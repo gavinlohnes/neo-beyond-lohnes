@@ -1,3 +1,14 @@
+# ALFRED-001 — the man in the chair (and RULES-2026-10-31)
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("approve the new rules"; Alfred via the Claude
+  API). Claude Code; Protected within the owner's go. Brief: `docs/agent/ALFRED-001.md`. Branch
+  `ccr-0be4f40f-16m0ja`.
+- **Built:** the rule amendments (online allowed, Alfred core, Anthropic approved, notifications at
+  key moments); Alfred v1 — header and LOG entry, voice or text, answers from BEYOND's records,
+  proposes logs/reminders/notes as cards the owner confirms.
+- **Verified:** `npm run verify` green (3,182 passed); the Claude SDK loads lazily, keeping the start-up bundle under the precache limit.
+- **Next:** Gavin adds his Claude key on the phone and tries it; then notifications and timed reminders.
+
 # SLEEP-WINDOW-001 — "last night" reaches 36 hours
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 (sleep in DATA but not TODAY). Claude Code;

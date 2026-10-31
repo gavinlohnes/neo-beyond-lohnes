@@ -12,6 +12,27 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## RULES-2026-10-31 — online allowed; Alfred is core (owner approval 2026-10-31)
+
+Gavin, 2026-10-31: "I don't necessarily need everything on my phone and super private and secretive.
+I don't need it to be offline all the time either. Those are outdated rules and I think they are
+holding us back… I think the Claude API idea is fantastic and so is the Alfred idea." Then: "approve
+the new rules."
+
+- **Your data is yours** (replaces "local-first, offline-first: nothing leaves the phone"): it lives
+  on the phone, backs up and exports anytime, never lost. BEYOND may use online services when they add
+  real value; logging still works without a signal.
+- **Alfred (Claude) is a core part of BEYOND** (replaces 2026-10-09 "AI optional"): he understands,
+  logs, answers from BEYOND's records, reminds and plans. Never invents facts; the operator confirms
+  every record; recommendations stay with the Engine for now; one switch turns him off.
+- **Approved services:** Anthropic (Claude API) and the free food databases. Anything costing more or
+  needing another account still needs approval.
+- **Notifications** at the operator's key moments are allowed: a few a day at most, easy to turn off.
+- **Kept:** no invented facts, confirm-before-save, no nagging/streaks/guilt/fake urgency, Engine
+  authority over recommendations.
+
+Amended in `docs/PRODUCT_DIRECTION.md`, `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` and `AGENTS.md`.
+
 ## SLEEP-WINDOW-001 — "last night" reaches 36 hours for a night worker (owner, 2026-10-31)
 
 Gavin, 2026-10-31: sleep showed in DATA but not TODAY — "Is it because I work overnight and sleep at

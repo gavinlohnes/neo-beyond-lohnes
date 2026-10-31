@@ -18,7 +18,8 @@ import type { WholePictureDestination } from "../ui/screens/review/WholePicture"
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
-import { HeaderSearchContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
+import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
+import { AlfredSheet } from "../ui/components/AlfredSheet";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
@@ -138,6 +139,8 @@ function AppWorkspaces() {
   // GARMIN-002 SEND TO BEYOND: the service worker parks shared Health Bridge files and opens ?share=health.
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
   // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
+  // ALFRED-001: the man in the chair, from the header or LOG.
+  const [alfredOpen, setAlfredOpen] = useState(false);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
   const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
@@ -661,6 +664,7 @@ function AppWorkspaces() {
   return (
     <EmblemContext.Provider value={goTodayRoot}>
     <HeaderSearchContext.Provider value={() => { openMore("SEARCH"); }}>
+    <HeaderAlfredContext.Provider value={() => setAlfredOpen(true)}>
     <StealthToggleContext.Provider value={() => changeStealth(!stealthOnRef.current)}>
     {/* Everything behind stealth is inert: not focusable, not read, not tappable. */}
     <div inert={stealthOn} style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
@@ -725,7 +729,7 @@ function AppWorkspaces() {
         </div>}
       </main>
 
-      <RecordSheets mealRequest={recordMealRequest} correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
+      <RecordSheets onAlfred={() => setAlfredOpen(true)} mealRequest={recordMealRequest} correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
         onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }}
         onHistory={(metric) => leaveRecordSheet(() => { openBodyEvidence(metric); setMealOrigin((origin) => origin ? { ...origin, trigger: recordOrigin.current } : null); })}
         onWorkout={() => leaveRecordSheet(() => openTrain("WORKOUT"))}
@@ -773,6 +777,8 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
+    <AlfredSheet open={alfredOpen} onClose={() => setAlfredOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }} />
+    </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
     </EmblemContext.Provider>
   );

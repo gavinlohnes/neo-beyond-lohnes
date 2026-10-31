@@ -170,7 +170,8 @@ priority changes;
 command/event semantic changes; new or destructive schema/migration; correction-model changes;
 historical fixture modification; backup-contract changes; removing user capability; changing
 TODAY/TRAIN/BODY/MORE primary information architecture; changing Mission/Obligation semantics;
-a meaningful new runtime dependency; external provider/account/backend introduction; paid
+a meaningful new runtime dependency; an external provider/account/backend beyond those approved
+(Anthropic and the free food databases, RULES-2026-10-31); paid
 infrastructure; a composition change that materially changes how recommendation authority or
 user choice is experienced; or a genuine conflict between current code and higher authority.
 Stop on unresolved conflicts.
