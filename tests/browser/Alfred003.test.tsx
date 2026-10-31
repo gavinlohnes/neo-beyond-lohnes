@@ -143,13 +143,12 @@ describe("ALFRED-003 brief on TODAY", () => {
     expect(briefIsDue(stored, "other", at.getTime() + 11 * 60_000)).toBe(true);
     expect(briefIsDue(stored, sig, at.getTime() + 3 * 60 * 60_000)).toBe(true);
   });
-  // Last in the file: it opens the database without the shell, which a later App render here does not expect.
   it("keeps the brief it wrote while the records hold; no second call", async () => {
     await startDay();
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     const first = await render(<AlfredBrief active refreshKey={0} onOpen={() => {}} />);
     await expect.element(first.getByRole("region", { name: "Alfred's brief" })).toHaveTextContent("Sleep first");
-    first.unmount();
+    await first.unmount();
     const second = await render(<AlfredBrief active refreshKey={1} onOpen={() => {}} />);
     await expect.element(second.getByRole("region", { name: "Alfred's brief" })).toHaveTextContent("Sleep first");
     await new Promise((r) => setTimeout(r, 300));
