@@ -39,8 +39,11 @@ import { markGarminSyncRequested } from "../../healthSyncRequest";
 /** SYNC-001: opens BEYOND Health Bridge (beyond-bridge://sync), which reads Health Connect and sends to BEYOND. */
 export const HELPER_SYNC_URL = "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end";
 /** The helper exists only on Android; elsewhere the link would go nowhere, so it isn't shown. */
+export function isAndroid(): boolean {
+  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+}
 export function SyncGarminLink() {
-  if (typeof navigator === "undefined" || !/Android/i.test(navigator.userAgent)) return null;
+  if (!isAndroid()) return null;
   // SYNC-002: remember the tap, so what the helper sends back imports straight away.
   return <a className="btn-secondary measured-sync" href={HELPER_SYNC_URL} onClick={() => markGarminSyncRequested()}>SYNC GARMIN</a>;
 }

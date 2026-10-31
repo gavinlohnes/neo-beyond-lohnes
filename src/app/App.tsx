@@ -2,10 +2,11 @@ import { RecordSheets } from "../ui/components/RecordSheets";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { takeGarminSyncRequest } from "../ui/healthSyncRequest";
 import { importBridgeFiles, type HealthSyncResult } from "../application/healthSync";
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
 import { GarminSyncLine } from "../ui/components/GarminSyncLine";
+import { markGarminSyncRequested, takeGarminSyncRequest } from "../ui/healthSyncRequest";
+import { HELPER_SYNC_URL, SyncGarminLink, isAndroid } from "../ui/screens/today/MeasuredSheet";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
@@ -138,6 +139,8 @@ function AppWorkspaces() {
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
   // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
+  // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
+  const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
   const [garminSync, setGarminSync] = useState<"syncing" | { result: HealthSyncResult } | { error: string } | null>(oneTapSync ? "syncing" : null);
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
   const [tab, setTab] = useState<Tab>(() => (sharedHealth && !oneTapSync ? "COMMAND" : shortcut === "workout" ? "TRAIN" : "TODAY"));
@@ -284,6 +287,12 @@ function AppWorkspaces() {
     url.searchParams.delete("share");
     window.history.replaceState(null, "", url.toString());
   }, [sharedHealth]);
+  useEffect(() => {
+    if (!syncShortcut) return;
+    markGarminSyncRequested();
+    // Chrome may hold an app launch that no tap started; the line on TODAY offers the same link to tap.
+    try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ }
+  }, [syncShortcut]);
   useEffect(() => {
     if (!oneTapSync) return;
     let current = true;
@@ -677,7 +686,8 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
-              banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} /> : undefined}
+              banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
+                : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
           </RootErrorBoundary>
         </div>}

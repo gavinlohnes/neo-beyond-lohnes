@@ -66,6 +66,8 @@ class MainActivity : ComponentActivity() {
     private var activityGranted: Set<String> = emptySet() // what the prepared activity file was read with
     private var working = false
     private var newestStepsHour: Instant? = null // SYNC-001: for the freshness line
+    private var newestResting: Instant? = null // BRIDGE-CHECK-001: resting heart rate's freshness
+    private var handBack = false // BRIDGE-CHECK-001: a sync started from BEYOND closes the helper once sent
     private var pendingSend = false // SYNC-001: a SYNC request that arrived while a read was running
     private val requestPermission = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
         if (granted.containsAll(permissions)) readSleep() else clear("Sleep access was not granted. No export was created.")
@@ -189,6 +191,7 @@ class MainActivity : ComponentActivity() {
     }
     /** SYNC-001: the daily 7-day read without a tap, only when every needed permission is already granted. */
     private fun autoRead(sendAfter: Boolean) {
+        handBack = sendAfter
         if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) return
         lifecycleScope.launch {
             try {
@@ -275,6 +278,8 @@ class MainActivity : ComponentActivity() {
                 if (target != null) {
                     startActivity(Intent(intent).setComponent(ComponentName(target.packageName, target.activityName)))
                     status.text = "Sent to BEYOND at ${java.time.LocalTime.now().withNano(0).withSecond(0)}."
+                    // BRIDGE-CHECK-001: started from BEYOND's SYNC GARMIN, the helper steps out of the way.
+                    if (handBack) { handBack = false; finish() }
                 } else {
                     startActivity(Intent.createChooser(intent, "Send to BEYOND"))
                     status.text = "Choose BEYOND in the share sheet."
@@ -323,8 +328,8 @@ class MainActivity : ComponentActivity() {
                     preparedActivity = null
                     "Steps and heart rate could not be read; sleep is unaffected."
                 }
-                val freshness = freshnessLine(records.maxOfOrNull { it.end }, newestStepsHour, Instant.now(), ZoneId.systemDefault())
-                status.text = "$sleepLine $activityLine $freshness Tap SEND TO BEYOND to preview it there. No data has been imported."
+                val freshness = freshnessLine(records.maxOfOrNull { it.end }, newestStepsHour, newestResting, Instant.now(), ZoneId.systemDefault())
+                status.text = "$freshness\n\n$sleepLine $activityLine"
                 ready = true
             } catch (_: Exception) { clear("Sleep could not be read safely. Check Health Connect sleep access and Garmin sync, then try again. No partial export was kept.") }
             finally { setWorking(false) }
@@ -334,7 +339,7 @@ class MainActivity : ComponentActivity() {
     /** Hourly Garmin steps and heart rate, plus resting heart rate, for whichever of them were granted. */
     private suspend fun readActivity(): String {
         val granted = client.permissionController.getGrantedPermissions()
-        newestStepsHour = null
+        newestStepsHour = null; newestResting = null
         if (granted.intersect(activityPermissions).isEmpty()) return "Steps, heart rate and calories were not allowed; only sleep was read."
         val end = Instant.now().truncatedTo(ChronoUnit.HOURS)
         val start = end.minus(windowDays, ChronoUnit.DAYS)
@@ -380,6 +385,7 @@ class MainActivity : ComponentActivity() {
             } while (token != null)
         }
         newestStepsHour = hours.filter { it.steps != null }.maxOfOrNull { it.start }
+        newestResting = resting.maxOfOrNull { it.time }
         preparedActivity = activityExport(hours, resting, start, end, Instant.now(), BuildConfig.VERSION_NAME)
         activityGranted = granted.intersect(activityPermissions)
         val calorieHours = hours.count { it.totalCalories != null || it.activeCalories != null }

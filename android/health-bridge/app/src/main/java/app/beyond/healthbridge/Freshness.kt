@@ -12,18 +12,26 @@ const val SYNC_SCHEME = "beyond-bridge"
 const val STALE_SLEEP_HOURS = 20L
 /** Steps this many hours behind the current hour suggest Garmin hasn't synced today's steps yet. */
 const val STALE_STEPS_HOURS = 3L
+/** Garmin writes resting heart rate about once a day; older than this suggests it hasn't synced. */
+const val STALE_RESTING_HOURS = 30L
 
-private val when_ = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", Locale.US)
+private val time_ = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
+private val dated_ = DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale.US)
 
 /**
- * SYNC-001: says how current Health Connect's Garmin data is, and what to do when it's behind, so a
- * missing night is explained instead of silently absent. Pure: the read itself is unchanged.
+ * SYNC-001, per kind since BRIDGE-CHECK-001 (owner go 2026-10-31): how current each kind of Garmin data
+ * in Health Connect is ("Sleep: Oct 27, 08:15 · Steps: 14:00 · Resting HR: Oct 27, 06:40"), and which
+ * ones are behind, so "Garmin is behind" points at exactly what. Pure: the reads are unchanged.
  */
-fun freshnessLine(newestSleepEnd: Instant?, newestStepsHour: Instant?, now: Instant, zone: ZoneId): String {
-    val sleep = newestSleepEnd?.let { "Newest Garmin sleep ended ${when_.format(it.atZone(zone))}." } ?: "No Garmin sleep in Health Connect for this window."
-    val steps = newestStepsHour?.let { "Newest steps: ${when_.format(it.atZone(zone))}." } ?: "No Garmin steps in Health Connect for this window."
-    val sleepBehind = newestSleepEnd == null || Duration.between(newestSleepEnd, now).toHours() >= STALE_SLEEP_HOURS
-    val stepsBehind = newestStepsHour == null || Duration.between(newestStepsHour, now).toHours() >= STALE_STEPS_HOURS
-    val hint = if (sleepBehind || stepsBehind) " If you've slept or moved since, open Garmin Connect, let it sync with your watch, then read again." else ""
-    return "$sleep $steps$hint"
+fun freshnessLine(newestSleepEnd: Instant?, newestStepsHour: Instant?, newestResting: Instant?, now: Instant, zone: ZoneId): String {
+    fun at(t: Instant?) = t?.let { val z = it.atZone(zone); if (z.toLocalDate() == now.atZone(zone).toLocalDate()) time_.format(z) else dated_.format(z) } ?: "none"
+    fun behind(t: Instant?, hours: Long) = t == null || Duration.between(t, now).toHours() >= hours
+    val late = listOfNotNull(
+        "sleep".takeIf { behind(newestSleepEnd, STALE_SLEEP_HOURS) },
+        "steps".takeIf { behind(newestStepsHour, STALE_STEPS_HOURS) },
+        "resting HR".takeIf { behind(newestResting, STALE_RESTING_HOURS) },
+    )
+    val line = "Sleep: ${at(newestSleepEnd)} · Steps: ${at(newestStepsHour)} · Resting HR: ${at(newestResting)}"
+    return if (late.isEmpty()) line
+    else "$line\nBehind: ${late.joinToString(", ")}. Open Garmin Connect, let it sync with your watch, then read again."
 }

@@ -26,7 +26,11 @@ gap is between Garmin Connect and Health Connect, and nothing in BEYOND said so 
 6. BRIDGE-CHECK-001 (Builder proposal inside the owner's "any other changes … top of the line"): the
    screen says which kinds Health Connect lets it read (Sleep ✓ · Resting heart rate ✗ …, `Access.kt`),
    with HEALTH CONNECT ACCESS and OPEN GARMIN CONNECT buttons; "Sent to BEYOND at 19:42".
-7. Excluded: background sync, new permissions, Internet, how Garmin sleep is filed into lived days.
+7. Owner go 2026-10-31 ("Do all three suggestions"): a sync started from BEYOND closes the helper
+   once sent (hand back); freshness per kind ("Sleep: Oct 27, 08:15 · Steps: 14:00 · Resting HR: …"
+   and "Behind: sleep, resting HR"); and a SYNC GARMIN home-screen shortcut on BEYOND (`?go=sync`)
+   that remembers the request and opens the helper, with the link on TODAY if Chrome holds the launch.
+8. Excluded: background sync, new permissions, Internet, how Garmin sleep is filed into lived days.
 
 ## Leverage
 

@@ -4,7 +4,7 @@
   owner's go. Brief: `docs/agent/SYNC-002.md`. Branch `ccr-0be4f40f-16m0ja`.
 - **Built:** SYNC GARMIN's tap lets the Bridge's files import straight away; TODAY says what came or
   that Garmin is behind; Health Bridge 0.8.0 sends straight to BEYOND.
-- **Verified:** `npm run verify` green (3,177 passed). Kotlin builds and tests in Health Bridge CI.
+- **Verified:** `npm run verify` green (3,178 passed). Kotlin builds and tests in Health Bridge CI.
 - **Next:** CI (PR Verification + Health Bridge), Gavin installs Bridge 0.8.0 and merges. Open:
   Garmin Connect → Health Connect gaps on the owner's phone (settings check).
 

@@ -64,4 +64,14 @@ describe("SYNC-002", () => {
     expect(takeGarminSyncRequest(now + 1000)).toBe(true);
     expect(takeGarminSyncRequest(now + 2000)).toBe(false);
   });
+
+  it("the SYNC GARMIN home-screen shortcut remembers the request and offers the link if the Bridge didn't open", async () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (Linux; Android 15) Chrome/140 Mobile");
+    const url = new URL(window.location.href); url.searchParams.set("go", "sync"); window.history.replaceState(null, "", url.toString());
+    const screen = await render(<App />);
+    await expect.element(screen.getByText("If the Bridge didn't open, tap", { exact: true })).toBeVisible();
+    expect(takeGarminSyncRequest()).toBe(true);
+    await expect.element(screen.getByRole("link", { name: "SYNC GARMIN" }).first()).toBeVisible();
+    vi.restoreAllMocks();
+  });
 });

@@ -26,6 +26,11 @@ as needed." Amends SYNC-001's preview-before-write for this one path. Brief: [`a
 - **TODAY says what came** under the hero: "Garmin updated · sleep 7:15 · 8,240 steps · resting 58"
   and the newest time, or "Garmin hasn't sent anything new" with the newest time and "Sync your watch
   in Garmin Connect" when Garmin itself is behind (over 12 hours). Your own entries still win.
+- **The Bridge (owner, 2026-10-31):** BEYOND's look and an angular red B icon; says what Health
+  Connect lets it read, with HEALTH CONNECT ACCESS and OPEN GARMIN CONNECT; freshness per kind
+  ("Behind: sleep, resting HR"); closes itself after a sync started from BEYOND.
+- **Long-press BEYOND → SYNC GARMIN** does the same as the button; if Chrome holds the launch, TODAY
+  offers the link to tap.
 - Still excluded: background sync, new permissions, Internet access for the Bridge.
 
 ## BOOT-BRIEF-001 — the launch screen is a readable startup brief (owner choice 2026-10-30)
