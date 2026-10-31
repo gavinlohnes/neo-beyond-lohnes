@@ -2630,6 +2630,15 @@ MISSIONS & OBLIGATIONS; no new tab or TODAY row. Alfred proposes a project and i
 card; nothing is saved until SAVE. Goals are deferred. [Brief](agent/PROJECTS-001.md).
 
 
+## 2026-10-31 — RELATIONSHIPS-001: remember the people who matter
+
+Owner: "Go relationships". A person's yearly date is a PERSON fact plus an ordinary yearly
+commitment, saved together on confirm. People in Personal Understanding is a view over those
+records, not a contacts app. No contact cadence, "you haven't called" prompts or scores; dates
+simply show when they come round. Alfred's repeat rules are anchored on their due date.
+[Brief](agent/RELATIONSHIPS-001.md).
+
+
 ## 2026-10-31 — ALFRED-COST-001: Alfred's monthly limit and automatic switch
 
 Owner concern: Alfred costing too much and being too big a part; "Build those 2". Alfred gets a
