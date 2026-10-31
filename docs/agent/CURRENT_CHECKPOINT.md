@@ -1,12 +1,12 @@
 # ALFRED-003 — cheap everyday Alfred, his brief on TODAY, Alfred can do it
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("go cheap + 1 and 2"). Claude Code; Protected
-  within the owner's go. Brief: `docs/agent/ALFRED-003.md`. Branch `ccr-0be4f40f-16m0ja`, PR #348
-  (stacked on ALFRED-002).
+  within the owner's go. Brief: `docs/agent/ALFRED-003.md`. Branch `ccr-0be4f40f-16m0ja`; follows
+  ALFRED-002 (#348, merged).
 - **Built:** everyday answers on the cheaper model with THINK HARDER for deep ones; Alfred's brief at
   the top of TODAY; new cards for check-in, started work, work ended, task done or moved, clean day, open TRAIN.
-- **Verified:** see the PR.
-- **Next:** Gavin merges and reads TODAY's brief on his phone; then notifications at key moments and Alfred's memory.
+- **Verified:** `npm run verify` green (3,191 passed).
+- **Next:** CI and Gavin's merge; he reads TODAY's brief on his phone; then notifications at key moments and Alfred's memory.
 
 # ALFRED-001 — the man in the chair (and RULES-2026-10-31)
 

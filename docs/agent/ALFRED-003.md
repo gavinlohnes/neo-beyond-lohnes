@@ -4,7 +4,7 @@
   the cheaper model with a "Think harder" option; (#1) Alfred's brief at the top of TODAY; (#2) Alfred
   can do what the buttons do, as confirm cards.
 - **Builder / lane:** Claude Code; Protected within the owner's go (TODAY composition; new Alfred
-  actions over existing commands). Branch `ccr-0be4f40f-16m0ja`, stacked on ALFRED-002 (#348).
+  actions over existing commands). Branch `ccr-0be4f40f-16m0ja`; follows ALFRED-002 (#348, merged).
 
 ## What it does
 
