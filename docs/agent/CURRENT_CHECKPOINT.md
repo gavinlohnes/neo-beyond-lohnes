@@ -1,3 +1,26 @@
+# ALFRED-004 — Alfred remembers, reads the whole history, talks back, plans
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("I like all of the ideas… Make it so"). Claude
+  Code; Protected within the owner's go (additive schema v16). Brief: `docs/agent/ALFRED-004.md`.
+  Branch `ccr-0be4f40f-16m0ja`, with ALFRED-003 in PR #349.
+- **Built:** memory with Forget; search_records and get_days read tools; Speak answers and hands-free
+  send; DEBRIEF MY SHIFT; weekly review, flip, meal plan and grocery starters; log-urge card; MONTH
+  in DATA's cave with sleep owed; "Ask Alfred" on a day and on every vital.
+  Health Bridge 0.9.0: notifications at the key moments around each shift and a home-screen widget
+  with Alfred's brief, both fed by SYNC GARMIN.
+- **Next:** CI (PR Verification + Health Bridge), Gavin's merge, install Bridge 0.9.0, tap SYNC
+  GARMIN once to arm the moments, add the widget.
+
+# ALFRED-003 — cheap everyday Alfred, his brief on TODAY, Alfred can do it
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("go cheap + 1 and 2"). Claude Code; Protected
+  within the owner's go. Brief: `docs/agent/ALFRED-003.md`. Branch `ccr-0be4f40f-16m0ja`; follows
+  ALFRED-002 (#348, merged).
+- **Built:** everyday answers on the cheaper model with THINK HARDER for deep ones; Alfred's brief at
+  the top of TODAY; new cards for check-in, started work, work ended, task done or moved, clean day, open TRAIN.
+- **Verified:** `npm run verify` green (3,191 passed).
+- **Next:** CI and Gavin's merge; he reads TODAY's brief on his phone; then notifications at key moments and Alfred's memory.
+
 # ALFRED-001 — the man in the chair (and RULES-2026-10-31)
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("approve the new rules"; Alfred via the Claude

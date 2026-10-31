@@ -1,33 +1,55 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { ALFRED_TOOLS, toProposal, type AlfredProposal } from "./alfredActions";
+import { ALFRED_READ_TOOLS, ALFRED_TOOLS, runReadTool, toProposal, type AlfredProposal } from "./alfredActions";
 
 /**
  * ALFRED-001 (owner ruling RULES-2026-10-31): one conversation with Alfred. Claude reads BEYOND's
  * context (alfredContext.ts), answers, and proposes records through tools; the operator confirms each
  * one in the sheet. The key is the operator's own, kept on his phone and sent only to Anthropic.
  */
-export const ALFRED_MODEL = "claude-opus-5-5";
+/**
+ * ALFRED-003 (owner go "go cheap"): everyday Alfred runs on Claude Haiku 5.5 (about a fortieth of the
+ * price); THINK HARDER sends one question to Claude Opus 5.5. Both read the same conversation; the
+ * API drops any thinking block the receiving model can't read, so switching mid-conversation is safe.
+ */
+export const ALFRED_MODELS = { everyday: "claude-haiku-5-5", deep: "claude-opus-5-5" } as const;
+export type AlfredDepth = keyof typeof ALFRED_MODELS;
 
 const PERSONA = `You are Alfred, the man in the chair inside BEYOND, a personal operating system for one person: Gavin, who works 12-hour night shifts (18:00–06:00) on a 2-2-3 rotation, sleeps by day, and uses BEYOND for food, sleep, training, reminders and his life.
 
 How you work:
 - Answer from the BEYOND RECORDS below. Name the records you used ("your last 14 days show…"). If the records don't say, say you don't know. Never invent numbers, dates or events.
-- When he tells you something to record (food, water, sleep, weight, a reminder, a note), call the matching tool. Each call becomes a card he confirms; nothing is saved until he does. Say briefly what you proposed.
+- When he tells you something to record or do (food, water, sleep, weight, a reminder, a note, a check-in, work started or ended, a task done or moved, a clean day, an urge, a fact to remember, opening today's workout), call the matching tool. Each call becomes a card he confirms; nothing is saved until he does. Say briefly what you proposed.
+- A debrief (he talks through his shift or day) usually holds several records: propose each as its own card, then give a two-line read of the shift.
+- You remember what he asks (remember tool): people, birthdays, sizes, gift ideas, bills and their amounts, health details. Use WHAT HE ASKED YOU TO REMEMBER in your answers. A bill or a birthday also gets a repeating reminder.
+- For anything older than the records above, or "when did I last…", call search_records. For weekly reviews and "did this work for me?", call get_days for the periods and compare the numbers exactly as they appear; say how many days each figure rests on.
+- Plans (a flip between nights and days, a week of meals, a grocery list, a date night on shared days off) are suggestions: lay them out briefly, then offer reminders or a note for the parts he wants kept.
 - Use his saved meals when they match (saved_meal_id). Otherwise estimate macros and say they are estimates.
 - Reminders: due_date is a calendar date; a night shift's "tonight" is the date the shift starts. "After I wake" on a work day means his afternoon wake-up, not the morning.
 - BEYOND's own Engine makes recommendations. You explain, plan and remember; you don't override it.
 - Be calm, short and concrete, like a trusted aide. No cheerleading, guilt, streaks or urgency. Plain sentences; short lists only when they help. Use his local times (24-hour).`;
 
-export interface AlfredTurn { role: "user" | "alfred"; text: string; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" }[] }
+export interface AlfredTurn { role: "user" | "alfred"; text: string; deep?: boolean; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" }[] }
 export interface AlfredReply { text: string; proposals: { id: string; proposal: AlfredProposal }[]; costUsd: number }
 
-/** Claude Opus 5.5 list price per token (input, output, cache read, cache write). */
-const PRICE = { input: 4 / 1e6, output: 20 / 1e6, cacheRead: 0.2 / 1e6, cacheWrite: 5 / 1e6 };
+/** List price per token (input, output, cache read, 5-minute cache write); Haiku's is for prompts up to 100K tokens. */
+const PRICE: Record<AlfredDepth, { input: number; output: number; cacheRead: number; cacheWrite: number }> = {
+  everyday: { input: 0.1 / 1e6, output: 0.5 / 1e6, cacheRead: 0.01 / 1e6, cacheWrite: 0.125 / 1e6 },
+  deep: { input: 4 / 1e6, output: 20 / 1e6, cacheRead: 0.2 / 1e6, cacheWrite: 5 / 1e6 },
+};
+
+/** The request settings for a depth. Opus opts into the server-side refusal fallback; Haiku has none. */
+function modelParams(depth: AlfredDepth) {
+  return depth === "deep"
+    ? { model: ALFRED_MODELS.deep, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const, output_config: { effort: "high" as const } }
+    : { model: ALFRED_MODELS.everyday, output_config: { effort: "medium" as const } };
+}
 
 export class AlfredSession {
   private messages: Anthropic.Beta.BetaMessageParam[] = [];
   /** tool_use ids from the last reply, answered at the start of the next user turn. */
   private openToolUses: string[] = [];
+  /** Read results not yet sent (only when the round limit stopped the loop). */
+  private pendingReads: Anthropic.Beta.BetaContentBlockParam[] = [];
   private readonly client: Anthropic;
 
   constructor(apiKey: string, private readonly context: string) {
@@ -35,50 +57,81 @@ export class AlfredSession {
   }
 
   /** `decisions` says what the operator did with each card from the last reply. */
-  async send(text: string, decisions: Record<string, "saved" | "skipped" | "pending"> = {}): Promise<AlfredReply> {
+  async send(text: string, decisions: Record<string, "saved" | "skipped" | "pending"> = {}, depth: AlfredDepth = "everyday"): Promise<AlfredReply> {
     const content: Anthropic.Beta.BetaContentBlockParam[] = this.openToolUses.map((id) => ({
       type: "tool_result" as const, tool_use_id: id,
       content: decisions[id] === "saved" ? "The operator confirmed it; it is saved in BEYOND." : decisions[id] === "skipped" ? "The operator skipped it; nothing was saved." : "Shown to the operator as a card; not confirmed yet.",
     }));
+    content.unshift(...this.pendingReads);
     content.push({ type: "text", text });
     this.messages.push({ role: "user", content });
     this.openToolUses = [];
+    this.pendingReads = [];
 
-    const response = await this.client.beta.messages.create({
-      model: ALFRED_MODEL,
-      max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "medium" },
-      system: [
-        { type: "text", text: PERSONA },
-        { type: "text", text: `BEYOND RECORDS (read just now):\n${this.context}`, cache_control: { type: "ephemeral" } },
-      ],
-      tools: ALFRED_TOOLS,
-      tool_choice: { type: "auto" },
-      messages: this.messages,
-    });
-    // Append the whole reply (thinking and tool blocks included) so the conversation stays append-only.
-    this.messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
-
-    if (response.stop_reason === "refusal") return { text: "I can't help with that one.", proposals: [], costUsd: cost(response.usage) };
     const proposals: { id: string; proposal: AlfredProposal }[] = [];
     const words: string[] = [];
-    for (const block of response.content) {
-      if (block.type === "text") words.push(block.text);
-      if (block.type === "tool_use") {
-        this.openToolUses.push(block.id);
+    let costUsd = 0;
+    // ALFRED-004: read tools (search_records, get_days) are answered at once from the records and
+    // Alfred continues; a few rounds at most. Proposals become cards; the last round's wait for the operator.
+    for (let round = 0; round < 5; round++) {
+      const response = await this.client.beta.messages.create({
+        ...modelParams(depth),
+        max_tokens: depth === "deep" ? 8000 : 4000,
+        system: [
+          { type: "text", text: PERSONA },
+          { type: "text", text: `BEYOND RECORDS (read just now):\n${this.context}`, cache_control: { type: "ephemeral" } },
+        ],
+        tools: [...ALFRED_TOOLS, ...ALFRED_READ_TOOLS],
+        tool_choice: { type: "auto" },
+        messages: this.messages,
+      });
+      costUsd += cost(response.usage, depth);
+      // Append the whole reply (thinking and tool blocks included) so the conversation stays append-only.
+      this.messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
+      if (response.stop_reason === "refusal") return { text: "I can't help with that one.", proposals, costUsd };
+
+      const reads: Anthropic.Beta.BetaContentBlockParam[] = [];
+      const cardIds: string[] = [];
+      for (const block of response.content) {
+        if (block.type === "text") words.push(block.text);
+        if (block.type !== "tool_use") continue;
+        const result = await runReadTool(block.name, block.input).catch(() => "That read failed; say so.");
+        if (result !== null) { reads.push({ type: "tool_result", tool_use_id: block.id, content: result }); continue; }
+        cardIds.push(block.id);
         const proposal = toProposal(block.name, block.input);
         if (proposal) proposals.push({ id: block.id, proposal });
       }
+      if (!reads.length || round === 4) { this.openToolUses = cardIds; this.pendingReads = reads; break; }
+      // Every tool_use needs its result in the next turn: cards shown so far are answered as pending.
+      this.messages.push({ role: "user", content: [...reads, ...cardIds.map((id) => ({ type: "tool_result" as const, tool_use_id: id, content: "Shown to the operator as a card; not confirmed yet." }))] });
     }
-    return { text: words.join("\n\n").trim(), proposals, costUsd: cost(response.usage) };
+    return { text: words.join("\n\n").trim(), proposals, costUsd };
   }
 }
 
-function cost(u: Anthropic.Beta.BetaUsage): number {
-  return (u.input_tokens ?? 0) * PRICE.input + (u.output_tokens ?? 0) * PRICE.output
-    + (u.cache_read_input_tokens ?? 0) * PRICE.cacheRead + (u.cache_creation_input_tokens ?? 0) * PRICE.cacheWrite;
+const BRIEF_ASK = `Write Alfred's brief for the top of TODAY: what matters right now and next, from the records. Two to four short sentences, plain text, no list, no heading, no greeting. Lead with the one thing most worth his attention (sleep before a shift, food and water against target, a task due, the shift ahead). Name times and numbers from the records. If the records are thin, say what's missing in one sentence.`;
+
+/** ALFRED-003 #1: one short, cheap read of the records for TODAY. No tools; nothing is proposed or saved. */
+export async function writeAlfredBrief(apiKey: string, context: string): Promise<{ text: string; costUsd: number }> {
+  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+  const response = await client.beta.messages.create({
+    model: ALFRED_MODELS.everyday,
+    max_tokens: 2000,
+    output_config: { effort: "low" },
+    system: [
+      { type: "text", text: PERSONA },
+      { type: "text", text: `BEYOND RECORDS (read just now):\n${context}`, cache_control: { type: "ephemeral" } },
+    ],
+    messages: [{ role: "user", content: BRIEF_ASK }],
+  });
+  const text = response.stop_reason === "refusal" ? "" : response.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join(" ").trim();
+  return { text, costUsd: cost(response.usage, "everyday") };
+}
+
+function cost(u: Anthropic.Beta.BetaUsage, depth: AlfredDepth): number {
+  const p = PRICE[depth];
+  return (u.input_tokens ?? 0) * p.input + (u.output_tokens ?? 0) * p.output
+    + (u.cache_read_input_tokens ?? 0) * p.cacheRead + (u.cache_creation_input_tokens ?? 0) * p.cacheWrite;
 }
 
 /** A plain-words reason for a failed call, for the sheet. */

@@ -6,7 +6,7 @@ import { importBridgeFiles, type HealthSyncResult } from "../application/healthS
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
 import { GarminSyncLine } from "../ui/components/GarminSyncLine";
 import { markGarminSyncRequested, takeGarminSyncRequest } from "../ui/healthSyncRequest";
-import { HELPER_SYNC_URL, SyncGarminLink, isAndroid } from "../ui/screens/today/MeasuredSheet";
+import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid } from "../ui/screens/today/MeasuredSheet";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
@@ -19,7 +19,8 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
-import { AlfredSheet } from "../ui/components/AlfredSheet";
+import { ASK_ALFRED_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
+import { AlfredBrief } from "../ui/components/AlfredBrief";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
 import { getStealth, setStealth } from "../application/stealthQueries";
 import { BackupDueLine } from "../ui/components/BackupDueLine";
@@ -140,7 +141,21 @@ function AppWorkspaces() {
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
   // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
   // ALFRED-001: the man in the chair, from the header or LOG.
-  const [alfredOpen, setAlfredOpen] = useState(false);
+  // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
+  const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
+  const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
+  useEffect(() => {
+    if (!alfredLaunch) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("alfred");
+    window.history.replaceState(null, "", url.toString());
+  }, [alfredLaunch]);
+  useEffect(() => {
+    const onAsk = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail })); setAlfredOpen(true); };
+    window.addEventListener(ASK_ALFRED_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_ALFRED_EVENT, onAsk);
+  }, []);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
   const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
@@ -294,7 +309,7 @@ function AppWorkspaces() {
     if (!syncShortcut) return;
     markGarminSyncRequested();
     // Chrome may hold an app launch that no tap started; the line on TODAY offers the same link to tap.
-    try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ }
+    void bridgeSyncUrl().then((url) => { try { window.location.assign(url); } catch { /* the line below stays */ } }, () => { try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ } });
   }, [syncShortcut]);
   useEffect(() => {
     if (!oneTapSync) return;
@@ -690,6 +705,7 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
+              brief={<AlfredBrief active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} />}
               banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
@@ -777,7 +793,7 @@ function AppWorkspaces() {
     </div>
     {stealthOn && <StealthOverlay onExit={() => changeStealth(false)} onLogged={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((n) => n + 1); }} />}
     </StealthToggleContext.Provider>
-    <AlfredSheet open={alfredOpen} onClose={() => setAlfredOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }} />
+    <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
     </EmblemContext.Provider>

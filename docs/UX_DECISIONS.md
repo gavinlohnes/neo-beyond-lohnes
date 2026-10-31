@@ -12,6 +12,28 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## ALFRED-004 — Alfred remembers and reads the whole history (owner go 2026-10-31)
+
+Gavin, 2026-10-31: "I like all of the ideas… Make it so." Alfred keeps the facts the owner confirms
+(new additive table, schema v16, carried by backups) and forgets them on his word. He can search the
+whole history and read any period of lived days himself; those reads never write. He can speak his
+answers, a debrief becomes one card per record, and plans (flip, meals, groceries, date nights) stay
+suggestions until kept as reminders or notes. DATA's cave gains MONTH (the month on one page) with
+the sleep owed against 7 hours, and "Ask Alfred" opens him with a question about a day or a reading.
+Health Bridge 0.9.0 speaks at the key moments around each shift (from the schedule BEYOND hands it
+on SYNC GARMIN) and shows Alfred's brief in a home-screen widget; still no Internet in the Bridge.
+Brief: `docs/agent/ALFRED-004.md`.
+
+## ALFRED-003 — everyday Alfred is cheap; his brief leads TODAY; he can do it (owner go 2026-10-31)
+
+Gavin, 2026-10-31: "go cheap + 1 and 2". Everyday Alfred runs on Claude Haiku 5.5; THINK HARDER sends
+one question to Claude Opus 5.5. TODAY's first panel under the hero is Alfred's brief: a few sentences
+from the records, rewritten when they change (at most every 10 minutes) or after 3 hours, and shown
+only with a key. Tap it to talk. It sits above the Engine's recommendation and never replaces it. Alfred's
+cards now also cover check-in, started work, work ended, task done, task to a new date, clean day, and
+opening TRAIN. Every one is still confirmed by the owner and runs BEYOND's own command. Brief:
+`docs/agent/ALFRED-003.md`.
+
 ## KEYBOARD-001 — bottom sheets rise above the keyboard (owner report 2026-10-31)
 
 Gavin, on Alfred's first open: "Looks bad. I can't even see it to type." Chrome on Android keeps the

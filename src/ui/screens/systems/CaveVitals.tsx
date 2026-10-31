@@ -7,6 +7,8 @@ import { CaveRouteView } from "./CaveRoute";
 import { CaveBriefView } from "./CaveBrief";
 import { CaveFileView } from "./CaveFile";
 import { CaveLogView } from "./CaveLog";
+import { CaveMonthView } from "./CaveMonth";
+import { askAlfred } from "../../components/AlfredSheet";
 import { SleepPeriods } from "../today/SleepMetricSheet";
 import { InsightsExplorer } from "../body/InsightsExplorer";
 import { getBodyInsights, type BodyInsights, type InsightMetric } from "../../../application/bodyInsightsQueries";
@@ -20,7 +22,7 @@ import "./systems.css";
  */
 const HISTORY: Partial<Record<CaveVitalId, InsightMetric>> = { sleep: "sleep", protein: "protein", water: "water" };
 
-export type CaveTab = "tonight" | "route" | "brief" | "vitals" | "file" | "log";
+export type CaveTab = "tonight" | "route" | "brief" | "vitals" | "file" | "log" | "month";
 export type CaveOpen = { tab: CaveTab; vital?: CaveVitalId };
 /** CAVE-DATA D1: an external entry (TODAY's bands, SYSTEMS rows) opening a view; each key opens it once. */
 export type CaveRequest = { key: number; tab: CaveTab | "lead"; vital?: CaveVitalId | undefined; section?: "rotation" | undefined };
@@ -55,7 +57,7 @@ export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnder
     if (request.vital) setVital(request.vital);
     setSection(request.section ? { key: request.key, name: request.section } : null);
   }, [request?.key]);
-  const tabs: (CaveTab | "lead")[] = [...(lead ? ["lead" as const] : []), "tonight", "route", "brief", "vitals", "file", "log"];
+  const tabs: (CaveTab | "lead")[] = [...(lead ? ["lead" as const] : []), "tonight", "route", "brief", "vitals", "file", "log", "month"];
   const name = (t: CaveTab | "lead") => t === "lead" ? lead!.label : TAB_NAME[t];
   return (
     <section className="cave" aria-labelledby="cave-title">
@@ -73,6 +75,7 @@ export function Cave({ initial, lead, request, onBack, onOpenMetric, onOpenUnder
         : tab === "brief" ? <CaveBriefView />
         : tab === "file" ? <CaveFileView onOpenUnderstanding={onOpenUnderstanding} onOpenWholePicture={onOpenWholePicture} onInspectDay={onInspectDay} focusRotation={section?.name === "rotation" ? section.key : 0} />
         : tab === "log" ? <CaveLogView />
+        : tab === "month" ? <CaveMonthView />
         : <CaveVitals id={vital} onPick={setVital} onOpenMetric={onOpenMetric} />}
     </section>
   );
@@ -115,6 +118,8 @@ function CaveVitals({ id, onPick, onOpenMetric }: {
         <div className="cave__lead">
           <p className="cave__value">{shown.today.value === undefined ? "—" : formatCaveValue(shown.id, shown.today.value)}<small>{shown.unit}{shown.today.partial ? " so far" : ""}</small></p>
           <p className={`cave__sum${off ? " cave__sum--off" : ""}`}>{describeCaveVital(shown)}</p>
+          {/* ALFRED-004 #11: ask Alfred about this reading. */}
+          <button type="button" className="btn-secondary" onClick={() => askAlfred(`About my ${TITLE[shown.id].toLowerCase()}: ${describeCaveVital(shown)} What's behind it, and what would help?`)}>ASK ALFRED</button>
         </div>
         <section className="cave__block" aria-labelledby="cave-trend">
           <h3 id="cave-trend" className="cave__cap">Last {shown.trend.length} finished days · band is your usual {shown.usual.dayKind === "WORK" ? "on work days" : shown.usual.dayKind === "OFF" ? "on days off" : ""} · dashed is your median</h3>
@@ -146,7 +151,7 @@ function CaveVitals({ id, onPick, onOpenMetric }: {
   );
 }
 
-const TAB_NAME: Record<CaveTab, string> = { tonight: "TONIGHT", route: "ROUTE", brief: "BRIEF", vitals: "VITALS", file: "FILE", log: "LOG" };
+const TAB_NAME: Record<CaveTab, string> = { tonight: "TONIGHT", route: "ROUTE", brief: "BRIEF", vitals: "VITALS", file: "FILE", log: "LOG", month: "MONTH" };
 const TITLE: Record<CaveVitalId, string> = { sleep: "SLEEP", energy: "ENERGY", protein: "PROTEIN", water: "WATER", resting: "RESTING HR", steps: "STEPS" };
 
 /** Bars for each finished day, your usual band behind them and your median dashed. Drawn to one scale. */

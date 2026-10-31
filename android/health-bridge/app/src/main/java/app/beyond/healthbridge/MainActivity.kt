@@ -169,6 +169,7 @@ class MainActivity : ComponentActivity() {
         // SYNC-001: read straight away when access is already allowed; opened from BEYOND, also send.
         // Only a fresh launch sends: a recreated activity (rotation, process restore) must not reopen the share sheet.
         autoRead(sendAfter = savedInstanceState == null && intent?.data?.scheme == SYNC_SCHEME)
+        if (savedInstanceState == null) takePlan(intent)
         val scroll = ScrollView(this).apply { setBackgroundColor(Look.BG); isFillViewport = true; addView(layout) }
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -189,6 +190,17 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.data?.scheme == SYNC_SCHEME) autoRead(sendAfter = true)
+        takePlan(intent)
+    }
+    /** BRIDGE-MOMENTS-001: keep the plan BEYOND sent with SYNC GARMIN; ask once to show notifications. */
+    private fun takePlan(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme != SYNC_SCHEME) return
+        val plan = data.getQueryParameter("plan") ?: return
+        MomentAlerts.save(this, plan)
+        if (android.os.Build.VERSION.SDK_INT >= 33 && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 7)
+        }
     }
     /** SYNC-001: the daily 7-day read without a tap, only when every needed permission is already granted. */
     private fun autoRead(sendAfter: Boolean) {

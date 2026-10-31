@@ -19,9 +19,19 @@
 /* The input stays pinned to the bottom of the sheet, above the keyboard, however long the answer. */
 .alfred-input { display: grid; gap: 8px; position: sticky; bottom: 0; z-index: 1; background: var(--surface-1); padding: 8px 0 max(4px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border-subtle); }
 .alfred-input textarea { resize: vertical; min-height: 64px; }
-.alfred-input__row { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.alfred-input__row { display: grid; grid-template-columns: 1fr 1.4fr 1.4fr; gap: 8px; }
+.alfred-input__row button { padding-left: 4px; padding-right: 4px; }
 .alfred-input__row button { margin: 0; }
 .alfred-foot { margin-top: 10px; }
 .alfred-link { background: none; border: 0; padding: 0; color: var(--text-2); text-decoration: underline; font: inherit; cursor: pointer; min-height: 44px; }
 .cc-hdr .cc-alfred-btn { min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--p-t2); cursor: pointer; }
 .cc-hdr .cc-alfred-btn + .cc-search-btn { margin-left: 0; }
+/* ALFRED-003: the brief at the top of TODAY. One quiet panel; the whole panel opens Alfred. */
+.alfred-brief { margin: 0 0 var(--space-3); }
+.alfred-brief__open { display: grid; gap: 6px; width: 100%; text-align: left; padding: 12px 14px; border: 1px solid var(--border-strong); border-left: 2px solid var(--red); background: var(--surface-1); color: var(--text-1); font: inherit; cursor: pointer; min-height: 44px; }
+.alfred-brief__who, .alfred-brief__talk { font-size: 11px; letter-spacing: 0.16em; color: var(--text-2); }
+.alfred-brief__text { line-height: 1.5; overflow-wrap: anywhere; }
+.alfred-brief__talk { justify-self: end; }
+/* ALFRED-004: what Alfred remembers, each with its own Forget. */
+.alfred-memory ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.alfred-memory li { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); overflow-wrap: anywhere; }
