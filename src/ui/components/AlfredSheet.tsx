@@ -8,7 +8,7 @@ import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/a
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
-import { addSpend, getMonthSpend } from "../../application/alfred/alfredSpend";
+import { addSpend, automaticAlfredOn, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./alfred.css";
@@ -64,6 +64,10 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   // ALFRED-004 talk mode: Alfred reads his answers aloud, and a spoken message sends itself.
   const [speak, setSpeak] = useState(() => { try { return localStorage.getItem(SPEAK) === "1"; } catch { return false; } });
   const [memories, setMemories] = useState<AlfredMemory[] | null>(null);
+  const [limitsOpen, setLimitsOpen] = useState(false);
+  const [cap, setCap] = useState<number | null>(() => getMonthlyCap());
+  const [capDraft, setCapDraft] = useState("");
+  const [auto, setAuto] = useState(() => automaticAlfredOn());
   const heard = useRef("");
   const prefix = useRef("");
   const session = useRef<AlfredSession | null>(null);
@@ -223,8 +227,21 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
           : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} disabled={busy} onClick={() => void forget(m.id)}>Forget</button></li>)}</ul>}
       </div>}
-      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
-      <p className="meta alfred-cost">This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)}</p>
+      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      {limitsOpen && <div className="alfred-limits" role="group" aria-label="Alfred limits">
+        <p className="meta">BEYOND's estimate of this month: ${usd(monthSpent)}{cap ? ` of your $${cap.toFixed(2)} limit` : ", no limit set"}. At the limit Alfred stops until next month; everything else keeps working. For a hard ceiling, also set a spend limit in the Anthropic console.</p>
+        <form className="alfred-input__row" onSubmit={(e) => { e.preventDefault(); const v = Number(capDraft); if (Number.isFinite(v) && v > 0) { setMonthlyCap(v); setCap(getMonthlyCap()); } }}>
+          <label className="field">Monthly limit ($)<input className="input" type="number" inputMode="decimal" min={0.5} step={0.5} value={capDraft} onChange={(e) => setCapDraft(e.target.value)} /></label>
+          <button type="submit" className="btn-secondary" disabled={!(Number(capDraft) > 0)}>SET LIMIT</button>
+          {cap !== null && <button type="button" className="btn-secondary" onClick={() => { setMonthlyCap(null); setCap(null); setCapDraft(""); }}>NO LIMIT</button>}
+        </form>
+        <label style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 44 }}>
+          <input type="checkbox" checked={auto} onChange={(e) => { setAutomaticAlfred(e.target.checked); setAuto(e.target.checked); }} />
+          <span>Automatic Alfred: write TODAY's brief and the weekly review on his own</span>
+        </label>
+        <p className="meta">{auto ? "On. These run without you asking (Haiku, the cheap model)." : "Off. Alfred only speaks when you open him and ask."}</p>
+      </div>}
+      <p className="meta alfred-cost">This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)}{cap ? ` of $${cap.toFixed(2)}` : ""}</p>
     </>}
   </LogSheet>;
 }
