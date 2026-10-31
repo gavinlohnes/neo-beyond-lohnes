@@ -2,6 +2,7 @@ import type { ProposalContext } from "./contextActions";
 import type { ContextSource } from "./personalContext";
 import Anthropic from "@anthropic-ai/sdk";
 import { ALFRED_READ_TOOLS, ALFRED_TOOLS, runReadTool, toProposal, type AlfredProposal } from "./alfredActions";
+import { assertWithinCap, getMonthlyCap } from "./alfredSpend";
 
 /**
  * ALFRED-001 (owner ruling RULES-2026-10-31): one conversation with Alfred. Claude reads BEYOND's
@@ -90,6 +91,8 @@ export class AlfredSession {
     // ALFRED-004: read tools (search_records, get_days) are answered at once from the records and
     // Alfred continues; a few rounds at most. Proposals become cards; the last round's wait for the operator.
     for (let round = 0; round < 5; round++) {
+      // ALFRED-COST-001: no new answer once this month's limit is reached; an answer already under way may finish its rounds.
+      if (round === 0) assertWithinCap();
       await this.policy?.assertFresh();
       const response = await this.client.beta.messages.create({
         ...modelParams(depth),
@@ -132,6 +135,7 @@ const BRIEF_ASK = `Write Alfred's brief for the top of TODAY: what matters right
 
 /** ALFRED-003 #1: one short, cheap read of the records for TODAY. No tools; nothing is proposed or saved. */
 export async function writeAlfredBrief(apiKey: string, context: string, ask = BRIEF_ASK, maxTokens = 2000): Promise<{ text: string; costUsd: number }> {
+  assertWithinCap();
   const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
   const response = await client.beta.messages.create({
     model: ALFRED_MODELS.everyday,
@@ -155,6 +159,7 @@ function cost(u: Anthropic.Beta.BetaUsage, depth: AlfredDepth): number {
 
 /** A plain-words reason for a failed call, for the sheet. */
 export function describeAlfredError(e: unknown): string {
+  if (e instanceof Error && e.message === "SPEND_CAP_REACHED") return `Alfred has reached this month's limit${getMonthlyCap() ? ` of $${getMonthlyCap()!.toFixed(2)}` : ""}. Nothing was sent. Change it under Limits, or he's back next month. Everything else in BEYOND works.`;
   if (e instanceof Error && e.message === "CONTEXT_UNAVAILABLE") return "Your records could not be read. No message was sent. Try again; your words are kept.";
   if (e instanceof Error && e.message === "CONTEXT_CHANGED") return "Your context changed. Start again with the current records; nothing was saved.";
   if (e instanceof Anthropic.AuthenticationError) return "Your Claude key wasn't accepted. Check it in Alfred settings.";
