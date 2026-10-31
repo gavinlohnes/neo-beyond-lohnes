@@ -21,7 +21,12 @@ gap is between Garmin Connect and Health Connect, and nothing in BEYOND said so 
 4. BRIDGE-LOOK-001 (owner, 2026-10-31: "I don't like the android app" → how it looks): the helper's
    screen in BEYOND's look (black, one red SEND TO BEYOND, outlined others, saving files and the
    privacy note under MORE). `Look.kt`; dark Material theme. Same reads, sends and permissions.
-5. Excluded: background sync, new permissions, Internet, how Garmin sleep is filed into lived days.
+5. BRIDGE-LOOK-001 icon (owner: "Just a B … stylized to belong to beyond"): an original angular red
+   B on black, an adaptive icon with a monochrome layer for themed icons (`res/drawable`, `mipmap-anydpi-v26`).
+6. BRIDGE-CHECK-001 (Builder proposal inside the owner's "any other changes … top of the line"): the
+   screen says which kinds Health Connect lets it read (Sleep ✓ · Resting heart rate ✗ …, `Access.kt`),
+   with HEALTH CONNECT ACCESS and OPEN GARMIN CONNECT buttons; "Sent to BEYOND at 19:42".
+7. Excluded: background sync, new permissions, Internet, how Garmin sleep is filed into lived days.
 
 ## Leverage
 

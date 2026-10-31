@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private var windowDays = 7L
     private val client by lazy { HealthConnectClient.getOrCreate(this) }
     private lateinit var status: TextView
+    private lateinit var access: TextView // BRIDGE-CHECK-001
     private lateinit var read: Button
     private lateinit var history: Button
     private lateinit var save: Button
@@ -113,8 +114,12 @@ class MainActivity : ComponentActivity() {
             background = Look.panel(dp); setPadding(padding, padding, padding, padding)
             layoutParams = Look.spaced(dp, top = 12)
         }
+        // BRIDGE-CHECK-001: what Health Connect lets the helper read, and the two places to fix things.
+        access = text("", 14f, Look.TEXT_2).apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE; visibility = View.GONE }
         send = Look.button(this, "SEND TO BEYOND", primary = true, dp).apply { isEnabled = false; setOnClickListener { sendToBeyond() } }
         layout.addView(send, Look.spaced(dp, top = 16))
+        layout.addView(Look.button(this, "OPEN GARMIN CONNECT", primary = false, dp).apply { setOnClickListener { openGarminConnect() } }, Look.spaced(dp, top = 8))
+        layout.addView(Look.button(this, "HEALTH CONNECT ACCESS", primary = false, dp).apply { setOnClickListener { openHealthConnect() } }, Look.spaced(dp, top = 8))
         read = Look.button(this, "ALLOW ACCESS AND READ", primary = false, dp).apply {
             setOnClickListener {
                 if (HealthConnectClient.getSdkStatus(this@MainActivity) != HealthConnectClient.SDK_AVAILABLE) {
@@ -172,6 +177,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        refreshAccess()
         if (prepared != null && HealthConnectClient.getSdkStatus(this) == HealthConnectClient.SDK_AVAILABLE) lifecycleScope.launch {
             try { if (!client.permissionController.getGrantedPermissions().containsAll(permissions)) clear("Sleep access was revoked. No export is ready.") }
             catch (_: Exception) { clear("Sleep access could not be checked. Read again.") }
@@ -194,6 +200,31 @@ class MainActivity : ComponentActivity() {
                 else status.text = "Tap ALLOW ACCESS AND READ once to allow access. After that the helper reads when it opens."
             } catch (_: Exception) { /* leave the manual buttons; nothing was read */ }
         }
+    }
+    /** BRIDGE-CHECK-001: re-read on every return, so allowing access in Health Connect shows at once. */
+    private fun refreshAccess() {
+        if (HealthConnectClient.getSdkStatus(this) != HealthConnectClient.SDK_AVAILABLE) return
+        lifecycleScope.launch {
+            try {
+                val granted = client.permissionController.getGrantedPermissions()
+                access.text = accessLine(listOf(
+                    AccessItem("Sleep", granted.containsAll(permissions)),
+                    AccessItem("Steps", stepsPermission in granted),
+                    AccessItem("Heart rate", heartRatePermission in granted),
+                    AccessItem("Resting heart rate", restingPermission in granted),
+                    AccessItem("Calories", totalCaloriesPermission in granted),
+                ))
+                access.visibility = View.VISIBLE
+            } catch (_: Exception) { access.visibility = View.GONE }
+        }
+    }
+    private fun openGarminConnect() {
+        val launch = packageManager.getLaunchIntentForPackage(GARMIN_CONNECT_PACKAGE)
+        if (launch != null) startActivity(launch) else status.text = "Garmin Connect isn't installed on this phone."
+    }
+    private fun openHealthConnect() {
+        try { startActivity(Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")) }
+        catch (_: Exception) { status.text = "Open Android Settings → Health Connect → App permissions → BEYOND Health Bridge." }
     }
     private fun setWorking(value: Boolean) {
         working = value; read.isEnabled = !value; history.isEnabled = !value
@@ -243,7 +274,7 @@ class MainActivity : ComponentActivity() {
                 }, packageName)
                 if (target != null) {
                     startActivity(Intent(intent).setComponent(ComponentName(target.packageName, target.activityName)))
-                    status.text = "Sent to BEYOND."
+                    status.text = "Sent to BEYOND at ${java.time.LocalTime.now().withNano(0).withSecond(0)}."
                 } else {
                     startActivity(Intent.createChooser(intent, "Send to BEYOND"))
                     status.text = "Choose BEYOND in the share sheet."
