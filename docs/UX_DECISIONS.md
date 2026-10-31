@@ -2639,6 +2639,14 @@ simply show when they come round. Alfred's repeat rules are anchored on their du
 [Brief](agent/RELATIONSHIPS-001.md).
 
 
+## 2026-10-31 — ALFRED-COST-001: Alfred's monthly limit and automatic switch
+
+Owner concern: Alfred costing too much and being too big a part; "Build those 2". Alfred gets a
+monthly limit (no requests once BEYOND's estimate reaches it; plainly stated; everything else works)
+and an Automatic Alfred switch (off: no TODAY brief or auto weekly review; he speaks only when
+asked). The Anthropic console limit remains the hard ceiling. [Brief](agent/ALFRED-COST-001.md).
+
+
 ## 2026-10-31 — ROUTINES-001: my shift rhythm
 
 Owner: "Routines sound better to me! Let's do that"; approved the additive routines table and

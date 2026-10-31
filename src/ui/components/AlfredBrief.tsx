@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { buildAlfredContext } from "../../application/alfred/alfredContext";
 import { readAlfredKey } from "./AlfredSheet";
-import { addSpend } from "../../application/alfred/alfredSpend";
+import { addSpend, automaticAlfredOn, capReached } from "../../application/alfred/alfredSpend";
 import "./alfred.css";
 
 /**
@@ -39,8 +39,9 @@ export function briefIsDue(stored: Stored | null, sig: string, now: number): boo
 const hhmm = (iso: string) => { const d = new Date(iso); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 
 export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; refreshKey: string | number; onOpen: () => void }) {
-  const [brief, setBrief] = useState<Stored | null>(() => (readAlfredKey() ? readStored() : null));
-  const [hasKey, setHasKey] = useState(() => !!readAlfredKey());
+  // ALFRED-COST-001: with automatic Alfred off there is no brief at all, not an old one.
+  const [brief, setBrief] = useState<Stored | null>(() => (readAlfredKey() && automaticAlfredOn() ? readStored() : null));
+  const [hasKey, setHasKey] = useState(() => !!readAlfredKey() && automaticAlfredOn());
   const [reading, setReading] = useState(false);
   const [tick, setTick] = useState(0);
   const inFlight = useRef(false);
@@ -55,8 +56,9 @@ export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; r
   }, [active]);
 
   useEffect(() => {
-    const key = readAlfredKey();
+    const key = automaticAlfredOn() ? readAlfredKey() : null;
     setHasKey(!!key);
+    if (!key) setBrief(null);
     if (!active || !key || inFlight.current) return;
     inFlight.current = true;
     void (async () => {
@@ -65,7 +67,7 @@ export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; r
         const sig = briefSignature(context);
         const stored = readStored();
         if (mounted.current) setBrief(stored);
-        if (!briefIsDue(stored, sig, Date.now()) || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
+        if (!briefIsDue(stored, sig, Date.now()) || (typeof navigator !== "undefined" && navigator.onLine === false) || capReached()) return;
         if (mounted.current) setReading(true);
         const { writeAlfredBrief } = await import("../../application/alfred/alfredClient");
         const { text, costUsd } = await writeAlfredBrief(key, context);
