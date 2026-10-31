@@ -32,3 +32,6 @@
 .alfred-brief__who, .alfred-brief__talk { font-size: 11px; letter-spacing: 0.16em; color: var(--text-2); }
 .alfred-brief__text { line-height: 1.5; overflow-wrap: anywhere; }
 .alfred-brief__talk { justify-self: end; }
+/* ALFRED-004: what Alfred remembers, each with its own Forget. */
+.alfred-memory ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.alfred-memory li { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); overflow-wrap: anywhere; }

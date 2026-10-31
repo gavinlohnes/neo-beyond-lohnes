@@ -77,7 +77,8 @@ describe("ALFRED-001", () => {
     expect(system[1]!.text).toMatch(/^BEYOND RECORDS/);
     expect(system[1]!.cache_control).toEqual({ type: "ephemeral" });
     expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "capture_note",
-      "check_in", "work_started", "work_ended", "task_done", "task_new_date", "clean_day", "open_training"]);
+      "check_in", "work_started", "work_ended", "task_done", "task_new_date", "clean_day", "open_training",
+      "remember", "forget", "log_urge", "search_records", "get_days"]);
 
     // The next turn tells Alfred what happened to each card.
     next = () => reply([{ type: "text", text: "Noted." }], "end_turn");

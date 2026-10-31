@@ -12,6 +12,14 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## ALFRED-004 — Alfred remembers and reads the whole history (owner go 2026-10-31)
+
+Gavin, 2026-10-31: "I like all of the ideas… Make it so." Alfred keeps the facts the owner confirms
+(new additive table, schema v16, carried by backups) and forgets them on his word. He can search the
+whole history and read any period of lived days himself; those reads never write. He can speak his
+answers, a debrief becomes one card per record, and plans (flip, meals, groceries, date nights) stay
+suggestions until kept as reminders or notes. Brief: `docs/agent/ALFRED-004.md`.
+
 ## ALFRED-003 — everyday Alfred is cheap; his brief leads TODAY; he can do it (owner go 2026-10-31)
 
 Gavin, 2026-10-31: "go cheap + 1 and 2". Everyday Alfred runs on Claude Haiku 5.5; THINK HARDER sends

@@ -3,6 +3,7 @@ import { getFoodDiary } from "../foodDiaryQueries";
 import { getSavedMeals } from "../nutritionQueries";
 import { getUnresolvedObligations } from "../intentQueries";
 import { getAllCaptureItems } from "../queries";
+import { getMemories } from "./alfredMemory";
 import { getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "../queries";
 import { getWeekAhead } from "../weekAheadQueries";
 import { getMeasuredSnapshot } from "../measuredQueries";
@@ -19,6 +20,13 @@ import { sleepMinutes } from "../../domain/health/measuredSeries";
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const hm = (minutes: number) => `${Math.floor(minutes / 60)}h${String(Math.round(minutes % 60)).padStart(2, "0")}`;
+
+type DaySummary = Awaited<ReturnType<typeof getDaySummaries>>[number];
+/** One lived day as a line Alfred can cite (shared with ALFRED-004's get_days). */
+export function dayLine(s: DaySummary): string {
+  const sets = s.workouts.reduce((n, w) => n + (w.setsLogged ?? 0), 0);
+  return `- ${day(s.livedDayStart)}: ${s.work.declared}${s.work.declared !== s.work.scheduled ? ` (scheduled ${s.work.scheduled})` : ""}; sleep ${s.sleep.primaryMinutes !== undefined ? hm(s.sleep.primaryMinutes) : "-"}${s.sleep.napMinutes ? ` + nap ${hm(s.sleep.napMinutes)}` : ""}; protein ${s.proteinG !== undefined ? Math.round(s.proteinG) + " g" : "-"}; kcal ${s.kcal !== undefined ? Math.round(s.kcal) : "-"}; water ${s.waterOz !== undefined ? Math.round(s.waterOz) + " oz" : "-"}; check-in ${s.checkIn?.capacity ?? "-"}; workouts ${s.workouts.length ? `${s.workouts.length} (${sets} sets)` : "-"}; urges ${s.urges.length}; clean day ${s.cleanDay ? "yes" : "-"}.`;
+}
 
 async function safe<T>(read: () => Promise<T>): Promise<T | null> {
   try { return await read(); } catch { return null; }
@@ -58,10 +66,7 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
   if (summaries) {
     const recent = [...summaries].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).slice(0, 14);
     lines.push("LAST 14 LIVED DAYS (newest first; '-' = not logged):");
-    for (const s of recent) {
-      const sets = s.workouts.reduce((n, w) => n + (w.setsLogged ?? 0), 0);
-      lines.push(`- ${day(s.livedDayStart)}: ${s.work.declared}${s.work.declared !== s.work.scheduled ? ` (scheduled ${s.work.scheduled})` : ""}; sleep ${s.sleep.primaryMinutes !== undefined ? hm(s.sleep.primaryMinutes) : "-"}${s.sleep.napMinutes ? ` + nap ${hm(s.sleep.napMinutes)}` : ""}; protein ${s.proteinG !== undefined ? Math.round(s.proteinG) + " g" : "-"}; kcal ${s.kcal !== undefined ? Math.round(s.kcal) : "-"}; water ${s.waterOz !== undefined ? Math.round(s.waterOz) + " oz" : "-"}; check-in ${s.checkIn?.capacity ?? "-"}; workouts ${s.workouts.length ? `${s.workouts.length} (${sets} sets)` : "-"}; urges ${s.urges.length}; clean day ${s.cleanDay ? "yes" : "-"}.`);
-    }
+    for (const s of recent) lines.push(dayLine(s));
   }
 
   if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}`).join("; ") : "none"}.`);
@@ -69,6 +74,8 @@ export async function buildAlfredContext(now = new Date()): Promise<string> {
     const open = notes.filter((n) => n.status === "OPEN").slice(-10);
     lines.push(`OPEN NOTES: ${open.length ? open.map((n) => `"${n.text}" (${day(n.capturedAt)})`).join("; ") : "none"}.`);
   }
+  const memories = await safe(getMemories);
+  if (memories) lines.push(`WHAT HE ASKED YOU TO REMEMBER ([id] topic: fact): ${memories.length ? memories.map((m) => `[${m.id}] ${m.topic}: ${m.text}`).join("; ") : "nothing yet"}.`);
   if (meals) lines.push(`SAVED MEALS (id: name, per serving): ${meals.map((m) => `${m.id}: ${m.name} — ${m.calories} kcal, ${m.proteinG} g protein`).join("; ")}.`);
   return lines.join("\n");
 }

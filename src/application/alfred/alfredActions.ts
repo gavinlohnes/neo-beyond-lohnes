@@ -2,7 +2,11 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn } from "../commands";
 import { logManualMeal, logMeal } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
-import { logCleanDay } from "../quitCommands";
+import { logCleanDay, logUrge } from "../quitCommands";
+import { forgetFact, rememberFact } from "./alfredMemory";
+import { getDays, searchRecords } from "./alfredSearch";
+import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
+import { URGE_TRIGGERS, type UrgeTrigger } from "../../domain/common/types";
 
 /**
  * ALFRED-001: what Alfred may propose. Each tool call becomes a card the operator confirms; only the
@@ -22,7 +26,11 @@ export type AlfredProposal =
   | { kind: "task_done"; task_id: string; title: string }
   | { kind: "task_new_date"; task_id: string; title: string; due_date: string }
   | { kind: "clean_day" }
-  | { kind: "open_training" };
+  | { kind: "open_training" }
+  // ALFRED-004: memory and urges.
+  | { kind: "remember"; text: string; topic: MemoryTopic }
+  | { kind: "forget"; memory_id: string; text: string }
+  | { kind: "log_urge"; trigger: UrgeTrigger };
 type Scale = 1 | 2 | 3 | 4 | 5;
 type Zero = 0 | Scale;
 
@@ -59,7 +67,33 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
     input_schema: { type: "object", additionalProperties: false, required: ["task_id", "title", "due_date"], properties: { task_id: s("id from OPEN TASKS"), title: s("the task's title"), due_date: s("YYYY-MM-DD") } } },
   { name: "clean_day", description: "Propose logging today as a clean day in his QUIT TRACKER, only when he says today was clean.", input_schema: none },
   { name: "open_training", description: "Offer to open TRAIN so he can start or resume today's workout. BEYOND picks the session there.", input_schema: none },
+  { name: "remember", description: "Propose keeping a fact he wants remembered: people (birthdays, sizes, gift ideas), money (a bill's amount and due day), health, home, work. One fact per call, in his words.",
+    input_schema: { type: "object", additionalProperties: false, required: ["text", "topic"], properties: { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } } } },
+  { name: "forget", description: "Propose forgetting one remembered fact, by its id, when he says it's wrong or no longer true.",
+    input_schema: { type: "object", additionalProperties: false, required: ["memory_id", "text"], properties: { memory_id: s("id from WHAT HE ASKED YOU TO REMEMBER"), text: s("the fact") } } },
+  { name: "log_urge", description: "Propose logging an urge (his quit tracker) he says he had, with what set it off.",
+    input_schema: { type: "object", additionalProperties: false, required: ["trigger"], properties: { trigger: { type: "string", enum: [...URGE_TRIGGERS], description: "what set it off" } } } },
 ];
+
+/**
+ * ALFRED-004: read tools. Alfred calls these himself and BEYOND answers at once from the records;
+ * they never write, so they need no card.
+ */
+export const ALFRED_READ_TOOLS: Anthropic.Beta.BetaTool[] = [
+  { name: "search_records", description: "Search his whole BEYOND history (events, meals, sleep, workouts and sets, tasks, notes, remembered facts) for words, newest first. Use for \"when did I last…\" and anything older than the records above.",
+    input_schema: { type: "object", additionalProperties: false, required: ["query"], properties: { query: s("one or two words that would appear in the record, e.g. \"CPAP\", \"bench\", \"pizza\"") } } },
+  { name: "get_days", description: "Read his lived days between two dates (YYYY-MM-DD, inclusive): work, sleep, food, water, check-in, workouts, urges, clean days. Use for weekly reviews and to compare periods (\"did this work for me?\"); compare numbers only as they appear.",
+    input_schema: { type: "object", additionalProperties: false, required: ["from", "to"], properties: { from: s("YYYY-MM-DD"), to: s("YYYY-MM-DD") } } },
+];
+
+/** Runs a read tool; null when `name` isn't one. */
+export async function runReadTool(name: string, input: unknown): Promise<string | null> {
+  const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  if (name === "search_records") return typeof i.query === "string" ? searchRecords(i.query) : "Give a word to search for.";
+  if (name === "get_days") { const from = date(i.from), to = date(i.to); return from && to ? getDays(from, to) : "Give from and to as YYYY-MM-DD."; }
+  return null;
+}
 
 export function toProposal(name: string, input: unknown): AlfredProposal | null {
   if (!input || typeof input !== "object") return null;
@@ -82,6 +116,9 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "work_started": case "work_ended": case "clean_day": case "open_training": return { kind: name } as AlfredProposal;
     case "task_done": { const id = str(i.task_id), t = str(i.title); return id && t ? { kind: "task_done", task_id: id, title: t } : null; }
     case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && /^\d{4}-\d{2}-\d{2}$/.test(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
+    case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
+    case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
+    case "log_urge": { const trigger = URGE_TRIGGERS.find((u) => u === i.trigger); return trigger ? { kind: "log_urge", trigger } : null; }
     default: return null;
   }
 }
@@ -102,6 +139,9 @@ export function describeProposal(p: AlfredProposal): string {
     case "task_new_date": return `New date: ${p.title} · ${p.due_date}`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
+    case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
+    case "forget": return `Forget: ${p.text}`;
+    case "log_urge": return `Log an urge · ${p.trigger.toLowerCase().replace("_", " ")}`;
   }
 }
 
@@ -114,6 +154,7 @@ export function describeConfirmError(e: unknown): string {
   if (m.startsWith("NOT_AN_ACTIVE_WORK_DAY")) return "Today isn't set as a work day, so there's no shift to mark. Nothing changed.";
   if (m.startsWith("QUIT_HABIT_NOT_SET")) return "Set up the quit tracker first (MORE → Settings). Nothing changed.";
   if (m.startsWith("OBLIGATION_ALREADY_RESOLVED")) return "That task is already closed. Nothing changed.";
+  if (m.startsWith("MEMORY_NOT_FOUND")) return "That fact is already gone. Nothing changed.";
   if (m.includes("NOT_FOUND")) return "BEYOND couldn't find that task. Nothing changed.";
   return "That didn't save. Nothing changed. Try again.";
 }
@@ -124,6 +165,8 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "capture_note") { await captureItem(p.text); return {}; }
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
+  if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
+  if (p.kind === "forget") { await forgetFact(p.memory_id); return {}; }
   if (p.kind === "add_reminder") {
     await createObligation({
       title: p.title,
@@ -142,6 +185,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
     case "work_started": await markWorkStarted(day.id); break;
     case "work_ended": await markWorkEnded(day.id); break;
     case "clean_day": await logCleanDay(day.id); break;
+    case "log_urge": await logUrge(day.id, p.trigger); break;
     case "log_meal":
       if (p.saved_meal_id) {
         try { await logMeal(day.id, p.saved_meal_id, p.servings ?? 1); break; } catch { /* unknown id: log as given */ }

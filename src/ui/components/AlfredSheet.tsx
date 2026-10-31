@@ -5,6 +5,8 @@ import { buildAlfredContext } from "../../application/alfred/alfredContext";
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, confirmProposal, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
+import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
+import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./alfred.css";
 
@@ -17,7 +19,17 @@ const KEY = "beyond.alfredKey";
 export function readAlfredKey(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
 function writeAlfredKey(value: string | null) { try { if (value) localStorage.setItem(KEY, value); else localStorage.removeItem(KEY); } catch { /* not kept */ } }
 
-const STARTERS = ["How am I doing?", "What am I forgetting?", "What should I eat before my shift?"];
+// ALFRED-004: the starters are the ideas the owner asked for; each is one question Alfred already knows how to answer.
+const STARTERS: { label: string; ask?: string; fill?: string }[] = [
+  { label: "How am I doing?" },
+  { label: "What am I forgetting?" },
+  { label: "Weekly review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
+  { label: "Plan my flip", ask: "Plan my next flip between nights and days from my schedule: when to sleep, when to stop caffeine, when to eat and when to get light. Offer reminders for the parts I want." },
+  { label: "Meal plan + grocery list", ask: "Plan my meals for the next 3 days around my shifts from my saved meals and protein target (pre-shift, mid-shift, after I wake), then a grocery list I can save as a note." },
+  { label: "When did I last…?", fill: "When did I last " },
+];
+const SPEAK = "beyond.alfredSpeak";
+const plain = (text: string) => text.replace(/\*\*/g, "").replace(/^#+\s*/gm, "").replace(/^\s*[-*•]\s+/gm, "");
 type Recognition = { lang: string; interimResults: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
 function speechRecognition(): (new () => Recognition) | null {
   const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
@@ -33,6 +45,11 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boo
   const [error, setError] = useState<string | null>(null);
   const [spent, setSpent] = useState(0);
   const [listening, setListening] = useState(false);
+  // ALFRED-004 talk mode: Alfred reads his answers aloud, and a spoken message sends itself.
+  const [speak, setSpeak] = useState(() => { try { return localStorage.getItem(SPEAK) === "1"; } catch { return false; } });
+  const [memories, setMemories] = useState<AlfredMemory[] | null>(null);
+  const heard = useRef("");
+  const prefix = useRef("");
   const session = useRef<AlfredSession | null>(null);
   const recognition = useRef<Recognition | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -52,6 +69,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boo
       const reply = await session.current.send(q, decisions, depth);
       setSpent((s) => s + reply.costUsd);
       setTurns((all) => [...all, { role: "alfred", text: reply.text, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
+      if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
       setError((await loadClient()).describeAlfredError(e));
       setTurns((all) => all.slice(0, -1)); setText(q);
@@ -64,20 +82,29 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boo
     const acknowledge = captureCommitFeedback();
     try {
       const result = save ? await confirmProposal(card.proposal) : {};
-      if (save) { acknowledge("LIGHT"); onSaved(); }
+      if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
       setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
     } catch (e) { setError(describeConfirmError(e)); }
   }
 
-  function talk() {
+  function talk(lead = "") {
     const Ctor = speechRecognition();
     if (!Ctor) { setError("Voice isn't available in this browser. Type instead."); return; }
     if (listening) { recognition.current?.stop(); return; }
+    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+    prefix.current = lead; heard.current = "";
     const r = new Ctor(); r.lang = "en-US"; r.interimResults = true;
-    r.onresult = (e) => setText(Array.from(e.results).map((res) => res[0]!.transcript).join(" "));
-    r.onend = () => setListening(false); r.onerror = () => setListening(false);
+    r.onresult = (e) => { heard.current = Array.from(e.results).map((res) => res[0]!.transcript).join(" "); setText(lead + heard.current); };
+    r.onend = () => { setListening(false); if ((speak || lead) && heard.current.trim()) void ask(prefix.current + heard.current); };
+    r.onerror = () => setListening(false);
     recognition.current = r; setListening(true); r.start();
+  }
+
+  function toggleSpeak() {
+    const next = !speak; setSpeak(next);
+    try { localStorage.setItem(SPEAK, next ? "1" : "0"); } catch { /* not kept */ }
+    if (!next && typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
   }
 
   return <LogSheet open={open} title="ALFRED" onClose={onClose} canClose={() => !busy}>
@@ -90,10 +117,11 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boo
       <div className="alfred-log" aria-live="polite">
         {turns.length === 0 && <div className="alfred-starters">
           <p className="meta">Say or type anything: what you ate, how you slept, something to remember. Or ask.</p>
-          {STARTERS.map((q) => <button type="button" key={q} className="btn-secondary" disabled={busy} onClick={() => void ask(q)}>{q}</button>)}
+          <button type="button" className="btn-primary" disabled={busy} onClick={() => talk("Shift debrief: ")}>DEBRIEF MY SHIFT</button>
+          {STARTERS.map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void ask(q.ask ?? q.label))}>{q.label}</button>)}
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
-          <p className="alfred-turn__who">{t.role === "user" ? "YOU" : "ALFRED"}</p>
+          <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : "ALFRED"}</p>
           {t.text && <AlfredText text={t.text} />}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
@@ -110,13 +138,17 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain }: { open: boo
       <form className="alfred-input" onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
         <textarea className="input" rows={2} aria-label="Message Alfred" placeholder="Ate a McGriddle, remind me to call CPAP after I wake…" value={text} onChange={(e) => setText(e.target.value)} />
         <div className="alfred-input__row">
-          <button type="button" className="btn-secondary" aria-pressed={listening} onClick={talk}>{listening ? "STOP" : "TALK"}</button>
+          <button type="button" className="btn-secondary" aria-pressed={listening} onClick={() => talk()}>{listening ? "STOP" : "TALK"}</button>
           {/* ALFRED-003: everyday answers are quick and cheap; this one question goes to the deeper model. */}
           <button type="button" className="btn-secondary" disabled={busy || !text.trim()} onClick={() => void ask(text, "deep")}>THINK HARDER</button>
           <button type="submit" className="btn-primary" disabled={busy || !text.trim()}>SEND</button>
         </div>
       </form>
-      <p className="meta alfred-foot">This conversation ≈ ${spent < 0.01 && spent > 0 ? spent.toFixed(3) : spent.toFixed(2)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      {memories && <div className="alfred-memory" role="group" aria-label="What Alfred remembers">
+        {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
+          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} onClick={() => void forgetFact(m.id).then(getMemories).then(setMemories)}>Forget</button></li>)}</ul>}
+      </div>}
+      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}This conversation ≈ ${spent < 0.01 && spent > 0 ? spent.toFixed(3) : spent.toFixed(2)} · <button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
     </>}
   </LogSheet>;
 }

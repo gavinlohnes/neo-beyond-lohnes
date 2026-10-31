@@ -1,3 +1,12 @@
+# ALFRED-004 — Alfred remembers, reads the whole history, talks back, plans
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("I like all of the ideas… Make it so"). Claude
+  Code; Protected within the owner's go (additive schema v16). Brief: `docs/agent/ALFRED-004.md`.
+  Branch `ccr-0be4f40f-16m0ja`, with ALFRED-003 in PR #349.
+- **Built:** memory with Forget; search_records and get_days read tools; Speak answers and hands-free
+  send; DEBRIEF MY SHIFT; weekly review, flip, meal plan and grocery starters; log-urge card.
+- **Next:** ideas 9–11 (month on one page, sleep debt, "Ask about this"), then 12–13 in the Bridge.
+
 # ALFRED-003 — cheap everyday Alfred, his brief on TODAY, Alfred can do it
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("go cheap + 1 and 2"). Claude Code; Protected
