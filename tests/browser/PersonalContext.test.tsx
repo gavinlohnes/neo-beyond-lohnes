@@ -1,3 +1,4 @@
+import { PersonalUnderstanding } from "../../src/ui/screens/review/PersonalUnderstanding";
 import { App } from "../../src/app/App";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
@@ -148,4 +149,31 @@ it("opens the exact original memory from an answer for correction through the ca
   const memory = screen.getByRole("region", { name: "What BEYOND should remember", exact: true });
   await expect.element(memory.getByRole("button", { name: "CORRECT MEMORY", exact: true })).toBeVisible();
   expect((document.activeElement as HTMLElement).dataset.memoryId).toBe("quiet");
+});
+
+it("retains a context draft across collapse and inactive/active Review refreshes", async () => {
+  await startDay(); const screen = await render(<PersonalUnderstanding active />);
+  await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "My context", exact: true }).click();
+  await screen.getByRole("button", { name: "ADD MEMORY", exact: true }).click();
+  await screen.getByRole("textbox", { name: "What should BEYOND remember?" }).fill("A thought I have not confirmed yet.");
+  await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await expect.element(screen.getByRole("textbox", { name: "What should BEYOND remember?" })).toHaveValue("A thought I have not confirmed yet.");
+  await screen.rerender(<PersonalUnderstanding active={false} />);
+  await screen.rerender(<PersonalUnderstanding active />);
+  await expect.element(screen.getByRole("textbox", { name: "What should BEYOND remember?" })).toHaveValue("A thought I have not confirmed yet.");
+  expect(await getMemoryFacts()).toEqual([]);
+  expect(requests).toHaveLength(0);
+});
+
+it("keeps an offline planning message without sending or blocking local context inspection", async () => {
+  const day = await startDay(); await fact(day.id);
+  vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+  const screen = await show(); await send(screen, "Help me plan my days off");
+  await expect.element(screen.getByRole("alert")).toHaveTextContent("Alfred needs a connection");
+  await expect.element(screen.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("Help me plan my days off");
+  await screen.getByText("CONTEXT & SOURCES", { exact: true }).click();
+  await expect.element(screen.getByText("Keep my first morning quiet.", { exact: true })).toBeVisible();
+  expect(requests).toHaveLength(0);
 });

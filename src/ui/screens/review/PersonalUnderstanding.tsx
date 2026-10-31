@@ -51,13 +51,6 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: P
       {error && <div><p role="alert">{error} Your knowledge is unavailable, not empty. No records were changed.</p><button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY PERSONAL UNDERSTANDING</button></div>}
       {data && !reading && !error && <>
         <p className="meta">Read on {date(data.readAt)} · on this device · nothing here changes your plan</p>
-        <div hidden={view !== "My context"}>
-          <h2 className="tool-label">WHAT MATTERS TO ME</h2>
-          <p>Keep your direction and constraints in your own words. Existing Missions remain in Choices. No need to record everything.</p>
-          <MemoryPanel active={active && view === "My context"} scope="PERSONAL" />
-          <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me plan my next days off around what matters to me. Use my recorded schedule and commitments, say what is unknown, and offer a draft for me to choose from.")}>PLAN MY NEXT DAYS OFF</button>
-          <p className="meta">Planning with Alfred needs a connection. You choose whether to include personal context before sending.</p>
-        </div>
         {view === "Choices" && <section aria-label="Your recorded choices">
           <h2 className="tool-label">WHAT MATTERS TO YOU</h2>
           <p className="meta">Active Missions you recorded. Their order is not a priority ranking.</p>
@@ -125,6 +118,13 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: P
         </section>}
       </>}
     </div>}
+        <div className="understanding-body" hidden={!open || view !== "My context"}>
+          <h2 className="tool-label">WHAT MATTERS TO ME</h2>
+          <p>Keep your direction and constraints in your own words. Existing Missions remain in Choices. No need to record everything.</p>
+          <MemoryPanel active={active && open && view === "My context"} scope="PERSONAL" />
+          <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me plan my next days off around what matters to me. Use my recorded schedule and commitments, say what is unknown, and offer a draft for me to choose from.")}>PLAN MY NEXT DAYS OFF</button>
+          <p className="meta">Planning with Alfred needs a connection. You choose whether to include personal context before sending.</p>
+        </div>
   </details></section>;
 }
 

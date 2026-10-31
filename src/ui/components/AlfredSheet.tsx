@@ -77,6 +77,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   async function ask(question: string, depth: AlfredDepth = "everyday") {
     const q = question.trim();
     if (!q || busy || working.current || !key) return;
+    if (!navigator.onLine) { setText(q); setError("Alfred needs a connection. Your local records and draft are still here."); return; }
     working.current = true;
     setBusy(true); setError(null); setText("");
     const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state]));

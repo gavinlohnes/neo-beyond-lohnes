@@ -62,6 +62,7 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
       <h3>Source record</h3>{reading && <p role="status">Reading current source…</p>}
       {current && <><p>{current.text}</p><p className="meta">{current.kind} · {sourceReadAt ? `read ${date(sourceReadAt)} · ` : ""}{current.revision !== selected.revision ? "Changed since this answer. Current record shown." : "Current record matches the supplied revision."}</p>
         {onOpenRecord && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenRecord(current)}>OPEN ORIGINAL RECORD</button>}</>}
+      {!current && !reading && onOpenRecord && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenRecord(selected)}>OPEN ORIGINAL RECORD</button>}
       <button type="button" className="btn-secondary" disabled={reading} onClick={() => onSelected({ ...selected })}>RELOAD SOURCE</button>
       <button type="button" className="btn-secondary" onClick={() => onSelected(null)}>CLOSE SOURCE</button>
     </section>}
