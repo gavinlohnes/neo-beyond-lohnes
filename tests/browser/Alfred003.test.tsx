@@ -6,6 +6,7 @@ import { App } from "../../src/app/App";
 import { setWorkContext, startDay } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
+import { addSpend, getMonthSpend } from "../../src/application/alfred/alfredSpend";
 import { AlfredBrief, briefIsDue, briefSignature } from "../../src/ui/components/AlfredBrief";
 import { db } from "../../src/persistence/db";
 
@@ -115,6 +116,7 @@ describe("ALFRED-003 brief on TODAY", () => {
     const brief = screen.getByRole("region", { name: "Alfred's brief" });
     await expect.element(brief).toHaveTextContent("Sleep first: the shift starts 18:00");
     expect(briefs()[0]!.model).toBe("claude-haiku-5-5");
+    expect(getMonthSpend()).toBeGreaterThan(0);
     expect(JSON.parse(localStorage.getItem("beyond.alfredBrief")!).text).toMatch(/^Sleep first/);
     // TODAY fades in; read contrast once the fade has finished (CI read it mid-fade).
     for (const animation of document.getAnimations()) animation.finish();
@@ -155,4 +157,12 @@ describe("ALFRED-003 brief on TODAY", () => {
     expect(briefs()).toHaveLength(1);
   });
 
+
+  it("ALFRED-005: counts the month's spend on this phone and starts again each month", () => {
+    const oct = new Date(2026, 9, 31, 6, 0);
+    expect(getMonthSpend(oct)).toBe(0);
+    addSpend(0.002, oct);
+    expect(addSpend(0.0005, oct)).toBeCloseTo(0.0025);
+    expect(getMonthSpend(new Date(2026, 10, 1, 6, 0))).toBe(0);
+  });
 });

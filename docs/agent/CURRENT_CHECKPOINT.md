@@ -1,3 +1,12 @@
+# Follow-ups after #350 — test harness fix, roadmap, Alfred's month spend
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("Just keep building and working through the
+  list"). Claude Code; Routine. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** awaited `unmount()` in Boot001/Alfred003 (later renders in Boot001 were blank, so two
+  tests passed vacuously); the roadmap records tonight's Alfred work; Alfred's sheet shows this
+  month's estimated spend (ALFRED-005).
+- **Next:** CI and Gavin's merge; then his pick from the roadmap's next candidates.
+
 # BOOT-ONCE-001 — the launch brief shows once per lived day
 
 - **Authority / Builder / lane:** Gavin, 2026-10-31 ("having it pop up every time I open it or

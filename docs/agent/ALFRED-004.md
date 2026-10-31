@@ -54,3 +54,9 @@ runs in the loop and its result reaches Alfred; search and get_days read stored 
 starters and Speak answers. `tests/browser/Month001.test.tsx`: sleep owed, a day's numbers, axe, and
 "ask about this" opening Alfred with the question. `tests/integration/bridgePlan.test.ts` and the
 Bridge's `MomentsTest.kt` (plan parsing, only BEYOND's address opens). Schema migration tests cover v16.
+
+## ALFRED-005 — this month's spend (follow-up, 2026-10-31)
+
+Gavin asked about cost earlier the same night. The sheet's footer now reads "This conversation ≈
+$0.003 · this month ≈ $0.21": answers and TODAY's briefs, at list prices, counted on this phone
+(`application/alfred/alfredSpend.ts`). The Anthropic console has the real bill.

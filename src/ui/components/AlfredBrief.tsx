@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { buildAlfredContext } from "../../application/alfred/alfredContext";
 import { readAlfredKey } from "./AlfredSheet";
+import { addSpend } from "../../application/alfred/alfredSpend";
 import "./alfred.css";
 
 /**
@@ -67,7 +68,8 @@ export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; r
         if (!briefIsDue(stored, sig, Date.now()) || (typeof navigator !== "undefined" && navigator.onLine === false)) return;
         if (mounted.current) setReading(true);
         const { writeAlfredBrief } = await import("../../application/alfred/alfredClient");
-        const { text } = await writeAlfredBrief(key, context);
+        const { text, costUsd } = await writeAlfredBrief(key, context);
+        addSpend(costUsd);
         if (!text) return;
         const next = { text, at: new Date().toISOString(), sig };
         writeStored(next);
