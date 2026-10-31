@@ -1,3 +1,13 @@
+# SYNC-002 — SYNC GARMIN is one tap
+
+- **Authority / Builder / lane:** Gavin, 2026-10-31 ("Go A"). Claude Code; Protected within the
+  owner's go. Brief: `docs/agent/SYNC-002.md`. Branch `ccr-0be4f40f-16m0ja`.
+- **Built:** SYNC GARMIN's tap lets the Bridge's files import straight away; TODAY says what came or
+  that Garmin is behind; Health Bridge 0.8.0 sends straight to BEYOND.
+- **Verified:** `npm run verify` green (3,177 passed). Kotlin builds and tests in Health Bridge CI.
+- **Next:** CI (PR Verification + Health Bridge), Gavin installs Bridge 0.8.0 and merges. Open:
+  Garmin Connect → Health Connect gaps on the owner's phone (settings check).
+
 # CITY-FIX-001 — TODAY's city stands under the timeline
 
 - **Authority / Builder / lane:** Gavin, 2026-10-30, from his phone: "The clock and building and

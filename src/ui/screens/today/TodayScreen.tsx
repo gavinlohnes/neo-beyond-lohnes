@@ -2681,6 +2681,8 @@ export function TodayScreen({
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
             <ActiveExperimentLine now={now} />
           </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
+    {/* SYNC-002: the shell's one line here (what SYNC GARMIN brought back), right under the hero. */}
+    {banners && <div className="today-banners">{banners}</div>}
     {/* Keyed so a state change reorders the two sections without remounting them (focus and drafts survive). */}
     {(nextIsReal ? [["next", nextSection], ["log", logSection]] as const : [["log", logSection], ["next", nextSection]] as const).map(([key, node]) => <Fragment key={key}>{node}</Fragment>)}
     <section className="today-numbers" aria-label="Today's numbers">

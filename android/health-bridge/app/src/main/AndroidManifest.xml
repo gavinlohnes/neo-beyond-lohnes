@@ -6,7 +6,11 @@
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
-    <queries><package android:name="com.google.android.apps.healthdata" /></queries>
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+        <!-- SYNC-002: find the installed BEYOND that takes shared JSON files, to send straight to it. -->
+        <intent><action android:name="android.intent.action.SEND_MULTIPLE" /><data android:mimeType="application/json" /></intent>
+    </queries>
     <application android:allowBackup="false" android:label="BEYOND Health Bridge" android:supportsRtl="true" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:usesCleartextTraffic="false">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>

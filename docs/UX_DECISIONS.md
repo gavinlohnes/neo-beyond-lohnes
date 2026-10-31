@@ -12,6 +12,22 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## SYNC-002 — SYNC GARMIN is one tap (owner go 2026-10-31)
+
+Gavin, 2026-10-31: "Is there a way to have it automatically update on it own?" Offered A (one-tap
+sync) and B (a native background app); he chose **A**: "Go A. That seems easier. I'll just update it
+as needed." Amends SYNC-001's preview-before-write for this one path. Brief: [`agent/SYNC-002.md`](agent/SYNC-002.md).
+
+- **SYNC GARMIN remembers the tap** (this phone, 15 minutes). Files the Health Bridge sends back in
+  that window import straight away through the same import commands; any other share still opens
+  the preview, so nothing arrives unasked and unreviewed.
+- **The Bridge sends straight to BEYOND** when exactly one installed BEYOND can take the files (Health
+  Bridge 0.8.0); otherwise Android's share sheet opens as before.
+- **TODAY says what came** under the hero: "Garmin updated · sleep 7:15 · 8,240 steps · resting 58"
+  and the newest time, or "Garmin hasn't sent anything new" with the newest time and "Sync your watch
+  in Garmin Connect" when Garmin itself is behind (over 12 hours). Your own entries still win.
+- Still excluded: background sync, new permissions, Internet access for the Bridge.
+
 ## BOOT-BRIEF-001 — the launch screen is a readable startup brief (owner choice 2026-10-30)
 
 Gavin, 2026-10-30: "this splash screen that pops up goes too quickly I can't read it. What are

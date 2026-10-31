@@ -11,7 +11,9 @@ worker, health write permission, analytics or third-party exporter.
 SYNC-001 (0.7.0): once access is allowed, the helper reads its 7-day window as soon as it opens and
 says how current Health Connect's Garmin sleep and steps are (with a hint to sync Garmin Connect when
 they're behind). BEYOND's **SYNC GARMIN** link opens the helper through `beyond-bridge://sync`; it
-reads and opens the share sheet, and BEYOND still previews before anything is saved. Still no
+reads and sends. SYNC-002 (0.8.0): it sends straight to the one installed BEYOND (the share sheet
+opens only when there isn't exactly one), and because BEYOND remembers its own SYNC GARMIN tap it
+imports those files straight away; any other share still opens BEYOND's preview. Still no
 background sync.
 
 The packaged manifest allows the official Health Connect SDK's bound

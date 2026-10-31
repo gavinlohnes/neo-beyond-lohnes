@@ -34,12 +34,15 @@ const clock = (minutes: number) => `${Math.floor(minutes / 60)}:${String(Math.ro
 export function formatMeasured(metric: MeasuredMetric, value: number): string {
   return metric === "steps" ? count(value) : metric === "resting" ? `${value} bpm` : metric === "calories" ? `${count(value)} kcal` : hoursMinutes(value);
 }
+import { markGarminSyncRequested } from "../../healthSyncRequest";
+
 /** SYNC-001: opens BEYOND Health Bridge (beyond-bridge://sync), which reads Health Connect and sends to BEYOND. */
 export const HELPER_SYNC_URL = "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end";
 /** The helper exists only on Android; elsewhere the link would go nowhere, so it isn't shown. */
 export function SyncGarminLink() {
   if (typeof navigator === "undefined" || !/Android/i.test(navigator.userAgent)) return null;
-  return <a className="btn-secondary measured-sync" href={HELPER_SYNC_URL}>SYNC GARMIN</a>;
+  // SYNC-002: remember the tap, so what the helper sends back imports straight away.
+  return <a className="btn-secondary measured-sync" href={HELPER_SYNC_URL} onClick={() => markGarminSyncRequested()}>SYNC GARMIN</a>;
 }
 
 /** "Garmin as of 14:20" today, otherwise with the date. */

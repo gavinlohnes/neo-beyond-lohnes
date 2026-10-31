@@ -1,6 +1,7 @@
 package app.beyond.healthbridge
 
 import android.content.ClipData
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.content.FileProvider
@@ -191,8 +192,9 @@ class MainActivity : ComponentActivity() {
     /** Shared copies live only in the helper's private cache and are removed on the next launch or send. */
     private fun clearShared() { shareDir().listFiles()?.forEach { it.delete() } }
     /**
-     * GARMIN-002 SEND TO BEYOND: hands the prepared files to Android's share sheet. Choosing the installed
-     * BEYOND app opens its import preview; nothing is imported until it is confirmed there.
+     * GARMIN-002 SEND TO BEYOND: hands the prepared files to BEYOND. SYNC-002 (owner go 2026-10-31): when
+     * exactly one installed BEYOND can take them, they go straight to it, and BEYOND imports them right
+     * after its own SYNC GARMIN tap; otherwise Android's share sheet opens as before.
      */
     private fun sendToBeyond() {
         val sleep = prepared; val activity = preparedActivity
@@ -219,8 +221,16 @@ class MainActivity : ComponentActivity() {
                     clipData = ClipData.newRawUri(null, uris.first()).apply { uris.drop(1).forEach { addItem(ClipData.Item(it)) } }
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                startActivity(Intent.createChooser(intent, "Send to BEYOND"))
-                status.text = "Choose BEYOND in the share sheet. BEYOND shows a preview; nothing is imported until you confirm there."
+                val target = pickBeyondTarget(packageManager.queryIntentActivities(intent, 0).map {
+                    ShareCandidate(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name)
+                }, packageName)
+                if (target != null) {
+                    startActivity(Intent(intent).setComponent(ComponentName(target.packageName, target.activityName)))
+                    status.text = "Sent to BEYOND."
+                } else {
+                    startActivity(Intent.createChooser(intent, "Send to BEYOND"))
+                    status.text = "Choose BEYOND in the share sheet."
+                }
             } catch (_: Exception) { status.text = "Could not open the share sheet. Save the files instead, then import them in BEYOND." }
             finally { setWorking(false) }
         }
