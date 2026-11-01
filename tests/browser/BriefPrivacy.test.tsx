@@ -10,7 +10,7 @@ const STORE = "beyond.alfredBrief";
 beforeEach(() => { localStorage.clear(); localStorage.setItem("beyond.alfredKey", "sk-ant-synthetic"); vi.mocked(writeAlfredBrief).mockReset(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); localStorage.clear(); });
 
-it.each(["retire", "correct"] as const)("hides a %s cached fact offline without bypassing the cost gate", async (action) => {
+it.each([["retire", "beyond:memory-changed"], ["correct", "beyond:memory-changed"], ["retire", "focus"]] as const)("hides a %s cached fact offline after %s without bypassing the cost gate", async (action, event) => {
   const m = await rememberFact("Private old wording", "OTHER");
   localStorage.setItem(STORE, JSON.stringify({ text: "Private old wording", at: new Date().toISOString(), sig: briefSignature(await buildAlfredContext()) }));
   const screen = await render(<AlfredBrief active refreshKey={0} onOpen={() => {}} />);
@@ -18,7 +18,7 @@ it.each(["retire", "correct"] as const)("hides a %s cached fact offline without 
   vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
   if (action === "retire") await stopUsingMemory(m.reference!);
   else await recordMemory({ factId: m.id, expectedPreviousId: m.reference!.revision, action: "CORRECTED", statement: "New wording" });
-  window.dispatchEvent(new Event("beyond:memory-changed"));
+  window.dispatchEvent(new Event(event));
   await expect.element(screen.getByText("Private old wording", { exact: true })).not.toBeInTheDocument();
   expect(writeAlfredBrief).not.toHaveBeenCalled();
   // Remount must validate, rather than flash the stale cache back into view.

@@ -39,6 +39,8 @@ describe("ALFRED-006", () => {
   it("writes last week's review once, shows it on TODAY until GOT IT, and keeps it in MONTH", async () => {
     const week = lastFinishedWeek();
     await startDay(new Date(`${week.start}T17:00:00`).toISOString());
+    // Keep last week as history, not an overdue active day that App rolls over during READ.
+    await startDay();
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     const label = weekLabel(week);
     const screen = await render(<App />);

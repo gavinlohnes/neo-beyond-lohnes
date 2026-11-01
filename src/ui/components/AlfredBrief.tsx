@@ -52,8 +52,10 @@ export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; r
   // A correction/retirement hides old prose immediately, even offline or during a request.
   useEffect(() => {
     const invalidate = () => { sourceEpoch.current++; setBrief(null); setTick((n) => n + 1); };
-    window.addEventListener("beyond:memory-changed", invalidate); window.addEventListener("focus", invalidate);
-    return () => { window.removeEventListener("beyond:memory-changed", invalidate); window.removeEventListener("focus", invalidate); };
+    // Focus alone is not a source change: avoid moving controls during the focus/click sequence.
+    const recheck = () => setTick((n) => n + 1);
+    window.addEventListener("beyond:memory-changed", invalidate); window.addEventListener("focus", recheck);
+    return () => { window.removeEventListener("beyond:memory-changed", invalidate); window.removeEventListener("focus", recheck); };
   }, []);
 
   // A quiet re-check every 10 minutes while TODAY is on screen.
