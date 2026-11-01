@@ -101,13 +101,19 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
       const next = await buildPlanningContext(included).catch(() => { throw new Error("CONTEXT_UNAVAILABLE"); });
-      const changed = lastContext.current !== null && (lastContext.current.personalVersion !== next.personalVersion || lastContext.current.recordVersion !== next.recordVersion);
+      const personalChanged = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
+      const changed = personalChanged || (lastContext.current !== null && lastContext.current.recordVersion !== next.recordVersion);
       const policy = { includePersonal: included, assertFresh: async () => {
         if (await personalContextVersion(included) !== next.personalVersion || await operatorContextVersion(included) !== next.recordVersion) throw new Error("CONTEXT_CHANGED");
       } };
       if (changed) {
-        session.current = null; setTurns([{ role: "user", text: q }]);
-        setContextNotice("Personal context changed or current records changed. This request starts a fresh model conversation. Earlier requests cannot be recalled.");
+        session.current = null;
+        // Personal changes clear the visible exchange as before. Operational changes reset model
+        // history but retain old cards with their ORIGINAL guards, so an old day cannot gain a new one.
+        if (personalChanged) setTurns([{ role: "user", text: q }]);
+        setContextNotice(personalChanged
+          ? "Personal context changed. This request starts a fresh model conversation. Earlier requests cannot be recalled."
+          : "Current records changed. This request starts a fresh model conversation. Earlier cards remain bound to their original records.");
       }
       if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, next.text, policy); }
       else session.current.updateContext(next.text, policy);

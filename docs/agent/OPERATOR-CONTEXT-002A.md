@@ -47,3 +47,12 @@ No memory conversion/new fact kinds, schema/event/backup contract change, Engine
   Local git push lacks authentication; publishing through the connected GitHub app instead.
 - #366 helper consumer integration remains pending its separate merge. Public context/card interfaces remain compatible.
 - PR Verification CI is running; Chromium installation passed remotely. No green CI, live model call, deployment or merge claimed.
+
+
+## Browser CI follow-up
+
+The first CI run (superseded by a later head) exposed the existing old-day-card regression:
+operational context reset removed old visible cards, so their original-day guard could no longer be
+exercised. Operational changes now reset only MODEL history while retaining visible old cards with
+their original immutable guards. Personal-context changes retain existing visible-history reset.
+The existing browser assertion is unchanged; no timeout or assertion was weakened. Renew exact-head review.
