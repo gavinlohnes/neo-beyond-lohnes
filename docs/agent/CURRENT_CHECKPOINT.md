@@ -1,3 +1,10 @@
+# UX-POLISH-001 — in review (Builder: Claude Code)
+
+- Gavin: "Go polish" after the hands-on UX review. Branch `ccr-0be4f40f-16m0ja` from master `072b588`.
+  [Brief](UX-POLISH-001.md). Routine lane. Next: full verify, PR, reviewer, green CI, Gavin merges.
+
+---
+
 # PERSONAL-OS campaign — end of 2026-10-31 (Builder: Claude Code)
 
 Merged today (each with an independent reviewer session, green CI, Gavin's merge or his "merge for me"):

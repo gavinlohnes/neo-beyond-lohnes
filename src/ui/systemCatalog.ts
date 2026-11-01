@@ -56,8 +56,13 @@ export const SYSTEM_CAPABILITIES = [
   { label: "WORKOUT", description: "TRAIN · Start or resume a workout", aliases: ["exercise", "resume", "gym", "set", "lift"], group: "Plan", destination: { kind: "workout" } },
   { label: "EXERCISE LIBRARY", description: "Browse and manage exercises", aliases: ["lift", "exercise"], group: "Plan", destination: { kind: "more", view: "EXERCISE_LIBRARY" } },
   { label: "CUSTOM PROGRAMS", description: "Your workout templates", aliases: ["program", "template"], group: "Plan", destination: { kind: "more", view: "CUSTOM_TEMPLATES" } },
-  { label: "MISSIONS & OBLIGATIONS", description: "Commitments and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Plan", destination: { kind: "more", view: "INTENT" } },
+  { label: "MISSIONS & OBLIGATIONS", description: "Commitments, projects and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Plan", destination: { kind: "more", view: "INTENT" } },
   { label: "ROUTINES", description: "Your before, during and after shift routines", aliases: ["routine", "checklist", "habit", "rhythm"], group: "Plan", destination: { kind: "more", view: "ROUTINES" } },
+  // UX-POLISH-001: the personal-OS areas are found by name in search (search-only: MORE-TRIM-001 keeps
+  // the browsed list at 25 or fewer). People and Home also stay in Personal Understanding.
+  { label: "PROJECTS", description: "Finite efforts and their steps", aliases: ["project", "get done", "steps", "errand"], group: "Plan", destination: { kind: "more", view: "INTENT" }, browse: false },
+  { label: "PEOPLE", description: "Birthdays, dates and what to remember about people", aliases: ["people", "birthday", "anniversary", "family", "friend", "gift"], group: "Plan", destination: { kind: "more", view: "PEOPLE" }, browse: false },
+  { label: "HOME", description: "House facts and jobs that come round", aliases: ["home", "house", "filter", "maintenance", "chore"], group: "Plan", destination: { kind: "more", view: "HOME" }, browse: false },
   { label: "WORK SCHEDULE", description: "Your standing schedule", aliases: ["shift", "schedule", "rotation"], group: "Plan", destination: { kind: "more", view: "WORK_SCHEDULE" } },
   { label: "WHAT BEYOND SHOULD REMEMBER", description: "Your prep and recovery preferences", aliases: ["memory", "preferences", "remember", "constraint"], group: "Settings", destination: { kind: "more", view: "MEMORY" } },
   { label: "IMPORT HEALTH DATA", description: "Preview Garmin data from the helper before saving", aliases: ["import", "health connect", "garmin"], group: "Review", destination: { kind: "more", view: "HEALTH_IMPORT" } },

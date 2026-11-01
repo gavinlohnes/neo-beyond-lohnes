@@ -106,3 +106,13 @@ it("Alfred's edit card refuses if the routine changed after it was proposed", as
   await confirmContextProposal(card, fresh, false);
   expect((await getRoutines())[0]!.steps.map((s) => s.text)).toEqual(["Shower", "Nap"]);
 });
+
+it("before the work question is answered, follows the schedule's predicted work moment, not a predicted day off (UX-POLISH-001)", () => {
+  const at = (predictedPhase: "PRE_WORK" | "SCHEDULED_SHIFT" | "EXPECTED_POST_WORK" | "OFF", workContext = "UNKNOWN") => routineMomentFor({ phase: null, predictedPhase, workContext, workStarted: false, workEnded: false });
+  expect(at("PRE_WORK")).toBe("BEFORE_SHIFT");
+  expect(at("SCHEDULED_SHIFT")).toBe("ON_SHIFT");
+  expect(at("EXPECTED_POST_WORK")).toBe("AFTER_SHIFT");
+  expect(at("OFF")).toBeNull();
+  expect(at("PRE_WORK", "OFF")).toBe("DAY_OFF");
+  expect(routineMomentFor({ phase: null, workContext: "UNKNOWN", workStarted: false, workEnded: false })).toBeNull();
+});

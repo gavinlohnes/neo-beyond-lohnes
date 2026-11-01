@@ -56,7 +56,8 @@ export function RoutinesPanel({ active }: { active: boolean }) {
       <summary role="button">NEW ROUTINE</summary>
       <label className="field">Name<input className="input" value={title} maxLength={80} disabled={busy} placeholder="Pre-shift" onChange={(e) => setTitle(e.target.value)} /></label>
       <label className="field">When<select className="input" value={moment} disabled={busy} onChange={(e) => setMoment(e.target.value as RoutineMoment)}>{ROUTINE_MOMENTS.map((m) => <option key={m} value={m}>{ROUTINE_MOMENT_LABELS[m]}</option>)}</select></label>
-      <label className="field">Steps, one per line<textarea className="input" style={{ minHeight: 100 }} value={steps} disabled={busy} placeholder={"Shower\nPack meals\nFill bottle"} onChange={(e) => setSteps(e.target.value)} /></label>
+      <p className="meta">Food and bottle already have their own buttons in TODAY's prep, so there's no need to list them here.</p>
+      <label className="field">Steps, one per line<textarea className="input" style={{ minHeight: 100 }} value={steps} disabled={busy} placeholder={"Nap 20 min\nShower\nLay out uniform"} onChange={(e) => setSteps(e.target.value)} /></label>
       <button type="button" className="btn-primary" disabled={busy || !title.trim() || lines(steps).length === 0}
         onClick={() => void run(() => createRoutine({ title, moment, steps: lines(steps) })).then((ok) => { if (ok) { setTitle(""); setSteps(""); } })}>SAVE ROUTINE</button>
     </details>
