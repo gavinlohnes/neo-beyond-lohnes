@@ -139,3 +139,18 @@ it("retains draft text through read failure/retry and rejects an older in-flight
   release(old);
   await expect.element(screen.getByText(words, { exact: true }).first()).toBeVisible();
 });
+
+it("returns to a saved fact rather than the old inspection target, then honors a new source request", async () => {
+  const day = await startDay(); await food(day.id);
+  await recordMemory({ dayId: day.id, factId: "other-source", action: "CREATED", expectedPreviousId: null, kind: "CONSTRAINT", statement: "Another explicit source" });
+  const screen = await render(<MemoryPanel focusFactId="food" />);
+  await expect.poll(() => (document.activeElement as HTMLElement)?.dataset.memoryId).toBe("food");
+  await screen.getByRole("button", { name: "ADD MEMORY", exact: true }).click();
+  await screen.getByRole("textbox", { name: "What should BEYOND remember?" }).fill("A new personal fact");
+  await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true }).click();
+  await expect.poll(async () => (await getMemoryFacts()).find((f) => f.statement === "A new personal fact")?.factId).toBeTruthy();
+  const saved = (await getMemoryFacts()).find((f) => f.statement === "A new personal fact")!;
+  await expect.poll(() => (document.activeElement as HTMLElement)?.dataset.memoryId).toBe(saved.factId);
+  await screen.rerender(<MemoryPanel focusFactId="other-source" />);
+  await expect.poll(() => (document.activeElement as HTMLElement)?.dataset.memoryId).toBe("other-source");
+});

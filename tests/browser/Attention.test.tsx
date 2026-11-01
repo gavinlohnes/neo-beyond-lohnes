@@ -78,7 +78,9 @@ it("uses one general-fact editor, retaining its draft across LIFE tabs", async (
   expect(screen.getByRole("button", { name: "REMEMBER", exact: true }).elements()).toHaveLength(0);
   await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true }).click();
   await expect.poll(() => getMemoryFacts().then((f) => f.length)).toBe(1);
-  expect((await getMemoryFacts())[0]!.kind).toBe("PERSONAL_FACT");
+  const saved = (await getMemoryFacts())[0]!;
+  expect(saved.kind).toBe("PERSONAL_FACT");
+  await expect.poll(() => (document.activeElement as HTMLElement)?.dataset.memoryId).toBe(saved.factId);
   expect(await db.beyondDays.count()).toBe(0);
   for (const width of [320, 360, 412]) { await page.viewport(width, 800); expect((await axe.run(screen.container)).violations).toEqual([]); expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth); }
 });

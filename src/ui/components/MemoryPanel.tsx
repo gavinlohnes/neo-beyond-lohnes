@@ -30,17 +30,20 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   const writing = useRef(false), sequence = useRef(0), lifecycle = useRef(0);
   const uid = useId();
   const focused = useRef<string | null>(null);
+  const [savedFocus, setSavedFocus] = useState<{ factId: string; revision: string } | null>(null);
+  const requestedFocus = savedFocus?.factId ?? focusFactId;
+  useEffect(() => { setSavedFocus(null); }, [focusFactId]);
   useEffect(() => {
-    if (!active || !data || !focusFactId || focused.current === focusFactId) return;
-    const fact = data.facts.find((f) => f.factId === focusFactId);
-    if (!fact) return;
-    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === focusFactId) + 1));
+    if (!active || !data || !requestedFocus || focused.current === requestedFocus) return;
+    const fact = data.facts.find((f) => f.factId === requestedFocus);
+    if (!fact || savedFocus && fact.id !== savedFocus.revision) return;
+    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === requestedFocus) + 1));
     const frame = requestAnimationFrame(() => {
-      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === focusFactId && el.getClientRects().length);
-      if (article) { article.focus(); focused.current = focusFactId; }
+      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === requestedFocus && el.getClientRects().length);
+      if (article) { article.focus(); focused.current = requestedFocus; }
     });
     return () => cancelAnimationFrame(frame);
-  }, [active, data, focusFactId]);
+  }, [active, data, requestedFocus, savedFocus]);
   useSessionDraft(`memory-${uid}`, draft !== null && draft.statement.length > 0);
   useEffect(() => { lifecycle.current++; return () => { lifecycle.current++; }; }, [active, scope]);
   useEffect(() => {
@@ -79,7 +82,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
         ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement, ...(draft!.kind === "PERSONAL_FACT" ? { topic: draft!.topic } : {}) }) }, receipt);
       if (receipt.changed) acknowledge(action === "IRRELEVANT" ? "HEAVY" : "LIGHT");
       if (lifecycle.current !== request) return;
-      if (!fact) setDraft(null);
+      if (!fact) { setDraft(null); focused.current = null; setSavedFocus({ factId: saved.factId, revision: saved.id }); }
       setUndo(action === "IRRELEVANT" ? saved : null);
       setNotice(action === "IRRELEVANT" ? "Marked no longer relevant. Kept in memory history." : action === "CONFIRMED" ? "Confirmed again." : action === "RESTORED" ? "Restored and confirmed." : "Memory saved.");
       window.dispatchEvent(new Event("beyond:memory-changed"));
