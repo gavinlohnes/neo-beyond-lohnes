@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -28,6 +28,7 @@ export function ProjectsSection({ missions, onOpenObligation, onChanged, refresh
   missions: Mission[]; onOpenObligation: (id: string) => void; onChanged: () => void; refreshKey: number; active: boolean;
 }) {
   const [views, setViews] = useState<ProjectView[] | null>(null);
+  const uid = useId();
   const [readError, setReadError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -72,8 +73,8 @@ export function ProjectsSection({ missions, onOpenObligation, onChanged, refresh
 
   const shown = (views ?? []).filter((v) => showAll || isOpen(v.project.status));
   return (
-    <section aria-labelledby="projects-heading">
-      <h2 id="projects-heading" className="section-label">Projects · finite efforts</h2>
+    <section aria-labelledby={`${uid}-projects`}>
+      <h2 id={`${uid}-projects`} className="section-label">Projects · finite efforts</h2>
       <div className="intent-filter" role="group" aria-label="Project visibility">
         <button aria-pressed={!showAll} className={`chip ${!showAll ? "chip--selected" : ""}`} onClick={() => setShowAll(false)}>OPEN</button>
         <button aria-pressed={showAll} className={`chip ${showAll ? "chip--selected" : ""}`} onClick={() => setShowAll(true)}>ALL / FINISHED</button>

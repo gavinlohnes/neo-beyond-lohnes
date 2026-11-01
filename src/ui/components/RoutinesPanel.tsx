@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { createRoutine, getRoutines, matchSteps, modifyRoutine, setRoutineArchived } from "../../application/routineCommands";
 import { ROUTINE_MOMENTS, ROUTINE_MOMENT_LABELS, type Routine, type RoutineMoment } from "../../domain/routines";
 import { captureCommitFeedback } from "../feel/feedback";
@@ -14,6 +14,7 @@ const lines = (text: string) => text.split("\n").map((s) => s.trim()).filter(Boo
 
 export function RoutinesPanel({ active }: { active: boolean }) {
   const [routines, setRoutines] = useState<Routine[] | null>(null);
+  const uid = useId();
   const [readError, setReadError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [title, setTitle] = useState("");
@@ -41,8 +42,8 @@ export function RoutinesPanel({ active }: { active: boolean }) {
   }
 
   const shown = (routines ?? []).filter((r) => showArchived || r.status === "ACTIVE");
-  return <section aria-labelledby="routines-heading" className="intent-field">
-    <h2 id="routines-heading" className="tool-label">YOUR ROUTINES</h2>
+  return <section aria-labelledby={`${uid}-routines`} className="intent-field">
+    <h2 id={`${uid}-routines`} className="tool-label">YOUR ROUTINES</h2>
     <p className="card-body">Write them in your own words. TODAY shows the ones for the moment you're in: before shift, on shift, after shift, or a day off. Tick steps if it helps; nothing counts what you skip.</p>
     <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me write a routine for one part of my rotation (before shift, on shift, after shift or a day off). Ask what I already do, then offer it as a card I can save.")}>WRITE ONE WITH ALFRED</button>
     {readError && <div><p role="alert">{readError} Routines are unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY ROUTINES</button></div>}

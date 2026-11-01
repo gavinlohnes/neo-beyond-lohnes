@@ -46,8 +46,8 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
   }
 
   return <section aria-label={`${ROUTINE_MOMENT_LABELS[moment]} routine`} className="today-routine">
-    {here.map((r) => <details key={r.id} className="writing-start beyond-disclosure">
-      <summary>{ROUTINE_MOMENT_LABELS[moment].toUpperCase()} · {r.title}</summary>
+    {here.map((r) => <details key={r.id} className="writing-start">
+      <summary className="disclosure-row">{ROUTINE_MOMENT_LABELS[moment].toUpperCase()} · {r.title}</summary>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {r.steps.map((s) => {
           const done = ticks.has(stepKey(r.id, s.id));

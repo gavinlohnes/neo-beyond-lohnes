@@ -75,3 +75,8 @@ it("refuses dates that don't exist, by hand or from Alfred, so no occurrence is 
   const project = toProposal("project_new", { title: "P", steps: [{ title: "s", due_date: "2026-11-31" }] }) as { steps: { due_date?: string }[] };
   expect(project.steps[0]!.due_date).toBeUndefined();
 });
+
+it("Alfred's cards add the year only when it isn't this year (review of #362)", () => {
+  expect(describeProposal(toProposal("add_reminder", { title: "Renew plates", due_date: "2027-01-05" })!)).toBe("Remind: Renew plates · Tue, Jan 5, 2027");
+  expect(describeProposal(toProposal("add_reminder", { title: "Call", due_date: "2026-11-20" })!)).toBe("Remind: Call · Fri, Nov 20");
+});
