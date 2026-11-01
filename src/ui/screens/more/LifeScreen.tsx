@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 import { MemoryPanel } from "../../components/MemoryPanel";
 import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { RoutinesPanel } from "../../components/RoutinesPanel";
@@ -29,6 +29,7 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
   const [visited, setVisited] = useState<Set<LifeTab>>(() => new Set([initialTab]));
   const open = (next: LifeTab) => { setTab(next); setVisited((v) => (v.has(next) ? v : new Set([...v, next]))); };
   const on = (t: LifeTab) => active && tab === t;
+  const uid = useId();
   // Review of #362: the WAI-ARIA tabs pattern. One Tab stop; arrows, Home and End move between tabs.
   function onKey(e: KeyboardEvent<HTMLButtonElement>) {
     const i = LIFE_TABS.indexOf(tab), last = LIFE_TABS.length - 1;
@@ -37,18 +38,18 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
     e.preventDefault();
     const next = LIFE_TABS[to]!;
     open(next);
-    document.getElementById(`life-tab-${next}`)?.focus();
+    document.getElementById(`${uid}-tab-${next}`)?.focus();
   }
 
   return <section aria-labelledby="life-heading" className="life-screen">
     <h2 id="life-heading" className="visually-hidden">Life</h2>
     <div className="life-tabs" role="tablist" aria-label="Life areas">
-      {LIFE_TABS.map((t) => <button key={t} type="button" role="tab" id={`life-tab-${t}`} aria-selected={tab === t} aria-controls={`life-panel-${t}`}
+      {LIFE_TABS.map((t) => <button key={t} type="button" role="tab" id={`${uid}-tab-${t}`} aria-selected={tab === t} aria-controls={`${uid}-panel-${t}`}
         tabIndex={tab === t ? 0 : -1} onKeyDown={onKey}
         className={`chip ${tab === t ? "chip--selected" : ""}`} onClick={() => open(t)}>{t}</button>)}
     </div>
     <p className="meta">{BLURB[tab]}</p>
-    {LIFE_TABS.map((t) => <div key={t} role="tabpanel" id={`life-panel-${t}`} aria-labelledby={`life-tab-${t}`} hidden={tab !== t}>
+    {LIFE_TABS.map((t) => <div key={t} role="tabpanel" id={`${uid}-panel-${t}`} aria-labelledby={`${uid}-tab-${t}`} hidden={tab !== t}>
       {visited.has(t) && <>
         {t === "Direction" && <>
           <MemoryPanel active={on(t)} scope="PERSONAL" />
