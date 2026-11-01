@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
-import { createObligation, modifyObligation } from "../../src/application/intentCommands";
+import { archiveMission, createMission, createObligation, modifyObligation } from "../../src/application/intentCommands";
 import { deriveWeekTasks, getWeekTasks } from "../../src/application/weekAheadQueries";
 import { describeProposal, toProposal } from "../../src/application/alfred/alfredActions";
 import { buildPlanningContext } from "../../src/application/alfred/personalContext";
@@ -42,4 +42,13 @@ it("Alfred's plan card sets only the planned day, on confirm, and refuses a chan
   await modifyObligation(task.id, { title: "Book the tip run" });
   await expect(confirmContextProposal({ kind: "task_plan", task_id: task.id, title: "Book a tip run", planned_date: "2026-11-04" }, stale, false)).rejects.toThrow("CONTEXT_CHANGED");
   expect((await db.obligations.get(task.id))!.plannedAt).toBe("2026-11-03");
+});
+
+it("leaves out tasks under an archived Mission, like Plan Today does (review of #365)", async () => {
+  const mission = await createMission({ title: "Invented direction" });
+  await createObligation({ title: "Under the mission", missionId: mission.id, plannedAt: "2026-11-02" });
+  await createObligation({ title: "Standalone", plannedAt: "2026-11-02" });
+  await archiveMission(mission.id);
+  const day = (await getWeekTasks()).find((d) => d.date === "2026-11-02")!;
+  expect(day.planned.map((o) => o.title)).toEqual(["Standalone"]);
 });

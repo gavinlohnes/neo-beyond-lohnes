@@ -3,7 +3,7 @@ import { WORKOUT_TEMPLATE_ORDER, type WorkoutTemplateId } from "../domain/workou
 import { formatLocalDate, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
 import { getSchedulePattern } from "./queries";
 import { suggestTemplateForNextWorkout } from "./trainQueries";
-import { getUnresolvedObligations } from "./intentQueries";
+import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import type { Obligation } from "../domain/intent/types";
 
 /** WEEKAHEAD-001: a read-only seven-day projection. It never feeds the Engine or stores a plan. */
@@ -100,5 +100,7 @@ export function deriveWeekTasks(dates: string[], open: Obligation[]): WeekTasksD
 
 export async function getWeekTasks(now: Date = new Date()): Promise<WeekTasksDay[]> {
   const dates = Array.from({ length: 7 }, (_, i) => formatLocalDate(localNoon(now, i)));
-  return deriveWeekTasks(dates, await getUnresolvedObligations());
+  // Review of #365: a current-attention view, so it follows the locked Intent Lifecycle Integrity rule
+  // (tasks under an archived or missing Mission don't appear), the same projection Plan Today uses.
+  return deriveWeekTasks(dates, await getCurrentlyEligibleUnresolvedObligations());
 }
