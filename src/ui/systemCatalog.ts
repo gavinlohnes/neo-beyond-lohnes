@@ -68,7 +68,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "WHAT BEYOND SHOULD REMEMBER", description: "Your prep and recovery preferences", aliases: ["memory", "preferences", "remember", "constraint"], group: "Settings", destination: { kind: "more", view: "MEMORY" } },
   { label: "IMPORT HEALTH DATA", description: "Preview Garmin data from the helper before saving", aliases: ["import", "health connect", "garmin"], group: "Review", destination: { kind: "more", view: "HEALTH_IMPORT" } },
   { label: "DATA", description: "Nutrition, water, sleep and bodyweight", aliases: ["body", "daily record", "health"], group: "Review", destination: { kind: "workspace", tab: "BODY" }, browse: false },
-  { label: "WEEKLY CHECK-IN", description: "Weekly progress, observations and Mirror", aliases: ["week", "mirror", "progress"], group: "Review", destination: { kind: "more", view: "WEEKLY" } },
+  { label: "WEEKLY CHECK-IN", description: "Weekly progress, observations and Mirror", aliases: ["week", "mirror", "progress", "week ahead", "plan my week", "planned"], group: "Review", destination: { kind: "more", view: "WEEKLY" } },
   { label: "REVIEW", description: "Weekly review, recorded evidence and recommendations", aliases: ["review", "weekly review", "recommendation", "rating", "decision", "evidence"], group: "Review", destination: { kind: "more", view: "REVIEW" } },
   { label: "HISTORY", description: "Every record, in order", aliases: ["timeline", "past"], group: "Review", destination: { kind: "more", view: "HISTORY" } },
   { label: "DECISION JOURNAL", description: "Decisions, outcomes and lessons", aliases: ["journal", "decision"], group: "Review", destination: { kind: "more", view: "JOURNAL" } },

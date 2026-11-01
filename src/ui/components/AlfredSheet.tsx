@@ -26,12 +26,15 @@ export function askAlfred(question: string) { window.dispatchEvent(new CustomEve
 export function readAlfredKey(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
 function writeAlfredKey(value: string | null) { try { if (value) localStorage.setItem(KEY, value); else localStorage.removeItem(KEY); } catch { /* not kept */ } }
 
+/** WEEK-PLAN-001: the one question Alfred is asked; each placement comes back as a card to SAVE or SKIP. */
+export const PLAN_MY_WEEK_ASK = "Plan my next 7 days. Use my shifts and sleep, my open tasks and project steps, birthdays and home jobs that are due. Offer each placement as a card for a specific day; I'll save the ones I want. Keep work nights light, never plan over sleep, and treat unknown time as unknown, not free. Say what you left unplanned and why.";
 // LIFE-HUB-001: grouped Plan · Remember · Review so the message box stays in view.
 type StarterGroup = "Plan" | "Remember" | "Review";
 const STARTER_GROUPS: StarterGroup[] = ["Plan", "Remember", "Review"];
 // ALFRED-004: the starters are the ideas the owner asked for; each is one question Alfred already knows how to answer.
 const STARTERS: { label: string; group: StarterGroup; ask?: string; fill?: string }[] = [
   { label: "Plan my next days off", group: "Plan", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
+  { label: "Plan my week", group: "Plan", ask: PLAN_MY_WEEK_ASK },
   { label: "Help me get something done", group: "Plan", fill: "Help me get this done: " },
   // UX-POLISH-001: one tap into each personal-OS area; each fills the sentence for him to finish.
   { label: "Write a routine", group: "Plan", fill: "My routine before shift is: " },
