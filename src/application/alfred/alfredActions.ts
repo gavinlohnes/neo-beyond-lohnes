@@ -194,6 +194,9 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
   }
 }
 
+/** LIFE-HUB-001: a card's date as he'd say it ("Sun, Nov 15"), not YYYY-MM-DD. */
+const humanDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
 /** One line for the confirm card. */
 export function describeProposal(p: AlfredProposal): string {
   switch (p.kind) {
@@ -201,21 +204,21 @@ export function describeProposal(p: AlfredProposal): string {
     case "log_water": return `Log ${Math.round(p.oz)} oz water`;
     case "log_sleep": return `Log ${p.nap ? "nap" : "main sleep"} ${Math.floor(p.minutes / 60)}h ${String(p.minutes % 60).padStart(2, "0")}m`;
     case "log_weight": return `Log weight ${p.lbs} lb`;
-    case "add_reminder": return `${p.project_id ? `Add step to ${p.project_title ?? "a project"}` : "Remind"}: ${p.title}${p.due_date ? ` · ${p.due_date}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`;
+    case "add_reminder": return `${p.project_id ? `Add step to ${p.project_title ?? "a project"}` : "Remind"}: ${p.title}${p.due_date ? ` · ${humanDate(p.due_date)}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`;
     case "routine_new": return `New routine · ${ROUTINE_MOMENT_LABELS[p.moment]}: ${p.title} · ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}`;
     case "routine_edit": return `Change routine ${p.title}${p.moment ? ` · now ${ROUTINE_MOMENT_LABELS[p.moment].toLowerCase()}` : ""}${p.steps ? ` · steps: ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}` : ""}`;
-    case "project_new": return `New project: ${p.title}${p.finish ? ` (finished when ${p.finish})` : ""} · ${p.steps.length} ${p.steps.length === 1 ? "step" : "steps"}: ${p.steps.map((st, n) => `${n + 1}. ${st.title}${st.due_date ? ` (${st.due_date})` : ""}`).join("; ")}`;
+    case "project_new": return `New project: ${p.title}${p.finish ? ` (finished when ${p.finish})` : ""} · ${p.steps.length} ${p.steps.length === 1 ? "step" : "steps"}: ${p.steps.map((st, n) => `${n + 1}. ${st.title}${st.due_date ? ` (${humanDate(st.due_date)})` : ""}`).join("; ")}`;
     case "capture_note": return `Note: ${p.text}`;
     case "check_in": return `Check in · energy ${p.energy} · stress ${p.stress} · mood ${p.mood} · soreness ${p.soreness} · urge ${p.alcohol_urge}`;
     case "work_started": return "Started work";
     case "work_ended": return "Work ended";
     case "task_done": return `Done: ${p.title}`;
-    case "task_new_date": return `New date: ${p.title} · ${p.due_date}`;
+    case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
     case "forget": return `Forget: ${p.text}`;
-    case "home_item": return `Home: ${p.item}${p.details ? ` · ${p.details}` : ""}${p.every && p.unit && p.first_due ? ` · ${describeRepeat(p.every, p.unit)} from ${p.first_due}` : ""}`;
+    case "home_item": return `Home: ${p.item}${p.details ? ` · ${p.details}` : ""}${p.every && p.unit && p.first_due ? ` · ${describeRepeat(p.every, p.unit)} from ${humanDate(p.first_due)}` : ""}`;
     case "person_date": return `Remember ${p.person}'s ${p.occasion.toLowerCase()} · ${describeMonthDay(p.month, p.day)} · reminder every year${p.note ? ` · ${p.note}` : ""}`;
     case "log_urge": return `Log an urge · ${p.trigger.toLowerCase().replace("_", " ")}`;
   }

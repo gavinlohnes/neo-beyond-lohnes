@@ -45,7 +45,7 @@ it("weekly rules stay on their weekday", () => {
 
 it("Alfred's home card describes itself and saves on confirm; needs a date to repeat", async () => {
   const p = toProposal("home_item", { item: "Furnace filter", details: "16x25x1", every: 3, unit: "MONTHS", first_due: "2026-11-15" })!;
-  expect(describeProposal(p)).toBe("Home: Furnace filter · 16x25x1 · every 3 months from 2026-11-15");
+  expect(describeProposal(p)).toBe("Home: Furnace filter · 16x25x1 · every 3 months from Sun, Nov 15");
   expect(toProposal("home_item", { item: "Gutters", every: 6, unit: "MONTHS" })).toBeNull();
   expect(describeProposal(toProposal("home_item", { item: "Plumber", details: "Ace Plumbing" })!)).toBe("Home: Plumber · Ace Plumbing");
   await confirmProposal(p);

@@ -50,6 +50,7 @@ import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
 import { RoutinesPanel } from "../../components/RoutinesPanel";
+import { LifeScreen } from "./LifeScreen";
 import { PeoplePanel } from "../../components/PeoplePanel";
 import { HomePanel } from "../../components/HomePanel";
 import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type SystemCapability, type SystemDestination } from "../../systemCatalog";
@@ -78,7 +79,7 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME";
+export type MoreView = "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import type { WholePictureDestination } from "../review/WholePicture";
@@ -518,6 +519,7 @@ export function MoreScreen({
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
+          <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} /></>}</div>
           <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} /></>}</div>
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
           <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>

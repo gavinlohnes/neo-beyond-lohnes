@@ -60,3 +60,17 @@
 .alfred-limits__row { display: flex; gap: 8px; align-items: flex-end; }
 .alfred-limits__row .field { flex: 1; }
 .alfred-limits__row .btn-secondary { width: auto; padding: 8px 14px; min-height: 44px; }
+
+/* LIFE-HUB-001 */
+.life-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.life-tabs .chip { flex: 1 1 30%; min-height: 44px; }
+.life-tabs .chip--selected { box-shadow: inset 3px 0 0 var(--accent); }
+.alfred-starter-group { margin-top: 8px; }
+.alfred-starter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.alfred-starter-grid .btn-secondary { margin: 0; min-height: 44px; padding: 6px 8px; font-size: 0.85em; text-transform: none; letter-spacing: 0; }
+/* LIFE-HUB-001: BEYOND's chevron on new disclosures instead of the browser triangle. */
+.beyond-disclosure > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+.beyond-disclosure > summary::-webkit-details-marker { display: none; }
+.beyond-disclosure > summary::after { content: "›"; font-size: 1.2em; transition: transform 150ms ease-out; }
+.beyond-disclosure[open] > summary::after { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .beyond-disclosure > summary::after { transition: none; } }

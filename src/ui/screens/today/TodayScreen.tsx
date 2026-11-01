@@ -177,7 +177,8 @@ import { checkInDraftDecision, type CheckInDraft } from "../../../engine/checkIn
 import { getCheckInDraft } from "../../../application/checkInDraftQueries";
 import { getAppOpenedAt } from "../../appSession";
 import { formatDuration } from "../body/bodyScreenCopy";
-import { predictedWorkPhase,
+import {
+  predictedWorkPhase,
   deriveLivedDayStrip,
   deriveShiftClockView,
   describeCountdown,

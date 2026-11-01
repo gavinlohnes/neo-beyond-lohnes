@@ -1,7 +1,7 @@
-# UX-POLISH-001 — in review (Builder: Claude Code)
+# LIFE-HUB-001 — in review (Builder: Claude Code)
 
-- Gavin: "Go polish" after the hands-on UX review. Branch `ccr-0be4f40f-16m0ja` from master `072b588`.
-  [Brief](UX-POLISH-001.md). Routine lane. Next: full verify, PR, reviewer, green CI, Gavin merges.
+- #361 UX-POLISH-001 merged. Gavin: "go life hub". [Brief](LIFE-HUB-001.md). Routine/Feature lane.
+- Held for his separate OK: merging TODAY's pre-shift lists into one "before you go" checklist.
 
 ---
 
