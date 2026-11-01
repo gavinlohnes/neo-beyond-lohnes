@@ -1,3 +1,17 @@
+# OPERATOR-CONTEXT-002A — implementation (Builder: Codex)
+
+- Gavin approved the advancement launching point on 2026-11-01; first bounded objective only.
+  [Brief](OPERATOR-CONTEXT-002A.md). Protected context/privacy contract; no migration or Engine change.
+- Branch `codex/operator-context-002a`, fresh master `f23668a` (#365). PR pending.
+- Shared read-only source projection and local LIFE/Memory inspection built; existing sharing and cards preserved.
+- Focused Node integration: 27/27 passed. TypeScript, architecture and production/PWA build passed.
+- Full Node suite: 216 files, 1,992 passed / one existing skip. Browser execution blocked: Playwright Chromium absent;
+  installation downloads return invalid archives. No browser acceptance, CI or independent review claimed.
+- #366 FREE-HELPER-001 remains Claude Code's work, not taken over; preserve context/card interfaces.
+- Next: finish verification, publish draft PR and obtain independent exact-head review; no merge authorized.
+
+---
+
 # WEEK-PLAN-001 — in review (Builder: Claude Code)
 
 - Merged since the campaign: #361 UX-POLISH-001, #362 LIFE-HUB-001, #363 REVIEW-NITS-001, #364 DEPS-002.

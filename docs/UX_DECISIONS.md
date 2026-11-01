@@ -12,6 +12,17 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## OPERATOR-CONTEXT-002A — one inspectable context projection (owner approval 2026-11-01)
+
+Gavin approved the advancement design's first implementation after its owner-visible walkthrough:
+“Approved. I think that's a good launching point to us to grow beyond.” [Brief](agent/OPERATOR-CONTEXT-002A.md).
+Existing canonical records feed one read-only source/coverage contract for local inspection and Alfred.
+Sharing remains purpose-bound: Missions and confirmed personal context are conversation opt-in;
+automatic consumers retain their existing prep/recovery allowance. Both memory stores retain their
+current lifecycles, explicitly labelled; no migration, new fact kind, Engine rule or provider is approved.
+LIFE → Memory and existing Memory expose deliberate local inspection; TODAY placement is unchanged.
+Further convergence, attention placement, providers and recovery changes remain separately bounded.
+
 ## ALFRED-006 — the weekly review writes itself (owner go 2026-10-31)
 
 Alfred writes each Monday–Sunday week's review once that week's last lived day ends (Monday 16:30),

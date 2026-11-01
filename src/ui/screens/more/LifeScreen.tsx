@@ -1,4 +1,5 @@
 import { useId, useState, type KeyboardEvent } from "react";
+import { OperatorContextPanel } from "../../components/OperatorContextPanel";
 import { MemoryPanel } from "../../components/MemoryPanel";
 import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { RoutinesPanel } from "../../components/RoutinesPanel";
@@ -25,6 +26,7 @@ const BLURB: Record<LifeTab, string> = {
 };
 
 export function LifeScreen({ active, initialTab = "Direction" }: { active: boolean; initialTab?: LifeTab }) {
+  const [memoryFocus, setMemoryFocus] = useState<string | null>(null);
   const [tab, setTab] = useState<LifeTab>(initialTab);
   const [visited, setVisited] = useState<Set<LifeTab>>(() => new Set([initialTab]));
   const open = (next: LifeTab) => { setTab(next); setVisited((v) => (v.has(next) ? v : new Set([...v, next]))); };
@@ -59,7 +61,7 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
         {t === "Routines" && <RoutinesPanel active={on(t)} />}
         {t === "People" && <PeoplePanel active={on(t)} />}
         {t === "Home" && <HomePanel active={on(t)} />}
-        {t === "Memory" && <><MemoryPanel active={on(t)} /><AlfredMemoryList active={on(t)} /></>}
+        {t === "Memory" && <><OperatorContextPanel active={on(t)} onMemory={setMemoryFocus} /><MemoryPanel active={on(t)} focusFactId={memoryFocus} /><AlfredMemoryList active={on(t)} /></>}
       </>}
     </div>)}
   </section>;

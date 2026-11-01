@@ -798,7 +798,9 @@ function AppWorkspaces() {
     <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} onOpenRecord={(source) => {
       const opened = source.kind === "MISSION" ? openMore("INTENT", { kind: "MISSION", missionId: source.id })
         : source.kind === "OBLIGATION" ? openMore("INTENT", { kind: "OBLIGATION", obligationId: source.id })
-        : source.kind === "MEMORY" ? openMore("MEMORY", null, false)
+        : source.kind === "MEMORY" || source.kind === "ALFRED_MEMORY" ? openMore("MEMORY", null, false)
+        : source.kind === "PROJECT" ? openMore("INTENT")
+        : source.kind === "ROUTINE" ? openMore("ROUTINES")
         : source.kind === "SCHEDULE" ? openMore("WORK_SCHEDULE") : openMore("HISTORY");
       if (opened) { if (source.kind === "MEMORY") setMemoryFocusId(source.id); if (source.kind === "DAY") setHealthHistory({ dayId: source.id }); setAlfredOpen(false); }
     }} draft={alfredDraft} />

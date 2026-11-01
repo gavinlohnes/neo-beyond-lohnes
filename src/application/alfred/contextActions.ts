@@ -2,9 +2,10 @@ import { getObligation } from "../intentQueries";
 import { db } from "../../persistence/db";
 import { writeAtomically } from "../atomicWrite";
 import { confirmProposal, type AlfredProposal } from "./alfredActions";
+import { operatorContextVersion } from "../operatorContext";
 import { personalContextVersion, proposalContextVersion } from "./personalContext";
 
-export interface ProposalContext { personalVersion: string; actionVersion: string; taskVersions: Record<string, string>; routineVersions?: Record<string, string> }
+export interface ProposalContext { personalVersion: string; actionVersion: string; taskVersions: Record<string, string>; routineVersions?: Record<string, string>; recordVersion?: string }
 
 /**
  * Guard and canonical write share one local transaction; another tab cannot interleave edits.
@@ -14,6 +15,7 @@ export interface ProposalContext { personalVersion: string; actionVersion: strin
  */
 export function confirmContextProposal(proposal: AlfredProposal, expected: ProposalContext, includePersonal: boolean) {
   return writeAtomically(db.tables.map((table) => table.name), async () => {
+    if (expected.recordVersion !== undefined && await operatorContextVersion(includePersonal) !== expected.recordVersion) throw new Error("CONTEXT_CHANGED");
     if (await personalContextVersion(includePersonal) !== expected.personalVersion || await proposalContextVersion() !== expected.actionVersion) {
       throw new Error("CONTEXT_CHANGED");
     }
@@ -27,6 +29,6 @@ export function confirmContextProposal(proposal: AlfredProposal, expected: Propo
       if (!current || expected.routineVersions?.[proposal.routine_id] !== current.updatedAt) throw new Error("CONTEXT_CHANGED");
     }
     const result = await confirmProposal(proposal);
-    return { result, personalVersion: await personalContextVersion(includePersonal) };
+    return { result, personalVersion: await personalContextVersion(includePersonal), ...(expected.recordVersion !== undefined ? { recordVersion: await operatorContextVersion(includePersonal) } : {}) };
   });
 }
