@@ -35,27 +35,43 @@ export function matchOne<T extends { title?: string; name?: string; text?: strin
   const exact = items.filter((t) => name(t) === w);
   if (exact.length === 1) return exact[0]!;
   if (exact.length > 1) return null;
-  const loose = items.filter((t) => { const n = name(t); return n.length > 0 && (n.includes(w) || w.includes(n)); });
+  // Review of #366 (B1): never the other way round ("skipped the chicken bowl" contains a meal's name).
+  // Every wanted word must be in the name, and cover at least half of the name's real words.
+  const words = (s: string) => s.split(" ").filter((x) => x && !FILLER.has(x));
+  const want = words(w);
+  const loose = items.filter((t) => {
+    const have = words(name(t));
+    return want.length > 0 && have.length > 0 && want.every((x) => have.includes(x)) && want.length * 2 >= have.length;
+  });
   return loose.length === 1 ? loose[0]! : null;
 }
+
+const FILLER = new Set(["the", "a", "an", "my", "of", "to", "for", "and"]);
+/** Review of #366: a clause with a negation or a "skip" is never turned into a card. */
+const NEGATION = /\b(not|no|never|without|skip|skipped|skipping|didnt|dont|wont|cant|isnt|wasnt|havent|hasnt|didn't|don't|won't|can't|isn't|wasn't|haven't|hasn't)\b|n't\b/i;
 
 const NUMBER_WORDS: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, half: 0.5, "half a": 0.5 };
 const WEEKDAYS: Record<string, string> = { monday: "MO", tuesday: "TU", wednesday: "WE", thursday: "TH", friday: "FR", saturday: "SA", sunday: "SU" };
 
 /** A single forward date chrono is sure about, and the text it matched. */
-function oneDate(text: string, now: Date): { date: string; matched: string; hour?: number; minute?: number } | null {
+function oneDate(text: string, now: Date): { date: string; matched: string; hour?: number; minute?: number; ambiguousTime?: true } | null {
   const results = chrono.parse(text, now, { forwardDate: true });
   if (results.length !== 1) return null;
   const r = results[0]!;
   const d = r.start.date();
-  return { date: formatLocalDate(d), matched: r.text, ...(r.start.isCertain("hour") ? { hour: d.getHours(), minute: d.getMinutes() } : {}) };
+  // Review of #366 (M3): "at 5" doesn't say morning or evening; only am/pm or a 24-hour time is certain.
+  const timeSaid = r.start.isCertain("hour");
+  const meridiemKnown = r.start.isCertain("meridiem") || /\b\d{1,2}\s*(am|pm|a\.m\.|p\.m\.)\b/i.test(r.text) || d.getHours() >= 13 || /\b(noon|midnight)\b/i.test(r.text) || /\b(0\d|1[3-9]|2[0-3]):\d{2}\b/.test(r.text);
+  return { date: formatLocalDate(d), matched: r.text, ...(timeSaid ? (meridiemKnown ? { hour: d.getHours(), minute: d.getMinutes() } : { ambiguousTime: true }) : {}) };
 }
 
 const strip = (text: string, part: string) => text.replace(part, " ").replace(/\b(on|by|for|at|this|next)\s*$/i, "").replace(/\s+/g, " ").trim();
 
 function water(c: string): AlfredProposal | null {
-  const m = c.match(/^(?:drank|had|drink|log(?:ged)?)?\s*(\d+(?:\.\d+)?)\s*(oz|ounces?|ml|millilit(?:er|re)s?|l|lit(?:er|re)s?)(?:\s+(?:of\s+)?water)?$/);
-  if (!m) return null;
+  const m = c.match(/^(drank|had|drink|log(?:ged)?)?\s*(\d+(?:\.\d+)?)\s*(oz|ounces?|ml|millilit(?:er|re)s?|l|lit(?:er|re)s?)(\s+(?:of\s+)?water)?$/);
+  // Review of #366: "16 oz" alone could be anything; it needs "water" or a drink verb.
+  if (!m || (!m[1] && !m[4])) return null;
+  m.splice(1, 1);
   const n = Number(m[1]), unit = m[2]!;
   const oz = unit.startsWith("o") ? n : unit.startsWith("m") ? n / 29.5735 : n * 33.814;
   return oz > 0 && oz <= 200 ? { kind: "log_water", oz: Math.round(oz) } : null;
@@ -85,10 +101,11 @@ function urge(c: string): AlfredProposal | null {
   const m = c.match(/^(?:had an? |log an? |logged an? )?urge(?:\s*(?:[,:\-–]|from|because of|after)?\s*(.*))?$/);
   if (!m) return null;
   const why = (m[1] ?? "").trim();
-  const trigger: UrgeTrigger = !why ? "OTHER"
-    : /shift|work/.test(why) ? "AFTER_SHIFT" : /stress/.test(why) ? "STRESS" : /tired|exhaust/.test(why) ? "TIRED"
-    : /social|friend|party|people/.test(why) ? "SOCIAL" : /bored/.test(why) ? "BORED" : "OTHER";
-  return { kind: "log_urge", trigger };
+  // Review of #366 (M2): only a known reason; "urge to quit my job" or "urge 4" isn't a quit-tracker urge.
+  const trigger: UrgeTrigger | null = !why ? "OTHER"
+    : /^(?:after )?(?:shift|work)$/.test(why) ? "AFTER_SHIFT" : /^stress(?:ed)?$/.test(why) ? "STRESS" : /^(?:tired|exhausted)$/.test(why) ? "TIRED"
+    : /^(?:social|friends?|a party|party)$/.test(why) ? "SOCIAL" : /^bored(?:om)?$/.test(why) ? "BORED" : null;
+  return trigger ? { kind: "log_urge", trigger } : null;
 }
 
 function checkIn(c: string): AlfredProposal | null | "unclear" {
@@ -147,13 +164,14 @@ function remind(raw: string, ctx: HelperContext): AlfredProposal | null {
     rest = strip(rest, rep[0]);
   }
   const date = oneDate(rest, ctx.now);
+  if (date?.ambiguousTime) return null;
   if (date) {
     due = due ?? date.date;
     if (date.hour !== undefined) when = `${String(date.hour).padStart(2, "0")}:${String(date.minute ?? 0).padStart(2, "0")}`;
     rest = strip(rest, date.matched);
   }
-  const title = rest.replace(/[.!]+$/, "").trim();
-  if (!title || title.length > 120) return null;
+  const title = rest.replace(/[.!]+$/, "").replace(/^(to|about|that)\s+/i, "").trim();
+  if (!title || /^(to|about|that)$/i.test(title) || title.length > 120) return null;
   return { kind: "add_reminder", title: title[0]!.toUpperCase() + title.slice(1), due_date: due, repeat_rrule: rrule, when_note: when };
 }
 
@@ -161,11 +179,13 @@ function taskAction(c: string, ctx: HelperContext): AlfredProposal | null | "unc
   let m = c.match(/^(?:move|push|reschedule)\s+(.+?)\s+to\s+(.+)$/);
   if (m) {
     const task = matchOne(ctx.openTasks, m[1]!), d = oneDate(m[2]!, ctx.now);
+    if (d && (d.hour !== undefined || d.ambiguousTime)) return "unclear"; // a task has a date, not a time
     return task && d ? { kind: "task_new_date", task_id: task.id, title: task.title, due_date: d.date } : "unclear";
   }
   m = c.match(/^plan\s+(.+)$/);
   if (m) {
     const d = oneDate(m[1]!, ctx.now);
+    if (d && (d.hour !== undefined || d.ambiguousTime)) return "unclear";
     const task = d ? matchOne(ctx.openTasks, strip(m[1]!, d.matched).replace(/\s+(for|on)$/, "")) : null;
     return task && d ? { kind: "task_plan", task_id: task.id, title: task.title, planned_date: d.date } : "unclear";
   }
@@ -209,6 +229,10 @@ export function clauses(text: string): string[] {
 /** Cards for every clause it is sure about; everything else is `unknown`, word for word. */
 export function interpret(text: string, ctx: HelperContext): HelperResult {
   const cards: AlfredProposal[] = [], unknown: string[] = [];
+  // Review of #366 (B1, M1): any negation outside a note's own words makes the whole message unclear,
+  // so "don't remind me…" or "didn't eat the bowl" is never turned into a card.
+  const beforeNote = text.split(/\bnote\s*[:\-–]/i)[0]!;
+  if (NEGATION.test(beforeNote.replace(/[’]/g, "'"))) return { cards, unknown: [text.trim()] };
   for (const raw of clauses(text)) {
     const c = norm(raw.replace(/^(i |just |also |and )+/i, "")).replace(/\boz\b/g, "oz");
     const lower = raw.toLowerCase().trim().replace(/[.!]+$/, "").replace(/^(i |just |also )+/, "");
@@ -220,7 +244,7 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     else if (WORK_END.test(c)) card = { kind: "work_ended" };
     else if (/^(clean day|today was clean|log clean(?: day)?|clean today)$/.test(c)) card = { kind: "clean_day" };
     else card = water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
-      ?? meal(lower.replace(/[^a-z0-9 .]+/g, " ").replace(/\s+/g, " "), ctx);
+      ?? (/(^|\s)-\s*\d/.test(lower) ? "unclear" : meal(lower.replace(/[^a-z0-9 .]+/g, " ").replace(/\s+/g, " "), ctx)); // a negative amount is a typo, not a log
     if (card && card !== "unclear") cards.push(card);
     else unknown.push(raw.trim());
   }

@@ -43,3 +43,17 @@ it("knows when it doesn't know", async () => {
   expect(await answerQuestion("why am I so tired lately")).toBeNull();
   expect(await answerQuestion("what's the capital of France?")).toBeNull();
 });
+
+it("doesn't answer advice, food facts or other days with today's totals (review of #366)", async () => {
+  const day = await startDay();
+  await logWater(day.id, 16);
+  for (const q of ["how many calories in a banana?", "how much water should I drink?", "how many calories did I eat Monday?",
+    "should I sleep more?", "is my protein enough?", "how much protein in my shake?"]) expect(await answerQuestion(q), q).toBeNull();
+  expect(await answerQuestion("how much water have I had?")).toBe("Water today: 16 oz.");
+});
+
+it("yesterday means the lived day before this one, not just the second-newest record", async () => {
+  vi.setSystemTime(new Date(2026, 9, 28, 17)); await startDay();
+  vi.setSystemTime(new Date(2026, 10, 2, 17)); await startDay();
+  expect(await answerQuestion("what did I eat yesterday?")).toBe("No day is recorded for yesterday.");
+});

@@ -5,6 +5,7 @@ import { searchRecords } from "../alfred/alfredSearch";
 import { getMemories } from "../alfred/alfredMemory";
 import { getMonthSpend } from "../alfred/alfredSpend";
 import { formatLocalDate } from "../../engine/scheduledContext";
+import { livedDayStartOf } from "../reflect";
 import * as chrono from "chrono-node";
 
 /**
@@ -25,31 +26,38 @@ async function today() {
 
 export async function answerQuestion(text: string, now = new Date()): Promise<string | null> {
   const q = text.toLowerCase().replace(/[?!.]+$/, "").trim();
+  // Review of #366 (B2): only questions about his own logged totals. Advice ("should I…", "enough?"),
+  // facts about a food ("calories in a banana"), rates and other days go to Alfred, not today's total.
+  const advice = /\b(should|why|need|enough|better|advice|recommend|healthy|normal|average person|per)\b|\bin (a|an|one|my|the|this|that|\d+)\b/.test(q);
+  const mine = /\b(today|so far|tonight|this shift|have i|did i|i've|i have|i had|my)\b/.test(q);
+  const otherDay = /\b(mon|tues|wednes|thurs|fri|satur|sun)day\b|\blast (week|month)\b|\bthis (week|month)\b|\bon the\b/.test(q);
+  const intake = !advice && !otherDay && mine && !/\byesterday\b/.test(q);
 
-  if (/\b(water|hydrat)/.test(q) && /\b(today|so far|how much|how many)\b/.test(q)) {
+  if (intake && /\b(water|hydrat)/.test(q)) {
     const t = await today();
     if (!t) return "No day is started yet, so there's no water to count.";
     return t.waterOz ? `Water today: ${Math.round(t.waterOz)} oz.` : "No water logged today yet.";
   }
-  if (/\bprotein\b/.test(q) && !/\byesterday\b/.test(q)) {
+  if (intake && /\bprotein\b/.test(q)) {
     const t = await today();
     if (!t) return "No day is started yet.";
     return t.proteinG !== undefined ? `Protein today: ${Math.round(t.proteinG)} g.` : "No food logged today yet.";
   }
-  if (/\b(calories|kcal|cals)\b/.test(q) && !/\byesterday\b/.test(q)) {
+  if (intake && /\b(calories|kcal|cals)\b/.test(q)) {
     const t = await today();
     if (!t) return "No day is started yet.";
     return t.kcal !== undefined ? `Calories today: ${Math.round(t.kcal)} kcal.` : "No food logged today yet.";
   }
-  if (/\byesterday\b/.test(q) && /\b(eat|ate|food|calories|protein)\b/.test(q)) {
-    const days = [...(await getDaySummaries())].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart));
-    const y = days[1];
-    if (!y) return "There's no earlier day recorded yet.";
+  if (!advice && /\byesterday\b/.test(q) && /\b(eat|ate|food|calories|protein)\b/.test(q)) {
+    // The lived day before the one he's in now (16:30 to 16:30), not just the second-newest record.
+    const start = livedDayStartOf(now); start.setDate(start.getDate() - 1);
+    const y = (await getDaySummaries()).find((s) => { const t = new Date(s.livedDayStart); return t >= start && t.getTime() < start.getTime() + 24 * 3600_000; });
+    if (!y) return "No day is recorded for yesterday.";
     return y.kcal !== undefined || y.proteinG !== undefined
       ? `${day(y.livedDayStart)}: ${y.kcal !== undefined ? `${Math.round(y.kcal)} kcal` : "calories not logged"}, ${y.proteinG !== undefined ? `${Math.round(y.proteinG)} g protein` : "protein not logged"}.`
       : `${day(y.livedDayStart)}: no food logged.`;
   }
-  if (/\b(sleep|slept)\b/.test(q)) {
+  if (!advice && /\b(sleep|slept)\b/.test(q)) {
     const days = [...(await getDaySummaries())].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart));
     if (/\blast night\b|\blast sleep\b/.test(q)) {
       const d = days.find((s) => s.sleep.primaryMinutes !== undefined);

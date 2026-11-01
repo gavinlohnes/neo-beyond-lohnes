@@ -21,7 +21,7 @@ describe("logging", () => {
     expect(one("16 oz water")).toEqual({ kind: "log_water", oz: 16 });
     expect(one("drank 20oz")).toEqual({ kind: "log_water", oz: 20 });
     expect(one("500 ml water")).toEqual({ kind: "log_water", oz: 17 });
-    expect(one("1 l")).toEqual({ kind: "log_water", oz: 34 });
+    expect(one("1 l water")).toEqual({ kind: "log_water", oz: 34 });
   });
   it("weight and sleep", () => {
     expect(one("weight 212")).toEqual({ kind: "log_weight", lbs: 212 });
@@ -63,7 +63,7 @@ describe("logging", () => {
 describe("tasks and plans", () => {
   it("reminders with a date, a time or a repeat", () => {
     expect(one("remind me to call the bank Friday")).toMatchObject({ kind: "add_reminder", title: "Call the bank", due_date: "2026-11-06" });
-    expect(one("remind me to call mom and dad tomorrow at 9:30")).toMatchObject({ kind: "add_reminder", title: "Call mom and dad", due_date: "2026-11-03", when_note: "09:30" });
+    expect(one("remind me to call mom and dad tomorrow at 9:30am")).toMatchObject({ kind: "add_reminder", title: "Call mom and dad", due_date: "2026-11-03", when_note: "09:30" });
     expect(one("remind me to pay the car every 15th")).toMatchObject({ kind: "add_reminder", title: "Pay the car", due_date: "2026-11-15", repeat_rrule: "FREQ=MONTHLY;BYMONTHDAY=15" });
     expect(one("remind me to put the bins out every monday")).toMatchObject({ kind: "add_reminder", title: "Put the bins out", repeat_rrule: "FREQ=WEEKLY;BYDAY=MO" });
     none("remind me to pay rent every 31st");
@@ -91,4 +91,25 @@ it("tells questions from logs, and keeps reminders whole", () => {
   expect(clauses("20 oz water, and remind me to call mom and dad")).toEqual(["20 oz water", "remind me to call mom and dad"]);
   none("plan my whole life");
   none("I feel off today");
+});
+
+describe("refuses to guess (review of #366)", () => {
+  const withOats: HelperContext = { ...ctx, savedMeals: [...ctx.savedMeals, { id: "m4", name: "Oats", calories: 300, proteinG: 10 }] };
+  it("negations and loose meal matches make no card", () => {
+    none("skipped the chicken bowl");
+    none("didn't eat the chicken bowl");
+    none("don't remind me to pay the car");
+    const r = interpret("ate oats with honey", withOats);
+    expect(r.cards).toEqual([]);
+  });
+  it("urges, water and times it isn't sure about", () => {
+    none("urge to quit my job");
+    none("urge 4");
+    none("16 oz");
+    none("remind me to call mom tomorrow at 5");
+    none("move tip run to thursday at 3pm");
+    none("remind me to");
+    none("done: car");
+    none("burger 650 cal -30g protein");
+  });
 });
