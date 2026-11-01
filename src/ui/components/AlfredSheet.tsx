@@ -8,7 +8,7 @@ import { AlfredContextPanel } from "./AlfredContextPanel";
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
-import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
+import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { addSpend, automaticAlfredOn, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
@@ -145,7 +145,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
       const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
       const result = confirmed?.result ?? {};
-      if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
+      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
       // forward for this conversation's other cards and its next question, nothing else.
       const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
@@ -181,13 +181,14 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     setTurns([]); setSnapshot(null); setSelectedSource(null);
     setContextNotice("Fresh conversation. Earlier requests sent to Claude cannot be recalled.");
   }
-  async function forget(id: string) {
+  async function forget(memory: AlfredMemory) {
     if (working.current) return;
     working.current = true; setBusy(true); setError(null);
     try {
-      await forgetFact(id); setMemories(await getMemories());
+      if (!memory.reference) throw new Error("Memory source unavailable");
+      await stopUsingMemory(memory.reference, memory.text); window.dispatchEvent(new Event("beyond:memory-changed")); setMemories(await getMemories());
       session.current = null; lastContext.current = null; setTurns([]); setSnapshot(null); setSelectedSource(null);
-      setContextNotice("Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
+      setContextNotice(memory.reference.source === "PERSONAL_FACT" ? "Stopped using. Correction history retained. Fresh conversation; earlier requests cannot be recalled." : "Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
     } catch { setError("That memory could not be forgotten. Try again."); }
     finally { working.current = false; setBusy(false); }
   }
@@ -224,6 +225,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
           {t.text && <AlfredText text={t.text} sources={t.sources} onSource={setSelectedSource} />}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
+            {["remember", "person_date", "home_item"].includes(p.proposal.kind) && <p className="meta">Personal facts are available to Alfred by default. Corrections keep history. Stop using removes them from active context; it does not erase them. New exports require this build or newer.</p>}
             {p.state === "pending" ? <div className="alfred-card__row">
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
@@ -245,7 +247,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       </form>
       {memories && <div className="alfred-memory" role="group" aria-label="What Alfred remembers">
         {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
-          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} disabled={busy} onClick={() => void forget(m.id)}>Forget</button></li>)}</ul>}
+          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`${m.reference?.source === "PERSONAL_FACT" ? "Stop using" : "Forget"}: ${m.text}`} disabled={busy} onClick={() => void forget(m)}>{m.reference?.source === "PERSONAL_FACT" ? "Stop using" : "Forget"}</button></li>)}</ul>}
       </div>}
       <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
       {limitsOpen && <div className="alfred-limits" role="group" aria-label="Alfred limits">

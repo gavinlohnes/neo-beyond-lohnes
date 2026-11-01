@@ -68,7 +68,7 @@ function validate(input: PersonDateInput) {
 export async function addPersonDate(input: PersonDateInput, now = new Date()): Promise<{ memory: AlfredMemory; reminder: Obligation }> {
   const { person, occasion, note } = validate(input);
   const due = nextAnnualDate(input.month, input.day, formatLocalDate(now));
-  return writeAtomically(["alfredMemories", ...INTENT_WRITE_TABLES], async () => {
+  return writeAtomically(["alfredMemories", "beyondDays", ...INTENT_WRITE_TABLES], async () => {
     const memory = await rememberFact(`${person}: ${occasion.toLowerCase()} ${describeMonthDay(input.month, input.day)}${note ? `. ${note}` : ""}`, "PERSON");
     const reminder = await createObligation({
       title: `${person}'s ${occasion.toLowerCase()}`,

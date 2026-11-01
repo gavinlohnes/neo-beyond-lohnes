@@ -1,4 +1,5 @@
 import { contextSource, readOperatorContext } from "../operatorContext";
+import { getMemories } from "./alfredMemory";
 import { db } from "../../persistence/db";
 import { parseProject } from "../../persistence/intentValidation";
 import { getDaySummaries } from "../dayLedgerQueries";
@@ -25,7 +26,7 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
   };
   const [events, notes, tasks, sessions, sets, memories, projects] = await Promise.all([
     db.events.toArray(), db.captureItems.toArray(), db.obligations.toArray(),
-    db.workoutSessions.toArray(), db.performedSets.toArray(), db.alfredMemories.toArray(), db.projects.toArray(),
+    db.workoutSessions.toArray(), db.performedSets.toArray(), getMemories(), db.projects.toArray(),
   ]);
   // A historical correction is not current memory; never leak opted-out personal facts via events.
   for (const e of events) {

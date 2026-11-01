@@ -2,7 +2,7 @@ import { ContextSourceDetails } from "./OperatorContextPanel";
 import { useEffect, useRef, useState } from "react";
 import { inspectContextSource, readPersonalSources, type ContextSource, type PlanningContext } from "../../application/alfred/personalContext";
 
-const canOpen = (kind: ContextSource["kind"]) => ["MISSION", "MEMORY", "ALFRED_MEMORY", "DAY", "OBLIGATION", "SCHEDULE", "ROUTINE", "PROJECT"].includes(kind);
+const canOpen = (kind: ContextSource["kind"]) => ["MISSION", "MEMORY", "ALFRED_MEMORY", "PERSONAL_FACT", "DAY", "OBLIGATION", "SCHEDULE", "ROUTINE", "PROJECT"].includes(kind);
 const date = (at: string) => new Date(at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 /** Local inspection never calls the model. Inclusion is explicit and lasts only for this conversation. */
@@ -41,7 +41,7 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
   return <section className="alfred-context" aria-label="Alfred context">
     <details onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>CONTEXT & SOURCES</summary>
-      <p className="meta">Claude already receives your current day, recent recorded days, schedule, tasks, notes, targets, saved meals and Alfred memories when you send. Read tools can retrieve older records. Sending needs a connection.</p>
+      <p className="meta">Claude already receives your current day, recent recorded days, schedule, tasks, notes, targets, saved meals and active personal facts (including unconverted Alfred entries) when you send. Read tools can retrieve older records. Sending needs a connection.</p>
       <label><input type="checkbox" checked={included} disabled={busy} onChange={(e) => onIncluded(e.target.checked)} /> Include my Missions and confirmed personal memory in this conversation</label>
       <p className="meta">Off for this conversation by default. Missions, direction and constraints stay out of automatic briefs and weekly reviews; those keep their existing prep/recovery context. Changing this choice starts a fresh model conversation; earlier requests sent to Claude cannot be recalled.</p>
       {open && <>

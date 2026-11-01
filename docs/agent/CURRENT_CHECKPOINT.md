@@ -1,3 +1,33 @@
+# OPERATOR-CONTEXT-002B — implementation and verification (Builder: Codex)
+
+- Gavin explicitly approved the bounded scope, global personal-fact contract and history retention
+  on 2026-11-01. The concise durable brief is [issue #368](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/368).
+  Protected lane. [PR #369](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/369).
+  Branch `codex/operator-context-002b`; baseline `938e2e06e7e4a20218baee0048ba86f6768ccffc`.
+- #367 (002A) is merged under separate owner approval; its final PR body supersedes the older notes below.
+- New personal facts use MEMORY_RECORDED globally; old fact kinds retain day guards. People/Home
+  and remember cards use the same lifecycle. STOP USING retains history. Legacy FORGET remains
+  physical deletion until individually previewed/confirmed conversion; original evidence stays local.
+- Common context and search expose active destination wording only. No Engine, schema version,
+  provider, dependency, recommendation, TODAY or navigation change. New backups require a build
+  that understands PERSONAL_FACT; originals remain in exports, not model context.
+- Verification so far: full Node 217 files / 2,001 passed / one existing skip; architecture PASS;
+  TypeScript PASS. Focused Chromium run found and fixed a long-original phone overflow and stale
+  conversion-list refresh. Focused Chromium acceptance: 38/38 across eight files, including
+  stale conversation/privacy and cards. Built-PWA offline reload, dayless capture, retire/restore,
+  source inspection and 320/360/412px overflow checks PASS; zero page errors. Latest metadata/tool
+  reference refinements still need exact-head CI; no live provider or real phone acceptance claimed.
+- Review findings addressed: personal-fact cards now bind displayed wording atomically, and cached
+  briefs hide changed sources offline, discard in-flight stale answers and retain the ten-minute
+  request gate. Focused brief/privacy/cost browser checks 17/17; independent lifecycle Node 46/46.
+- Independent exact-head review, final required CI and separate Gavin merge approval pending.
+  No merge or field acceptance claimed. Final PR body will carry exact-head evidence/status.
+- #366 FREE-HELPER-001 is still Claude Code's branch. No takeover. Coordinate typed memory
+  reference semantics if its helper parser proposes legacy `forget` for a new personal fact.
+- Next: complete browser/build proof, publish PR, obtain independent exact-head review and green CI.
+
+---
+
 # OPERATOR-CONTEXT-002A — draft PR #367 (Builder: Codex)
 
 - Gavin approved the first bounded advancement objective on 2026-11-01.
