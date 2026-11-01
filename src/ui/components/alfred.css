@@ -73,3 +73,28 @@
 .alfred-memory-page, .alfred-memory-page > *, .alfred-memory-page form { min-width: 0; overflow-wrap: anywhere; }
 .alfred-memory-page input, .alfred-memory-page textarea, .alfred-memory-page select { max-width: 100%; }
 .alfred-memory-page button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+/* ATTENTION-001: deliberate depth, in BEYOND's equipment grammar. */
+.support-disclosure { min-width: 0; margin-block: 12px; border: 1px solid var(--border-strong); border-inline-start: 2px solid var(--border-strong); background: var(--surface-1); overflow-wrap: anywhere; }
+.support-disclosure > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 12px 14px; cursor: pointer; color: var(--text-1); font-size: 12px; font-weight: 600; letter-spacing: .12em; list-style: none; }
+.support-disclosure > summary::-webkit-details-marker { display: none; }
+.support-disclosure > summary::after { content: "+"; color: var(--text-2); font-size: 18px; font-weight: 400; letter-spacing: 0; }
+.support-disclosure[open] > summary::after { content: "−"; }
+.support-disclosure__hint { margin-inline-start: auto; color: var(--text-2); font-size: 11px; font-weight: 400; letter-spacing: 0; }
+.support-disclosure__body { padding: 4px 14px 14px; border-block-start: 1px solid var(--border-subtle); }
+.support-disclosure__body > .alfred-brief { margin-block: 12px 0; }
+.support-disclosure summary:focus-visible { outline: 2px solid var(--text-1); outline-offset: 3px; }
+.alfred-support .alfred-brief__open, .today-review-support .alfred-brief__open { border: 0; border-inline-start: 1px solid var(--border-strong); background: transparent; }
+.life-identity { position: relative; margin-block: 4px 24px; padding: 18px 18px 16px; border-block-start: 1px solid var(--border-strong); border-inline-start: 3px solid var(--red); background: linear-gradient(135deg, var(--surface-1), transparent); }
+.life-identity::after { content: ""; position: absolute; inset-block-start: -1px; inset-inline-end: 0; width: 22px; border-block-start: 2px solid var(--red); }
+.life-identity h2 { font-size: clamp(32px, 8vw, 44px); line-height: 1; letter-spacing: .1em; margin: 12px 0; }
+.life-identity p:last-child { margin: 0; color: var(--text-2); font-size: 13px; }
+.life-tabs { gap: 6px; padding-block-end: 12px; border-block-end: 1px solid var(--border-strong); margin-block-end: 14px; }
+.life-tabs .chip { background: var(--surface-1); }
+.life-tabs .chip--selected { border-color: var(--text-2); color: var(--text-1); box-shadow: inset 3px 0 0 var(--red); }
+.memory-management { margin-block: 10px; border-block: 1px solid var(--border-subtle); }
+@media (max-width: 360px) { .support-disclosure > summary { gap: 8px; padding-inline: 10px; letter-spacing: .08em; } }
+
+.support-disclosure[open] { border-inline-start-color: var(--red); }
+
+.today-routine fieldset { border: 0; padding: 0; margin: 10px 0; min-width: 0; }

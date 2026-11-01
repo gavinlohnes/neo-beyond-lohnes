@@ -707,7 +707,8 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
-              brief={<><AlfredBrief active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} /><AlfredWeek active={tab === "TODAY"} /></>}
+              brief={<AlfredBrief recessed active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} />}
+              review={(onAvailable) => <AlfredWeek active={tab === "TODAY"} onAvailabilityChange={onAvailable} />}
               banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />

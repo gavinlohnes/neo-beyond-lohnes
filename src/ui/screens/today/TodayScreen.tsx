@@ -7,6 +7,7 @@ import { useHiddenFeatures } from "../../hiddenFeatures";
 import { LogActions } from "../../components/RecordSheets";
 import type { RecordSheetTarget } from "../../recordSheets";
 import { LogSheet } from "../../components/LogSheet";
+import { TodayReviewSupport } from "../../components/TodayReviewSupport";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -277,6 +278,7 @@ export function TodayScreen({
   onWorkContextChanged,
   banners,
   brief,
+  review,
   shiftHandoffRefreshKey,
   mealRefreshKey = 0,
 }: {
@@ -307,8 +309,9 @@ export function TodayScreen({
   onWorkContextChanged?: () => void;
   /** CLEANUP-002: the shell's lines (backup, sweep, handoff, capsule), shown right under the header. */
   banners?: ReactNode;
-  /** ALFRED-003: Alfred's brief, the first thing under the hero. */
+  /** ATTENTION-001: optional narrative after the next action and logging. */
   brief?: ReactNode;
+  review?: (onAvailable: (available: boolean) => void) => ReactNode;
   /** COMMAND-CENTER-001: the shift handoff note, under the header or in ON SHIFT's row. */
   shiftHandoffRefreshKey?: number;
   /** Re-read canonical totals after BODY without resetting TODAY's disclosures. */
@@ -2689,12 +2692,12 @@ export function TodayScreen({
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
             <ActiveExperimentLine now={now} />
           </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
-    {/* ALFRED-003: Alfred's brief leads, right under the hero. */}
-    {brief}
     {/* SYNC-002: the shell's one line here (what SYNC GARMIN brought back), right under the hero. */}
     {banners && <div className="today-banners">{banners}</div>}
     {/* Keyed so a state change reorders the two sections without remounting them (focus and drafts survive). */}
     {(nextIsReal ? [["next", nextSection], ["log", logSection]] as const : [["log", logSection], ["next", nextSection]] as const).map(([key, node]) => <Fragment key={key}>{node}</Fragment>)}
+    {brief}
+    <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} />
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"

@@ -113,6 +113,7 @@ describe("ALFRED-003 brief on TODAY", () => {
     await startDay();
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     const screen = await render(<App />);
+    await screen.getByLabelText("Alfred brief", { exact: true }).click();
     const brief = screen.getByRole("region", { name: "Alfred's brief" });
     await expect.element(brief).toHaveTextContent("Sleep first: the shift starts 18:00");
     expect(briefs()[0]!.model).toBe("claude-haiku-5-5");

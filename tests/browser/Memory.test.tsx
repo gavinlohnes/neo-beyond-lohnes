@@ -59,6 +59,7 @@ it("corrects words/kind through MORE, keeps previous words in history, and expos
   const saved = (await getMemoryFacts())[0]!; expect(saved.kind).toBe("RECOVERY"); expect(saved.history[0]!.statement).toBe(words);
   await memory.getByText("Inspect or fix this memory", { exact: true }).click();
   await memory.getByRole("article").getByRole("button", { name: "NO LONGER RELEVANT", exact: true }).click();
+  await memory.getByText("MANAGE MEMORY", { exact: true }).click();
   await memory.getByRole("group", { name: "Memory status" }).getByRole("button", { name: "NO LONGER RELEVANT", exact: true }).click();
   await expect.element(memory.getByText("Quiet first after work.", { exact: true }).first()).toBeVisible();
   await memory.getByText("Inspect or fix this memory", { exact: true }).click();
