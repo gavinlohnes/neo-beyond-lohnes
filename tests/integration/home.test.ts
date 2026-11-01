@@ -24,12 +24,14 @@ it("saves a fact and an every-3-months job together; the next one comes round on
 it("keeps a fact on its own, or a job on its own, and refuses an empty or broken item", async () => {
   await addHomeItem({ item: "Water heater", details: "Model AB-40, warranty to 2030" });
   await addHomeItem({ item: "Smoke alarm batteries", repeat: { every: 1, unit: "YEARS", firstDue: "2027-01-01" } });
-  expect(await db.alfredMemories.count()).toBe(1);
+  expect((await getHomeView()).facts).toHaveLength(1);
+  expect(await db.alfredMemories.count()).toBe(0);
   expect(await db.obligations.count()).toBe(1);
   await expect(addHomeItem({ item: "Gutters" })).rejects.toThrow("NOTHING_TO_KEEP");
   await expect(addHomeItem({ item: "Gutters", details: "x", repeat: { every: 0, unit: "MONTHS", firstDue: "2026-11-01" } })).rejects.toThrow("INVALID_REPEAT");
   await expect(addHomeItem({ item: "Gutters", details: "x", repeat: { every: 2, unit: "MONTHS", firstDue: "soon" } })).rejects.toThrow("INVALID_DATE");
-  expect(await db.alfredMemories.count()).toBe(1);
+  expect((await getHomeView()).facts).toHaveLength(1);
+  expect(await db.alfredMemories.count()).toBe(0);
 });
 
 it("rolls the fact back if the job can't be saved", async () => {

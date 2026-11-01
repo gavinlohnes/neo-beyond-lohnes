@@ -2674,3 +2674,20 @@ Owner: "Go home?" on the HOME-001 proposal. A home item is a HOME fact plus, if 
 ordinary repeating commitment titled "Home: …", saved together on confirm. Home in Personal
 Understanding is a view over those records: what's coming round and what BEYOND knows about the
 house. No scores, overdue alarms or new notifications. [Brief](agent/HOME-001.md).
+
+## 2026-11-01 — OPERATOR-CONTEXT-002B: one lifecycle for new personal facts
+
+Gavin explicitly approved [#368](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/368),
+including its global fact event contract and retention choice. New general personal facts use
+MEMORY_RECORDED with kind PERSONAL_FACT and an explicit topic, without a lived-day association.
+Existing preparation/recovery/direction/constraint facts retain their day guards and sharing rules;
+correction cannot change a fact between those purposes and general personal facts.
+
+Personal facts retain Alfred's existing default sharing allowance. STOP USING removes them from
+active context while retaining correction history; RESTORE makes them active again. Neither is
+physical erasure. Unconverted legacy entries retain physical-delete FORGET. Individual conversion
+requires a preview and confirmation, retains original evidence, records confirmation time honestly,
+and suppresses the original active copy even after retirement. Long originals need operator-chosen
+wording of at most 280 characters; no silent truncation, splitting, inference or bulk migration.
+New exports require this build or newer to interpret PERSONAL_FACT history; there is no downgrade
+conversion or selective erasure of older backups/external requests. Engine authority is unchanged.

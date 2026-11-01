@@ -5,7 +5,7 @@ import { createMission, archiveMission, createObligation } from "../../src/appli
 import { createProject } from "../../src/application/projectCommands";
 import { createRoutine, modifyRoutine } from "../../src/application/routineCommands";
 import { recordMemory } from "../../src/application/memory";
-import { rememberFact, forgetFact } from "../../src/application/alfred/alfredMemory";
+import { forgetFact } from "../../src/application/alfred/alfredMemory";
 import { buildPlanningContext, inspectContextSource } from "../../src/application/alfred/personalContext";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
 import { readOperatorContext, CONTEXT_TEXT_LIMIT, CONTEXT_SOURCE_LIMIT, operatorContextVersion } from "../../src/application/operatorContext";
@@ -13,6 +13,8 @@ import * as routines from "../../src/application/routineCommands";
 
 beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 1, 17)); });
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+let legacyId = 0;
+const rememberFact = async (text: string, topic: "OTHER") => { const row = { id: `legacy-${++legacyId}`, text, topic, savedAt: new Date().toISOString() }; await db.alfredMemories.add(row); return row; };
 const all = () => Promise.all(db.tables.map(async (t) => [t.name, await t.toArray()]));
 it("keeps both memory origins, their lifecycles and sharing purposes honest without writes", async () => {
   const day = await startDay();
@@ -35,7 +37,7 @@ it("bounds the entire source payload with no unbounded legacy prose bypass and i
   expect(context.text.length).toBeLessThanOrEqual(CONTEXT_TEXT_LIMIT);
   expect(context.sources.length).toBeLessThanOrEqual(CONTEXT_SOURCE_LIMIT);
   expect(context.omitted).toBeGreaterThan(0);
-  expect(context.coverage.find((c) => c.category === "Alfred legacy memory")?.state).toBe("partial");
+  expect(context.coverage.find((c) => c.category === "Personal facts for Alfred")?.state).toBe("partial");
   const local = await readOperatorContext({ purpose: "local", includePersonal: true });
   const omitted = local.records.find((r) => r.kind === "ALFRED_MEMORY" && !context.sources.some((s) => s.key === r.key))!;
   expect(context.text).not.toContain(omitted.text);
@@ -60,7 +62,7 @@ it("labels an unavailable category separately from empty and does not mutate oth
   vi.spyOn(routines, "getRoutines").mockRejectedValue(new Error("synthetic failure"));
   const context = await buildPlanningContext(false);
   expect(context.coverage.find((c) => c.category === "Routines")?.state).toBe("unavailable");
-  expect(context.coverage.find((c) => c.category === "Alfred legacy memory")?.state).toBe("empty");
+  expect(context.coverage.find((c) => c.category === "Personal facts for Alfred")?.state).toBe("empty");
   expect(context.text).not.toContain("ROUTINES: none");
 });
 it("excludes archived-Mission commitments from planning but preserves records for management", async () => {

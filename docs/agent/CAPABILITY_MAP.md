@@ -354,3 +354,15 @@ live in `domain/operatorContext.ts`. `alfred/personalContext.ts` and automatic `
 serialize the same bounded record model with purpose-specific sharing. `OperatorContextPanel`
 provides local inspection in LIFE/Memory. Two memory stores remain distinct; no migration occurred.
 Reuse these adapters rather than adding a third profile store. Status/limits: [brief](OPERATOR-CONTEXT-002A.md).
+
+### OPERATOR-CONTEXT-002B — new personal facts and explicit legacy conversion (2026-11-01)
+
+Approved bounded work: [#368](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/368).
+`application/memory.ts` reuses the causal MEMORY_RECORDED lifecycle for global PERSONAL_FACT
+records with topics; old kinds keep day guards and opt-in sharing. `alfred/alfredMemory.ts` is a
+compatibility view/command gateway, not a second new store: remember/People/Home now create events,
+retired facts stay out of active context/search, and conversion retains an explicit immutable origin.
+`MemoryPanel` owns corrections/history/restore; `AlfredMemoryList` offers bounded original-entry
+inspection, physical deletion of unconverted rows and individually confirmed conversion. No bulk
+migration; both stores still exist while originals remain. BUILD OWNED integration using existing
+atomic writes, proposal cards, common context projection and native backups; no new dependency.

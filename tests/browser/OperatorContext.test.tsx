@@ -16,7 +16,7 @@ afterEach(async () => { await cleanup(); vi.restoreAllMocks(); vi.useRealTimers(
 it("inspects both local memory contracts offline without a key or writes, with accessible bounded sources", async () => {
   const day = await startDay();
   await recordMemory({ dayId: day.id, factId: "quiet", kind: "CONSTRAINT", statement: "Keep the morning quiet", expectedPreviousId: null, action: "CREATED" });
-  await rememberFact("An old Alfred fact", "OTHER");
+  await db.alfredMemories.add({ id: "old", text: "An old Alfred fact", topic: "OTHER", savedAt: new Date().toISOString() });
   for (let i = 0; i < 8; i++) await rememberFact(`Other fact ${i}`, "OTHER");
   vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
   const fetch = vi.spyOn(window, "fetch"); const count = await db.events.count();

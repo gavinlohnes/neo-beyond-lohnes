@@ -967,7 +967,9 @@ export interface DomainEvent<TPayload = unknown> {
    * must still produce real historical DomainEvents (locked Drop 01
    * doctrine), so the day-scoping requirement is loosened here rather than
    * inventing a second, parallel event shape. See missionId/obligationId
-   * below for how those events are scoped instead.
+   * below for how those events are scoped instead. OPERATOR-CONTEXT-002B
+   * also permits explicitly global PERSONAL_FACT memory revisions; all
+   * other MEMORY_RECORDED kinds retain required lived-day provenance.
    */
   beyondDayId?: string;
   /** Intent & Commitment Spine (Drop 01): set on MISSION_* events instead of beyondDayId. */

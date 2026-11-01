@@ -9,6 +9,9 @@ export interface AlfredMemory {
   text: string;
   topic: MemoryTopic;
   savedAt: string; // ISO
+  reference?: MemoryReference;
+  recordedAt?: string;
+  lastConfirmedAt?: string;
 }
 
 /** ALFRED-006: a weekly review Alfred wrote (Monday–Sunday lived days, by their start date). */
@@ -19,3 +22,6 @@ export interface AlfredReview {
   text: string;
   writtenAt: string; // ISO
 }
+
+/** Explicit storage owner. Old proposal IDs refer only to legacy rows. */
+export type MemoryReference = { source: "ALFRED_MEMORY"; id: string; revision: string } | { source: "PERSONAL_FACT"; id: string; revision: string };

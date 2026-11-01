@@ -11,7 +11,7 @@ export function ContextSourceDetails({ source }: { source: ContextSource }) {
     {source.confirmedAt && <p className="meta">Last confirmed: {format(source.confirmedAt)}</p>}
     <p className="meta">{source.freshness}</p>
     {source.kind === "ALFRED_MEMORY" && <p className="meta">This legacy entry has no revision history. Forget deletes the local entry; old exports and earlier external requests are not recalled.</p>}
-    {source.kind === "MEMORY" && <p className="meta">Corrections and no-longer-relevant status retain revision history.</p>}
+    {(source.kind === "MEMORY" || source.kind === "PERSONAL_FACT") && <p className="meta">Corrections and no-longer-relevant status retain revision history.</p>}
   </div>;
 }
 
@@ -43,7 +43,7 @@ export function OperatorContextPanel({ active, onMemory }: { active: boolean; on
       {error && <p role="alert">Context is unavailable, not empty. Your records have not changed.</p>}
       <button type="button" className="btn-secondary" disabled={loading} onClick={() => setAttempt((v) => v + 1)}>RELOAD CONTEXT</button>
       {snapshot && <>
-        <p className="meta">Read {new Date(snapshot.readAt).toLocaleString()}. Missions and confirmed personal memory are conversation opt-in. Alfred legacy memory and automatic prep/recovery keep their existing sharing rules. This local view grants no additional sharing.</p>
+        <p className="meta">Read {new Date(snapshot.readAt).toLocaleString()}. Missions, direction and constraints are conversation opt-in. Active personal facts and unconverted Alfred entries are available to Alfred by default; automatic prep/recovery keep their existing allowance. This local view grants no additional sharing.</p>
         {([true, false] as const).map((statements) => {
           const records = snapshot.records.filter((s) => (s.classification === "Operator statement") === statements);
           return <details key={String(statements)}><summary>{statements ? "Your statements" : "Current records and recorded history"} ({records.length})</summary>
@@ -60,7 +60,7 @@ export function OperatorContextPanel({ active, onMemory }: { active: boolean; on
       {selected && <section ref={detail} tabIndex={-1} aria-label="Local source record">
         <h3>{selected.title}</h3><ContextSourceDetails source={selected} />
         <p className="meta">Snapshot at {snapshot ? new Date(snapshot.readAt).toLocaleString() : "unknown time"}. Reload to check for changes.</p>
-        {selected.kind === "MEMORY" && onMemory && <button type="button" className="btn-secondary" onClick={() => onMemory(selected.id)}>OPEN MEMORY EDITOR</button>}
+        {(selected.kind === "MEMORY" || selected.kind === "PERSONAL_FACT") && onMemory && <button type="button" className="btn-secondary" onClick={() => onMemory(selected.id)}>OPEN MEMORY EDITOR</button>}
         <button type="button" className="btn-secondary" onClick={() => setSelected(null)}>CLOSE SOURCE</button>
       </section>}
     </details>

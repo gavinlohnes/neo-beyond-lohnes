@@ -68,3 +68,8 @@
 .alfred-starter-group { margin-top: 8px; }
 .alfred-starter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .alfred-starter-grid .btn-secondary { margin: 0; min-height: 44px; padding: 6px 8px; font-size: 0.85em; text-transform: none; letter-spacing: 0; }
+
+/* Original evidence can contain long unbroken words. Keep deliberate inspection inside the phone. */
+.alfred-memory-page, .alfred-memory-page > *, .alfred-memory-page form { min-width: 0; overflow-wrap: anywhere; }
+.alfred-memory-page input, .alfred-memory-page textarea, .alfred-memory-page select { max-width: 100%; }
+.alfred-memory-page button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

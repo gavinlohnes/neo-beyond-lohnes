@@ -38,7 +38,7 @@ export async function readPersonalSources(): Promise<ContextSource[]> {
   return [
     ...missions.map((m) => contextSource("MISSION", m.id, m.updatedAt, m.title,
       `${m.title}${m.description ? ` — ${m.description}` : ""}. Source: ${m.source}; active Mission; updated ${date(m.updatedAt)}. This is direction, not a task.`, "Operator statement", { at: m.updatedAt })),
-    ...facts.filter((f) => f.status === "ACTIVE").map((f) => contextSource("MEMORY", f.factId, f.id, f.statement,
+    ...facts.filter((f) => f.status === "ACTIVE" && f.kind !== "PERSONAL_FACT").map((f) => contextSource("MEMORY", f.factId, f.id, f.statement,
       `${MEMORY_LABELS[f.kind]}: ${f.statement} Source: OPERATOR; last confirmed ${date(f.lastConfirmedAt)}.`, "Operator statement",
       { at: f.recordedAt, confirmedAt: f.lastConfirmedAt, lifecycle: "BEYOND memory — revision history available" })),
   ];
@@ -92,8 +92,8 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
     if (options.purpose === "automatic" && options.includePreparationMemory !== false) await read("Preparation and recovery memory", getMemoryFacts,
       (facts) => facts.filter((f) => f.status === "ACTIVE" && (f.kind.startsWith("PREP_") || f.kind === "RECOVERY")).map((f) => s("MEMORY", f.factId, f.id, f.statement,
         `${MEMORY_LABELS[f.kind]}: ${f.statement}`, "Operator statement", { at: f.recordedAt, confirmedAt: f.lastConfirmedAt, lifecycle: "BEYOND memory — revision history available" })), true);
-    await read("Alfred legacy memory", getMemories, (v) => v.map((m) => s("ALFRED_MEMORY", m.id, JSON.stringify(m), m.text,
-      `WHAT HE ASKED YOU TO REMEMBER: [${m.id}] ${m.topic}: ${m.text} — saved ${date(m.savedAt)}.`, "Operator statement", { at: m.savedAt, lifecycle: "Alfred legacy memory — original saved entry; no revision history" })), true);
+    await read("Personal facts for Alfred", getMemories, (v) => v.map((m) => s(m.reference?.source ?? "ALFRED_MEMORY", m.id, m.reference?.revision ?? JSON.stringify(m), m.text,
+      `WHAT HE ASKED YOU TO REMEMBER: [${m.id}] ${m.topic}: ${m.text} — saved ${date(m.savedAt)}.${m.reference?.source === "PERSONAL_FACT" ? ` Personal fact revision: ${m.reference.revision}. STOP USING retains history.` : " Legacy source; FORGET physically deletes this entry."}`, "Operator statement", { at: m.recordedAt ?? m.savedAt, ...(m.lastConfirmedAt ? { confirmedAt: m.lastConfirmedAt } : {}), lifecycle: m.reference?.source === "PERSONAL_FACT" ? "Personal fact — correction history retained; Stop using excludes active context" : "Alfred legacy memory — original saved entry; no revision history" })), true);
     const tasks = await read("Eligible commitments", getCurrentlyEligibleUnresolvedObligations, (v) => v.map((t) => s("OBLIGATION", t.id, JSON.stringify(t), t.title,
       `OPEN TASKS/REMINDERS: [${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.plannedAt ? ` planned ${t.plannedAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}${t.projectId ? ` (step of project [${t.projectId}])` : ""}. ${t.status}; no other availability is implied.`, "Recorded event", { at: t.updatedAt })));
     const routines = await read("Routines", getRoutines, (v) => v.filter((r) => r.status === "ACTIVE").map((r) => s("ROUTINE", r.id, JSON.stringify(r), r.title,
