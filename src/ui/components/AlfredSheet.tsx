@@ -26,20 +26,23 @@ export function askAlfred(question: string) { window.dispatchEvent(new CustomEve
 export function readAlfredKey(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
 function writeAlfredKey(value: string | null) { try { if (value) localStorage.setItem(KEY, value); else localStorage.removeItem(KEY); } catch { /* not kept */ } }
 
+// LIFE-HUB-001: grouped Plan · Remember · Review so the message box stays in view.
+type StarterGroup = "Plan" | "Remember" | "Review";
+const STARTER_GROUPS: StarterGroup[] = ["Plan", "Remember", "Review"];
 // ALFRED-004: the starters are the ideas the owner asked for; each is one question Alfred already knows how to answer.
-const STARTERS: { label: string; ask?: string; fill?: string }[] = [
-  { label: "Plan my next days off", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
-  { label: "Help me get something done", fill: "Help me get this done: " },
+const STARTERS: { label: string; group: StarterGroup; ask?: string; fill?: string }[] = [
+  { label: "Plan my next days off", group: "Plan", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
+  { label: "Help me get something done", group: "Plan", fill: "Help me get this done: " },
   // UX-POLISH-001: one tap into each personal-OS area; each fills the sentence for him to finish.
-  { label: "Write a routine", fill: "My routine before shift is: " },
-  { label: "Remember a birthday", fill: "Remember a birthday: " },
-  { label: "Add a house job", fill: "House job: " },
-  { label: "How am I doing?" },
-  { label: "What am I forgetting?" },
-  { label: "Weekly review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
-  { label: "Plan my flip", ask: "Plan my next flip between nights and days from my schedule: when to sleep, when to stop caffeine, when to eat and when to get light. Offer reminders for the parts I want." },
-  { label: "Meal plan + grocery list", ask: "Plan my meals for the next 3 days around my shifts from my saved meals and protein target (pre-shift, mid-shift, after I wake), then a grocery list I can save as a note." },
-  { label: "When did I last…?", fill: "When did I last " },
+  { label: "Write a routine", group: "Plan", fill: "My routine before shift is: " },
+  { label: "Remember a birthday", group: "Remember", fill: "Remember a birthday: " },
+  { label: "Add a house job", group: "Remember", fill: "House job: " },
+  { label: "How am I doing?", group: "Review" },
+  { label: "What am I forgetting?", group: "Review" },
+  { label: "Weekly review", group: "Review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
+  { label: "Plan my flip", group: "Plan", ask: "Plan my next flip between nights and days from my schedule: when to sleep, when to stop caffeine, when to eat and when to get light. Offer reminders for the parts I want." },
+  { label: "Meal plan + grocery list", group: "Plan", ask: "Plan my meals for the next 3 days around my shifts from my saved meals and protein target (pre-shift, mid-shift, after I wake), then a grocery list I can save as a note." },
+  { label: "When did I last…?", group: "Remember", fill: "When did I last " },
 ];
 const SPEAK = "beyond.alfredSpeak";
 const usd = (v: number) => (v > 0 && v < 0.01 ? v.toFixed(3) : v.toFixed(2));
@@ -201,7 +204,10 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         {turns.length === 0 && <div className="alfred-starters">
           <p className="meta">Say or type anything: what you ate, how you slept, something to remember. Or ask.</p>
           <button type="button" className="btn-primary" disabled={busy} onClick={() => talk("Shift debrief: ")}>DEBRIEF MY SHIFT</button>
-          {STARTERS.map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void ask(q.ask ?? q.label))}>{q.label}</button>)}
+          {STARTER_GROUPS.map((g) => <div key={g} className="alfred-starter-group" role="group" aria-label={g}>
+            <p className="alfred-turn__who">{g.toUpperCase()}</p>
+            <div className="alfred-starter-grid">{STARTERS.filter((q) => q.group === g).map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void ask(q.ask ?? q.label))}>{q.label}</button>)}</div>
+          </div>)}
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
           <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : "ALFRED"}</p>

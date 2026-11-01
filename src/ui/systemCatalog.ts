@@ -57,7 +57,8 @@ export const SYSTEM_CAPABILITIES = [
   { label: "EXERCISE LIBRARY", description: "Browse and manage exercises", aliases: ["lift", "exercise"], group: "Plan", destination: { kind: "more", view: "EXERCISE_LIBRARY" } },
   { label: "CUSTOM PROGRAMS", description: "Your workout templates", aliases: ["program", "template"], group: "Plan", destination: { kind: "more", view: "CUSTOM_TEMPLATES" } },
   { label: "MISSIONS & OBLIGATIONS", description: "Commitments, projects and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Plan", destination: { kind: "more", view: "INTENT" } },
-  { label: "ROUTINES", description: "Your before, during and after shift routines", aliases: ["routine", "checklist", "habit", "rhythm"], group: "Plan", destination: { kind: "more", view: "ROUTINES" } },
+  { label: "LIFE", description: "Direction, plans, routines, people, home and memory in one place", aliases: ["life", "personal", "me", "organise", "organize"], group: "Plan", destination: { kind: "more", view: "LIFE" } },
+  { label: "ROUTINES", description: "Your before, during and after shift routines", aliases: ["routine", "checklist", "habit", "rhythm"], group: "Plan", destination: { kind: "more", view: "ROUTINES" }, browse: false },
   // UX-POLISH-001: the personal-OS areas are found by name in search (search-only: MORE-TRIM-001 keeps
   // the browsed list at 25 or fewer). People and Home also stay in Personal Understanding.
   { label: "PROJECTS", description: "Finite efforts and their steps", aliases: ["project", "get done", "steps", "errand"], group: "Plan", destination: { kind: "more", view: "INTENT" }, browse: false },

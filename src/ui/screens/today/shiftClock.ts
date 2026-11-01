@@ -146,12 +146,6 @@ export function deriveShiftClockPhase(input: ShiftClockInput): ShiftClockPhase |
 }
 
 /**
- * COMMAND-CENTER-001: `pin` is placement only. It selects which PHASE_ROWS TODAY
- * shows; `phase` stays the schedule's, for every caller that decides anything
- * else (Attention, guidance timing). An UNKNOWN day keeps its work question
- * first. Countdowns appear only where the real shift times support them.
- */
-/**
  * UX-POLISH-001 (review of #361): the phase this lived day would be in if it were declared a work day,
  * from its own scheduled shift and the live clock. Null on a scheduled day off (no shift window):
  * a calendar-day prediction would wrongly put a day off's morning "before shift".
@@ -160,6 +154,12 @@ export function predictedWorkPhase(input: ShiftClockInput): ShiftClockPhase | nu
   return input.shiftWindow ? deriveShiftClockPhase({ ...input, workContext: "WORK" }) : null;
 }
 
+/**
+ * COMMAND-CENTER-001: `pin` is placement only. It selects which PHASE_ROWS TODAY
+ * shows; `phase` stays the schedule's, for every caller that decides anything
+ * else (Attention, guidance timing). An UNKNOWN day keeps its work question
+ * first. Countdowns appear only where the real shift times support them.
+ */
 export function deriveShiftClockView(input: ShiftClockInput, pin: ShiftClockPhase | null = null): ShiftClockView {
   const phase = deriveShiftClockPhase(input);
   const displayPhase = pin ?? phase;
