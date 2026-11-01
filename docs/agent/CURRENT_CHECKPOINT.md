@@ -1,7 +1,8 @@
-# LIFE-HUB-001 — in review (Builder: Claude Code)
+# WEEK-PLAN-001 — in review (Builder: Claude Code)
 
-- #361 UX-POLISH-001 merged. Gavin: "go life hub". [Brief](LIFE-HUB-001.md). Routine/Feature lane.
-- Held for his separate OK: merging TODAY's pre-shift lists into one "before you go" checklist.
+- Merged since the campaign: #361 UX-POLISH-001, #362 LIFE-HUB-001, #363 REVIEW-NITS-001, #364 DEPS-002.
+- Gavin: "We will do plan my week Now". [Brief](WEEK-PLAN-001.md). Feature lane, no schema.
+- Held for his separate OK: TODAY "before you go" merge; vite-plugin-pwa 2.0 upgrade (10 build-time advisories).
 
 ---
 

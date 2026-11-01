@@ -3,6 +3,8 @@ import { WORKOUT_TEMPLATE_ORDER, type WorkoutTemplateId } from "../domain/workou
 import { formatLocalDate, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
 import { getSchedulePattern } from "./queries";
 import { suggestTemplateForNextWorkout } from "./trainQueries";
+import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
+import type { Obligation } from "../domain/intent/types";
 
 /** WEEKAHEAD-001: a read-only seven-day projection. It never feeds the Engine or stores a plan. */
 export interface WeekAheadDay {
@@ -79,4 +81,26 @@ export async function getWeekAhead(now: Date = new Date()): Promise<WeekAhead> {
     suggestTemplateForNextWorkout(),
   ]);
   return deriveWeekAhead(now, pattern, firstTemplate);
+}
+
+/**
+ * WEEK-PLAN-001 (owner go 2026-11-01, "We will do plan my week"): the open commitments that land on
+ * each of the next seven days, by their own planned or due date. Read-only; it never schedules,
+ * ranks or moves anything, and an undated commitment simply isn't on any day.
+ */
+export interface WeekTasksDay { date: string; planned: Obligation[]; due: Obligation[] }
+
+export function deriveWeekTasks(dates: string[], open: Obligation[]): WeekTasksDay[] {
+  return dates.map((date) => ({
+    date,
+    planned: open.filter((o) => o.plannedAt === date),
+    due: open.filter((o) => o.dueAt === date && o.plannedAt !== date),
+  }));
+}
+
+export async function getWeekTasks(now: Date = new Date()): Promise<WeekTasksDay[]> {
+  const dates = Array.from({ length: 7 }, (_, i) => formatLocalDate(localNoon(now, i)));
+  // Review of #365: a current-attention view, so it follows the locked Intent Lifecycle Integrity rule
+  // (tasks under an archived or missing Mission don't appear), the same projection Plan Today uses.
+  return deriveWeekTasks(dates, await getCurrentlyEligibleUnresolvedObligations());
 }

@@ -78,7 +78,7 @@ export async function buildAlfredContext(now = new Date(), includePreparationMem
     for (const s of recent) lines.push(dayLine(s));
   }
 
-  if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}${t.projectId ? ` (step of project [${t.projectId}])` : ""}`).join("; ") : "none"}.`);
+  if (tasks) lines.push(`OPEN TASKS/REMINDERS ([id] title): ${tasks.length ? tasks.map((t) => `[${t.id}] "${t.title}"${t.dueAt ? ` due ${t.dueAt}` : ""}${t.plannedAt ? ` planned ${t.plannedAt}` : ""}${t.recurrence ? ` (repeats ${t.recurrence.rrule})` : ""}${t.projectId ? ` (step of project [${t.projectId}])` : ""}`).join("; ") : "none"}.`);
   // ROUTINES-001: his own routines, by moment. No history of ticks is sent: nothing to count.
   const routines = await safe(getRoutines);
   if (routines) {

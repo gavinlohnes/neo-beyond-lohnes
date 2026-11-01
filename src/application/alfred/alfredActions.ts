@@ -32,6 +32,8 @@ export type AlfredProposal =
   | { kind: "work_ended" }
   | { kind: "task_done"; task_id: string; title: string }
   | { kind: "task_new_date"; task_id: string; title: string; due_date: string }
+  // WEEK-PLAN-001: the day he means to work on an open task (its planned date), not its due date.
+  | { kind: "task_plan"; task_id: string; title: string; planned_date: string }
   | { kind: "clean_day" }
   | { kind: "open_training" }
   // ALFRED-004: memory and urges.
@@ -93,6 +95,8 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
     input_schema: { type: "object", additionalProperties: false, required: ["task_id", "title"], properties: { task_id: s("id from OPEN TASKS"), title: s("the task's title") } } },
   { name: "task_new_date", description: "Propose moving one of his OPEN TASKS to a new due date (YYYY-MM-DD). Use the task's id from the records.",
     input_schema: { type: "object", additionalProperties: false, required: ["task_id", "title", "due_date"], properties: { task_id: s("id from OPEN TASKS"), title: s("the task's title"), due_date: s("YYYY-MM-DD") } } },
+  { name: "task_plan", description: "Propose the day he'll work on one of his OPEN TASKS (its planned date, YYYY-MM-DD), for planning his week. Not its due date. One card per task; fit his shifts and sleep, keep work nights light, and never treat unknown time as free.",
+    input_schema: { type: "object", additionalProperties: false, required: ["task_id", "title", "planned_date"], properties: { task_id: s("id from OPEN TASKS"), title: s("the task's title"), planned_date: s("YYYY-MM-DD") } } },
   { name: "clean_day", description: "Propose logging today as a clean day in his QUIT TRACKER, only when he says today was clean.", input_schema: none },
   { name: "open_training", description: "Offer to open TRAIN so he can start or resume today's workout. BEYOND picks the session there.", input_schema: none },
   { name: "person_date", description: "Propose keeping a person's yearly date (birthday, anniversary) as one card: it saves the fact and a reminder that repeats every year. Use it instead of remember plus add_reminder whenever he gives a person and a month and day. Only dates he stated; never guess a year or a date.",
@@ -170,6 +174,7 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     }
     case "work_started": case "work_ended": case "clean_day": case "open_training": return { kind: name } as AlfredProposal;
     case "task_done": { const id = str(i.task_id), t = str(i.title); return id && t ? { kind: "task_done", task_id: id, title: t } : null; }
+    case "task_plan": { const id = str(i.task_id), t = str(i.title), day = str(i.planned_date); return id && t && day && isRealDate(day) ? { kind: "task_plan", task_id: id, title: t, planned_date: day } : null; }
     case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && isRealDate(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
     case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
     case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
@@ -218,6 +223,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "work_ended": return "Work ended";
     case "task_done": return `Done: ${p.title}`;
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
+    case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
@@ -259,6 +265,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "capture_note") { await captureItem(p.text); return {}; }
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
+  if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
   if (p.kind === "forget") { await forgetFact(p.memory_id); return {}; }
   if (p.kind === "home_item") {
