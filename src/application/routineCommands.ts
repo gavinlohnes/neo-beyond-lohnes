@@ -118,8 +118,8 @@ export async function getRoutineHistory(routineId: string): Promise<DomainEvent[
  */
 export function routineMomentFor(input: { phase: SchedulePhase | null; workContext: string | null | undefined; workStarted: boolean; workEnded: boolean; predictedPhase?: SchedulePhase | null | undefined }): RoutineMoment | null {
   if (input.workContext === "OFF") return "DAY_OFF";
-  // UX-POLISH-001: before the work question is answered, follow the schedule's own prediction for a
-  // predicted work moment, as prep does. A predicted day off isn't assumed: nothing shows.
+  // UX-POLISH-001: before the work question is answered, follow this lived day's own scheduled shift
+  // (the caller passes it, live). A scheduled day off has no prediction, so nothing shows.
   if (input.phase === null) {
     if (input.workContext === "WORK" || !input.predictedPhase || input.predictedPhase === "OFF") return null;
     return routineMomentFor({ ...input, phase: input.predictedPhase, predictedPhase: undefined });

@@ -12,9 +12,12 @@
    projects). All three are search-only: MORE-TRIM-001 keeps the browsed list at 25 or fewer.
 2. **Two places to mark the bottle.** The routine editor now says food and bottle already have
    buttons in TODAY's prep; the example steps no longer include them.
-3. **Routine row missing before the work question was answered** while prep showed. The row now
-   follows the schedule's predicted work moment until the day is declared, as prep does. A declared day
-   off is still a day off; a predicted day off shows nothing rather than a guess.
+3. **Routine row missing before the work question was answered.** The row now follows this lived day's
+   own scheduled shift, live (`predictedWorkPhase`, from `livedDayShiftWindow` and the ticking clock),
+   until the day is declared. A scheduled day off has no shift, so nothing shows; a declared day off is
+   still a day off. (Prep itself still waits for the declaration; this is the routine row's own rule.)
+   Review of #361 caught that a first version used the calendar-day prediction, which put a day off's
+   morning "before shift" and went stale while TODAY stayed open; fixed and tested.
 4. **Unfinished-looking controls.** Routine ticks and the Automatic Alfred box use BEYOND's accent
    (`.beyond-check`), not the browser's blue. The Limits row is one line: amount field and a normal button.
 5. **Alfred's quick-starts skipped the new areas.** Added "Write a routine", "Remember a birthday" and
