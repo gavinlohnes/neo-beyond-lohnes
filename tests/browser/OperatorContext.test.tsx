@@ -36,8 +36,11 @@ it("inspects both local memory contracts offline without a key or writes, with a
   await screen.getByRole("button", { name: "SHOW MORE SOURCES", exact: true }).click();
   expect(screen.getByRole("button", { name: /^INSPECT / }).elements()).toHaveLength(10);
   expect(await db.events.count()).toBe(count); expect(fetch).not.toHaveBeenCalled();
-  expect((await axe.run(screen.container)).violations).toEqual([]);
-  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  for (const width of [320, 360, 412]) {
+    await page.viewport(width, 800);
+    expect((await axe.run(screen.container)).violations).toEqual([]);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  }
 });
 it("LIFE Memory opens a confirmed fact's existing correction editor without creating another record", async () => {
   const day = await startDay();
@@ -73,4 +76,23 @@ it("drops stale operational conversation history when a routine changes, and bou
   await send("z".repeat(130_000));
   await expect.element(screen.getByRole("alert")).toHaveTextContent("too large to send safely");
   expect(requests).toHaveLength(2);
+});
+
+it("inspects a historical day returned by a read tool outside the initial fourteen-day catalog", async () => {
+  const old = await startDay(new Date(2026, 9, 1, 17).toISOString());
+  for (let i = 2; i <= 17; i++) await startDay(new Date(2026, 9, i, 17).toISOString());
+  localStorage.setItem("beyond.alfredKey", "sk-ant-synthetic"); let calls = 0;
+  vi.spyOn(window, "fetch").mockImplementation(async () => {
+    calls++;
+    const content = calls === 1 ? [{ type: "tool_use", id: "history", name: "get_days", input: { from: "2026-10-01", to: "2026-10-01" } }]
+      : [{ type: "text", text: `Your recorded day. [[DAY:${old.id}]]` }];
+    return new Response(JSON.stringify({ id: "synthetic-history", type: "message", role: "assistant", model: "claude-haiku-5-5", content, stop_reason: calls === 1 ? "tool_use" : "end_turn", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 10 } }), { headers: { "content-type": "application/json" } });
+  });
+  const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
+  await screen.getByRole("textbox", { name: "Message Alfred" }).fill("What happened on October 1?");
+  await screen.getByRole("button", { name: "SEND", exact: true }).click();
+  await screen.getByRole("button", { name: /^Source: Recorded day/ }).click();
+  await expect.element(screen.getByRole("region", { name: "Source record", exact: true })).toHaveTextContent("Current record matches the supplied revision");
+  expect(calls).toBe(2);
+  expect(screen.getByText("[Source unavailable]", { exact: true }).elements()).toHaveLength(0);
 });

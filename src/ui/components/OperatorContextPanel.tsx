@@ -43,7 +43,7 @@ export function OperatorContextPanel({ active, onMemory }: { active: boolean; on
       {error && <p role="alert">Context is unavailable, not empty. Your records have not changed.</p>}
       <button type="button" className="btn-secondary" disabled={loading} onClick={() => setAttempt((v) => v + 1)}>RELOAD CONTEXT</button>
       {snapshot && <>
-        <p className="meta">Read {new Date(snapshot.readAt).toLocaleString()}. Sharing with Alfred is chosen in his conversation; this local view grants no sharing permission.</p>
+        <p className="meta">Read {new Date(snapshot.readAt).toLocaleString()}. Missions and confirmed personal memory are conversation opt-in. Alfred legacy memory and automatic prep/recovery keep their existing sharing rules. This local view grants no additional sharing.</p>
         {([true, false] as const).map((statements) => {
           const records = snapshot.records.filter((s) => (s.classification === "Operator statement") === statements);
           return <details key={String(statements)}><summary>{statements ? "Your statements" : "Current records and recorded history"} ({records.length})</summary>

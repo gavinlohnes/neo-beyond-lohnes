@@ -3,7 +3,7 @@
 - Authority: Gavin, 2026-11-01: “Approved. I think that's a good launching point to us to grow beyond”, after reviewing the advancement design and its recommended 1A first implementation. Approval is bounded to this first objective; 002B migration, attention placement, providers and recovery behavior remain separate decisions.
 - Lane: PROTECTED — context/privacy/source contracts. Builder: Codex.
 - Fresh starting master: `f23668a8d7876f7c7a931c126770313ef58f6060` (#365), clean checkout.
-- Branch: `codex/operator-context-002a`. PR pending. Never merge.
+- Branch: `codex/operator-context-002a`. [PR #367](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/367). Never merge.
 - Overlap: #366 FREE-HELPER-001 belongs to Claude Code. Do not edit/take over its branch or duplicate its implementation. Preserve current public context/card interfaces; integrate its helper consumer after its reviewed merge if available, otherwise record the exact remaining integration seam.
 
 ## Outcome and scope
@@ -38,11 +38,12 @@ No memory conversion/new fact kinds, schema/event/backup contract change, Engine
 - LIFE/Memory local inspection is deliberate, bounded and model-free; legacy memory is honestly labelled.
 - Existing atomic confirmation guards retained; own confirmed saves advance the operational snapshot,
   outside operational changes start fresh model history. Entire conversation requests have a 120,000-character ceiling.
-- Focused Node 27/27; full Node 216 files, 1,992 passed / one existing compile-time skip; architecture,
+- Focused Node 30/30; full Node 216 files, 1,995 passed / one existing compile-time skip; architecture,
   TypeScript and production/PWA build PASS. Existing large-chunk warning remains.
 - Browser execution blocked locally: no Chromium executable; official Playwright downloads return invalid archives.
   Browser tests are present but unrun, so phone/accessibility acceptance is not claimed.
-- Independent review requested against source commit `eb7613a4`; GitHub exact-head confirmation still required.
+- Independent source review PASS at `7a4b5a694cc01edb490d8bc2f3f43d95d50d3b52`; final copy/tests/docs head confirmation still required.
+  Initial BLOCK findings fixed with regressions: outside-change receipt bypass, unmeasured steps as zero, old-day citation sources.
   Local git push lacks authentication; publishing through the connected GitHub app instead.
 - #366 helper consumer integration remains pending its separate merge. Public context/card interfaces remain compatible.
-- No live model call, CI, deployment or merge claimed.
+- PR Verification CI is running; Chromium installation passed remotely. No green CI, live model call, deployment or merge claimed.

@@ -1,14 +1,21 @@
-# OPERATOR-CONTEXT-002A — implementation (Builder: Codex)
+# OPERATOR-CONTEXT-002A — draft PR #367 (Builder: Codex)
 
-- Gavin approved the advancement launching point on 2026-11-01; first bounded objective only.
-  [Brief](OPERATOR-CONTEXT-002A.md). Protected context/privacy contract; no migration or Engine change.
-- Branch `codex/operator-context-002a`, fresh master `f23668a` (#365). PR pending.
-- Shared read-only source projection and local LIFE/Memory inspection built; existing sharing and cards preserved.
-- Focused Node integration: 27/27 passed. TypeScript, architecture and production/PWA build passed.
-- Full Node suite: 216 files, 1,992 passed / one existing skip. Browser execution blocked: Playwright Chromium absent;
-  installation downloads return invalid archives. No browser acceptance, CI or independent review claimed.
-- #366 FREE-HELPER-001 remains Claude Code's work, not taken over; preserve context/card interfaces.
-- Next: finish verification, publish draft PR and obtain independent exact-head review; no merge authorized.
+- Gavin approved the first bounded advancement objective on 2026-11-01.
+  [Brief](OPERATOR-CONTEXT-002A.md). Protected context/privacy contract; no memory migration or Engine change.
+- Branch `codex/operator-context-002a`, baseline `f23668a` (#365), [PR #367](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/367).
+- Shared read-only source projection, bounded request assembly and local LIFE/Memory inspection built.
+  Both memory lifecycles remain distinct; existing purpose-specific sharing and atomic cards retained.
+- Verification: focused Node30/30; full Node216 files, 1,995 passed / one existing compile-time skip;
+  TypeScript, architecture, risk classification and production/PWA build PASS (existing chunk warning).
+- Independent source review PASS at `7a4b5a694cc01edb490d8bc2f3f43d95d50d3b52`, reviewer18/18 Node.
+  Initial BLOCK findings fixed: outside-change receipt bypass, unmeasured steps as zero, old-day citations.
+  [Review record](reviews/OPERATOR-CONTEXT-002A.md). Final copy/tests/docs need exact-head confirmation.
+- Browser acceptance: local execution blocked by absent Chromium and invalid official downloads.
+  CI installed Chromium and is running the full suite. New 320/360/412px, offline, editor, stale-save,
+  oversized-request and old-day citation browser regressions are not yet claimed passed.
+- #366 FREE-HELPER-001 remains Claude Code's work; no takeover. Check helper integration after its separate merge.
+- Next: final exact-head review + green required CI, resolve any findings, then Gavin's merge decision.
+  No live-model quality, phone field acceptance, deployment or merge claimed.
 
 ---
 
