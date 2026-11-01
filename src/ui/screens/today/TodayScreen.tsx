@@ -2504,7 +2504,7 @@ export function TodayScreen({
         />}
       <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
       {/* ROUTINES-001 (owner ruling 2026-10-31): one quiet row, only the current moment's routines. */}
-      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
+      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: scheduledContext?.phase, workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">

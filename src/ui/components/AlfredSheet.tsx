@@ -30,6 +30,10 @@ function writeAlfredKey(value: string | null) { try { if (value) localStorage.se
 const STARTERS: { label: string; ask?: string; fill?: string }[] = [
   { label: "Plan my next days off", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
   { label: "Help me get something done", fill: "Help me get this done: " },
+  // UX-POLISH-001: one tap into each personal-OS area; each fills the sentence for him to finish.
+  { label: "Write a routine", fill: "My routine before shift is: " },
+  { label: "Remember a birthday", fill: "Remember a birthday: " },
+  { label: "Add a house job", fill: "House job: " },
   { label: "How am I doing?" },
   { label: "What am I forgetting?" },
   { label: "Weekly review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
@@ -230,13 +234,13 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
       {limitsOpen && <div className="alfred-limits" role="group" aria-label="Alfred limits">
         <p className="meta">BEYOND's estimate of this month: ${usd(monthSpent)}{cap ? ` of your $${cap.toFixed(2)} limit` : ", no limit set"}. At the limit Alfred stops until next month; everything else keeps working. For a hard ceiling, also set a spend limit in the Anthropic console.</p>
-        <form className="alfred-input__row" onSubmit={(e) => { e.preventDefault(); const v = Number(capDraft); if (Number.isFinite(v) && v > 0) { setMonthlyCap(v); setCap(getMonthlyCap()); } }}>
+        <form className="alfred-limits__row" onSubmit={(e) => { e.preventDefault(); const v = Number(capDraft); if (Number.isFinite(v) && v > 0) { setMonthlyCap(v); setCap(getMonthlyCap()); } }}>
           <label className="field">Monthly limit ($)<input className="input" type="number" inputMode="decimal" min={0.01} step="0.01" value={capDraft} onChange={(e) => setCapDraft(e.target.value)} /></label>
           <button type="submit" className="btn-secondary" disabled={!(Number(capDraft) > 0)}>SET LIMIT</button>
           {cap !== null && <button type="button" className="btn-secondary" onClick={() => { setMonthlyCap(null); setCap(null); setCapDraft(""); }}>NO LIMIT</button>}
         </form>
         <label style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 44 }}>
-          <input type="checkbox" checked={auto} onChange={(e) => { setAutomaticAlfred(e.target.checked); setAuto(e.target.checked); }} />
+          <input type="checkbox" className="beyond-check" checked={auto} onChange={(e) => { setAutomaticAlfred(e.target.checked); setAuto(e.target.checked); }} />
           <span>Automatic Alfred: write TODAY's brief and the weekly review on his own</span>
         </label>
         <p className="meta">{auto ? "On. These run without you asking (Haiku, the cheap model)." : "Off. Alfred only speaks when you open him and ask."}</p>

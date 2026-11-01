@@ -3,6 +3,7 @@ import { getRoutines, getRoutineTicks, setRoutineStep, stepKey } from "../../app
 import { ROUTINE_MOMENT_LABELS, type Routine, type RoutineMoment } from "../../domain/routines";
 import { captureCommitFeedback } from "../feel/feedback";
 import { describeError } from "../errorMessage";
+import "./alfred.css";
 
 /**
  * ROUTINES-001 (owner ruling: "One quiet row on TODAY"). Only the routines for the current moment,
@@ -51,7 +52,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
         {r.steps.map((s) => {
           const done = ticks.has(stepKey(r.id, s.id));
           return <li key={s.id}><label style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 44 }}>
-            <input type="checkbox" checked={done} disabled={saving || busy} onChange={(e) => void toggle(r, s.id, e.target.checked)} />
+            <input type="checkbox" className="beyond-check" checked={done} disabled={saving || busy} onChange={(e) => void toggle(r, s.id, e.target.checked)} />
             <span>{s.text}</span>
           </label></li>;
         })}

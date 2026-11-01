@@ -7,9 +7,9 @@ describe("capability discovery (COMMAND search)", () => {
     // workspace entry left because COMMAND is where the search lives. SUIT-001 adds SYSTEMS and STEALTH.
     // TONIGHT-001: FOOD LOOKUP left the meal screen for its own COMMAND entry.
     // MEMORY-001 adds one settings destination for confirmed prep/recovery facts.
-    // ROUTINES-001 adds MORE → ROUTINES.
-    expect(SYSTEM_CAPABILITIES).toHaveLength(51);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(51);
+    // ROUTINES-001 adds MORE → ROUTINES; UX-POLISH-001 adds PROJECTS, PEOPLE and HOME.
+    expect(SYSTEM_CAPABILITIES).toHaveLength(54);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(54);
     for (const entry of SYSTEM_CAPABILITIES) expect(CAPABILITY_GROUPS).toContain(entry.group);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
   });

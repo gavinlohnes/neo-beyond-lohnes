@@ -54,3 +54,9 @@
 .alfred-memory-page h2 { margin: 0; }
 .alfred-memory-add { display: grid; gap: 8px; }
 .alfred-memory-add button { margin: 0; }
+
+/* UX-POLISH-001: BEYOND's own tick boxes (routines, Alfred limits), not the browser's blue default. */
+.beyond-check { accent-color: var(--accent-strong); width: 22px; height: 22px; flex: none; margin: 0; }
+.alfred-limits__row { display: flex; gap: 8px; align-items: flex-end; }
+.alfred-limits__row .field { flex: 1; }
+.alfred-limits__row .btn-secondary { width: auto; padding: 8px 14px; min-height: 44px; }
