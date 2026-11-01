@@ -145,7 +145,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
       const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
       const result = confirmed?.result ?? {};
-      if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
+      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
       // forward for this conversation's other cards and its next question, nothing else.
       const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
@@ -186,7 +186,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     working.current = true; setBusy(true); setError(null);
     try {
       if (!memory.reference) throw new Error("Memory source unavailable");
-      await stopUsingMemory(memory.reference); setMemories(await getMemories());
+      await stopUsingMemory(memory.reference, memory.text); window.dispatchEvent(new Event("beyond:memory-changed")); setMemories(await getMemories());
       session.current = null; lastContext.current = null; setTurns([]); setSnapshot(null); setSelectedSource(null);
       setContextNotice(memory.reference.source === "PERSONAL_FACT" ? "Stopped using. Correction history retained. Fresh conversation; earlier requests cannot be recalled." : "Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
     } catch { setError("That memory could not be forgotten. Try again."); }

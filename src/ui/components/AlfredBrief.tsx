@@ -40,13 +40,21 @@ const hhmm = (iso: string) => { const d = new Date(iso); return `${String(d.getH
 
 export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; refreshKey: string | number; onOpen: () => void }) {
   // ALFRED-COST-001: with automatic Alfred off there is no brief at all, not an old one.
-  const [brief, setBrief] = useState<Stored | null>(() => (readAlfredKey() && automaticAlfredOn() ? readStored() : null));
+  const [brief, setBrief] = useState<Stored | null>(null);
   const [hasKey, setHasKey] = useState(() => !!readAlfredKey() && automaticAlfredOn());
   const [reading, setReading] = useState(false);
   const [tick, setTick] = useState(0);
   const inFlight = useRef(false);
+  const sourceEpoch = useRef(0);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+
+  // A correction/retirement hides old prose immediately, even offline or during a request.
+  useEffect(() => {
+    const invalidate = () => { sourceEpoch.current++; setBrief(null); setTick((n) => n + 1); };
+    window.addEventListener("beyond:memory-changed", invalidate); window.addEventListener("focus", invalidate);
+    return () => { window.removeEventListener("beyond:memory-changed", invalidate); window.removeEventListener("focus", invalidate); };
+  }, []);
 
   // A quiet re-check every 10 minutes while TODAY is on screen.
   useEffect(() => {
@@ -61,23 +69,30 @@ export function AlfredBrief({ active, refreshKey, onOpen }: { active: boolean; r
     if (!key) setBrief(null);
     if (!active || !key || inFlight.current) return;
     inFlight.current = true;
+    const epoch = sourceEpoch.current;
     void (async () => {
       try {
         const context = await buildAlfredContext();
         const sig = briefSignature(context);
         const stored = readStored();
-        if (mounted.current) setBrief(stored);
+        if (mounted.current && sourceEpoch.current === epoch) setBrief(stored?.text && stored.sig === sig ? stored : null);
         if (!briefIsDue(stored, sig, Date.now()) || (typeof navigator !== "undefined" && navigator.onLine === false) || capReached()) return;
         if (mounted.current) setReading(true);
         const { writeAlfredBrief } = await import("../../application/alfred/alfredClient");
+        if (!mounted.current || sourceEpoch.current !== epoch || !automaticAlfredOn() || readAlfredKey() !== key) return;
+        if (briefSignature(await buildAlfredContext()) !== sig || sourceEpoch.current !== epoch || !automaticAlfredOn() || readAlfredKey() !== key) return;
+        // Preserve the ten-minute cost gate even when a now-stale response is discarded.
+        writeStored({ text: "", at: new Date().toISOString(), sig: "" });
         const { text, costUsd } = await writeAlfredBrief(key, context);
         addSpend(costUsd);
-        if (!text) return;
+        if (!text || !mounted.current || sourceEpoch.current !== epoch || !automaticAlfredOn() || readAlfredKey() !== key) return;
+        if (briefSignature(await buildAlfredContext()) !== sig || sourceEpoch.current !== epoch) return;
         const next = { text, at: new Date().toISOString(), sig };
         writeStored(next);
         if (mounted.current) setBrief(next);
       } catch {
-        // No signal or no answer: the last brief (if any) stays, with its time.
+        // Unavailable sources never authorize displaying an unvalidated cached brief.
+        if (mounted.current) setBrief(null);
       } finally {
         inFlight.current = false;
         if (mounted.current) setReading(false);
