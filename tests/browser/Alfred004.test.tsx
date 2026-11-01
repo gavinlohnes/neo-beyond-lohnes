@@ -70,7 +70,7 @@ describe("ALFRED-004 reading the whole history", () => {
     const { sheet } = await openAlfred();
     await sheet.getByRole("button", { name: "When did I last…?" }).click();
     await expect.element(sheet.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("When did I last ");
-    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("When did I last call the CPAP place?");
+    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("What's the story with the CPAP place?");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await expect.element(sheet.getByText("You last noted the CPAP place today.")).toBeVisible();
     expect(chats()).toHaveLength(2);
