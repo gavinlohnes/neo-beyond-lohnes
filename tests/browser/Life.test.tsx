@@ -25,7 +25,7 @@ it("shows each area as a tab over its existing screen, at phone width", async ()
   await screen.getByRole("tab", { name: "Home" }).click();
   await expect.element(screen.getByRole("heading", { name: "KEEP THE HOUSE RUNNING" })).toBeVisible();
   await screen.getByRole("tab", { name: "Memory" }).click();
-  await expect.element(screen.getByRole("heading", { name: "ALFRED REMEMBERS" })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "PERSONAL FACTS FOR ALFRED" })).toBeVisible();
   await noAxe(screen.container);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
 });

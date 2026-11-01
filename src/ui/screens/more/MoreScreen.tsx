@@ -1,6 +1,7 @@
 import type { CaveVitalId } from "../../../application/caveVitals";
 import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
 import { MemoryPanel } from "../../components/MemoryPanel";
+import { OperatorContextPanel } from "../../components/OperatorContextPanel";
 import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 import { getSavedMeals } from "../../../application/nutritionQueries";
@@ -523,7 +524,7 @@ export function MoreScreen({
           <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} /></>}</div>
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
           <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
-          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
+          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>

@@ -1,4 +1,5 @@
-import { readPersonalSources } from "./personalContext";
+import { contextSource, readOperatorContext } from "../operatorContext";
+import { getMemories } from "./alfredMemory";
 import { db } from "../../persistence/db";
 import { parseProject } from "../../persistence/intentValidation";
 import { getDaySummaries } from "../dayLedgerQueries";
@@ -13,6 +14,8 @@ const stamp = (iso: string) => new Date(iso).toLocaleString("en-US", { weekday: 
 const clip = (v: unknown) => { const s = JSON.stringify(v); return s.length > 220 ? `${s.slice(0, 220)}…` : s; };
 
 export async function searchRecords(query: string, limit = 30, includePersonal = false): Promise<string> {
+  if (query.length > 500) return "Search phrase is too long. Use a few specific words.";
+  limit = Math.max(1, Math.min(30, Math.floor(limit) || 30));
   const terms = query.toLowerCase().split(/\s+/).filter((t) => t.length > 1);
   if (!terms.length) return "Give a word to search for.";
   const hits: { at: string; line: string }[] = [];
@@ -23,17 +26,19 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
   };
   const [events, notes, tasks, sessions, sets, memories, projects] = await Promise.all([
     db.events.toArray(), db.captureItems.toArray(), db.obligations.toArray(),
-    db.workoutSessions.toArray(), db.performedSets.toArray(), db.alfredMemories.toArray(), db.projects.toArray(),
+    db.workoutSessions.toArray(), db.performedSets.toArray(), getMemories(), db.projects.toArray(),
   ]);
   // A historical correction is not current memory; never leak opted-out personal facts via events.
   for (const e of events) {
     if (e.type === "MEMORY_RECORDED" || e.type.startsWith("MISSION_")) continue;
     // ROUTINES-001: routine ticks are for the day they're on, not a record to tally.
     if (e.type === "ROUTINE_STEP_SET") continue;
-    consider(e.occurredAt, e.type, e.payload);
+    consider(e.occurredAt, `Historical ${e.type} (not current state)`, e.payload);
   }
-  if (includePersonal) {
-    for (const s of await readPersonalSources()) consider(new Date().toISOString(), s.kind, { source: s.key, text: s.text });
+  // Current sources share the same classification/privacy boundary as the initial request.
+  const context = await readOperatorContext({ purpose: "conversation", includePersonal });
+  for (const s of context.records.filter((r) => ["MEMORY", "MISSION", "ROUTINE"].includes(r.kind))) {
+    consider(s.at, s.kind, { source: s.key, text: s.text, classification: s.classification });
   }
   for (const n of notes) consider(n.capturedAt, `NOTE ${n.status}`, n.text);
   for (const t of tasks) consider(t.resolvedAt ?? t.dueAt ?? t.createdAt, `TASK ${t.status}`, { title: t.title, description: t.description, due: t.dueAt, resolved: t.resolvedAt, project: t.projectId });
@@ -51,5 +56,21 @@ export async function getDays(from: string, to: string): Promise<string> {
   const local = (iso: string) => formatLocalDate(new Date(iso));
   const days = summaries.filter((s) => local(s.livedDayStart) >= from && local(s.livedDayStart) <= to)
     .sort((a, b) => a.livedDayStart.localeCompare(b.livedDayStart));
-  return days.length ? `${days.length} lived days ${from} → ${to} (oldest first; '-' = not logged):\n${days.map(dayLine).join("\n")}` : `No BEYOND days between ${from} and ${to}.`;
+  if (!days.length) return `No BEYOND days between ${from} and ${to}.`;
+  const lines: string[] = []; let size = 0;
+  for (const day of days) {
+    const source = contextSource("DAY", day.beyondDayId, JSON.stringify(day), "Recorded day", dayLine(day));
+    const line = `[[${source.key}]] Derived from records: ${source.text}`;
+    if (lines.length >= 60 || size + line.length > 16_000) break;
+    lines.push(line); size += line.length;
+  }
+  return `${days.length} lived days ${from} → ${to} (oldest first; '-' = not logged):\n${lines.join("\n")}\nCoverage: ${lines.length} of ${days.length} supplied; ${days.length - lines.length} omitted by limits.`;
+}
+
+/** Only actual source tokens from an authorized read result may extend a turn's inspection catalog. */
+export async function readToolSources(result: string, includePersonal: boolean) {
+  const keys = new Set([...result.matchAll(/\[\[([^\]]+)\]\]/g)].map((m) => m[1]!));
+  if (keys.size === 0) return [];
+  const context = await readOperatorContext({ purpose: "conversation", includePersonal });
+  return context.records.filter((s) => keys.has(s.key)).slice(0, 60);
 }

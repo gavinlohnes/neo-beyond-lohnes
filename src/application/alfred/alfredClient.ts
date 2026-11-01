@@ -1,3 +1,4 @@
+import { readToolSources } from "./alfredSearch";
 import type { ProposalContext } from "./contextActions";
 import type { ContextSource } from "./personalContext";
 import Anthropic from "@anthropic-ai/sdk";
@@ -42,7 +43,7 @@ How you work:
 
 export interface AlfredTurn { role: "user" | "alfred"; text: string; deep?: boolean; /** FREE-HELPER-001: answered by BEYOND itself, at no cost. */ free?: boolean; sources?: ContextSource[]; context?: ProposalContext; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" }[] }
 export interface AlfredContextPolicy { includePersonal: boolean; assertFresh: () => Promise<void> }
-export interface AlfredReply { text: string; proposals: { id: string; proposal: AlfredProposal }[]; costUsd: number }
+export interface AlfredReply { sources?: ContextSource[]; text: string; proposals: { id: string; proposal: AlfredProposal }[]; costUsd: number }
 
 /** List price per token (input, output, cache read, 5-minute cache write); Haiku's is for prompts up to 100K tokens. */
 const PRICE: Record<AlfredDepth, { input: number; output: number; cacheRead: number; cacheWrite: number }> = {
@@ -86,6 +87,7 @@ export class AlfredSession {
     this.pendingReads = [];
 
     const proposals: { id: string; proposal: AlfredProposal }[] = [];
+    const sources = new Map<string, ContextSource>();
     const words: string[] = [];
     let costUsd = 0;
     // ALFRED-004: read tools (search_records, get_days) are answered at once from the records and
@@ -94,7 +96,7 @@ export class AlfredSession {
       // ALFRED-COST-001: no new answer once this month's limit is reached; an answer already under way may finish its rounds.
       if (round === 0) assertWithinCap();
       await this.policy?.assertFresh();
-      const response = await this.client.beta.messages.create({
+      const request = {
         ...modelParams(depth),
         max_tokens: depth === "deep" ? 8000 : 4000,
         system: [
@@ -104,13 +106,16 @@ export class AlfredSession {
         tools: [...ALFRED_TOOLS, ...ALFRED_READ_TOOLS],
         tool_choice: { type: "auto" },
         messages: this.messages,
-      });
+      } satisfies Anthropic.Beta.MessageCreateParamsNonStreaming;
+      // Bound the complete request, including tools and transcript. Never silently clip user words.
+      if (JSON.stringify(request).length > 120_000) throw new Error("CONTEXT_TOO_LARGE");
+      const response = await this.client.beta.messages.create(request);
       const charged = cost(response.usage, depth);
       this.usageUsd += charged; costUsd += charged;
       await this.policy?.assertFresh();
       // Append the whole reply (thinking and tool blocks included) so the conversation stays append-only.
       this.messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
-      if (response.stop_reason === "refusal") return { text: "I can't help with that one.", proposals, costUsd };
+      if (response.stop_reason === "refusal") return { text: "I can't help with that one.", proposals, costUsd, sources: [...sources.values()] };
 
       const reads: Anthropic.Beta.BetaContentBlockParam[] = [];
       const cardIds: string[] = [];
@@ -118,7 +123,7 @@ export class AlfredSession {
         if (block.type === "text") words.push(block.text);
         if (block.type !== "tool_use") continue;
         const result = await runReadTool(block.name, block.input, this.policy?.includePersonal ?? false).catch(() => "That read failed; say so.");
-        if (result !== null) { reads.push({ type: "tool_result", tool_use_id: block.id, content: result }); continue; }
+        if (result !== null) { for (const source of await readToolSources(result, this.policy?.includePersonal ?? false)) { if (sources.size < 60) sources.set(source.key, source); } reads.push({ type: "tool_result", tool_use_id: block.id, content: result }); continue; }
         cardIds.push(block.id);
         const proposal = toProposal(block.name, block.input);
         if (proposal) proposals.push({ id: block.id, proposal });
@@ -127,7 +132,7 @@ export class AlfredSession {
       // Every tool_use needs its result in the next turn: cards shown so far are answered as pending.
       this.messages.push({ role: "user", content: [...reads, ...cardIds.map((id) => ({ type: "tool_result" as const, tool_use_id: id, content: "Shown to the operator as a card; not confirmed yet." }))] });
     }
-    return { text: words.join("\n\n").trim(), proposals, costUsd };
+    return { text: words.join("\n\n").trim(), proposals, costUsd, sources: [...sources.values()] };
   }
 }
 
@@ -160,6 +165,7 @@ function cost(u: Anthropic.Beta.BetaUsage, depth: AlfredDepth): number {
 /** A plain-words reason for a failed call, for the sheet. */
 export function describeAlfredError(e: unknown): string {
   if (e instanceof Error && e.message === "SPEND_CAP_REACHED") return `Alfred has reached this month's limit${getMonthlyCap() ? ` of $${getMonthlyCap()!.toFixed(2)}` : ""}. Nothing was sent. Change it under Limits, or he's back next month. Everything else in BEYOND works.`;
+  if (e instanceof Error && e.message === "CONTEXT_TOO_LARGE") return "This conversation is too large to send safely. Start a fresh conversation or shorten the message. Your words are kept; nothing was saved.";
   if (e instanceof Error && e.message === "CONTEXT_UNAVAILABLE") return "Your records could not be read. No message was sent. Try again; your words are kept.";
   if (e instanceof Error && e.message === "CONTEXT_CHANGED") return "Your context changed. Start again with the current records; nothing was saved.";
   if (e instanceof Anthropic.AuthenticationError) return "Your Claude key wasn't accepted. Check it in Alfred settings.";
