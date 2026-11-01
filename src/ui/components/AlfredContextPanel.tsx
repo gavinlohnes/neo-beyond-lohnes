@@ -1,6 +1,8 @@
+import { ContextSourceDetails } from "./OperatorContextPanel";
 import { useEffect, useRef, useState } from "react";
 import { inspectContextSource, readPersonalSources, type ContextSource, type PlanningContext } from "../../application/alfred/personalContext";
 
+const canOpen = (kind: ContextSource["kind"]) => ["MISSION", "MEMORY", "ALFRED_MEMORY", "DAY", "OBLIGATION", "SCHEDULE", "ROUTINE", "PROJECT"].includes(kind);
 const date = (at: string) => new Date(at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 /** Local inspection never calls the model. Inclusion is explicit and lasts only for this conversation. */
@@ -46,12 +48,13 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
         <h3>Personal sources available on this phone</h3>
         {previewLoading && <p role="status">Reading local personal sources…</p>}
         {!available.length && !previewLoading && !error && <p className="meta">No active personal sources recorded.</p>}
-        {available.slice(0, limit).map((s) => <details key={s.key}><summary>{s.title}</summary><p>{s.text}</p>
-          {onOpenRecord && <button className="btn-secondary" type="button" disabled={busy} onClick={() => onOpenRecord(s)}>OPEN ORIGINAL RECORD</button>}
+        {available.slice(0, limit).map((s) => <details key={s.key}><summary>{s.title}</summary><ContextSourceDetails source={s} />
+          {onOpenRecord && canOpen(s.kind) && <button className="btn-secondary" type="button" disabled={busy} onClick={() => onOpenRecord(s)}>OPEN ORIGINAL RECORD</button>}
         </details>)}
         {available.length > limit && <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 5)}>SHOW MORE PERSONAL SOURCES</button>}
         {snapshot && <details><summary>Records supplied for the last request ({snapshot.sources.length})</summary>
           <p className="meta">Read {date(snapshot.readAt)}. Supplied does not mean the answer used every record. {snapshot.omitted ? `${snapshot.omitted} sources omitted by the limit.` : ""}</p>
+          {snapshot.coverage.map((c) => <p className="meta" key={c.category}>{c.category}: {c.state} · {c.supplied} of {c.count} supplied</p>)}
           {snapshot.sources.slice(0, limit).map((s) => <button type="button" className="btn-secondary" key={s.key} disabled={busy} onClick={() => onSelected(s)}>INSPECT {s.title}</button>)}
           {snapshot.sources.length > limit && <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 5)}>SHOW MORE SUPPLIED SOURCES</button>}
         </details>}
@@ -60,9 +63,9 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
     {error && <p role="alert">{error}</p>}
     {selected && <section ref={inspection} tabIndex={-1} aria-label="Source record">
       <h3>Source record</h3>{reading && <p role="status">Reading current source…</p>}
-      {current && <><p>{current.text}</p><p className="meta">{current.kind} · {sourceReadAt ? `read ${date(sourceReadAt)} · ` : ""}{current.revision !== selected.revision ? "Changed since this answer. Current record shown." : "Current record matches the supplied revision."}</p>
-        {onOpenRecord && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenRecord(current)}>OPEN ORIGINAL RECORD</button>}</>}
-      {!current && !reading && onOpenRecord && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenRecord(selected)}>OPEN ORIGINAL RECORD</button>}
+      {current && <><ContextSourceDetails source={current} /><p className="meta">{current.kind} · {sourceReadAt ? `read ${date(sourceReadAt)} · ` : ""}{current.revision !== selected.revision ? "Changed since this answer. Current record shown." : "Current record matches the supplied revision."}</p>
+        {onOpenRecord && canOpen(current.kind) && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenRecord(current)}>{["PROJECT", "ROUTINE"].includes(current.kind) ? "OPEN SOURCE AREA" : "OPEN ORIGINAL RECORD"}</button>}</>}
+
       <button type="button" className="btn-secondary" disabled={reading} onClick={() => onSelected({ ...selected })}>RELOAD SOURCE</button>
       <button type="button" className="btn-secondary" onClick={() => onSelected(null)}>CLOSE SOURCE</button>
     </section>}

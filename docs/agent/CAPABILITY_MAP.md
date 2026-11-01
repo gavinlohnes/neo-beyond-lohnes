@@ -345,3 +345,12 @@ DIRECTION/CONSTRAINT without a new table; PREP/recovery filters stay bounded. Pe
 Understanding has the local editor/planning entry; Alfred sources navigate original records.
 See [brief](PERSONAL-CONTEXT-001.md) and active checkpoint for verification/review/merge status.
 No new library, model, notifications or Engine rules. Reuse these paths before a new profile store.
+
+
+### OPERATOR-CONTEXT-002A — approved implementation, integration pending
+
+`application/operatorContext.ts` is the common read-only source/coverage assembler; domain types
+live in `domain/operatorContext.ts`. `alfred/personalContext.ts` and automatic `alfredContext.ts`
+serialize the same bounded record model with purpose-specific sharing. `OperatorContextPanel`
+provides local inspection in LIFE/Memory. Two memory stores remain distinct; no migration occurred.
+Reuse these adapters rather than adding a third profile store. Status/limits: [brief](OPERATOR-CONTEXT-002A.md).

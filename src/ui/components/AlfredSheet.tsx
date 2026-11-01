@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
+import { operatorContextVersion } from "../../application/operatorContext";
 import { LogSheet } from "./LogSheet";
 import { buildPlanningContext, personalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
 import { confirmContextProposal } from "../../application/alfred/contextActions";
@@ -100,20 +101,26 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
       const next = await buildPlanningContext(included).catch(() => { throw new Error("CONTEXT_UNAVAILABLE"); });
-      const changed = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
+      const personalChanged = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
+      const changed = personalChanged || (lastContext.current !== null && lastContext.current.recordVersion !== next.recordVersion);
       const policy = { includePersonal: included, assertFresh: async () => {
-        if (await personalContextVersion(included) !== next.personalVersion) throw new Error("CONTEXT_CHANGED");
+        if (await personalContextVersion(included) !== next.personalVersion || await operatorContextVersion(included) !== next.recordVersion) throw new Error("CONTEXT_CHANGED");
       } };
       if (changed) {
-        session.current = null; setTurns([{ role: "user", text: q }]);
-        setContextNotice("Personal context changed. This request starts a fresh model conversation. Earlier requests cannot be recalled.");
+        session.current = null;
+        // Personal changes clear the visible exchange as before. Operational changes reset model
+        // history but retain old cards with their ORIGINAL guards, so an old day cannot gain a new one.
+        if (personalChanged) setTurns([{ role: "user", text: q }]);
+        setContextNotice(personalChanged
+          ? "Personal context changed. This request starts a fresh model conversation. Earlier requests cannot be recalled."
+          : "Current records changed. This request starts a fresh model conversation. Earlier cards remain bound to their original records.");
       }
       if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, next.text, policy); }
       else session.current.updateContext(next.text, policy);
       lastContext.current = next; setSnapshot(next);
       meteredSession = session.current; usageBefore = meteredSession.usageUsd;
       const reply = await session.current.send(q, decisions, depth);
-      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: next.sources, context: { personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
+      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: [...new Map([...next.sources, ...(reply.sources ?? [])].map((s) => [s.key, s])).values()], context: { recordVersion: next.recordVersion, personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
       // A failed send may leave the model session half-written, so it's dropped. Say so when earlier
@@ -142,8 +149,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
       // forward for this conversation's other cards and its next question, nothing else.
       const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
-      const advance = (c: AlfredTurn["context"]) => (c && after && c.personalVersion === before ? { ...c, personalVersion: after } : c);
-      if (after && lastContext.current?.personalVersion === before) lastContext.current = { ...lastContext.current, personalVersion: after };
+      const advance = (c: AlfredTurn["context"]) => (c && after && c.personalVersion === before && c.recordVersion === turn.context?.recordVersion ? { ...c, personalVersion: after, ...(confirmed?.recordVersion ? { recordVersion: confirmed.recordVersion } : {}) } : c);
+      if (after && lastContext.current?.personalVersion === before && lastContext.current.recordVersion === turn.context?.recordVersion) lastContext.current = { ...lastContext.current, personalVersion: after, recordVersion: confirmed?.recordVersion ?? lastContext.current.recordVersion };
       setTurns((all) => all.map((t, i) => {
         const context = advance(t.context);
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
