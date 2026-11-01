@@ -1,5 +1,5 @@
 import { captureCommitFeedback } from "../../feel/feedback";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useId } from "react";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { Mission, Obligation, ObligationStatus, RecurrenceRule } from "../../../domain/intent/types";
@@ -245,6 +245,8 @@ function IntentItemRow({
 
 export function IntentScreen({ initialFocus, navigationFocus, active = true, onDraftChange }: { initialFocus?: IntentFocus; navigationFocus?: IntentFocus | null; active?: boolean; onDraftChange?: (hasDraft: boolean) => void } = {}) {
   const [view, setView] = useState<View>(() => initialViewFor(initialFocus));
+  // Review of #362: unique ids, so a second copy (LIFE and MORE) never points a label at the hidden one.
+  const uid = useId();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [allMissions, setAllMissions] = useState<Mission[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
@@ -421,8 +423,8 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
       {readState === "loading" && <p role="status">Reading plans…</p>}
       {readState === "error" && <div><p role="alert">{readError} Lists are unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void refreshList()}>RETRY PLANS</button></div>}
 
-      <section aria-labelledby="missions-heading">
-      <h2 id="missions-heading" className="section-label">Missions · durable direction</h2>
+      <section aria-labelledby={`${uid}-missions`}>
+      <h2 id={`${uid}-missions`} className="section-label">Missions · durable direction</h2>
       <div className="intent-filter" role="group" aria-label="Mission visibility">
         <button aria-pressed={!showAllMissions} className={`chip ${!showAllMissions ? "chip--selected" : ""}`} onClick={() => setShowAllMissions(false)}>
           ACTIVE
@@ -472,8 +474,8 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
 
       <ProjectsSection missions={allMissions} refreshKey={projectsKey} active={active} onChanged={() => void refreshList()} onOpenObligation={(id) => setView({ kind: "OBLIGATION_DETAIL", obligationId: id })} />
 
-      <section aria-labelledby="obligations-heading">
-      <h2 id="obligations-heading" className="section-label">Obligations · commitments</h2>
+      <section aria-labelledby={`${uid}-obligations`}>
+      <h2 id={`${uid}-obligations`} className="section-label">Obligations · commitments</h2>
       <div className="intent-filter" role="group" aria-label="Obligation visibility">
         <button aria-pressed={!showAllObligations} className={`chip ${!showAllObligations ? "chip--selected" : ""}`} onClick={() => setShowAllObligations(false)}>
           UNRESOLVED
@@ -524,15 +526,15 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         </select>
         <div className="intent-dates">
           <div>
-            <label htmlFor="new-obligation-due" className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
-            <input id="new-obligation-due" type="date" className="input" value={newObligationDueAt} disabled={busy} onChange={(e) => setNewObligationDueAt(e.target.value)} />
+            <label htmlFor={`${uid}-due`} className="meta" style={{ display: "block", marginBottom: 4 }}>Due</label>
+            <input id={`${uid}-due`} type="date" className="input" value={newObligationDueAt} disabled={busy} onChange={(e) => setNewObligationDueAt(e.target.value)} />
           </div>
           <div>
-            <label htmlFor="new-obligation-planned" className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
-            <input id="new-obligation-planned" type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
+            <label htmlFor={`${uid}-planned`} className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
+            <input id={`${uid}-planned`} type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
           </div>
         </div>
-        <RecurrencePicker form={newObligationRecurrence} onChange={setNewObligationRecurrence} idPrefix="new-obligation-recurrence" disabled={busy} />
+        <RecurrencePicker form={newObligationRecurrence} onChange={setNewObligationRecurrence} idPrefix={`${uid}-recurrence`} disabled={busy} />
         <button className="btn-primary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
           CREATE OBLIGATION
         </button>

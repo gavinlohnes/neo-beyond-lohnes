@@ -195,7 +195,11 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
 }
 
 /** LIFE-HUB-001: a card's date as he'd say it ("Sun, Nov 15"), not YYYY-MM-DD. */
-const humanDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+// Review of #362: the year is added when it isn't this year ("Tue, Jan 5, 2027").
+const humanDate = (iso: string, now = new Date()) => {
+  const d = new Date(`${iso}T12:00:00`);
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", ...(d.getFullYear() !== now.getFullYear() ? { year: "numeric" as const } : {}) });
+};
 
 /** One line for the confirm card. */
 export function describeProposal(p: AlfredProposal): string {

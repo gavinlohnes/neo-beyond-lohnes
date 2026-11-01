@@ -87,7 +87,7 @@ it("Alfred proposes a project with steps as one card; nothing is saved until SAV
   await expect.element(screen.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("Help me get this done: ");
   await screen.getByRole("textbox", { name: "Message Alfred" }).fill("Help me get this done: clear the garage");
   await screen.getByRole("button", { name: "SEND", exact: true }).click();
-  const card = screen.getByRole("group", { name: "New project: Clear the garage · 2 steps: 1. Sort shelves; 2. Book a tip run (Sun, Nov 8)" });
+  const card = screen.getByRole("group", { name: /^New project: Clear the garage · 2 steps: 1\. Sort shelves; 2\. Book a tip run \(Sun, Nov 8(, 2026)?\)$/ });
   await expect.element(card).toBeVisible();
   expect(await db.projects.count()).toBe(0);
   await card.getByRole("button", { name: "SAVE", exact: true }).click();

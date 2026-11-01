@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
 import { forgetFact, getMemories, rememberFact } from "../../application/alfred/alfredMemory";
 import { MEMORY_TOPICS, type AlfredMemory, type MemoryTopic } from "../../domain/alfred/types";
 import "./alfred.css";
@@ -12,6 +12,7 @@ const LABEL: Record<MemoryTopic, string> = { PERSON: "People", MONEY: "Money and
 
 export function AlfredMemoryList({ active }: { active: boolean }) {
   const [facts, setFacts] = useState<AlfredMemory[] | null>(null);
+  const uid = useId();
   const [topic, setTopic] = useState<MemoryTopic>("PERSON");
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +24,8 @@ export function AlfredMemoryList({ active }: { active: boolean }) {
     try { await rememberFact(text, topic); setText(""); await load(); } catch { setError("That didn't save. Nothing changed."); }
   }
 
-  return <section className="alfred-memory-page" aria-labelledby="alfred-memory-heading">
-    <h2 id="alfred-memory-heading" className="tool-label">ALFRED REMEMBERS</h2>
+  return <section className="alfred-memory-page" aria-labelledby={`${uid}-heading`}>
+    <h2 id={`${uid}-heading`} className="tool-label">ALFRED REMEMBERS</h2>
     <p className="meta">Facts you've asked Alfred to keep: birthdays, sizes, bills and their amounts. He reads them in every answer. A bill or birthday can also be a repeating reminder in COMMITMENTS.</p>
     {error && <p role="alert">{error}</p>}
     {facts && MEMORY_TOPICS.map((t) => {

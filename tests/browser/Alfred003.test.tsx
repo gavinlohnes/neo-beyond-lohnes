@@ -80,7 +80,7 @@ describe("ALFRED-003 Alfred can do it", () => {
     await expect.poll(() => db.checkIns.count()).toBe(1);
     await sheet.getByRole("group", { name: "Done: Call the bank" }).getByRole("button", { name: "SAVE" }).click();
     await expect.poll(async () => (await db.obligations.get(call.id))?.status).toBe("SATISFIED");
-    await sheet.getByRole("group", { name: "New date: Pay the car · Thu, Nov 5" }).getByRole("button", { name: "SAVE" }).click();
+    await sheet.getByRole("group", { name: /^New date: Pay the car · Thu, Nov 5(, 2026)?$/ }).getByRole("button", { name: "SAVE" }).click();
     await expect.poll(async () => (await db.obligations.get(pay.id))?.dueAt).toBe("2026-11-05");
   });
 
