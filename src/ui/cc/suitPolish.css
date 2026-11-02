@@ -1,0 +1,89 @@
+/* PHONE-POLISH-001: the existing suit, with clearer physical structure and response.
+   No continuous animation, fake telemetry or extra attention on TODAY. */
+.field-header.cc-hdr {
+  border-bottom-color: var(--p-line-2);
+  background: linear-gradient(110deg, var(--p-s2), var(--p-bg) 70%);
+}
+.field-header.cc-hdr::after {
+  content: ""; display: block; height: 3px; pointer-events: none;
+  background: linear-gradient(90deg, var(--p-t3) 0 24px, transparent 24px calc(100% - 24px), var(--p-line-2) calc(100% - 24px));
+}
+.cc-hdr .cc-title { font-size: 20px; font-weight: 700; letter-spacing: .12em; }
+.cc-hdr .cc-title:has(.cc-where) { font-size: 16px; line-height: 1.35; }
+.cc-hdr .cc-title .cc-where { display: block; font-size: 16px; font-weight: 600; color: var(--p-t1); }
+.cc-hdr .cc-clock { font-variant-numeric: tabular-nums; padding-left: 8px; border-left: 1px solid var(--p-line-2); }
+.cc-hdr :is(.cc-search-btn, .cc-alfred-btn) { transition: background-color 140ms, color 140ms; }
+.cc-hdr :is(.cc-search-btn, .cc-alfred-btn):active { background: var(--p-s3); color: var(--p-t1); }
+.shell-nav.cc-nav { background: linear-gradient(180deg, var(--p-s2), var(--p-bg)); }
+.cc-nav .shell-nav__item { transition: color 160ms, background-color 160ms; }
+.cc-nav .shell-nav__item--active { background: linear-gradient(180deg, var(--p-red-soft), transparent 85%); }
+.cc-nav .shell-nav__item--active::before { left: 14%; right: 14%; height: 3px; }
+.cc-nav .shell-nav__item--active svg { color: var(--p-t1); }
+.cc-nav .shell-nav__log-mark { transition: transform 140ms, background-color 140ms; }
+.cc-nav .shell-nav__log:active .shell-nav__log-mark { transform: scale(.92); background: var(--p-s3); }
+
+/* Planning hardware: the same material in a sheet, TRAIN and DATA. */
+.suit-panel {
+  position: relative; margin-block: 20px; padding: 18px 14px;
+  border: 1px solid var(--p-line-2); border-top: 2px solid var(--p-t3);
+  background: linear-gradient(135deg, var(--p-s2), var(--p-s1) 55%);
+  min-width: 0; scroll-margin-top: 130px;
+}
+.suit-panel::after {
+  content: ""; position: absolute; right: 0; bottom: 0; width: 14px; height: 14px;
+  border-right: 2px solid var(--p-t3); border-bottom: 2px solid var(--p-t3); pointer-events: none;
+}
+.suit-panel .suit-panel__title {
+  margin: 0 0 8px; font-family: var(--p-display); font-size: 22px;
+  font-weight: 600; letter-spacing: .08em; color: var(--p-t1); line-height: 1.25;
+}
+.suit-panel .meta { line-height: 1.55; }
+.suit-panel label { display: block; color: var(--p-t2); font-size: 16px; }
+.suit-panel select {
+  display: block; width: 100%; min-width: 0; max-width: 100%; min-height: 48px;
+  margin-top: 6px; padding: 10px; border: 1px solid var(--p-line-2); border-radius: 0;
+  background: var(--p-bg); color: var(--p-t1); font: inherit;
+}
+.suit-panel :is(button, select):focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.suit-panel :is(.btn-secondary, .btn-primary) { min-height: 48px; margin-top: 10px; width: 100%; font-size: 16px; }
+.suit-panel fieldset { margin: 18px 0 0; padding: 14px 10px; border: 1px solid var(--p-line-2); min-width: 0; }
+.suit-panel legend { padding-inline: 6px; font-size: 16px; color: var(--p-t1); }
+.suit-panel [role="status"] { padding: 12px; border-left: 2px solid var(--p-t3); background: var(--p-s2); line-height: 1.5; }
+.suit-panel [role="alert"] { overflow-wrap: anywhere; }
+.suit-panel__controls { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(0, 2fr); gap: 12px; align-items: end; }
+.suit-panel__controls .btn-secondary { margin: 0; }
+.suit-panel__totals { font-variant-numeric: tabular-nums; padding-top: 12px; border-top: 1px solid var(--p-line); }
+.suit-panel__loading { color: var(--p-t2); }
+.suit-panel[aria-busy="true"] { border-top-style: dashed; }
+
+/* MORE keeps its existing destinations; each job explains what is behind it. */
+.more-operator .command-group > summary { padding-block: 16px; }
+.command-group__hint { display: block; margin: 6px 0 0; font-family: var(--p-display); font-size: 16px; letter-spacing: .02em; line-height: 1.5; color: var(--p-t2); }
+.screen .command-result { padding-inline: 10px; transition: background-color 140ms; }
+.screen .command-result:is(:active, :focus-visible) { background: var(--p-s2); }
+.screen .command-result__go { font-size: 24px; }
+.screen .command-search:focus-within { border-color: var(--p-t1); background: var(--p-s2); }
+
+/* Existing recorded-data instruments gain depth without changing their emphasis. */
+.screen .health-overview .readout { background: linear-gradient(145deg, var(--p-s2), var(--p-s1)); }
+.screen .health-overview .readout .readout__value { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.screen .health-overview button.readout:active { background: var(--p-s3); }
+.weekly-dashboard .weekly-dashboard__hero {
+  padding: 16px 12px; border: 1px solid var(--p-line-2); border-top: 2px solid var(--p-t3);
+  background: linear-gradient(135deg, var(--p-s2), var(--p-s1));
+}
+.weekly-dashboard .weekly-dashboard__range { font-family: var(--p-display); letter-spacing: .025em; }
+
+/* Brief, finite responses when an operation opens or resolves. No idle motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .tab-enter .field-header::after { transform-origin: left; animation: suit-edge-resolve 240ms ease-out both; }
+  .suit-panel fieldset, .suit-panel [role="status"], .command-group[open] > .command-result { animation: suit-content-resolve 180ms ease-out both; }
+  .suit-panel select { transition: border-color 140ms, background-color 140ms; }
+  .suit-panel select:focus { border-color: var(--p-t1); background: var(--p-s2); }
+}
+@keyframes suit-edge-resolve { from { transform: scaleX(.2); opacity: .3; } to { transform: scaleX(1); opacity: 1; } }
+/* Text keeps its full contrast throughout the entrance. */
+@keyframes suit-content-resolve { from { transform: translateY(4px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .field-header.cc-hdr *, .shell-nav.cc-nav *, .suit-panel *, .command-result { transition: none !important; animation: none !important; }
+}

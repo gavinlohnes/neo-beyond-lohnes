@@ -705,7 +705,7 @@ export function MoreScreen({
       </section>
       </details>
 
-      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary>
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary><p className="command-group__hint">{({ Log: "Record what happened", "On shift": "Daily controls and privacy", Review: "Free weekly debrief, progress and history", Plan: "Tasks, life, workouts and your schedule", Notes: "Capture now. Come back when you're ready.", Systems: "Readings, observations and device status" } as Partial<Record<typeof group, string>>)[group]}</p>
         {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
       </details>)}
 
