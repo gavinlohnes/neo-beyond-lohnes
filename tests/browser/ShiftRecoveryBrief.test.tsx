@@ -30,3 +30,19 @@ it("fails closed and retries without presenting absence as evidence", async () =
   await screen.getByRole("button", { name: "RETRY RECOVERY CONTEXT" }).click();
   await expect.element(screen.getByRole("alert")).not.toBeInTheDocument();
 });
+
+it("clears stale guidance while the lived-day replacement read is pending", async () => {
+  let resolveNext!: (value: Awaited<ReturnType<typeof import("../../src/application/shiftRecoveryQueries").getShiftRecoveryBrief>>) => void;
+  const read = vi.fn()
+    .mockResolvedValueOnce({
+      kind: "FINAL_SHIFT", label: "FINAL SHIFT OF RUN", headline: "Protect the first main sleep.",
+      detail: "Old lived-day context.", evidence: null,
+    })
+    .mockImplementationOnce(() => new Promise((resolve) => { resolveNext = resolve; }));
+  const screen = await render(<ShiftRecoveryBrief active now={new Date(2026, 10, 2, 16, 29)} read={read} />);
+  await expect.element(screen.getByText("Protect the first main sleep.")).toBeVisible();
+  await screen.rerender(<ShiftRecoveryBrief active now={new Date(2026, 10, 2, 16, 30)} read={read} />);
+  await expect.element(screen.getByText("Protect the first main sleep.")).not.toBeInTheDocument();
+  expect(read).toHaveBeenCalledTimes(2);
+  resolveNext(null);
+});
