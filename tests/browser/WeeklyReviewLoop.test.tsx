@@ -37,7 +37,7 @@ for (const width of [320, 360, 412]) it(`saves a note/focus via TODAY→Review, 
   await openDetailedReviews(screen);
   const panel = screen.getByRole("region", { name: "Weekly review", exact: true });
   // The Weekly Review dashboard (2026-10-18) shows the week's logged protein in its headline.
-  await expect.element(panel.getByText("Recorded on 1 day", { exact: true })).toBeVisible();
+  await expect.element(panel.getByText(/^1 of 7 days logged/)).toBeVisible();
   await panel.getByRole("textbox", { name: "What stood out? (optional)", exact: true }).fill("Protein logging was easier on shift.");
   await panel.getByRole("combobox", { name: /Your focus for the week starting/ }).selectOptions('CUSTOM');
   await panel.getByRole("textbox", { name: "Written focus", exact: true }).fill("Eat before I leave for work.");

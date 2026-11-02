@@ -1,0 +1,22 @@
+import { afterEach, expect, it } from "vitest";
+import { render, cleanup } from "vitest-browser-react";
+import { page } from "vitest/browser";
+import axe from "axe-core";
+import { WeekInNumbers } from "../../src/ui/screens/review/WeekInNumbers";
+import { getWeeklyDashboard } from "../../src/application/weeklyDashboardQueries";
+import { db } from "../../src/persistence/db";
+afterEach(cleanup);
+it("extends the existing weekly data with free missing-data-aware numbers at 360px", async () => {
+  await page.viewport(360, 800);
+  const dashboard = await getWeeklyDashboard(0, new Date(2026, 10, 2, 17));
+  const before = await db.events.count();
+  const screen = await render(<WeekInNumbers dashboard={dashboard} />);
+  await expect.element(screen.getByText("SLEEP / AVERAGE", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText(/Not enough logged data in both weeks/)).toBeVisible();
+  expect(screen.container.textContent).toContain("Not recorded");
+  expect(screen.container.textContent).toContain("0 of 7 days logged");
+  expect(screen.container.textContent).toContain("0 weigh-ins on 0 of 7 days");
+  expect(await db.events.count()).toBe(before);
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+});
