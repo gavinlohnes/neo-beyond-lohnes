@@ -1,3 +1,17 @@
+# Handover — 2026-11-02 (Builder: Claude Code)
+
+- Codex ran out of usage; Gavin: "Finish and merge everything for a good starting point for tonight."
+  Claude Code finishes #371 ATTENTION-001 as Builder, within #370's approved scope; no new scope.
+- Merged: #365 WEEK-PLAN-001, #367/#368/#369 OPERATOR-CONTEXT-002A/B, #366 FREE-HELPER-001
+  (reviewer PASS at 5ffcc1a; free cards now carry #367's recordVersion guard).
+- #371: master (#366) merged in; only conflict was UX_DECISIONS (both entries kept). Fresh independent
+  exact-head review in a separate reviewer session; merge after PASS + green CI.
+- Follow-ups for Gavin to choose: helper single-word loose match (#366 N1); Alfred's planning context
+  still lists archived-mission tasks (#365 N1); TODAY "before you go" merge; vite-plugin-pwa 2.0;
+  on-phone AI (run CHECK ON-PHONE AI in SYSTEMS first).
+
+---
+
 # ATTENTION-001 — implementation (Builder: Codex)
 
 - Gavin approved [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370), including
