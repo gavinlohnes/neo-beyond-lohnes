@@ -5,8 +5,41 @@
 - Branch `codex/phone-polish-001` pushed; app implementation through `ec09187`, with final test-selector/evidence updates in subsequent commits.
 - Final broad run: 3,423 passed / four old menu-selector failures / two skips. Corrected selectors retain all assertions; final affected rerun 45/45 PASS. Separate architecture, TypeScript/PWA build and compiled offline 320/360/412px walkthrough PASS. No single green final full-verify invocation claimed.
 - Review [captures and motion](../screenshots/phone-polish-001/README.md) use synthetic records. All four workspaces, confirmations, native disclosures, compact Plan access and Engine authority retained.
-- PR creation blocked: GitHub GraphQL Forbidden. No remote CI, independent review, merge, deployment or owner phone acceptance claimed.
-- Next: open the PR, review the experience, complete remote checks and obtain owner merge approval.
+- Prior PR creation was blocked by GitHub GraphQL; the current primary chat has working GitHub access
+  and has explicitly taken the handoff. Master through merged PR #397 is being reconciled before PR.
+- Next: finish reconciliation verification, publish the PR, complete independent review and remote CI.
+
+---
+
+# SHIFT-RECOVERY-001 — merged PR #397
+
+- Gavin approved the bounded Shift Recovery objective on 2026-11-02. Brief:
+  [SHIFT-RECOVERY-001.md](SHIFT-RECOVERY-001.md). Branch `codex/shift-recovery-001`; baseline
+  `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`; merged PR
+  [#397](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/397).
+- TODAY now offers optional, read-only recovery context for a recorded final shift, flip toward work,
+  first day off or later day off. It reuses saved schedule position plus existing sleep/training
+  evidence, states its limits, and never moves commitments, schedules recovery or writes a record.
+- No Engine, schema, command/event, provider, dependency, recommendation-priority or primary
+  navigation change. Medical claims and generic shift-worker prescriptions are explicitly excluded.
+- Local evidence: focused Node 14/14, Chromium component 3/3 including axe, 320 px overflow and
+  stale-guidance clearing across the 16:30 lived-day boundary,
+  architecture, TypeScript and production PWA build PASS. The repository-wide browser command is
+  not a clean signal in this checkout: parallel suites repeatedly close one another's shared
+  `beyond` IndexedDB, and standalone `TodayScreen.test.tsx` cannot resolve its existing
+  `currentContextQueries` mock target. PR CI, independent exact-head review and separate owner
+  merge gate passed.
+- Independent review of head `d1547ce7` found two blockers: refresh was hour-keyed rather than
+  lived-day-keyed, and a prior brief remained visible while its replacement read was pending. Both
+  are addressed by the existing rollover subscription plus an explicit 16:30 key and fail-closed
+  loading state. Independent exact-head review then passed at `b20410b0`; required CI was green.
+- PR #396's missing Protected review was reconciled post-merge by the established independent
+  reviewer at exact head `3c38be9689746291614947e5543c1ddc015b4368`: PASS, 27/27 focused
+  Node, 2/2 browser and architecture PASS. The record is a post-merge reconciliation, not a claim
+  of retroactive workflow compliance; reviewer-attributed evidence is recorded on PR #396.
+- Gavin's standing ruling on 2026-11-02 authorizes automatic merge after green required CI and an
+  independent exact-head PASS, with no unresolved findings or head movement. PR #397 then merged
+  without bypass as squash `793821b95f612e2f17af2659355294caafc27cff`.
 
 ---
 
