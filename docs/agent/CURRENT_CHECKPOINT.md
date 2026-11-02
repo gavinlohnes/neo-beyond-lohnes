@@ -1,3 +1,20 @@
+# BEYOND-2.0 night campaign — 2026-11-02 (orchestrator: Claude Code; builders: Claude Code, Codex)
+
+- Plan, authorization and rules: [#373](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/373);
+  Codex briefs #374–#377. One independent reviewer session reviews every PR; merge on PASS + green CI.
+- Merged: #378 BUNDLE-002, #379 FREE-HELPER-002, #380 COMMAND-BAR-001, #381 DRIVE-HOME-001,
+  #382 PRESENCE-001, #383 SHIFT-RUN-001, #384 Sync002 timing, #385 CARD-UNDO-001, #386 GYM-SETS-001,
+  #387 POST-SHIFT-001, #388 CORRECTIONS-001, #389 NIGHT-POLISH-001, #390 TODAY-RUN-001,
+  #391 CALENDAR-EXPORT-001 (Codex), #392 FREE-BRIEF-001. Next with Codex: #375 meal plan, #377 weekly
+  debrief, #376 TRAIN programme. Goal after tonight: [BEYOND 3.0 launch checklist](../BEYOND_3_LAUNCH.md).
+- Known CI noise: browser tests near 06:00 UTC can meet the real shift-end moment; heavy imports can
+  pass 15 s under load (Sync002 now 45 s). Re-run failed jobs; never skip a test.
+- Follow-ups: free helper doesn't yet log meals by voice in DRIVE HOME for unknown foods (they become a
+  note); on-phone AI model needs Gavin's OK; vite-plugin-pwa 2.0; TODAY "before you go" merge.
+- What's new, for Gavin: [NIGHT-2026-11-02.md](NIGHT-2026-11-02.md).
+
+---
+
 # ALFRED-VOICE-001 — Routine, in review (Builder: Claude Code)
 
 - Gavin: the fixed "Ate a McGriddle…" hint should fit him, BEYOND and Alfred. The message box now shows
@@ -2880,25 +2897,3 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
-
-## WEEKLY-DEBRIEF-001 — Codex night campaign
-
-- Authorization/brief: #373/#377 and Gavin's direct Builder instructions; FEATURE. Existing
-  weekly dashboard headline grid extended, not a parallel review. Fresh-master rebase includes
-  merged calendar #391 and FREE-BRIEF-001; calendar Codex branch left untouched.
-- Branch `codex/weekly-debrief-001`: free WEEK IN NUMBERS, logged-day sleep/work-off, calorie/
-  protein targets, water, weight coverage, sets/volume/PRs, commitments and worked/scheduled
-  distinction. Missing remains missing; current settings and open-now counts are labelled.
-- REUSE: WeeklyDashboard/ReviewRow/Day Ledger, corrected canonical queries, workoutVolumeLbs,
-  existing ReadoutGrid/review surface. OWN: bounded enrichment/evidence counts and factual
-  preceding-week comparison. BUILD FROM SCRATCH: only the small missing enrichment/comparison;
-  no new dependency, provider, table, canonical write or Alfred call.
-- Typecheck PASS; refreshed relevant tests33/33PASS. Full
-  `BEYOND_BROWSER_EXECUTABLE=/usr/bin/chromium npm run verify` PASS:404 files passed/one skipped,
-  3,407 tests passed/two skipped; production/PWA build PASS. Saved review workflows and axe at
-  320/360/412px passed; real-record no-write integration passed. Intentional coverage-copy
-  assertion updated; identical assertion-preserving browser fixture corrections retained.
-- No reserved Claude source changed. Ready PR description is preserved under
-  `/workspace/shared/beyond-night-campaign/weekly-debrief-001-pr.md`. PR/push attempted next;
-  this runtime's GitHub API and Git writes remain blocked. No independent review/merge claimed.
-- Next: TRAIN-PROGRAM-001 (#376), Protected setting event, from fresh master.
