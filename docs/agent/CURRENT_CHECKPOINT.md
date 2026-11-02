@@ -1,3 +1,34 @@
+# SHIFT-RECOVERY-001 — Protected, implementation (Builder: Codex)
+
+- Gavin approved the bounded Shift Recovery objective on 2026-11-02. Brief:
+  [SHIFT-RECOVERY-001.md](SHIFT-RECOVERY-001.md). Branch `codex/shift-recovery-001`; baseline
+  `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`; active PR
+  [#397](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/397).
+- TODAY now offers optional, read-only recovery context for a recorded final shift, flip toward work,
+  first day off or later day off. It reuses saved schedule position plus existing sleep/training
+  evidence, states its limits, and never moves commitments, schedules recovery or writes a record.
+- No Engine, schema, command/event, provider, dependency, recommendation-priority or primary
+  navigation change. Medical claims and generic shift-worker prescriptions are explicitly excluded.
+- Local evidence: focused Node 14/14, Chromium component 3/3 including axe, 320 px overflow and
+  stale-guidance clearing across the 16:30 lived-day boundary,
+  architecture, TypeScript and production PWA build PASS. The repository-wide browser command is
+  not a clean signal in this checkout: parallel suites repeatedly close one another's shared
+  `beyond` IndexedDB, and standalone `TodayScreen.test.tsx` cannot resolve its existing
+  `currentContextQueries` mock target. PR CI, independent exact-head review and separate owner
+  merge approval remain pending.
+- Independent review of head `d1547ce7` found two blockers: refresh was hour-keyed rather than
+  lived-day-keyed, and a prior brief remained visible while its replacement read was pending. Both
+  are addressed by the existing rollover subscription plus an explicit 16:30 key and fail-closed
+  loading state. A fresh independent exact-head review is required after push.
+- PR #396's missing Protected review was reconciled post-merge by the established independent
+  reviewer at exact head `3c38be9689746291614947e5543c1ddc015b4368`: PASS, 27/27 focused
+  Node, 2/2 browser and architecture PASS. The record is a post-merge reconciliation, not a claim
+  of retroactive workflow compliance; reviewer-attributed evidence is recorded on PR #396.
+- Next: dispatch PR #397's exact head for independent review and use isolated CI as the broader
+  regression gate.
+
+---
+
 # BEYOND-2.0 night campaign — 2026-11-02 (orchestrator: Claude Code; builders: Claude Code, Codex)
 
 - Plan, authorization and rules: [#373](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/373);

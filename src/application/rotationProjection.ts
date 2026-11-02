@@ -1,5 +1,6 @@
 import { PICTURE_MEAN_FLOOR, pictureMean, pictureValues, type PictureRow } from "./wholePictureProjection";
 import type { WeekAheadDay } from "./weekAheadQueries";
+import type { ShiftRun } from "./shiftRun";
 
 /**
  * ROTATION-001 phase 1: lived days grouped into the runs a shift worker actually lives — a stretch of
@@ -133,4 +134,61 @@ export function flipSummary(all: readonly Flip[], kind: Flip["kind"]) {
   const napped = known.filter((flip) => (flip.before.napMinutes ?? 0) > 0), none = known.filter((flip) => !((flip.before.napMinutes ?? 0) > 0));
   const comparison = kind === "INTO_WORK" && napped.length >= RUN_MEAN_FLOOR && none.length >= RUN_MEAN_FLOOR ? { napped: sideOf(napped), none: sideOf(none) } : undefined;
   return { kind, flips: group, before, first, second, naps: { napped: napped.length, none: none.length }, comparison };
+}
+
+export interface ShiftRecoveryBrief {
+  kind: "FINAL_SHIFT" | "FIRST_DAY_OFF" | "FLIP_TO_WORK" | "DAY_OFF";
+  label: string;
+  headline: string;
+  detail: string;
+  evidence: string | null;
+}
+
+const clockWindow = (window: Window, reference: string) => {
+  const at = (offset: number) => new Date(Date.parse(reference) + offset * 60000)
+    .toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  return `${at(window.start)}–${at(window.end)}`;
+};
+
+/**
+ * SHIFT-RECOVERY-001: current schedule position plus recorded personal evidence. This is a
+ * read-only briefing, never an Engine input, recovery verdict, medical claim or plan mutation.
+ */
+export function shiftRecoveryBrief(rows: readonly PictureRow[], run: ShiftRun | null): ShiftRecoveryBrief | null {
+  if (!run) return null;
+  const allFlips = flips(rows);
+  if (run.kind === "WORK" && run.position === run.length) {
+    const summary = flipSummary(allFlips, "OUT_OF_WORK");
+    return {
+      kind: "FINAL_SHIFT", label: "FINAL SHIFT OF RUN", headline: "Protect the first main sleep.",
+      detail: "The first sleep after this run stays open. BEYOND has not moved a commitment or scheduled recovery.",
+      evidence: summary.before ? `Your recorded final-shift main sleep usually ran ${clockWindow(summary.before, rows.at(-1)?.start ?? new Date().toISOString())} (${summary.before.days} runs).` : null,
+    };
+  }
+  if (run.kind === "WORK" && run.position === 1) {
+    const summary = flipSummary(allFlips, "INTO_WORK");
+    const total = summary.naps.napped + summary.naps.none;
+    return {
+      kind: "FLIP_TO_WORK", label: "FLIP INTO NIGHTS", headline: "Use your recorded flip, not a generic rule.",
+      detail: "BEYOND shows what happened on prior flips. It does not claim you are recovered or prescribe sleep.",
+      evidence: summary.before ? `Before prior runs, main sleep usually ran ${clockWindow(summary.before, rows.at(-1)?.start ?? new Date().toISOString())}${total ? `; a nap was recorded before ${summary.naps.napped} of ${total} flips` : ""}.` : null,
+    };
+  }
+  if (run.kind === "OFF") {
+    const place = runPositions(rows).find((item) => item.context === "OFF" && item.position === run.position);
+    const first = run.position === 1;
+    const training = place && place.trained.of >= RUN_MEAN_FLOOR
+      ? `You trained on ${place.trained.days} of ${place.trained.of} recorded day-off ${run.position}s.`
+      : null;
+    return {
+      kind: first ? "FIRST_DAY_OFF" : "DAY_OFF",
+      label: first ? "FIRST DAY OFF" : `DAY OFF ${run.position} OF ${run.length}`,
+      headline: first ? "Keep the first sleep protected." : "Plan from what this day has actually looked like.",
+      detail: first
+        ? "No commitment is moved into the first post-run sleep window. Your recorded pattern is context, not a recovery score."
+        : "Nothing is auto-booked. Use the evidence only if it helps you choose the day.",
+      evidence: training,
+    };
+  }
+  return null;
 }
