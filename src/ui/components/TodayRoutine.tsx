@@ -28,6 +28,12 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
     } catch (cause) { if (mine === epoch.current) setError(describeError(cause, "Routines could not be read. Your records are unchanged.")); }
   }
   useEffect(() => { setRoutines(null); setTicks(new Set()); setTickError(null); if (active && dayId && moment) void load(); return () => { ++epoch.current; }; }, [dayId, moment, active]);
+  useEffect(() => {
+    if (!active || !dayId || !moment) return;
+    const reload = () => void load();
+    window.addEventListener("beyond:routines-changed", reload);
+    return () => window.removeEventListener("beyond:routines-changed", reload);
+  }, [dayId, moment, active]);
 
   if (!dayId || !moment) return null;
   if (error) return <div><p role="alert" className="meta">{error}</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY ROUTINES</button></div>;

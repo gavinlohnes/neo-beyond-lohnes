@@ -7,7 +7,8 @@ import "./alfred.css";
 
 /**
  * ALFRED-006: once a week (after Sunday's lived day ends, Monday 16:30) Alfred writes the week's review
- * on his own and TODAY shows "Your week" until GOT IT. Every review stays in DATA → MONTH.
+ * on his own. Since ATTENTION-001 TODAY offers it in a closed review entry on days off only, until GOT IT.
+ * Every review stays in DATA → MONTH.
  */
 const SEEN = "beyond.alfredReviewSeen";
 const seenFor = () => { try { return localStorage.getItem(SEEN); } catch { return null; } };

@@ -110,5 +110,5 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
       <span className="alfred-brief__talk">TAP TO TALK</span>
     </button>
   </section>;
-  return recessed ? <details className="support-disclosure alfred-support"><summary aria-label="Alfred brief"><span>ALFRED</span><span className="support-disclosure__hint">Brief & conversation</span></summary><div className="support-disclosure__body">{content}</div></details> : content;
+  return recessed ? <details className="support-disclosure alfred-support"><summary><span>ALFRED</span><span className="support-disclosure__hint">Brief & conversation</span></summary><div className="support-disclosure__body">{content}</div></details> : content;
 }

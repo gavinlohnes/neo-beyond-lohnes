@@ -1,3 +1,15 @@
+# ALFRED-VOICE-001 — Routine, in review (Builder: Claude Code)
+
+- Gavin: the fixed "Ate a McGriddle…" hint should fit him, BEYOND and Alfred. The message box now shows
+  one line in Alfred's voice per lived day. Also closes #371 review notes: brief summary's accessible
+  name matches its text, stale AlfredWeek comment, ALFRED-003/006 amendment pointers, and TODAY's
+  open routine refreshes after a free-helper tick.
+- On-phone AI check (Gavin's phone): no built-in browser AI; WebGPU available (Adreno 8xx); ~8 GB
+  reported. A downloaded on-phone model is possible but is a new dependency + model download:
+  needs Gavin's explicit OK before any work.
+
+---
+
 # Handover — 2026-11-02 (Builder: Claude Code)
 
 - Codex ran out of usage; Gavin: "Finish and merge everything for a good starting point for tonight."

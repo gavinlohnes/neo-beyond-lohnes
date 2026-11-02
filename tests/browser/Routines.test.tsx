@@ -4,7 +4,7 @@ import { page } from "vitest/browser";
 import axe from "axe-core";
 import { RoutinesPanel } from "../../src/ui/components/RoutinesPanel";
 import { TodayRoutine } from "../../src/ui/components/TodayRoutine";
-import { createRoutine, getRoutineTicks, getRoutines } from "../../src/application/routineCommands";
+import { createRoutine, getRoutineTicks, getRoutines, setRoutineStep } from "../../src/application/routineCommands";
 import { startDay } from "../../src/application/commands";
 
 /** ROUTINES-001 at phone width. Invented routines only. */
@@ -87,4 +87,15 @@ it("groups matching routines behind one disclosure while keeping distinct access
   await expect.poll(async () => (await getRoutineTicks(day.id)).has(`${first.id}:${first.steps[0]!.id}`)).toBe(true);
   await expect.element(screen.getByRole("group", { name: "Leaving home", exact: true }).getByRole("checkbox", { name: "Keys" })).not.toBeChecked();
   await noAxe(screen.container);
+});
+
+it("an open TODAY routine shows a tick saved elsewhere (the free helper's card) without reopening", async () => {
+  const day = await startDay();
+  const pre = await createRoutine({ title: "Pre-shift", moment: "BEFORE_SHIFT", steps: ["Shower"] });
+  const screen = await render(<TodayRoutine dayId={day.id} moment="BEFORE_SHIFT" active />);
+  await screen.getByText("BEFORE SHIFT · Pre-shift").click();
+  await expect.element(screen.getByRole("checkbox", { name: "Shower" })).not.toBeChecked();
+  await setRoutineStep(day.id, pre.id, pre.steps[0]!.id, true);
+  window.dispatchEvent(new Event("beyond:routines-changed"));
+  await expect.element(screen.getByRole("checkbox", { name: "Shower" })).toBeChecked();
 });
