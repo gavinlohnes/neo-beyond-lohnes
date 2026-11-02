@@ -7,7 +7,7 @@ import { AlfredContextPanel } from "./AlfredContextPanel";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
-import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
+import { confirmLabel, describeConfirmError, describeProposal, undoSavedLog } from "../../application/alfred/alfredActions";
 import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
 import { answerQuestion } from "../../application/helper/freeAnswers";
@@ -188,7 +188,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     if (!navigator.onLine) { setText(q); setError("Alfred needs a connection. Your local records and draft are still here."); return; }
     working.current = true;
     setBusy(true); setError(null); setText("");
-    const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state]));
+    const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state === "undone" ? "skipped" as const : p.state])); // an undone card counts as not saved
     setTurns((all) => [...all, { role: "user", text: q, ...(depth === "deep" ? { deep: true } : {}) }]);
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
@@ -247,12 +247,25 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => all.map((t, i) => {
         const context = advance(t.context);
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
-        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped", ...(result.undo ? { undo: result.undo } : {}) } : p) };
       }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
     } catch (e) {
       setError(e instanceof Error && e.message === "CONTEXT_CHANGED" ? "Your context changed. Ask again before saving this proposal. Nothing changed." : describeConfirmError(e));
     } finally { working.current = false; setBusy(false); }
+  }
+
+  // CARD-UNDO-001: a saved log card can be taken back once, with the same void the LOG sheet's UNDO uses.
+  async function undoCard(turnIndex: number, id: string) {
+    const card = turns[turnIndex]?.proposals?.find((p) => p.id === id);
+    if (!card?.undo || card.state !== "saved" || working.current) return;
+    working.current = true; setBusy(true); setError(null);
+    try {
+      await undoSavedLog(card.undo);
+      onSaved();
+      setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: "undone" as const } : p) }));
+    } catch { setError("That couldn't be undone. Change it from LOG or the day's history."); }
+    finally { working.current = false; setBusy(false); }
   }
 
   function talk(lead = "") {
@@ -331,7 +344,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               {p.proposal.kind === "log_meal" && !p.proposal.saved_meal_id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, true, true)}>SAVE + REMEMBER MEAL</button>}
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
-            </div> : <p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : "Skipped."}</p>}
+            </div> : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : p.state === "undone" ? "Undone. Nothing of it is counted." : "Skipped."}</p>
+              {p.state === "saved" && p.undo && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undoCard(i, p.id)} aria-label={`Undo: ${describeProposal(p.proposal)}`}>UNDO</button>}</div>}
           </div>)}
         </div>)}
         {busy && <p className="meta" role="status">Alfred is reading your records…</p>}
