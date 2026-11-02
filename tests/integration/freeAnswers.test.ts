@@ -64,3 +64,7 @@ it("says how much protein is left against his own target, or that none is set (F
   await logBodyweight(day.id, 160);
   expect(await answerQuestion("how much protein do I have left?")).toMatch(/^No protein logged today yet\. Target: \d+ g\.$/);
 });
+
+it("next day off comes from the saved schedule, or says there is none (SHIFT-RUN-001)", async () => {
+  expect(await answerQuestion("when is my next day off?")).toBe("There's no saved schedule to read that from. Set it in MORE → WORK SCHEDULE.");
+});

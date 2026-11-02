@@ -41,5 +41,5 @@
 /* PRESENCE-001: one quiet line under every non-TODAY title — mode, scheduled time, the Engine's next. */
 .cc-presence { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0 14px 8px; font-size: 13px; letter-spacing: 0.04em; color: var(--text-2); min-width: 0; }
 .cc-presence__mode { font-family: var(--font-display); letter-spacing: 0.12em; color: var(--brand-yellow, var(--text-1)); } /* the approved brand accent; red is kept for action */
-.cc-presence__next { all: unset; cursor: pointer; color: var(--text-1); min-height: 44px; display: inline-flex; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-presence__next { appearance: none; background: none; border: 0; padding: 0; margin: 0; font: inherit; letter-spacing: inherit; cursor: pointer; color: var(--text-1); min-height: 44px; display: inline-flex; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-presence__next:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 2px; }

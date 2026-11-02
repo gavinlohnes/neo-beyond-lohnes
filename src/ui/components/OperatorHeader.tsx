@@ -72,7 +72,7 @@ export function OperatorHeader({ destination: _destination, children, headingId,
         {/* Decorative: it repeats the phone's own clock, so it stays out of text and the a11y tree. */}
         <span className="cc-clock" aria-hidden="true" data-clock={clock} />
       </div>
-      {presence?.presence && <p className="cc-presence" aria-label={`Now: ${presence.presence.mode}${presence.presence.when ? `, ${presence.presence.when}` : ""}${presence.presence.run ? `, ${presence.presence.run}` : ""}${presence.presence.next ? `. Next: ${presence.presence.next}` : ""}`}>
+      {presence?.presence && <p className="cc-presence">
         <span className="cc-presence__mode">{presence.presence.mode}</span>
         {presence.presence.when && <span className="cc-presence__when">{presence.presence.when}</span>}
         {presence.presence.run && <span className="cc-presence__when">{presence.presence.run}</span>}

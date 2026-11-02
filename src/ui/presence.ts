@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { getActiveDay, getLatestRecommendation, getSchedulePattern } from "../application/queries";
+import { getActiveDay, getLatestRecommendation, getRecommendationDecision, getSchedulePattern } from "../application/queries";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import { readBootPhase } from "./screens/today/bootMode";
 import { MODE_NAMES } from "./screens/today/shiftClock";
@@ -28,7 +28,9 @@ export async function readPresence(now = new Date()): Promise<Presence | null> {
   let when: string | null = null;
   if (phase === "PRE_WORK" && window && window.start > now) when = `scheduled shift in ${until(window.start.getTime() - now.getTime())}`;
   else if (phase === "SCHEDULED_SHIFT" && window) when = `scheduled to ${hhmm(window.end)}`;
-  const next = rec && rec.statusAtIssue === "ACTION" ? rec.title : null;
+  // Review of #382: once he has accepted or declined it, TODAY shows the decision; so does this line (by saying nothing).
+  const decided = rec && rec.statusAtIssue === "ACTION" ? await getRecommendationDecision(day.id, rec.id) : undefined;
+  const next = rec && rec.statusAtIssue === "ACTION" && !decided ? rec.title : null;
   const run = shiftRun(now, schedule);
   return { mode: phase ? MODE_NAMES[phase] : "MODE NOT SET", when, next, run: run ? `scheduled: ${describeShiftRun(run)}` : null };
 }
