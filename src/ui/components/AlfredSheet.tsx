@@ -63,6 +63,21 @@ function speechRecognition(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+/** ALFRED-VOICE-001: the message box speaks like Alfred, not like a sample log. One line per lived day. */
+export const ALFRED_PROMPTS = [
+  "Report in, sir. Water, meals, sleep or what's next.",
+  "What's the mission tonight?",
+  "Tell me what's done, what's due or what to remember.",
+  "Log it, plan it or ask. I'm listening.",
+  "Shall I take a note, sir?",
+  "Back from the night? Tell me how it went.",
+] as const;
+export function placeholderFor(now: Date): string {
+  const lived = new Date(now.getTime() - (16 * 60 + 30) * 60_000); // the 16:30 lived-day boundary
+  const n = Math.floor(Date.UTC(lived.getFullYear(), lived.getMonth(), lived.getDate()) / 86_400_000);
+  return ALFRED_PROMPTS[((n % ALFRED_PROMPTS.length) + ALFRED_PROMPTS.length) % ALFRED_PROMPTS.length]!;
+}
+
 export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
@@ -205,7 +220,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
       const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
       const result = confirmed?.result ?? {};
-      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
+      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); if (card.proposal.kind === "routine_tick" || card.proposal.kind === "routine_edit") window.dispatchEvent(new Event("beyond:routines-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
       // forward for this conversation's other cards and its next question, nothing else.
       const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
@@ -301,7 +316,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       </div>
       {error && <p role="alert">{error}</p>}
       <form className="alfred-input" onSubmit={(e) => { e.preventDefault(); void ask(text); }}>
-        <textarea className="input" rows={2} aria-label="Message Alfred" placeholder="Ate a McGriddle, remind me to call CPAP after I wake…" value={text} onChange={(e) => setText(e.target.value)} />
+        <textarea className="input" rows={2} aria-label="Message Alfred" placeholder={placeholderFor(new Date())} value={text} onChange={(e) => setText(e.target.value)} />
         <div className="alfred-input__row">
           <button type="button" className="btn-secondary" aria-pressed={listening} onClick={() => talk()}>{listening ? "STOP" : "TALK"}</button>
           {/* ALFRED-003: everyday answers are quick and cheap; this one question goes to the deeper model. */}

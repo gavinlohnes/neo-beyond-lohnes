@@ -25,6 +25,8 @@ Further convergence, attention placement, providers and recovery changes remain 
 
 ## ALFRED-006 — the weekly review writes itself (owner go 2026-10-31)
 
+> Placement amended by ATTENTION-001 (2026-11-01): on TODAY the review sits in a closed entry, shown automatically only on days off.
+
 Alfred writes each Monday–Sunday week's review once that week's last lived day ends (Monday 16:30),
 from that week and the one before. TODAY shows it under the brief until GOT IT, and every review is
 kept (new additive table, schema v17, in backups) and listed in DATA → MONTH. MORE → MEMORY gains
@@ -60,6 +62,8 @@ on SYNC GARMIN) and shows Alfred's brief in a home-screen widget; still no Inter
 Brief: `docs/agent/ALFRED-004.md`.
 
 ## ALFRED-003 — everyday Alfred is cheap; his brief leads TODAY; he can do it (owner go 2026-10-31)
+
+> Placement amended by ATTENTION-001 (2026-11-01): the next action and logging come first; the brief sits below them, closed.
 
 Gavin, 2026-10-31: "go cheap + 1 and 2". Everyday Alfred runs on Claude Haiku 5.5; THINK HARDER sends
 one question to Claude Opus 5.5. TODAY's first panel under the hero is Alfred's brief: a few sentences
