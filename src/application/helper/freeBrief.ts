@@ -20,7 +20,7 @@ export async function freeBrief(now = new Date()): Promise<string[]> {
   if (run && (day.workContext === "UNKNOWN" || day.workContext === run.kind)) lines.push(`Scheduled: ${describeShiftRun(run)}.`);
   const protein = today?.proteinG, water = today?.waterOz;
   const food = protein !== undefined ? `${Math.round(protein)} g protein${target ? ` of ${Math.round(target)}` : ""}` : "no food logged";
-  lines.push(`So far today: ${food}, ${water ? `${Math.round(water)} oz water` : "no water logged"}.`);
+  lines.push(`So far today: ${food}, ${water !== undefined && water > 0 ? `${Math.round(water)} oz water` : "no water logged"}.`);
   const lastSleep = [...summaries].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).find((s) => s.sleep.primaryMinutes !== undefined);
   if (lastSleep) { const m = lastSleep.sleep.primaryMinutes!; lines.push(`Last main sleep logged: ${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m.`); }
   const due = week.find((d) => d.date === formatLocalDate(now));

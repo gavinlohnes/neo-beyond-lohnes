@@ -44,6 +44,8 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
   const [brief, setBrief] = useState<Stored | null>(null);
   const [hasKey, setHasKey] = useState(() => !!readAlfredKey() && automaticAlfredOn());
   const [reading, setReading] = useState(false);
+  // Review of #392: with a key, wait for the first context read before showing the free brief instead.
+  const [checked, setChecked] = useState(false);
   const [tick, setTick] = useState(0);
   const inFlight = useRef(false);
   const sourceEpoch = useRef(0);
@@ -79,6 +81,7 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
         const sig = briefSignature(context);
         const stored = readStored();
         if (mounted.current && sourceEpoch.current === epoch) setBrief(stored?.text && stored.sig === sig ? stored : null);
+        if (mounted.current) setChecked(true);
         if (!briefIsDue(stored, sig, Date.now()) || (typeof navigator !== "undefined" && navigator.onLine === false) || capReached()) return;
         if (mounted.current) setReading(true);
         const { writeAlfredBrief } = await import("../../application/alfred/alfredClient");
@@ -98,13 +101,13 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
         if (mounted.current) setBrief(null);
       } finally {
         inFlight.current = false;
-        if (mounted.current) setReading(false);
+        if (mounted.current) { setReading(false); setChecked(true); }
       }
     })();
   }, [active, refreshKey, tick]);
 
   // FREE-BRIEF-001: with no Alfred brief to show, the free one from his records takes its place.
-  if (!hasKey || (!brief && !reading)) return recessed ? <FreeBrief active={active} refreshKey={refreshKey} onOpen={onOpen} /> : null;
+  if (!hasKey || (!brief && !reading)) return recessed && (!hasKey || checked) ? <FreeBrief active={active} refreshKey={refreshKey} onOpen={onOpen} /> : null;
   const content = <section className="alfred-brief" aria-label="Alfred's brief">
     <button type="button" className="alfred-brief__open" onClick={onOpen}>
       <span className="alfred-brief__who">ALFRED{brief ? ` · ${hhmm(brief.at)}` : ""}{reading ? " · reading…" : ""}</span>
