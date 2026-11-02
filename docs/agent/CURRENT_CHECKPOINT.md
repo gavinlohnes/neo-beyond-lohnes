@@ -1,3 +1,15 @@
+# PHONE-POLISH-001 — phone suit polish (Codex)
+
+- Gavin requested overall polish, then specified Batman Beyond suit presence: more dynamic, alive and cooler.
+- FEATURE presentation objective; brief: [PHONE-POLISH-001.md](PHONE-POLISH-001.md).
+- Branch `codex/phone-polish-001` is pushed. Shared shell, planning panels, data instruments and discovery vocabulary updated.
+- Initial full verify PASS at `20b1638`: 3,427 tests. After Gavin clarified visual elevation: 145 focused browser tests, architecture, production/PWA build, 320/360/412px walkthrough, panel axe and reduced motion PASS. Final refinement has not had a second full-suite run. Details in the brief.
+- Review captures: [phone-polish-001](../screenshots/phone-polish-001/README.md), synthetic data only.
+- PR creation failed: GitHub GraphQL returned Forbidden from this environment. Branch and changes are preserved remotely; no merge or deployment claimed. Every merge remains Gavin's decision.
+- Next: open the PR when API access permits, review the normal/night-vision captures and changes, complete remote checks and obtain owner merge approval.
+
+---
+
 # BEYOND-2.0 night campaign — 2026-11-02 (orchestrator: Claude Code; builders: Claude Code, Codex)
 
 - Plan, authorization and rules: [#373](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/373);
