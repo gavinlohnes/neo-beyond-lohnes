@@ -137,7 +137,7 @@ export function SearchScreen({ onSelectResult, onRunCapability, hiddenCapability
           Search failed. Try again.
         </p>
       )}
-      {!loading && !error && searched && results.length === 0 && (
+      {!loading && !error && searched && results.length === 0 && !(command && (command.answer || command.doIt.length > 0 || command.go.length > 0)) && (
         <p className="empty-state" role="status" aria-live="polite">
           No matches for "{query.trim()}".
         </p>
