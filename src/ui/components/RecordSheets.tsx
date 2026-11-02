@@ -1,3 +1,4 @@
+import { MealPlanPanel } from "../screens/body/MealPlanPanel";
 import { captureCommitFeedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -211,6 +212,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
             </>}
           </>}
           <button type="button" className="btn-secondary" onClick={() => { setBodyFocus("meal"); setBodyRequest((key) => key + 1); setPage("mealTools"); }}>More meal tools & corrections</button>
+          {target === "meal" && <MealPlanPanel />}
         </>}
         {(page === "new" || page === "quick") && <>
           <p className="meta">Carbs and fat default to 0 when not entered.</p>

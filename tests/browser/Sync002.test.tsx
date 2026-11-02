@@ -7,6 +7,15 @@ import { markGarminSyncRequested, takeGarminSyncRequest, SYNC_REQUEST_WINDOW_MS 
 import { describeGarminSync } from "../../src/ui/components/GarminSyncLine";
 import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
 
+// A desktop Vitest iframe cannot launch an Android activity. Preserve the app's launch
+// attempt and the real fallback link, but keep the automatic navigation in this document.
+vi.mock("../../src/ui/screens/today/MeasuredSheet", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/ui/screens/today/MeasuredSheet")>();
+  return { ...actual, bridgeSyncUrl: vi.fn(async () => {
+    const url = new URL(window.location.href); url.hash = "health-bridge-launch-attempt"; return url.toString();
+  }) };
+});
+
 /** SYNC-002: one tap of SYNC GARMIN — what the Health Bridge sends back imports straight away. */
 const H = 3600_000;
 const start = new Date(2026, 9, 20, 16, 30).getTime(), now = start + 34 * H;

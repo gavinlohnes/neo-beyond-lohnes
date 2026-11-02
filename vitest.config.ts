@@ -61,7 +61,7 @@ export default defineConfig({
           setupFiles: ["./tests/browser/setup.ts"],
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: playwright(process.env.BEYOND_BROWSER_EXECUTABLE ? { launchOptions: { executablePath: process.env.BEYOND_BROWSER_EXECUTABLE } } : {}),
             headless: true,
             instances: [{ browser: "chromium" }],
           },

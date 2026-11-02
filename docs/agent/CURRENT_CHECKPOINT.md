@@ -2880,3 +2880,25 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
+
+## MEAL-PLAN-001 — Codex, 2026-11-01 night campaign
+
+- Authorization: #373/#375 and Gavin's continuation instruction: separate branches and prepared
+  PR descriptions may proceed while GitHub API access is blocked. Lane FEATURE, Builder Codex.
+- Branch `codex/meal-plan-001`, fresh baseline `744cdcf3b2e720bcadba0dfef9ed0261b8f06296`.
+- Deterministic 3/7-day saved-meal draft in MEAL and meal tools; saved schedule work/off slots,
+  current calorie/protein targets, swap/clear and updated totals. Confirmed grocery note only;
+  no food log, table, dependency or provider. SavedMeal has no ingredient/notes fields, so the
+  grocery list honestly uses meal names and serving counts. Search-only entry is append-only.
+- REUSE: saved meals, nutrition targets, schedule/lived-day helpers, MEAL surfaces, captureItem.
+  OWN: rotation/portions, slots, draft and confirmation UI. BUILD FROM SCRATCH: bounded allocation
+  rule not present in current queries; no dependency. Claude-reserved source files untouched.
+- Typecheck PASS; focused planner/catalog 21/21 PASS; harness/meal acceptance 77/77 PASS;
+  app-route/focus/target regression run 93/93 PASS. Complete system-Chromium `npm run verify`
+  PASS after fixing a wrong catalog route and planner placement that affected focus recovery.
+- Test support: optional BEYOND_BROWSER_EXECUTABLE; Android launch isolated to same-document
+  navigation inside Sync002's desktop iframe; async substitution list checked after it loads.
+  Existing assertions and the real fallback link remain. No production Garmin/Engine change.
+- PR description: `/workspace/shared/beyond-night-campaign/meal-plan-001-pr.md`. No PR or review
+  claimed. Git writes now also fail authentication after reconnection; commits are preserved
+  locally and will be packaged for recovery. Next: #377 from fresh master, then #376.

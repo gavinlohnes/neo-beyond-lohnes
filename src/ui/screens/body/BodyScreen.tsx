@@ -1,3 +1,4 @@
+import { MealPlanPanel } from "./MealPlanPanel";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { LogTimeEditor } from "../../components/LogTimeEditor";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
@@ -2451,6 +2452,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             {mealHistoryContent}
           </div>
         )}
+        <MealPlanPanel />
       </div>);
   if (overviewOnly) return <div className="screen body-field body-home">
     <SleepMetricSheet open={sleepMetricOpen} onClose={() => setSleepMetricOpen(false)} onAllRecords={() => { setSleepMetricOpen(false); showProgress("sleep"); }} />
