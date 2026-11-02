@@ -98,6 +98,7 @@ export const SYSTEM_CAPABILITIES = [
   { hiddenFeature: "smallSteps", label: "SMALL STEPS", description: "One tool at a time", aliases: ["small steps", "simple"], group: "On shift", destination: { kind: "daily", tool: "SMALL_STEPS" }, browse: false },
   { label: "HIDDEN FEATURES", description: "Show optional tools; your data is kept either way", aliases: ["hidden", "minimum day", "small steps", "food lookup"], group: "Settings", destination: { kind: "section", section: "HIDDEN_FEATURES" }, browse: false },
   { label: "PROTEIN ONLY", description: "Log protein without a meal", aliases: ["protein", "grams"], group: "Log", destination: { kind: "record", target: "protein" }, browse: false },
+  { label: "CALENDAR EXPORT", description: "Export scheduled shifts and optional plans from Week Ahead", aliases: ["calendar", "ics", "export to calendar"], group: "Review", destination: { kind: "more", view: "WEEKLY" }, browse: false },
 ] as const satisfies readonly Capability[];
 
 export type SystemCapability = Capability;

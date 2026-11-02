@@ -1,3 +1,4 @@
+import { CalendarExportPanel } from "./CalendarExportPanel";
 import { useEffect, useState } from "react";
 import { getWeekAhead, getWeekTasks, type WeekAhead, type WeekTasksDay } from "../../../application/weekAheadQueries";
 import { askAlfred, PLAN_MY_WEEK_ASK } from "../../components/AlfredSheet";
@@ -63,6 +64,7 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
         </div>
       ))}
       {tasksFailed && <p role="alert" className="meta">Commitments couldn't be read, so days may show fewer than you have. Nothing changed.</p>}
+      <CalendarExportPanel now={now} />
       <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => askAlfred(PLAN_MY_WEEK_ASK)}>PLAN MY WEEK WITH ALFRED</button>
       <p className="meta">He offers each placement as a card. Only the ones you SAVE change a task's planned day.</p>
     </div>

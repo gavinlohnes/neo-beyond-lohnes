@@ -2880,3 +2880,28 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
+
+## CALENDAR-EXPORT-001 — Codex night campaign, 2026-11-01
+
+- Authorization/brief: issues #373 and #374; Gavin assigned Codex the four items in order,
+  one ready PR before starting the next. Lane FEATURE; Builder Codex.
+- Branch `codex/calendar-export-001`, fresh baseline `7c37d3d96098507ada2d9c7347aee6ccb3934950`.
+- Adds Week Ahead export: shifts only by default, optional eligible planned/due commitment
+  titles (People/Home dates already are commitments), 4/8 weeks, RFC 5545 floating-local
+  shifts and all-day tasks, share/download receipt. Read-only; Claude-owned files untouched.
+- REUSE: saved schedule, eligible commitment query, Week Ahead, RFC 5545, browser delivery.
+  OWN: BEYOND event projection/privacy/range. BUILD FROM SCRATCH: requested bounded RFC
+  serializer; no runtime dependency.
+- Typecheck PASS; focused calendar/catalog tests 23/23 PASS, including synthetic People/Home
+  lifecycle/privacy/no-write integration and 360px axe; existing Week Ahead/Week Plan checks
+  PASS; production build PASS. Full `npm run verify` attempted twice; final Node results
+  pass, but browser launch is blocked by missing Playwright Chromium (download domains denied).
+  System Chromium focused tests passed through the ignored onboarding override. Full gate
+  is NOT green; the prior baseline also has a Sync002 iframe-navigation limitation.
+- Ready PR body prepared in `/tmp/beyond-calendar-pr.md`; no PR exists yet: both GitHub API
+  reads and `gh pr create` fail at proxy CONNECT with HTTP 403. GitHub pages and Git work.
+  Draft environment network additions saved for `api.github.com`, `cdn.playwright.dev`, and
+  `storage.googleapis.com`; those additions have not been applied to the running instance.
+- Next: apply the required environment access, install pinned Playwright Chromium, rerun
+  `npm run verify`, open a ready PR with `Closes #374`, check for BLOCK findings, then start
+  #375 from fresh master. #377 and #376 remain unstarted. No self-review or merge.

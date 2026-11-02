@@ -1,0 +1,38 @@
+import { afterEach, expect, it, vi } from "vitest";
+import { cleanup, render } from "vitest-browser-react";
+import { page } from "vitest/browser";
+import axe from "axe-core";
+import { CalendarExportPanel } from "../../src/ui/screens/weekly/CalendarExportPanel";
+import { updateSchedulePattern } from "../../src/application/commands";
+import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
+import { createObligation } from "../../src/application/intentCommands";
+import { db } from "../../src/persistence/db";
+
+afterEach(() => { cleanup(); vi.restoreAllMocks(); Reflect.deleteProperty(navigator, "canShare"); Reflect.deleteProperty(navigator, "share"); });
+it("exports at 360px after privacy/range choices, gives a receipt, and writes no canonical records", async () => {
+  await page.viewport(360, 800);
+  await updateSchedulePattern({ ...DEFAULT_SCHEDULE_PATTERN, anchorMonday: "2026-11-02" });
+  await createObligation({ title: "Home: replace filter", dueAt: "2026-11-04", description: "Private model number" });
+  const before = await db.events.count();
+  const files: File[] = [];
+  Object.defineProperty(navigator, "canShare", { configurable: true, value: () => true });
+  Object.defineProperty(navigator, "share", { configurable: true, value: async (data: ShareData) => { files.push(...(data.files ?? [])); } });
+  const screen = await render(<CalendarExportPanel now={new Date(2026, 10, 2, 17)} />);
+  const button = screen.getByRole("button", { name: "EXPORT TO CALENDAR", exact: true });
+  await expect.element(button).toBeEnabled();
+  expect(screen.getByRole("combobox", { name: "Calendar contents" }).element()).toHaveValue("shifts");
+  await button.click();
+  await expect.element(screen.getByRole("status")).toHaveTextContent("Shared 14 events · 2026-11-02 to 2026-11-29.");
+  expect(await files[0]!.text()).not.toContain("replace filter");
+  await screen.getByRole("combobox", { name: "Calendar contents" }).selectOptions("plans");
+  await screen.getByRole("combobox", { name: "Calendar range" }).selectOptions("8");
+  await expect.element(button).toBeEnabled();
+  await button.click();
+  await expect.element(screen.getByRole("status")).toHaveTextContent("Shared 29 events");
+  const content = await files[1]!.text();
+  expect(content).toContain("Home: replace filter · Due");
+  expect(content).not.toContain("Private model");
+  expect(await db.events.count()).toBe(before);
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+});
