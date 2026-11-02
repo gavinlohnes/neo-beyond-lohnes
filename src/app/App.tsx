@@ -39,7 +39,7 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
-import { ASK_ALFRED_EVENT, FIND_FOOD_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
+import { ASK_ALFRED_EVENT, DO_IN_BEYOND_EVENT, FIND_FOOD_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
 import { AlfredBrief } from "../ui/components/AlfredBrief";
 import { AlfredWeek } from "../ui/components/AlfredWeek";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
@@ -165,7 +165,7 @@ function AppWorkspaces() {
   // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
   const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
   const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
-  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
   useEffect(() => {
     if (!alfredLaunch) return;
     const url = new URL(window.location.href);
@@ -174,8 +174,9 @@ function AppWorkspaces() {
   }, [alfredLaunch]);
   useEffect(() => {
     const onAsk = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail })); setAlfredOpen(true); };
-    window.addEventListener(ASK_ALFRED_EVENT, onAsk);
-    return () => window.removeEventListener(ASK_ALFRED_EVENT, onAsk);
+    const onDo = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail, send: true })); setAlfredOpen(true); };
+    window.addEventListener(ASK_ALFRED_EVENT, onAsk); window.addEventListener(DO_IN_BEYOND_EVENT, onDo);
+    return () => { window.removeEventListener(ASK_ALFRED_EVENT, onAsk); window.removeEventListener(DO_IN_BEYOND_EVENT, onDo); };
   }, []);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.

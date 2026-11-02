@@ -28,6 +28,9 @@ import "./alfred.css";
 const KEY = "beyond.alfredKey";
 /** ALFRED-004 #11 "Ask about this": any screen opens Alfred with a question ready to send. */
 export const ASK_ALFRED_EVENT = "beyond:ask-alfred";
+/** COMMAND-BAR-001: open the sheet and send these words now (the free helper answers first). */
+export const DO_IN_BEYOND_EVENT = "beyond:do";
+export function doInBeyond(text: string) { window.dispatchEvent(new CustomEvent<string>(DO_IN_BEYOND_EVENT, { detail: text })); }
 /** FREE-HELPER-002: open MEAL's free food search for this food. */
 export const FIND_FOOD_EVENT = "beyond:find-food";
 export function findFood(query: string) { window.dispatchEvent(new CustomEvent<string>(FIND_FOOD_EVENT, { detail: query })); }
@@ -81,7 +84,7 @@ export function placeholderFor(now: Date): string {
   return ALFRED_PROMPTS[((n % ALFRED_PROMPTS.length) + ALFRED_PROMPTS.length) % ALFRED_PROMPTS.length]!;
 }
 
-export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string } | undefined }) {
+export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string; send?: boolean } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
   const [included, setIncluded] = useState(false);
@@ -111,7 +114,11 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
   useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); setMonthSpent(getMonthSpend()); setIncluded(false); setSnapshot(null); setSelectedSource(null); lastContext.current = null; setContextNotice(null); } }, [open]);
-  useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
+  useEffect(() => {
+    if (!open || !draft) return;
+    // COMMAND-BAR-001: DO IT from search sends straight through the usual route: free helper first.
+    if (draft.send) void ask(draft.text, "everyday", true); else setText(draft.text);
+  }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
   /**
@@ -120,7 +127,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
    * before; if Alfred can't be reached (no key, no signal, at the monthly limit) the helper does what
    * it can and says what's left. THINK HARDER and the planning starters always go to Alfred.
    */
-  async function ask(question: string, depth: AlfredDepth = "everyday") {
+  async function ask(question: string, depth: AlfredDepth = "everyday", freeOnly = false) {
     const q = question.trim();
     if (!q || busy || working.current) return;
     if (depth === "deep") return sendToAlfred(q, depth);
@@ -161,7 +168,9 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setText(q); setError("The free helper couldn't read your records. Nothing changed. Try again.");
     } finally {
       working.current = false; setBusy(false);
-      if (route === "alfred") void sendToAlfred(q, depth);
+      // COMMAND-BAR-001: words sent from search stay free; anything that needs Alfred waits for SEND.
+      if (route === "alfred" && freeOnly) { setText(q); setError("That needs Alfred. Tap SEND to ask him, or change the words."); }
+      else if (route === "alfred") void sendToAlfred(q, depth);
     }
   }
 
