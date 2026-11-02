@@ -2691,3 +2691,11 @@ and suppresses the original active copy even after retirement. Long originals ne
 wording of at most 280 characters; no silent truncation, splitting, inference or bulk migration.
 New exports require this build or newer to interpret PERSONAL_FACT history; there is no downgrade
 conversion or selective erasure of older backups/external requests. Engine authority is unchanged.
+
+## 2026-11-01 — FREE-HELPER-001: free first, Alfred when needed
+
+Owner: work that doesn't need Alfred-level thinking should use a free helper. Everyday messages
+in Alfred's sheet try BEYOND's free helper first: if it understands the whole message it answers or
+makes the same confirm cards (labelled BEYOND · FREE), free and offline; anything it isn't sure of goes
+to Alfred whole, within the monthly limit. It never guesses and never writes without SAVE. THINK
+HARDER, planning starters and shift debriefs always go to Alfred. [Brief](agent/FREE-HELPER-001.md).

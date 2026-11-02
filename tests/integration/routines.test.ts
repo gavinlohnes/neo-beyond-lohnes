@@ -116,3 +116,15 @@ it("before the work question is answered, follows the schedule's predicted work 
   expect(at("PRE_WORK", "OFF")).toBe("DAY_OFF");
   expect(routineMomentFor({ phase: null, workContext: "UNKNOWN", workStarted: false, workEnded: false })).toBeNull();
 });
+
+it("a free-helper tick refuses if the routine was archived after it was offered (review of #366)", async () => {
+  const { buildPlanningContext } = await import("../../src/application/alfred/personalContext");
+  const { confirmContextProposal } = await import("../../src/application/alfred/contextActions");
+  const day = await startDay();
+  const r = await createRoutine({ title: "Pre-shift", moment: "BEFORE_SHIFT", steps: ["Shower"] });
+  const context = await buildPlanningContext(false);
+  const card = { kind: "routine_tick" as const, routine_id: r.id, step_id: r.steps[0]!.id, text: "Shower", routine_title: "Pre-shift" };
+  await setRoutineArchived(r.id, true);
+  await expect(confirmContextProposal(card, context, false)).rejects.toThrow("CONTEXT_CHANGED");
+  expect((await getRoutineTicks(day.id)).size).toBe(0);
+});
