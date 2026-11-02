@@ -16,8 +16,8 @@ for(const width of [320,360,390,412])it(`groups all capabilities and retains bac
  await expect.poll(()=>document.querySelector('.more-control-center')).not.toBeNull(); // BUNDLE-002: MORE loads on first visit
  const root=document.querySelector('.more-control-center')!;
  // MORE-TRIM-001: Log has no browse row (LOG on TODAY is its home); search finds every row.
- for(const group of CAPABILITY_GROUPS.filter(g=>g!=='Log')){const summary=[...root.querySelectorAll('summary')].find(s=>s.textContent===group)!;expect(summary).toBeTruthy();(summary.parentElement as HTMLDetailsElement).open=true;}
- expect([...root.querySelectorAll('summary')].some(s=>s.textContent==='Log')).toBe(false);
+ for(const group of CAPABILITY_GROUPS.filter(g=>g!=='Log')){const summary=[...root.querySelectorAll('summary')].find(s=>(s.querySelector('.command-group__name')?.textContent??s.textContent)===group)!;expect(summary).toBeTruthy();(summary.parentElement as HTMLDetailsElement).open=true;}
+ expect([...root.querySelectorAll('summary')].some(s=>(s.querySelector('.command-group__name')?.textContent??s.textContent)==='Log')).toBe(false);
  for(const entry of SYSTEM_CAPABILITIES.filter(e=>!('browse' in e)))await expect.element(screen.getByRole('button',{name:`${entry.label} ${entry.description}`,exact:true})).toBeVisible();
  await document.fonts.ready;for(const a of document.getAnimations())if(a.effect?.getComputedTiming().iterations!==Infinity)a.finish();
  expect((await axe.run(root)).violations).toEqual([]);expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);

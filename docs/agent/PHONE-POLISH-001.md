@@ -13,12 +13,22 @@
 - OWN: BEYOND's suit geometry and visual response to navigation, focus, loading and plan edits.
 - BUILD FROM SCRATCH: none; extend current visual surfaces.
 
+## Delivered experience
+
+- TODAY: layered Gotham silhouettes and stronger next-action typography, with the same calm all-clear state.
+- TRAIN: constructed workout surface, explicit exercise sequence, distinct view controls and existing programme/start/override paths.
+- DATA: larger aligned nutrition readings, subordinate units, supporting water/sleep instruments and weight history.
+- MORE: job descriptions visible before disclosure, native expansion controls and compact Plan access; all destinations retained.
+- Shared angular materials, planning panels, finite state-linked motion and reduced-motion support. No new dependency, provider or timer.
+
 ## Verification and handoff
 
-- Initial source at `20b1638`: full `npm run verify` PASS — 408 files passed / one skipped; 3,427 tests passed / two skipped; architecture, TypeScript and production/PWA build passed. An earlier exploratory run was interrupted after finding transient-contrast, header-type and search-copy failures; those were fixed before this successful full run.
-- After Gavin's visual-elevation refinement: 9 browser files / 145 tests PASS (FieldRehearsal, TrainOperator, GuidedMoreSmallSteps, CommandCatalog, MealPlan, TrainingProgramme, BodyDailyRecord, BodyProgressExperience, WeeklyReviewLoop). Architecture, TypeScript/production/PWA build and whitespace checks PASS. No second full-suite pass is claimed for the final visual refinement.
-- Source walkthrough at 320/360/412 px: all four tabs and seven-day meal plans without horizontal overflow; meal-panel axe and reduced motion PASS; no page errors. An initial walkthrough had insufficient synthetic saved meals and was corrected to meet the real three-meal prerequisite.
-- Screenshots: `docs/screenshots/phone-polish-001/`, synthetic records, NORMAL and AUTO night vision. These are Chromium captures, not owner phone acceptance.
-- The shared shell, Gothic scene lighting, recorded-data instruments, physical controls and planning panels carry the same existing visual vocabulary. No new runtime dependency or timer was introduced.
-- Branch pushed. PR creation attempted using `gh pr create --draft`; GitHub GraphQL returned `Forbidden`. No PR, independent review, remote CI, merge, deployment or phone acceptance is claimed.
-- Next: open/review the branch PR, complete required remote checks and obtain Gavin's merge approval. API access remains restricted in this environment.
+- Final broad run: 409 files; 407 passed / one failed / one skipped. 3,423 tests passed, four failed, two existing skips. The four failures were the old full-text job-row selectors in RedesignCommand; they stopped before exercising the new title/description structure.
+- Updated the selector to read the visible job title, retaining every destination, backup/restore access, axe and width assertion. Final rerun: RedesignCommand, DailyExperience, BodyDailyRecord and BodyProgressExperience — 4 files / 45 tests PASS. All four previously failing cases now pass. The full command was not rerun after this test-only correction; do not describe it as one green full-verify invocation.
+- Earlier focused coverage: 145 phone checks, followed by 105 navigation checks, with the compact 700px Plan-access assertion retained and passing. All application failures found during refinement were corrected; no test was disabled or assertion weakened.
+- Architecture (416 files), TypeScript/production/PWA build and whitespace PASS. Final PWA precache: 49 entries / 2,967.53 KiB total; no new runtime assets or dependencies.
+- Final compiled PWA walkthrough: offline navigation through all four tabs at 320/360/412 px, local meal drafting and offline cold reload PASS; no horizontal overflow or page errors. Synthetic fixtures were seeded via the real commands; these are not Gavin's records.
+- Source walkthrough also verified seven-day meal plans, panel axe and reduced motion at all three widths.
+- Captures and motion clip: `docs/screenshots/phone-polish-001/`. These are Chromium evidence, not owner phone acceptance.
+- Branch `codex/phone-polish-001` pushed. PR creation attempted with `gh pr create --draft`; GitHub GraphQL returned `Forbidden`. No PR, independent review, remote CI, merge, deployment or owner phone acceptance is claimed.
+- Next: open/review the PR, complete required remote checks and obtain Gavin's merge approval. API access remains restricted in this environment.

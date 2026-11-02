@@ -1,12 +1,12 @@
-# PHONE-POLISH-001 — phone suit polish (Codex)
+# PHONE-POLISH-001 — approved suit elevation (Codex)
 
-- Gavin requested overall polish, then specified Batman Beyond suit presence: more dynamic, alive and cooler.
-- FEATURE presentation objective; brief: [PHONE-POLISH-001.md](PHONE-POLISH-001.md).
-- Branch `codex/phone-polish-001` is pushed. Shared shell, planning panels, data instruments and discovery vocabulary updated.
-- Initial full verify PASS at `20b1638`: 3,427 tests. After Gavin clarified visual elevation: 145 focused browser tests, architecture, production/PWA build, 320/360/412px walkthrough, panel axe and reduced motion PASS. Final refinement has not had a second full-suite run. Details in the brief.
-- Review captures: [phone-polish-001](../screenshots/phone-polish-001/README.md), synthetic data only.
-- PR creation failed: GitHub GraphQL returned Forbidden from this environment. Branch and changes are preserved remotely; no merge or deployment claimed. Every merge remains Gavin's decision.
-- Next: open the PR when API access permits, review the normal/night-vision captures and changes, complete remote checks and obtain owner merge approval.
+- Gavin approved distinct TODAY/TRAIN/DATA/MORE compositions, stronger hierarchy, constructed panels, Gotham atmosphere and action-linked motion: “Approved. Now take it beyond.”
+- FEATURE; brief and complete evidence: [PHONE-POLISH-001.md](PHONE-POLISH-001.md).
+- Branch `codex/phone-polish-001` pushed; app implementation through `ec09187`, with final test-selector/evidence updates in subsequent commits.
+- Final broad run: 3,423 passed / four old menu-selector failures / two skips. Corrected selectors retain all assertions; final affected rerun 45/45 PASS. Separate architecture, TypeScript/PWA build and compiled offline 320/360/412px walkthrough PASS. No single green final full-verify invocation claimed.
+- Review [captures and motion](../screenshots/phone-polish-001/README.md) use synthetic records. All four workspaces, confirmations, native disclosures, compact Plan access and Engine authority retained.
+- PR creation blocked: GitHub GraphQL Forbidden. No remote CI, independent review, merge, deployment or owner phone acceptance claimed.
+- Next: open the PR, review the experience, complete remote checks and obtain owner merge approval.
 
 ---
 
