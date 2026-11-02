@@ -34,5 +34,6 @@ it("exports at 360px after privacy/range choices, gives a receipt, and writes no
   expect(content).not.toContain("Private model");
   expect(await db.events.count()).toBe(before);
   expect((await axe.run(screen.container)).violations).toEqual([]);
+  for (const name of ["Calendar contents", "Calendar range"]) expect(screen.getByRole("combobox", { name }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44); // review of #391
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
 });

@@ -39,10 +39,10 @@ export function CalendarExportPanel({ now }: { now?: Date | undefined }) {
   }
   return <section aria-label="Calendar export">
     <h2 className="eyebrow">EXPORT TO CALENDAR</h2>
-    <label className="meta">Include<select aria-label="Calendar contents" value={includePlans ? "plans" : "shifts"} disabled={busy} onChange={(e) => setIncludePlans(e.target.value === "plans")}>
+    <label className="meta" style={{ display: "grid", gap: 4 }}>Include<select className="input" aria-label="Calendar contents" value={includePlans ? "plans" : "shifts"} disabled={busy} onChange={(e) => setIncludePlans(e.target.value === "plans")}>
       <option value="shifts">Shifts only</option><option value="plans">Shifts + my plans</option>
     </select></label>
-    <label className="meta">How far ahead<select aria-label="Calendar range" value={weeks} disabled={busy} onChange={(e) => setWeeks(Number(e.target.value) as 4 | 8)}>
+    <label className="meta" style={{ display: "grid", gap: 4 }}>How far ahead<select className="input" aria-label="Calendar range" value={weeks} disabled={busy} onChange={(e) => setWeeks(Number(e.target.value) as 4 | 8)}>
       <option value={4}>4 weeks</option><option value={8}>8 weeks</option>
     </select></label>
     <p className="meta">Scheduled shifts, not worked records. Shift times use the importing calendar's local time zone. Plans include titles and planned/due dates only. No notes are included.</p>

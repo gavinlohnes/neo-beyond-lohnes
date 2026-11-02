@@ -55,6 +55,7 @@ export function buildCalendarExport(input: {
   const saved = isOperatorSavedSchedule(pattern);
   if (saved) for (let i = 0; i < input.weeks * 7; i++) {
     const day = localDay(now, i);
+    // Noon of a calendar date sits inside the lived day (16:30 to 16:30) whose shift starts that evening.
     if (!deriveScheduledContext(day, pattern).todayIsScheduledWorkDay) continue;
     const finish = localDay(day, pattern.shiftEndHour <= pattern.shiftStartHour ? 1 : 0);
     event(`shift-${dateValue(day)}`, "Scheduled shift", `DTSTART:${timeValue(day, pattern.shiftStartHour)}`, `DTEND:${timeValue(finish, pattern.shiftEndHour)}`);
