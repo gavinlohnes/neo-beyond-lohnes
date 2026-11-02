@@ -22,12 +22,11 @@ function recognitionCtor(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export const DRIVE_HOME_EVENT = "beyond:drive-home";
-export function openDriveHome() { window.dispatchEvent(new Event(DRIVE_HOME_EVENT)); }
 
 export const SAVE_WORDS = /\b(yes|yep|yeah|save|save it|confirm|do it|correct)\b/;
 export const SKIP_WORDS = /\b(no|nope|skip|cancel|wrong|scrap)\b/;
-export const DONE_WORDS = /\b(done|stop|that's all|that is all|finished|nothing else|nothing|goodbye|bye)\b/;
+// Review of #381: exits are whole phrases, so "done with work" or "finished the garage" are logged, not exits.
+export const DONE_WORDS = /^(?:ok(?:ay)? )?(?:that's all|that is all|that's it|i'm done|im done|all done|done|stop|nothing else|nothing|no thanks|goodbye|bye)(?: thanks| thank you)?$/;
 
 type Phase = "starting" | "listening" | "confirm" | "saving" | "idle";
 
@@ -41,11 +40,15 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
   const alive = useRef(false);
   const pending = useRef<AlfredProposal[]>([]);
   const farewell = useRef(false); // let "Drive safe" finish after the screen closes
-  const savedCount = useRef(0); // callbacks chain across renders, so this lives in a ref
+  const savedCount = useRef(0);
+  const reprompted = useRef(false);
+  const context = useRef<Awaited<ReturnType<typeof buildPlanningContext>> | null>(null);
+  const dialog = useRef<HTMLDivElement>(null); // callbacks chain across renders, so this lives in a ref
   const supported = !!recognitionCtor();
 
   function say(text: string, then?: () => void) {
     setNote(text);
+    if (!alive.current && !farewell.current) return; // closed: say nothing more
     if (typeof speechSynthesis === "undefined" || typeof SpeechSynthesisUtterance === "undefined") { then?.(); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -59,29 +62,32 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
     if (!Ctor || !alive.current) return;
     rec.current?.abort?.();
     const r = new Ctor(); r.lang = "en-US"; r.interimResults = false;
-    let words = "";
+    let words = "", failed = false;
     r.onresult = (e) => { words = Array.from(e.results).map((res) => res[0]!.transcript).join(" "); setHeard(words); };
-    r.onerror = () => { if (alive.current) setPhase("idle"); };
-    r.onend = () => { if (alive.current) void (mode === "log" ? understood(words) : answered(words)); };
+    // Review of #381: a recognition error (silence, mic denied) stops here; it never loops.
+    r.onerror = () => { failed = true; if (alive.current) { setPhase("idle"); setNote(pending.current.length ? "Didn't catch that. Tap SAVE or SKIP." : "Didn't catch that. Tap TALK."); } };
+    r.onend = () => { if (alive.current && !failed) void (mode === "log" ? understood(words) : answered(words)); };
     rec.current = r; setPhase(mode === "log" ? "listening" : "confirm"); r.start();
   }
 
   async function understood(words: string) {
     const said = words.trim();
     if (!said) { setPhase("idle"); return; }
-    if (DONE_WORDS.test(said.toLowerCase()) && said.split(/\s+/).length <= 4) { finish(); return; }
+    if (DONE_WORDS.test(said.toLowerCase().replace(/[.!?,]/g, "").trim())) { finish(); return; }
     const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
     const result = interpret(said, { now: new Date(), savedMeals: meals, openTasks: tasks, openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"), routines: routines.filter((r) => r.status === "ACTIVE") });
     const next: AlfredProposal[] = [...result.cards, ...(result.unknown.length ? [{ kind: "capture_note", text: `Drive home: ${result.unknown.join("; ")}` } as AlfredProposal] : [])];
-    pending.current = next; setCards(next);
+    pending.current = next; setCards(next); context.current = await buildPlanningContext(false); reprompted.current = false;
     say(`I heard: ${next.map(describeProposal).join(". ")}. Say save, or skip.`, () => listen("confirm"));
   }
 
   async function answered(words: string) {
-    const w = words.toLowerCase();
+    const w = words.toLowerCase().trim();
+    // Review of #381: silence re-prompts once, then waits quietly with SAVE/SKIP on screen.
+    if (!w) { if (reprompted.current) { setPhase("idle"); setNote("Tap SAVE or SKIP when you're ready."); return; } reprompted.current = true; say("Say save, or skip.", () => listen("confirm")); return; }
     if (SAVE_WORDS.test(w) && !SKIP_WORDS.test(w)) { await saveAll(); return; }
     if (SKIP_WORDS.test(w)) { pending.current = []; setCards([]); say("Skipped. Anything else?", () => listen("log")); return; }
-    if (DONE_WORDS.test(w)) { finish(); return; }
+    if (DONE_WORDS.test(w.replace(/[.!?,]/g, ""))) { finish(); return; }
     say("Say save, or skip.", () => listen("confirm"));
   }
 
@@ -92,11 +98,15 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
     const acknowledge = captureCommitFeedback();
     const saved: string[] = [];
     try {
+      // One context read when the cards were made, advanced by his own saves (as Alfred's sheet does),
+      // so an outside change since the readback is still refused.
+      let ctx = context.current ?? await buildPlanningContext(false);
       for (const card of toSave) {
-        const ctx = await buildPlanningContext(false);
-        await confirmContextProposal(card, ctx, false);
+        const done = await confirmContextProposal(card, ctx, false);
+        ctx = { ...ctx, personalVersion: done.personalVersion, ...(done.recordVersion ? { recordVersion: done.recordVersion } : {}) };
         saved.push(describeProposal(card));
       }
+      context.current = null;
       acknowledge("LIGHT");
       savedCount.current += saved.length; pending.current = []; setCards([]); setLog((all) => [...all, ...saved]); onSaved();
       say("Saved. Anything else?", () => listen("log"));
@@ -122,16 +132,18 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
 
   useEffect(() => {
     if (!open) return;
+    const returnTo = document.activeElement as HTMLElement | null;
+    queueMicrotask(() => dialog.current?.focus());
     alive.current = true; savedCount.current = 0; setLog([]); setCards([]); pending.current = []; setHeard("");
     if (supported) { setPhase("starting"); say("Ready. Tell me what to log.", () => listen("log")); }
     farewell.current = false;
-    return () => { alive.current = false; rec.current?.abort?.(); if (!farewell.current && typeof speechSynthesis !== "undefined") speechSynthesis.cancel(); };
+    return () => { returnTo?.focus?.(); alive.current = false; rec.current?.abort?.(); if (!farewell.current && typeof speechSynthesis !== "undefined") speechSynthesis.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   if (!open) return null;
   const busy = phase === "saving";
-  return <div className="drive-home" role="dialog" aria-modal="true" aria-label="Drive home">
+  return <div ref={dialog} tabIndex={-1} className="drive-home" role="dialog" aria-modal="true" aria-label="Drive home">
     <p className="drive-home__mode">DRIVE HOME · HANDS-FREE · FREE</p>
     {!supported ? <p className="drive-home__say">Voice isn't available in this browser. Use Alfred's box instead.</p> : <>
       <p className="drive-home__say" aria-live="polite">{phase === "listening" ? "Listening…" : phase === "confirm" ? "Say save, or skip." : phase === "saving" ? "Saving…" : note ?? "Ready."}</p>

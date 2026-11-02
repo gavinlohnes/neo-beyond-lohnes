@@ -35,7 +35,7 @@ export function preloadLazyScreens() { void import("../ui/screens/train/TrainScr
 if (typeof window !== "undefined") window.setTimeout(preloadLazyScreens, 2000);
 // DRIVE-HOME-001: the hands-free screen loads only when opened.
 const DriveHome = lazy(() => import("../ui/components/DriveHome").then((m) => ({ default: m.DriveHome })));
-const DRIVE_HOME_EVENT = "beyond:drive-home";
+import { DRIVE_HOME_EVENT } from "../ui/driveHomeEvent";
 const TabLoading = () => <p className="meta" role="status">Loading…</p>;
 import type { WholePictureDestination } from "../ui/screens/review/WholePicture";
 import { Icon, type IconName } from "../ui/icons/Icon";
