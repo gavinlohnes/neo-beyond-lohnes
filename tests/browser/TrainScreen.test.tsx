@@ -675,7 +675,7 @@ describe("TrainScreen (real browser) — CustomExercise substitution suggestions
     // REAL-DATA-001: the exercise names show before START too; wait for the live set instead.
     await expect.element(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" })).toBeVisible();
     await screen.getByText("Progression and substitution", { exact: true }).click();
-    expect(screen.getByRole("button", { name: "Chest Supported Row" }).elements()).toHaveLength(1);
+    await expect.poll(() => screen.getByRole("button", { name: "Chest Supported Row" }).elements().length).toBe(1);
   });
 });
 

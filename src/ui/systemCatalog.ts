@@ -101,6 +101,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "DRIVE HOME", description: "Hands-free: say what to log, then say save. Free", aliases: ["drive", "driving", "hands free", "hands-free", "voice", "car", "commute", "debrief"], group: "On shift", destination: { kind: "drive" }, browse: false },
   { label: "PROTEIN ONLY", description: "Log protein without a meal", aliases: ["protein", "grams"], group: "Log", destination: { kind: "record", target: "protein" }, browse: false },
   { label: "CALENDAR EXPORT", description: "Export scheduled shifts and optional plans from Week Ahead", aliases: ["calendar", "ics", "export to calendar"], group: "Review", destination: { kind: "more", view: "WEEKLY" }, browse: false },
+  { label: "MEAL PLAN + GROCERY LIST", description: "Free meal draft and grocery note from saved meals", aliases: ["meal plan", "grocery", "plan my meals"], group: "Log", destination: { kind: "body", focus: "meal" }, browse: false },
 ] as const satisfies readonly Capability[];
 
 export type SystemCapability = Capability;

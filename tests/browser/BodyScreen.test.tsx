@@ -585,6 +585,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
   it("selecting a result pre-fills the ADD MEAL form without saving anything", async () => {
     mockFetchOnce({ foods: [BANANA_FOOD] });
     const screen = await render(<BodyScreen focus="foodLookup" />);
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("textbox", { name: "Search USDA food database" }).element());
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
     await screen.getByRole("button", { name: "SEARCH" }).click();
@@ -601,6 +602,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
   it("shows a plain no-results message rather than an error for a search with no matches", async () => {
     mockFetchOnce({ foods: [] });
     const screen = await render(<BodyScreen focus="foodLookup" />);
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("textbox", { name: "Search USDA food database" }).element());
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("zzzznotafood");
     await screen.getByRole("button", { name: "SEARCH" }).click();
@@ -614,6 +616,7 @@ describe("BodyScreen (real browser) — Food Lookup (NUTRITION-002, USDA FoodDat
   it("degrades gracefully to manual entry when the search request fails", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("network down"));
     const screen = await render(<BodyScreen focus="foodLookup" />);
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("textbox", { name: "Search USDA food database" }).element());
 
     await screen.getByRole("textbox", { name: "Search USDA food database" }).fill("banana");
     await screen.getByRole("button", { name: "SEARCH" }).click();
