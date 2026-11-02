@@ -14,7 +14,7 @@ it("shows 'scheduled: night 1 of 2 · next day off Fri' on a Week B Wednesday ni
   await updateSchedulePattern(rotation);
   const day = await startDay(new Date(2026, 10, 4, 16, 30).toISOString()); await setWorkContext(day.id, "WORK", "MANUAL");
   const screen = await render(<App />);
-  await expect.element(screen.getByText("scheduled: night 1 of 2 · next day off Fri")).toBeVisible();
+  await expect.element(screen.getByText("scheduled: night 1 of 2 · next day off Fri", { exact: true })).toBeVisible();
 });
 
 it("says nothing when he declared the scheduled night OFF", async () => {

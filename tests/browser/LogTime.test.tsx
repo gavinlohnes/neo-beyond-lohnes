@@ -24,6 +24,9 @@ it("logs water an hour ago from the sheet, says so, and resets to NOW", async ()
   const screen = await render(<App />);
   const continueButton = screen.getByRole("button", { name: "CONTINUE", exact: true });
   if (document.querySelector(".shift-change")) await continueButton.click();
+  await expect.poll(() => screen.container.querySelector(".mode-header__value")?.textContent, { timeout: 10_000 }).toBe("ON SHIFT");
+  // expect.poll advances Vitest's fake clock while waiting; logging uses this fixed instant.
+  vi.setSystemTime(new Date(2026, 9, 28, 4, 30));
   await screen.getByRole("button", { name: "Log water", exact: true }).click();
   const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
   const when = sheet.getByRole("group", { name: "When" });

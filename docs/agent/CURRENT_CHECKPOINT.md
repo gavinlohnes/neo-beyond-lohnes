@@ -2880,3 +2880,13 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
+
+
+## Night campaign #373 — TRAIN-PROGRAM-001 handoff (Codex, 2026-11-02)
+
+- Authorization: #373/#376 and direct owner assignment; Protected persisted programme. Branch `codex/train-program-001`, fresh starting master `d63900f35b681b9d4318f12da3319fe3bbc6ec12`.
+- Implemented MY PROGRAMME: weekday/rotation assignments, confirmed save/clear, native backup event retention and old-backup compatibility, causal stale-editor protection, and planned start through existing TRAIN capacity confirmation. No reserved source, dependency, progression or recommendation change.
+- Typecheck PASS; focused programme/restore/migration tests 29/29 PASS; TRAIN/programme browser regression tests 73/73 PASS; water-sheet/programme regression tests 3/3 PASS.
+- Full `npm run verify` is NOT green: latest run 402 files passed, 1 failed, 1 skipped; 3,411 tests passed, 1 failed, 2 skipped. Sole failure: FieldRehearsal preflight at 360px, axe color-contrast on existing `button[aria-controls="train-override-picker"]` in TRAIN (tests/browser/FieldRehearsal.test.tsx:149). Build was not reached by this failing gate. No assertion disabled. The isolated FieldRehearsal rerun passed all 6 cases; the full-gate failure remains unresolved and is not waived.
+- Owner requested immediate handoff to Claude. Implementation preserved as a local commit, not represented as ready for merge. GitHub push credentials/API access are unavailable; no PR/remote CI/review/merge claimed.
+- Next: Claude imports the bundle, resolves the rehearsal finding, runs typecheck/relevant tests/full verify, opens the ready PR with Closes #376 and the supplied body, obtains independent exact-head review and green CI under #373. Calendar #374 is already merged as #391; its branch was not touched.

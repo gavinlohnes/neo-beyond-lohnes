@@ -152,6 +152,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Note for next shift: ${p.note}`;
     case "SHIFT_HANDOFF_READ":
       return "Shift note read.";
+    case "TRAIN_PROGRAM_SET":
+      return p.programme === null ? "Training programme cleared." : "Training programme saved.";
     case "EXERCISE_CUE_SET":
       return `${p.cue ? "Cue set" : "Cue cleared"}: ${exercise(p.exerciseId)}.`;
     case "URGE_PLAN_RESPONDED":
