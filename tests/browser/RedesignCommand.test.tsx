@@ -13,6 +13,7 @@ afterEach(()=>{cleanup();vi.useRealTimers();});
 for(const width of [320,360,390,412])it(`groups all capabilities and retains backup/restore at ${width}`,async()=>{
  for(const feature of ["minimumDay","smallSteps","foodLookup"] as const)setHiddenFeature(feature,true);
  await page.viewport(width,844);await startDay();const screen=await render(<App/>);await screen.getByRole('button',{name:'MORE',exact:true}).click();
+ await expect.poll(()=>document.querySelector('.more-control-center')).not.toBeNull(); // BUNDLE-002: MORE loads on first visit
  const root=document.querySelector('.more-control-center')!;
  // MORE-TRIM-001: Log has no browse row (LOG on TODAY is its home); search finds every row.
  for(const group of CAPABILITY_GROUPS.filter(g=>g!=='Log')){const summary=[...root.querySelectorAll('summary')].find(s=>s.textContent===group)!;expect(summary).toBeTruthy();(summary.parentElement as HTMLDetailsElement).open=true;}
