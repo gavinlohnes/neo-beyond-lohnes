@@ -55,8 +55,8 @@ export function HealthOverview({ day, calories, protein, water, sleep, lastMainS
       {/* UX-COHESION-001: the lived-day boundary is internal; only say something when no day exists yet. */}
       {!day && <p className="meta health-day">Your day begins with your first record.</p>}
       <ReadoutGrid emphasis="primary" className="health-nutrition">
-        <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={<><TickNumber value={calories} /><span> kcal</span></>} detail={calorieCopy} />
-        <HealthMeasure metric="protein" onExplore={onExplore} label="PROTEIN" value={<><TickNumber value={protein} /><span> g</span></>} detail={proteinCopy} />
+        <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={<><TickNumber value={calories} /><span className="health-unit"> kcal</span></>} detail={calorieCopy} />
+        <HealthMeasure metric="protein" onExplore={onExplore} label="PROTEIN" value={<><TickNumber value={protein} /><span className="health-unit"> g</span></>} detail={proteinCopy} />
       </ReadoutGrid>
       <ReadoutGrid className="health-readings">
         <HealthMeasure metric="water" onExplore={onExplore} label="WATER" value={`${water} oz`} />

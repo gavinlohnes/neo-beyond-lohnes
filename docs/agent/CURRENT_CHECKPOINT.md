@@ -1,8 +1,27 @@
-# SHIFT-RECOVERY-001 — Protected, implementation (Builder: Codex)
+# PHONE-POLISH-001 — approved suit elevation (Codex)
+
+- Gavin approved distinct TODAY/TRAIN/DATA/MORE compositions, stronger hierarchy, constructed panels, Gotham atmosphere and action-linked motion: “Approved. Now take it beyond.”
+- FEATURE; brief and complete evidence: [PHONE-POLISH-001.md](PHONE-POLISH-001.md).
+- Branch `codex/phone-polish-001` pushed; app implementation through `ec09187`, with final test-selector/evidence updates in subsequent commits.
+- Final broad run: 3,423 passed / four old menu-selector failures / two skips. Corrected selectors retain all assertions; final affected rerun 45/45 PASS. Separate architecture, TypeScript/PWA build and compiled offline 320/360/412px walkthrough PASS. No single green final full-verify invocation claimed.
+- Review [captures and motion](../screenshots/phone-polish-001/README.md) use synthetic records. All four workspaces, confirmations, native disclosures, compact Plan access and Engine authority retained.
+- Prior PR creation was blocked by GitHub GraphQL; the current primary chat took the explicit
+  handoff, reconciled master through merged PR #397 and opened
+  [PR #398](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/398).
+- Reconciled evidence: architecture and TypeScript PASS; production/PWA build PASS. Combined
+  phone/command/data/Shift Recovery browser run 43/48; the five failures reproduce master harness
+  issues (shared IndexedDB closure and legacy ESM mocks), with no visual assertion failure. Isolated
+  CI remains authoritative.
+- Next: independent exact-head review and remote CI. Gavin's standing 2026-11-02 ruling authorizes
+  automatic merge only when both pass at an unchanged head with no unresolved findings.
+
+---
+
+# SHIFT-RECOVERY-001 — merged PR #397
 
 - Gavin approved the bounded Shift Recovery objective on 2026-11-02. Brief:
   [SHIFT-RECOVERY-001.md](SHIFT-RECOVERY-001.md). Branch `codex/shift-recovery-001`; baseline
-  `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`; active PR
+  `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`; merged PR
   [#397](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/397).
 - TODAY now offers optional, read-only recovery context for a recorded final shift, flip toward work,
   first day off or later day off. It reuses saved schedule position plus existing sleep/training
@@ -15,17 +34,18 @@
   not a clean signal in this checkout: parallel suites repeatedly close one another's shared
   `beyond` IndexedDB, and standalone `TodayScreen.test.tsx` cannot resolve its existing
   `currentContextQueries` mock target. PR CI, independent exact-head review and separate owner
-  merge approval remain pending.
+  merge gate passed.
 - Independent review of head `d1547ce7` found two blockers: refresh was hour-keyed rather than
   lived-day-keyed, and a prior brief remained visible while its replacement read was pending. Both
   are addressed by the existing rollover subscription plus an explicit 16:30 key and fail-closed
-  loading state. A fresh independent exact-head review is required after push.
+  loading state. Independent exact-head review then passed at `b20410b0`; required CI was green.
 - PR #396's missing Protected review was reconciled post-merge by the established independent
   reviewer at exact head `3c38be9689746291614947e5543c1ddc015b4368`: PASS, 27/27 focused
   Node, 2/2 browser and architecture PASS. The record is a post-merge reconciliation, not a claim
   of retroactive workflow compliance; reviewer-attributed evidence is recorded on PR #396.
-- Next: dispatch PR #397's exact head for independent review and use isolated CI as the broader
-  regression gate.
+- Gavin's standing ruling on 2026-11-02 authorizes automatic merge after green required CI and an
+  independent exact-head PASS, with no unresolved findings or head movement. PR #397 then merged
+  without bypass as squash `793821b95f612e2f17af2659355294caafc27cff`.
 
 ---
 

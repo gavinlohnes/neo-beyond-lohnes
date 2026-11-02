@@ -29,7 +29,8 @@ export function TrainingProgrammePanel({ onStart, disabled = false, startDisable
     finally { saving.current = false; setBusy(false); }
   }
   const template = data?.templates.find((t) => t.id === data.planned.templateId);
-  return <section aria-label="My programme"><h2 className="eyebrow">MY PROGRAMME</h2>
+  return <section className="suit-panel" aria-label="My programme" aria-busy={busy || (active && !data && !error)}><h2 className="suit-panel__title">MY PROGRAMME</h2>
+    {active && !data && !error && <p className="suit-panel__loading">Reading your programme…</p>}
     {error && <p role="alert">{error}<button type="button" className="btn-secondary" onClick={() => { setEditing(false); setKey((n) => n + 1); }}>RELOAD PROGRAMME</button></p>}
     {data && <>
       {data.revision.programme ? <><p className="meta">Planned today: {!data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved" : template?.name ?? (data.planned.templateId ? "Template no longer available" : "No assigned session")}{data.revision.programme.mode === "ROTATION" && data.rotationAvailable && data.forecast ? " · schedule forecast" : ""}</p>

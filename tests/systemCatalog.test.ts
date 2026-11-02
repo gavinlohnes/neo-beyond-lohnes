@@ -28,6 +28,8 @@ describe("capability discovery (COMMAND search)", () => {
     ["resume", ["WORKOUT"]],
     ["restore", ["BACKUP & RECOVERY"]],
     ["weekly review", ["REVIEW"]],
+    ["weekly debrief", ["REVIEW"]],
+    ["my programme", ["TRAIN"]],
     ["system status", ["SYSTEMS"]],
     ["privacy", ["STEALTH"]],
     ["nonexistent-tool", []],
