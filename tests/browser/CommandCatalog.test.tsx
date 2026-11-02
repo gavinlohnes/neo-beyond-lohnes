@@ -140,7 +140,7 @@ describe("COMMAND catalog", () => {
     await screen.getByRole("button", { name: "Clear search" }).click();
     await launch(screen, "SEARCH RECORDS");
     await screen.getByRole("textbox", { name: "Search everything" }).fill("Synthetic lunch");
-    await expect.element(screen.getByRole("button", { name: /Synthetic lunch/ })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: /^Open .*Synthetic lunch/ })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await screen.getByRole("button", { name: "Search everything", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "MORE // SEARCH", exact: true })).toBeVisible();

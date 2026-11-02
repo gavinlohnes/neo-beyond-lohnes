@@ -519,7 +519,7 @@ export function MoreScreen({
             reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
-          {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} />}
+          {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} onRunCapability={runCapability} hiddenCapability={(entry) => "hiddenFeature" in entry && !hiddenFeatures[entry.hiddenFeature]} />}
           <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} /></>}</div>
           <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} /></>}</div>
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>

@@ -28,6 +28,9 @@ import "./alfred.css";
 const KEY = "beyond.alfredKey";
 /** ALFRED-004 #11 "Ask about this": any screen opens Alfred with a question ready to send. */
 export const ASK_ALFRED_EVENT = "beyond:ask-alfred";
+/** COMMAND-BAR-001: open the sheet and send these words now (the free helper answers first). */
+export const DO_IN_BEYOND_EVENT = "beyond:do";
+export function doInBeyond(text: string) { window.dispatchEvent(new CustomEvent<string>(DO_IN_BEYOND_EVENT, { detail: text })); }
 export function askAlfred(question: string) { window.dispatchEvent(new CustomEvent<string>(ASK_ALFRED_EVENT, { detail: question })); }
 
 export function readAlfredKey(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
@@ -78,7 +81,7 @@ export function placeholderFor(now: Date): string {
   return ALFRED_PROMPTS[((n % ALFRED_PROMPTS.length) + ALFRED_PROMPTS.length) % ALFRED_PROMPTS.length]!;
 }
 
-export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string } | undefined }) {
+export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string; send?: boolean } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
   const [included, setIncluded] = useState(false);
@@ -108,7 +111,11 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
   useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); setMonthSpent(getMonthSpend()); setIncluded(false); setSnapshot(null); setSelectedSource(null); lastContext.current = null; setContextNotice(null); } }, [open]);
-  useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
+  useEffect(() => {
+    if (!open || !draft) return;
+    // COMMAND-BAR-001: DO IT from search sends straight through the usual route: free helper first.
+    if (draft.send) void ask(draft.text); else setText(draft.text);
+  }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
   /**
