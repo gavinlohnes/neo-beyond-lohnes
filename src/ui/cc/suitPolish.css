@@ -112,12 +112,94 @@
 .suit-panel:focus-within { border-top-color: var(--p-t1); }
 .weekly-dashboard .weekly-dashboard__panel { border-top-color: var(--p-line-2); }
 
+/* Owner-approved full visual elevation: four compositions, one suit vocabulary. */
+/* FIELD — the existing Gotham scene has foreground and distant silhouettes. */
+.cc-mode .cc-city-depth { fill: var(--p-city); stroke: var(--p-line); }
+.cc-mode .cc-city { stroke: var(--p-line-2); }
+.cc-mode .cc-perch .cc-stone { stroke: var(--p-t3); }
+.cc-mode .cc-sky { background: radial-gradient(ellipse at 52% 100%, color-mix(in srgb, var(--p-red) 48%, transparent), transparent 76%); }
+.command-console.today-field .next-action-card.command-surface {
+  border-top-color: var(--p-t3);
+  background: linear-gradient(135deg, var(--p-s2), var(--p-s1) 65%);
+}
+.command-console.today-field .next-action-card h2.command-title {
+  font-size: clamp(24px, 6.5vw, 28px); line-height: 1.15; letter-spacing: .025em;
+}
+.today-field .cc-actions button.cc-act { border-bottom-width: 2px; }
+
+/* TRAIN — a prepared loadout, then the existing execution controls. */
+.train-operator .train-switcher {
+  gap: 0; border: 1px solid var(--p-line-2); background: var(--p-s1);
+}
+.train-operator .train-switcher .btn-secondary {
+  border: 0; border-bottom: 2px solid transparent; background: none; letter-spacing: .06em;
+}
+.train-operator .train-switcher .btn-secondary + .btn-secondary { border-left: 1px solid var(--p-line); }
+.train-operator .train-switcher .btn-secondary[aria-pressed="true"] {
+  border-bottom-color: var(--p-t1); background: var(--p-s3); color: var(--p-t1);
+}
+.train-operator .command-surface:has(.train-prescription--preview) {
+  padding: 20px 16px 16px; border-top: 2px solid var(--p-t3);
+  background: linear-gradient(145deg, var(--p-s3), var(--p-s1) 60%);
+}
+.train-operator .command-surface:has(.train-prescription--preview) .command-title {
+  font-size: clamp(28px, 8.5vw, 36px); letter-spacing: -.015em;
+}
+.train-operator .train-prescription--preview { list-style: none; padding-left: 0; }
+.train-operator .train-prescription--preview li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px; padding: 10px 0; border-top: 1px solid var(--p-line); }
+.train-operator .train-prescription-index { font: 400 16px var(--p-mono); color: var(--p-t2); }
+.train-operator[data-workout-active="true"] .command-surface { border-top-color: var(--p-t3); }
+.train-operator .train-session-readout { border-block: 1px solid var(--p-line-2); padding-block: 12px; }
+.train-operator .train-session-readout .readout__value { font-family: var(--p-mono); font-variant-numeric: tabular-nums; }
+
+/* DATA — units and provenance support the recorded values, rather than competing. */
+.body-home .health-overview .readout { align-self: stretch; }
+.body-home .health-overview .health-nutrition .readout {
+  min-height: 144px; padding: 16px 12px 12px; gap: 10px;
+}
+.body-home .health-overview .health-nutrition .readout__value {
+  font: 600 clamp(30px, 8.8vw, 38px)/1.1 var(--p-mono); letter-spacing: -.045em;
+}
+.body-home .health-overview .health-nutrition .health-unit {
+  display: block; margin-top: 5px; font: 400 16px/1.2 var(--p-display); color: var(--p-t2); letter-spacing: .08em;
+}
+.body-home .health-overview .health-readings .readout { min-height: 104px; padding: 12px; }
+.body-home .data-weight-instrument {
+  border-top: 2px solid var(--p-t3); background: linear-gradient(130deg, var(--p-s2), var(--p-s1));
+}
+.body-home .data-weight-instrument > p { font: 600 22px/1.4 var(--p-mono); letter-spacing: -.025em; }
+.body-home .data-weight-instrument .meta { font-family: var(--p-display); font-weight: 400; }
+.body-home .health-record-row { border-left: 2px solid transparent; }
+.body-home .health-record-row:focus-visible { border-left-color: var(--p-t1); }
+
+/* MORE — deliberate destinations, explained before opening. Native disclosures stay native. */
+.more-control-center > .equipment-row { margin-top: 0; padding-block: 8px; }
+.more-control-center > .equipment-row .meta { margin-block: 8px; }
+.more-operator .command-group > .command-group__control {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 24px;
+  gap: 5px 12px; min-height: 84px; padding: 16px 10px; list-style: none;
+}
+.command-group__control::-webkit-details-marker { display: none; }
+.command-group__control::before { content: none; display: none; }
+.command-group__control .command-group__name { grid-column: 1; font-size: 24px; line-height: 1.25; }
+.command-group__control .command-group__hint { grid-column: 1; margin: 0; font-weight: 400; letter-spacing: .015em; }
+.command-group__control::after {
+  content: "+"; grid-column: 2; grid-row: 1 / 3; align-self: center;
+  font: 400 24px var(--p-mono); text-align: center; color: var(--p-t2);
+}
+.command-group[open] > .command-group__control::after { content: "−"; }
+.more-operator .command-group[open] > .command-group__control {
+  background: linear-gradient(120deg, var(--p-s2), var(--p-s1));
+}
+.more-operator .command-group .command-result { padding-inline: 16px 10px; }
+
 /* Brief, finite responses when an operation opens or resolves. No idle motion. */
 @media (prefers-reduced-motion: no-preference) {
   .tab-enter .field-header::after { transform-origin: left; animation: suit-edge-resolve 240ms ease-out both; }
   .suit-panel fieldset, .suit-panel [role="status"], .command-group[open] > .command-result { animation: suit-content-resolve 180ms ease-out both; }
   .suit-panel select { transition: border-color 140ms, background-color 140ms; }
   .suit-panel select:focus { border-color: var(--p-t1); background: var(--p-s2); }
+  .tab-enter .cc-scene { animation: suit-content-resolve 300ms ease-out both; }
 }
 @keyframes suit-edge-resolve { from { transform: scaleX(.2); opacity: .3; } to { transform: scaleX(1); opacity: 1; } }
 /* Text keeps its full contrast throughout the entrance. */

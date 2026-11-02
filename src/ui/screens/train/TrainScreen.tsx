@@ -991,7 +991,7 @@ export function TrainScreen({
   const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
 
   return (
-    <div className="screen fade-in train-field train-operator">
+    <div className="screen fade-in train-field train-operator" data-training-view={trainView} data-workout-active={Boolean(session)}>
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -1208,8 +1208,9 @@ export function TrainScreen({
               workouts abandoned within seconds; looking should never cost an abandoned session. */}
           {chosenVariant !== "RECOVERY" && (
             <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
-              {suggestedExercises.map((exercise) => (
+              {suggestedExercises.map((exercise, index) => (
                 <li key={exercise.exerciseId}>
+                  <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                   <span>{exercise.name}</span>
                   <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
                 </li>

@@ -78,6 +78,7 @@ export function ModeScene({ now, workDay, hasAction, onShift = false }: { now: D
   return <div className="cc-scene" aria-hidden="true">
     {hasAction && !onShift && <div className="cc-beam mode-city__beam" />}
     <svg className="cc-skyline mode-city__buildings" viewBox="0 0 400 92" preserveAspectRatio="xMidYMax slice">
+      <path className="cc-city-depth" d={CITY.path} transform="translate(28 20) scale(.82)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
       <path className="cc-city" d={CITY.path} strokeWidth="1" vectorEffect="non-scaling-stroke" />
       <g className="cc-ant" strokeWidth="1">{CITY.antennas.map((a) => <path key={a} d={a} />)}</g>
       <g className="mode-city__windows">{lit.map(([wx, wy], i) => <rect key={i} className="cc-w" x={wx} y={wy} width="1.6" height="2" />)}</g>

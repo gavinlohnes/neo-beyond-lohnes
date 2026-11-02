@@ -152,7 +152,7 @@ describe("Plan Today and truthful guidance", () => {
     expect(screen.getByRole("main").elements()).toHaveLength(1);
     await tab(screen, "MORE");
     // FIELD-AUTHORITY-001: Plan is a top-level job row.
-    const plans = [...document.querySelectorAll<HTMLElement>("summary")].find((element) => element.textContent === "Plan")!;
+    const plans = [...document.querySelectorAll<HTMLElement>("summary")].find((element) => element.querySelector(".command-group__name")?.textContent === "Plan")!;
     expect(plans.getBoundingClientRect().bottom).toBeLessThan(700);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     for (const animation of document.getAnimations()) animation.finish();

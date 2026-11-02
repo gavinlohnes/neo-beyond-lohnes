@@ -33,7 +33,7 @@ export async function commandResult(screen: Screen, label: string) {
     await expect.element(found).toBeVisible();
     return found;
   }
-  const summary = screen.getByText(entry.group, { exact: true }).elements().find((element) => element.tagName === 'SUMMARY');
+  const summary = screen.getByText(entry.group, { exact: true }).elements().map((element) => element.closest('summary')).find((element) => element !== null);
   if (!summary) throw new Error(`Missing COMMAND group: ${entry.group}`);
   // Click the element itself: a text locator for a job row ("On shift") can match the mode name too.
   if (!(summary.parentElement as HTMLDetailsElement).open) (summary as HTMLElement).click();

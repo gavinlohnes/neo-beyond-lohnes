@@ -548,7 +548,7 @@ export function MoreScreen({
       {/* NAV-001: two taps from TODAY to a real backup, reusing the existing export command. */}
       <section className="equipment-row" aria-label="Back up my data">
         <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleExportBackup()}>Back up my data</button>
-        <p className="meta">Download a file with everything on this device. Keep it somewhere safe.</p>
+        <p className="meta">Keep a copy of your records.</p>
         {archiveStatus && <p role="status" className="meta">{archiveStatus}</p>}
       </section>
       <div className="command-search" role="search">
@@ -705,7 +705,7 @@ export function MoreScreen({
       </section>
       </details>
 
-      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row">{group}</summary><p className="command-group__hint">{({ Log: "Record what happened", "On shift": "Daily controls and privacy", Review: "Free weekly debrief, progress and history", Plan: "Tasks, life, workouts and your schedule", Notes: "Capture now. Come back when you're ready.", Systems: "Readings, observations and device status" } as Partial<Record<typeof group, string>>)[group]}</p>
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row command-group__control"><span className="command-group__name">{group}</span><span className="command-group__hint">{({ Log: "Record what happened", "On shift": "Daily controls and privacy", Review: "Free weekly debrief, progress and history", Plan: "Tasks, life, workouts and your schedule", Notes: "Capture now. Come back when you're ready.", Systems: "Readings, observations and device status" } as Partial<Record<typeof group, string>>)[group]}</span></summary>
         {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
       </details>)}
 

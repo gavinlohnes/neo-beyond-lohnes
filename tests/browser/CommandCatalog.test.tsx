@@ -139,7 +139,7 @@ describe("COMMAND catalog", () => {
     await screen.getByRole("button", { name: "Clear search" }).click();
     await expect.element(searchbox(screen)).toHaveValue("");
     await expect.poll(() => document.activeElement).toBe(searchbox(screen).element());
-    expect([...document.querySelectorAll<HTMLElement>(".command-group > summary")].find((el) => el.textContent === "Review")!.getClientRects().length).toBeGreaterThan(0);
+    expect([...document.querySelectorAll<HTMLElement>(".command-group > summary")].find((el) => el.querySelector(".command-group__name")?.textContent === "Review")!.getClientRects().length).toBeGreaterThan(0);
     await searchbox(screen).fill("HYDRATION");
     await expect.element(screen.getByText("1 result", { exact: true })).toBeInTheDocument();
     await screen.getByRole("button", { name: "Clear search" }).click();
