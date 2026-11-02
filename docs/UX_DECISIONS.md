@@ -2712,3 +2712,10 @@ semantics, primary logging routes and active operation/error visibility remain u
 The visual pass preserves black-dominant space, sharp BEYOND framing, typography, restrained red
 emphasis and current brand tokens (including the approved yellow accent). No new dashboard,
 provider, dependency, notification, recovery inference or navigation scheme follows from this ruling.
+## 2026-11-01 — FREE-HELPER-001: free first, Alfred when needed
+
+Owner: work that doesn't need Alfred-level thinking should use a free helper. Everyday messages
+in Alfred's sheet try BEYOND's free helper first: if it understands the whole message it answers or
+makes the same confirm cards (labelled BEYOND · FREE), free and offline; anything it isn't sure of goes
+to Alfred whole, within the monthly limit. It never guesses and never writes without SAVE. THINK
+HARDER, planning starters and shift debriefs always go to Alfred. [Brief](agent/FREE-HELPER-001.md).

@@ -7,6 +7,7 @@ import { Signal } from "../../components/Signal";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import type { WorkoutTemplateId } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
+import { AiCheck } from "../../components/AiCheck";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { useOnline } from "../../hooks/useOnline";
@@ -119,6 +120,7 @@ export function SystemsReadout({ active, refreshKey = 0, onOpenMetric, onOpenCav
             <Reading label="Last backup" value={state.backupDue ? <Signal data-signal="backup">{describeBackupAge(r.daysSinceLastBackup)}</Signal> : describeBackupAge(r.daysSinceLastBackup)}
               tone={state.backupDue ? "warn" : undefined} detail={state.backupDue ? "Backup due. Export or share one from MORE." : "Export or share a backup from MORE."} />
             <Reading label="Records" value="On this phone" detail="No account. Nothing leaves unless you share a backup." />
+            <AiCheck />
           </Group>
         </>;
       })()}
