@@ -2,7 +2,7 @@ import { createContext } from "react";
 import { getActiveDay, getLatestRecommendation, getRecommendationDecision, getSchedulePattern } from "../application/queries";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import { readBootPhase } from "./screens/today/bootMode";
-import { MODE_NAMES } from "./screens/today/shiftClock";
+import { MODE_NAMES, predictedWorkPhase } from "./screens/today/shiftClock";
 import { describeShiftRun, shiftRun } from "../application/shiftRun";
 
 /**
@@ -26,6 +26,11 @@ export async function readPresence(now = new Date()): Promise<Presence | null> {
   const [phase, schedule, rec] = await Promise.all([readBootPhase(now), getSchedulePattern(), getLatestRecommendation(day.id)]);
   const window = day.workContext === "OFF" ? null : livedDayShiftWindow(new Date(day.startedAt), schedule);
   let when: string | null = null;
+  // NIGHT-POLISH-001: while the work question is unanswered, say what the schedule predicts, labelled as such.
+  if (!phase && day.workContext === "UNKNOWN" && window) {
+    const predicted = predictedWorkPhase({ now, workContext: "UNKNOWN", shiftWindow: window, workEnded: false, mainSleepLogged: false });
+    if (predicted) when = `schedule says ${MODE_NAMES[predicted]}`;
+  }
   if (phase === "PRE_WORK" && window && window.start > now) when = `scheduled shift in ${until(window.start.getTime() - now.getTime())}`;
   else if (phase === "SCHEDULED_SHIFT" && window) when = `scheduled to ${hhmm(window.end)}`;
   // Review of #382: once he has accepted or declined it, TODAY shows the decision; so does this line (by saying nothing).

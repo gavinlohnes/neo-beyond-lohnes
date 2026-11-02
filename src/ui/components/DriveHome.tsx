@@ -6,6 +6,7 @@ import { buildPlanningContext } from "../../application/alfred/personalContext";
 import { confirmContextProposal } from "../../application/alfred/contextActions";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./driveHome.css";
+import { Emblem } from "./Emblem";
 
 /**
  * DRIVE-HOME-001 (#373 item 6): hands-free logging on the way home, free and on the phone.
@@ -149,6 +150,7 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
   const busy = phase === "saving";
   return <div ref={dialog} tabIndex={-1} className="drive-home" role="dialog" aria-modal="true" aria-label="Drive home">
     <p className="drive-home__mode">DRIVE HOME · HANDS-FREE · FREE</p>
+    <div className={`drive-home__signal${phase === "listening" || phase === "confirm" ? " is-listening" : ""}`} aria-hidden="true"><Emblem size={72} /></div>
     {!supported ? <p className="drive-home__say">Voice isn't available in this browser. Use Alfred's box instead.</p> : <>
       <p className="drive-home__say" aria-live="polite">{phase === "listening" ? "Listening…" : phase === "confirm" ? "Say save, or skip." : phase === "saving" ? "Saving…" : note ?? "Ready."}</p>
       {heard && <p className="drive-home__heard">“{heard}”</p>}
