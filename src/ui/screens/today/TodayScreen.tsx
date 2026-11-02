@@ -1,3 +1,4 @@
+import { DRIVE_HOME_EVENT } from "../../driveHomeEvent";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
 import { TodayRoutine } from "../../components/TodayRoutine";
@@ -2507,6 +2508,8 @@ export function TodayScreen({
           }}
         />}
       <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
+      {/* POST-SHIFT-001 (#373): right after a shift, hands-free logging is one tap. Quiet; never a prompt. */}
+      {day && scheduledClock.phase === "EXPECTED_POST_WORK" && !activeWorkout && !activeResetId && !activeShiftDownId && <button type="button" className="btn-secondary today-drive-home" disabled={busy} onClick={() => window.dispatchEvent(new Event(DRIVE_HOME_EVENT))}>DRIVE HOME · HANDS-FREE</button>}
       {/* ROUTINES-001 (owner ruling 2026-10-31): one quiet row, only the current moment's routines. */}
       <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: predictedWorkPhase(shiftClockInput), workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
   </>;

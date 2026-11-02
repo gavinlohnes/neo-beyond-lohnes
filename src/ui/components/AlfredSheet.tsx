@@ -7,14 +7,11 @@ import { AlfredContextPanel } from "./AlfredContextPanel";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
-import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
+import { confirmLabel, describeConfirmError, describeProposal, undoSavedLog } from "../../application/alfred/alfredActions";
 import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
+import { readHelperContext } from "../../application/helper/helperContext";
 import { answerQuestion } from "../../application/helper/freeAnswers";
-import { getSavedMeals } from "../../application/nutritionQueries";
-import { getUnresolvedObligations } from "../../application/intentQueries";
-import { getProjects } from "../../application/projectQueries";
-import { getRoutines } from "../../application/routineCommands";
 import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
@@ -28,6 +25,9 @@ import "./alfred.css";
 const KEY = "beyond.alfredKey";
 /** ALFRED-004 #11 "Ask about this": any screen opens Alfred with a question ready to send. */
 export const ASK_ALFRED_EVENT = "beyond:ask-alfred";
+/** COMMAND-BAR-001: open the sheet and send these words now (the free helper answers first). */
+export const DO_IN_BEYOND_EVENT = "beyond:do";
+export function doInBeyond(text: string) { window.dispatchEvent(new CustomEvent<string>(DO_IN_BEYOND_EVENT, { detail: text })); }
 /** FREE-HELPER-002: open MEAL's free food search for this food. */
 export const FIND_FOOD_EVENT = "beyond:find-food";
 export function findFood(query: string) { window.dispatchEvent(new CustomEvent<string>(FIND_FOOD_EVENT, { detail: query })); }
@@ -81,7 +81,7 @@ export function placeholderFor(now: Date): string {
   return ALFRED_PROMPTS[((n % ALFRED_PROMPTS.length) + ALFRED_PROMPTS.length) % ALFRED_PROMPTS.length]!;
 }
 
-export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string } | undefined }) {
+export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string; send?: boolean } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
   const [included, setIncluded] = useState(false);
@@ -111,7 +111,11 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
   useEffect(() => { if (open) { session.current = null; setTurns([]); setError(null); setSpent(0); setMonthSpent(getMonthSpend()); setIncluded(false); setSnapshot(null); setSelectedSource(null); lastContext.current = null; setContextNotice(null); } }, [open]);
-  useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
+  useEffect(() => {
+    if (!open || !draft) return;
+    // COMMAND-BAR-001: DO IT from search sends straight through the usual route: free helper first.
+    if (draft.send) void ask(draft.text, "everyday", true); else setText(draft.text);
+  }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
   /**
@@ -120,7 +124,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
    * before; if Alfred can't be reached (no key, no signal, at the monthly limit) the helper does what
    * it can and says what's left. THINK HARDER and the planning starters always go to Alfred.
    */
-  async function ask(question: string, depth: AlfredDepth = "everyday") {
+  async function ask(question: string, depth: AlfredDepth = "everyday", freeOnly = false) {
     const q = question.trim();
     if (!q || busy || working.current) return;
     if (depth === "deep") return sendToAlfred(q, depth);
@@ -134,12 +138,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         // Not something the helper answers: Alfred's path reports plainly if he can't be reached.
         route = "alfred"; return;
       }
-      const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
-      const result = interpret(q, {
-        now: new Date(), savedMeals: meals, openTasks: tasks,
-        openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),
-        routines: routines.filter((r) => r.status === "ACTIVE"),
-      });
+      const result = interpret(q, await readHelperContext());
       // FREE-HELPER-002: food it doesn't know is looked up free in MEAL's food search first; Alfred's
       // paid estimate is one tap away instead of automatic.
       const foods = result.unknown.map(foodQuery);
@@ -161,7 +160,9 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setText(q); setError("The free helper couldn't read your records. Nothing changed. Try again.");
     } finally {
       working.current = false; setBusy(false);
-      if (route === "alfred") void sendToAlfred(q, depth);
+      // COMMAND-BAR-001: words sent from search stay free; anything that needs Alfred waits for SEND.
+      if (route === "alfred" && freeOnly) { setText(q); setError("That needs Alfred. Tap SEND to ask him, or change the words."); }
+      else if (route === "alfred") void sendToAlfred(q, depth);
     }
   }
 
@@ -179,7 +180,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     if (!navigator.onLine) { setText(q); setError("Alfred needs a connection. Your local records and draft are still here."); return; }
     working.current = true;
     setBusy(true); setError(null); setText("");
-    const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state]));
+    const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state === "undone" ? "skipped" as const : p.state])); // an undone card counts as not saved
     setTurns((all) => [...all, { role: "user", text: q, ...(depth === "deep" ? { deep: true } : {}) }]);
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
@@ -238,12 +239,33 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => all.map((t, i) => {
         const context = advance(t.context);
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
-        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped" } : p) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, ...(save ? { proposal } : {}), state: save ? "saved" : "skipped", ...(result.undo ? { undo: result.undo } : {}) } : p) };
       }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
     } catch (e) {
       setError(e instanceof Error && e.message === "CONTEXT_CHANGED" ? "Your context changed. Ask again before saving this proposal. Nothing changed." : describeConfirmError(e));
     } finally { working.current = false; setBusy(false); }
+  }
+
+  // CARD-UNDO-001: a saved log card can be taken back once, with the same void the LOG sheet's UNDO uses.
+  async function undoCard(turnIndex: number, id: string) {
+    const card = turns[turnIndex]?.proposals?.find((p) => p.id === id);
+    if (!card?.undo || card.state !== "saved" || working.current) return;
+    working.current = true; setBusy(true); setError(null);
+    try {
+      await undoSavedLog(card.undo);
+      onSaved();
+      // Review of #385: his own UNDO is not an outside change; carry the record version forward like a SAVE.
+      const before = turns[turnIndex]!.context?.recordVersion;
+      const after = before !== undefined ? await operatorContextVersion(included) : undefined;
+      setTurns((all) => all.map((t, i) => {
+        const context = t.context && before !== undefined && after && t.context.recordVersion === before ? { ...t.context, recordVersion: after } : t.context;
+        const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: "undone" as const } : p) };
+      }));
+      if (after && lastContext.current && lastContext.current.recordVersion === before) lastContext.current = { ...lastContext.current, recordVersion: after };
+    } catch { setError("That couldn't be undone. Change it from LOG or the day's history."); }
+    finally { working.current = false; setBusy(false); }
   }
 
   function talk(lead = "") {
@@ -322,7 +344,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               {p.proposal.kind === "log_meal" && !p.proposal.saved_meal_id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, true, true)}>SAVE + REMEMBER MEAL</button>}
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
-            </div> : <p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : "Skipped."}</p>}
+            </div> : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : p.state === "undone" ? (p.proposal.kind === "log_meal" && p.proposal.remember ? "Undone. The saved meal stays in MY MEALS." : "Undone. Nothing of it is counted.") : "Skipped."}</p>
+              {p.state === "saved" && p.undo && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undoCard(i, p.id)} aria-label={`Undo: ${describeProposal(p.proposal)}`}>UNDO</button>}</div>}
           </div>)}
         </div>)}
         {busy && <p className="meta" role="status">Alfred is reading your records…</p>}

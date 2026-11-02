@@ -22,6 +22,7 @@ import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid } from "../ui
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
+import { PresenceContext, readPresence, type Presence } from "../ui/presence";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import type { TrainDestination } from "../ui/screens/train/TrainScreen";
 import type { MoreView } from "../ui/screens/more/MoreScreen";
@@ -33,13 +34,16 @@ const MoreScreen = lazy(() => import("../ui/screens/more/MoreScreen").then((m) =
 // Fetch them quietly once TODAY has settled, so the first tap on TRAIN or MORE is instant.
 export function preloadLazyScreens() { void import("../ui/screens/train/TrainScreen"); void import("../ui/screens/more/MoreScreen"); }
 if (typeof window !== "undefined") window.setTimeout(preloadLazyScreens, 2000);
+// DRIVE-HOME-001: the hands-free screen loads only when opened.
+const DriveHome = lazy(() => import("../ui/components/DriveHome").then((m) => ({ default: m.DriveHome })));
+import { DRIVE_HOME_EVENT } from "../ui/driveHomeEvent";
 const TabLoading = () => <p className="meta" role="status">Loading…</p>;
 import type { WholePictureDestination } from "../ui/screens/review/WholePicture";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
-import { ASK_ALFRED_EVENT, FIND_FOOD_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
+import { ASK_ALFRED_EVENT, DO_IN_BEYOND_EVENT, FIND_FOOD_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
 import { AlfredBrief } from "../ui/components/AlfredBrief";
 import { AlfredWeek } from "../ui/components/AlfredWeek";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
@@ -165,7 +169,9 @@ function AppWorkspaces() {
   // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
   const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
   const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
-  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
+  const [driveOpen, setDriveOpen] = useState(false);
+  useEffect(() => { const open = () => setDriveOpen(true); window.addEventListener(DRIVE_HOME_EVENT, open); return () => window.removeEventListener(DRIVE_HOME_EVENT, open); }, []);
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
   useEffect(() => {
     if (!alfredLaunch) return;
     const url = new URL(window.location.href);
@@ -174,8 +180,9 @@ function AppWorkspaces() {
   }, [alfredLaunch]);
   useEffect(() => {
     const onAsk = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail })); setAlfredOpen(true); };
-    window.addEventListener(ASK_ALFRED_EVENT, onAsk);
-    return () => window.removeEventListener(ASK_ALFRED_EVENT, onAsk);
+    const onDo = (e: Event) => { setAlfredDraft((d) => ({ key: (d?.key ?? 0) + 1, text: (e as CustomEvent<string>).detail, send: true })); setAlfredOpen(true); };
+    window.addEventListener(ASK_ALFRED_EVENT, onAsk); window.addEventListener(DO_IN_BEYOND_EVENT, onDo);
+    return () => { window.removeEventListener(ASK_ALFRED_EVENT, onAsk); window.removeEventListener(DO_IN_BEYOND_EVENT, onDo); };
   }, []);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
@@ -227,6 +234,11 @@ function AppWorkspaces() {
   }, [todayVisited]);
   useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
+  // PRESENCE-001: the shift-aware line under every other screen's title; re-read each minute and on change.
+  const [presence, setPresence] = useState<Presence | null>(null);
+  const [presenceTick, setPresenceTick] = useState(0);
+  useEffect(() => { const t = window.setInterval(() => setPresenceTick((n) => n + 1), 60_000); return () => window.clearInterval(t); }, []);
+  useEffect(() => { let live = true; void readPresence().then((p) => { if (live) setPresence(p); }, () => {}); return () => { live = false; }; }, [presenceTick, tab, todayRefreshKey]);
   // SUIT-001: stealth writes while BODY or SYSTEMS stays shown behind it; they re-read on this.
   const [stealthWrites, setStealthWrites] = useState(0);
   // SUIT-001: stealth hides the screen, not the data. It stays on across reloads until exited.
@@ -670,6 +682,7 @@ function AppWorkspaces() {
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
     if (destination.kind === "capture") { openCapture(); return true; }
     if (destination.kind === "stealth") { changeStealth(true); return true; }
+    if (destination.kind === "drive") { setDriveOpen(true); return true; }
     if (destination.kind === "tools") return openMore("DAILY_CONTROLS");
     if (destination.kind === "more") return openMore(destination.view);
     return false;
@@ -723,6 +736,7 @@ function AppWorkspaces() {
 
   return (
     <EmblemContext.Provider value={goTodayRoot}>
+    <PresenceContext.Provider value={{ presence, openToday: goTodayRoot }}>
     <HeaderSearchContext.Provider value={() => { openMore("SEARCH"); }}>
     <HeaderAlfredContext.Provider value={() => setAlfredOpen(true)}>
     <StealthToggleContext.Provider value={() => changeStealth(!stealthOnRef.current)}>
@@ -731,6 +745,8 @@ function AppWorkspaces() {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <main id="main-content" tabIndex={-1}>
         {visited.has("TODAY") && <div id="workspace-TODAY" className={tab === "TODAY" ? "tab-enter" : undefined} hidden={tab !== "TODAY"}>
+          {/* TODAY shows its own mode and next action at full size, so it has no presence line. */}
+          <PresenceContext.Provider value={null}>
           <RootErrorBoundary active={tab === "TODAY"}>
             <TodayScreen
               active={tab === "TODAY"}
@@ -756,6 +772,7 @@ function AppWorkspaces() {
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
           </RootErrorBoundary>
+          </PresenceContext.Provider>
         </div>}
         {visited.has("TRAIN") && <div id="workspace-TRAIN" className={tab === "TRAIN" ? "tab-enter" : undefined} hidden={tab !== "TRAIN"}>
           <RootErrorBoundary active={tab === "TRAIN"}><Suspense fallback={<TabLoading />}><TrainScreen active={tab === "TRAIN"} destination={trainDestination} recordsFocus={trainRecordsFocus}
@@ -791,6 +808,7 @@ function AppWorkspaces() {
         </div>}
       </main>
 
+      {driveOpen && <Suspense fallback={null}><DriveHome open onClose={() => setDriveOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }} /></Suspense>}
       <RecordSheets onAlfred={() => setAlfredOpen(true)} mealRequest={recordMealRequest} correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
         onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }}
         onHistory={(metric) => leaveRecordSheet(() => { openBodyEvidence(metric); setMealOrigin((origin) => origin ? { ...origin, trigger: recordOrigin.current } : null); })}
@@ -850,6 +868,7 @@ function AppWorkspaces() {
     }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
+    </PresenceContext.Provider>
     </EmblemContext.Provider>
   );
 }

@@ -6,6 +6,8 @@ import { getMemories } from "../alfred/alfredMemory";
 import { getMonthSpend } from "../alfred/alfredSpend";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import { livedDayStartOf } from "../reflect";
+import { describeShiftRun, shiftRun } from "../shiftRun";
+import { getSchedulePattern } from "../queries";
 import { getEffectiveProteinTargetG } from "../nutritionTargetQueries";
 import * as chrono from "chrono-node";
 
@@ -77,6 +79,11 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
     if (!logged.length) return "No main sleep logged in the last 7 days.";
     const avg = logged.reduce((n, s) => n + s.sleep.primaryMinutes!, 0) / logged.length;
     return `Main sleep, last 7 days: average ${hm(avg)}, from ${logged.length} of ${week.length} days logged.`;
+  }
+  // SHIFT-RUN-001: where today sits in the saved rotation.
+  if (/\b(next day off|days? off|when am i off|how many (nights|shifts) left|when am i back on|back on shift|back at work|next night off)\b/.test(q)) {
+    const run = shiftRun(now, await getSchedulePattern());
+    return run ? `From your saved schedule: ${describeShiftRun(run)}.` : "There's no saved schedule to read that from. Set it in MORE → WORK SCHEDULE.";
   }
   if (/\b(next shift|when do i work|am i working)\b/.test(q)) {
     const w = await getWeekAhead(now);

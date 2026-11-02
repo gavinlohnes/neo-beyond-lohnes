@@ -1,0 +1,18 @@
+/* DRIVE-HOME-001: full screen, black, huge targets, readable at a glance. */
+.drive-home { position: fixed; inset: 0; z-index: 60; background: var(--bg, #000); color: var(--text-1); display: flex; flex-direction: column; gap: 16px; padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); overflow-y: auto; }
+.drive-home__mode { font-family: var(--font-display); letter-spacing: 0.12em; color: var(--accent, var(--text-2)); font-size: 14px; margin: 0; }
+.drive-home__say { font-family: var(--font-display); font-size: 32px; line-height: 1.15; margin: 0; }
+.drive-home__heard { color: var(--text-2); font-size: 18px; margin: 0; }
+.drive-home__cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.drive-home__cards li { border: 1px solid var(--border-strong); background: var(--surface-1); padding: 12px; font-size: 18px; }
+.drive-home__buttons { display: grid; gap: 12px; margin-top: auto; }
+.drive-home__big { min-height: 96px; font-size: 28px; width: 100%; }
+.drive-home__log { margin: 0; }
+.drive-home__close { min-height: 56px; }
+/* NIGHT-POLISH-001: the emblem holds the empty middle; a red ring breathes while BEYOND is listening. */
+.drive-home__signal { position: relative; align-self: center; display: grid; place-items: center; width: 168px; height: 168px; margin-block: 24px; border: 1px solid var(--border-strong); clip-path: polygon(14% 0, 100% 0, 100% 86%, 86% 100%, 0 100%, 0 14%); }
+.drive-home__signal::after { content: ""; position: absolute; inset: 10px; border: 2px solid var(--red); opacity: 0; clip-path: inherit; }
+/* House rule: animations play once, never loop. The ring draws in once when listening starts, then holds. */
+.drive-home__signal.is-listening::after { opacity: 1; animation: drive-home-listen 600ms ease-out 1; }
+@keyframes drive-home-listen { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .drive-home__signal.is-listening::after { animation: none; opacity: 1; } }

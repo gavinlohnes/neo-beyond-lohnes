@@ -1,6 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn } from "../commands";
-import { createSavedMeal, logManualMeal, logMeal } from "../nutritionCommands";
+import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn, voidBodyweightLog, voidSleepLog, voidWaterLog } from "../commands";
+import { createSavedMeal, logManualMeal, logMeal, voidMealLog } from "../nutritionCommands";
+import { getActiveWorkoutSession, getPerformedSets } from "../trainQueries";
+import { logSet } from "../trainCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
@@ -36,6 +38,8 @@ export type AlfredProposal =
   | { kind: "task_plan"; task_id: string; title: string; planned_date: string }
   // FREE-HELPER-001: tick one of his routine steps for today. Made only by the free helper, not by Alfred.
   | { kind: "routine_tick"; routine_id: string; step_id: string; text: string; routine_title: string }
+  // GYM-SETS-001: one set into the workout in progress. Made only by the free helper, not by Alfred.
+  | { kind: "log_set"; session_id: string; exercise_id: string; exercise_name: string; weight: number; reps: number }
   | { kind: "clean_day" }
   | { kind: "open_training" }
   // ALFRED-004: memory and urges.
@@ -56,7 +60,15 @@ type Scale = 1 | 2 | 3 | 4 | 5;
 type Zero = 0 | Scale;
 
 /** What a confirm asks of the shell beyond the write (open TRAIN). */
-export interface ConfirmResult { open?: "TRAIN" }
+/** CARD-UNDO-001: what to void if he taps UNDO on a saved log card (the same void the LOG sheet's UNDO uses). */
+export interface SavedLog { kind: "water" | "sleep" | "weight" | "meal"; dayId: string; eventId: string }
+export interface ConfirmResult { open?: "TRAIN"; undo?: SavedLog }
+export async function undoSavedLog(saved: SavedLog): Promise<boolean> {
+  if (saved.kind === "water") return voidWaterLog(saved.dayId, saved.eventId);
+  if (saved.kind === "sleep") return voidSleepLog(saved.dayId, saved.eventId);
+  if (saved.kind === "weight") return voidBodyweightLog(saved.dayId, saved.eventId);
+  return voidMealLog(saved.dayId, saved.eventId);
+}
 
 const n = (description: string) => ({ type: "number" as const, description });
 const s = (description: string) => ({ type: "string" as const, description });
@@ -233,6 +245,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
     case "routine_tick": return `Tick: ${p.text} (${p.routine_title})`;
+    case "log_set": return `Log set: ${p.exercise_name} ${p.weight} × ${p.reps}`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
@@ -277,6 +290,14 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
+  if (p.kind === "log_set") {
+    const session = await getActiveWorkoutSession();
+    if (!session || session.id !== p.session_id) throw new Error("WORKOUT_NOT_ACTIVE: that workout is no longer in progress.");
+    // The next number after any logged or skipped set of this exercise, as TRAIN numbers them (review of #386).
+    const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((s) => s.exerciseId === p.exercise_id).map((s) => s.setNumber));
+    await logSet(session.beyondDayId, session.id, p.exercise_id, last + 1, p.weight, p.reps);
+    return {};
+  }
   if (p.kind === "routine_tick") { const day = await ensureActiveDay(); await setRoutineStep(day.id, p.routine_id, p.step_id, true); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
   if (p.kind === "memory_retire" || p.kind === "memory_restore") {
@@ -318,9 +339,9 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   }
   const day = await ensureActiveDay();
   switch (p.kind) {
-    case "log_water": await logWater(day.id, Math.round(p.oz)); break;
-    case "log_sleep": await logSleep(day.id, p.minutes, p.nap ? "SUPPLEMENTAL" : "PRIMARY"); break;
-    case "log_weight": await logBodyweight(day.id, p.lbs); break;
+    case "log_water": return { undo: { kind: "water", dayId: day.id, eventId: await logWater(day.id, Math.round(p.oz)) } };
+    case "log_sleep": return { undo: { kind: "sleep", dayId: day.id, eventId: await logSleep(day.id, p.minutes, p.nap ? "SUPPLEMENTAL" : "PRIMARY") } };
+    case "log_weight": return { undo: { kind: "weight", dayId: day.id, eventId: await logBodyweight(day.id, p.lbs) } };
     case "check_in": await submitCheckIn(day.id, { energy: p.energy, stress: p.stress, mood: p.mood, soreness: p.soreness, alcoholUrge: p.alcohol_urge }); break;
     case "work_started": await markWorkStarted(day.id); break;
     case "work_ended": await markWorkEnded(day.id); break;
@@ -328,15 +349,13 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
     case "log_urge": await logUrge(day.id, p.trigger); break;
     case "log_meal":
       if (p.saved_meal_id) {
-        try { await logMeal(day.id, p.saved_meal_id, p.servings ?? 1); break; } catch { /* unknown id: log as given */ }
+        try { return { undo: { kind: "meal", dayId: day.id, eventId: (await logMeal(day.id, p.saved_meal_id, p.servings ?? 1)).eventId } }; } catch { /* unknown id: log as given */ }
       }
       if (p.remember) {
         const kept = await createSavedMeal({ name: p.name.slice(0, 80), calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) });
-        await logMeal(day.id, kept.id, 1);
-        break;
+        return { undo: { kind: "meal", dayId: day.id, eventId: (await logMeal(day.id, kept.id, 1)).eventId } };
       }
-      await logManualMeal(day.id, { name: p.name, calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) });
-      break;
+      return { undo: { kind: "meal", dayId: day.id, eventId: (await logManualMeal(day.id, { name: p.name, calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) })).eventId } };
   }
   return {};
 }
