@@ -2723,3 +2723,20 @@ in Alfred's sheet try BEYOND's free helper first: if it understands the whole me
 makes the same confirm cards (labelled BEYOND · FREE), free and offline; anything it isn't sure of goes
 to Alfred whole, within the monthly limit. It never guesses and never writes without SAVE. THINK
 HARDER, planning starters and shift debriefs always go to Alfred. [Brief](agent/FREE-HELPER-001.md).
+
+## 2026-11-02 — BEYOND-2.0 night campaign (#373)
+
+Gavin, 2026-11-01: "I approve all edits" and "if it passes review and CI is green you have permission
+to always merge." Goal: log almost anything free by voice or text, every screen shift-aware, answers from
+his own records. Rulings recorded for this campaign (details in each PR):
+- **Free first, paid on purpose.** Unknown food is found free in MEAL's USDA/Open Food Facts search;
+  Alfred's estimate is a deliberate tap. Words sent from search or drive home never become a paid call
+  on their own. TODAY's closed brief is free from records when Alfred isn't writing one.
+- **One box.** The header search goes, logs (free, after SAVE), answers and finds.
+- **Hands-free.** DRIVE HOME reads back what it heard and saves only on "save" or SAVE; a spoken "save"
+  after a full readback is explicit confirmation. It is one quiet tap on TODAY in the after-shift phase.
+- **Shift-aware everywhere.** One line under every other screen's title (mode, scheduled time, the Engine's
+  open action only); "scheduled: night N of M · next day off" from the saved schedule only, never a
+  record or a claim about rest, hidden when he declared the day otherwise.
+- **Correctable.** Saved log cards have UNDO (the LOG sheet's void); plain corrections ("that was 12 oz,
+  not 16") change today's latest log through its correction chain; gym sets log into the workout in progress.

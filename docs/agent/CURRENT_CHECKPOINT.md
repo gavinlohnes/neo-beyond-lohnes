@@ -1,3 +1,20 @@
+# BEYOND-2.0 night campaign — 2026-11-02 (orchestrator: Claude Code; builders: Claude Code, Codex)
+
+- Plan, authorization and rules: [#373](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/373);
+  Codex briefs #374–#377. One independent reviewer session reviews every PR; merge on PASS + green CI.
+- Merged: #378 BUNDLE-002, #379 FREE-HELPER-002, #380 COMMAND-BAR-001, #381 DRIVE-HOME-001,
+  #382 PRESENCE-001, #383 SHIFT-RUN-001, #384 Sync002 timing, #385 CARD-UNDO-001, #386 GYM-SETS-001,
+  #387 POST-SHIFT-001, #388 CORRECTIONS-001, #389 NIGHT-POLISH-001. In flight: #390 TODAY-RUN-001,
+  #391 CALENDAR-EXPORT-001 (Codex), #392 FREE-BRIEF-001; Codex: #375 meal plan, #377 weekly debrief,
+  #376 TRAIN programme.
+- Known CI noise: browser tests near 06:00 UTC can meet the real shift-end moment; heavy imports can
+  pass 15 s under load (Sync002 now 45 s). Re-run failed jobs; never skip a test.
+- Follow-ups: free helper doesn't yet log meals by voice in DRIVE HOME for unknown foods (they become a
+  note); on-phone AI model needs Gavin's OK; vite-plugin-pwa 2.0; TODAY "before you go" merge.
+- What's new, for Gavin: [NIGHT-2026-11-02.md](NIGHT-2026-11-02.md).
+
+---
+
 # ALFRED-VOICE-001 — Routine, in review (Builder: Claude Code)
 
 - Gavin: the fixed "Ate a McGriddle…" hint should fit him, BEYOND and Alfred. The message box now shows
