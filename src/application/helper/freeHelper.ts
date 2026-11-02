@@ -18,6 +18,8 @@ export interface HelperContext {
   routines: { id: string; title: string; steps: { id: string; text: string }[] }[];
   /** GYM-SETS-001: the workout in progress, when there is one; sets can only be logged into it. */
   workout?: { sessionId: string; exercises: { id: string; name: string }[] } | null;
+  /** CORRECTIONS-001: today's latest water, sleep and weight logs, the only ones a plain correction can change. */
+  lastLogs?: { water?: { id: string; value: number }; sleep?: { id: string; value: number }; weight?: { id: string; value: number } };
 }
 
 export interface HelperResult { cards: AlfredProposal[]; unknown: string[] }
@@ -237,6 +239,11 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
   // Review of #366 (B1, M1): any negation outside a note's own words makes the whole message unclear,
   // so "don't remind me…" or "didn't eat the bowl" is never turned into a card.
   const beforeNote = text.split(/\bnote\s*[:\-–]/i)[0]!;
+  // CORRECTIONS-001: "…12 oz, not 16" is a correction, the one "not" that names a number. Only a correction then.
+  if (/\bnot\s+\d/i.test(beforeNote)) {
+    const fix = correction(text.toLowerCase().replace(/[,;!?]/g, " ").replace(/\s+/g, " ").trim(), ctx);
+    return fix && fix !== "unclear" ? { cards: [fix], unknown: [] } : { cards, unknown: [text.trim()] };
+  }
   if (NEGATION.test(beforeNote.replace(/[’]/g, "'"))) return { cards, unknown: [text.trim()] };
   for (const raw of clauses(text)) {
     const c = norm(raw.replace(/^(i |just |also |and )+/i, "")).replace(/\boz\b/g, "oz");
@@ -248,7 +255,7 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     else if (WORK_START.test(c)) card = { kind: "work_started" };
     else if (WORK_END.test(c)) card = { kind: "work_ended" };
     else if (/^(clean day|today was clean|log clean(?: day)?|clean today)$/.test(c)) card = { kind: "clean_day" };
-    else card = gymSet(lower, ctx) ?? water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
+    else card = correction(lower, ctx) ?? gymSet(lower, ctx) ?? water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
       ?? (/(^|\s)-\s*\d/.test(lower) ? "unclear" : meal(lower.replace(/[^a-z0-9 .]+/g, " ").replace(/\s+/g, " "), ctx)); // a negative amount is a typo, not a log
     if (card && card !== "unclear") cards.push(card);
     else unknown.push(raw.trim());
@@ -286,4 +293,37 @@ function gymSet(c: string, ctx: HelperContext): AlfredProposal | null | "unclear
   const weight = Number(m[2]), reps = Number(m[3]);
   if (!(reps >= 1 && reps <= 100 && weight >= 0 && weight <= 1500)) return "unclear";
   return { kind: "log_set", session_id: ctx.workout.sessionId, exercise_id: ex.id, exercise_name: ex.name, weight, reps };
+}
+
+/**
+ * CORRECTIONS-001: "that was 12 oz not 16", "make that 12 oz", "sleep was 7 hours not 6", "weight was 210".
+ * Changes only today's latest log of that kind, through its correction chain (history kept). When he
+ * names the old value it must match, so a correction never lands on the wrong log.
+ */
+function correction(c: string, ctx: HelperContext): AlfredProposal | null | "unclear" {
+  if (!/\b(that was|make that|make it|actually|should be|should have been|was|correct|change|fix)\b/.test(c) || !/\b(not|instead|actually|make (that|it)|should|correct|change|fix)\b/.test(c)) return null;
+  const num = (s: string | undefined) => (s === undefined ? undefined : Number(s));
+  const logs = ctx.lastLogs ?? {};
+  const oz = c.match(/(\d+(?:\.\d+)?)\s*(?:oz|ounces?)\b(?:.*?\bnot\s+(\d+(?:\.\d+)?))?/);
+  if (oz && (/\b(water|that|it|drink)\b/.test(c))) {
+    const t = logs.water; if (!t) return "unclear";
+    const to = num(oz[1])!, from = num(oz[2]);
+    if (from !== undefined && Math.round(from) !== Math.round(t.value)) return "unclear";
+    return to > 0 && to <= 200 && to !== t.value ? { kind: "correct_log", metric: "water", target_id: t.id, from: t.value, to } : "unclear";
+  }
+  const hrs = c.match(/\bsleep\b.*?(\d+(?:\.\d+)?)\s*(?:h|hours?|hrs?)\b(?:\s*(\d{1,2})\s*(?:m|min|minutes?)?)?(?:.*?\bnot\s+(\d+(?:\.\d+)?))?/);
+  if (hrs) {
+    const t = logs.sleep; if (!t) return "unclear";
+    const to = Math.round(Number(hrs[1]) * 60 + (num(hrs[2]) ?? 0)), from = num(hrs[3]);
+    if (from !== undefined && Math.abs(from * 60 - t.value) > 30) return "unclear";
+    return to > 0 && to <= 24 * 60 && to !== t.value ? { kind: "correct_log", metric: "sleep", target_id: t.id, from: t.value, to } : "unclear";
+  }
+  const w = c.match(/\b(?:weight|weighed|weigh)\b.*?(\d{2,3}(?:\.\d)?)(?:\s*(?:lbs?|pounds))?(?:.*?\bnot\s+(\d{2,3}(?:\.\d)?))?/);
+  if (w) {
+    const t = logs.weight; if (!t) return "unclear";
+    const to = Number(w[1]), from = num(w[2]);
+    if (from !== undefined && Math.abs(from - t.value) > 0.05) return "unclear";
+    return to >= 50 && to <= 700 && to !== t.value ? { kind: "correct_log", metric: "weight", target_id: t.id, from: t.value, to } : "unclear";
+  }
+  return null;
 }
