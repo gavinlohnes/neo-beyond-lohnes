@@ -23,7 +23,7 @@ it("logs 'name weight x reps' as the next set of that exercise in the active wor
   expect(r.cards).toEqual([{ kind: "log_set", session_id: session.id, exercise_id: first.id, exercise_name: first.name, weight: 135, reps: 8 }]);
   await confirmProposal(r.cards[0]!);
   await confirmProposal(interpret(`${words} 135 for 7`, ctx).cards[0]!);
-  const sets = (await getPerformedSets(session.id)).filter((s) => s.exerciseId === first.id);
+  const sets = (await getPerformedSets(session.id)).filter((s) => s.exerciseId === first.id).sort((a, b) => a.setNumber - b.setNumber);
   expect(sets.map((s) => [s.setNumber, s.weight, s.reps])).toEqual([[1, 135, 8], [2, 135, 7]]);
 });
 
