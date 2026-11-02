@@ -71,7 +71,7 @@ const electricianResult: SearchResult = { domain: "OBLIGATION", id: "obligation-
 describe("SearchScreen (real browser)", () => {
   it("prompts to type before any query is entered", async () => {
     const screen = await render(<SearchScreen />);
-    await expect.element(screen.getByText(/Type to search/, { exact: false })).toBeVisible();
+    await expect.element(screen.getByText(/Try "16 oz water"/)).toBeVisible();
   });
 
   it("finds a Mission, an Obligation, and a Capture item by text as the operator types", async () => {
@@ -183,7 +183,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     // Initial prompt.
     await expect
       .element(screen.getByRole("status"))
-      .toHaveTextContent("Type to search lifts, PRs, meals, notes, days, journal entries and commitments.");
+      .toHaveTextContent('Try "16 oz water", "protein left?", "week ahead" or "bench".');
     let results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 
@@ -213,7 +213,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     await input.fill("");
     await expect
       .element(screen.getByRole("status"))
-      .toHaveTextContent("Type to search lifts, PRs, meals, notes, days, journal entries and commitments.");
+      .toHaveTextContent('Try "16 oz water", "protein left?", "week ahead" or "bench".');
     expect(document.activeElement).toBe(input.element());
   });
 });
@@ -251,11 +251,11 @@ describe("SearchScreen (real browser) — request lifecycle", () => {
     await expect.element(screen.getByText("Searching…", { exact: true })).toBeVisible();
 
     await input.fill("");
-    await expect.element(screen.getByText(/Type to search/, { exact: false })).toBeVisible();
+    await expect.element(screen.getByText(/Try "16 oz water"/)).toBeVisible();
 
     deferred.resolve([deckResult]);
     await new Promise((r) => setTimeout(r, 50));
-    await expect.element(screen.getByText(/Type to search/, { exact: false })).toBeVisible();
+    await expect.element(screen.getByText(/Try "16 oz water"/)).toBeVisible();
     await expect.element(screen.getByText("Rebuild the deck", { exact: true })).not.toBeInTheDocument();
 
     spy.mockRestore();
@@ -291,7 +291,7 @@ describe("SearchScreen (real browser) — request lifecycle", () => {
 
     await expect.element(screen.getByText(/Search failed/, { exact: false })).toBeVisible();
     await expect.element(screen.getByText(/No matches/, { exact: false })).not.toBeInTheDocument();
-    await expect.element(screen.getByText(/Type to search/, { exact: false })).not.toBeInTheDocument();
+    await expect.element(screen.getByText(/Try "16 oz water"/)).not.toBeInTheDocument();
 
     await tracker.settle();
     expect(tracker.reasons).toEqual([]);
@@ -368,7 +368,7 @@ describe("SearchScreen (real browser) — request lifecycle", () => {
     await expect.element(screen.getByText(/Search failed/, { exact: false })).toBeVisible();
 
     await input.fill("");
-    await expect.element(screen.getByText(/Type to search/, { exact: false })).toBeVisible();
+    await expect.element(screen.getByText(/Try "16 oz water"/)).toBeVisible();
     await expect.element(screen.getByText(/Search failed/, { exact: false })).not.toBeInTheDocument();
 
     spy.mockRestore();

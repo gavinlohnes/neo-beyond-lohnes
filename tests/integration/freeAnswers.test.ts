@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
-import { logSleep, logWater, startDay } from "../../src/application/commands";
+import { logBodyweight, logSleep, logWater, startDay } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
 import { rememberFact } from "../../src/application/alfred/alfredMemory";
 import { addHomeItem } from "../../src/application/homeCommands";
@@ -56,4 +56,11 @@ it("yesterday means the lived day before this one, not just the second-newest re
   vi.setSystemTime(new Date(2026, 9, 28, 17)); await startDay();
   vi.setSystemTime(new Date(2026, 10, 2, 17)); await startDay();
   expect(await answerQuestion("what did I eat yesterday?")).toBe("No day is recorded for yesterday.");
+});
+
+it("says how much protein is left against his own target, or that none is set (FREE-HELPER-002)", async () => {
+  const day = await startDay();
+  expect(await answerQuestion("how much protein do I have left?")).toBe("Protein today: nothing logged yet. No protein target is set.");
+  await logBodyweight(day.id, 160);
+  expect(await answerQuestion("how much protein do I have left?")).toMatch(/^No protein logged today yet\. Target: \d+ g\.$/);
 });

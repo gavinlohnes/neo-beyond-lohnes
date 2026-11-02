@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn } from "../commands";
-import { logManualMeal, logMeal } from "../nutritionCommands";
+import { createSavedMeal, logManualMeal, logMeal } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
@@ -20,7 +20,7 @@ import { URGE_TRIGGERS, type UrgeTrigger } from "../../domain/common/types";
  * confirm runs a BEYOND command, with its usual history and corrections. Alfred never writes.
  */
 export type AlfredProposal =
-  | { kind: "log_meal"; saved_meal_id?: string | undefined; name: string; calories: number; protein_g: number; carbs_g?: number | undefined; fat_g?: number | undefined; servings?: number | undefined }
+  | { kind: "log_meal"; saved_meal_id?: string | undefined; name: string; calories: number; protein_g: number; carbs_g?: number | undefined; fat_g?: number | undefined; servings?: number | undefined; /** FREE-HELPER-002: also keep it as a saved meal, so next time it logs free. */ remember?: boolean | undefined }
   | { kind: "log_water"; oz: number }
   | { kind: "log_sleep"; minutes: number; nap?: boolean }
   | { kind: "log_weight"; lbs: number }
@@ -329,6 +329,11 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
     case "log_meal":
       if (p.saved_meal_id) {
         try { await logMeal(day.id, p.saved_meal_id, p.servings ?? 1); break; } catch { /* unknown id: log as given */ }
+      }
+      if (p.remember) {
+        const kept = await createSavedMeal({ name: p.name.slice(0, 80), calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) });
+        await logMeal(day.id, kept.id, 1);
+        break;
       }
       await logManualMeal(day.id, { name: p.name, calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) });
       break;

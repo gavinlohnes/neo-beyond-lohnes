@@ -51,3 +51,10 @@ owner approval) is worth building on this phone.
 
 "Remember…" and people/home entry stay with Alfred and the People/Home screens (v2). Looser wording
 waits for an on-phone model, if this phone supports one.
+
+## FREE-HELPER-002 (2026-11-02, #373 item 1)
+
+- Food the helper doesn't know ("ate 2 slices of pepperoni pizza from Little Caesars") no longer goes to Alfred automatically. BEYOND · FREE offers **FIND "pepperoni pizza little caesars" FREE**, which opens MEAL with SEARCH ALL FOODS already run (USDA / Open Food Facts, same as FOOD-001), and **ASK ALFRED TO ESTIMATE** as one deliberate tap.
+- **SAVE + REMEMBER MEAL** on a meal card without a saved meal keeps it as a saved meal, so next time it's matched and logged free.
+- "How much protein do I have left?" answers against his own target, or says no target is set.
+- Matching (#366 N1): a short single word no longer guesses a two-word name ("car" → "Pay car"). Distinctive words still match ("garage" → "Clear the garage").
