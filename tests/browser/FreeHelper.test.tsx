@@ -113,3 +113,19 @@ it("SAVE + REMEMBER MEAL keeps a food as a saved meal, so next time it logs free
   await expect.element(screen.getByRole("group", { name: /^Log burger · 650 kcal/ }).last().getByRole("button", { name: "SAVE + REMEMBER MEAL" })).not.toBeInTheDocument(); // matched the saved meal
   expect(requests).toBe(0);
 });
+
+it("UNDO on a saved log card takes it back with the LOG sheet's own void (CARD-UNDO-001)", async () => {
+  const day = await startDay();
+  const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
+  await send(screen, "16 oz water and slept 6h");
+  const water = screen.getByRole("group", { name: "Log 16 oz water" });
+  await water.getByRole("button", { name: "SAVE" }).click();
+  await water.getByRole("button", { name: "Undo: Log 16 oz water" }).click();
+  await expect.element(water.getByText("Undone. Nothing of it is counted.")).toBeVisible();
+  const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+  expect(events.filter((e) => e.type === "WATER_LOGGED")).toHaveLength(1);
+  expect(events.filter((e) => e.type === "WATER_LOG_VOIDED")).toHaveLength(1);
+  // A card that isn't a log (or was skipped) has no UNDO.
+  await screen.getByRole("group", { name: /^Log main sleep 6h/ }).getByRole("button", { name: "SKIP" }).click();
+  expect(document.querySelectorAll("[aria-label^='Undo:']")).toHaveLength(0);
+});

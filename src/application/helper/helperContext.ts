@@ -5,6 +5,7 @@ import { getRoutines } from "../routineCommands";
 import { getActiveWorkoutSession } from "../trainQueries";
 import { resolveTemplateExercises } from "../customTemplateQueries";
 import type { HelperContext } from "./freeHelper";
+import type { WorkoutTemplateId } from "../../domain/workout/types";
 
 /**
  * The one read the free helper needs, shared by Alfred's sheet, search and drive home so the preview,
@@ -12,7 +13,7 @@ import type { HelperContext } from "./freeHelper";
  */
 export async function readHelperContext(now = new Date()): Promise<HelperContext> {
   const [meals, tasks, projects, routines, session] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines(), getActiveWorkoutSession()]);
-  const exercises = session ? await resolveTemplateExercises(session.templateId as never, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : [];
+  const exercises = session ? await resolveTemplateExercises(session.templateId as WorkoutTemplateId, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : [];
   return {
     now, savedMeals: meals, openTasks: tasks,
     openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),
