@@ -29,7 +29,7 @@ function arriveFromShare() {
 }
 
 beforeEach(async () => {
-  vi.useFakeTimers({ toFake: ["Date"], shouldAdvanceTime: true }); vi.setSystemTime(now);
+  vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(now);
   await page.viewport(412, 915);
   try { localStorage.clear(); } catch { /* ignore */ }
 });
@@ -48,6 +48,7 @@ describe("SYNC-002", () => {
     expect(await db.externalSleepRecords.count()).toBe(sleep.records.length);
     expect(await db.externalActivityHours.count()).toBe(activity.hours.length);
     expect(await caches.has("beyond-shared-health")).toBe(false);
+    await expect.poll(() => screen.container.querySelector(".mode-header__value")?.textContent, { timeout: 10_000 }).toBe("ON SHIFT");
     await screen.getByRole("button", { name: "OK", exact: true }).click();
     await expect.element(screen.getByText(/^Garmin updated/)).not.toBeInTheDocument();
   }, 45_000); // importing a synthetic month runs past the default 15 s when the full suite loads the runner

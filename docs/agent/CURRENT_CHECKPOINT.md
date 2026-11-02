@@ -2902,3 +2902,12 @@ by its shortcut finding; the new head requires a renewed verdict recorded on PR 
 - PR description: `/workspace/shared/beyond-night-campaign/meal-plan-001-pr.md`. No PR or review
   claimed. Git writes now also fail authentication after reconnection; commits are preserved
   locally and will be packaged for recovery. Next: #377 from fresh master, then #376.
+
+- MEAL-PLAN-001 fresh-master follow-up: #374 is merged as #391; its Codex branch is frozen by
+  owner instruction. Meal branch rebased onto freshly fetched master including FREE-BRIEF-001.
+  Typecheck PASS; fresh focused checks26PASS; latest targeted8PASS; complete
+  `BEYOND_BROWSER_EXECUTABLE=/usr/bin/chromium npm run verify` PASS:403 files passed/one skipped,
+  3,408 tests passed/two skipped, production/PWA build PASS. Common fixture corrections wait for
+  food lookup's initial focus and TODAY's fixed-time mode read before acting; TodayRun's rotation
+  locator is exact after the free brief began repeating that text. All original assertions remain.
+  Ready PR creation/push is attempted next; GitHub API and Git write access remain unverified.
