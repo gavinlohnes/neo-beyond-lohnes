@@ -3,10 +3,7 @@ import { searchAll, type SearchResult } from "../../../application/searchQueries
 import { describeSearchDomain } from "./searchCopy";
 import { interpret, isQuestion } from "../../../application/helper/freeHelper";
 import { answerQuestion } from "../../../application/helper/freeAnswers";
-import { getSavedMeals } from "../../../application/nutritionQueries";
-import { getUnresolvedObligations } from "../../../application/intentQueries";
-import { getProjects } from "../../../application/projectQueries";
-import { getRoutines } from "../../../application/routineCommands";
+import { readHelperContext } from "../../../application/helper/helperContext";
 import { describeProposal } from "../../../application/alfred/alfredActions";
 import { findCapabilities, type SystemCapability } from "../../systemCatalog";
 import { askAlfred, doInBeyond } from "../../components/AlfredSheet";
@@ -16,8 +13,7 @@ interface Command { q: string; go: SystemCapability[]; doIt: string[]; answer: s
 async function readCommand(q: string): Promise<Command> {
   const go = findCapabilities(q).slice(0, 4);
   if (isQuestion(q)) return { q, go, doIt: [], answer: await answerQuestion(q).catch(() => null) };
-  const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
-  const result = interpret(q, { now: new Date(), savedMeals: meals, openTasks: tasks, openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"), routines: routines.filter((r) => r.status === "ACTIVE") });
+  const result = interpret(q, await readHelperContext());
   return { q, go, doIt: result.unknown.length ? [] : result.cards.map(describeProposal), answer: null };
 }
 

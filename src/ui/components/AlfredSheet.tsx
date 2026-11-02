@@ -10,11 +10,8 @@ const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
+import { readHelperContext } from "../../application/helper/helperContext";
 import { answerQuestion } from "../../application/helper/freeAnswers";
-import { getSavedMeals } from "../../application/nutritionQueries";
-import { getUnresolvedObligations } from "../../application/intentQueries";
-import { getProjects } from "../../application/projectQueries";
-import { getRoutines } from "../../application/routineCommands";
 import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
@@ -141,12 +138,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         // Not something the helper answers: Alfred's path reports plainly if he can't be reached.
         route = "alfred"; return;
       }
-      const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
-      const result = interpret(q, {
-        now: new Date(), savedMeals: meals, openTasks: tasks,
-        openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),
-        routines: routines.filter((r) => r.status === "ACTIVE"),
-      });
+      const result = interpret(q, await readHelperContext());
       // FREE-HELPER-002: food it doesn't know is looked up free in MEAL's food search first; Alfred's
       // paid estimate is one tap away instead of automatic.
       const foods = result.unknown.map(foodQuery);
