@@ -1,3 +1,20 @@
+# BEYOND-2.0 night campaign — 2026-11-02 (orchestrator: Claude Code; builders: Claude Code, Codex)
+
+- Plan, authorization and rules: [#373](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/373);
+  Codex briefs #374–#377. One independent reviewer session reviews every PR; merge on PASS + green CI.
+- Merged: #378 BUNDLE-002, #379 FREE-HELPER-002, #380 COMMAND-BAR-001, #381 DRIVE-HOME-001,
+  #382 PRESENCE-001, #383 SHIFT-RUN-001, #384 Sync002 timing, #385 CARD-UNDO-001, #386 GYM-SETS-001,
+  #387 POST-SHIFT-001, #388 CORRECTIONS-001, #389 NIGHT-POLISH-001, #390 TODAY-RUN-001,
+  #391 CALENDAR-EXPORT-001 (Codex), #392 FREE-BRIEF-001. Next with Codex: #375 meal plan, #377 weekly
+  debrief, #376 TRAIN programme. Goal after tonight: [BEYOND 3.0 launch checklist](../BEYOND_3_LAUNCH.md).
+- Known CI noise: browser tests near 06:00 UTC can meet the real shift-end moment; heavy imports can
+  pass 15 s under load (Sync002 now 45 s). Re-run failed jobs; never skip a test.
+- Follow-ups: free helper doesn't yet log meals by voice in DRIVE HOME for unknown foods (they become a
+  note); on-phone AI model needs Gavin's OK; vite-plugin-pwa 2.0; TODAY "before you go" merge.
+- What's new, for Gavin: [NIGHT-2026-11-02.md](NIGHT-2026-11-02.md).
+
+---
+
 # ALFRED-VOICE-001 — Routine, in review (Builder: Claude Code)
 
 - Gavin: the fixed "Ate a McGriddle…" hint should fit him, BEYOND and Alfred. The message box now shows
@@ -2880,13 +2897,3 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
-
-
-## Night campaign #373 — TRAIN-PROGRAM-001 handoff (Codex, 2026-11-02)
-
-- Authorization: #373/#376 and direct owner assignment; Protected persisted programme. Branch `codex/train-program-001`, fresh starting master `d63900f35b681b9d4318f12da3319fe3bbc6ec12`.
-- Implemented MY PROGRAMME: weekday/rotation assignments, confirmed save/clear, native backup event retention and old-backup compatibility, causal stale-editor protection, and planned start through existing TRAIN capacity confirmation. No reserved source, dependency, progression or recommendation change.
-- Typecheck PASS; focused programme/restore/migration tests 29/29 PASS; TRAIN/programme browser regression tests 73/73 PASS; water-sheet/programme regression tests 3/3 PASS.
-- Full `npm run verify` is NOT green: latest run 402 files passed, 1 failed, 1 skipped; 3,411 tests passed, 1 failed, 2 skipped. Sole failure: FieldRehearsal preflight at 360px, axe color-contrast on existing `button[aria-controls="train-override-picker"]` in TRAIN (tests/browser/FieldRehearsal.test.tsx:149). Build was not reached by this failing gate. No assertion disabled. The isolated FieldRehearsal rerun passed all 6 cases; the full-gate failure remains unresolved and is not waived.
-- Owner requested immediate handoff to Claude. Implementation preserved as a local commit, not represented as ready for merge. GitHub push credentials/API access are unavailable; no PR/remote CI/review/merge claimed.
-- Next: Claude imports the bundle, resolves the rehearsal finding, runs typecheck/relevant tests/full verify, opens the ready PR with Closes #376 and the supplied body, obtains independent exact-head review and green CI under #373. Calendar #374 is already merged as #391; its branch was not touched.
