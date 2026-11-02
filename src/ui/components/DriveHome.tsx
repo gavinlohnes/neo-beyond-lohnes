@@ -97,10 +97,11 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
     setPhase("saving");
     const acknowledge = captureCommitFeedback();
     const saved: string[] = [];
+    let ctx = context.current;
     try {
       // One context read when the cards were made, advanced by his own saves (as Alfred's sheet does),
       // so an outside change since the readback is still refused.
-      let ctx = context.current ?? await buildPlanningContext(false);
+      ctx = ctx ?? await buildPlanningContext(false);
       for (const card of toSave) {
         const done = await confirmContextProposal(card, ctx, false);
         ctx = { ...ctx, personalVersion: done.personalVersion, ...(done.recordVersion ? { recordVersion: done.recordVersion } : {}) };
@@ -110,8 +111,15 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
       acknowledge("LIGHT");
       savedCount.current += saved.length; pending.current = []; setCards([]); setLog((all) => [...all, ...saved]); onSaved();
       say("Saved. Anything else?", () => listen("log"));
-    } catch {
+    } catch (e) {
       savedCount.current += saved.length; setLog((all) => [...all, ...saved]); if (saved.length) onSaved();
+      // Review of #381: keep his own saves' advanced context for a retry; an outside change means read it again.
+      if (e instanceof Error && e.message === "CONTEXT_CHANGED") {
+        pending.current = []; setCards([]); context.current = null;
+        say("Things changed since I read that back. Say it again.", () => listen("log"));
+        return;
+      }
+      context.current = ctx;
       pending.current = toSave.slice(saved.length); setCards(pending.current);
       say("That one didn't save. It's still here. Tap SAVE to try again.");
       setPhase("idle");
