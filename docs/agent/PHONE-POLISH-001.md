@@ -4,7 +4,7 @@
 - Refinement: “the existing visual direction needs to be elevated and enhanced.” Carry the established Gotham scene, physical controls, instrument readings and angular typography across the experience; do not substitute a new theme or navigation model.
 - Owner approval for the complete visual pass: “Approved. Now take it beyond” after the proposed distinct TODAY/TRAIN/DATA/MORE compositions, confident hierarchy, constructed panels, Gotham atmosphere and action-linked motion.
 - Lane: FEATURE, presentation and discovery within existing navigation and capabilities.
-- Builder: Codex; branch `codex/phone-polish-001`; PR pending.
+- Builder: Codex; branch `codex/phone-polish-001`; PR #398.
 - Starting master: `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`.
 - Scope: stronger shared header/navigation framing, responsive interaction/entry motion, cohesive meal/programme panels, clearer existing MORE groups and search vocabulary. Real state only; motion stops with reduced-motion preference.
 - Exclusions: primary navigation/IA, Engine recommendations, commands/events/schema, backup, providers/dependencies, new features, merge or deployment.
@@ -30,5 +30,8 @@
 - Final compiled PWA walkthrough: offline navigation through all four tabs at 320/360/412 px, local meal drafting and offline cold reload PASS; no horizontal overflow or page errors. Synthetic fixtures were seeded via the real commands; these are not Gavin's records.
 - Source walkthrough also verified seven-day meal plans, panel axe and reduced motion at all three widths.
 - Captures and motion clip: `docs/screenshots/phone-polish-001/`. These are Chromium evidence, not owner phone acceptance.
-- Branch `codex/phone-polish-001` pushed. PR creation attempted with `gh pr create --draft`; GitHub GraphQL returned `Forbidden`. No PR, independent review, remote CI, merge, deployment or owner phone acceptance is claimed.
-- Next: open/review the PR, complete required remote checks and obtain Gavin's merge approval. API access remains restricted in this environment.
+- Branch `codex/phone-polish-001` reconciled with master through merged PR #397 and published as
+  PR #398. Independent exact-head review, remote CI, merge, deployment and owner phone acceptance
+  remain pending.
+- Next: complete required remote checks and independent review. Under Gavin's standing 2026-11-02
+  ruling, merge automatically only after both gates pass at the unchanged exact head.

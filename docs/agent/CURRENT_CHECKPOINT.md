@@ -5,9 +5,15 @@
 - Branch `codex/phone-polish-001` pushed; app implementation through `ec09187`, with final test-selector/evidence updates in subsequent commits.
 - Final broad run: 3,423 passed / four old menu-selector failures / two skips. Corrected selectors retain all assertions; final affected rerun 45/45 PASS. Separate architecture, TypeScript/PWA build and compiled offline 320/360/412px walkthrough PASS. No single green final full-verify invocation claimed.
 - Review [captures and motion](../screenshots/phone-polish-001/README.md) use synthetic records. All four workspaces, confirmations, native disclosures, compact Plan access and Engine authority retained.
-- Prior PR creation was blocked by GitHub GraphQL; the current primary chat has working GitHub access
-  and has explicitly taken the handoff. Master through merged PR #397 is being reconciled before PR.
-- Next: finish reconciliation verification, publish the PR, complete independent review and remote CI.
+- Prior PR creation was blocked by GitHub GraphQL; the current primary chat took the explicit
+  handoff, reconciled master through merged PR #397 and opened
+  [PR #398](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/398).
+- Reconciled evidence: architecture and TypeScript PASS; production/PWA build PASS. Combined
+  phone/command/data/Shift Recovery browser run 43/48; the five failures reproduce master harness
+  issues (shared IndexedDB closure and legacy ESM mocks), with no visual assertion failure. Isolated
+  CI remains authoritative.
+- Next: independent exact-head review and remote CI. Gavin's standing 2026-11-02 ruling authorizes
+  automatic merge only when both pass at an unchanged head with no unresolved findings.
 
 ---
 
