@@ -42,3 +42,11 @@ it("a correction proposed twice can't land twice (the chain refuses a stale targ
   await confirmProposal(card);
   await expect(confirmProposal(card)).rejects.toThrow(/STALE_CORRECTION_TARGET/);
 });
+
+it("a correction inside a longer message drops nothing: the whole message goes on (review of #388)", async () => {
+  const day = await startDay();
+  await logWater(day.id, 16);
+  const ctx = await readHelperContext();
+  expect(interpret("that was 12 oz not 16, and 8 oz water", ctx)).toEqual({ cards: [], unknown: ["that was 12 oz not 16, and 8 oz water"] });
+  expect(interpret("actually drank 24 oz water", ctx).cards.some((c) => c.kind === "correct_log")).toBe(false); // a new drink, never a correction
+});

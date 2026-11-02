@@ -240,7 +240,9 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
   // so "don't remind me…" or "didn't eat the bowl" is never turned into a card.
   const beforeNote = text.split(/\bnote\s*[:\-–]/i)[0]!;
   // CORRECTIONS-001: "…12 oz, not 16" is a correction, the one "not" that names a number. Only a correction then.
+  // Review of #388: only a one-clause message; with anything else in it, nothing is dropped: it goes whole.
   if (/\bnot\s+\d/i.test(beforeNote)) {
+    if (clauses(text.replace(/,\s*not\b/gi, " not")).length !== 1) return { cards, unknown: [text.trim()] };
     const fix = correction(text.toLowerCase().replace(/[,;!?]/g, " ").replace(/\s+/g, " ").trim(), ctx);
     return fix && fix !== "unclear" ? { cards: [fix], unknown: [] } : { cards, unknown: [text.trim()] };
   }
@@ -301,7 +303,8 @@ function gymSet(c: string, ctx: HelperContext): AlfredProposal | null | "unclear
  * names the old value it must match, so a correction never lands on the wrong log.
  */
 function correction(c: string, ctx: HelperContext): AlfredProposal | null | "unclear" {
-  if (!/\b(that was|make that|make it|actually|should be|should have been|was|correct|change|fix)\b/.test(c) || !/\b(not|instead|actually|make (that|it)|should|correct|change|fix)\b/.test(c)) return null;
+  // "actually drank 24 oz" is a new drink, not a correction: "actually" needs "not", "make that" or "should".
+  if (!/\b(that was|make that|make it|should be|should have been|was|correct|change|fix)\b/.test(c) || !/\b(not|instead|make (that|it)|should|correct|change|fix)\b/.test(c)) return null;
   const num = (s: string | undefined) => (s === undefined ? undefined : Number(s));
   const logs = ctx.lastLogs ?? {};
   const oz = c.match(/(\d+(?:\.\d+)?)\s*(?:oz|ounces?)\b(?:.*?\bnot\s+(\d+(?:\.\d+)?))?/);
