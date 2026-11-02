@@ -9,6 +9,7 @@ import "../ui/screens/health/healthImport.css";
 import "../ui/screens/body/bodyProgress.css";
 import "../ui/screens/today/reflect.css";
 import "../ui/components/alfred.css";
+import "../ui/screens/more/operator.css";
 import { RecordSheets } from "../ui/components/RecordSheets";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
