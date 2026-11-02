@@ -39,7 +39,7 @@ import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
 import { CcIcon } from "../ui/cc/ccIcons";
 import { HeaderSearchContext, HeaderAlfredContext, EmblemContext, StealthToggleContext } from "../ui/components/OperatorHeader";
-import { ASK_ALFRED_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
+import { ASK_ALFRED_EVENT, FIND_FOOD_EVENT, AlfredSheet } from "../ui/components/AlfredSheet";
 import { AlfredBrief } from "../ui/components/AlfredBrief";
 import { AlfredWeek } from "../ui/components/AlfredWeek";
 import { StealthOverlay } from "../ui/components/StealthOverlay";
@@ -257,7 +257,7 @@ function AppWorkspaces() {
   const closingRecordSheet = useRef(false);
   const recordOrigin = useRef<HTMLElement | null>(null);
   const correctionKey = useRef(0);
-  const [recordMealRequest, setRecordMealRequest] = useState<{ id: string; key: number } | null>(null);
+  const [recordMealRequest, setRecordMealRequest] = useState<{ id?: string; query?: string; key: number } | null>(null);
   const [recordCorrection, setRecordCorrection] = useState<RecordCorrectionRequest | null>(null);
   const [recordSheet, setRecordSheet] = useState<RecordSheetTarget | null>(shortcut === "workout" ? null : shortcut);
   const [bodyRequest, setBodyRequest] = useState(0);
@@ -699,6 +699,18 @@ function AppWorkspaces() {
     showTab("TODAY", false);
   }
 
+  // FREE-HELPER-002: the free helper hands an unknown food to MEAL's free search, not to a paid estimate.
+  useEffect(() => {
+    const find = (e: Event) => {
+      const query = (e as CustomEvent<string>).detail;
+      if (!query) return;
+      setAlfredOpen(false);
+      setRecordMealRequest({ query, key: ++correctionKey.current });
+      openRecordSheet("meal");
+    };
+    window.addEventListener(FIND_FOOD_EVENT, find);
+    return () => window.removeEventListener(FIND_FOOD_EVENT, find);
+  });
   function openCapture() { openRecordSheet("note"); }
 
   if (!continuityResolved) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clauses, interpret, isQuestion, type HelperContext } from "../src/application/helper/freeHelper";
+import { clauses, foodQuery, interpret, isQuestion, matchOne, type HelperContext } from "../src/application/helper/freeHelper";
 
 /** FREE-HELPER-001: the free helper understands common phrasings and refuses to guess. Invented data. */
 const ctx: HelperContext = {
@@ -111,5 +111,28 @@ describe("refuses to guess (review of #366)", () => {
     none("remind me to");
     none("done: car");
     none("burger 650 cal -30g protein");
+  });
+});
+
+describe("FREE-HELPER-002", () => {
+  it("one short word no longer guesses a two-word name; a distinctive word still finds it", () => {
+    const tasks = [{ title: "Pay car" }, { title: "Clear the garage" }, { title: "Book a tip run" }];
+    expect(matchOne(tasks, "car")).toBeNull();
+    expect(matchOne([{ name: "Chicken bowl" }], "bowl")).toBeNull();
+    expect(matchOne(tasks, "garage")?.title).toBe("Clear the garage");
+    expect(matchOne(tasks, "tip run")?.title).toBe("Book a tip run");
+    expect(matchOne(tasks, "pay car")?.title).toBe("Pay car");
+    none("done: car"); // the fixture has no car task either way; matchOne above proves the rule
+  });
+  it("finds the food in what he says he ate, and nothing else", () => {
+    expect(foodQuery("For dinner I just ate 2 pieces of pepperoni pizza from Little Caesars")).toBe("pepperoni pizza little caesars");
+    expect(foodQuery("had a banana for breakfast")).toBe("banana");
+    expect(foodQuery("had 2 slices of pizza")).toBe("pizza");
+    for (const notFood of ["had a bad day at work", "I had a long call with mom", "I got paid today", "had a headache all shift", "had a meeting with Dave about overtime", "had a banana"])
+      expect(foodQuery(notFood), notFood).toBeNull();
+    expect(foodQuery("ate a McGriddle")).toBe("mcgriddle");
+    expect(foodQuery("skipped the pizza")).toBeNull();
+    expect(foodQuery("sort out the car insurance")).toBeNull();
+    expect(foodQuery("ate it")).toBeNull();
   });
 });

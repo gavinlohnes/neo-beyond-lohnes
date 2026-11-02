@@ -6,6 +6,7 @@ import { getMemories } from "../alfred/alfredMemory";
 import { getMonthSpend } from "../alfred/alfredSpend";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import { livedDayStartOf } from "../reflect";
+import { getEffectiveProteinTargetG } from "../nutritionTargetQueries";
 import * as chrono from "chrono-node";
 
 /**
@@ -28,6 +29,15 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
   const q = text.toLowerCase().replace(/[?!.]+$/, "").trim();
   // Review of #366 (B2): only questions about his own logged totals. Advice ("should I…", "enough?"),
   // facts about a food ("calories in a banana"), rates and other days go to Alfred, not today's total.
+  // FREE-HELPER-002: how far today's protein is from his own target. Facts only; a missing target is said.
+  if (/\bprotein\b/.test(q) && /\b(left|remaining|to go|more|short)\b/.test(q) && !/\byesterday\b/.test(q)) {
+    const [t, target] = await Promise.all([today(), getEffectiveProteinTargetG()]);
+    if (!t) return "No day is started yet.";
+    if (target === undefined) return `Protein today: ${t.proteinG !== undefined ? `${Math.round(t.proteinG)} g` : "nothing logged yet"}. No protein target is set.`;
+    if (t.proteinG === undefined) return `No protein logged today yet. Target: ${Math.round(target)} g.`; // missing is not zero
+    const have = t.proteinG, left = Math.round(target - have);
+    return left > 0 ? `${left} g to go: ${Math.round(have)} of ${Math.round(target)} g today.` : `Target reached: ${Math.round(have)} of ${Math.round(target)} g today.`;
+  }
   const advice = /\b(should|why|need|enough|better|advice|recommend|healthy|normal|average person|per)\b|\bin (a|an|one|my|the|this|that|\d+)\b/.test(q);
   const mine = /\b(today|so far|tonight|this shift|have i|did i|i've|i have|i had|my)\b/.test(q);
   const otherDay = /\b(mon|tues|wednes|thurs|fri|satur|sun)day\b|\blast (week|month)\b|\bthis (week|month)\b|\bon the\b/.test(q);
