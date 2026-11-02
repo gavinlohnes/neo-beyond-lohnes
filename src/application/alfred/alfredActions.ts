@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn, voidBodyweightLog, voidSleepLog, voidWaterLog } from "../commands";
+import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn, correctWater, correctSleep, correctBodyweight, voidBodyweightLog, voidSleepLog, voidWaterLog } from "../commands";
 import { createSavedMeal, logManualMeal, logMeal, voidMealLog } from "../nutritionCommands";
 import { getActiveWorkoutSession, getPerformedSets } from "../trainQueries";
 import { logSet } from "../trainCommands";
@@ -39,6 +39,8 @@ export type AlfredProposal =
   // FREE-HELPER-001: tick one of his routine steps for today. Made only by the free helper, not by Alfred.
   | { kind: "routine_tick"; routine_id: string; step_id: string; text: string; routine_title: string }
   // GYM-SETS-001: one set into the workout in progress. Made only by the free helper, not by Alfred.
+  // CORRECTIONS-001: change today's latest water/sleep/weight log through its correction chain. Free helper only.
+  | { kind: "correct_log"; metric: "water" | "sleep" | "weight"; target_id: string; from: number; to: number }
   | { kind: "log_set"; session_id: string; exercise_id: string; exercise_name: string; weight: number; reps: number }
   | { kind: "clean_day" }
   | { kind: "open_training" }
@@ -245,6 +247,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
     case "routine_tick": return `Tick: ${p.text} (${p.routine_title})`;
+    case "correct_log": return p.metric === "water" ? `Change last water: ${p.from} → ${p.to} oz` : p.metric === "sleep" ? `Change last sleep: ${Math.floor(p.from / 60)}h ${String(p.from % 60).padStart(2, "0")}m → ${Math.floor(p.to / 60)}h ${String(p.to % 60).padStart(2, "0")}m` : `Change last weight: ${p.from} → ${p.to} lbs`;
     case "log_set": return `Log set: ${p.exercise_name} ${p.weight} × ${p.reps}`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
@@ -290,6 +293,13 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
+  if (p.kind === "correct_log") {
+    const day = await ensureActiveDay();
+    if (p.metric === "water") await correctWater(day.id, p.target_id, p.to);
+    else if (p.metric === "sleep") await correctSleep(day.id, p.target_id, p.to);
+    else await correctBodyweight(day.id, p.target_id, p.to);
+    return {};
+  }
   if (p.kind === "log_set") {
     const session = await getActiveWorkoutSession();
     if (!session || session.id !== p.session_id) throw new Error("WORKOUT_NOT_ACTIVE: that workout is no longer in progress.");
