@@ -32,7 +32,7 @@ it.each(cases)("keeps optional prose below action/logging %s; actual phase owns 
   vi.spyOn(window, "fetch").mockImplementation(async () => { calls++; return new Response(JSON.stringify({ id: "synthetic", type: "message", role: "assistant", model: "claude-haiku-5-5", content: [{ type: "text", text: "Optional supporting brief" }], stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 10 } }), { headers: { "content-type": "application/json" } }); });
   const screen = await render(<App />);
   await expect.element(screen.getByRole("button", { name: new RegExp(`^Mode ${mode}, per schedule`) })).toBeVisible();
-  await expect.element(screen.getByLabelText("Alfred brief", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("Brief & conversation", { exact: true })).toBeVisible();
   const workspace = document.getElementById("workspace-TODAY")!;
   const support = workspace.querySelector<HTMLDetailsElement>(".alfred-support")!;
   expect(support.open).toBe(false);
@@ -55,7 +55,7 @@ it.each(cases)("keeps optional prose below action/logging %s; actual phase owns 
     expect(await db.events.count()).toBe(count);
   }
   const before = calls;
-  await screen.getByLabelText("Alfred brief", { exact: true }).click();
+  await screen.getByText("Brief & conversation", { exact: true }).click();
   await expect.element(screen.getByText("Optional supporting brief", { exact: true })).toBeVisible();
   expect(calls).toBe(before);
   expect(await db.events.where("type").equals("MEMORY_RECORDED").count()).toBe(0);
