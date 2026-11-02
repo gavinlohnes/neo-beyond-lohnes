@@ -9,8 +9,8 @@ describe("capability discovery (COMMAND search)", () => {
     // MEMORY-001 adds one settings destination for confirmed prep/recovery facts.
     // ROUTINES-001 adds MORE → ROUTINES; UX-POLISH-001 adds PROJECTS, PEOPLE and HOME.
     // LIFE-HUB-001 adds LIFE (ROUTINES becomes search-only inside it).
-    expect(SYSTEM_CAPABILITIES).toHaveLength(55);
-    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(55);
+    expect(SYSTEM_CAPABILITIES).toHaveLength(56);
+    expect(new Set(SYSTEM_CAPABILITIES.map((entry) => entry.label)).size).toBe(56);
     for (const entry of SYSTEM_CAPABILITIES) expect(CAPABILITY_GROUPS).toContain(entry.group);
     expect(findCapabilities("  ")).toEqual(SYSTEM_CAPABILITIES);
   });

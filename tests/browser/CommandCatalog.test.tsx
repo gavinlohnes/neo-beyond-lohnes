@@ -88,6 +88,11 @@ describe("COMMAND catalog", () => {
         const title = destination.kind === "capture" ? "NOTE" : destination.kind === "record" ? destination.target === "protein" ? "PROTEIN ONLY" : "MY MEALS" : { water: "WATER", meal: "MEAL", foodLookup: "FOOD LOOKUP", sleep: "SLEEP", weight: "BODYWEIGHT", urge: "URGE" }[destination.focus];
         await expect.element(screen.getByRole("dialog", { name: title, exact: true })).toBeVisible();
         await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
+      } else if (destination.kind === "drive") {
+        // DRIVE-HOME-001: the hands-free screen opens; DONE closes it and nothing was written.
+        await expect.element(screen.getByRole("dialog", { name: "Drive home" })).toBeVisible();
+        await screen.getByRole("button", { name: "DONE", exact: true }).click();
+        await expect.poll(() => document.querySelector(".drive-home")).toBeNull();
       } else if (destination.kind === "stealth") {
         // SUIT-001: stealth covers the screen; Escape exits and nothing was written.
         await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
