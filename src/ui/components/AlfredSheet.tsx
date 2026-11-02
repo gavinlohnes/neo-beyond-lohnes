@@ -131,7 +131,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => [...all, { role: "user", text: q }, {
         role: "alfred", free: true,
         text: "Here's what I can do for free. SAVE the ones you want." + left,
-        ...(ctx ? { context: { personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } } : {}),
+        ...(ctx ? { context: { recordVersion: ctx.recordVersion, personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } } : {}),
         proposals: result.cards.map((proposal, n) => ({ id: `free-${Date.now()}-${n}`, proposal, state: "pending" as const })),
       }]);
     } catch {

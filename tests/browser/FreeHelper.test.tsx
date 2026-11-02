@@ -5,6 +5,7 @@ import axe from "axe-core";
 import { AlfredSheet } from "../../src/ui/components/AlfredSheet";
 import { startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
+import { createSavedMeal, updateSavedMeal } from "../../src/application/nutritionCommands";
 
 /** FREE-HELPER-001 in Alfred's sheet: free first, Alfred only when needed. Invented data only. */
 let requests = 0;
@@ -65,4 +66,17 @@ it("the on-phone AI check only asks the browser and reports plainly", async () =
   expect(Object.keys(r)).toEqual(["builtIn", "webgpu", "memory"]);
   expect(r.builtIn.length).toBeGreaterThan(0);
   expect(requests).toBe(0);
+});
+
+it("a free meal card refuses to save if the saved meal changed after it was shown (review of #366)", async () => {
+  await startDay();
+  const meal = await createSavedMeal({ name: "Chicken bowl", calories: 600, proteinG: 50, carbsG: 60, fatG: 15 });
+  const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
+  await send(screen, "ate the chicken bowl");
+  const card = screen.getByRole("group", { name: /^Log Chicken bowl/ });
+  await expect.element(card).toBeVisible();
+  await updateSavedMeal(meal.id, { calories: 900, proteinG: 20 });
+  await card.getByRole("button", { name: "SAVE" }).click();
+  await expect.element(screen.getByText("Your context changed. Ask again before saving this proposal. Nothing changed.")).toBeVisible();
+  expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
 });
