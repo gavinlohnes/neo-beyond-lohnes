@@ -239,7 +239,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => all.map((t, i) => {
         const context = advance(t.context);
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
-        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: save ? "saved" : "skipped", ...(result.undo ? { undo: result.undo } : {}) } : p) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, ...(save ? { proposal } : {}), state: save ? "saved" : "skipped", ...(result.undo ? { undo: result.undo } : {}) } : p) };
       }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
     } catch (e) {
@@ -255,7 +255,15 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     try {
       await undoSavedLog(card.undo);
       onSaved();
-      setTurns((all) => all.map((t, i) => i !== turnIndex ? t : { ...t, proposals: t.proposals!.map((p) => p.id === id ? { ...p, state: "undone" as const } : p) }));
+      // Review of #385: his own UNDO is not an outside change; carry the record version forward like a SAVE.
+      const before = turns[turnIndex]!.context?.recordVersion;
+      const after = before !== undefined ? await operatorContextVersion(included) : undefined;
+      setTurns((all) => all.map((t, i) => {
+        const context = t.context && before !== undefined && after && t.context.recordVersion === before ? { ...t.context, recordVersion: after } : t.context;
+        const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: "undone" as const } : p) };
+      }));
+      if (after && lastContext.current && lastContext.current.recordVersion === before) lastContext.current = { ...lastContext.current, recordVersion: after };
     } catch { setError("That couldn't be undone. Change it from LOG or the day's history."); }
     finally { working.current = false; setBusy(false); }
   }
@@ -336,7 +344,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               {p.proposal.kind === "log_meal" && !p.proposal.saved_meal_id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, true, true)}>SAVE + REMEMBER MEAL</button>}
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
-            </div> : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : p.state === "undone" ? "Undone. Nothing of it is counted." : "Skipped."}</p>
+            </div> : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : p.state === "undone" ? (p.proposal.kind === "log_meal" && p.proposal.remember ? "Undone. The saved meal stays in MY MEALS." : "Undone. Nothing of it is counted.") : "Skipped."}</p>
               {p.state === "saved" && p.undo && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undoCard(i, p.id)} aria-label={`Undo: ${describeProposal(p.proposal)}`}>UNDO</button>}</div>}
           </div>)}
         </div>)}
