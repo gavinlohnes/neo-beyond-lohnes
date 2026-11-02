@@ -19,6 +19,7 @@ export type SystemDestination =
   | { kind: "workout" }
   | { kind: "capture" }
   | { kind: "stealth" }
+  | { kind: "drive" }
   | { kind: "more"; view: MoreView }
   | { kind: "section"; section: CommandSection };
 
@@ -97,6 +98,7 @@ export const SYSTEM_CAPABILITIES = [
   { hiddenFeature: "minimumDay", label: "MINIMUM DAY", description: "The six basics for a hard day", aliases: ["minimum", "basics"], group: "On shift", destination: { kind: "daily", tool: "MINIMUM_DAY" }, browse: false },
   { hiddenFeature: "smallSteps", label: "SMALL STEPS", description: "One tool at a time", aliases: ["small steps", "simple"], group: "On shift", destination: { kind: "daily", tool: "SMALL_STEPS" }, browse: false },
   { label: "HIDDEN FEATURES", description: "Show optional tools; your data is kept either way", aliases: ["hidden", "minimum day", "small steps", "food lookup"], group: "Settings", destination: { kind: "section", section: "HIDDEN_FEATURES" }, browse: false },
+  { label: "DRIVE HOME", description: "Hands-free: say what to log, then say save. Free", aliases: ["drive", "driving", "hands free", "hands-free", "voice", "car", "commute", "debrief"], group: "On shift", destination: { kind: "drive" }, browse: false },
   { label: "PROTEIN ONLY", description: "Log protein without a meal", aliases: ["protein", "grams"], group: "Log", destination: { kind: "record", target: "protein" }, browse: false },
 ] as const satisfies readonly Capability[];
 
