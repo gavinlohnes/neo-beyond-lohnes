@@ -59,7 +59,7 @@ describe("ALFRED-001", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Ask Alfred" }).first().click();
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
-    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("Ate a McGriddle and 20 oz water, and remind me to call the CPAP place after I wake");
+    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("Sort out the uniform order and 20 oz water, and remind me to call the CPAP place after I wake");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await expect.element(sheet.getByText("Logged both for you to confirm.")).toBeVisible();
     // Nothing is written until SAVE.

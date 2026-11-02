@@ -41,7 +41,10 @@ export function matchOne<T extends { title?: string; name?: string; text?: strin
   const want = words(w);
   const loose = items.filter((t) => {
     const have = words(name(t));
-    return want.length > 0 && have.length > 0 && want.every((x) => have.includes(x)) && want.length * 2 >= have.length;
+    if (!(want.length > 0 && have.length > 0 && want.every((x) => have.includes(x)))) return false;
+    // FREE-HELPER-002 (#366 N1): cover more than half the name, or exactly half with distinctive words
+    // only (5+ letters). "garage" finds "Clear the garage"; "car" no longer guesses "Pay car", nor "bowl" "Chicken bowl".
+    return want.length * 2 > have.length || (want.length * 2 === have.length && want.every((x) => x.length >= 5));
   });
   return loose.length === 1 ? loose[0]! : null;
 }
@@ -249,4 +252,19 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     else unknown.push(raw.trim());
   }
   return { cards, unknown };
+}
+
+/**
+ * FREE-HELPER-002: the food a clause the helper couldn't log talks about, for the free food search.
+ * "for dinner I just ate 2 pieces of pepperoni pizza from Little Caesars" → "pepperoni pizza little caesars".
+ * Only clauses that say they ate or had something; anything else returns null.
+ */
+export function foodQuery(clause: string): string | null {
+  const c = clause.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim();
+  const m = c.match(/\b(?:ate|eaten|eat|had|having|eating|grabbed|got)\b\s+(.+)$/);
+  if (!m || /\b(no|not|never|didn't|didnt|skipped|without)\b/.test(c)) return null;
+  const words = m[1]!
+    .replace(/\b(will you|can you|could you|please|log|my|meal|and protein|protein intake|intake|for (breakfast|lunch|dinner|supper)|just|a|an|the|some|of|from|at|with|piece|pieces|slice|slices|serving|servings|bowl|plate|order|\d+(\.\d+)?|one|two|three|four|half)\b/g, " ")
+    .replace(/\s+/g, " ").trim();
+  return words.length >= 3 ? words.slice(0, 60) : null;
 }
