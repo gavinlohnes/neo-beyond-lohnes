@@ -28,7 +28,10 @@ export function ModeHeader({
   busy,
   onPin,
   onRecordWorkDay,
+  run,
 }: {
+  /** SHIFT-RUN-001: "scheduled: night 2 of 3 · next day off Thu", from the saved schedule only. */
+  run?: string | null;
   now: Date;
   children?: ReactNode;
   /** POLISH-002: the SYSTEMS line, inside the hero's frame as in the prototype. */
@@ -103,6 +106,7 @@ export function ModeHeader({
       </button>
       {children}
       <div className="mode-header__source cc-mode-meta">{source}</div>
+      {run && <div className="mode-header__run cc-mode-meta">{run}</div>}
       <div className="cc-timeline mode-strip" aria-hidden="true">
         <div className="cc-tl-bar">
           {strip.segments.map((segment) => (

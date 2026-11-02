@@ -3,6 +3,7 @@ import { buildAlfredContext } from "../../application/alfred/alfredContext";
 import { readAlfredKey } from "./AlfredSheet";
 import { addSpend, automaticAlfredOn, capReached } from "../../application/alfred/alfredSpend";
 import "./alfred.css";
+import { freeBrief } from "../../application/helper/freeBrief";
 
 /**
  * ALFRED-003 #1 (owner go "go cheap + 1 and 2"): Alfred's brief at the top of TODAY — a few sentences
@@ -43,6 +44,8 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
   const [brief, setBrief] = useState<Stored | null>(null);
   const [hasKey, setHasKey] = useState(() => !!readAlfredKey() && automaticAlfredOn());
   const [reading, setReading] = useState(false);
+  // Review of #392: with a key, wait for the first context read before showing the free brief instead.
+  const [checked, setChecked] = useState(false);
   const [tick, setTick] = useState(0);
   const inFlight = useRef(false);
   const sourceEpoch = useRef(0);
@@ -78,6 +81,7 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
         const sig = briefSignature(context);
         const stored = readStored();
         if (mounted.current && sourceEpoch.current === epoch) setBrief(stored?.text && stored.sig === sig ? stored : null);
+        if (mounted.current) setChecked(true);
         if (!briefIsDue(stored, sig, Date.now()) || (typeof navigator !== "undefined" && navigator.onLine === false) || capReached()) return;
         if (mounted.current) setReading(true);
         const { writeAlfredBrief } = await import("../../application/alfred/alfredClient");
@@ -97,12 +101,13 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
         if (mounted.current) setBrief(null);
       } finally {
         inFlight.current = false;
-        if (mounted.current) setReading(false);
+        if (mounted.current) { setReading(false); setChecked(true); }
       }
     })();
   }, [active, refreshKey, tick]);
 
-  if (!hasKey || (!brief && !reading)) return null;
+  // FREE-BRIEF-001: with no Alfred brief to show, the free one from his records takes its place.
+  if (!hasKey || (!brief && !reading)) return recessed && (!hasKey || checked) ? <FreeBrief active={active} refreshKey={refreshKey} onOpen={onOpen} /> : null;
   const content = <section className="alfred-brief" aria-label="Alfred's brief">
     <button type="button" className="alfred-brief__open" onClick={onOpen}>
       <span className="alfred-brief__who">ALFRED{brief ? ` · ${hhmm(brief.at)}` : ""}{reading ? " · reading…" : ""}</span>
@@ -111,4 +116,24 @@ export function AlfredBrief({ active, refreshKey, onOpen, recessed = false }: { 
     </button>
   </section>;
   return recessed ? <details className="support-disclosure alfred-support"><summary><span>ALFRED</span><span className="support-disclosure__hint">Brief & conversation</span></summary><div className="support-disclosure__body">{content}</div></details> : content;
+}
+
+function FreeBrief({ active, refreshKey, onOpen }: { active: boolean; refreshKey: string | number; onOpen: () => void }) {
+  const [lines, setLines] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    let live = true;
+    void freeBrief().then((l) => { if (live) setLines(l); }, () => { if (live) setLines(null); });
+    return () => { live = false; };
+  }, [active, refreshKey]);
+  if (!lines?.length) return null;
+  return <details className="support-disclosure alfred-support"><summary><span>BRIEF</span><span className="support-disclosure__hint">Free · from your records</span></summary><div className="support-disclosure__body">
+    <section className="alfred-brief" aria-label="Free brief">
+      <button type="button" className="alfred-brief__open" onClick={onOpen}>
+        <span className="alfred-brief__who">BEYOND · FREE</span>
+        <span className="alfred-brief__text">{lines.join(" ")}</span>
+        <span className="alfred-brief__talk">TAP TO ASK</span>
+      </button>
+    </section>
+  </div></details>;
 }
