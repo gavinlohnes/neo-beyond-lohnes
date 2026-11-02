@@ -34,7 +34,8 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
     const [t, target] = await Promise.all([today(), getEffectiveProteinTargetG()]);
     if (!t) return "No day is started yet.";
     if (target === undefined) return `Protein today: ${t.proteinG !== undefined ? `${Math.round(t.proteinG)} g` : "nothing logged yet"}. No protein target is set.`;
-    const have = t.proteinG ?? 0, left = Math.round(target - have);
+    if (t.proteinG === undefined) return `No protein logged today yet. Target: ${Math.round(target)} g.`; // missing is not zero
+    const have = t.proteinG, left = Math.round(target - have);
     return left > 0 ? `${left} g to go: ${Math.round(have)} of ${Math.round(target)} g today.` : `Target reached: ${Math.round(have)} of ${Math.round(target)} g today.`;
   }
   const advice = /\b(should|why|need|enough|better|advice|recommend|healthy|normal|average person|per)\b|\bin (a|an|one|my|the|this|that|\d+)\b/.test(q);

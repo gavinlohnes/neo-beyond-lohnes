@@ -126,7 +126,10 @@ describe("FREE-HELPER-002", () => {
   });
   it("finds the food in what he says he ate, and nothing else", () => {
     expect(foodQuery("For dinner I just ate 2 pieces of pepperoni pizza from Little Caesars")).toBe("pepperoni pizza little caesars");
-    expect(foodQuery("had a banana")).toBe("banana");
+    expect(foodQuery("had a banana for breakfast")).toBe("banana");
+    expect(foodQuery("had 2 slices of pizza")).toBe("pizza");
+    for (const notFood of ["had a bad day at work", "I had a long call with mom", "I got paid today", "had a headache all shift", "had a meeting with Dave about overtime", "had a banana"])
+      expect(foodQuery(notFood), notFood).toBeNull();
     expect(foodQuery("ate a McGriddle")).toBe("mcgriddle");
     expect(foodQuery("skipped the pizza")).toBeNull();
     expect(foodQuery("sort out the car insurance")).toBeNull();

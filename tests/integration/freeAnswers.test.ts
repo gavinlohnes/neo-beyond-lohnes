@@ -62,5 +62,5 @@ it("says how much protein is left against his own target, or that none is set (F
   const day = await startDay();
   expect(await answerQuestion("how much protein do I have left?")).toBe("Protein today: nothing logged yet. No protein target is set.");
   await logBodyweight(day.id, 160);
-  expect(await answerQuestion("how much protein do I have left?")).toMatch(/^\d+ g to go: 0 of \d+ g today\.$/);
+  expect(await answerQuestion("how much protein do I have left?")).toMatch(/^No protein logged today yet\. Target: \d+ g\.$/);
 });

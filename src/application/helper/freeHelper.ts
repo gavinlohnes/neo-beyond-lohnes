@@ -261,7 +261,9 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
  */
 export function foodQuery(clause: string): string | null {
   const c = clause.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ").trim();
-  const m = c.match(/\b(?:ate|eaten|eat|had|having|eating|grabbed|got)\b\s+(.+)$/);
+  // Review of #379: "ate" is about food; "had/got/grabbed" only with a meal cue ("had a bad day at work" is not food).
+  const m = c.match(/\b(?:ate|eaten|eat|eating)\b\s+(.+)$/)
+    ?? (/\b(breakfast|lunch|dinner|supper|snack|slices?|pieces?|servings?|bowl|plate|order)\b/.test(c) ? c.match(/\b(?:had|having|grabbed|got)\b\s+(.+)$/) : null);
   if (!m || /\b(no|not|never|didn't|didnt|skipped|without)\b/.test(c)) return null;
   const words = m[1]!
     .replace(/\b(will you|can you|could you|please|log|my|meal|and protein|protein intake|intake|for (breakfast|lunch|dinner|supper)|just|a|an|the|some|of|from|at|with|piece|pieces|slice|slices|serving|servings|bowl|plate|order|\d+(\.\d+)?|one|two|three|four|half)\b/g, " ")
