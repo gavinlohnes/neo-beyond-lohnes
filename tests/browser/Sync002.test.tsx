@@ -41,7 +41,7 @@ describe("SYNC-002", () => {
     expect(await caches.has("beyond-shared-health")).toBe(false);
     await screen.getByRole("button", { name: "OK", exact: true }).click();
     await expect.element(screen.getByText(/^Garmin updated/)).not.toBeInTheDocument();
-  });
+  }, 45_000); // importing a synthetic month runs past the default 15 s when the full suite loads the runner
 
   it("a share before any SYNC GARMIN tap on this phone still opens the preview and imports nothing", async () => {
     const { days, sleep } = syntheticGarminMonth(start, 2, now);
