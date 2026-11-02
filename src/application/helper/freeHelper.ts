@@ -16,6 +16,8 @@ export interface HelperContext {
   openTasks: { id: string; title: string }[];
   openProjects: { id: string; title: string }[];
   routines: { id: string; title: string; steps: { id: string; text: string }[] }[];
+  /** GYM-SETS-001: the workout in progress, when there is one; sets can only be logged into it. */
+  workout?: { sessionId: string; exercises: { id: string; name: string }[] } | null;
 }
 
 export interface HelperResult { cards: AlfredProposal[]; unknown: string[] }
@@ -246,7 +248,7 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     else if (WORK_START.test(c)) card = { kind: "work_started" };
     else if (WORK_END.test(c)) card = { kind: "work_ended" };
     else if (/^(clean day|today was clean|log clean(?: day)?|clean today)$/.test(c)) card = { kind: "clean_day" };
-    else card = water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
+    else card = gymSet(lower, ctx) ?? water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
       ?? (/(^|\s)-\s*\d/.test(lower) ? "unclear" : meal(lower.replace(/[^a-z0-9 .]+/g, " ").replace(/\s+/g, " "), ctx)); // a negative amount is a typo, not a log
     if (card && card !== "unclear") cards.push(card);
     else unknown.push(raw.trim());
@@ -269,4 +271,19 @@ export function foodQuery(clause: string): string | null {
     .replace(/\b(will you|can you|could you|please|log|my|meal|and protein|protein intake|intake|for (breakfast|lunch|dinner|supper)|just|a|an|the|some|of|from|at|with|piece|pieces|slice|slices|serving|servings|bowl|plate|order|\d+(\.\d+)?|one|two|three|four|half)\b/g, " ")
     .replace(/\s+/g, " ").trim();
   return words.length >= 3 ? words.slice(0, 60) : null;
+}
+
+/**
+ * GYM-SETS-001: "bench 135 x 8", "squat 225 for 5", "lat pulldown 120 lbs x 10 reps", "pushups 0 x 15".
+ * Only during a workout in progress, only for an exercise in it, and never a guessed weight or rep count.
+ */
+function gymSet(c: string, ctx: HelperContext): AlfredProposal | null | "unclear" {
+  if (!ctx.workout) return null;
+  const m = c.match(/^(?:did |logged? )?(.+?)\s+(\d{1,4}(?:\.\d)?)\s*(?:lbs?|pounds|lb)?\s*(?:x|×|for|by|times)\s*(\d{1,3})(?:\s*reps?)?$/);
+  if (!m) return null;
+  const ex = matchOne(ctx.workout.exercises, m[1]!);
+  if (!ex) return "unclear";
+  const weight = Number(m[2]), reps = Number(m[3]);
+  if (!(reps >= 1 && reps <= 100 && weight >= 0 && weight <= 1500)) return "unclear";
+  return { kind: "log_set", session_id: ctx.workout.sessionId, exercise_id: ex.id, exercise_name: ex.name, weight, reps };
 }

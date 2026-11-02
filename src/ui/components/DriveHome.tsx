@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { interpret } from "../../application/helper/freeHelper";
-import { getSavedMeals } from "../../application/nutritionQueries";
-import { getUnresolvedObligations } from "../../application/intentQueries";
-import { getProjects } from "../../application/projectQueries";
-import { getRoutines } from "../../application/routineCommands";
+import { readHelperContext } from "../../application/helper/helperContext";
 import { describeProposal, type AlfredProposal } from "../../application/alfred/alfredActions";
 import { buildPlanningContext } from "../../application/alfred/personalContext";
 import { confirmContextProposal } from "../../application/alfred/contextActions";
@@ -74,8 +71,7 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
     const said = words.trim();
     if (!said) { setPhase("idle"); return; }
     if (DONE_WORDS.test(said.toLowerCase().replace(/[.!?,]/g, "").trim())) { finish(); return; }
-    const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
-    const result = interpret(said, { now: new Date(), savedMeals: meals, openTasks: tasks, openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"), routines: routines.filter((r) => r.status === "ACTIVE") });
+    const result = interpret(said, await readHelperContext());
     const next: AlfredProposal[] = [...result.cards, ...(result.unknown.length ? [{ kind: "capture_note", text: `Drive home: ${result.unknown.join("; ")}` } as AlfredProposal] : [])];
     pending.current = next; setCards(next); context.current = await buildPlanningContext(false); reprompted.current = false;
     say(`I heard: ${next.map(describeProposal).join(". ")}. Say save, or skip.`, () => listen("confirm"));

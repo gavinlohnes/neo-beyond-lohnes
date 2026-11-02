@@ -1,6 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn, voidBodyweightLog, voidSleepLog, voidWaterLog } from "../commands";
 import { createSavedMeal, logManualMeal, logMeal, voidMealLog } from "../nutritionCommands";
+import { getActiveWorkoutSession, getPerformedSets } from "../trainQueries";
+import { logSet } from "../trainCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
@@ -36,6 +38,8 @@ export type AlfredProposal =
   | { kind: "task_plan"; task_id: string; title: string; planned_date: string }
   // FREE-HELPER-001: tick one of his routine steps for today. Made only by the free helper, not by Alfred.
   | { kind: "routine_tick"; routine_id: string; step_id: string; text: string; routine_title: string }
+  // GYM-SETS-001: one set into the workout in progress. Made only by the free helper, not by Alfred.
+  | { kind: "log_set"; session_id: string; exercise_id: string; exercise_name: string; weight: number; reps: number }
   | { kind: "clean_day" }
   | { kind: "open_training" }
   // ALFRED-004: memory and urges.
@@ -241,6 +245,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
     case "routine_tick": return `Tick: ${p.text} (${p.routine_title})`;
+    case "log_set": return `Log set: ${p.exercise_name} ${p.weight} × ${p.reps}`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
@@ -285,6 +290,14 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
+  if (p.kind === "log_set") {
+    const session = await getActiveWorkoutSession();
+    if (!session || session.id !== p.session_id) throw new Error("WORKOUT_NOT_ACTIVE: that workout is no longer in progress.");
+    // The next number after any logged or skipped set of this exercise, as TRAIN numbers them (review of #386).
+    const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((s) => s.exerciseId === p.exercise_id).map((s) => s.setNumber));
+    await logSet(session.beyondDayId, session.id, p.exercise_id, last + 1, p.weight, p.reps);
+    return {};
+  }
   if (p.kind === "routine_tick") { const day = await ensureActiveDay(); await setRoutineStep(day.id, p.routine_id, p.step_id, true); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
   if (p.kind === "memory_retire" || p.kind === "memory_restore") {
