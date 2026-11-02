@@ -2880,3 +2880,25 @@ stored-pin shortcut regressions pass. The renewed full `npm run verify` passes (
 2,556 passed / one existing skip), and built offline cold workout/water shortcut acceptance
 passes at 320/360/412 with no duplicate workout set. The earlier exact-head review was superseded
 by its shortcut finding; the new head requires a renewed verdict recorded on PR #241.
+
+## WEEKLY-DEBRIEF-001 — Codex night campaign
+
+- Authorization/brief: #373/#377 and Gavin's direct Builder instructions; FEATURE. Existing
+  weekly dashboard headline grid extended, not a parallel review. Fresh-master rebase includes
+  merged calendar #391 and FREE-BRIEF-001; calendar Codex branch left untouched.
+- Branch `codex/weekly-debrief-001`: free WEEK IN NUMBERS, logged-day sleep/work-off, calorie/
+  protein targets, water, weight coverage, sets/volume/PRs, commitments and worked/scheduled
+  distinction. Missing remains missing; current settings and open-now counts are labelled.
+- REUSE: WeeklyDashboard/ReviewRow/Day Ledger, corrected canonical queries, workoutVolumeLbs,
+  existing ReadoutGrid/review surface. OWN: bounded enrichment/evidence counts and factual
+  preceding-week comparison. BUILD FROM SCRATCH: only the small missing enrichment/comparison;
+  no new dependency, provider, table, canonical write or Alfred call.
+- Typecheck PASS; refreshed relevant tests33/33PASS. Full
+  `BEYOND_BROWSER_EXECUTABLE=/usr/bin/chromium npm run verify` PASS:404 files passed/one skipped,
+  3,407 tests passed/two skipped; production/PWA build PASS. Saved review workflows and axe at
+  320/360/412px passed; real-record no-write integration passed. Intentional coverage-copy
+  assertion updated; identical assertion-preserving browser fixture corrections retained.
+- No reserved Claude source changed. Ready PR description is preserved under
+  `/workspace/shared/beyond-night-campaign/weekly-debrief-001-pr.md`. PR/push attempted next;
+  this runtime's GitHub API and Git writes remain blocked. No independent review/merge claimed.
+- Next: TRAIN-PROGRAM-001 (#376), Protected setting event, from fresh master.

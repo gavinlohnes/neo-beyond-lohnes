@@ -1,3 +1,4 @@
+import { WeekInNumbers } from "./WeekInNumbers";
 import { useEffect, useRef, useState } from "react";
 import { getWeeklyDashboard, type WeeklyDashboard as Dashboard } from "../../../application/weeklyDashboardQueries";
 import { CONTEXT_FLOOR_DAYS, weekPattern, type PatternMode } from "../../../engine/weeklyDashboard";
@@ -120,21 +121,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
           <button type="button" className="btn-secondary" disabled={!data.hasEarlier} onClick={() => setWeeksBack((n) => n + 1)}>← PREVIOUS WEEK</button>
           <button type="button" className="btn-secondary" disabled={isLatest} onClick={() => setWeeksBack((n) => Math.max(0, n - 1))}>NEXT WEEK →</button>
         </div>
-        <ReadoutGrid className="weekly-dashboard__metrics">
-          <Readout
-            label="SLEEP / AVERAGE"
-            value={fixed(headline.sleep.mean, 1, "h")}
-            detail={`${fixed(headline.sleep.work.mean, 1, "h")} work · ${fixed(headline.sleep.off.mean, 1, "h")} off · ${plural(headline.sleep.days, "day", "days")}`}
-          />
-          <Readout label="PROTEIN / AVERAGE" value={fixed(headline.protein.mean, 0, "g")} detail={`Recorded on ${plural(headline.protein.days, "day", "days")}`} />
-          <Readout label="TRAINING" value={plural(headline.sessions, "session", "sessions")} detail="Completed or partial strength sessions" />
-          <Readout
-            label="WEIGHT CHANGE"
-            value={weightChange ? `${weightChange.change > 0 ? "+" : ""}${weightChange.change.toFixed(1)} lb` : "Not enough"}
-            detail={weightChange ? `${longDate(weightChange.firstDay)} to ${longDate(weightChange.lastDay)}, first to last recorded` : "Needs two weighed days this week"}
-          />
-        </ReadoutGrid>
-        <p className="meta">Work and off-day sleep each need {CONTEXT_FLOOR_DAYS} logged days. Food figures are logged amounts, not verified total intake.</p>
+        <WeekInNumbers dashboard={data} />
         {isLatest ? (
           <div className="weekly-dashboard__status">
             <div>
