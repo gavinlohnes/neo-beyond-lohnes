@@ -1,3 +1,4 @@
+import { describeShiftRun, shiftRun } from "../../../application/shiftRun";
 import { DRIVE_HOME_EVENT } from "../../driveHomeEvent";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
@@ -1728,6 +1729,9 @@ export function TodayScreen({
   // DROP 0: the saved schedule's value still stands for this day (no change since).
   const workContextPerSchedule = !!day && day.workContext !== "UNKNOWN" && workContextSource === "SCHEDULE_STANDING";
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
+  // SHIFT-RUN-001 on TODAY: where today sits in the saved rotation, unless he declared the day otherwise.
+  const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern) : null;
+  const todayRun = scheduledRun && day && (day.workContext === "UNKNOWN" || day.workContext === scheduledRun.kind) ? `scheduled: ${describeShiftRun(scheduledRun)}` : null;
   const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;
   const livedDayStart = mostRecentBoundaryAtOrBefore(new Date(day?.startedAt ?? now));
   const shiftClockInput = {
@@ -2652,6 +2656,7 @@ export function TodayScreen({
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
+            run={todayRun}
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
@@ -2815,6 +2820,7 @@ export function TodayScreen({
           {/* POLISH-002: the prototype's mode hero — mode, meta, timeline, scene, and SYSTEMS inside
               its frame. AMBER or RED still lead the SYSTEMS line in words (SUIT-001). */}
           <ModeHeader
+            run={todayRun}
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
