@@ -3,7 +3,7 @@
 - **Authorization / Builder / lane:** Gavin approved the recommended Launch 3.0 Shift Recovery
   objective on 2026-11-02 ("Approved. Begin"). Codex; PROTECTED presentation of recovery guidance.
 - **Starting commit / branch:** `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`;
-  `codex/shift-recovery-001`; PR pending.
+  `codex/shift-recovery-001`; PR #397.
 - **Outcome:** TODAY names the final shift, first day off and first shift back, and connects that
   position to Gavin's own recorded sleep and training patterns. It protects the first post-run
   sleep by leaving it unallocated and gives factual flip/day-off context without medical advice.

@@ -2,7 +2,8 @@
 
 - Gavin approved the bounded Shift Recovery objective on 2026-11-02. Brief:
   [SHIFT-RECOVERY-001.md](SHIFT-RECOVERY-001.md). Branch `codex/shift-recovery-001`; baseline
-  `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`; active PR pending.
+  `fc94c0da152a0c9de067d6003af3c042ebbe0bf7`; active PR
+  [#397](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/397).
 - TODAY now offers optional, read-only recovery context for a recorded final shift, flip toward work,
   first day off or later day off. It reuses saved schedule position plus existing sleep/training
   evidence, states its limits, and never moves commitments, schedules recovery or writes a record.
@@ -18,8 +19,8 @@
   reviewer at exact head `3c38be9689746291614947e5543c1ddc015b4368`: PASS, 27/27 focused
   Node, 2/2 browser and architecture PASS. The record is a post-merge reconciliation, not a claim
   of retroactive workflow compliance; reviewer-attributed evidence is recorded on PR #396.
-- Next: publish the PR, then dispatch its exact head for independent review and use isolated CI as
-  the broader regression gate.
+- Next: dispatch PR #397's exact head for independent review and use isolated CI as the broader
+  regression gate.
 
 ---
 
