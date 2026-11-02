@@ -22,6 +22,7 @@ import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid } from "../ui
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
+import { PresenceContext, readPresence, type Presence } from "../ui/presence";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
 import type { TrainDestination } from "../ui/screens/train/TrainScreen";
 import type { MoreView } from "../ui/screens/more/MoreScreen";
@@ -227,6 +228,11 @@ function AppWorkspaces() {
   }, [todayVisited]);
   useEffect(() => () => { delete document.documentElement.dataset.suitMode; }, []);
   const [todayRefreshKey, setTodayRefreshKey] = useState(0);
+  // PRESENCE-001: the shift-aware line under every other screen's title; re-read each minute and on change.
+  const [presence, setPresence] = useState<Presence | null>(null);
+  const [presenceTick, setPresenceTick] = useState(0);
+  useEffect(() => { const t = window.setInterval(() => setPresenceTick((n) => n + 1), 60_000); return () => window.clearInterval(t); }, []);
+  useEffect(() => { let live = true; void readPresence().then((p) => { if (live) setPresence(p); }, () => {}); return () => { live = false; }; }, [presenceTick, tab, todayRefreshKey]);
   // SUIT-001: stealth writes while BODY or SYSTEMS stays shown behind it; they re-read on this.
   const [stealthWrites, setStealthWrites] = useState(0);
   // SUIT-001: stealth hides the screen, not the data. It stays on across reloads until exited.
@@ -723,6 +729,7 @@ function AppWorkspaces() {
 
   return (
     <EmblemContext.Provider value={goTodayRoot}>
+    <PresenceContext.Provider value={{ presence, openToday: goTodayRoot }}>
     <HeaderSearchContext.Provider value={() => { openMore("SEARCH"); }}>
     <HeaderAlfredContext.Provider value={() => setAlfredOpen(true)}>
     <StealthToggleContext.Provider value={() => changeStealth(!stealthOnRef.current)}>
@@ -731,6 +738,8 @@ function AppWorkspaces() {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <main id="main-content" tabIndex={-1}>
         {visited.has("TODAY") && <div id="workspace-TODAY" className={tab === "TODAY" ? "tab-enter" : undefined} hidden={tab !== "TODAY"}>
+          {/* TODAY shows its own mode and next action at full size, so it has no presence line. */}
+          <PresenceContext.Provider value={null}>
           <RootErrorBoundary active={tab === "TODAY"}>
             <TodayScreen
               active={tab === "TODAY"}
@@ -756,6 +765,7 @@ function AppWorkspaces() {
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
           </RootErrorBoundary>
+          </PresenceContext.Provider>
         </div>}
         {visited.has("TRAIN") && <div id="workspace-TRAIN" className={tab === "TRAIN" ? "tab-enter" : undefined} hidden={tab !== "TRAIN"}>
           <RootErrorBoundary active={tab === "TRAIN"}><Suspense fallback={<TabLoading />}><TrainScreen active={tab === "TRAIN"} destination={trainDestination} recordsFocus={trainRecordsFocus}
@@ -850,6 +860,7 @@ function AppWorkspaces() {
     }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>
+    </PresenceContext.Provider>
     </EmblemContext.Provider>
   );
 }

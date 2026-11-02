@@ -5,6 +5,7 @@ import { Emblem } from "./Emblem";
 import { useMinuteClock } from "../cc/useMinuteClock";
 import { useLongPress } from "../hooks/useLongPress";
 import "./stealth.css";
+import { PresenceContext } from "../presence";
 
 /**
  * COMMAND-CENTER-001: the header glyph is the emblem — tapping it goes to
@@ -40,6 +41,7 @@ export function OperatorHeader({ destination: _destination, children, headingId,
   const clock = useMinuteClock();
   const search = useContext(HeaderSearchContext);
   const alfred = useContext(HeaderAlfredContext);
+  const presence = useContext(PresenceContext);
   // POLISH-002: the prototype's header row — emblem, BEYOND // WHERE, the clock on the right.
   const split = children.indexOf(" // ");
   const lead = split < 0 ? children : children.slice(0, split);
@@ -70,6 +72,11 @@ export function OperatorHeader({ destination: _destination, children, headingId,
         {/* Decorative: it repeats the phone's own clock, so it stays out of text and the a11y tree. */}
         <span className="cc-clock" aria-hidden="true" data-clock={clock} />
       </div>
+      {presence?.presence && <p className="cc-presence" aria-label={`Now: ${presence.presence.mode}${presence.presence.when ? `, ${presence.presence.when}` : ""}${presence.presence.next ? `. Next: ${presence.presence.next}` : ""}`}>
+        <span className="cc-presence__mode">{presence.presence.mode}</span>
+        {presence.presence.when && <span className="cc-presence__when">{presence.presence.when}</span>}
+        {presence.presence.next && <button type="button" className="cc-presence__next" onClick={presence.openToday} aria-label={`Next: ${presence.presence.next}. Open TODAY`}>Next: {presence.presence.next} ›</button>}
+      </p>}
     </div>
   );
 }
