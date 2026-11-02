@@ -155,8 +155,9 @@
 /* DATA — units and provenance support the recorded values, rather than competing. */
 .body-home .health-overview .readout { align-self: stretch; }
 .body-home .health-overview .health-nutrition .readout {
-  min-height: 144px; padding: 16px 12px 12px; gap: 10px;
+  min-height: 144px; padding: 16px 12px 12px; gap: 10px; justify-content: flex-start;
 }
+.body-home .health-overview .health-nutrition .readout__detail { margin-top: auto; }
 .body-home .health-overview .health-nutrition .readout__value {
   font: 600 clamp(30px, 8.8vw, 38px)/1.1 var(--p-mono); letter-spacing: -.045em;
 }
