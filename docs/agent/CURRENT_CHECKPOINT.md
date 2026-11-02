@@ -1,3 +1,94 @@
+# Handover — 2026-11-02 (Builder: Claude Code)
+
+- Codex ran out of usage; Gavin: "Finish and merge everything for a good starting point for tonight."
+  Claude Code finishes #371 ATTENTION-001 as Builder, within #370's approved scope; no new scope.
+- Merged: #365 WEEK-PLAN-001, #367/#368/#369 OPERATOR-CONTEXT-002A/B, #366 FREE-HELPER-001
+  (reviewer PASS at 5ffcc1a; free cards now carry #367's recordVersion guard).
+- #371: master (#366) merged in; only conflict was UX_DECISIONS (both entries kept). Fresh independent
+  exact-head review in a separate reviewer session; merge after PASS + green CI.
+- Follow-ups for Gavin to choose: helper single-word loose match (#366 N1); Alfred's planning context
+  still lists archived-mission tasks (#365 N1); TODAY "before you go" merge; vite-plugin-pwa 2.0;
+  on-phone AI (run CHECK ON-PHONE AI in SYSTEMS first).
+
+---
+
+# ATTENTION-001 — implementation (Builder: Codex)
+
+- Gavin approved [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370), including
+  the two explicit Alfred placement amendments and pleasant Batman Beyond visual direction.
+- Protected lane. Branch `codex/attention-001`; baseline `997421b272c7c952864adf63296fd4ac60ade881`.
+  Active PR pending. Separate owner merge approval required.
+- #369 is merged with Gavin's explicit merge approval; its final PR body supersedes older notes below.
+- Primary TODAY puts the existing next/log pair before closed Alfred support; review invitations use
+  actual OFF and existing records/readiness. Generation remains mounted independently of disclosure.
+- Current-moment routines group into one disclosure. LIFE retains tabs/drafts; one canonical fact
+  editor replaces the redundant general-fact form. Legacy evidence/conversion remains available.
+- Black-dominant space, BEYOND framing/typography and current brand tokens retained. No Engine,
+  command/event/schema/provider/dependency or primary navigation change.
+- Verification: Node217 files /2,002 passed /one existing skip; architecture, TypeScript and PWA
+  build PASS. Focused browser55/55, then20/20 after final focus/routine/history refinements.
+  Actual phase assertions and recovery→OFF display pin are covered; phase changes preserve an
+  operator-opened review and closing returns to an available action. Production before/after and
+  offline LIFE save/draft walkthrough PASS at320/360/412px; font-settled final capture in progress.
+- Independent exact-head review and final CI pending. No field acceptance, live model quality, deployment or merge claimed.
+- #366 FREE-HELPER-001 remains Claude Code's branch; do not take it over. Integrate AlfredSheet and
+  typed memory action seams separately, preserving #369's source/privacy/confirmation safeguards.
+- Next: finish acceptance and visual inspection, publish PR, independent review and green CI.
+  Final PR body will carry exact-head evidence and supersede this implementation snapshot.
+
+---
+
+# OPERATOR-CONTEXT-002B — implementation and verification (Builder: Codex)
+
+- Gavin explicitly approved the bounded scope, global personal-fact contract and history retention
+  on 2026-11-01. The concise durable brief is [issue #368](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/368).
+  Protected lane. [PR #369](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/369).
+  Branch `codex/operator-context-002b`; baseline `938e2e06e7e4a20218baee0048ba86f6768ccffc`.
+- #367 (002A) is merged under separate owner approval; its final PR body supersedes the older notes below.
+- New personal facts use MEMORY_RECORDED globally; old fact kinds retain day guards. People/Home
+  and remember cards use the same lifecycle. STOP USING retains history. Legacy FORGET remains
+  physical deletion until individually previewed/confirmed conversion; original evidence stays local.
+- Common context and search expose active destination wording only. No Engine, schema version,
+  provider, dependency, recommendation, TODAY or navigation change. New backups require a build
+  that understands PERSONAL_FACT; originals remain in exports, not model context.
+- Verification so far: full Node 217 files / 2,001 passed / one existing skip; architecture PASS;
+  TypeScript PASS. Focused Chromium run found and fixed a long-original phone overflow and stale
+  conversion-list refresh. Focused Chromium acceptance: 38/38 across eight files, including
+  stale conversation/privacy and cards. Built-PWA offline reload, dayless capture, retire/restore,
+  source inspection and 320/360/412px overflow checks PASS; zero page errors. Latest metadata/tool
+  reference refinements still need exact-head CI; no live provider or real phone acceptance claimed.
+- Review findings addressed: personal-fact cards now bind displayed wording atomically, and cached
+  briefs hide changed sources offline, discard in-flight stale answers and retain the ten-minute
+  request gate. Focused brief/privacy/cost browser checks 17/17; independent lifecycle Node 46/46.
+- Independent exact-head review, final required CI and separate Gavin merge approval pending.
+  No merge or field acceptance claimed. Final PR body will carry exact-head evidence/status.
+- #366 FREE-HELPER-001 is still Claude Code's branch. No takeover. Coordinate typed memory
+  reference semantics if its helper parser proposes legacy `forget` for a new personal fact.
+- Next: complete browser/build proof, publish PR, obtain independent exact-head review and green CI.
+
+---
+
+# OPERATOR-CONTEXT-002A — draft PR #367 (Builder: Codex)
+
+- Gavin approved the first bounded advancement objective on 2026-11-01.
+  [Brief](OPERATOR-CONTEXT-002A.md). Protected context/privacy contract; no memory migration or Engine change.
+- Branch `codex/operator-context-002a`, baseline `f23668a` (#365), [PR #367](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/367).
+- Shared read-only source projection, bounded request assembly and local LIFE/Memory inspection built.
+  Both memory lifecycles remain distinct; existing purpose-specific sharing and atomic cards retained.
+- Verification: focused Node30/30; full Node216 files, 1,995 passed / one existing compile-time skip;
+  TypeScript, architecture, risk classification and production/PWA build PASS (existing chunk warning).
+- Independent source review PASS at `7a4b5a694cc01edb490d8bc2f3f43d95d50d3b52`, reviewer18/18 Node.
+  Initial BLOCK findings fixed: outside-change receipt bypass, unmeasured steps as zero, old-day citations.
+  [Review record](reviews/OPERATOR-CONTEXT-002A.md). Final copy/tests/docs need exact-head confirmation.
+- Browser acceptance: local execution blocked by absent Chromium and invalid official downloads.
+  CI installed Chromium and is running the full suite. New 320/360/412px, offline, editor, stale-save,
+  oversized-request and old-day citation browser regressions are not yet claimed passed.
+- #366 FREE-HELPER-001 remains Claude Code's work; no takeover. Check helper integration after its separate merge.
+- Next: final exact-head review + green required CI, resolve any findings, then Gavin's merge decision.
+  No live-model quality, phone field acceptance, deployment or merge claimed.
+
+---
+
 # WEEK-PLAN-001 — in review (Builder: Claude Code)
 
 - Merged since the campaign: #361 UX-POLISH-001, #362 LIFE-HUB-001, #363 REVIEW-NITS-001, #364 DEPS-002.

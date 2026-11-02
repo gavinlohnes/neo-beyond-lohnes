@@ -39,6 +39,8 @@ describe("ALFRED-001", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Ask Alfred" }).first().click();
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
+    // FREE-HELPER-001: the free helper works without a key; connecting Alfred is one tap away.
+    await sheet.getByText("Connect Alfred (optional)").click();
     await sheet.getByLabelText("Claude API key").fill("sk-ant-test-key");
     await sheet.getByRole("button", { name: "SAVE KEY" }).click();
     await expect.element(sheet.getByRole("button", { name: "How am I doing?" })).toBeVisible();
@@ -57,7 +59,7 @@ describe("ALFRED-001", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Ask Alfred" }).first().click();
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
-    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("20 oz water, and remind me to call the CPAP place after I wake");
+    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("Ate a McGriddle and 20 oz water, and remind me to call the CPAP place after I wake");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await expect.element(sheet.getByText("Logged both for you to confirm.")).toBeVisible();
     // Nothing is written until SAVE.
@@ -78,7 +80,7 @@ describe("ALFRED-001", () => {
     expect(system[1]!.cache_control).toEqual({ type: "ephemeral" });
     expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "routine_new", "routine_edit", "project_new", "capture_note",
       "check_in", "work_started", "work_ended", "task_done", "task_new_date", "task_plan", "clean_day", "open_training",
-      "person_date", "home_item", "remember", "forget", "log_urge", "search_records", "get_days"]);
+      "person_date", "home_item", "remember", "forget", "memory_retire", "memory_restore", "log_urge", "search_records", "get_days"]);
 
     // The next turn tells Alfred what happened to each card.
     next = () => reply([{ type: "text", text: "Noted." }], "end_turn");

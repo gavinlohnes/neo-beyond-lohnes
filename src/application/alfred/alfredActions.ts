@@ -4,10 +4,10 @@ import { logManualMeal, logMeal } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
-import { createRoutine, getRoutines, matchSteps, modifyRoutine } from "../routineCommands";
+import { createRoutine, getRoutines, matchSteps, modifyRoutine, setRoutineStep } from "../routineCommands";
 import { ROUTINE_MOMENTS, ROUTINE_MOMENT_LABELS, type RoutineMoment } from "../../domain/routines";
 import { logCleanDay, logUrge } from "../quitCommands";
-import { forgetFact, rememberFact } from "./alfredMemory";
+import { forgetFact, rememberFact, stopUsingMemory, restoreMemory } from "./alfredMemory";
 import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
 import { addHomeItem, describeRepeat, isRealDate, REPEAT_UNITS, type RepeatUnit } from "../homeCommands";
 import { formatLocalDate } from "../../engine/scheduledContext";
@@ -34,11 +34,14 @@ export type AlfredProposal =
   | { kind: "task_new_date"; task_id: string; title: string; due_date: string }
   // WEEK-PLAN-001: the day he means to work on an open task (its planned date), not its due date.
   | { kind: "task_plan"; task_id: string; title: string; planned_date: string }
+  // FREE-HELPER-001: tick one of his routine steps for today. Made only by the free helper, not by Alfred.
+  | { kind: "routine_tick"; routine_id: string; step_id: string; text: string; routine_title: string }
   | { kind: "clean_day" }
   | { kind: "open_training" }
   // ALFRED-004: memory and urges.
   | { kind: "remember"; text: string; topic: MemoryTopic }
-  | { kind: "forget"; memory_id: string; text: string }
+  | { kind: "memory_retire" | "memory_restore"; memory_id: string; revision: string; source: "PERSONAL_FACT"; text: string }
+  | { kind: "forget"; source: "ALFRED_MEMORY"; memory_id: string; text: string }
   | { kind: "log_urge"; trigger: UrgeTrigger }
   // RELATIONSHIPS-001: a person's yearly date, kept as a fact plus a yearly reminder in one card.
   | { kind: "person_date"; person: string; occasion: string; month: number; day: number; note?: string | undefined }
@@ -112,8 +115,12 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
       first_due: s("YYYY-MM-DD, next due date, required with every") } } },
   { name: "remember", description: "Propose keeping a fact he wants remembered: people (birthdays, sizes, gift ideas), money (a bill's amount and due day), health, home, work. One fact per call, in his words.",
     input_schema: { type: "object", additionalProperties: false, required: ["text", "topic"], properties: { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } } } },
-  { name: "forget", description: "Propose forgetting one remembered fact, by its id, when he says it's wrong or no longer true.",
-    input_schema: { type: "object", additionalProperties: false, required: ["memory_id", "text"], properties: { memory_id: s("id from WHAT HE ASKED YOU TO REMEMBER"), text: s("the fact") } } },
+  { name: "forget", description: "Propose physical deletion of an unconverted ALFRED_MEMORY legacy entry only. For PERSONAL_FACT use memory_retire, which retains history.",
+    input_schema: { type: "object", additionalProperties: false, required: ["memory_id", "text", "source"], properties: { source: { type: "string", enum: ["ALFRED_MEMORY"] }, memory_id: s("id from WHAT HE ASKED YOU TO REMEMBER"), text: s("the fact") } } },
+  ...(["memory_retire", "memory_restore"] as const).map((name) => ({ name,
+    description: name === "memory_retire" ? "Propose STOP USING an active PERSONAL_FACT. Keeps correction history; does not erase it." : "Propose RESTORE of a PERSONAL_FACT only from an operator-provided exact reference. Never invent a missing revision.",
+    input_schema: { type: "object" as const, additionalProperties: false, required: ["memory_id", "revision", "source", "text"], properties: {
+      memory_id: s("exact PERSONAL_FACT id"), revision: s("exact revision from its source"), source: { type: "string" as const, enum: ["PERSONAL_FACT"] }, text: s("exact current fact") } } })),
   { name: "log_urge", description: "Propose logging an urge (his quit tracker) he says he had, with what set it off.",
     input_schema: { type: "object", additionalProperties: false, required: ["trigger"], properties: { trigger: { type: "string", enum: [...URGE_TRIGGERS], description: "what set it off" } } } },
 ];
@@ -177,7 +184,8 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
     case "task_plan": { const id = str(i.task_id), t = str(i.title), day = str(i.planned_date); return id && t && day && isRealDate(day) ? { kind: "task_plan", task_id: id, title: t, planned_date: day } : null; }
     case "task_new_date": { const id = str(i.task_id), t = str(i.title), due = str(i.due_date); return id && t && due && isRealDate(due) ? { kind: "task_new_date", task_id: id, title: t, due_date: due } : null; }
     case "remember": { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; }
-    case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t ? { kind: "forget", memory_id: id, text: t } : null; }
+    case "memory_retire": case "memory_restore": { const id = str(i.memory_id), revision = str(i.revision), text = str(i.text); return id && revision && text && i.source === "PERSONAL_FACT" ? { kind: name, memory_id: id, revision, source: "PERSONAL_FACT", text } : null; }
+    case "forget": { const id = str(i.memory_id), t = str(i.text); return id && t && (i.source === undefined || i.source === "ALFRED_MEMORY") ? { kind: "forget", source: "ALFRED_MEMORY", memory_id: id, text: t } : null; }
     case "home_item": {
       const item = str(i.item), details = str(i.details), due = str(i.first_due);
       const every = typeof i.every === "number" && Number.isInteger(i.every) && i.every >= 1 && i.every <= 60 ? i.every : undefined;
@@ -224,9 +232,12 @@ export function describeProposal(p: AlfredProposal): string {
     case "task_done": return `Done: ${p.title}`;
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
+    case "routine_tick": return `Tick: ${p.text} (${p.routine_title})`;
     case "clean_day": return "Log today clean";
     case "open_training": return "Open TRAIN for today's workout";
     case "remember": return `Remember (${p.topic.toLowerCase()}): ${p.text}`;
+    case "memory_retire": return `Stop using: ${p.text} · Correction history retained.`;
+    case "memory_restore": return `Restore: ${p.text} · Available to Alfred again.`;
     case "forget": return `Forget: ${p.text}`;
     case "home_item": return `Home: ${p.item}${p.details ? ` · ${p.details}` : ""}${p.every && p.unit && p.first_due ? ` · ${describeRepeat(p.every, p.unit)} from ${humanDate(p.first_due)}` : ""}`;
     case "person_date": return `Remember ${p.person}'s ${p.occasion.toLowerCase()} · ${describeMonthDay(p.month, p.day)} · reminder every year${p.note ? ` · ${p.note}` : ""}`;
@@ -266,8 +277,14 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
+  if (p.kind === "routine_tick") { const day = await ensureActiveDay(); await setRoutineStep(day.id, p.routine_id, p.step_id, true); return {}; }
   if (p.kind === "remember") { await rememberFact(p.text, p.topic); return {}; }
-  if (p.kind === "forget") { await forgetFact(p.memory_id); return {}; }
+  if (p.kind === "memory_retire" || p.kind === "memory_restore") {
+    const ref = { source: p.source, id: p.memory_id, revision: p.revision };
+    if (p.kind === "memory_retire") await stopUsingMemory(ref, p.text); else await restoreMemory(ref, p.text);
+    return {};
+  }
+  if (p.kind === "forget") { await forgetFact(p.memory_id, undefined, p.text); return {}; }
   if (p.kind === "home_item") {
     await addHomeItem({ item: p.item, details: p.details, ...(p.every && p.unit && p.first_due ? { repeat: { every: p.every, unit: p.unit, firstDue: p.first_due } } : {}) });
     return {};

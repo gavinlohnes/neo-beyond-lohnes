@@ -12,6 +12,17 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## OPERATOR-CONTEXT-002A — one inspectable context projection (owner approval 2026-11-01)
+
+Gavin approved the advancement design's first implementation after its owner-visible walkthrough:
+“Approved. I think that's a good launching point to us to grow beyond.” [Brief](agent/OPERATOR-CONTEXT-002A.md).
+Existing canonical records feed one read-only source/coverage contract for local inspection and Alfred.
+Sharing remains purpose-bound: Missions and confirmed personal context are conversation opt-in;
+automatic consumers retain their existing prep/recovery allowance. Both memory stores retain their
+current lifecycles, explicitly labelled; no migration, new fact kind, Engine rule or provider is approved.
+LIFE → Memory and existing Memory expose deliberate local inspection; TODAY placement is unchanged.
+Further convergence, attention placement, providers and recovery changes remain separately bounded.
+
 ## ALFRED-006 — the weekly review writes itself (owner go 2026-10-31)
 
 Alfred writes each Monday–Sunday week's review once that week's last lived day ends (Monday 16:30),
@@ -2663,3 +2674,48 @@ Owner: "Go home?" on the HOME-001 proposal. A home item is a HOME fact plus, if 
 ordinary repeating commitment titled "Home: …", saved together on confirm. Home in Personal
 Understanding is a view over those records: what's coming round and what BEYOND knows about the
 house. No scores, overdue alarms or new notifications. [Brief](agent/HOME-001.md).
+
+## 2026-11-01 — OPERATOR-CONTEXT-002B: one lifecycle for new personal facts
+
+Gavin explicitly approved [#368](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/368),
+including its global fact event contract and retention choice. New general personal facts use
+MEMORY_RECORDED with kind PERSONAL_FACT and an explicit topic, without a lived-day association.
+Existing preparation/recovery/direction/constraint facts retain their day guards and sharing rules;
+correction cannot change a fact between those purposes and general personal facts.
+
+Personal facts retain Alfred's existing default sharing allowance. STOP USING removes them from
+active context while retaining correction history; RESTORE makes them active again. Neither is
+physical erasure. Unconverted legacy entries retain physical-delete FORGET. Individual conversion
+requires a preview and confirmation, retains original evidence, records confirmation time honestly,
+and suppresses the original active copy even after retirement. Long originals need operator-chosen
+wording of at most 280 characters; no silent truncation, splitting, inference or bulk migration.
+New exports require this build or newer to interpret PERSONAL_FACT history; there is no downgrade
+conversion or selective erasure of older backups/external requests. Engine authority is unchanged.
+
+## 2026-11-01 — ATTENTION-001: next action first, deliberate supporting depth
+
+Gavin approved [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370), including the
+explicit ALFRED-003/006 placement amendments: “Approved. But make sure it is pleasant to look at
+and still looks like Batman Beyond.” On primary TODAY the existing next-action/log pair precedes
+closed Alfred narrative. Saved AI weekly reviews and the separate structured review remain distinct;
+a shared neutral review disclosure may surface automatically only in the actual OFF phase when
+backed by existing availability/readiness. Operator-opened review depth survives phase changes.
+Generation, cost gates, stored records, GOT IT and MONTH access retain existing behavior; opening
+or closing a disclosure does not request another review or create a canonical record.
+
+Current-moment routines share one collapsed entry without adding a tap for a single routine. LIFE
+keeps its six tabs and mounted drafts; general personal facts use one canonical memory editor,
+with legacy original-entry conversion/deletion retained separately. Management and planning are
+inspectable depth. People/Home compound writes, Engine decisions, trace, actual phases, mode-pin
+semantics, primary logging routes and active operation/error visibility remain unchanged.
+
+The visual pass preserves black-dominant space, sharp BEYOND framing, typography, restrained red
+emphasis and current brand tokens (including the approved yellow accent). No new dashboard,
+provider, dependency, notification, recovery inference or navigation scheme follows from this ruling.
+## 2026-11-01 — FREE-HELPER-001: free first, Alfred when needed
+
+Owner: work that doesn't need Alfred-level thinking should use a free helper. Everyday messages
+in Alfred's sheet try BEYOND's free helper first: if it understands the whole message it answers or
+makes the same confirm cards (labelled BEYOND · FREE), free and offline; anything it isn't sure of goes
+to Alfred whole, within the monthly limit. It never guesses and never writes without SAVE. THINK
+HARDER, planning starters and shift debriefs always go to Alfred. [Brief](agent/FREE-HELPER-001.md).

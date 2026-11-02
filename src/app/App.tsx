@@ -707,7 +707,8 @@ function AppWorkspaces() {
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
-              brief={<><AlfredBrief active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} /><AlfredWeek active={tab === "TODAY"} /></>}
+              brief={<AlfredBrief recessed active={tab === "TODAY" && !alfredOpen} refreshKey={`${todayRefreshKey}|${workEndedKey}`} onOpen={() => setAlfredOpen(true)} />}
+              review={(onAvailable) => <AlfredWeek active={tab === "TODAY"} onAvailabilityChange={onAvailable} />}
               banners={garminSync ? <GarminSyncLine state={garminSync} onDismiss={() => setGarminSync(null)} />
                 : syncShortcut ? <div className="backup-due" role="status"><div className="backup-due__row" style={{ justifyContent: "space-between" }}><p className="tool-label" style={{ margin: 0 }}>If the Bridge didn't open, tap</p><SyncGarminLink /></div></div> : undefined}
             />
@@ -798,9 +799,11 @@ function AppWorkspaces() {
     <AlfredSheet open={alfredOpen} onClose={() => { setAlfredOpen(false); setAlfredDraft(undefined); }} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); setWorkEndedKey((key) => key + 1); }} onOpenTrain={() => { openTrain("WORKOUT"); }} onOpenRecord={(source) => {
       const opened = source.kind === "MISSION" ? openMore("INTENT", { kind: "MISSION", missionId: source.id })
         : source.kind === "OBLIGATION" ? openMore("INTENT", { kind: "OBLIGATION", obligationId: source.id })
-        : source.kind === "MEMORY" ? openMore("MEMORY", null, false)
+        : (source.kind === "MEMORY" || source.kind === "PERSONAL_FACT") || source.kind === "ALFRED_MEMORY" ? openMore("MEMORY", null, false)
+        : source.kind === "PROJECT" ? openMore("INTENT")
+        : source.kind === "ROUTINE" ? openMore("ROUTINES")
         : source.kind === "SCHEDULE" ? openMore("WORK_SCHEDULE") : openMore("HISTORY");
-      if (opened) { if (source.kind === "MEMORY") setMemoryFocusId(source.id); if (source.kind === "DAY") setHealthHistory({ dayId: source.id }); setAlfredOpen(false); }
+      if (opened) { if ((source.kind === "MEMORY" || source.kind === "PERSONAL_FACT")) setMemoryFocusId(source.id); if (source.kind === "DAY") setHealthHistory({ dayId: source.id }); setAlfredOpen(false); }
     }} draft={alfredDraft} />
     </HeaderAlfredContext.Provider>
     </HeaderSearchContext.Provider>

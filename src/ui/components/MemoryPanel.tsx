@@ -2,6 +2,7 @@ import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { getMemoryWorkspace, recordMemory } from "../../application/memory";
 import { MEMORY_KINDS, MEMORY_LABELS, type MemoryFact, type MemoryKind, type MemoryAction } from "../../domain/memory";
+import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
 import { useSessionDraft } from "../sessionDrafts";
 import { useUndoWindow } from "../hooks/useUndoWindow";
 import { ConfirmBanner } from "./ConfirmBanner";
@@ -9,9 +10,9 @@ import { describeError } from "../errorMessage";
 import "./memory.css";
 
 type Scope = "ALL" | "PREP" | "RECOVERY" | "PERSONAL";
-type Draft = { factId: string; previous: string | null; dayId: string | null; kind: MemoryKind; statement: string };
+type Draft = { factId: string; previous: string | null; dayId: string | null; kind: MemoryKind; statement: string; topic: MemoryTopic; general?: boolean | undefined };
 const starters: Record<MemoryKind, string> = {
-  PREP_FOOD: "Frozen meals are a good backup for me.", PREP_BOTTLE: "I prefer to fill my bottle before leaving for work.",
+  PERSONAL_FACT: "I prefer to keep family dates together.", PREP_FOOD: "Frozen meals are a good backup for me.", PREP_BOTTLE: "I prefer to fill my bottle before leaving for work.",
   PREP_OTHER: "Keeping my work essentials by the door helps me prepare.", RECOVERY: "I prefer quiet first after work.",
   DIRECTION: "I want more energy for life outside work.", CONSTRAINT: "Keep my first morning after nights quiet.",
 };
@@ -29,17 +30,20 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   const writing = useRef(false), sequence = useRef(0), lifecycle = useRef(0);
   const uid = useId();
   const focused = useRef<string | null>(null);
+  const [savedFocus, setSavedFocus] = useState<{ factId: string; revision: string } | null>(null);
+  const requestedFocus = savedFocus?.factId ?? focusFactId;
+  useEffect(() => { setSavedFocus(null); }, [focusFactId]);
   useEffect(() => {
-    if (!active || !data || !focusFactId || focused.current === focusFactId) return;
-    const fact = data.facts.find((f) => f.factId === focusFactId);
-    if (!fact) return;
-    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === focusFactId) + 1));
+    if (!active || !data || !requestedFocus || focused.current === requestedFocus) return;
+    const fact = data.facts.find((f) => f.factId === requestedFocus);
+    if (!fact || savedFocus && fact.id !== savedFocus.revision) return;
+    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === requestedFocus) + 1));
     const frame = requestAnimationFrame(() => {
-      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === focusFactId && el.getClientRects().length);
-      if (article) { article.focus(); focused.current = focusFactId; }
+      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === requestedFocus && el.getClientRects().length);
+      if (article) { article.focus(); focused.current = requestedFocus; }
     });
     return () => cancelAnimationFrame(frame);
-  }, [active, data, focusFactId]);
+  }, [active, data, requestedFocus, savedFocus]);
   useSessionDraft(`memory-${uid}`, draft !== null && draft.statement.length > 0);
   useEffect(() => { lifecycle.current++; return () => { lifecycle.current++; }; }, [active, scope]);
   useEffect(() => {
@@ -61,24 +65,24 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   function edit(fact?: MemoryFact) {
     setNotice(null); setError(null);
     setDraft({ factId: fact?.factId ?? crypto.randomUUID(), previous: fact?.id ?? null, dayId: data?.dayId ?? null,
-      kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : scope === "PERSONAL" ? "DIRECTION" : "PREP_FOOD"), statement: fact?.statement ?? "" });
+      general: fact ? fact.kind === "PERSONAL_FACT" : undefined, topic: fact?.topic ?? "OTHER", kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : scope === "PERSONAL" ? "DIRECTION" : scope === "ALL" ? "PERSONAL_FACT" : "PREP_FOOD"), statement: fact?.statement ?? "" });
   }
   async function write(action: MemoryAction, fact?: MemoryFact) {
     if (writing.current || disabled) return;
     const subject = fact ?? draft;
     if (!subject) return;
     const dayId = fact ? data?.dayId : draft?.dayId;
-    if (!dayId) { setError("Start a day before saving memory. Your draft is kept."); return; }
+    if (!dayId && subject.kind !== "PERSONAL_FACT") { setError("Start a day before saving memory. Your draft is kept."); return; }
     writing.current = true; setBusy(true); setError(null); setNotice(null);
     const request = lifecycle.current;
     const acknowledge = captureCommitFeedback(), receipt = { changed: false };
     try {
       const saved = await recordMemory({ action, dayId, factId: subject.factId,
         expectedPreviousId: fact?.id ?? draft!.previous,
-        ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement }) }, receipt);
+        ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement, ...(draft!.kind === "PERSONAL_FACT" ? { topic: draft!.topic } : {}) }) }, receipt);
       if (receipt.changed) acknowledge(action === "IRRELEVANT" ? "HEAVY" : "LIGHT");
       if (lifecycle.current !== request) return;
-      if (!fact) setDraft(null);
+      if (!fact) { setDraft(null); focused.current = null; setSavedFocus({ factId: saved.factId, revision: saved.id }); }
       setUndo(action === "IRRELEVANT" ? saved : null);
       setNotice(action === "IRRELEVANT" ? "Marked no longer relevant. Kept in memory history." : action === "CONFIRMED" ? "Confirmed again." : action === "RESTORED" ? "Restored and confirmed." : "Memory saved.");
       window.dispatchEvent(new Event("beyond:memory-changed"));
@@ -88,15 +92,16 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   if (!active) return null;
   const facts = data?.facts.filter((fact) => includes(scope, fact.kind) && fact.status === status) ?? [];
   return <section className="memory-panel" aria-label={contextual ? scope === "RECOVERY" ? "Your recovery memory" : "Your preparation memory" : "What BEYOND should remember"}>
-    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Nothing here changes your plan or BEYOND’s advice. Direction and constraints stay local until you share them with Alfred. Prep and recovery also support his briefs.</p></>}
+    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p className="meta">Your words. Inspect or change them when you choose.</p><details><summary>Sharing and retention</summary><p>Your words. Nothing here changes your plan or BEYOND’s advice. Direction and constraints stay local until you share them with Alfred. Prep and recovery also support his briefs. Personal facts are available to Alfred by default. Stop using removes them from active context while keeping correction history.</p></details></>}
     {loading && <p role="status" className="meta">Reading memory…</p>}
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
     {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}
     {undo && <ConfirmBanner message="Marked no longer relevant." actionLabel="RESTORE & CONFIRM" disabled={disabled} onAction={() => void write("RESTORED", undo)} />}
     {data && !loading && <>
-      {!contextual && <div className="memory-actions" role="group" aria-label="Memory status">
+      {!contextual && <details className="memory-management"><summary>MANAGE MEMORY</summary><div className="memory-actions" role="group" aria-label="Memory status">
         {(["ACTIVE", "IRRELEVANT"] as const).map((value) => <button type="button" className="btn-secondary" key={value} aria-pressed={status === value} onClick={() => { setStatus(value); setLimit(5); }}>{value === "ACTIVE" ? "ACTIVE" : "NO LONGER RELEVANT"}</button>)}
-      </div>}
+      </div></details>}
+      {status === "IRRELEVANT" && facts.length > 0 && <p className="meta">HISTORY · NO LONGER RELEVANT</p>}
       {!facts.length && !contextual && <p className="meta">{status === "ACTIVE" ? "No active memories yet. Add only what you want BEYOND to remember." : "No memories marked irrelevant."}</p>}
       {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId} tabIndex={-1} data-memory-id={fact.factId}>
         <p className="memory-statement">{fact.statement}</p>
@@ -106,24 +111,26 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
           <div className="memory-actions">
             <button type="button" className="btn-secondary" disabled={disabled || draft !== null} onClick={() => edit(fact)}>CORRECT MEMORY</button>
             <button type="button" className="btn-secondary" disabled={disabled} onClick={() => void write(fact.status === "ACTIVE" ? "CONFIRMED" : "RESTORED", fact)}>{fact.status === "ACTIVE" ? "CONFIRM AGAIN" : "RESTORE & CONFIRM"}</button>
-            {fact.status === "ACTIVE" && <button type="button" className="btn-secondary" disabled={disabled} onClick={() => void write("IRRELEVANT", fact)}>NO LONGER RELEVANT</button>}
+            {fact.status === "ACTIVE" && <button type="button" className="btn-secondary" disabled={disabled} onClick={() => void write("IRRELEVANT", fact)}>{fact.kind === "PERSONAL_FACT" ? "STOP USING" : "NO LONGER RELEVANT"}</button>}
           </div>
           <MemoryHistory fact={fact} />
         </details>
       </article>)}
       {facts.length > limit && <button className="btn-secondary" type="button" onClick={() => setLimit((n) => n + 5)}>SHOW MORE MEMORIES</button>}
       {!draft && <button type="button" className="btn-secondary" disabled={disabled} onClick={() => edit()}>{contextual ? scope === "RECOVERY" ? "REMEMBER FOR RECOVERY" : "REMEMBER FOR PREPARATION" : "ADD MEMORY"}</button>}
-      {!data.dayId && <p className="meta">Start a day to save changes. Your saved memories remain available.</p>}
+      {!data.dayId && <p className="meta">Personal facts work without a day. Start a day to change preparation, recovery, direction or constraints.</p>}
     </>}
     {draft && <form className="memory-editor" aria-label="Memory editor" onSubmit={(event) => { event.preventDefault(); void write(draft.previous === null ? "CREATED" : "CORRECTED"); }}>
       <h3>{draft.previous === null ? "Add a memory" : "Correct your memory"}</h3>
       <label htmlFor={`${uid}-kind`}>Applies to</label>
       <select className="input" id={`${uid}-kind`} value={draft.kind} disabled={busy} onChange={(event) => setDraft({ ...draft, kind: event.target.value as MemoryKind })}>
-        {MEMORY_KINDS.filter((kind) => includes(scope, kind)).map((kind) => <option value={kind} key={kind}>{MEMORY_LABELS[kind]}</option>)}
+        {MEMORY_KINDS.filter((kind) => includes(scope, kind) && (draft.previous === null || (kind === "PERSONAL_FACT") === draft.general)).map((kind) => <option value={kind} key={kind}>{MEMORY_LABELS[kind]}</option>)}
       </select>
+      {draft.kind === "PERSONAL_FACT" && <label>About<select className="input" value={draft.topic} disabled={busy} onChange={(event) => setDraft({ ...draft, topic: event.target.value as MemoryTopic })}>{MEMORY_TOPICS.map((topic) => <option key={topic} value={topic}>{topic === "PERSON" ? "People" : topic === "MONEY" ? "Money and bills" : topic[0] + topic.slice(1).toLowerCase()}</option>)}</select></label>}
       {draft.previous === null && <button type="button" className="btn-secondary" disabled={busy || Boolean(draft.statement)} onClick={() => setDraft({ ...draft, statement: starters[draft.kind] })}>USE AN EDITABLE STARTER</button>}
       <label htmlFor={`${uid}-statement`}>What should BEYOND remember?</label>
       <textarea className="input" id={`${uid}-statement`} maxLength={280} value={draft.statement} disabled={busy} onChange={(event) => setDraft({ ...draft, statement: event.target.value })} />
+      <p className="meta">{draft.kind === "PERSONAL_FACT" ? "Available to Alfred by default. Stop using excludes active context; history stays." : "This does not change your plan or BEYOND’s advice. Existing purpose-specific sharing applies."}</p>
       <p className="meta">{draft.statement.length}/280 · Saving confirms these words. Closing keeps this draft in this session; reloading clears unsaved text.</p>
       <div className="memory-actions"><button className="btn-secondary" type="submit" disabled={disabled || !draft.statement.trim()}>SAVE & CONFIRM MEMORY</button>
         <button className="btn-secondary" type="button" disabled={busy} onClick={() => setDraft(null)}>DISCARD DRAFT</button></div>
@@ -135,6 +142,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
 function MemoryHistory({ fact }: { fact: MemoryFact }) {
   const [limit, setLimit] = useState(5);
   return <details><summary>Memory history ({fact.history.length})</summary>
+    {fact.origin && <div><p className="meta">Converted from legacy {fact.origin.id} · originally saved {date(fact.origin.savedAt)} · conversion confirmed {date(fact.createdAt)}. Original evidence retained locally.</p><p>{fact.origin.text}</p></div>}
     {[...fact.history].reverse().slice(0, limit).map((revision) => <div className="memory-history" key={revision.id}><p className="meta">{revision.action.toLowerCase()} · {date(revision.recordedAt)} · OPERATOR</p><p>{revision.statement}</p><p className="meta">{MEMORY_LABELS[revision.kind]} · {revision.status === "ACTIVE" ? "Active" : "No longer relevant"}</p></div>)}
     {fact.history.length > limit && <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 5)}>SHOW MORE HISTORY</button>}
   </details>;

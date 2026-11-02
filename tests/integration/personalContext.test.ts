@@ -111,7 +111,7 @@ it("carries the operator's own confirmed remember card forward; outside changes 
   expect(saved.personalVersion).not.toBe(context.personalVersion);
   expect(saved.personalVersion).toBe(await personalContextVersion(false));
   // A sibling card from the same reply, carried forward by the returned version, still saves.
-  await confirmContextProposal({ kind: "log_water", oz: 8 }, { ...context, personalVersion: saved.personalVersion }, false);
+  await confirmContextProposal({ kind: "log_water", oz: 8 }, { ...context, personalVersion: saved.personalVersion, recordVersion: saved.recordVersion! }, false);
   expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
   // The stale version (what an outside change looks like) is still refused.
   await expect(confirmContextProposal({ kind: "log_water", oz: 8 }, context, false)).rejects.toThrow("CONTEXT_CHANGED");

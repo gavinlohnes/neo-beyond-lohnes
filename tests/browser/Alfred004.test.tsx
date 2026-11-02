@@ -6,7 +6,8 @@ import { App } from "../../src/app/App";
 import { captureItem, startDay } from "../../src/application/commands";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
 import { getDays, searchRecords } from "../../src/application/alfred/alfredSearch";
-import { db } from "../../src/persistence/db";
+import { getMemories } from "../../src/application/alfred/alfredMemory";
+import { getMemoryFacts } from "../../src/application/memory";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
 
 /** ALFRED-004: Alfred remembers, searches the whole history, reads periods, talks back, and debriefs. */
@@ -47,14 +48,16 @@ describe("ALFRED-004 memory", () => {
     await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("remember Sam's birthday is March 3");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await sheet.getByRole("group", { name: "Remember (person): Sam's birthday is March 3" }).getByRole("button", { name: "SAVE" }).click();
-    await expect.poll(() => db.alfredMemories.count()).toBe(1);
+    await expect.poll(() => getMemories().then((m) => m.length)).toBe(1);
     expect(await buildAlfredContext()).toMatch(/WHAT HE ASKED YOU TO REMEMBER.*PERSON: Sam's birthday is March 3/);
     await sheet.getByRole("button", { name: "Memory" }).click();
     const list = sheet.getByRole("group", { name: "What Alfred remembers" });
     await expect.element(list).toHaveTextContent("Sam's birthday is March 3");
     expect((await axe.run(sheet.element())).violations).toEqual([]);
-    await list.getByRole("button", { name: "Forget: Sam's birthday is March 3" }).click();
-    await expect.poll(() => db.alfredMemories.count()).toBe(0);
+    await list.getByRole("button", { name: "Stop using: Sam's birthday is March 3" }).click();
+    await expect.poll(() => getMemories().then((m) => m.length)).toBe(0);
+    expect((await getMemoryFacts())[0]!.status).toBe("IRRELEVANT");
+    expect((await getMemoryFacts())[0]!.history).toHaveLength(2);
   });
 });
 
@@ -70,7 +73,7 @@ describe("ALFRED-004 reading the whole history", () => {
     const { sheet } = await openAlfred();
     await sheet.getByRole("button", { name: "When did I last…?" }).click();
     await expect.element(sheet.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("When did I last ");
-    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("When did I last call the CPAP place?");
+    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("What's the story with the CPAP place?");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await expect.element(sheet.getByText("You last noted the CPAP place today.")).toBeVisible();
     expect(chats()).toHaveLength(2);

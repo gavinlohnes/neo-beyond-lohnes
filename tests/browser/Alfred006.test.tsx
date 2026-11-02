@@ -9,6 +9,8 @@ import { CaveMonthView } from "../../src/ui/screens/systems/CaveMonth";
 import { db } from "../../src/persistence/db";
 import { recordMemory } from "../../src/application/memory";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
+import { MemoryPanel } from "../../src/ui/components/MemoryPanel";
+import { getMemoryFacts } from "../../src/application/memory";
 import { AlfredMemoryList } from "../../src/ui/components/AlfredMemoryList";
 
 /** ALFRED-006: Alfred writes the week's review once, TODAY shows it until GOT IT, MONTH keeps them all. */
@@ -37,9 +39,15 @@ describe("ALFRED-006", () => {
   it("writes last week's review once, shows it on TODAY until GOT IT, and keeps it in MONTH", async () => {
     const week = lastFinishedWeek();
     await startDay(new Date(`${week.start}T17:00:00`).toISOString());
+    // Keep last week as history, not an overdue active day that App rolls over during READ.
+    await startDay();
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
+    const currentDay = (await db.beyondDays.filter((d) => d.status === "ACTIVE").toArray())[0]!;
+    const { setWorkContext } = await import("../../src/application/commands");
+    await setWorkContext(currentDay.id, "OFF", "MANUAL");
     const label = weekLabel(week);
     const screen = await render(<App />);
+    await screen.getByLabelText("Review when you want", { exact: true }).click();
     const card = screen.getByRole("region", { name: `Your week, ${label}` });
     await expect.element(card).toHaveTextContent("Steady week: sleep held on work nights.");
     expect(await db.alfredReviews.count()).toBe(1);
@@ -68,17 +76,21 @@ describe("ALFRED-006 memory in MORE", () => {
   it("adds, groups and forgets facts in MORE → MEMORY; Alfred also reads MEMORY-001's own notes", async () => {
     const day = await startDay();
     await recordMemory({ dayId: day.id, factId: "f1", expectedPreviousId: null, action: "CREATED", kind: "PREP_FOOD", statement: "Frozen meals are my backup." });
-    const screen = await render(<AlfredMemoryList active />);
+    const screen = await render(<><MemoryPanel /><AlfredMemoryList active /></>);
+    await screen.getByRole("button", { name: "ADD MEMORY", exact: true }).click();
     await screen.getByLabelText("About").selectOptions("MONEY");
-    await screen.getByRole("textbox", { name: "Remember" }).fill("Car payment $412, due the 15th");
-    await screen.getByRole("button", { name: "REMEMBER" }).click();
-    const money = screen.getByRole("group", { name: "Money and bills" });
-    await expect.element(money).toHaveTextContent("Car payment $412, due the 15th");
+    await screen.getByRole("textbox", { name: "What should BEYOND remember?" }).fill("Car payment $412, due the 15th");
+    await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY" }).click();
+    const memory = screen.getByRole("region", { name: "What BEYOND should remember", exact: true });
+    await expect.element(memory.getByText("Car payment $412, due the 15th", { exact: true }).first()).toBeVisible();
     expect((await axe.run(screen.container)).violations).toEqual([]);
     const context = await buildAlfredContext();
     expect(context).toContain("MONEY: Car payment $412, due the 15th");
     expect(context).toContain("Food preparation: Frozen meals are my backup.");
-    await money.getByRole("button", { name: "Forget: Car payment $412, due the 15th" }).click();
-    await expect.poll(() => db.alfredMemories.count()).toBe(0);
+    const fact = memory.getByRole("article").filter({ hasText: "Car payment $412" });
+    await fact.getByText("Inspect or fix this memory", { exact: true }).click();
+    await fact.getByRole("button", { name: "STOP USING", exact: true }).click();
+    await expect.poll(async () => (await getMemoryFacts()).find((f) => f.kind === "PERSONAL_FACT")?.status).toBe("IRRELEVANT");
+    expect(await db.alfredMemories.count()).toBe(0);
   });
 });

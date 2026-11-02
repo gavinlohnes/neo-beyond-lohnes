@@ -4,7 +4,7 @@ import { getMonthlyCadence } from "../../application/monthlyReviewQueries";
 import { mostRecentBoundaryAtOrBefore } from "../../engine/dayRollover";
 import type { ShiftClockPhase } from "../screens/today/shiftClock";
 const LATER_KEY = "beyond.weeklyReviewLater";
-export function WeeklyReviewReadyLine({ phase, now, onOpen, active = true }: { active?: boolean; phase: ShiftClockPhase | null; now: Date; onOpen: () => void }) {
+export function WeeklyReviewReadyLine({ phase, now, onOpen, active = true, onAvailabilityChange }: { onAvailabilityChange?: (available: boolean) => void; active?: boolean; phase: ShiftClockPhase | null; now: Date; onOpen: () => void }) {
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const refresh = () => setRevision((n) => n + 1);
@@ -30,7 +30,9 @@ export function WeeklyReviewReadyLine({ phase, now, onOpen, active = true }: { a
   }, [active, phase, minute, revision]);
   let stored: string | null = null;
   try { stored = localStorage.getItem(LATER_KEY); } catch { /* Notice can return if UI bookkeeping is unavailable. */ }
-  if (!active || phase !== "OFF" || !ready || stored === livedDay || dismissed === livedDay) return null;
+  const available = active && phase === "OFF" && ready && stored !== livedDay && dismissed !== livedDay;
+  useEffect(() => { onAvailabilityChange?.(available); }, [available, onAvailabilityChange]);
+  if (!available) return null;
   return <div className="backup-due"><div className="backup-due__row" style={{ borderLeftColor: "var(--border-strong)", flexWrap: "wrap", gap: 8 }}>
     <span>{monthly ? "Monthly review ready" : "Weekly review ready"}</span><button type="button" className="btn-secondary" onClick={onOpen}>OPEN REVIEW</button>
     <button type="button" className="btn-secondary" onClick={() => { try { localStorage.setItem(LATER_KEY, livedDay); } catch { /* Session state still dismisses. */ } setDismissed(livedDay); }}>LATER</button>

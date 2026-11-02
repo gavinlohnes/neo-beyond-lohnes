@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
+import { operatorContextVersion } from "../../application/operatorContext";
 import { LogSheet } from "./LogSheet";
 import { buildPlanningContext, personalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
 import { confirmContextProposal } from "../../application/alfred/contextActions";
@@ -7,8 +8,14 @@ import { AlfredContextPanel } from "./AlfredContextPanel";
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
-import { forgetFact, getMemories } from "../../application/alfred/alfredMemory";
-import { addSpend, automaticAlfredOn, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
+import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
+import { interpret, isQuestion } from "../../application/helper/freeHelper";
+import { answerQuestion } from "../../application/helper/freeAnswers";
+import { getSavedMeals } from "../../application/nutritionQueries";
+import { getUnresolvedObligations } from "../../application/intentQueries";
+import { getProjects } from "../../application/projectQueries";
+import { getRoutines } from "../../application/routineCommands";
+import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./alfred.css";
@@ -89,9 +96,63 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   useEffect(() => { if (open && draft) setText(draft.text); }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
+  /**
+   * FREE-HELPER-001: everyday messages try BEYOND's free helper first. If it understands all of it, it
+   * answers or makes the cards itself, free and offline. Anything it isn't sure of goes to Alfred as
+   * before; if Alfred can't be reached (no key, no signal, at the monthly limit) the helper does what
+   * it can and says what's left. THINK HARDER and the planning starters always go to Alfred.
+   */
   async function ask(question: string, depth: AlfredDepth = "everyday") {
     const q = question.trim();
-    if (!q || busy || working.current || !key) return;
+    if (!q || busy || working.current) return;
+    if (depth === "deep") return sendToAlfred(q, depth);
+    const alfredReady = !!key && navigator.onLine && !capReached();
+    working.current = true; setBusy(true); setError(null);
+    let route: "alfred" | "done" = "done";
+    try {
+      if (isQuestion(q)) {
+        const answer = await answerQuestion(q);
+        if (answer) { setText(""); setTurns((all) => [...all, { role: "user", text: q }, { role: "alfred", free: true, text: answer }]); return; }
+        // Not something the helper answers: Alfred's path reports plainly if he can't be reached.
+        route = "alfred"; return;
+      }
+      const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
+      const result = interpret(q, {
+        now: new Date(), savedMeals: meals, openTasks: tasks,
+        openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),
+        routines: routines.filter((r) => r.status === "ACTIVE"),
+      });
+      // Anything unsure goes to Alfred whole. Nothing understood at all also goes there, so an offline,
+      // keyless or capped Alfred says why and keeps the words in the box, as before.
+      if ((result.unknown.length && alfredReady) || result.cards.length === 0) { route = "alfred"; return; }
+      const ctx = result.cards.length ? await buildPlanningContext(included) : null;
+      const left = result.unknown.length ? ` I couldn't do “${result.unknown.join("”, “")}”. ${whyNoAlfred()}` : "";
+      setText("");
+      setTurns((all) => [...all, { role: "user", text: q }, {
+        role: "alfred", free: true,
+        text: "Here's what I can do for free. SAVE the ones you want." + left,
+        ...(ctx ? { context: { recordVersion: ctx.recordVersion, personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } } : {}),
+        proposals: result.cards.map((proposal, n) => ({ id: `free-${Date.now()}-${n}`, proposal, state: "pending" as const })),
+      }]);
+    } catch {
+      setText(q); setError("The free helper couldn't read your records. Nothing changed. Try again.");
+    } finally {
+      working.current = false; setBusy(false);
+      if (route === "alfred") void sendToAlfred(q, depth);
+    }
+  }
+
+  function whyNoAlfred(): string {
+    if (!key) return "Alfred needs a Claude key (Connect Alfred, above).";
+    if (!navigator.onLine) return "Alfred needs a signal; try again when you have one.";
+    if (capReached()) return "Alfred is at this month's limit (Limits, below).";
+    return "";
+  }
+
+  async function sendToAlfred(question: string, depth: AlfredDepth = "everyday") {
+    const q = question.trim();
+    if (!q || busy || working.current) return;
+    if (!key) { setText(q); setError("Alfred needs a Claude key. Add it under Connect Alfred, above. The free helper works without one."); return; }
     if (!navigator.onLine) { setText(q); setError("Alfred needs a connection. Your local records and draft are still here."); return; }
     working.current = true;
     setBusy(true); setError(null); setText("");
@@ -100,20 +161,26 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
       const next = await buildPlanningContext(included).catch(() => { throw new Error("CONTEXT_UNAVAILABLE"); });
-      const changed = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
+      const personalChanged = lastContext.current !== null && lastContext.current.personalVersion !== next.personalVersion;
+      const changed = personalChanged || (lastContext.current !== null && lastContext.current.recordVersion !== next.recordVersion);
       const policy = { includePersonal: included, assertFresh: async () => {
-        if (await personalContextVersion(included) !== next.personalVersion) throw new Error("CONTEXT_CHANGED");
+        if (await personalContextVersion(included) !== next.personalVersion || await operatorContextVersion(included) !== next.recordVersion) throw new Error("CONTEXT_CHANGED");
       } };
       if (changed) {
-        session.current = null; setTurns([{ role: "user", text: q }]);
-        setContextNotice("Personal context changed. This request starts a fresh model conversation. Earlier requests cannot be recalled.");
+        session.current = null;
+        // Personal changes clear the visible exchange as before. Operational changes reset model
+        // history but retain old cards with their ORIGINAL guards, so an old day cannot gain a new one.
+        if (personalChanged) setTurns([{ role: "user", text: q }]);
+        setContextNotice(personalChanged
+          ? "Personal context changed. This request starts a fresh model conversation. Earlier requests cannot be recalled."
+          : "Current records changed. This request starts a fresh model conversation. Earlier cards remain bound to their original records.");
       }
       if (!session.current) { const { AlfredSession } = await loadClient(); session.current = new AlfredSession(key, next.text, policy); }
       else session.current.updateContext(next.text, policy);
       lastContext.current = next; setSnapshot(next);
       meteredSession = session.current; usageBefore = meteredSession.usageUsd;
       const reply = await session.current.send(q, decisions, depth);
-      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: next.sources, context: { personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
+      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: [...new Map([...next.sources, ...(reply.sources ?? [])].map((s) => [s.key, s])).values()], context: { recordVersion: next.recordVersion, personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
       // A failed send may leave the model session half-written, so it's dropped. Say so when earlier
@@ -138,12 +205,12 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
       const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
       const result = confirmed?.result ?? {};
-      if (save) { acknowledge("LIGHT"); onSaved(); if (memories) setMemories(await getMemories()); }
+      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
       // forward for this conversation's other cards and its next question, nothing else.
       const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
-      const advance = (c: AlfredTurn["context"]) => (c && after && c.personalVersion === before ? { ...c, personalVersion: after } : c);
-      if (after && lastContext.current?.personalVersion === before) lastContext.current = { ...lastContext.current, personalVersion: after };
+      const advance = (c: AlfredTurn["context"]) => (c && after && c.personalVersion === before && c.recordVersion === turn.context?.recordVersion ? { ...c, personalVersion: after, ...(confirmed?.recordVersion ? { recordVersion: confirmed.recordVersion } : {}) } : c);
+      if (after && lastContext.current?.personalVersion === before && lastContext.current.recordVersion === turn.context?.recordVersion) lastContext.current = { ...lastContext.current, personalVersion: after, recordVersion: confirmed?.recordVersion ?? lastContext.current.recordVersion };
       setTurns((all) => all.map((t, i) => {
         const context = advance(t.context);
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
@@ -163,7 +230,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     prefix.current = lead; heard.current = "";
     const r = new Ctor(); r.lang = "en-US"; r.interimResults = true;
     r.onresult = (e) => { heard.current = Array.from(e.results).map((res) => res[0]!.transcript).join(" "); setText(lead + heard.current); };
-    r.onend = () => { setListening(false); if ((speak || lead) && heard.current.trim()) void ask(prefix.current + heard.current); };
+    // A shift debrief is a conversation, so it goes straight to Alfred; plain talk tries the free helper first.
+    r.onend = () => { setListening(false); if ((speak || lead) && heard.current.trim()) void (lead ? sendToAlfred(prefix.current + heard.current) : ask(heard.current)); };
     r.onerror = () => setListening(false);
     recognition.current = r; setListening(true); r.start();
   }
@@ -174,13 +242,14 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     setTurns([]); setSnapshot(null); setSelectedSource(null);
     setContextNotice("Fresh conversation. Earlier requests sent to Claude cannot be recalled.");
   }
-  async function forget(id: string) {
+  async function forget(memory: AlfredMemory) {
     if (working.current) return;
     working.current = true; setBusy(true); setError(null);
     try {
-      await forgetFact(id); setMemories(await getMemories());
+      if (!memory.reference) throw new Error("Memory source unavailable");
+      await stopUsingMemory(memory.reference, memory.text); window.dispatchEvent(new Event("beyond:memory-changed")); setMemories(await getMemories());
       session.current = null; lastContext.current = null; setTurns([]); setSnapshot(null); setSelectedSource(null);
-      setContextNotice("Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
+      setContextNotice(memory.reference.source === "PERSONAL_FACT" ? "Stopped using. Correction history retained. Fresh conversation; earlier requests cannot be recalled." : "Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
     } catch { setError("That memory could not be forgotten. Try again."); }
     finally { working.current = false; setBusy(false); }
   }
@@ -197,26 +266,30 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       else onOpenRecord?.(s);
     }} />
     {contextNotice && <p role="status" className="meta">{contextNotice}</p>}
-    {!key ? <div className="alfred-setup">
+    {!key && <details className="alfred-setup">
+      <summary className="disclosure-row">Connect Alfred (optional)</summary>
       <p>Alfred is BEYOND's man in the chair. He answers from your records and logs things for you; you confirm every record.</p>
       <p className="meta">He runs on Claude. Paste your key from console.anthropic.com → API Keys. It stays on this phone and is sent only to Anthropic.</p>
       <label className="field">Claude API key<input className="input" type="password" autoComplete="off" aria-label="Claude API key" value={draftKey} onChange={(e) => setDraftKey(e.target.value)} /></label>
       <button type="button" className="btn-primary" disabled={!draftKey.trim().startsWith("sk-")} onClick={() => { writeAlfredKey(draftKey.trim()); setKey(draftKey.trim()); setDraftKey(""); }}>SAVE KEY</button>
-    </div> : <>
+    </details>}
+    {!key && <p className="meta">The free helper works without a key: log water, meals, sleep, weight, reminders and more, or ask about your records.</p>}
+    <>
       <div className="alfred-log" aria-live="polite">
         {turns.length === 0 && <div className="alfred-starters">
           <p className="meta">Say or type anything: what you ate, how you slept, something to remember. Or ask.</p>
           <button type="button" className="btn-primary" disabled={busy} onClick={() => talk("Shift debrief: ")}>DEBRIEF MY SHIFT</button>
           {STARTER_GROUPS.map((g) => <div key={g} className="alfred-starter-group" role="group" aria-label={g}>
             <p className="alfred-turn__who">{g.toUpperCase()}</p>
-            <div className="alfred-starter-grid">{STARTERS.filter((q) => q.group === g).map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void ask(q.ask ?? q.label))}>{q.label}</button>)}</div>
+            <div className="alfred-starter-grid">{STARTERS.filter((q) => q.group === g).map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void sendToAlfred(q.ask ?? q.label))}>{q.label}</button>)}</div>
           </div>)}
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
-          <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : "ALFRED"}</p>
+          <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : t.free ? "BEYOND · FREE" : "ALFRED"}</p>
           {t.text && <AlfredText text={t.text} sources={t.sources} onSource={setSelectedSource} />}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
+            {["remember", "person_date", "home_item"].includes(p.proposal.kind) && <p className="meta">Personal facts are available to Alfred by default. Corrections keep history. Stop using removes them from active context; it does not erase them. New exports require this build or newer.</p>}
             {p.state === "pending" ? <div className="alfred-card__row">
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
@@ -238,9 +311,9 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       </form>
       {memories && <div className="alfred-memory" role="group" aria-label="What Alfred remembers">
         {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
-          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`Forget: ${m.text}`} disabled={busy} onClick={() => void forget(m.id)}>Forget</button></li>)}</ul>}
+          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`${m.reference?.source === "PERSONAL_FACT" ? "Stop using" : "Forget"}: ${m.text}`} disabled={busy} onClick={() => void forget(m)}>{m.reference?.source === "PERSONAL_FACT" ? "Stop using" : "Forget"}</button></li>)}</ul>}
       </div>}
-      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></p>
+      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{key && <>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></>}</p>
       {limitsOpen && <div className="alfred-limits" role="group" aria-label="Alfred limits">
         <p className="meta">BEYOND's estimate of this month: ${usd(monthSpent)}{cap ? ` of your $${cap.toFixed(2)} limit` : ", no limit set"}. At the limit Alfred stops until next month; everything else keeps working. For a hard ceiling, also set a spend limit in the Anthropic console.</p>
         <form className="alfred-limits__row" onSubmit={(e) => { e.preventDefault(); const v = Number(capDraft); if (Number.isFinite(v) && v > 0) { setMonthlyCap(v); setCap(getMonthlyCap()); } }}>
@@ -255,7 +328,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         <p className="meta">{auto ? "On. These run without you asking (Haiku, the cheap model)." : "Off. Alfred only speaks when you open him and ask."}</p>
       </div>}
       <p className="meta alfred-cost">This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)}{cap ? ` of $${cap.toFixed(2)}` : ""}</p>
-    </>}
+    </>
   </LogSheet>;
 }
 

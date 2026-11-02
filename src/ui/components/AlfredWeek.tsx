@@ -12,7 +12,7 @@ import "./alfred.css";
 const SEEN = "beyond.alfredReviewSeen";
 const seenFor = () => { try { return localStorage.getItem(SEEN); } catch { return null; } };
 
-export function AlfredWeek({ active }: { active: boolean }) {
+export function AlfredWeek({ active, onAvailabilityChange }: { active: boolean; onAvailabilityChange?: (available: boolean) => void }) {
   const [review, setReview] = useState<AlfredReview | null>(null);
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -45,6 +45,7 @@ export function AlfredWeek({ active }: { active: boolean }) {
     return () => { live = false; };
   }, [active]);
 
+  useEffect(() => { onAvailabilityChange?.(!!review && !dismissed); }, [review, dismissed, onAvailabilityChange]);
   if (!review || dismissed) return null;
   const label = weekLabel({ start: review.weekStart, end: review.weekEnd });
   return <section className="alfred-brief alfred-week" aria-label={`Your week, ${label}`}>

@@ -345,3 +345,35 @@ DIRECTION/CONSTRAINT without a new table; PREP/recovery filters stay bounded. Pe
 Understanding has the local editor/planning entry; Alfred sources navigate original records.
 See [brief](PERSONAL-CONTEXT-001.md) and active checkpoint for verification/review/merge status.
 No new library, model, notifications or Engine rules. Reuse these paths before a new profile store.
+
+
+### OPERATOR-CONTEXT-002A — approved implementation, integration pending
+
+`application/operatorContext.ts` is the common read-only source/coverage assembler; domain types
+live in `domain/operatorContext.ts`. `alfred/personalContext.ts` and automatic `alfredContext.ts`
+serialize the same bounded record model with purpose-specific sharing. `OperatorContextPanel`
+provides local inspection in LIFE/Memory. Two memory stores remain distinct; no migration occurred.
+Reuse these adapters rather than adding a third profile store. Status/limits: [brief](OPERATOR-CONTEXT-002A.md).
+
+### OPERATOR-CONTEXT-002B — new personal facts and explicit legacy conversion (2026-11-01)
+
+Approved bounded work: [#368](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/368).
+`application/memory.ts` reuses the causal MEMORY_RECORDED lifecycle for global PERSONAL_FACT
+records with topics; old kinds keep day guards and opt-in sharing. `alfred/alfredMemory.ts` is a
+compatibility view/command gateway, not a second new store: remember/People/Home now create events,
+retired facts stay out of active context/search, and conversion retains an explicit immutable origin.
+`MemoryPanel` owns corrections/history/restore; `AlfredMemoryList` offers bounded original-entry
+inspection, physical deletion of unconverted rows and individually confirmed conversion. No bulk
+migration; both stores still exist while originals remain. BUILD OWNED integration using existing
+atomic writes, proposal cards, common context projection and native backups; no new dependency.
+
+### ATTENTION-001 — connected TODAY/LIFE presentation (2026-11-01)
+
+Approved bounded objective: [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370).
+Primary TODAY reuses its existing next/log ordering, attention and actual-phase truth. AlfredBrief's
+optional recessed rendering keeps generation/cache guards mounted; TodayReviewSupport combines
+presentation of existing AlfredWeek and WeeklyReviewReadyLine without merging their records or
+readiness rules. Current-moment routines group behind one entry. LIFE retains mounted tabs and
+routes personal-fact creation through MemoryPanel; AlfredMemoryList handles legacy evidence only.
+BUILD OWNED composition on existing native disclosures and brand tokens; no new recommendation
+policy, library, database or provider. Separate COMMAND operating surfaces retain their behavior.
