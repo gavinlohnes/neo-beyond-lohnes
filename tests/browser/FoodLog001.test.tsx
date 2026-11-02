@@ -3,6 +3,7 @@ import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { App } from "../../src/app/App";
+import { findFood } from "../../src/ui/components/AlfredSheet";
 import { logBodyweight, startDay } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { db } from "../../src/persistence/db";
@@ -91,5 +92,15 @@ describe("FOOD-001", () => {
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.poll(async () => (await db.events.where("beyondDayId").equals(day.id).toArray()).find((e) => e.type === "MEAL_LOGGED")?.payload)
       .toMatchObject({ servings: 3, proteinG: 90 });
+  });
+
+  it("the free helper's FIND opens MEAL with that food already searched (FREE-HELPER-002)", async () => {
+    await startDay();
+    const screen = await render(<App />);
+    await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
+    findFood("chicken breast");
+    await expect.element(screen.getByRole("searchbox", { name: "Search your meals and foods" })).toHaveValue("chicken breast");
+    await expect.element(screen.getByRole("button", { name: "Amount for Chicken breast, roasted" })).toBeVisible();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });

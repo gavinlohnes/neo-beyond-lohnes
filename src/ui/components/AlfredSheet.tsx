@@ -9,7 +9,7 @@ import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/a
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { confirmLabel, describeConfirmError, describeProposal } from "../../application/alfred/alfredActions";
 import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
-import { interpret, isQuestion } from "../../application/helper/freeHelper";
+import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
 import { answerQuestion } from "../../application/helper/freeAnswers";
 import { getSavedMeals } from "../../application/nutritionQueries";
 import { getUnresolvedObligations } from "../../application/intentQueries";
@@ -31,6 +31,9 @@ export const ASK_ALFRED_EVENT = "beyond:ask-alfred";
 /** COMMAND-BAR-001: open the sheet and send these words now (the free helper answers first). */
 export const DO_IN_BEYOND_EVENT = "beyond:do";
 export function doInBeyond(text: string) { window.dispatchEvent(new CustomEvent<string>(DO_IN_BEYOND_EVENT, { detail: text })); }
+/** FREE-HELPER-002: open MEAL's free food search for this food. */
+export const FIND_FOOD_EVENT = "beyond:find-food";
+export function findFood(query: string) { window.dispatchEvent(new CustomEvent<string>(FIND_FOOD_EVENT, { detail: query })); }
 export function askAlfred(question: string) { window.dispatchEvent(new CustomEvent<string>(ASK_ALFRED_EVENT, { detail: question })); }
 
 export function readAlfredKey(): string | null { try { return localStorage.getItem(KEY); } catch { return null; } }
@@ -114,7 +117,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   useEffect(() => {
     if (!open || !draft) return;
     // COMMAND-BAR-001: DO IT from search sends straight through the usual route: free helper first.
-    if (draft.send) void ask(draft.text); else setText(draft.text);
+    if (draft.send) void ask(draft.text, "everyday", true); else setText(draft.text);
   }, [open, draft?.key]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [turns, busy]);
 
@@ -124,7 +127,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
    * before; if Alfred can't be reached (no key, no signal, at the monthly limit) the helper does what
    * it can and says what's left. THINK HARDER and the planning starters always go to Alfred.
    */
-  async function ask(question: string, depth: AlfredDepth = "everyday") {
+  async function ask(question: string, depth: AlfredDepth = "everyday", freeOnly = false) {
     const q = question.trim();
     if (!q || busy || working.current) return;
     if (depth === "deep") return sendToAlfred(q, depth);
@@ -144,15 +147,20 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),
         routines: routines.filter((r) => r.status === "ACTIVE"),
       });
-      // Anything unsure goes to Alfred whole. Nothing understood at all also goes there, so an offline,
+      // FREE-HELPER-002: food it doesn't know is looked up free in MEAL's food search first; Alfred's
+      // paid estimate is one tap away instead of automatic.
+      const foods = result.unknown.map(foodQuery);
+      const onlyFood = result.unknown.length > 0 && foods.every((f) => f !== null);
+      // Anything else unsure goes to Alfred whole. Nothing understood at all also goes there, so an offline,
       // keyless or capped Alfred says why and keeps the words in the box, as before.
-      if ((result.unknown.length && alfredReady) || result.cards.length === 0) { route = "alfred"; return; }
+      if (!onlyFood && ((result.unknown.length && alfredReady) || result.cards.length === 0)) { route = "alfred"; return; }
       const ctx = result.cards.length ? await buildPlanningContext(included) : null;
-      const left = result.unknown.length ? ` I couldn't do “${result.unknown.join("”, “")}”. ${whyNoAlfred()}` : "";
+      const left = onlyFood ? " I don't know that food yet. Find it free below, or ask Alfred to estimate it." : result.unknown.length ? ` I couldn't do “${result.unknown.join("”, “")}”. ${whyNoAlfred()}` : "";
       setText("");
       setTurns((all) => [...all, { role: "user", text: q }, {
         role: "alfred", free: true,
-        text: "Here's what I can do for free. SAVE the ones you want." + left,
+        text: (result.cards.length ? "Here's what I can do for free. SAVE the ones you want." : "Nothing to save yet.") + left,
+        ...(onlyFood ? { foods: foods as string[], estimate: q } : {}),
         ...(ctx ? { context: { recordVersion: ctx.recordVersion, personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } } : {}),
         proposals: result.cards.map((proposal, n) => ({ id: `free-${Date.now()}-${n}`, proposal, state: "pending" as const })),
       }]);
@@ -160,7 +168,9 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setText(q); setError("The free helper couldn't read your records. Nothing changed. Try again.");
     } finally {
       working.current = false; setBusy(false);
-      if (route === "alfred") void sendToAlfred(q, depth);
+      // COMMAND-BAR-001: words sent from search stay free; anything that needs Alfred waits for SEND.
+      if (route === "alfred" && freeOnly) { setText(q); setError("That needs Alfred. Tap SEND to ask him, or change the words."); }
+      else if (route === "alfred") void sendToAlfred(q, depth);
     }
   }
 
@@ -218,14 +228,15 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     }
   }
 
-  async function decide(turnIndex: number, id: string, save: boolean) {
+  async function decide(turnIndex: number, id: string, save: boolean, remember = false) {
     const turn = turns[turnIndex]; const card = turn?.proposals?.find((p) => p.id === id);
     if (!turn || !card || card.state !== "pending" || working.current) return;
     working.current = true; setBusy(true);
     const acknowledge = captureCommitFeedback();
     try {
       if (save && !turn.context) throw new Error("CONTEXT_CHANGED");
-      const confirmed = save ? await confirmContextProposal(card.proposal, turn.context!, included) : null;
+      const proposal = remember && card.proposal.kind === "log_meal" ? { ...card.proposal, remember: true } : card.proposal;
+      const confirmed = save ? await confirmContextProposal(proposal, turn.context!, included) : null;
       const result = confirmed?.result ?? {};
       if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); if (card.proposal.kind === "routine_tick" || card.proposal.kind === "routine_edit") window.dispatchEvent(new Event("beyond:routines-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
@@ -309,11 +320,16 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
           <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : t.free ? "BEYOND · FREE" : "ALFRED"}</p>
           {t.text && <AlfredText text={t.text} sources={t.sources} onSource={setSelectedSource} />}
+          {t.foods && <div className="alfred-card__row alfred-find">
+            {t.foods.map((f) => <button key={f} type="button" className="btn-secondary" disabled={busy || !navigator.onLine} onClick={() => findFood(f)}>FIND “{f}” FREE</button>)}
+            {t.estimate && key && <button type="button" className="btn-secondary" disabled={busy || capReached()} onClick={() => void sendToAlfred(t.estimate!, "everyday")}>ASK ALFRED TO ESTIMATE</button>}
+          </div>}
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
             {["remember", "person_date", "home_item"].includes(p.proposal.kind) && <p className="meta">Personal facts are available to Alfred by default. Corrections keep history. Stop using removes them from active context; it does not erase them. New exports require this build or newer.</p>}
             {p.state === "pending" ? <div className="alfred-card__row">
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
+              {p.proposal.kind === "log_meal" && !p.proposal.saved_meal_id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, true, true)}>SAVE + REMEMBER MEAL</button>}
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
             </div> : <p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : "Skipped."}</p>}
           </div>)}

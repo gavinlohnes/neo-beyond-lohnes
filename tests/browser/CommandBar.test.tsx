@@ -47,3 +47,24 @@ it("answers from records in place, goes to screens, and offers Alfred only on re
   await expect.element(screen.getByText("MORE // WEEKLY", { exact: false }).first()).toBeVisible();
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
 });
+
+it("Enter never acts on a stale preview, and DO IT from search never becomes a paid call (review of #380)", async () => {
+  await startDay();
+  localStorage.setItem("beyond.alfredKey", "sk-ant-test-command");
+  let requests = 0;
+  const fetchSpy = (await import("vitest")).vi.spyOn(window, "fetch").mockImplementation(async (_input, init) => { if (String(init?.body ?? "").includes("car insurance")) requests++; return new Response("{}", { status: 500 }); }); // the automatic brief may call too; only this message counts
+  const { screen, box } = await openSearch();
+  await box.fill("16 oz water");
+  await expect.element(screen.getByRole("button", { name: "Log free: Log 16 oz water" })).toBeVisible();
+  await box.fill("16 oz water and sort out the car insurance");
+  await userEvent.keyboard("{Enter}");
+  await expect.poll(() => document.querySelector(".drive-home, [role=dialog][aria-label=ALFRED]")).toBeNull();
+  // Sent from search, words that need Alfred stay in his box instead of being sent.
+  const { doInBeyond } = await import("../../src/ui/components/AlfredSheet");
+  doInBeyond("16 oz water and sort out the car insurance");
+  const sheet = screen.getByRole("dialog", { name: "ALFRED" });
+  await expect.element(sheet.getByText("That needs Alfred. Tap SEND to ask him, or change the words.")).toBeVisible();
+  await expect.element(sheet.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("16 oz water and sort out the car insurance");
+  expect(requests).toBe(0);
+  fetchSpy.mockRestore();
+});

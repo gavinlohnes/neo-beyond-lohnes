@@ -48,7 +48,7 @@ function parse(form: MealForm) {
 
 /** The shell owns one stable modal. Drafts live here, never in persistent storage. */
 export function RecordSheets({ mealRequest, correctionRequest, target, open, close, onSaved, onBusy, onHistory, onWorkout, onNotes, onAlfred }: {
-  mealRequest?: { id: string; key: number } | null;
+  mealRequest?: { id?: string; query?: string; key: number } | null;
   correctionRequest?: RecordCorrectionRequest | null;
   target: RecordSheetTarget | null; open: (target: RecordSheetTarget) => void; close: () => void;
   onSaved: () => void; onBusy: (busy: boolean) => void; onHistory: (metric: "water" | "protein") => void; onWorkout: () => void; onNotes: () => void;
@@ -110,7 +110,9 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   useEffect(() => {
     if (target !== "meal" || !mealRequest || readState !== "ready" || appliedMeal.current === mealRequest.key) return;
     appliedMeal.current = mealRequest.key;
-    if (meals.some((meal) => meal.id === mealRequest.id)) { setMealId(mealRequest.id); setServings(1); setPage("portion"); }
+    // FREE-HELPER-002: "find this food free" from Alfred's sheet runs the same SEARCH ALL FOODS.
+    if (mealRequest.query) { setPage("list"); setQuery(mealRequest.query); void searchAllFoods(mealRequest.query); return; }
+    if (mealRequest.id && meals.some((meal) => meal.id === mealRequest.id)) { setMealId(mealRequest.id); setServings(1); setPage("portion"); }
     else setError("That saved meal is unavailable. Choose another meal or retry.");
   }, [target, mealRequest, readState, meals]);
   async function commit(action: () => Promise<Receipt>) {
@@ -127,8 +129,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     return { message: `${name} logged.`, undo: () => voidMealLog(dayId, eventId) };
   }
 
-  async function searchAllFoods() {
-    const q = query.trim(); if (!q) return;
+  async function searchAllFoods(asked = query) {
+    const q = asked.trim(); if (!q) return;
     setOnline({ query: q, state: "searching", results: [] });
     const results = await searchFoods(q);
     setOnline((now) => now?.query === q ? { query: q, state: "done", results } : now);

@@ -12,13 +12,13 @@ import { findCapabilities, type SystemCapability } from "../../systemCatalog";
 import { askAlfred, doInBeyond } from "../../components/AlfredSheet";
 
 /** COMMAND-BAR-001: what the one box can do with these words, before any record search. */
-interface Command { go: SystemCapability[]; doIt: string[]; answer: string | null }
+interface Command { q: string; go: SystemCapability[]; doIt: string[]; answer: string | null }
 async function readCommand(q: string): Promise<Command> {
   const go = findCapabilities(q).slice(0, 4);
-  if (isQuestion(q)) return { go, doIt: [], answer: await answerQuestion(q).catch(() => null) };
+  if (isQuestion(q)) return { q, go, doIt: [], answer: await answerQuestion(q).catch(() => null) };
   const [meals, tasks, projects, routines] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines()]);
   const result = interpret(q, { now: new Date(), savedMeals: meals, openTasks: tasks, openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"), routines: routines.filter((r) => r.status === "ACTIVE") });
-  return { go, doIt: result.unknown.length ? [] : result.cards.map(describeProposal), answer: null };
+  return { q, go, doIt: result.unknown.length ? [] : result.cards.map(describeProposal), answer: null };
 }
 
 /**
@@ -71,6 +71,7 @@ export function SearchScreen({ onSelectResult, onRunCapability, hiddenCapability
       return;
     }
 
+    setCommand(null);
     setResults([]);
     setSearched(false);
     setLoading(true);
@@ -105,7 +106,8 @@ export function SearchScreen({ onSelectResult, onRunCapability, hiddenCapability
         enterKeyHint="go"
         onKeyDown={(e) => {
           // Enter does the most useful thing: the free log if there is one, else the first screen.
-          if (e.key !== "Enter" || !command) return;
+          // Review of #380: only act on what was read for exactly these words, never a stale preview.
+          if (e.key !== "Enter" || !command || loading || command.q !== query.trim()) return;
           if (command.doIt.length) { e.preventDefault(); doInBeyond(query.trim()); }
           else if (command.go[0] && onRunCapability) { e.preventDefault(); onRunCapability(command.go[0]); }
         }}
