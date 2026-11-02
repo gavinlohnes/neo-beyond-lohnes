@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn } from "../commands";
-import { createSavedMeal, logManualMeal, logMeal } from "../nutritionCommands";
+import { captureItem, ensureActiveDay, logBodyweight, logSleep, logWater, markWorkEnded, markWorkStarted, submitCheckIn, voidBodyweightLog, voidSleepLog, voidWaterLog } from "../commands";
+import { createSavedMeal, logManualMeal, logMeal, voidMealLog } from "../nutritionCommands";
 import { createObligation, modifyObligation, satisfyObligation } from "../intentCommands";
 import { createProject } from "../projectCommands";
 import { getProject } from "../projectQueries";
@@ -56,7 +56,15 @@ type Scale = 1 | 2 | 3 | 4 | 5;
 type Zero = 0 | Scale;
 
 /** What a confirm asks of the shell beyond the write (open TRAIN). */
-export interface ConfirmResult { open?: "TRAIN" }
+/** CARD-UNDO-001: what to void if he taps UNDO on a saved log card (the same void the LOG sheet's UNDO uses). */
+export interface SavedLog { kind: "water" | "sleep" | "weight" | "meal"; dayId: string; eventId: string }
+export interface ConfirmResult { open?: "TRAIN"; undo?: SavedLog }
+export async function undoSavedLog(saved: SavedLog): Promise<boolean> {
+  if (saved.kind === "water") return voidWaterLog(saved.dayId, saved.eventId);
+  if (saved.kind === "sleep") return voidSleepLog(saved.dayId, saved.eventId);
+  if (saved.kind === "weight") return voidBodyweightLog(saved.dayId, saved.eventId);
+  return voidMealLog(saved.dayId, saved.eventId);
+}
 
 const n = (description: string) => ({ type: "number" as const, description });
 const s = (description: string) => ({ type: "string" as const, description });
@@ -318,9 +326,9 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   }
   const day = await ensureActiveDay();
   switch (p.kind) {
-    case "log_water": await logWater(day.id, Math.round(p.oz)); break;
-    case "log_sleep": await logSleep(day.id, p.minutes, p.nap ? "SUPPLEMENTAL" : "PRIMARY"); break;
-    case "log_weight": await logBodyweight(day.id, p.lbs); break;
+    case "log_water": return { undo: { kind: "water", dayId: day.id, eventId: await logWater(day.id, Math.round(p.oz)) } };
+    case "log_sleep": return { undo: { kind: "sleep", dayId: day.id, eventId: await logSleep(day.id, p.minutes, p.nap ? "SUPPLEMENTAL" : "PRIMARY") } };
+    case "log_weight": return { undo: { kind: "weight", dayId: day.id, eventId: await logBodyweight(day.id, p.lbs) } };
     case "check_in": await submitCheckIn(day.id, { energy: p.energy, stress: p.stress, mood: p.mood, soreness: p.soreness, alcoholUrge: p.alcohol_urge }); break;
     case "work_started": await markWorkStarted(day.id); break;
     case "work_ended": await markWorkEnded(day.id); break;
@@ -328,15 +336,13 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
     case "log_urge": await logUrge(day.id, p.trigger); break;
     case "log_meal":
       if (p.saved_meal_id) {
-        try { await logMeal(day.id, p.saved_meal_id, p.servings ?? 1); break; } catch { /* unknown id: log as given */ }
+        try { return { undo: { kind: "meal", dayId: day.id, eventId: (await logMeal(day.id, p.saved_meal_id, p.servings ?? 1)).eventId } }; } catch { /* unknown id: log as given */ }
       }
       if (p.remember) {
         const kept = await createSavedMeal({ name: p.name.slice(0, 80), calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) });
-        await logMeal(day.id, kept.id, 1);
-        break;
+        return { undo: { kind: "meal", dayId: day.id, eventId: (await logMeal(day.id, kept.id, 1)).eventId } };
       }
-      await logManualMeal(day.id, { name: p.name, calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) });
-      break;
+      return { undo: { kind: "meal", dayId: day.id, eventId: (await logManualMeal(day.id, { name: p.name, calories: Math.round(p.calories), proteinG: Math.round(p.protein_g), carbsG: Math.round(p.carbs_g ?? 0), fatG: Math.round(p.fat_g ?? 0) })).eventId } };
   }
   return {};
 }
