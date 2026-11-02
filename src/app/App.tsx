@@ -1,6 +1,17 @@
+// Their stylesheets stay in the start bundle: several define shared classes TODAY uses too
+// (e.g. operator.css's command surfaces), so they must never wait for a lazy screen.
+import "../ui/screens/train/operator.css";
+import "../ui/screens/systems/systems.css";
+import "../ui/screens/review/review.css";
+import "../ui/screens/review/weightDetails.css";
+import "../ui/screens/review/personalUnderstanding.css";
+import "../ui/screens/health/healthImport.css";
+import "../ui/screens/body/bodyProgress.css";
+import "../ui/screens/today/reflect.css";
+import "../ui/components/alfred.css";
 import { RecordSheets } from "../ui/components/RecordSheets";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { importBridgeFiles, type HealthSyncResult } from "../application/healthSync";
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
@@ -11,9 +22,17 @@ import type { HealthEvidenceRequest, HealthHistoryDestination } from "../applica
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
 import { TodayScreen } from "../ui/screens/today/TodayScreen";
-import { TrainScreen, type TrainDestination } from "../ui/screens/train/TrainScreen";
-import { BodyScreen } from "../ui/screens/body/BodyScreen";
-import { MoreScreen, type MoreView } from "../ui/screens/more/MoreScreen";
+import type { TrainDestination } from "../ui/screens/train/TrainScreen";
+import type { MoreView } from "../ui/screens/more/MoreScreen";
+import { BodyScreen } from "../ui/screens/body/BodyScreen"; // shared with TODAY already, so splitting it saves nothing
+// BUNDLE-002: TRAIN and MORE load on first visit, so the start bundle stays well under the
+// 2 MiB offline precache limit as BEYOND grows. Each is precached as its own file, so offline still works.
+const TrainScreen = lazy(() => import("../ui/screens/train/TrainScreen").then((m) => ({ default: m.TrainScreen })));
+const MoreScreen = lazy(() => import("../ui/screens/more/MoreScreen").then((m) => ({ default: m.MoreScreen })));
+// Fetch them quietly once TODAY has settled, so the first tap on TRAIN or MORE is instant.
+export function preloadLazyScreens() { void import("../ui/screens/train/TrainScreen"); void import("../ui/screens/more/MoreScreen"); }
+if (typeof window !== "undefined") window.setTimeout(preloadLazyScreens, 2000);
+const TabLoading = () => <p className="meta" role="status">Loading…</p>;
 import type { WholePictureDestination } from "../ui/screens/review/WholePicture";
 import { Icon, type IconName } from "../ui/icons/Icon";
 import { RootErrorBoundary } from "../ui/components/RootErrorBoundary";
@@ -480,7 +499,18 @@ function AppWorkspaces() {
       const pane = document.getElementById(`workspace-${destination}`);
       const target = position?.trigger;
       if (target?.isConnected && pane?.contains(target) && target.getClientRects().length) target.focus({ preventScroll: true });
-      else (() => { const heading = [...(pane?.querySelectorAll<HTMLElement>("h1") ?? [])].find((element) => element.getClientRects().length); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } })();
+      else {
+        // BUNDLE-002: a lazily loaded screen's heading may arrive a few frames later on first visit.
+        let tries = 0;
+        const focusHeading = () => {
+          if (request !== navigation.current) return;
+          const live = document.getElementById(`workspace-${destination}`);
+          const heading = [...(live?.querySelectorAll<HTMLElement>("h1") ?? [])].find((element) => element.getClientRects().length);
+          if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+          else if (tries++ < 120) requestAnimationFrame(focusHeading);
+        };
+        focusHeading();
+      }
       if (position) window.scrollTo({ top: position.scrollY, behavior: "instant" });
       else positionPrimaryDestination();
     });
@@ -715,8 +745,8 @@ function AppWorkspaces() {
           </RootErrorBoundary>
         </div>}
         {visited.has("TRAIN") && <div id="workspace-TRAIN" className={tab === "TRAIN" ? "tab-enter" : undefined} hidden={tab !== "TRAIN"}>
-          <RootErrorBoundary active={tab === "TRAIN"}><TrainScreen active={tab === "TRAIN"} destination={trainDestination} recordsFocus={trainRecordsFocus}
-            onDestinationConsumed={() => setTrainDestination(null)} /></RootErrorBoundary>
+          <RootErrorBoundary active={tab === "TRAIN"}><Suspense fallback={<TabLoading />}><TrainScreen active={tab === "TRAIN"} destination={trainDestination} recordsFocus={trainRecordsFocus}
+            onDestinationConsumed={() => setTrainDestination(null)} /></Suspense></RootErrorBoundary>
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
           <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onOpenReview={openDataReview} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} caveRequest={caveRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
@@ -725,7 +755,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}
@@ -744,7 +774,7 @@ function AppWorkspaces() {
             systemsRefreshKey={stealthWrites}
             onOpenCave={(vital) => { openCave("vitals", vital); }}
             onReturnToToday={commandTodayOrigin && moreView !== "MENU" ? () => { setCommandTodayOrigin(false); showTab("TODAY"); } : undefined}
-            onOpenDestination={openSystemDestination} /></RootErrorBoundary>
+            onOpenDestination={openSystemDestination} /></Suspense></RootErrorBoundary>
         </div>}
       </main>
 
