@@ -64,6 +64,16 @@
 /* POLISH-002: TODAY in the prototype's order and look — the hero (modeHeader.css), then a
    padded stack of the next-action panel, the numbers and the action row (cc.css values). */
 .today-field > .console-guidance, .today-field > .today-numbers, .today-field > .console-operations { margin-top: 12px; }
+.today-field .shift-recovery-brief { box-sizing: border-box; max-width: 100%; margin: 12px 0 0; border-top: 1px solid var(--p-line); border-bottom: 1px solid var(--p-line); overflow-wrap: anywhere; }
+.today-field .shift-recovery-brief summary { box-sizing: border-box; width: 100%; position: relative; min-height: 60px; padding: 10px 30px 10px 2px; display: flex; align-items: center; overflow: hidden; cursor: pointer; list-style: none; }
+.today-field .shift-recovery-brief summary::-webkit-details-marker { display: none; }
+.today-field .shift-recovery-brief summary span:first-child { display: grid; gap: 3px; min-width: 0; }
+.today-field .shift-recovery-brief summary > span:last-child { position: absolute; right: 8px; }
+.today-field .shift-recovery-brief summary small { color: var(--p-t2); font-family: var(--p-mono); font-size: 11px; letter-spacing: .12em; }
+.today-field .shift-recovery-brief summary strong { color: var(--p-t1); font-family: var(--p-display); font-size: 16px; letter-spacing: .03em; }
+.today-field .shift-recovery-brief[open] summary > span:last-child { transform: rotate(45deg); }
+.today-field .shift-recovery-brief > div { padding: 0 2px 12px; color: var(--p-t2); }
+.today-field .shift-recovery-brief > div p { margin: 0 0 8px; }
 .console-guidance__label { display: none; }
 .next-action-card { display: flex; flex-direction: column; }
 .next-action-card > details, .next-action-card > .why-disclosure { order: 10; margin-top: 10px; font-size: 13px; color: var(--p-t2); }

@@ -11,6 +11,7 @@ import type { RecordSheetTarget } from "../../recordSheets";
 import { LogSheet } from "../../components/LogSheet";
 import { TodayReviewSupport } from "../../components/TodayReviewSupport";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
+import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
@@ -2936,6 +2937,7 @@ export function TodayScreen({
 
       {/* An active workout resumes from right under the card, above the fold. */}
       {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} fromEarlierDay={!!activeWorkout && activeWorkout.beyondDayId !== day.id} onOpenTrain={onOpenTrain} /></div>}
+      {day && <ShiftRecoveryBrief active={active} now={now} />}
       {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
       {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
       <section className="console-operations" aria-labelledby="console-operations-heading">
