@@ -31,3 +31,13 @@ it("counts days off and when he's back on", () => {
   expect(off.kind).toBe("OFF");
   expect(describeShiftRun(off)).toMatch(/^day off 1 of \d · back on \w{3}$/);
 });
+
+it("steps by calendar day at 16:30, so a clock change never moves the window (review of #383)", () => {
+  // Under any TZ: the run around the US fall-back change (Sun Nov 1 2026) matches a day-by-day count.
+  const at = (y: number, m: number, d: number) => new Date(y, m, d, 20);
+  const seen = Array.from({ length: 10 }, (_, i) => shiftRun(at(2026, 9, 28 + i), saved)?.kind);
+  // Week A (Oct 26) works Mon/Tue/Fri/Sat/Sun; Week B (Nov 2) Wed/Thu.
+  expect(seen).toEqual(["OFF", "OFF", "WORK", "WORK", "WORK", "OFF", "OFF", "WORK", "WORK", "OFF"]);
+  expect(shiftRun(at(2026, 9, 30), saved)).toMatchObject({ kind: "WORK", position: 1, length: 3 });
+  expect(shiftRun(at(2026, 9, 30), saved)!.next.getHours()).toBe(16);
+});

@@ -31,6 +31,8 @@ export async function readPresence(now = new Date()): Promise<Presence | null> {
   // Review of #382: once he has accepted or declined it, TODAY shows the decision; so does this line (by saying nothing).
   const decided = rec && rec.statusAtIssue === "ACTION" ? await getRecommendationDecision(day.id, rec.id) : undefined;
   const next = rec && rec.statusAtIssue === "ACTION" && !decided ? rec.title : null;
-  const run = shiftRun(now, schedule);
+  // His own declaration wins: a day he set OFF on a scheduled night (or the reverse) shows no run.
+  const scheduled = shiftRun(now, schedule);
+  const run = scheduled && (day.workContext === "UNKNOWN" || day.workContext === scheduled.kind) ? scheduled : null;
   return { mode: phase ? MODE_NAMES[phase] : "MODE NOT SET", when, next, run: run ? `scheduled: ${describeShiftRun(run)}` : null };
 }

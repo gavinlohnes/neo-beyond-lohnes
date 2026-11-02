@@ -81,7 +81,7 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
     return `Main sleep, last 7 days: average ${hm(avg)}, from ${logged.length} of ${week.length} days logged.`;
   }
   // SHIFT-RUN-001: where today sits in the saved rotation.
-  if (/\b(next day off|days? off|when am i off|how many (nights|shifts) left|back on|next night off)\b/.test(q)) {
+  if (/\b(next day off|days? off|when am i off|how many (nights|shifts) left|when am i back on|back on shift|back at work|next night off)\b/.test(q)) {
     const run = shiftRun(now, await getSchedulePattern());
     return run ? `From your saved schedule: ${describeShiftRun(run)}.` : "There's no saved schedule to read that from. Set it in MORE → WORK SCHEDULE.";
   }
