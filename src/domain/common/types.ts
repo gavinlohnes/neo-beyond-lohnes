@@ -245,6 +245,8 @@ export type DomainEventType =
   | "URGE_LOGGED"
   | "URGE_UNDONE"
   | "URGE_PLAN_RESPONDED"
+  /** TRAIN-PROGRAM-001: confirmed global programme snapshots; no Engine authority. */
+  | "TRAIN_PROGRAM_SET"
   | "EXERCISE_CUE_SET"
   | "SHIFT_HANDOFF_NOTED"
   | "SHIFT_HANDOFF_READ"
@@ -969,7 +971,8 @@ export interface DomainEvent<TPayload = unknown> {
    * inventing a second, parallel event shape. See missionId/obligationId
    * below for how those events are scoped instead. OPERATOR-CONTEXT-002B
    * also permits explicitly global PERSONAL_FACT memory revisions; all
-   * other MEMORY_RECORDED kinds retain required lived-day provenance.
+   * other MEMORY_RECORDED kinds retain required lived-day provenance. TRAIN_PROGRAM_SET
+   * also records global operator configuration, independent of any lived day.
    */
   beyondDayId?: string;
   /** Intent & Commitment Spine (Drop 01): set on MISSION_* events instead of beyondDayId. */

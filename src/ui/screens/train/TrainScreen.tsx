@@ -1,3 +1,4 @@
+import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
@@ -458,7 +459,7 @@ export function TrainScreen({
     setRecentSubstitutions(Object.fromEntries(substitutionEntries));
   }
 
-  async function actuallyStart() {
+  async function actuallyStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant) {
     const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
@@ -467,8 +468,8 @@ export function TrainScreen({
       const receipt = { changed: false };
       const started = await startWorkout(
         activeDay.id,
-        chosenVariant === "RECOVERY" ? null : chosenTemplate,
-        chosenVariant,
+        variant === "RECOVERY" ? null : template,
+        variant,
         { overrideConfirmed: true, receipt },
       );
       if (receipt.changed) acknowledge("MEDIUM");
@@ -488,12 +489,12 @@ export function TrainScreen({
     }
   }
 
-  async function handleStart() {
+  async function handleStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant) {
     if (busy) return;
-    if (chosenVariant === "STANDARD") {
-      guard(capacity, () => actuallyStart());
+    if (variant === "STANDARD") {
+      guard(capacity, () => actuallyStart(template, variant));
     } else {
-      await actuallyStart();
+      await actuallyStart(template, variant);
     }
   }
 
@@ -1230,6 +1231,13 @@ export function TrainScreen({
           </WhyDisclosure>
         </CommandSurface>
       )}
+
+      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} disabled={busy} startDisabled={!!session} onStart={(templateId) => {
+        const variant = chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant;
+        templateChosenRef.current = true; variantChosenRef.current = true;
+        setChosenTemplate(templateId); setChosenVariant(variant);
+        void handleStart(templateId, variant);
+      }} />
 
       {/* LAUNCH POLISH (owner approval 2026-10-01): the suggested workout leads;
           the planned-work question sits under it instead of above it. */}
