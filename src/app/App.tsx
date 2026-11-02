@@ -33,6 +33,9 @@ const MoreScreen = lazy(() => import("../ui/screens/more/MoreScreen").then((m) =
 // Fetch them quietly once TODAY has settled, so the first tap on TRAIN or MORE is instant.
 export function preloadLazyScreens() { void import("../ui/screens/train/TrainScreen"); void import("../ui/screens/more/MoreScreen"); }
 if (typeof window !== "undefined") window.setTimeout(preloadLazyScreens, 2000);
+// DRIVE-HOME-001: the hands-free screen loads only when opened.
+const DriveHome = lazy(() => import("../ui/components/DriveHome").then((m) => ({ default: m.DriveHome })));
+const DRIVE_HOME_EVENT = "beyond:drive-home";
 const TabLoading = () => <p className="meta" role="status">Loading…</p>;
 import type { WholePictureDestination } from "../ui/screens/review/WholePicture";
 import { Icon, type IconName } from "../ui/icons/Icon";
@@ -165,6 +168,8 @@ function AppWorkspaces() {
   // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
   const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
   const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
+  const [driveOpen, setDriveOpen] = useState(false);
+  useEffect(() => { const open = () => setDriveOpen(true); window.addEventListener(DRIVE_HOME_EVENT, open); return () => window.removeEventListener(DRIVE_HOME_EVENT, open); }, []);
   const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
   useEffect(() => {
     if (!alfredLaunch) return;
@@ -670,6 +675,7 @@ function AppWorkspaces() {
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
     if (destination.kind === "capture") { openCapture(); return true; }
     if (destination.kind === "stealth") { changeStealth(true); return true; }
+    if (destination.kind === "drive") { setDriveOpen(true); return true; }
     if (destination.kind === "tools") return openMore("DAILY_CONTROLS");
     if (destination.kind === "more") return openMore(destination.view);
     return false;
@@ -779,6 +785,7 @@ function AppWorkspaces() {
         </div>}
       </main>
 
+      {driveOpen && <Suspense fallback={null}><DriveHome open onClose={() => setDriveOpen(false)} onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }} /></Suspense>}
       <RecordSheets onAlfred={() => setAlfredOpen(true)} mealRequest={recordMealRequest} correctionRequest={recordCorrection} target={recordSheet} open={openRecordSheet} close={closeRecordSheet} onBusy={updateMealInFlight}
         onSaved={() => { setTodayRefreshKey((key) => key + 1); setStealthWrites((key) => key + 1); }}
         onHistory={(metric) => leaveRecordSheet(() => { openBodyEvidence(metric); setMealOrigin((origin) => origin ? { ...origin, trigger: recordOrigin.current } : null); })}
