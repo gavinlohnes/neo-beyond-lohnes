@@ -74,3 +74,17 @@ it("a failed tick keeps the routine on screen with a retryable message", async (
   await screen.getByRole("checkbox", { name: "Fill bottle" }).click();
   await expect.poll(async () => (await getRoutineTicks(day.id)).size).toBe(1);
 });
+
+it("groups matching routines behind one disclosure while keeping distinct accessible step groups", async () => {
+  const day = await startDay();
+  const first = await createRoutine({ title: "Essentials", moment: "BEFORE_SHIFT", steps: ["Keys"] });
+  await createRoutine({ title: "Leaving home", moment: "BEFORE_SHIFT", steps: ["Keys"] });
+  const screen = await render(<TodayRoutine dayId={day.id} moment="BEFORE_SHIFT" active />);
+  await expect.element(screen.getByText("BEFORE SHIFT ROUTINES", { exact: true })).toBeVisible();
+  expect(screen.container.querySelectorAll("summary")).toHaveLength(1);
+  await screen.getByText("BEFORE SHIFT ROUTINES", { exact: true }).click();
+  await screen.getByRole("group", { name: "Essentials", exact: true }).getByRole("checkbox", { name: "Keys" }).click();
+  await expect.poll(async () => (await getRoutineTicks(day.id)).has(`${first.id}:${first.steps[0]!.id}`)).toBe(true);
+  await expect.element(screen.getByRole("group", { name: "Leaving home", exact: true }).getByRole("checkbox", { name: "Keys" })).not.toBeChecked();
+  await noAxe(screen.container);
+});

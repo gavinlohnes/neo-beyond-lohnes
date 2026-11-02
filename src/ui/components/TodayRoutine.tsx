@@ -46,8 +46,9 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
   }
 
   return <section aria-label={`${ROUTINE_MOMENT_LABELS[moment]} routine`} className="today-routine">
-    {here.map((r) => <details key={r.id} className="writing-start">
-      <summary className="disclosure-row">{ROUTINE_MOMENT_LABELS[moment].toUpperCase()} · {r.title}</summary>
+    <details className="support-disclosure"><summary>{here.length === 1 ? `${ROUTINE_MOMENT_LABELS[moment].toUpperCase()} · ${here[0]!.title}` : `${ROUTINE_MOMENT_LABELS[moment].toUpperCase()} ROUTINES`}</summary><div className="support-disclosure__body">
+    {here.map((r) => <fieldset key={r.id} className="writing-start">
+      <legend className={here.length > 1 ? "tool-label" : "visually-hidden"}>{r.title}</legend>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
         {r.steps.map((s) => {
           const done = ticks.has(stepKey(r.id, s.id));
@@ -57,7 +58,8 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
           </label></li>;
         })}
       </ul>
-    </details>)}
+    </fieldset>)}
+    </div></details>
     {tickError && <p role="alert" className="meta">{tickError}</p>}
   </section>;
 }

@@ -2692,6 +2692,26 @@ wording of at most 280 characters; no silent truncation, splitting, inference or
 New exports require this build or newer to interpret PERSONAL_FACT history; there is no downgrade
 conversion or selective erasure of older backups/external requests. Engine authority is unchanged.
 
+## 2026-11-01 — ATTENTION-001: next action first, deliberate supporting depth
+
+Gavin approved [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370), including the
+explicit ALFRED-003/006 placement amendments: “Approved. But make sure it is pleasant to look at
+and still looks like Batman Beyond.” On primary TODAY the existing next-action/log pair precedes
+closed Alfred narrative. Saved AI weekly reviews and the separate structured review remain distinct;
+a shared neutral review disclosure may surface automatically only in the actual OFF phase when
+backed by existing availability/readiness. Operator-opened review depth survives phase changes.
+Generation, cost gates, stored records, GOT IT and MONTH access retain existing behavior; opening
+or closing a disclosure does not request another review or create a canonical record.
+
+Current-moment routines share one collapsed entry without adding a tap for a single routine. LIFE
+keeps its six tabs and mounted drafts; general personal facts use one canonical memory editor,
+with legacy original-entry conversion/deletion retained separately. Management and planning are
+inspectable depth. People/Home compound writes, Engine decisions, trace, actual phases, mode-pin
+semantics, primary logging routes and active operation/error visibility remain unchanged.
+
+The visual pass preserves black-dominant space, sharp BEYOND framing, typography, restrained red
+emphasis and current brand tokens (including the approved yellow accent). No new dashboard,
+provider, dependency, notification, recovery inference or navigation scheme follows from this ruling.
 ## 2026-11-01 — FREE-HELPER-001: free first, Alfred when needed
 
 Owner: work that doesn't need Alfred-level thinking should use a free helper. Everyday messages

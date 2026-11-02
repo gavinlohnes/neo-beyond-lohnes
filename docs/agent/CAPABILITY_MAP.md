@@ -366,3 +366,14 @@ retired facts stay out of active context/search, and conversion retains an expli
 inspection, physical deletion of unconverted rows and individually confirmed conversion. No bulk
 migration; both stores still exist while originals remain. BUILD OWNED integration using existing
 atomic writes, proposal cards, common context projection and native backups; no new dependency.
+
+### ATTENTION-001 — connected TODAY/LIFE presentation (2026-11-01)
+
+Approved bounded objective: [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370).
+Primary TODAY reuses its existing next/log ordering, attention and actual-phase truth. AlfredBrief's
+optional recessed rendering keeps generation/cache guards mounted; TodayReviewSupport combines
+presentation of existing AlfredWeek and WeeklyReviewReadyLine without merging their records or
+readiness rules. Current-moment routines group behind one entry. LIFE retains mounted tabs and
+routes personal-fact creation through MemoryPanel; AlfredMemoryList handles legacy evidence only.
+BUILD OWNED composition on existing native disclosures and brand tokens; no new recommendation
+policy, library, database or provider. Separate COMMAND operating surfaces retain their behavior.

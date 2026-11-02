@@ -30,17 +30,20 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   const writing = useRef(false), sequence = useRef(0), lifecycle = useRef(0);
   const uid = useId();
   const focused = useRef<string | null>(null);
+  const [savedFocus, setSavedFocus] = useState<{ factId: string; revision: string } | null>(null);
+  const requestedFocus = savedFocus?.factId ?? focusFactId;
+  useEffect(() => { setSavedFocus(null); }, [focusFactId]);
   useEffect(() => {
-    if (!active || !data || !focusFactId || focused.current === focusFactId) return;
-    const fact = data.facts.find((f) => f.factId === focusFactId);
-    if (!fact) return;
-    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === focusFactId) + 1));
+    if (!active || !data || !requestedFocus || focused.current === requestedFocus) return;
+    const fact = data.facts.find((f) => f.factId === requestedFocus);
+    if (!fact || savedFocus && fact.id !== savedFocus.revision) return;
+    setStatus(fact.status); setLimit(Math.max(5, data.facts.filter((f) => f.status === fact.status).findIndex((f) => f.factId === requestedFocus) + 1));
     const frame = requestAnimationFrame(() => {
-      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === focusFactId && el.getClientRects().length);
-      if (article) { article.focus(); focused.current = focusFactId; }
+      const article = [...document.querySelectorAll<HTMLElement>("[data-memory-id]")].find((el) => el.dataset.memoryId === requestedFocus && el.getClientRects().length);
+      if (article) { article.focus(); focused.current = requestedFocus; }
     });
     return () => cancelAnimationFrame(frame);
-  }, [active, data, focusFactId]);
+  }, [active, data, requestedFocus, savedFocus]);
   useSessionDraft(`memory-${uid}`, draft !== null && draft.statement.length > 0);
   useEffect(() => { lifecycle.current++; return () => { lifecycle.current++; }; }, [active, scope]);
   useEffect(() => {
@@ -62,7 +65,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   function edit(fact?: MemoryFact) {
     setNotice(null); setError(null);
     setDraft({ factId: fact?.factId ?? crypto.randomUUID(), previous: fact?.id ?? null, dayId: data?.dayId ?? null,
-      general: fact ? fact.kind === "PERSONAL_FACT" : undefined, topic: fact?.topic ?? "OTHER", kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : scope === "PERSONAL" ? "DIRECTION" : "PREP_FOOD"), statement: fact?.statement ?? "" });
+      general: fact ? fact.kind === "PERSONAL_FACT" : undefined, topic: fact?.topic ?? "OTHER", kind: fact?.kind ?? (scope === "RECOVERY" ? "RECOVERY" : scope === "PERSONAL" ? "DIRECTION" : scope === "ALL" ? "PERSONAL_FACT" : "PREP_FOOD"), statement: fact?.statement ?? "" });
   }
   async function write(action: MemoryAction, fact?: MemoryFact) {
     if (writing.current || disabled) return;
@@ -79,7 +82,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
         ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement, ...(draft!.kind === "PERSONAL_FACT" ? { topic: draft!.topic } : {}) }) }, receipt);
       if (receipt.changed) acknowledge(action === "IRRELEVANT" ? "HEAVY" : "LIGHT");
       if (lifecycle.current !== request) return;
-      if (!fact) setDraft(null);
+      if (!fact) { setDraft(null); focused.current = null; setSavedFocus({ factId: saved.factId, revision: saved.id }); }
       setUndo(action === "IRRELEVANT" ? saved : null);
       setNotice(action === "IRRELEVANT" ? "Marked no longer relevant. Kept in memory history." : action === "CONFIRMED" ? "Confirmed again." : action === "RESTORED" ? "Restored and confirmed." : "Memory saved.");
       window.dispatchEvent(new Event("beyond:memory-changed"));
@@ -89,15 +92,16 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
   if (!active) return null;
   const facts = data?.facts.filter((fact) => includes(scope, fact.kind) && fact.status === status) ?? [];
   return <section className="memory-panel" aria-label={contextual ? scope === "RECOVERY" ? "Your recovery memory" : "Your preparation memory" : "What BEYOND should remember"}>
-    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p>Your words. Nothing here changes your plan or BEYOND’s advice. Direction and constraints stay local until you share them with Alfred. Prep and recovery also support his briefs. Personal facts are available to Alfred by default. Stop using removes them from active context while keeping correction history.</p></>}
+    {!contextual && <><h2 className="tool-label">WHAT BEYOND SHOULD REMEMBER</h2><p className="meta">Your words. Inspect or change them when you choose.</p><details><summary>Sharing and retention</summary><p>Your words. Nothing here changes your plan or BEYOND’s advice. Direction and constraints stay local until you share them with Alfred. Prep and recovery also support his briefs. Personal facts are available to Alfred by default. Stop using removes them from active context while keeping correction history.</p></details></>}
     {loading && <p role="status" className="meta">Reading memory…</p>}
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
     {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}
     {undo && <ConfirmBanner message="Marked no longer relevant." actionLabel="RESTORE & CONFIRM" disabled={disabled} onAction={() => void write("RESTORED", undo)} />}
     {data && !loading && <>
-      {!contextual && <div className="memory-actions" role="group" aria-label="Memory status">
+      {!contextual && <details className="memory-management"><summary>MANAGE MEMORY</summary><div className="memory-actions" role="group" aria-label="Memory status">
         {(["ACTIVE", "IRRELEVANT"] as const).map((value) => <button type="button" className="btn-secondary" key={value} aria-pressed={status === value} onClick={() => { setStatus(value); setLimit(5); }}>{value === "ACTIVE" ? "ACTIVE" : "NO LONGER RELEVANT"}</button>)}
-      </div>}
+      </div></details>}
+      {status === "IRRELEVANT" && facts.length > 0 && <p className="meta">HISTORY · NO LONGER RELEVANT</p>}
       {!facts.length && !contextual && <p className="meta">{status === "ACTIVE" ? "No active memories yet. Add only what you want BEYOND to remember." : "No memories marked irrelevant."}</p>}
       {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId} tabIndex={-1} data-memory-id={fact.factId}>
         <p className="memory-statement">{fact.statement}</p>
@@ -122,10 +126,11 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
       <select className="input" id={`${uid}-kind`} value={draft.kind} disabled={busy} onChange={(event) => setDraft({ ...draft, kind: event.target.value as MemoryKind })}>
         {MEMORY_KINDS.filter((kind) => includes(scope, kind) && (draft.previous === null || (kind === "PERSONAL_FACT") === draft.general)).map((kind) => <option value={kind} key={kind}>{MEMORY_LABELS[kind]}</option>)}
       </select>
-      {draft.kind === "PERSONAL_FACT" && <label>About<select className="input" value={draft.topic} disabled={busy} onChange={(event) => setDraft({ ...draft, topic: event.target.value as MemoryTopic })}>{MEMORY_TOPICS.map((topic) => <option key={topic} value={topic}>{topic}</option>)}</select></label>}
+      {draft.kind === "PERSONAL_FACT" && <label>About<select className="input" value={draft.topic} disabled={busy} onChange={(event) => setDraft({ ...draft, topic: event.target.value as MemoryTopic })}>{MEMORY_TOPICS.map((topic) => <option key={topic} value={topic}>{topic === "PERSON" ? "People" : topic === "MONEY" ? "Money and bills" : topic[0] + topic.slice(1).toLowerCase()}</option>)}</select></label>}
       {draft.previous === null && <button type="button" className="btn-secondary" disabled={busy || Boolean(draft.statement)} onClick={() => setDraft({ ...draft, statement: starters[draft.kind] })}>USE AN EDITABLE STARTER</button>}
       <label htmlFor={`${uid}-statement`}>What should BEYOND remember?</label>
       <textarea className="input" id={`${uid}-statement`} maxLength={280} value={draft.statement} disabled={busy} onChange={(event) => setDraft({ ...draft, statement: event.target.value })} />
+      <p className="meta">{draft.kind === "PERSONAL_FACT" ? "Available to Alfred by default. Stop using excludes active context; history stays." : "This does not change your plan or BEYOND’s advice. Existing purpose-specific sharing applies."}</p>
       <p className="meta">{draft.statement.length}/280 · Saving confirms these words. Closing keeps this draft in this session; reloading clears unsaved text.</p>
       <div className="memory-actions"><button className="btn-secondary" type="submit" disabled={disabled || !draft.statement.trim()}>SAVE & CONFIRM MEMORY</button>
         <button className="btn-secondary" type="button" disabled={busy} onClick={() => setDraft(null)}>DISCARD DRAFT</button></div>

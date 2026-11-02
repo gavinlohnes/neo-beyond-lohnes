@@ -44,7 +44,7 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
   }
 
   return <section aria-labelledby="life-heading" className="life-screen">
-    <h2 id="life-heading" className="visually-hidden">Life</h2>
+    <header className="life-identity"><p className="tool-label">PERSONAL OPERATING CONTEXT</p><h2 id="life-heading">LIFE</h2><p>Direction, people and everyday life.</p></header>
     <div className="life-tabs" role="tablist" aria-label="Life areas">
       {LIFE_TABS.map((t) => <button key={t} type="button" role="tab" id={`${uid}-tab-${t}`} aria-selected={tab === t} aria-controls={`${uid}-panel-${t}`}
         tabIndex={tab === t ? 0 : -1} onKeyDown={onKey}
@@ -55,7 +55,7 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
       {visited.has(t) && <>
         {t === "Direction" && <>
           <MemoryPanel active={on(t)} scope="PERSONAL" />
-          <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me plan my next days off around what matters to me. Use my recorded schedule and commitments, say what is unknown, and offer a draft for me to choose from.")}>PLAN MY NEXT DAYS OFF</button>
+          <details className="support-disclosure"><summary>PLAN WHEN YOU WANT</summary><div className="support-disclosure__body"><button type="button" className="btn-secondary" onClick={() => askAlfred("Help me plan my next days off around what matters to me. Use my recorded schedule and commitments, say what is unknown, and offer a draft for me to choose from.")}>PLAN MY NEXT DAYS OFF</button><p className="meta">Alfred offers a draft. Nothing is saved until you confirm.</p></div></details>
         </>}
         {t === "Plans" && <IntentScreen active={on(t)} />}
         {t === "Routines" && <RoutinesPanel active={on(t)} />}

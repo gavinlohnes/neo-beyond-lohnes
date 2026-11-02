@@ -1,5 +1,5 @@
 import { useEffect, useState, useId, useRef } from "react";
-import { convertLegacyMemory, stopUsingMemory, getMemories, rememberFact } from "../../application/alfred/alfredMemory";
+import { convertLegacyMemory, stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { MEMORY_TOPICS, type AlfredMemory, type MemoryTopic } from "../../domain/alfred/types";
 import { useSessionDraft } from "../sessionDrafts";
 import { describeError } from "../errorMessage";
@@ -10,11 +10,10 @@ const LABEL: Record<MemoryTopic, string> = { PERSON: "People", MONEY: "Money and
 export function AlfredMemoryList({ active }: { active: boolean }) {
   const [facts, setFacts] = useState<AlfredMemory[] | null>(null);
   const uid = useId(), working = useRef(false);
-  const [topic, setTopic] = useState<MemoryTopic>("PERSON"), [text, setText] = useState("");
   const [preview, setPreview] = useState<{ source: AlfredMemory; text: string; topic: MemoryTopic } | null>(null);
   const [error, setError] = useState<string | null>(null), [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false), [limit, setLimit] = useState(5);
-  useSessionDraft(`legacy-memory-${uid}`, Boolean(text || preview));
+  useSessionDraft(`legacy-memory-${uid}`, Boolean(preview));
   const load = () => getMemories().then(setFacts).catch(() => setError("Couldn't read what Alfred remembers."));
   useEffect(() => {
     if (!active) return;
@@ -31,9 +30,9 @@ export function AlfredMemoryList({ active }: { active: boolean }) {
   }
   if (!active) return null;
   const legacy = facts?.filter((f) => f.reference?.source === "ALFRED_MEMORY") ?? [];
+  if (!legacy.length && !preview && !error && !notice) return null;
   return <section className="alfred-memory-page" aria-labelledby={`${uid}-heading`}>
-    <h2 id={`${uid}-heading`} className="tool-label">PERSONAL FACTS FOR ALFRED</h2>
-    <p className="meta">New facts use the memory editor above for corrections, history and restore. Alfred reads active personal facts in every answer. Stop using keeps history; it does not erase records. A bill or birthday can also be a repeating reminder in COMMITMENTS.</p>
+    <h2 id={`${uid}-heading`} className="visually-hidden">ORIGINAL ALFRED ENTRIES</h2>
     {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     {legacy.length > 0 && <details><summary>Original Alfred entries ({legacy.length})</summary>
       <p className="meta">These entries have no correction history. Forget deletes the local entry. Convert individually to keep future corrections; no automatic conversion.</p>
@@ -52,10 +51,6 @@ export function AlfredMemoryList({ active }: { active: boolean }) {
       <button type="submit" className="btn-secondary" disabled={busy || !preview.text.trim() || preview.text.trim().length > 280}>CONVERT & CONFIRM THIS ENTRY</button>
       <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPreview(null)}>DISCARD CONVERSION DRAFT</button>
     </form>}
-    <form className="alfred-memory-add" onSubmit={(e) => { e.preventDefault(); if (text.trim()) void write(async () => { await rememberFact(text, topic); setText(""); }, "Personal fact saved. Inspect or correct it in the memory editor."); }}>
-      <label className="field">About<select className="input" disabled={busy} value={topic} onChange={(e) => setTopic(e.target.value as MemoryTopic)}>{MEMORY_TOPICS.map((t) => <option key={t} value={t}>{LABEL[t]}</option>)}</select></label>
-      <label className="field">Remember<input className="input" value={text} disabled={busy} maxLength={280} placeholder="Car payment $412, due the 15th" onChange={(e) => setText(e.target.value)} /></label>
-      <button type="submit" className="btn-secondary" disabled={busy || !text.trim()}>REMEMBER</button>
-    </form>
+
   </section>;
 }
