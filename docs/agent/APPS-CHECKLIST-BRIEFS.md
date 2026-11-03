@@ -2,7 +2,8 @@
 
 Owner selection 2026-11-03 ([checklist](../BEYOND_APPS_CHECKLIST.md)). Field test #402 is paused by Gavin.
 These are BEYOND's own features modelled on jobs other apps do — not the apps. Only A8 (Google
-Calendar) and A9 (IFTTT) connect to real services; Gavin approved both providers.
+Calendar) and A9 (IFTTT) connect to real services; Gavin approved both providers by selecting them
+(recorded in [UX_DECISIONS](../UX_DECISIONS.md), "2026-11-03 — Apps checklist selection").
 
 ## Rules for every item
 - One branch per item `codex/<id>` from fresh `origin/master`; open a **ready** PR with the item id in the
@@ -44,7 +45,7 @@ Events, in backups, correctable. Free helper understands "did <habit>".
 
 ## A3 DAILY-NOTE-001 — daily note and [[links]] (Obsidian)
 One note per lived day (16:30→16:30): that day's logs read-only, free text below (draft autosave, SAVE).
-`[[Name]]` in notes/journal/daily notes links to a person, project, collection item or day
+The draft lives on the phone only until SAVE. `[[Name]]` in notes/journal/daily notes links to a person, project, collection item or day
 (`[[2026-11-03]]`), with autocomplete; each target shows "Mentioned in". Links derived on read.
 
 ## A6 COLLECTIONS-001 — collections (Notion)
@@ -61,11 +62,13 @@ His own Google sign-in via Google Identity Services in the browser, no server. S
 calendar he picks/creates (write) plus read of his primary calendar. Out: scheduled shifts (labelled),
 and planned/due tasks if he chooses (titles only — no notes, health, money or memory). In: his events
 read-only in Week Ahead and the presence line; never BEYOND records, never free/busy truth for
-recommendations. Sync on SYNC, or on open if he turns it on; disconnect removes the token. The OAuth
+recommendations. Sync on SYNC, or on open if he turns it on; disconnect removes the token. The token stays on the phone only
+(like the Alfred key): never in backups or exports, with a backup round-trip test proving it. The OAuth
 client ID comes from an optional build-time env var; the PR body gives Gavin plain phone steps to create it.
 
 ## A9 IFTTT-001 — IFTTT webhooks (provider approved)
 Off by default. MORE → AUTOMATIONS (search-only): paste his Webhooks key, tick events (work started/ended,
 workout finished, day started, routine finished). Payload = event + time only unless he ticks "include
-value" on a non-sensitive item. TEST button; last 20 sends logged on the phone. Fire-and-forget POST to
+value" on a non-sensitive item. TEST button; last 20 sends logged on the phone. The key stays on the phone only: never in backups or
+exports, with a round-trip test proving it. Fire-and-forget POST to
 maker.ifttt.com; failures shown, no retry loop.
