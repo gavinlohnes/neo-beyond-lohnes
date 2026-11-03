@@ -13,6 +13,10 @@
   FIELD actions. Dedicated Chromium 2/2 PASS at 1440 and 360 px including axe and overflow;
   COMMAND catalog 68/68 PASS; architecture, TypeScript and production/PWA build PASS. Visual
   inspection completed against the generated concept; no bitmap or fictional telemetry ships.
+- Independent review blocked head `b55d6291` because the first stylesheet bypassed the locked
+  palette with local colors. The repair uses only established BEYOND tokens and keeps red as
+  structural authority rather than low-contrast small text; dedicated Chromium/axe is again 2/2
+  PASS. The changed head requires renewed exact-head review.
 - Next: obtain independent exact-head review and required CI, then apply Gavin's standing
   green-gates merge ruling.
 
