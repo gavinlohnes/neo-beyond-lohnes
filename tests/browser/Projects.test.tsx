@@ -83,6 +83,7 @@ it("Alfred proposes a project with steps as one card; nothing is saved until SAV
       stop_reason: "tool_use", stop_sequence: null, usage: { input_tokens: 100, output_tokens: 20 } }), { headers: { "content-type": "application/json" } });
   });
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
+  await screen.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
   await screen.getByRole("button", { name: "Help me get something done" }).click();
   await expect.element(screen.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("Help me get this done: ");
   await screen.getByRole("textbox", { name: "Message Alfred" }).fill("Help me get this done: clear the garage");

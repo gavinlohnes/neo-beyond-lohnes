@@ -21,6 +21,9 @@
   Evidence: TypeScript PASS; Alfred/Week Plan/cost-control Chromium 11/11 PASS; 320/360/412 px
   overflow and axe PASS; recommendation-context integration 10/10 PASS; architecture PASS (418
   files); production/PWA build PASS (49 entries).
+- CI at `b49f6684` reached the full browser suite and found four stale locators for specialist
+  starters now intentionally placed under MORE THINGS ALFRED CAN DO. Their behavioral assertions
+  are unchanged; each now deliberately opens that depth before selecting the existing starter.
 - Next: push a PR, obtain independent exact-head review and required CI, then apply Gavin's
   standing green-gates merge ruling.
 
