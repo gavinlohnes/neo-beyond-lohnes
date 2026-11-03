@@ -38,6 +38,9 @@ function writeAlfredKey(value: string | null) { try { if (value) localStorage.se
 
 /** WEEK-PLAN-001: the one question Alfred is asked; each placement comes back as a card to SAVE or SKIP. */
 export const PLAN_MY_WEEK_ASK = "Plan my next 7 days. Use my shifts and sleep, my open tasks and project steps, birthdays and home jobs that are due. Offer each placement as a card for a specific day; I'll save the ones I want. Keep work nights light, never plan over sleep, and treat unknown time as unknown, not free. Say what you left unplanned and why.";
+/** ALFRED-COACH-001: three bounded jobs, grounded in existing BEYOND authority and records. */
+export const COACH_NOW_ASK = "Explain today's situation from BEYOND's current records and existing Engine recommendation. Separate what is recorded, what BEYOND already recommends, and what is still unknown. Tell me what is already handled and what choice is actually mine. Do not create or rank a new recommendation.";
+export const COACH_REVIEW_ASK = "Review my last 7 lived days against the 7 before. Use get_days, cite the recorded numbers and sample sizes, name uncertainty, and distinguish observation from interpretation. End with one optional question for me to consider, not a new BEYOND recommendation.";
 // LIFE-HUB-001: grouped Plan · Remember · Review so the message box stays in view.
 type StarterGroup = "Plan" | "Remember" | "Review";
 const STARTER_GROUPS: StarterGroup[] = ["Plan", "Remember", "Review"];
@@ -323,12 +326,30 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     <>
       <div className="alfred-log" aria-live="polite">
         {turns.length === 0 && <div className="alfred-starters">
-          <p className="meta">Say or type anything: what you ate, how you slept, something to remember. Or ask.</p>
-          <button type="button" className="btn-primary" disabled={busy} onClick={() => talk("Shift debrief: ")}>DEBRIEF MY SHIFT</button>
-          {STARTER_GROUPS.map((g) => <div key={g} className="alfred-starter-group" role="group" aria-label={g}>
-            <p className="alfred-turn__who">{g.toUpperCase()}</p>
-            <div className="alfred-starter-grid">{STARTERS.filter((q) => q.group === g).map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void sendToAlfred(q.ask ?? q.label))}>{q.label}</button>)}</div>
-          </div>)}
+          <section className="alfred-coach" aria-labelledby="alfred-coach-title">
+            <div className="alfred-coach__lead">
+              <p className="alfred-turn__who">ALFRED / COACH</p>
+              <h3 id="alfred-coach-title">Understand. Plan. Decide.</h3>
+              <p>Grounded in your BEYOND records. Alfred explains and drafts; BEYOND keeps recommendation authority, and you approve every change.</p>
+            </div>
+            <div className="alfred-coach__grid">
+              <button type="button" disabled={busy} onClick={() => void sendToAlfred(COACH_NOW_ASK)}><span>01 / NOW</span><strong>Explain today</strong><small>Facts, existing guidance and the choice that remains.</small></button>
+              <button type="button" disabled={busy} onClick={() => void sendToAlfred(PLAN_MY_WEEK_ASK)}><span>02 / NEXT 7</span><strong>Draft my week</strong><small>Shifts, sleep and commitments. Save only what fits.</small></button>
+              <button type="button" disabled={busy} onClick={() => void sendToAlfred(COACH_REVIEW_ASK)}><span>03 / REVIEW</span><strong>Read the pattern</strong><small>Two recorded weeks, sample sizes and uncertainty.</small></button>
+            </div>
+            <div className="alfred-coach__actions">
+              <button type="button" className="btn-primary" disabled={busy} onClick={() => talk("Shift debrief: ")}>DEBRIEF MY SHIFT</button>
+              <button type="button" className="btn-secondary" disabled={busy} onClick={() => setText("Help me adjust the draft because: ")}>ADJUST A PLAN</button>
+            </div>
+          </section>
+          <p className="meta">Or say or type anything: what happened, what you need, or what BEYOND should remember.</p>
+          <details className="alfred-coach__more">
+            <summary>MORE THINGS ALFRED CAN DO</summary>
+            {STARTER_GROUPS.map((g) => <div key={g} className="alfred-starter-group" role="group" aria-label={g}>
+              <p className="alfred-turn__who">{g.toUpperCase()}</p>
+              <div className="alfred-starter-grid">{STARTERS.filter((q) => q.group === g).map((q) => <button type="button" key={q.label} className="btn-secondary" disabled={busy} onClick={() => (q.fill ? setText(q.fill) : void sendToAlfred(q.ask ?? q.label))}>{q.label}</button>)}</div>
+            </div>)}
+          </details>
         </div>}
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
           <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : t.free ? "BEYOND · FREE" : "ALFRED"}</p>
