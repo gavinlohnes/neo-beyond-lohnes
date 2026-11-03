@@ -2,7 +2,8 @@
 
 - Gavin directed: “Let's create a plan beyond 3.0 launch. Advance it even further” on 2026-11-03.
   Routine documentation objective; baseline `47d98ceb56496f24cce35cb179c853c41249f020`;
-  branch `codex/beyond-after-3-plan`.
+  branch `codex/beyond-after-3-plan`; active
+  [PR #401](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/401).
 - Live master is clean apart from the existing untracked attachment folder, matches origin, and has
   no active implementation objective. The old 3.0 checklist understated shipped programme, meal
   planning, graph, recovery and Alfred capabilities.
