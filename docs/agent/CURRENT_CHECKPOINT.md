@@ -1,3 +1,19 @@
+# SNIPPETS-001 — A1 active build
+
+- Gavin directed Codex to build A1–A9 in checklist order. A1 brief:
+  [SNIPPETS-001.md](SNIPPETS-001.md). Protected additive configuration schema; baseline
+  `c9356356f8d3da13612b5a51047b872ea01cc95c`; branch `codex/snippets-001`; PR pending.
+- Implemented search-only snippets and named free-helper card sets with explicit saves,
+  one-Backspace undo and native backup compatibility. Focused integration, migration, catalog,
+  360px/touch/axe browser tests, architecture and typecheck pass. No Engine/provider/dependency change.
+- Full `npm run verify` is blocked before PR: existing browser mock suites fail on clean
+  `origin/master` with `vi.mocked(...).mockReset is not a function` (reproduced from a detached
+  `c9356356` worktree after `npm ci`). No branch push or PR until the required gate is green.
+- Next: restore a working Chromium/Vitest verification environment, rerun full verify, open the
+  ready PR immediately, then start A2 from fresh master. Claude Code reviews and merges.
+
+---
+
 # APPS-CHECKLIST — 2026-11-03 (orchestrator: Claude Code; builder: Codex)
 
 - Gavin picked nine outside-app jobs for BEYOND: [checklist](../BEYOND_APPS_CHECKLIST.md), briefs in

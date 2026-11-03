@@ -7,13 +7,14 @@ import { resolveTemplateExercises } from "../customTemplateQueries";
 import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries } from "../queries";
 import type { HelperContext } from "./freeHelper";
 import type { WorkoutTemplateId } from "../../domain/workout/types";
+import { getLogTemplates } from "../snippetQueries";
 
 /**
  * The one read the free helper needs, shared by Alfred's sheet, search and drive home so the preview,
  * the send and the voice loop can never drift apart (review of #380). Read-only.
  */
 export async function readHelperContext(now = new Date()): Promise<HelperContext> {
-  const [meals, tasks, projects, routines, session] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines(), getActiveWorkoutSession()]);
+  const [meals, tasks, projects, routines, session, logTemplates] = await Promise.all([getSavedMeals(), getUnresolvedObligations(), getProjects(), getRoutines(), getActiveWorkoutSession(), getLogTemplates()]);
   const day = await getActiveDay();
   const [water, sleep, weight] = day ? await Promise.all([getHydrationEntries(day.id), getSleepEntries(day.id), getBodyweightEntries(day.id)]) : [[], [], []];
   const w = water.at(-1), s = sleep.at(-1), b = weight.at(-1);
@@ -22,6 +23,7 @@ export async function readHelperContext(now = new Date()): Promise<HelperContext
     now, savedMeals: meals, openTasks: tasks,
     openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),
     routines: routines.filter((r) => r.status === "ACTIVE"),
+    logTemplates,
     lastLogs: {
       ...(w ? { water: { id: w.headEventId, value: w.effectiveAmountOz } } : {}),
       ...(s ? { sleep: { id: s.headEventId, value: s.effectiveDurationMinutes } } : {}),
