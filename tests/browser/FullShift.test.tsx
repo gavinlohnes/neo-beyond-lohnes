@@ -60,8 +60,8 @@ it("walks one whole shift through the screens: preflight, a late-logged meal, a 
   await sheet.getByRole("textbox", { name: "Pick a time" }).fill("17:10");
   await sheet.getByRole("button", { name: "QUICK ADD", exact: true }).click();
   sheet = screen.getByRole("dialog", { name: /QUICK ADD|MEAL/ });
-  await sheet.getByLabelText("Quick add Calories").fill("600");
-  await sheet.getByLabelText("Quick add Protein").fill("45");
+  await sheet.getByLabelText("Quick add Calories", { exact: true }).fill("600");
+  await sheet.getByLabelText("Quick add Protein (g)", { exact: true }).fill("45");
   await sheet.getByRole("button", { name: "LOG", exact: true }).click();
   await expect.poll(async () => (await getMealEntries((await db.beyondDays.orderBy("startedAt").last())!.id)).map((m) => hhmm(new Date(m.at)))).toEqual(["17:10"]);
   await check("2-meal-logged");

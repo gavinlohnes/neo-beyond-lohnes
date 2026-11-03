@@ -68,7 +68,7 @@ describe("TODAY action row", () => {
 
     const destinations = [
       ["WATER", () => expect.element(screen.getByRole("button", { name: "+8 oz", exact: true })).toBeVisible()],
-      ["MEAL", () => expect.element(screen.getByRole("searchbox", { name: "Search your meals" })).toBeVisible()],
+      ["MEAL", () => expect.element(screen.getByRole("searchbox", { name: "Search your meals and foods", exact: true })).toBeVisible()],
       ["SLEEP", () => expect.element(screen.getByRole("spinbutton", { name: "Hours", exact: true })).toBeVisible()],
       ["BODYWEIGHT", () => expect.element(screen.getByRole("spinbutton", { name: "Weight (lbs)", exact: true })).toBeVisible()],
       ["URGE", () => expect.element(screen.getByRole("button", { name: "Log urge: Stress" })).toBeVisible()],

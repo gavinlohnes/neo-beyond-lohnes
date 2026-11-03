@@ -102,7 +102,8 @@ describe("ALFRED-001", () => {
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
     await sheet.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
     await sheet.getByRole("button", { name: "How am I doing?" }).click();
-    await expect.element(sheet.getByRole("alert")).toHaveTextContent(/No connection to Claude|couldn't answer/);
+    await expect.element(sheet.getByRole("alert")).toBeVisible();
+    expect(sheet.getByRole("alert").element().textContent).toMatch(/No connection to Claude|couldn't answer/);
   });
 
   it("reads BEYOND's records into plain lines, saved meals by id", async () => {

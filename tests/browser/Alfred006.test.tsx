@@ -78,7 +78,9 @@ describe("ALFRED-006 memory in MORE", () => {
     await recordMemory({ dayId: day.id, factId: "f1", expectedPreviousId: null, action: "CREATED", kind: "PREP_FOOD", statement: "Frozen meals are my backup." });
     const screen = await render(<><MemoryPanel /><AlfredMemoryList active /></>);
     await screen.getByRole("button", { name: "ADD MEMORY", exact: true }).click();
-    await screen.getByLabelText("About").selectOptions("MONEY");
+    const topic = screen.getByRole("combobox", { name: "About", exact: true });
+    await expect.element(topic).toBeVisible();
+    await topic.selectOptions("MONEY");
     await screen.getByRole("textbox", { name: "What should BEYOND remember?" }).fill("Car payment $412, due the 15th");
     await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY" }).click();
     const memory = screen.getByRole("region", { name: "What BEYOND should remember", exact: true });

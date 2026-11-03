@@ -17,7 +17,18 @@ import "../../src/ui/cc/suitPolish.css";
 import "../../src/ui/styles/fonts.ts";
 
 import Dexie from "dexie";
-import { afterEach, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, expect, vi } from "vitest";
+
+// Vitest 5 changed Browser Mode's string form of toHaveTextContent from substring matching to an
+// exact comparison. BEYOND's established acceptance suite uses it as a readable substring check;
+// retain that contract while still letting expect.element poll until asynchronous UI settles.
+expect.extend({
+  toHaveTextContent(received: HTMLElement, expected?: string | number) {
+    const actual = received.textContent ?? "";
+    const pass = expected === undefined ? actual.length > 0 : actual.includes(String(expected));
+    return { pass, message: () => `expected ${JSON.stringify(actual)} ${pass ? "not " : ""}to contain ${JSON.stringify(expected)}` };
+  },
+});
 
 // SHIFT-CHANGE-001: the shift-edge moment takes the whole screen once around a shift (PREFLIGHT,
 // LANDING, SECURED), and many TODAY tests start inside those windows for other reasons. It is off by
