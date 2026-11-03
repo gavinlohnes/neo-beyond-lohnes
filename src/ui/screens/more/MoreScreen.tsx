@@ -80,10 +80,11 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE";
+export type MoreView = "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import type { WholePictureDestination } from "../review/WholePicture";
+import { BatcomputerScreen } from "../command/BatcomputerScreen";
 
 export function MoreScreen({
   onViewChange,
@@ -101,6 +102,7 @@ export function MoreScreen({
   onOpenMetric, onReturnToToday, systemsRefreshKey = 0, onOpenCave,
   reviewDestination = null,
   onReviewDestinationConsumed,
+  onReturnToField,
 }: {
   onViewChange?: (view: MoreView) => void;
   /** COMMAND-CENTER-001: search results outside COMMAND (BODY, TRAIN, TODAY) go through the shell. */
@@ -134,6 +136,7 @@ export function MoreScreen({
   /** NAV-001: DATA can open the existing Whole Picture at its overview or rotation view. */
   reviewDestination?: { key: number; view: WholePictureDestination } | null;
   onReviewDestinationConsumed?: (key: number) => void;
+  onReturnToField?: () => void;
 } = {}) {
   const [view, setViewState] = useState<MoreView>(initialView);
   // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
@@ -498,11 +501,12 @@ export function MoreScreen({
   }
 
   return (
-    <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}`}>
+    <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}${view === "BATCOMPUTER" ? " more-batcomputer" : ""}`}>
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (returnToUnderstanding) { setView("REVIEW"); return; } if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{returnToUnderstanding ? "BACK TO REVIEW" : onReturnToToday ? "BACK TO TODAY" : "BACK TO MORE"}</button>
           <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { if (focus) onOpenDestination?.({ kind: "body", focus }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} onOpenCave={onOpenCave} /></>}
+          {view === "BATCOMPUTER" && <BatcomputerScreen active={active} onInspectSources={() => setView("REVIEW")} onReturnToField={() => onReturnToField?.()} />}
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<Opening><HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></Opening></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}
