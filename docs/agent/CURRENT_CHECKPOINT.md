@@ -2,7 +2,8 @@
 
 - Gavin approved the proposed ALFRED COACH 1.0 direction with “Make it so” on 2026-11-02.
   Protected brief: [ALFRED-COACH-001.md](ALFRED-COACH-001.md). Branch
-  `codex/alfred-coach-001`; baseline `8e1d46411b3725ce78c5ee32f9d4b17fa0e931a3`.
+  `codex/alfred-coach-001`; baseline `8e1d46411b3725ce78c5ee32f9d4b17fa0e931a3`; active
+  [PR #400](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/400).
 - Current truth already includes Alfred, daily and weekly briefs, whole-history reads, confirmed
   action cards, week/flip/meal planning and debriefs. This objective unifies those capabilities
   rather than creating a second coach or external integration.

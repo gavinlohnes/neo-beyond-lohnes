@@ -4,7 +4,7 @@
   ALFRED COACH 1.0 direction. Codex; Protected presentation/prompt-boundary work because coaching
   composition can change how recommendation authority is experienced.
 - **Starting commit / branch:** `8e1d46411b3725ce78c5ee32f9d4b17fa0e931a3`;
-  `codex/alfred-coach-001`.
+  `codex/alfred-coach-001`; PR #400.
 - **Outcome:** opening Alfred presents one purposeful coach workspace: understand the current
   situation, draft the next seven days, review the recorded pattern, debrief a shift, or adjust a
   draft. Existing specialist capabilities remain available without dominating the first view.
