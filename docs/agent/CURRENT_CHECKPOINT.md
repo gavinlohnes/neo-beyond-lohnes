@@ -2,7 +2,8 @@
 
 - Gavin authorized taking BEYOND's graphs and surrounding data experience beyond on 2026-11-02.
   FEATURE brief: [SUIT-DATA-001.md](SUIT-DATA-001.md). Branch `codex/suit-data-001`; baseline
-  `e338eb67a68e57cdffdc93bf8ae6186920836182`; PR pending.
+  `e338eb67a68e57cdffdc93bf8ae6186920836182`; active
+  [PR #399](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/399).
 - Scope is presentation/read-only inspection across BODY, REVIEW / Whole Picture, VITALS and TODAY:
   one suit-data grammar, stronger touch/keyboard selection, axes, legends, sparse states and
   responsive composition. Existing data meaning, evidence floors, sources and Engine boundaries
@@ -15,7 +16,7 @@
   direct 320 px suit-data interaction/axe 1/1 and focused Node 18/18 PASS; production PWA build PASS.
   Existing `BodyInsights.test.tsx` cannot reach assertions because its legacy ESM module mock is no
   longer a mock under the current browser runner; required isolated CI remains the broader gate.
-- Next: final diff review, publish, independently review and merge only after the standing green-gates
+- Next: independent exact-head review and required CI; merge only after the standing green-gates
   rule passes.
 
 ---

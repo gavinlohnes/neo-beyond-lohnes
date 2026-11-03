@@ -3,7 +3,7 @@
 - **Authorization / Builder / lane:** Gavin, 2026-11-02: “take it beyond … Make the graphs and
   everything else better.” Codex; FEATURE presentation and read-only inspection.
 - **Starting commit / branch:** `e338eb67a68e57cdffdc93bf8ae6186920836182`;
-  `codex/suit-data-001`; PR pending.
+  `codex/suit-data-001`; PR #399.
 - **Outcome:** BODY, REVIEW / Whole Picture, VITALS and TODAY measured views feel like one coherent
   BEYOND instrument system: legible comparisons, strong selected-state feedback, useful touch
   inspection, honest gaps and clearer surrounding controls at phone and desktop widths.
