@@ -14,8 +14,13 @@
   primary-navigation change.
 - Implemented the suit-style coach console, retained every prior starter under deliberate depth,
   and added bounded NOW and REVIEW prompts alongside the existing confirmed weekly-plan path.
+  Independent review of head `5126b842` correctly blocked NOW because its promise to explain the
+  Engine recommendation was not backed by that canonical record in Alfred's context. The repair
+  supplies the exact current recommendation and recorded decision as a provenance-bearing source,
+  or explicitly supplies that none is recorded; Alfred remains forbidden to infer a replacement.
   Evidence: TypeScript PASS; Alfred/Week Plan/cost-control Chromium 11/11 PASS; 320/360/412 px
-  overflow and axe PASS; architecture PASS (418 files); production/PWA build PASS (49 entries).
+  overflow and axe PASS; recommendation-context integration 10/10 PASS; architecture PASS (418
+  files); production/PWA build PASS (49 entries).
 - Next: push a PR, obtain independent exact-head review and required CI, then apply Gavin's
   standing green-gates merge ruling.
 

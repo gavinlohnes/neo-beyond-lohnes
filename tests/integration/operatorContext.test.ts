@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
-import { startDay, logWater } from "../../src/application/commands";
+import { startDay, logWater, recordRecommendation, submitCheckIn } from "../../src/application/commands";
 import { createMission, archiveMission, createObligation } from "../../src/application/intentCommands";
 import { createProject } from "../../src/application/projectCommands";
 import { createRoutine, modifyRoutine } from "../../src/application/routineCommands";
@@ -94,6 +94,18 @@ it("never labels missing Garmin steps as measured zero, including a sleep-only i
   const context = await buildPlanningContext(false);
   expect(context.text).toContain("steps so far today not measured");
   expect(context.text).not.toContain("steps so far today 0");
+});
+it("supplies the canonical current Engine recommendation and its recorded decision without inferring one", async () => {
+  const day = await startDay();
+  const empty = await buildPlanningContext(false);
+  expect(empty.text).toContain("BEYOND CURRENT RECOMMENDATION: none recorded for this lived day");
+  const { recommendation } = await submitCheckIn(day.id, { energy: 2, stress: 4, mood: 2, soreness: 2, alcoholUrge: 1 });
+  await recordRecommendation(day.id, recommendation);
+  const context = await buildPlanningContext(false);
+  expect(context.text).toContain(`BEYOND CURRENT RECOMMENDATION: ${recommendation.kind} — ${recommendation.title}.`);
+  expect(context.text).toContain(`Rationale: ${recommendation.rationale}`);
+  expect(context.text).toContain("Decision: ACCEPTED");
+  expect(context.sources.find((source) => source.kind === "RECOMMENDATION")).toMatchObject({ id: recommendation.id, classification: "Recorded event" });
 });
 it("an unrelated SAVE cannot bless an outside correction or advance its context receipt", async () => {
   await startDay();

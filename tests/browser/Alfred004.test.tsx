@@ -3,7 +3,7 @@ import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { App } from "../../src/app/App";
-import { captureItem, startDay } from "../../src/application/commands";
+import { captureItem, startDay, submitCheckIn } from "../../src/application/commands";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
 import { COACH_NOW_ASK, COACH_REVIEW_ASK, PLAN_MY_WEEK_ASK } from "../../src/ui/components/AlfredSheet";
 import { getDays, searchRecords } from "../../src/application/alfred/alfredSearch";
@@ -113,7 +113,8 @@ describe("ALFRED-004 talk mode and starters", () => {
   });
 
   it("opens as an owner-controlled coach workspace with bounded now, week and review jobs", async () => {
-    await startDay();
+    const day = await startDay();
+    const { recommendation } = await submitCheckIn(day.id, { energy: 2, stress: 4, mood: 2, soreness: 2, alcoholUrge: 1 });
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     const { sheet } = await openAlfred();
     await expect.element(sheet.getByRole("heading", { name: "Understand. Plan. Decide." })).toBeVisible();
@@ -125,6 +126,10 @@ describe("ALFRED-004 talk mode and starters", () => {
     await sheet.getByRole("button", { name: /Explain today/ }).click();
     await expect.poll(() => chats().length).toBe(1);
     expect(JSON.stringify(chats()[0]!.messages)).toContain(COACH_NOW_ASK);
+    const suppliedContext = JSON.stringify(chats()[0]!.system);
+    expect(suppliedContext).toContain(`BEYOND CURRENT RECOMMENDATION: ${recommendation.kind}`);
+    expect(suppliedContext).toContain(recommendation.title);
+    expect(suppliedContext).toContain(recommendation.rationale);
     expect(COACH_NOW_ASK).toContain("Do not create or rank a new recommendation");
     expect(COACH_REVIEW_ASK).toContain("optional question");
     expect(PLAN_MY_WEEK_ASK).toContain("I'll save the ones I want");
