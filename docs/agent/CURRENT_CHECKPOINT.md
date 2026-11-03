@@ -1,4 +1,22 @@
-# BEYOND-AFTER-3-PLAN-001 — approved planning objective (Builder: Codex)
+# ROTATION-FIELD-001 — active 3.0 launch field mission
+
+- Gavin approved activation with “Get after it” on 2026-11-03. Brief:
+  [ROTATION-FIELD-001.md](ROTATION-FIELD-001.md). Report-only mission; Gavin operates the real app,
+  Codex reconciles evidence. Baseline `100a701ce7a0da9f11631e26c5fe71fdbda4511b`;
+  branch `codex/rotation-field-001`; active
+  [PR #402](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/402).
+- Run the next complete work run through the first full day off. Mandatory checkpoints: final shift
+  ends, next wake, full day off.
+- Capture evidence through the existing LOG → NOTE path with `FIELD · INCIDENT`, `FRICTION`,
+  `MISSING JOB`, or `TRUST GAP`; capture `FIELD · CLEAR` when a checkpoint has no failure.
+- No product change is authorized by the mission. Data-integrity/core-loop incidents stop and jump
+  the queue; ordinary friction is carried through the rotation to measure recurrence.
+- Next: merge the field protocol, then begin on Gavin's next first work night. Completion waits for
+  real evidence; tests and simulated days cannot substitute.
+
+---
+
+# BEYOND-AFTER-3-PLAN-001 — merged PR #401
 
 - Gavin directed: “Let's create a plan beyond 3.0 launch. Advance it even further” on 2026-11-03.
   Routine documentation objective; baseline `47d98ceb56496f24cce35cb179c853c41249f020`;

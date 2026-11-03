@@ -59,6 +59,7 @@ Engine as the only recommendation authority. Ticks reflect master on 2026-11-02;
 ### Launch test (the gate)
 - [ ] A full rotation using only BEYOND, checked at three moments: end of a real shift, the next wake,
   and a day off. Write down every time another app or a workaround was needed.
+  Active field protocol: [ROTATION-FIELD-001](agent/ROTATION-FIELD-001.md).
 
 ## 2. Out of scope until section 1 is green and field-tested
 Batcomputer/desktop mode, on-device local model, photo food logging, Hevy/Strong import, deep
