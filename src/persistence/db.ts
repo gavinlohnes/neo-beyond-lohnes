@@ -15,6 +15,7 @@ import type {
 } from "../domain/common/types";
 import type { Mission, Obligation, Project } from "../domain/intent/types";
 import type { Routine } from "../domain/routines";
+import type { SavedInboxItem } from "../domain/saved/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
@@ -54,6 +55,7 @@ export class BeyondDB extends Dexie {
   alfredReviews!: Table<AlfredReview, string>;
   projects!: Table<Project, string>;
   routines!: Table<Routine, string>;
+  savedInboxItems!: Table<SavedInboxItem, string>;
 
   constructor() {
     super("beyond");
@@ -365,6 +367,10 @@ export class BeyondDB extends Dexie {
     // Ticks are events in the existing events table. Nothing else changes.
     this.version(19).stores({
       routines: "id, status, moment, createdAt",
+    });
+    // SHARE-INBOX-001: owner-approved additive inbox for text and links explicitly shared to BEYOND.
+    this.version(20).stores({
+      savedInboxItems: "id, createdAt, source, *tags",
     });
   }
 }
