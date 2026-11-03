@@ -1,0 +1,41 @@
+/* SUIT-DATA-001: one restrained instrument grammar for recorded data. Geometry marks
+   inspection structure; it never invents telemetry or uses motion as meaning. */
+.suit-data-frame {
+  position: relative;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.suit-data-frame::before,
+.suit-data-frame::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+}
+.suit-data-frame::before { top: 4px; right: 4px; border-top: 1px solid var(--text-3-strong); border-right: 1px solid var(--text-3-strong); }
+.suit-data-frame::after { bottom: 4px; left: 4px; border-bottom: 1px solid var(--text-3-strong); border-left: 1px solid var(--text-3-strong); }
+.suit-data-plot { display: block; width: 100%; height: auto; overflow: visible; }
+.suit-data-grid { stroke: var(--border-subtle); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.suit-data-line { fill: none; stroke: var(--text-1); stroke-width: 1.75; vector-effect: non-scaling-stroke; }
+.suit-data-point { fill: var(--text-2); stroke: var(--bg); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.suit-data-selection { fill: var(--brand-yellow); stroke: var(--bg); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.suit-data-cursor { stroke: var(--brand-yellow); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.suit-data-readout {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.suit-data-readout strong { color: var(--text-1); font-size: 15px; font-variant-numeric: tabular-nums; }
+@media (max-width: 360px) { .suit-data-frame { padding-inline: 9px; } }
+@media (prefers-reduced-motion: reduce) { .suit-data-frame *, .suit-data-frame *::before, .suit-data-frame *::after { animation: none !important; transition: none !important; } }

@@ -13,6 +13,7 @@ import { SleepPeriods } from "../today/SleepMetricSheet";
 import { InsightsExplorer } from "../body/InsightsExplorer";
 import { getBodyInsights, type BodyInsights, type InsightMetric } from "../../../application/bodyInsightsQueries";
 import "./systems.css";
+import "../../charts/suitData.css";
 
 /**
  * SUIT-ALIVE S2 — the cave, Vitals. One reading in depth, read-only: value, last 14 finished lived days
@@ -167,7 +168,8 @@ function Trend({ vital }: { vital: CaveVital }) {
   const label = (v: number) => formatCaveValue(vital.id, v);
   const summary = `${vital.title}, last ${n} finished days: ${known.length} recorded${band ? `, usual ${label(band.low)} to ${label(band.high)}` : ""}.`;
   return (
-    <svg className="cave__chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary}>
+    <div className="cave__chart-frame suit-data-frame">
+    <svg className="cave__chart suit-data-plot" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary}>
       {band && <rect x={L} y={y(band.high)} width={W - L - R} height={Math.max(1, y(band.low) - y(band.high))} className="cave__band" />}
       {band && <line x1={L} x2={W - R} y1={y(band.median)} y2={y(band.median)} className="cave__median" />}
       {band && <text x={L - 5} y={y(band.high) + 3} textAnchor="end" className="cave__axis">{label(band.high)}</text>}
@@ -184,6 +186,8 @@ function Trend({ vital }: { vital: CaveVital }) {
       <text x={L} y={H - 5} className="cave__axis">{shortDate(vital.trend[0]!.start)}</text>
       <text x={W - R} y={H - 5} textAnchor="end" className="cave__axis">{shortDate(vital.trend[n - 1]!.start)}</text>
     </svg>
+    <p className="suit-data-readout"><span>{known.length} of {n} recorded</span><strong>{band ? `USUAL ${label(band.low)}–${label(band.high)}` : "USUAL NOT READY"}</strong></p>
+    </div>
   );
 }
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });

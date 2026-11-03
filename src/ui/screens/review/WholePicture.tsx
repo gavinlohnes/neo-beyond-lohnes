@@ -10,6 +10,7 @@ import { livedDayBoundary } from "../../../engine/livedDaySeries";
 import { useSessionDraft } from "../../sessionDrafts";
 import { describeError } from "../../errorMessage";
 import "./wholePicture.css";
+import "../../charts/suitData.css";
 
 const date = (at: string) => new Date(at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 const fullDate = (at: string) => new Date(at).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -47,9 +48,9 @@ function PictureChart({ rows, selected, onSelect, measure, title, unit, min, max
   const value = read(chosen);
   const display = value === undefined ? "Not recorded" : measure === "sleepHours" ? hours(value) : `${value.toLocaleString()} ${unit}`;
   const dayWidth = Math.min(16, (W - 2 * pad) / Math.max(7, rows.length) * .5);
-  return <div className="picture-chart">
+  return <div className="picture-chart suit-data-frame">
     <div className="chart-labels"><strong>{title}</strong><span>{display} · {date(chosen.start)}</span></div>
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" tabIndex={0} aria-label={`${title}. ${min} to ${max} ${unit}. Left and right arrow keys select a day; the day selector and source records give exact values.`}
+    <svg className="suit-data-plot" viewBox={`0 0 ${W} ${H}`} role="img" tabIndex={0} aria-label={`${title}. ${min} to ${max} ${unit}. Left and right arrow keys select a day; the day selector and source records give exact values.`}
       onKeyDown={(event) => {
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
         event.preventDefault(); const index = rows.findIndex((row) => row.start === chosen.start);
@@ -60,7 +61,7 @@ function PictureChart({ rows, selected, onSelect, measure, title, unit, min, max
         onSelect(closest.start);
       }}>
       {rows.filter((row) => row.context === "WORK").map((row) => <rect key={row.start} x={x(row) - dayWidth / 2} y={5} width={dayWidth} height={H - 10} fill="#222" />)}
-      <path d={`M0 ${H - pad}H${W}`} stroke="#555" />
+      <path d={`M0 ${H - pad}H${W}`} className="suit-data-grid" />
       {measure === "sessions" ? rows.filter((row) => (read(row) ?? 0) > 0).map((row) => <rect key={row.start} x={x(row) - dayWidth / 2} y={y(read(row)!)} width={dayWidth} height={H - pad - y(read(row)!)} fill="#d5d4cc" />) : segments.map((part) => <g key={part[0]!.start}><polyline points={part.map((row) => `${x(row)},${y(read(row)!)}`).join(" ")} fill="none" stroke="#d5d4cc" strokeWidth="1.7" vectorEffect="non-scaling-stroke" />{part.map((row) => <circle key={row.start} cx={x(row)} cy={y(read(row)!)} r={2.8} fill="#ddd" />)}</g>)}
       <line x1={x(chosen)} x2={x(chosen)} y1={0} y2={H} stroke="#eee" strokeDasharray="2 3" />
       {value !== undefined && <circle cx={x(chosen)} cy={y(value)} r={5} fill="#090909" stroke="#fff" strokeWidth="1.7" />}

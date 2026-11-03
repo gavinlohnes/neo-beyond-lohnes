@@ -4,6 +4,7 @@ import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { INSIGHT_DAY_MS, insightPoints, insightWindow, type BodyInsights, type InsightMetric, type InsightPoint } from "../../../application/bodyInsightsQueries";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./insights.css";
+import "../../charts/suitData.css";
 
 const METRICS: Record<InsightMetric, { label: string; unit: string; decimals: number }> = {
   weight: { label: "Weight", unit: "lb", decimals: 1 },
@@ -102,21 +103,22 @@ function ObservationChart({ points, metric, readAt, days, pointId, focusDayId, o
   const x = (at: string) => 12 + ((Date.parse(at) - start) / (end - start)) * 296;
   const y = (value: number) => 140 - ((value - lo) / span) * 116;
   const path = points.map((point, i) => `${i === 0 || (metric !== "weight" && Date.parse(point.at) - Date.parse(points[i - 1]!.at) > 1.5 * INSIGHT_DAY_MS) ? "M" : "L"}${x(point.at)},${y(point.value)}`).join(" ");
-  return <div className="insights-chart">
+  return <div className="insights-chart suit-data-frame">
     <div className="insights-scale"><span>High {insightValue(hi, metric)}</span><span>Low {insightValue(lo, metric)}</span></div>
-    <svg viewBox="0 0 320 160" role="img" aria-label={`${METRICS[metric].label}: ${points.length} recorded observations; values and dates can be inspected below`} onPointerDown={(event) => {
+    <svg className="suit-data-plot" viewBox="0 0 320 160" role="img" aria-label={`${METRICS[metric].label}: ${points.length} recorded observations; values and dates can be inspected below`} onPointerDown={(event) => {
       const bounds = event.currentTarget.getBoundingClientRect();
       const target = start + (((event.clientX - bounds.left) / bounds.width * 320 - 12) / 296) * (end - start);
       let closest = 0;
       points.forEach((point, i) => { if (Math.abs(Date.parse(point.at) - target) < Math.abs(Date.parse(points[closest]!.at) - target)) closest = i; });
       onSelect(points[closest]!.id);
     }}>
-      <path d={path} fill="none" stroke="var(--text-2)" strokeWidth="2" />
-      {points.map((point) => <circle key={point.id} cx={x(point.at)} cy={y(point.value)} r="2.5" fill="var(--text-2)" />)}
-      <line x1={x(selected.at)} x2={x(selected.at)} y1="12" y2="150" stroke="var(--text-3-strong)" strokeDasharray="4 4" />
-      <circle cx={x(selected.at)} cy={y(selected.value)} r="5" fill="var(--text-1)" />
+      {[24, 82, 140].map((line) => <line key={line} x1="12" x2="308" y1={line} y2={line} className="suit-data-grid" />)}
+      <path d={path} className="suit-data-line" />
+      {points.map((point) => <circle key={point.id} cx={x(point.at)} cy={y(point.value)} r="3" className="suit-data-point" />)}
+      <line x1={x(selected.at)} x2={x(selected.at)} y1="12" y2="150" className="suit-data-cursor" />
+      <rect x={x(selected.at) - 4.5} y={y(selected.value) - 4.5} width="9" height="9" transform={`rotate(45 ${x(selected.at)} ${y(selected.value)})`} className="suit-data-selection" />
     </svg>
-    <p role="status" className="insights-selected">{formatShortDate(selected.at)} · {insightValue(selected.value, metric)} · observation {index + 1} of {points.length}</p>
+    <p role="status" className="insights-selected suit-data-readout"><span>{formatShortDate(selected.at)} · {index + 1} of {points.length}</span><strong>{insightValue(selected.value, metric)}</strong></p>
     {points.length > 1 ? <label className="insights-point-control">RECORDED OBSERVATION<input type="range" min="0" max={points.length - 1} value={index} aria-label="Open recorded observation" aria-valuetext={`${formatShortDate(selected.at)}, ${insightValue(selected.value, metric)}`} onChange={(event) => onSelect(points[Number(event.target.value)]!.id)} /></label>
       : <p className="meta">One observation is a record, not a trend.</p>}
     {onSources && <button type="button" id="insight-view-records" className="btn-secondary" disabled={!selected.source} onClick={() => onSources(selected, metric)}>VIEW RECORDS</button>}
