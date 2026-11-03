@@ -50,7 +50,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "NOTE", description: "TODAY · Quick Capture", aliases: ["capture", "thought", "idea", "handoff"], group: "Log", destination: { kind: "capture" }, browse: false },
   { label: "URGE", description: "DATA · Quit tracker entry", aliases: ["quit", "habit", "craving"], group: "Log", destination: { kind: "body", focus: "urge" }, browse: false },
   { label: "SYSTEMS", description: "Sleep, fuel, training, state and device readings", aliases: ["status", "system status", "readout", "readings", "suit", "connection", "offline"], group: "Systems", destination: { kind: "more", view: "SYSTEMS" } },
-  { label: "ROTATION COMMAND", description: "COMMAND · Whole-rotation desktop briefing", aliases: ["batcomputer", "command center", "desktop", "rotation command"], group: "Review", destination: { kind: "more", view: "BATCOMPUTER" } },
+  { label: "ROTATION COMMAND", description: "Whole-rotation desktop briefing", aliases: ["batcomputer", "command center", "desktop", "rotation command"], group: "Review", destination: { kind: "more", view: "BATCOMPUTER" } },
   { label: "STEALTH", description: "Hide your numbers. Long-press the emblem anytime", aliases: ["hide", "privacy", "discreet", "screen"], group: "On shift", destination: { kind: "stealth" } },
   { label: "TODAY TOOLS", description: "Every daily control in one place", aliases: ["check in", "check-in", "minimum day", "end day", "shift down", "reset"], group: "On shift", destination: { kind: "tools" } },
   { label: "PLAN TODAY", description: "Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan"], group: "Plan", destination: { kind: "more", view: "PLAN" } },

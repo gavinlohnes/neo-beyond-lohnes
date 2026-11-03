@@ -20,7 +20,7 @@ afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 async function openRotationCommand(screen: Awaited<ReturnType<typeof render>>) {
   await screen.getByRole("button", { name: "MORE", exact: true }).click();
   await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("batcomputer");
-  await screen.getByRole("button", { name: "ROTATION COMMAND COMMAND · Whole-rotation desktop briefing", exact: true }).click();
+  await screen.getByRole("button", { name: "ROTATION COMMAND Whole-rotation desktop briefing", exact: true }).click();
 }
 
 describe("BATCOMPUTER-001 Rotation Command", () => {

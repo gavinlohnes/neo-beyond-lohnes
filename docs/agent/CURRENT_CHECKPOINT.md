@@ -20,6 +20,9 @@
 - Renewed review found the actionable Engine status still used small red text while the all-clear
   fixture overrode it. The status words now use accessible text with red retained as the border,
   and a STABILIZE-specific axe case covers that state.
+- CI at `3c5f8293` found the catalog's new description redundantly began `COMMAND ·`, violating the
+  existing plain-language catalog safeguard. The description is now simply “Whole-rotation desktop
+  briefing”; no destination or behavior changed.
 - Next: obtain independent exact-head review and required CI, then apply Gavin's standing
   green-gates merge ruling.
 
