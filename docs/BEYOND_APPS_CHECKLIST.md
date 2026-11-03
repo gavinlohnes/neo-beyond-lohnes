@@ -5,6 +5,11 @@ independent review and green CI before merge. BEYOND's rules hold for all of the
 local-first, nothing saves without his SAVE, the Engine keeps recommendation authority, and there are
 no streaks, guilt or nagging.
 
+**Field test:** Gavin paused ROTATION-FIELD-001 (#402) on 2026-11-03 ("Pause it, build now"). It restarts
+once these items are merged. **Builders:** Codex builds most items; Claude Code reviews and merges on
+an independent PASS and green CI (Gavin's standing rule). These are BEYOND's own features, not the
+outside apps; only A8 and A9 connect to the real services.
+
 ## Selected
 
 | # | Item | From | Notes |
