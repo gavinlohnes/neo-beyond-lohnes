@@ -2740,3 +2740,12 @@ his own records. Rulings recorded for this campaign (details in each PR):
   record or a claim about rest, hidden when he declared the day otherwise.
 - **Correctable.** Saved log cards have UNDO (the LOG sheet's void); plain corrections ("that was 12 oz,
   not 16") change today's latest log through its correction chain; gym sets log into the workout in progress.
+
+## 2026-11-03 — Apps checklist selection
+
+Gavin selected from a list which outside-app jobs BEYOND takes over: snippets and log templates,
+share into BEYOND, daily note with [[links]], routine player, habits without streaks, collections,
+highlights and smart task lists, plus two new providers: **Google Calendar sync** (his own Google
+sign-in) and **IFTTT webhooks** (off by default, events he chooses). Not selected: focus timer,
+sound, Obsidian export, time blocking, offer-only rules, Readwise/Raindrop import. Each item still needs
+its own brief, review and green CI. [Checklist](BEYOND_APPS_CHECKLIST.md).
