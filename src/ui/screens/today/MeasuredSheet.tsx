@@ -7,6 +7,7 @@ import { hoursMinutes, localTime } from "../health/healthFormat";
 import { describeUnusual } from "./unusualCopy";
 import type { UnusualReading } from "../../../domain/health/unusual";
 import "./measuredSheet.css";
+import "../../charts/suitData.css";
 
 /**
  * GARMIN-004 (owner approval 2026-10-22): the detail behind TODAY's Garmin tiles, as a sheet over

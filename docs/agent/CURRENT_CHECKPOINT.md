@@ -1,3 +1,31 @@
+# SUIT-DATA-001 — approved implementation (Builder: Codex)
+
+- Gavin authorized taking BEYOND's graphs and surrounding data experience beyond on 2026-11-02.
+  FEATURE brief: [SUIT-DATA-001.md](SUIT-DATA-001.md). Branch `codex/suit-data-001`; baseline
+  `e338eb67a68e57cdffdc93bf8ae6186920836182`; active
+  [PR #399](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/399).
+- Scope is presentation/read-only inspection across BODY, REVIEW / Whole Picture, VITALS and TODAY:
+  one suit-data grammar, stronger touch/keyboard selection, axes, legends, sparse states and
+  responsive composition. Existing data meaning, evidence floors, sources and Engine boundaries
+  remain unchanged; no dependency or invented telemetry.
+- Implemented shared angular instrument frames, plot grids/lines/points, yellow inspected-value
+  cursor, exact-value rails and responsive measured-chart framing across the major chart families.
+  Weight and BODY inspection use recorded values unchanged; VITALS retains personal bands/off-normal
+  semantics; Whole Picture retains keyboard/day/source inspection; TODAY retains existing tables.
+- Evidence so far: architecture and TypeScript PASS; Cave browser 5/5, Garmin measured browser 7/7,
+  direct 320 px suit-data interaction/axe 1/1 and focused Node 18/18 PASS; production PWA build PASS.
+  Existing `BodyInsights.test.tsx` cannot reach assertions because its legacy ESM module mock is no
+  longer a mock under the current browser runner. Independent exact-head review passed at
+  `45962b85471ca03273591b56f5656a55be933c3c`. CI then exposed two stale Connected Health text
+  locators: the new readout deliberately separates date/count and exact value into structured
+  children. Their assertions now target the accessible status and independently verify exact value
+  plus observation count; no product behavior or data semantics changed. Standalone local execution
+  of that legacy suite still collapses at its known ESM mock teardown, while CI reaches its tests.
+- Next: push the locator repair, obtain independent exact-head review again and require green CI;
+  merge only after the standing green-gates rule passes.
+
+---
+
 # PHONE-POLISH-001 — approved suit elevation (Codex)
 
 - Gavin approved distinct TODAY/TRAIN/DATA/MORE compositions, stronger hierarchy, constructed panels, Gotham atmosphere and action-linked motion: “Approved. Now take it beyond.”

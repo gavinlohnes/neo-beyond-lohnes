@@ -6,6 +6,7 @@ import {
   trendDirection,
   type WeighIn,
 } from "../../../application/bodyTrendQueries";
+import "../../charts/suitData.css";
 
 const WINDOW_DAYS = 60;
 const W = 300;
@@ -55,15 +56,17 @@ export function WeightTrend({
   const points = shown.map((w) => `${x(w.recordedAt).toFixed(1)},${y(w.weightLbs).toFixed(1)}`).join(" ");
 
   return (
-    <div style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
+    <div className="weight-trend" style={{ marginTop: 16, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
       {!hideChart && <p className="meta" style={{ marginBottom: 6 }}>Last {WINDOW_DAYS} days · latest {formatShortDate(latest.recordedAt)}</p>}
-      {!hideChart && <svg
+      {!hideChart && <div className="suit-data-frame"><svg
+        className="suit-data-plot"
         role="img"
         aria-label={`Weight over the last ${WINDOW_DAYS} days ending ${formatShortDate(latest.recordedAt)}, from ${shown[0]!.weightLbs} to ${latest.weightLbs} lb`}
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
-        style={{ width: "100%", height: H, display: "block" }}
+        style={{ height: H }}
       >
+        {[PAD, H / 2, H - PAD].map((line) => <line key={line} x1={PAD} x2={W - PAD} y1={line} y2={line} className="suit-data-grid" />)}
         {goalInView && (
           <line
             x1={0}
@@ -77,17 +80,13 @@ export function WeightTrend({
           />
         )}
         {shown.length > 1 && (
-          <polyline
+          <polyline className="suit-data-line"
             points={points}
-            fill="none"
-            stroke="var(--text-2)"
-            strokeWidth={1.7}
             strokeLinejoin="miter"
-            vectorEffect="non-scaling-stroke"
           />
         )}
-        <circle cx={x(latest.recordedAt)} cy={y(latest.weightLbs)} r={3} fill="var(--text-1)" />
-      </svg>}
+        <rect x={x(latest.recordedAt) - 3.5} y={y(latest.weightLbs) - 3.5} width="7" height="7" transform={`rotate(45 ${x(latest.recordedAt)} ${y(latest.weightLbs)})`} className="suit-data-selection" />
+      </svg><p className="suit-data-readout"><span>{formatShortDate(shown[0]!.recordedAt)}–{formatShortDate(latest.recordedAt)}</span><strong>{latest.weightLbs} lb</strong></p></div>}
       {!hideFacts && bestSince && <p className="meta-strong" style={{ margin: "8px 0 0" }}>{bestSince}</p>}
       {!hideFacts && milestone && <p className="meta" style={{ margin: "4px 0 0" }}>{milestone}</p>}
       {!hideFacts && projection.kind === "DATE" && (

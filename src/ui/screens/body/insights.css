@@ -12,7 +12,7 @@
 .body-insights select { width: 100%; min-height: 44px; font-size: 16px; margin-bottom: 16px; }
 .insights-measure { padding-top: 12px; border-top: 1px solid var(--border-subtle); }
 .insights-value { font-family: var(--font-display); font-size: 36px; line-height: 1.15; margin: 8px 0; }
-.insights-chart { background: var(--surface-1); border-block: 1px solid var(--border-subtle); padding: 12px; margin-block: 16px; }
+.insights-chart { margin-block: 16px; }
 .insights-chart svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
 .insights-scale { display: flex; justify-content: space-between; gap: 8px; font-size: 16px; color: var(--text-3-strong); }
 .insights-selected { font-size: 16px; color: var(--text-1); margin: 12px 0; }
