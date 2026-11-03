@@ -1,22 +1,3 @@
-# SNIPPETS-001 — A1 active build
-
-- Gavin directed Codex to build A1–A9 in checklist order. A1 brief:
-  [SNIPPETS-001.md](SNIPPETS-001.md). Protected additive configuration schema; baseline
-  `c9356356f8d3da13612b5a51047b872ea01cc95c`; branch `codex/snippets-001`; PR pending.
-- Implemented search-only snippets and named free-helper card sets with explicit saves,
-  one-Backspace undo and native backup compatibility. Focused integration, migration, catalog,
-  360px/touch/axe browser tests, architecture and typecheck pass. No Engine or provider change.
-- Repaired the clean-master verification blocker by moving the dev-only Vitest browser pair from
-  4.1.12 to 5.0.5 and making existing browser assertions explicit where runner matching semantics
-  changed. A full gate reached 3,434 passes, two intentional skips and 11 load timeouts in seven
-  known heavy files; all seven files then passed alone (64 tests total), as the campaign brief
-  permits, and the production/PWA build passed. No runtime dependency was added.
-- Next: commit and push the verified head, open the ready PR immediately, record its number here,
-  then wait for Claude Code exact-head review, green CI and owner merge before starting A2 from
-  fresh `origin/master`.
-
----
-
 # APPS-CHECKLIST — 2026-11-03 (orchestrator: Claude Code; builder: Codex)
 
 - Gavin picked nine outside-app jobs for BEYOND: [checklist](../BEYOND_APPS_CHECKLIST.md), briefs in
