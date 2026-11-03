@@ -53,7 +53,8 @@ it("saves the chosen focus through the existing weekly command and preserves its
   await screen.getByRole("radio", { name: /Understand my energy/ }).click();
   await screen.getByRole("textbox", { name: "What would this look like in your life?", exact: true }).fill("Leave some space after the last shift.");
   await screen.getByRole("button", { name: "Save weekly review & focus", exact: true }).click();
-  await expect.element(screen.getByRole("status")).toHaveTextContent(/Weekly review and focus saved/);
+  await expect.element(screen.getByRole("status")).toBeVisible();
+  expect(screen.getByRole("status").element().textContent).toMatch(/Weekly review and focus saved/);
   const records = await getWeeklyReviewRecords(); expect(records).toHaveLength(2);
   expect(records[0]!.note).toBe("Keep this original reflection.");
   expect(records[0]!.focus?.text).toContain("Leave some space after the last shift.");
@@ -69,7 +70,8 @@ it("keeps a dirty focus on inactive navigation and rejects a competing saved rev
   await screen.rerender(<WholePicture active />);
   await expect.element(screen.getByText("Your choice / week starting Mon, Oct 19", { exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "Save weekly review & focus", exact: true }).click();
-  await expect.element(screen.getByRole("alert")).toHaveTextContent(/different saved weekly review exists/);
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  expect(screen.getByRole("alert").element().textContent).toMatch(/different saved weekly review exists/);
   await expect.element(screen.getByRole("textbox", { name: "What would this look like in your life?", exact: true })).toHaveValue("My unsaved intention.");
   expect(await getWeeklyReviewRecords()).toHaveLength(1);
   await screen.getByRole("button", { name: "Use latest saved review, keep my focus draft", exact: true }).click();
@@ -80,7 +82,8 @@ it("keeps a dirty focus on inactive navigation and rejects a competing saved rev
 it("offers a visible retry and honest empty/insufficient states, never demo data", async () => {
   vi.mocked(getWholePicture).mockRejectedValueOnce(new Error("Synthetic read failure"));
   const screen = await render(<WholePicture />);
-  await expect.element(screen.getByRole("alert")).toHaveTextContent("unavailable, not empty");
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  expect(screen.getByRole("alert").element().textContent).toContain("unavailable, not empty");
   await screen.getByRole("button", { name: "RETRY WHOLE PICTURE", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Your record starts with what you choose to record.", exact: true })).toBeVisible();
   await screen.getByRole("tab", { name: "Compare", exact: true }).click();

@@ -92,7 +92,8 @@ it("preserves a PREP draft across ended/no-day/new-day transitions and requires 
   await screen.getByRole("button", { name: "PREPARATION OPTIONS", exact: true }).click();
   await expect.element(screen.getByRole("textbox", { name: "What should BEYOND remember?" })).toHaveValue("Keep my unfinished words.");
   await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true }).click();
-  await expect.element(screen.getByRole("alert")).toHaveTextContent(/day changed/);
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  expect(screen.getByRole("alert").element().textContent).toMatch(/day changed/);
   expect(await getMemoryFacts()).toEqual([]);
   await screen.getByRole("button", { name: "USE CURRENT DAY — KEEP MY WORDS", exact: true }).click();
   await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true }).click();
@@ -125,7 +126,8 @@ it("retains draft text through read failure/retry and rejects an older in-flight
   await screen.rerender(<MemoryPanel active={false} />);
   vi.mocked(getMemoryWorkspace).mockRejectedValueOnce(new Error("Storage unavailable"));
   await screen.rerender(<MemoryPanel />);
-  await expect.element(screen.getByRole("alert")).toHaveTextContent(/not empty/);
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  expect(screen.getByRole("alert").element().textContent).toMatch(/not empty/);
   await expect.element(screen.getByRole("textbox", { name: "What should BEYOND remember?" })).toHaveValue("My draft stays here.");
   await screen.getByRole("button", { name: "RELOAD MEMORY LIST", exact: true }).click();
   await expect.element(screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true })).toBeEnabled();

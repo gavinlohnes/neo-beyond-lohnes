@@ -10,7 +10,7 @@ afterEach(() => {
   cleanup();
 });
 
-describe.sequential("shared operator presentation primitives", () => {
+describe("shared operator presentation primitives", () => {
   it("keeps the destination identity as one real heading with a reinforcing hidden glyph", async () => {
     const screen = await render(<OperatorHeader destination="body">DATA // TODAY</OperatorHeader>);
     const heading = screen.getByRole("heading", { level: 1, name: "DATA // TODAY" }).element();

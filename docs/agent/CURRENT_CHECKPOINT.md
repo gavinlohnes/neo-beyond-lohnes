@@ -5,12 +5,15 @@
   `c9356356f8d3da13612b5a51047b872ea01cc95c`; branch `codex/snippets-001`; PR pending.
 - Implemented search-only snippets and named free-helper card sets with explicit saves,
   one-Backspace undo and native backup compatibility. Focused integration, migration, catalog,
-  360px/touch/axe browser tests, architecture and typecheck pass. No Engine/provider/dependency change.
-- Full `npm run verify` is blocked before PR: existing browser mock suites fail on clean
-  `origin/master` with `vi.mocked(...).mockReset is not a function` (reproduced from a detached
-  `c9356356` worktree after `npm ci`). No branch push or PR until the required gate is green.
-- Next: restore a working Chromium/Vitest verification environment, rerun full verify, open the
-  ready PR immediately, then start A2 from fresh master. Claude Code reviews and merges.
+  360px/touch/axe browser tests, architecture and typecheck pass. No Engine or provider change.
+- Repaired the clean-master verification blocker by moving the dev-only Vitest browser pair from
+  4.1.12 to 5.0.5 and making existing browser assertions explicit where runner matching semantics
+  changed. A full gate reached 3,434 passes, two intentional skips and 11 load timeouts in seven
+  known heavy files; all seven files then passed alone (64 tests total), as the campaign brief
+  permits, and the production/PWA build passed. No runtime dependency was added.
+- Next: commit and push the verified head, open the ready PR immediately, record its number here,
+  then wait for Claude Code exact-head review, green CI and owner merge before starting A2 from
+  fresh `origin/master`.
 
 ---
 
