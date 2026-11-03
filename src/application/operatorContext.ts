@@ -7,7 +7,7 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { dayLine } from "./alfred/dayLine";
 import { getFoodDiary } from "./foodDiaryQueries";
 import { getSavedMeals } from "./nutritionQueries";
-import { getAllCaptureItems, getActiveDay, getLatestCheckIn, getMostRecentBodyweight, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
+import { getAllCaptureItems, getActiveDay, getLatestCheckIn, getLatestRecommendation, getMostRecentBodyweight, getRecommendationDecision, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
 import { getProjectViews } from "./projectQueries";
 import { getRoutines } from "./routineCommands";
 import { ROUTINE_MOMENT_LABELS } from "../domain/routines";
@@ -81,6 +81,14 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
         `WORK TODAY: started ${w.started ? date(w.started.occurredAt) : "not recorded"}; ended ${w.ended ? date(w.ended.occurredAt) : "not recorded"}.`, "Recorded event")]);
       await read("Check-in", () => getLatestCheckIn(active.id), (c) => c ? [s("CHECK_IN", c.id, JSON.stringify(c), "Latest check-in",
         `CHECK-IN TODAY: ${date(c.recordedAt)} energy ${c.energy}, stress ${c.stress}, mood ${c.mood}, soreness ${c.soreness}, alcohol urge ${c.alcoholUrge}.`, "Recorded event", { at: c.recordedAt })] : []);
+      await read("Current Engine recommendation", async () => {
+        const recommendation = await getLatestRecommendation(active.id);
+        return { recommendation, decision: recommendation ? await getRecommendationDecision(active.id, recommendation.id) : undefined };
+      }, ({ recommendation: r, decision }) => r
+        ? [s("RECOMMENDATION", r.id, JSON.stringify([r, decision]), "Current BEYOND recommendation",
+          `BEYOND CURRENT RECOMMENDATION: ${r.kind} — ${r.title}. Rationale: ${r.rationale} Decision: ${decision ?? "not recorded"}. Issued ${date(r.issuedAt)}. Canonical Engine output; Alfred may explain it but must not create or rank a replacement.`, "Recorded event", { at: r.issuedAt })]
+        : [s("RECOMMENDATION", `none:${active.id}`, JSON.stringify([active.id, "none"]), "No current BEYOND recommendation",
+          "BEYOND CURRENT RECOMMENDATION: none recorded for this lived day. Alfred must say it is unavailable and must not infer or create one.")]);
       await read("Food today", () => getFoodDiary(active.id), (d) => [s("FOOD", active.id, JSON.stringify(d), "Food today",
         `FOOD TODAY: ${Math.round(d.proteinG)} g protein${d.proteinTargetG ? ` of ${Math.round(d.proteinTargetG)} g target` : ""}, ${Math.round(d.calories)} kcal.${d.entries.length ? " " + d.entries.map((e) => `${hhmm(new Date(e.at))} ${e.name} (${Math.round(e.proteinG)} g${e.calories !== null ? `, ${Math.round(e.calories)} kcal` : ""})`).join("; ") : " Nothing logged yet."}`)]);
       await read("Quit records", () => getQuitSummary(active.id, now), (q) => q ? [s("QUIT", q.habit.id, JSON.stringify(q), "Quit records",

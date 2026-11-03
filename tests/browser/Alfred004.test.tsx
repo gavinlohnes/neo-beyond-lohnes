@@ -3,8 +3,9 @@ import { page } from "vitest/browser";
 import { render, cleanup } from "vitest-browser-react";
 import axe from "axe-core";
 import { App } from "../../src/app/App";
-import { captureItem, startDay } from "../../src/application/commands";
+import { captureItem, startDay, submitCheckIn } from "../../src/application/commands";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
+import { COACH_NOW_ASK, COACH_REVIEW_ASK, PLAN_MY_WEEK_ASK } from "../../src/ui/components/AlfredSheet";
 import { getDays, searchRecords } from "../../src/application/alfred/alfredSearch";
 import { getMemories } from "../../src/application/alfred/alfredMemory";
 import { getMemoryFacts } from "../../src/application/memory";
@@ -71,6 +72,7 @@ describe("ALFRED-004 reading the whole history", () => {
       () => reply([{ type: "text", text: "You last noted the CPAP place today." }], "end_turn"),
     ];
     const { sheet } = await openAlfred();
+    await sheet.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
     await sheet.getByRole("button", { name: "When did I last…?" }).click();
     await expect.element(sheet.getByRole("textbox", { name: "Message Alfred" })).toHaveValue("When did I last ");
     await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("What's the story with the CPAP place?");
@@ -100,6 +102,7 @@ describe("ALFRED-004 talk mode and starters", () => {
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     const { sheet } = await openAlfred();
     await expect.element(sheet.getByRole("button", { name: "DEBRIEF MY SHIFT" })).toBeVisible();
+    await sheet.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
     for (const name of ["Weekly review", "Plan my flip", "Meal plan + grocery list"]) await expect.element(sheet.getByRole("button", { name })).toBeVisible();
     await sheet.getByRole("button", { name: "Speak answers" }).click();
     await expect.element(sheet.getByRole("button", { name: "Speaking answers" })).toHaveAttribute("aria-pressed", "true");
@@ -107,5 +110,29 @@ describe("ALFRED-004 talk mode and starters", () => {
     await sheet.getByRole("button", { name: "Weekly review" }).click();
     await expect.poll(() => chats().length).toBe(1);
     expect(JSON.stringify(chats()[0]!.messages)).toContain("weekly review");
+  });
+
+  it("opens as an owner-controlled coach workspace with bounded now, week and review jobs", async () => {
+    const day = await startDay();
+    const { recommendation } = await submitCheckIn(day.id, { energy: 2, stress: 4, mood: 2, soreness: 2, alcoholUrge: 1 });
+    localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
+    const { sheet } = await openAlfred();
+    await expect.element(sheet.getByRole("heading", { name: "Understand. Plan. Decide." })).toBeVisible();
+    await expect.element(sheet.getByText(/BEYOND keeps recommendation authority/)).toBeVisible();
+    for (const width of [320, 360, 412]) {
+      await page.viewport(width, 800);
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    }
+    await sheet.getByRole("button", { name: /Explain today/ }).click();
+    await expect.poll(() => chats().length).toBe(1);
+    expect(JSON.stringify(chats()[0]!.messages)).toContain(COACH_NOW_ASK);
+    const suppliedContext = JSON.stringify(chats()[0]!.system);
+    expect(suppliedContext).toContain(`BEYOND CURRENT RECOMMENDATION: ${recommendation.kind}`);
+    expect(suppliedContext).toContain(recommendation.title);
+    expect(suppliedContext).toContain(recommendation.rationale);
+    expect(COACH_NOW_ASK).toContain("Do not create or rank a new recommendation");
+    expect(COACH_REVIEW_ASK).toContain("optional question");
+    expect(PLAN_MY_WEEK_ASK).toContain("I'll save the ones I want");
+    expect((await axe.run(sheet.element())).violations).toEqual([]);
   });
 });

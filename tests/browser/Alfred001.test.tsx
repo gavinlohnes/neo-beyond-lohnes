@@ -43,6 +43,7 @@ describe("ALFRED-001", () => {
     await sheet.getByText("Connect Alfred (optional)").click();
     await sheet.getByLabelText("Claude API key").fill("sk-ant-test-key");
     await sheet.getByRole("button", { name: "SAVE KEY" }).click();
+    await sheet.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
     await expect.element(sheet.getByRole("button", { name: "How am I doing?" })).toBeVisible();
     expect(localStorage.getItem("beyond.alfredKey")).toBe("sk-ant-test-key");
     expect((await axe.run(sheet.element())).violations).toEqual([]);
@@ -99,6 +100,7 @@ describe("ALFRED-001", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Ask Alfred" }).first().click();
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
+    await sheet.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
     await sheet.getByRole("button", { name: "How am I doing?" }).click();
     await expect.element(sheet.getByRole("alert")).toHaveTextContent(/No connection to Claude|couldn't answer/);
   });

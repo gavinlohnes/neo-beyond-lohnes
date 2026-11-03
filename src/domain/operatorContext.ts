@@ -1,7 +1,7 @@
 /** Disposable read model. Canonical records keep their existing owners and lifecycles. */
 export type ContextKind = "MISSION" | "MEMORY" | "ALFRED_MEMORY" | "PERSONAL_FACT" | "DAY" | "OBLIGATION" | "SCHEDULE"
   | "PROJECT" | "ROUTINE" | "CURRENT_DAY" | "WORK" | "CHECK_IN" | "FOOD" | "QUIT"
-  | "TARGETS" | "FORECAST" | "MEASURED" | "SLEEP_SUMMARY" | "NOTE" | "SAVED_MEAL";
+  | "RECOMMENDATION" | "TARGETS" | "FORECAST" | "MEASURED" | "SLEEP_SUMMARY" | "NOTE" | "SAVED_MEAL";
 export type ContextClassification = "Operator statement" | "Recorded event" | "Measurement" | "Configured forecast" | "Derived from records";
 export interface ContextSource {
   key: string; kind: ContextKind; id: string; revision: string; title: string; text: string;

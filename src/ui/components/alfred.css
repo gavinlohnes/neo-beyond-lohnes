@@ -3,6 +3,21 @@
 .alfred-log { display: grid; gap: 12px; margin-bottom: 12px; }
 .alfred-starters { display: grid; gap: 8px; }
 .alfred-starters .btn-secondary { margin: 0; text-align: left; }
+.alfred-coach { position: relative; display: grid; gap: 12px; padding: 16px; border: 1px solid var(--border-strong); border-inline-start: 3px solid var(--brand-yellow); background: var(--surface-1); overflow: hidden; }
+.alfred-coach::after { content: ""; position: absolute; inset-block-start: -1px; inset-inline-end: 0; width: 32px; border-block-start: 2px solid var(--brand-yellow); }
+.alfred-coach__lead h3 { margin: 2px 0 8px; font-size: clamp(24px, 7vw, 34px); line-height: 1; letter-spacing: .02em; }
+.alfred-coach__lead > p:last-child { margin: 0; color: var(--text-2); line-height: 1.45; }
+.alfred-coach__grid { display: grid; border-block: 1px solid var(--border-strong); }
+.alfred-coach__grid > button { display: grid; grid-template-columns: 74px 1fr; gap: 3px 10px; width: 100%; padding: 12px 4px; border: 0; border-block-end: 1px solid var(--border-subtle); background: transparent; color: var(--text-1); text-align: left; font: inherit; cursor: pointer; }
+.alfred-coach__grid > button:last-child { border-block-end: 0; }
+.alfred-coach__grid > button:hover, .alfred-coach__grid > button:focus-visible { background: var(--surface-2); }
+.alfred-coach__grid span { grid-row: 1 / span 2; color: var(--brand-yellow); font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.alfred-coach__grid strong { font-size: 15px; }
+.alfred-coach__grid small { color: var(--text-2); line-height: 1.35; }
+.alfred-coach__actions { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; }
+.alfred-coach__actions button { margin: 0; min-width: 0; padding-inline: 8px; }
+.alfred-coach__more { border-block-end: 1px solid var(--border-subtle); padding-block: 4px 12px; }
+.alfred-coach__more > summary { display: flex; align-items: center; min-height: 44px; color: var(--text-2); cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: .12em; }
 .alfred-turn { border-left: 2px solid var(--border-strong); padding: 2px 0 2px 12px; }
 .alfred-turn--alfred { border-left-color: var(--red); }
 .alfred-turn__who { margin: 0 0 4px; font-size: 11px; letter-spacing: 0.16em; color: var(--text-3-strong); }
@@ -94,6 +109,7 @@
 .life-tabs .chip--selected { border-color: var(--text-2); color: var(--text-1); box-shadow: inset 3px 0 0 var(--red); }
 .memory-management { margin-block: 10px; border-block: 1px solid var(--border-subtle); }
 @media (max-width: 360px) { .support-disclosure > summary { gap: 8px; padding-inline: 10px; letter-spacing: .08em; } }
+@media (max-width: 360px) { .alfred-coach { padding-inline: 12px; } .alfred-coach__actions { grid-template-columns: 1fr; } }
 
 .support-disclosure[open] { border-inline-start-color: var(--red); }
 

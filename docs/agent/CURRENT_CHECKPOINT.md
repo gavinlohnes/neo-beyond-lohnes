@@ -1,4 +1,35 @@
-# SUIT-DATA-001 — approved implementation (Builder: Codex)
+# ALFRED-COACH-001 — approved implementation (Builder: Codex)
+
+- Gavin approved the proposed ALFRED COACH 1.0 direction with “Make it so” on 2026-11-02.
+  Protected brief: [ALFRED-COACH-001.md](ALFRED-COACH-001.md). Branch
+  `codex/alfred-coach-001`; baseline `8e1d46411b3725ce78c5ee32f9d4b17fa0e931a3`; active
+  [PR #400](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/400).
+- Current truth already includes Alfred, daily and weekly briefs, whole-history reads, confirmed
+  action cards, week/flip/meal planning and debriefs. This objective unifies those capabilities
+  rather than creating a second coach or external integration.
+- Scope is one NOW / NEXT 7 / REVIEW coach workspace plus debrief and draft adjustment. NOW may
+  explain the existing deterministic recommendation but cannot create or rank a competing one;
+  plans remain drafts and all writes still require individual confirmation.
+- No provider, dependency, schema/event, Engine rule, automatic plan change, notification or
+  primary-navigation change.
+- Implemented the suit-style coach console, retained every prior starter under deliberate depth,
+  and added bounded NOW and REVIEW prompts alongside the existing confirmed weekly-plan path.
+  Independent review of head `5126b842` correctly blocked NOW because its promise to explain the
+  Engine recommendation was not backed by that canonical record in Alfred's context. The repair
+  supplies the exact current recommendation and recorded decision as a provenance-bearing source,
+  or explicitly supplies that none is recorded; Alfred remains forbidden to infer a replacement.
+  Evidence: TypeScript PASS; Alfred/Week Plan/cost-control Chromium 11/11 PASS; 320/360/412 px
+  overflow and axe PASS; recommendation-context integration 10/10 PASS; architecture PASS (418
+  files); production/PWA build PASS (49 entries).
+- CI at `b49f6684` reached the full browser suite and found four stale locators for specialist
+  starters now intentionally placed under MORE THINGS ALFRED CAN DO. Their behavioral assertions
+  are unchanged; each now deliberately opens that depth before selecting the existing starter.
+- Next: push a PR, obtain independent exact-head review and required CI, then apply Gavin's
+  standing green-gates merge ruling.
+
+---
+
+# SUIT-DATA-001 — merged PR #399
 
 - Gavin authorized taking BEYOND's graphs and surrounding data experience beyond on 2026-11-02.
   FEATURE brief: [SUIT-DATA-001.md](SUIT-DATA-001.md). Branch `codex/suit-data-001`; baseline
