@@ -18,28 +18,31 @@ Engine as the only recommendation authority. Ticks reflect master on 2026-11-02;
 - [x] Gym mode (one-handed, rest timer, plate math, wake lock)
 - [x] Progression advice (INCREASE / HOLD / REDUCE) with WHY
 - [x] PR tracking and records
-- [ ] Next session ready / simple programme on the rotation (#376)
-- [ ] Strength trends that are actually readable (review in field use)
+- [x] Next session ready / simple programme on the rotation (TRAIN-PROGRAM-001, PR #396)
+- [~] Strength trends are visually unified and inspectable (VIEWS-001 + SUIT-DATA-001); prove them
+  during the launch rotation
 
 ### Body & fuel
 - [x] Sleep (main + supplemental), water, protein, weight
 - [x] Meal logging at MyFitnessPal quality (search, barcode, saved meals, diary, protein-first)
 - [x] Own protein/calorie targets
-- [ ] Weekly meal plan + grocery list from saved meals and targets, free (#375)
-- [ ] Clear trends without dashboard tax (review in field use)
+- [x] Weekly meal plan + grocery list from saved meals and targets, free (MEAL-PLAN-001, PR #394)
+- [~] Clear trends without dashboard tax (SUIT-DATA-001, PR #399); prove them during the launch rotation
 
 ### Life & memory
 - [x] People, birthdays, home jobs, personal facts
 - [x] Routines
 - [x] Alfred remembers confirmed facts and recalls them
-- [ ] Weekly review that writes itself from records, free (#377)
+- [~] Weekly review writes itself from records with Alfred; the structured local review remains
+  free, but a useful automatically written free summary is a post-launch 3.1 objective
 
 ### Recovery & schedule
 - [x] Where today sits in the rotation ("night 2 of 3 · next day off Thu"), scheduled, never a record
 - [x] Calendar export of shifts + plans (shareable shifts-only option)
-- [ ] Protects first sleep after a run of shifts
-- [ ] Flip-day help grounded in his own records
-- [ ] Days-off planning from actual history
+- [~] Read-only first-sleep/shift-recovery context exists (SHIFT-RECOVERY-001, PR #397); field proof
+  and an explicitly chosen protection plan remain
+- [~] Flip-day evidence and Alfred drafting exist; durable rotation intelligence remains post-launch
+- [~] Days-off evidence and Alfred drafting exist; plan-versus-reality continuity remains post-launch
 - Rule: always labelled as his own pattern; never medical advice; never says "recovered"; never moves
   commitments or records work/sleep by itself.
 
@@ -67,6 +70,8 @@ multi-week status wall, circadian modelling beyond his own records.
 - "Since last shift" factual summary; private share surface for his wife (calendar + chosen plans only).
 - Study before building: openGym, wger, OpenNutriTracker / Waistline / FoodYou, LiftShift, ShiftCal.
   Check licences first (wger is AGPL: patterns only, no code).
+
+The sequenced post-launch roadmap now lives in [BEYOND_AFTER_3.md](BEYOND_AFTER_3.md).
 
 ## Questions to keep asking
 Does it reduce attention or add it? Does the core path work offline? Does it need a new paid service or

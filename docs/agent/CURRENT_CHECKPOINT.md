@@ -1,4 +1,25 @@
-# ALFRED-COACH-001 — approved implementation (Builder: Codex)
+# BEYOND-AFTER-3-PLAN-001 — approved planning objective (Builder: Codex)
+
+- Gavin directed: “Let's create a plan beyond 3.0 launch. Advance it even further” on 2026-11-03.
+  Routine documentation objective; baseline `47d98ceb56496f24cce35cb179c853c41249f020`;
+  branch `codex/beyond-after-3-plan`; active
+  [PR #401](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/401).
+- Live master is clean apart from the existing untracked attachment folder, matches origin, and has
+  no active implementation objective. The old 3.0 checklist understated shipped programme, meal
+  planning, graph, recovery and Alfred capabilities.
+- Added [BEYOND after 3.0](../BEYOND_AFTER_3.md): 3.0 field gate → self-running week → rotation
+  intelligence → learning coach → connected body → Batcomputer. It preserves Engine authority,
+  local-first truth, explicit confirmation and one-phase-at-a-time gates.
+- Reconciled [the 3.0 launch checklist](../BEYOND_3_LAUNCH.md) with master. Partial marks distinguish
+  shipped surfaces from field-proven journeys rather than falsely declaring launch complete.
+- Immediate recommended objective is `ROTATION-FIELD-001`: use BEYOND through a complete rotation
+  and convert observed incidents/friction into the next bounded build.
+- Next: review the plan diff, open a documentation PR, require green CI, and merge only under Gavin's
+  standing green-gates ruling.
+
+---
+
+# ALFRED-COACH-001 — merged PR #400
 
 - Gavin approved the proposed ALFRED COACH 1.0 direction with “Make it so” on 2026-11-02.
   Protected brief: [ALFRED-COACH-001.md](ALFRED-COACH-001.md). Branch
