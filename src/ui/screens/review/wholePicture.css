@@ -8,6 +8,8 @@
 
 /* Production integration: preserve the shell; widen only the active Review destination. */
 .screen.more-operator.more-whole-picture{max-width:1440px;padding-inline:0}
+.screen.more-operator.more-batcomputer{max-width:none;padding-inline:0}
+.more-batcomputer .more-return{margin:12px 20px}
 .screen.picture-review{max-width:none;padding:0}
 .picture-review>h1{margin:20px 24px}
 .more-whole-picture .more-return{margin:12px 20px}

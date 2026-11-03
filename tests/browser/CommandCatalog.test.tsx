@@ -46,6 +46,7 @@ async function launch(screen: Screen, label: string) {
   await screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true }).click();
 }
 const commandHeadings = {
+  BATCOMPUTER: "Deep work has a bigger surface.",
   REPORT: "AFTER ACTION REPORT", MIRROR: "MIRROR",
   PLAN: "MORE // PLAN TODAY", SYSTEMS: "MORE // SYSTEMS",
   HISTORY: "MORE // HISTORY", WEEKLY: "MORE // WEEKLY CHECK-IN", REVIEW: "MORE // REVIEW",

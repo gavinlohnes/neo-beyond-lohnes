@@ -804,6 +804,7 @@ function AppWorkspaces() {
             systemsRefreshKey={stealthWrites}
             onOpenCave={(vital) => { openCave("vitals", vital); }}
             onReturnToToday={commandTodayOrigin && moreView !== "MENU" ? () => { setCommandTodayOrigin(false); showTab("TODAY"); } : undefined}
+            onReturnToField={() => { setCommandTodayOrigin(false); showTab("TODAY"); }}
             onOpenDestination={openSystemDestination} /></Suspense></RootErrorBoundary>
         </div>}
       </main>

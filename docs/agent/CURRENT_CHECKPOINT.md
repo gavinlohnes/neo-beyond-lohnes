@@ -1,3 +1,33 @@
+# BATCOMPUTER-001 — active protected build
+
+- Gavin approved the BEYOND 4.5 / COMMAND concept and directed “lets work on it” on 2026-11-03.
+  Brief: [BATCOMPUTER-001.md](BATCOMPUTER-001.md). Baseline
+  `126e76fa315edfa5c4fdb379d1c5519e5a527f41`; Builder Codex; branch
+  `codex/batcomputer-001`; active
+  [PR #403](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/403).
+- Building a real wide-screen Rotation Command from existing schedule, Whole Picture, Cave Tonight,
+  current Engine recommendation and grounded Alfred paths. No Engine/schema/provider/write/phone IA
+  change; narrow screens deliberately return to FIELD.
+- Implemented the discoverable Rotation Command with schedule timeline, canonical Engine call,
+  recorded-change rail, personal-range evidence, source limits and grounded Alfred/Whole Picture/
+  FIELD actions. Dedicated Chromium 2/2 PASS at 1440 and 360 px including axe and overflow;
+  COMMAND catalog 68/68 PASS; architecture, TypeScript and production/PWA build PASS. Visual
+  inspection completed against the generated concept; no bitmap or fictional telemetry ships.
+- Independent review blocked head `b55d6291` because the first stylesheet bypassed the locked
+  palette with local colors. The repair uses only established BEYOND tokens and keeps red as
+  structural authority rather than low-contrast small text; dedicated Chromium/axe is again 2/2
+  PASS. The changed head requires renewed exact-head review.
+- Renewed review found the actionable Engine status still used small red text while the all-clear
+  fixture overrode it. The status words now use accessible text with red retained as the border,
+  and a STABILIZE-specific axe case covers that state.
+- CI at `3c5f8293` found the catalog's new description redundantly began `COMMAND ·`, violating the
+  existing plain-language catalog safeguard. The description is now simply “Whole-rotation desktop
+  briefing”; no destination or behavior changed.
+- Next: obtain independent exact-head review and required CI, then apply Gavin's standing
+  green-gates merge ruling.
+
+---
+
 # ROTATION-FIELD-001 — active 3.0 launch field mission
 
 - Gavin approved activation with “Get after it” on 2026-11-03. Brief:
