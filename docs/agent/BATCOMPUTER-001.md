@@ -5,7 +5,8 @@
 - **Lane:** PROTECTED — the new composition presents Engine and Alfred authority together. It does
   not change either authority.
 - **Starting commit:** `126e76fa315edfa5c4fdb379d1c5519e5a527f41` (`origin/master`, freshly
-  fetched). **Builder:** Codex. **Branch:** `codex/batcomputer-001`. **PR:** pending.
+  fetched). **Builder:** Codex. **Branch:** `codex/batcomputer-001`. **PR:**
+  [#403](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/403).
 - **Objective:** add a deliberate wide-screen COMMAND home that reconstructs the current rotation:
   schedule position and forecast, the canonical current Engine recommendation, recorded changes,
   evidence coverage and direct routes to Alfred and Whole Picture.
