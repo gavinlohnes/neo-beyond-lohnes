@@ -15,9 +15,14 @@
 - Evidence so far: architecture and TypeScript PASS; Cave browser 5/5, Garmin measured browser 7/7,
   direct 320 px suit-data interaction/axe 1/1 and focused Node 18/18 PASS; production PWA build PASS.
   Existing `BodyInsights.test.tsx` cannot reach assertions because its legacy ESM module mock is no
-  longer a mock under the current browser runner; required isolated CI remains the broader gate.
-- Next: independent exact-head review and required CI; merge only after the standing green-gates
-  rule passes.
+  longer a mock under the current browser runner. Independent exact-head review passed at
+  `45962b85471ca03273591b56f5656a55be933c3c`. CI then exposed two stale Connected Health text
+  locators: the new readout deliberately separates date/count and exact value into structured
+  children. Their assertions now target the accessible status and independently verify exact value
+  plus observation count; no product behavior or data semantics changed. Standalone local execution
+  of that legacy suite still collapses at its known ESM mock teardown, while CI reaches its tests.
+- Next: push the locator repair, obtain independent exact-head review again and require green CI;
+  merge only after the standing green-gates rule passes.
 
 ---
 

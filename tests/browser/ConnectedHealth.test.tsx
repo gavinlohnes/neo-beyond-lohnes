@@ -80,7 +80,8 @@ it("retains range, exact same-time weight selection and source focus through the
   await screen.getByRole("button", { name: "7 DAYS", exact: true }).click();
   const slider = screen.getByRole("slider", { name: "Open recorded observation" });
   slider.element().focus(); await userEvent.keyboard("{Home}");
-  await expect.element(screen.getByText(/179.0 lb · observation 1 of 2/)).toBeVisible();
+  await expect.element(screen.getByRole("status")).toHaveTextContent("179.0 lb");
+  await expect.element(screen.getByRole("status")).toHaveTextContent("1 of 2");
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Bodyweight · 179 lbs", exact: true })).toBeVisible();
   expect(document.querySelector("[data-source-root]")?.getAttribute("data-source-root")).toBe(first);
@@ -91,7 +92,8 @@ it("retains range, exact same-time weight selection and source focus through the
   await expect.element(screen.getByRole("heading", { name: "Bodyweight · 179 lbs", exact: true })).toBeVisible();
   await expect.poll(() => document.activeElement?.textContent).toBe("FULL HISTORY");
   await screen.getByRole("button", { name: "BACK TO TREND", exact: true }).click();
-  await expect.element(screen.getByText(/179.0 lb · observation 1 of 2/)).toBeVisible();
+  await expect.element(screen.getByRole("status")).toHaveTextContent("179.0 lb");
+  await expect.element(screen.getByRole("status")).toHaveTextContent("1 of 2");
   expect(screen.getByRole("button", { name: "7 DAYS", exact: true }).element().getAttribute("aria-pressed")).toBe("true");
   await expect.poll(() => document.activeElement?.textContent).toBe("VIEW RECORDS");
   expect(await db.events.toArray()).toEqual(before);
@@ -237,7 +239,8 @@ it("retains exploration without running hidden progress reads on each quick log"
   expect(vi.mocked(getBodyInsights).mock.calls.length).toBe(reads);
   await screen.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
-  await expect.element(screen.getByText(/16 oz · observation 1 of 1/)).toBeVisible();
+  await expect.element(screen.getByRole("status")).toHaveTextContent("16 oz");
+  await expect.element(screen.getByRole("status")).toHaveTextContent("1 of 1");
   expect(vi.mocked(getBodyInsights).mock.calls.length).toBe(reads + 1);
 });
 
