@@ -9,3 +9,4 @@
 @media(prefers-reduced-motion:reduce){.batcomputer *{transition:none!important}}
 .batcomputer-authority small{color:var(--text-2)}
 .batcomputer-actions span{color:var(--text-1)}
+.batcomputer-status{color:var(--text-1)}

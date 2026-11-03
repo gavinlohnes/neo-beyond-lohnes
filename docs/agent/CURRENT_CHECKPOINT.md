@@ -17,6 +17,9 @@
   palette with local colors. The repair uses only established BEYOND tokens and keeps red as
   structural authority rather than low-contrast small text; dedicated Chromium/axe is again 2/2
   PASS. The changed head requires renewed exact-head review.
+- Renewed review found the actionable Engine status still used small red text while the all-clear
+  fixture overrode it. The status words now use accessible text with red retained as the border,
+  and a STABILIZE-specific axe case covers that state.
 - Next: obtain independent exact-head review and required CI, then apply Gavin's standing
   green-gates merge ruling.
 
