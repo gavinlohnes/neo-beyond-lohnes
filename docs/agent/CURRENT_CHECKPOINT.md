@@ -1,3 +1,12 @@
+# APPS-CHECKLIST — 2026-11-03 (orchestrator: Claude Code; builder: Codex)
+
+- Gavin picked nine outside-app jobs for BEYOND: [checklist](../BEYOND_APPS_CHECKLIST.md), briefs in
+  [APPS-CHECKLIST-BRIEFS.md](APPS-CHECKLIST-BRIEFS.md). Google Calendar sync and IFTTT webhooks approved as providers.
+- ROTATION-FIELD-001 is **paused** by Gavin ("Pause it, build now"); restart after the checklist merges.
+- Next: Codex builds A1 → A9 one PR each; Claude Code reviews and merges on PASS + green CI.
+
+---
+
 # BATCOMPUTER-001 — active protected build
 
 - Gavin approved the BEYOND 4.5 / COMMAND concept and directed “lets work on it” on 2026-11-03.
