@@ -1,3 +1,29 @@
+# Current checkpoint — Apps Checklist integrated, field gate next
+
+Updated 2026-11-04 by Codex.
+
+- `origin/master` is `5ab48460fe3438b5bd11b91917126a6986b042a8`; the pull-request queue is empty.
+- The complete Apps Checklist is merged: A1 Snippets (#405), A2 Share Inbox (#406), A7a Smart
+  Lists (#410), A4 Routine Player (#411), A5 Habits (#412, Dexie v22), A9 IFTTT (#413), A3 Daily
+  Note (#414, Dexie v23), A6 Collections (#415, Dexie v24), A8 Google Calendar (#416), and A7b
+  Highlights (#417, Dexie v25).
+- Integrated verification on that exact master passed: architecture 453 files; tests 432 files / 3,510
+  tests, with the existing one-file/two-test skips; TypeScript, production build and PWA generation
+  passed. The existing large-chunk build warning remains non-blocking.
+- Provider secrets remain phone-local and excluded from backups. The final IFTTT repair also
+  redacts network errors so Webhooks keys cannot appear in user-visible failure text.
+- Automated integration is complete. Real Google authorization, a real IFTTT key, physical-phone
+  ergonomics and lived rotation behavior cannot be established by repository tests.
+- Resume `ROTATION-FIELD-001`, the already-approved report-only 3.0 launch mission. Gavin uses
+  BEYOND through a complete work run and first full day off; capture `FIELD · INCIDENT`,
+  `FRICTION`, `MISSING JOB`, `TRUST GAP`, or `CLEAR` at final shift, next wake and full day off.
+  This closeout authorizes no new product implementation; evidence determines the next bounded
+  objective.
+
+---
+
+## Historical checkpoints
+
 # CI-FLAKE-001 — 2026-11-04 (Builder: Codex; reviewer/merger: Claude Code)
 
 - Gavin assigned [CI-FLAKE-001](CI-FLAKE-001.md) ahead of further checklist items. Branch
