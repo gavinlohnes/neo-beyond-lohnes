@@ -47,7 +47,7 @@ describe("SHORTCUTS-001", () => {
     openWithShortcut("meal");
     const screen = await render(<App />);
     await expect.element(screen.getByRole("dialog", { name: "MEAL", exact: true })).toBeVisible();
-    await expect.element(screen.getByRole("searchbox", { name: "Search your meals" })).toBeVisible();
+    await expect.element(screen.getByRole("searchbox", { name: "Search your meals and foods", exact: true })).toBeVisible();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
   });
 });

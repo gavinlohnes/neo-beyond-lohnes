@@ -56,7 +56,8 @@ it("bounds lists and keeps real absence distinct from a reading failure", async 
   await screen.rerender(<PersonalUnderstanding active={false} />);
   vi.mocked(getPersonalUnderstanding).mockRejectedValueOnce(new Error("Storage unavailable"));
   await screen.rerender(<PersonalUnderstanding active />);
-  await expect.element(screen.getByRole("alert")).toHaveTextContent(/unavailable, not empty/);
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  expect(screen.getByRole("alert").element().textContent).toMatch(/unavailable, not empty/);
   await expect.element(screen.getByText(/No written lessons yet/)).not.toBeInTheDocument();
   await screen.getByRole("button", { name: "RETRY PERSONAL UNDERSTANDING" }).click();
   await expect.element(screen.getByText(/No written lessons yet/)).toBeVisible();

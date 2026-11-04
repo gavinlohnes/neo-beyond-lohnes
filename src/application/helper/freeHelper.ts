@@ -16,6 +16,7 @@ export interface HelperContext {
   openTasks: { id: string; title: string }[];
   openProjects: { id: string; title: string }[];
   routines: { id: string; title: string; steps: { id: string; text: string }[] }[];
+  logTemplates?: { id: string; name: string; cards: AlfredProposal[] }[];
   /** GYM-SETS-001: the workout in progress, when there is one; sets can only be logged into it. */
   workout?: { sessionId: string; exercises: { id: string; name: string }[] } | null;
   /** CORRECTIONS-001: today's latest water, sleep and weight logs, the only ones a plain correction can change. */
@@ -236,6 +237,8 @@ export function clauses(text: string): string[] {
 /** Cards for every clause it is sure about; everything else is `unknown`, word for word. */
 export function interpret(text: string, ctx: HelperContext): HelperResult {
   const cards: AlfredProposal[] = [], unknown: string[] = [];
+  const template = ctx.logTemplates?.find((item) => norm(item.name) === norm(text));
+  if (template) return { cards: structuredClone(template.cards), unknown: [] };
   // Review of #366 (B1, M1): any negation outside a note's own words makes the whole message unclear,
   // so "don't remind me…" or "didn't eat the bowl" is never turned into a card.
   const beforeNote = text.split(/\bnote\s*[:\-–]/i)[0]!;

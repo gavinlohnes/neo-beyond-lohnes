@@ -26,7 +26,8 @@ it("shows personal evidence as optional depth without phone overflow", async () 
 it("fails closed and retries without presenting absence as evidence", async () => {
   const read = vi.fn().mockRejectedValueOnce(new Error("Storage unavailable")).mockResolvedValue(null);
   const screen = await render(<div className="today-field"><ShiftRecoveryBrief active now={new Date(2026, 10, 2, 6, 30)} read={read} /></div>);
-  await expect.element(screen.getByRole("alert")).toHaveTextContent(/unavailable/i);
+  await expect.element(screen.getByRole("alert")).toBeVisible();
+  expect(screen.getByRole("alert").element().textContent).toMatch(/unavailable/i);
   await screen.getByRole("button", { name: "RETRY RECOVERY CONTEXT" }).click();
   await expect.element(screen.getByRole("alert")).not.toBeInTheDocument();
 });
