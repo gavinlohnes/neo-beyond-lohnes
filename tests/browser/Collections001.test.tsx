@@ -15,9 +15,11 @@ it("adds, edits and searches a typed item accessibly at 360px", async () => {
   await expect.element(screen.getByRole("heading", { name: "Gift ideas", exact: true })).toBeVisible();
   await screen.getByRole("textbox", { name: "Idea", exact: true }).fill("Heated blanket"); await screen.getByRole("spinbutton", { name: "Price", exact: true }).fill("49"); await screen.getByRole("checkbox", { name: "Bought", exact: true }).click();
   await screen.getByRole("button", { name: "ADD ITEM", exact: true }).click(); await expect.element(screen.getByText("Heated blanket", { exact: true })).toBeVisible();
+  await screen.getByRole("textbox", { name: "Idea", exact: true }).fill("Book");
+  await screen.getByRole("button", { name: "ADD ITEM", exact: true }).click(); await expect.element(screen.getByText("Book", { exact: true })).toBeVisible();
   await screen.getByRole("searchbox", { name: "Search this collection", exact: true }).fill("missing"); await expect.element(screen.getByText("No matching items.", { exact: true })).toBeVisible();
   await screen.getByRole("searchbox", { name: "Search this collection", exact: true }).fill("blanket"); await expect.element(screen.getByText("Heated blanket", { exact: true })).toBeVisible();
-  expect(await db.collectionItems.where("collectionId").equals(collection.id).count()).toBe(1); expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
-  for (const control of document.querySelectorAll<HTMLElement>(".collections-screen button, .collections-screen input, .collections-screen select, .collections-screen summary")) expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  expect(await db.collectionItems.where("collectionId").equals(collection.id).count()).toBe(2); expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  for (const control of document.querySelectorAll<HTMLElement>(".collections-screen button, .collections-screen input, .collections-screen select, .collections-screen summary")) if (control.getClientRects().length) expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   expect((await axe.run(document.body)).violations).toEqual([]);
 });

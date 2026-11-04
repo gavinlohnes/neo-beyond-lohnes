@@ -28,6 +28,15 @@ describe("COLLECTIONS-001", () => {
     expect(await db.collectionItems.count()).toBe(0); await confirmProposal(result.cards[0]!); expect(await db.collectionItems.count()).toBe(1);
   });
 
+  it("rejects unknown field types, ambiguous yes/no values and impossible dates", async () => {
+    await expect(createCollection("Broken", [{ label: "Value", type: "MAYBE" }])).rejects.toThrow("unknown field type");
+    const collection = await createCollection("Typed", [{ label: "Done", type: "YES_NO" }, { label: "When", type: "DATE" }]);
+    const [done, when] = collection.fields;
+    await expect(addCollectionItem(collection.id, { [done!.id]: "not sure", [when!.id]: "2026-11-04" })).rejects.toThrow("needs yes or no");
+    await expect(addCollectionItem(collection.id, { [done!.id]: "yes", [when!.id]: "2026-02-30" })).rejects.toThrow("real calendar date");
+    expect(await db.collectionItems.count()).toBe(0);
+  });
+
   it("round-trips collections and restores a v23 backup with both stores empty", async () => {
     const oldJson = JSON.parse(await (await db.export()).text()); oldJson.data.databaseVersion = 23;
     for (const name of ["collections", "collectionItems"]) { oldJson.data.tables = oldJson.data.tables.filter((table: { name: string }) => table.name !== name); oldJson.data.data = oldJson.data.data.filter((table: { tableName: string }) => table.tableName !== name); }
