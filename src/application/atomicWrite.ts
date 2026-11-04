@@ -49,6 +49,9 @@ export const ROUTINE_WRITE_TABLES = ["routines", "beyondDays"] as const;
 /** Decision Journal create / modify / review. */
 export const JOURNAL_WRITE_TABLES = ["decisionJournalEntries"] as const;
 
+/** DAILY-NOTE-001: one directly-mutable note per lived day. */
+export const DAILY_NOTE_WRITE_TABLES = ["dailyNotes", "beyondDays"] as const;
+
 /** TRAIN start / log / skip / complete / abandon. */
 export const WORKOUT_WRITE_TABLES = ["workoutSessions", "performedSets"] as const;
 

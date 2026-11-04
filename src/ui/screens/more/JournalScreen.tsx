@@ -13,6 +13,7 @@ import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { describeError } from "../../errorMessage";
 import { FollowUps } from "./FollowUps";
 import { Experiments } from "./Experiments";
+import { WikiTextArea } from "../../components/WikiTextArea";
 
 /**
  * Decision Journal (approved under the Whole-Life Capability North Star,
@@ -250,16 +251,7 @@ export function JournalScreen({ active = true, navigationEntryId, onOpenCapture,
               disabled={busy}
               onChange={(e) => setNewOptions(e.target.value)}
             />
-            <label htmlFor="journal-decision" className="meta" style={{ display: "block", marginBottom: 4 }}>Decision</label>
-            <textarea
-              id="journal-decision"
-              className="input"
-              style={{ marginBottom: 8, minHeight: 60 }}
-              placeholder="What did you decide?"
-              value={newDecision}
-              disabled={busy}
-              onChange={(e) => setNewDecision(e.target.value)}
-            />
+            <WikiTextArea label="Decision" value={newDecision} onChange={setNewDecision} rows={3} disabled={busy} />
             <label htmlFor="journal-reasoning" className="meta" style={{ display: "block", marginBottom: 4 }}>Reasoning (optional)</label>
             <textarea
               id="journal-reasoning"
@@ -482,7 +474,7 @@ function JournalEntryDetail({ entryId, onBack, onDraftChange }: { entryId: strin
                 <input type="text" className="input" style={{ marginBottom: 8 }} aria-label="Decision title" value={title} onChange={(e) => setTitle(e.target.value)} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 60 }} aria-label="Context" placeholder="Context" value={context} onChange={(e) => setContext(e.target.value)} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 60 }} aria-label="Options considered" placeholder="Options considered" value={options} onChange={(e) => setOptions(e.target.value)} />
-                <textarea className="input" style={{ marginBottom: 8, minHeight: 60 }} aria-label="Decision" placeholder="Decision" value={decision} onChange={(e) => setDecision(e.target.value)} />
+                <WikiTextArea label="Decision" value={decision} onChange={setDecision} rows={3} disabled={busy} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 60 }} aria-label="Reasoning" placeholder="Reasoning" value={reasoning} onChange={(e) => setReasoning(e.target.value)} />
                 <textarea className="input" style={{ marginBottom: 8, minHeight: 60 }} aria-label="Expectation" placeholder="Expectation" value={expectation} onChange={(e) => setExpectation(e.target.value)} />
                 <div style={{ display: "flex", gap: 8 }}>
