@@ -32,3 +32,15 @@ it("keeps a phone-local draft until SAVE, autocompletes a day link and exposes b
   for (const control of document.querySelectorAll<HTMLElement>(".daily-note-screen button, .daily-note-screen textarea")) expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   expect((await axe.run(document.body)).violations).toEqual([]);
 });
+
+it("forgets an older session draft after the operator reverts to the saved text", async () => {
+  let screen = await render(<DailyNoteScreen active />);
+  const editor = screen.getByRole("textbox", { name: "Your note", exact: true });
+  await editor.fill("Keep this only while editing");
+  await expect.poll(() => sessionStorage.length).toBe(1);
+  await editor.fill("");
+  await expect.poll(() => sessionStorage.length).toBe(0);
+  await cleanup();
+  screen = await render(<DailyNoteScreen active />);
+  await expect.element(screen.getByRole("textbox", { name: "Your note", exact: true })).toHaveValue("");
+});

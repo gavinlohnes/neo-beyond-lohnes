@@ -22,7 +22,10 @@ export function DailyNoteScreen({ active }: { active: boolean }) {
     });
   }, [active]);
   useEffect(() => {
-    if (workspace && draft !== savedText) sessionStorage.setItem(`beyond.daily-note.draft.${workspace.day.id}`, draft);
+    if (!workspace) return;
+    const key = `beyond.daily-note.draft.${workspace.day.id}`;
+    if (draft !== savedText) sessionStorage.setItem(key, draft);
+    else sessionStorage.removeItem(key);
   }, [draft, savedText, workspace]);
   if (!workspace) return <section className="daily-note-screen"><p className="meta">Start a lived day to open its daily note.</p></section>;
   const dirty = draft !== savedText;
