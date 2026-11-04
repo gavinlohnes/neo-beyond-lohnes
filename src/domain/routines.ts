@@ -9,7 +9,7 @@ export type RoutineMoment = (typeof ROUTINE_MOMENTS)[number];
 export const ROUTINE_MOMENT_LABELS: Record<RoutineMoment, string> = {
   BEFORE_SHIFT: "Before shift", ON_SHIFT: "On shift", AFTER_SHIFT: "After shift", DAY_OFF: "Day off",
 };
-export interface RoutineStep { id: string; text: string }
+export interface RoutineStep { id: string; text: string; /** Operator estimate; absent means untimed. */ minutes?: number }
 export interface Routine {
   id: string;
   title: string;
