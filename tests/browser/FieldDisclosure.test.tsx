@@ -41,7 +41,11 @@ const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
 describe("FieldDisclosure (real browser)", () => {
   afterEach(async () => {
     vi.restoreAllMocks();
-    window.scrollTo(0, 0);
+    // A smooth scroll started by the previous test can still be running; "instant" cancels it, and
+    // two frames let it settle, so the next test really starts at the top.
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    await nextFrame();
+    await nextFrame();
     await cdp().send("Emulation.setEmulatedMedia", { features: [] });
   });
 
@@ -93,6 +97,8 @@ describe("FieldDisclosure (real browser)", () => {
         <Harness />
       </div>,
     );
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    await expect.poll(() => window.scrollY).toBe(0);
     (screen.getByRole("button", { name: "SHOW THING" }).element() as HTMLElement).click();
     await expect.element(screen.getByText("Hidden content")).toBeVisible();
     await nextFrame();
