@@ -50,6 +50,13 @@ REUSE / OWN / BUILD FROM SCRATCH in the body. Claude Code reviews and merges.
   `.only`, retries, timeout increases, deleted tests or relaxed assertions.
 - An exploratory full run during repair had 4 failures (414 files passed, 1 skipped): one helper
   regression in the isolated TODAY harness and three lazy-photo decode waits introduced during
-  repair. Both were corrected before the 232-test focused pass. A fresh full run is in progress.
+  repair. Both were corrected before the 232-test focused pass.
+- The next full run at `802249e` had 414 files / 3,447 tests pass, with two failures and the existing
+  one-file/two-test skips. Small Steps uses two meal choosers; its helper must continue from the old
+  chooser into RecordSheets. Synthetic camera tests also need a decoded frame, selected preview and
+  saved receipt before their existing storage/crop assertions. Corrected those paths; the expanded
+  meal/camera regression set is **5 files / 61 tests PASS**, and TypeScript again PASS.
+- All **337 original assertions** in the modified files are retained (TypeScript AST comparison).
+  A fresh full run of the corrected code is next. No isolated rerun is substituted for a full pass.
 - **CI acceptance: pending, 0/5 links recorded.** Do not treat local results as CI evidence or merge
   before the five consecutive full-suite PR workflow passes and Claude Code review.

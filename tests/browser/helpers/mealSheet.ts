@@ -5,13 +5,15 @@ export function mealButton(screen: Screen) { return screen.getByRole("button", {
 
 /** Existing preset management/correction form, now behind the production meal sheet. */
 export async function openMealInBody(screen: Screen) {
+  const appShell = screen.container.querySelector("#workspace-TODAY") !== null;
   await mealButton(screen).click();
   // Wait for the sheet's contents first; checking synchronously can run before it renders and skip the route.
   await expect.poll(() => document.querySelector("dialog[open] button") !== null).toBe(true);
   await expect.poll(() => screen.getByRole("button", { name: /^New meal or manual entry/ }).elements().length + screen.getByRole("button", { name: "More meal tools & corrections", exact: true }).elements().length).toBeGreaterThan(0);
   const oldRoute = screen.getByRole("button", { name: /^New meal or manual entry/ });
-  // Isolated TODAY harnesses expose the DATA handoff instead of mounting RecordSheets.
-  if (oldRoute.elements().length) { await oldRoute.click(); return; }
+  // Small Steps in App uses the older chooser before RecordSheets. An isolated TODAY harness
+  // only calls its DATA callback, so it has no second sheet to wait for.
+  if (oldRoute.elements().length) { await oldRoute.click(); if (!appShell) return; }
   const tools = screen.getByRole("dialog").getByRole("button", { name: "More meal tools & corrections", exact: true });
   await tools.click();
   await expect.element(screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true })).toBeVisible();
@@ -23,7 +25,14 @@ export async function openMealInBodyDom(screen: Screen) {
   const option = () => [...document.querySelectorAll<HTMLButtonElement>("dialog[open] button")]
     .find((button) => button.textContent?.startsWith("More meal tools & corrections") || button.textContent?.startsWith("New meal or manual entry"));
   await expect.poll(option).toBeDefined();
-  option()!.click();
+  const route = option()!;
+  const olderChooser = route.textContent?.startsWith("New meal or manual entry");
+  route.click();
+  if (olderChooser) {
+    const tools = screen.getByRole("dialog").getByRole("button", { name: "More meal tools & corrections", exact: true });
+    await expect.element(tools).toBeVisible();
+    (tools.element() as HTMLButtonElement).click();
+  }
   await expect.element(screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true })).toBeVisible();
 }
 export async function closeMealSheet(screen: Screen) {

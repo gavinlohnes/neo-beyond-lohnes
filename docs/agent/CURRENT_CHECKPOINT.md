@@ -6,7 +6,9 @@
   relaxation. Shared helpers/setup ensure this PR selects full-suite CI under #408.
 - Routine-player WIP is paused and preserved at `ae1f7c6` on `codex/routine-player-001`.
 - Focused verification: 16 files / 232 tests PASS, including all named browser files and Factory;
-  architecture, TypeScript and production/PWA build PASS. Fresh full-suite verification in progress.
+  architecture, TypeScript and production/PWA build PASS. A full run found an additional two-hop
+  Small Steps meal path and synthetic camera readiness race. Both repaired; expanded regression
+  set 5 files / 61 tests PASS; all 337 original assertions retained. Fresh full verification next.
   Completion requires five consecutive full-suite CI workflow
   passes on the one PR, with run links in its body; none claimed yet.
 - Git fetch/push work, but GitHub API requests return `Forbidden`, blocking PR creation/run control.
