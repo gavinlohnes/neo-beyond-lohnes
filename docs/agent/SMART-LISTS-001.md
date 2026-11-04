@@ -18,4 +18,6 @@
 - Unchanged isolated ReviewBodyAnswers rerun: 4/4 PASS. No timeout, assertion or test was disabled or relaxed. This uses the checklist's documented isolated-timeout rerun policy; do not claim a single green full-verify invocation. Build was run separately after the test phase stopped and passed.
 - Actual App → MORE → Plan Today walkthrough: all three views rendered at 360px with no page errors. Captures: `docs/screenshots/smart-lists-001/`; synthetic records only. 320/360/412px, 44px targets and axe pass in the browser cases.
 - App implementation commit: `d4b3928`. No #406 implementation files were taken over; only the existing catalog's Plan aliases overlap its broader catalog surface.
-- Ready PR pending creation; Claude Code supplies independent review and integration. Next checklist item after A7a is ROUTINE-PLAYER-001 / A4.
+- Branch pushed at `3a96fc3`; ready PR creation attempted with `gh pr create` and rejected by the GitHub API: `Post https://api.github.com/graphql: Forbidden`. No PR number is assigned, and no independent review, merge or deployment is claimed.
+- Per APPS-CHECKLIST-BRIEFS: “If GitHub write access fails, stop and tell Gavin.” Stopped before A4; Claude can open the ready PR from `codex/smart-lists-001`. The prepared PR body is `.cache/smart-lists/pr.md` in this workspace; this brief contains the durable scope and evidence.
+- Next checklist item after A7a is ROUTINE-PLAYER-001 / A4 once publication is available.
