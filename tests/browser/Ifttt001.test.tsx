@@ -46,6 +46,17 @@ describe("IFTTT-001", () => {
     expect(readAutomationSends().some((send) => !send.ok)).toBe(false);
   });
 
+  it("never leaks the key when a network exception includes the full request URL", async () => {
+    const secret = "secret/key-never-log";
+    const encoded = encodeURIComponent(secret);
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error(`Failed to fetch https://maker.ifttt.com/trigger/beyond/with/key/${encoded}`)));
+    await expect(sendAutomationTest(secret)).rejects.toThrow("IFTTT could not be reached.");
+    const serialized = JSON.stringify(readAutomationSends());
+    expect(serialized).not.toContain(secret);
+    expect(serialized).not.toContain(encoded);
+    expect(readAutomationSends()[0]?.error).toBe("IFTTT could not be reached.");
+  });
+
   it("never places the key or phone log in a backup or restores them from one", async () => {
     const secret = "maker-secret-never-export";
     saveAutomationConfig({ enabled: true, key: secret, events: ["day_started"], includeValue: [] });

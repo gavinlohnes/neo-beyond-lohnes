@@ -39,17 +39,22 @@ async function post(event: AutomationEvent | "test", key: string, value?: string
   const time = new Date().toISOString();
   const body: { event: string; time: string; value?: string } = { event, time };
   if (value) body.value = value;
+  let response: Response;
   try {
-    const response = await fetch(`https://maker.ifttt.com/trigger/beyond/with/key/${encodeURIComponent(key)}`, {
+    response = await fetch(`https://maker.ifttt.com/trigger/beyond/with/key/${encodeURIComponent(key)}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error(`IFTTT returned ${response.status}.`);
-    record({ id: crypto.randomUUID(), event, time, ok: true });
-  } catch (cause) {
-    const error = cause instanceof Error ? cause.message : "Send failed.";
+  } catch {
+    const error = "IFTTT could not be reached.";
     record({ id: crypto.randomUUID(), event, time, ok: false, error });
     throw new Error(error);
   }
+  if (!response.ok) {
+    const error = `IFTTT returned ${response.status}.`;
+    record({ id: crypto.randomUUID(), event, time, ok: false, error });
+    throw new Error(error);
+  }
+  record({ id: crypto.randomUUID(), event, time, ok: true });
 }
 
 /** One attempt only. Commands do not wait and failures never replay themselves. */
