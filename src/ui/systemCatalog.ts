@@ -54,7 +54,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "SNIPPETS", description: "Text expansions and reusable log-card sets", aliases: ["template", "espanso", "shortcut text", "log template"], group: "Settings", destination: { kind: "more", view: "SNIPPETS" }, browse: false },
   { label: "STEALTH", description: "Hide your numbers. Long-press the emblem anytime", aliases: ["hide", "privacy", "discreet", "screen"], group: "On shift", destination: { kind: "stealth" } },
   { label: "TODAY TOOLS", description: "Every daily control in one place", aliases: ["check in", "check-in", "minimum day", "end day", "shift down", "reset"], group: "On shift", destination: { kind: "tools" } },
-  { label: "PLAN TODAY", description: "Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan"], group: "Plan", destination: { kind: "more", view: "PLAN" } },
+  { label: "PLAN TODAY", description: "Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan", "next 7", "next7", "no date", "undated", "smart lists"], group: "Plan", destination: { kind: "more", view: "PLAN" } },
   { label: "TRAIN", description: "Workouts, your programme, recovery and records", aliases: ["training", "fitness", "recovery", "programme", "training programme", "my programme", "training program"], group: "Plan", destination: { kind: "workspace", tab: "TRAIN" }, browse: false },
   { label: "WORKOUT", description: "TRAIN · Start or resume a workout", aliases: ["exercise", "resume", "gym", "set", "lift"], group: "Plan", destination: { kind: "workout" } },
   { label: "EXERCISE LIBRARY", description: "Browse and manage exercises", aliases: ["lift", "exercise"], group: "Plan", destination: { kind: "more", view: "EXERCISE_LIBRARY" } },

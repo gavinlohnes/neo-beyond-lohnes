@@ -9,6 +9,35 @@ export interface TodayPlan {
   missions: Mission[];
 }
 
+export interface TaskSmartLists {
+  date: string;
+  through: string;
+  today: Obligation[];
+  next7: Obligation[];
+  noDate: Obligation[];
+  missions: Mission[];
+}
+
+/** Existing local calendar-date task semantics; does not change lived-day ownership. */
+export const taskListDate = (now = new Date()) => formatLocalDate(now);
+
+/** Read-only filters, retaining the canonical query's ordering and eligibility.
+ * Due dates and planned attention remain distinct; neither is moved or inferred.
+ */
+export async function getTaskSmartLists(now = new Date()): Promise<TaskSmartLists> {
+  const date = taskListDate(now);
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 12);
+  const through = taskListDate(end);
+  const [obligations, missions] = await Promise.all([getCurrentlyEligibleUnresolvedObligations(), getMissions()]);
+  const inToday = (item: Obligation) => item.plannedAt === date || (item.dueAt !== undefined && item.dueAt <= date);
+  return {
+    date, through, missions,
+    today: obligations.filter(inToday),
+    next7: obligations.filter((item) => !inToday(item) && [item.plannedAt, item.dueAt].some((at) => at !== undefined && at > date && at <= through)),
+    noDate: obligations.filter((item) => item.plannedAt === undefined && item.dueAt === undefined),
+  };
+}
+
 /** Explicit dates only. This view does not rank, schedule, recommend or write. */
 export async function getTodayPlan(now = new Date()): Promise<TodayPlan> {
   const date = formatLocalDate(now);

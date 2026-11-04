@@ -86,6 +86,12 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## INTELLIGENCE SPINE / DELTA
 
+- **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
+  `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
+  Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,
+  not lived-day ownership or a recommendation rank. Due and planned dates remain separate; past
+  plans alone are not reinterpreted as deadlines. Reuse before adding another task-date projection.
+
 - **Confirmed memory (MEMORY-001, #303; consult live PR status):** `application/memory.ts`
   projects operator-authored prep-food/bottle/other/recovery facts from append-only
   MEMORY_RECORDED events, with explicit confirmation, irrelevant/restore lifecycle, causal/stale
