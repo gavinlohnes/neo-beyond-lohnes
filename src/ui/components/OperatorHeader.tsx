@@ -76,6 +76,7 @@ export function OperatorHeader({ destination: _destination, children, headingId,
         <span className="cc-presence__mode">{presence.presence.mode}</span>
         {presence.presence.when && <span className="cc-presence__when">{presence.presence.when}</span>}
         {presence.presence.run && <span className="cc-presence__when">{presence.presence.run}</span>}
+        {presence.presence.calendar && <span className="cc-presence__when">{presence.presence.calendar}</span>}
         {presence.presence.next && <button type="button" className="cc-presence__next" onClick={presence.openToday} aria-label={`Next: ${presence.presence.next}. Open TODAY`}>Next: {presence.presence.next} ›</button>}
       </p>}
     </div>
