@@ -237,6 +237,8 @@ export type DomainEventType =
   | "ROUTINE_ARCHIVED"
   | "ROUTINE_RESTORED"
   | "ROUTINE_STEP_SET"
+  /** HABITS-001: latest completion state for one habit on one lived day; false corrects a prior tap. */
+  | "HABIT_SET"
   | "DECISION_JOURNAL_CREATED"
   | "DECISION_JOURNAL_MODIFIED"
   | "DECISION_JOURNAL_REVIEWED"

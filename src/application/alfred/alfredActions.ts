@@ -16,6 +16,7 @@ import { formatLocalDate } from "../../engine/scheduledContext";
 import { getDays, searchRecords } from "./alfredSearch";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
 import { URGE_TRIGGERS, type UrgeTrigger } from "../../domain/common/types";
+import { setHabitDone } from "../habitCommands";
 
 /**
  * ALFRED-001: what Alfred may propose. Each tool call becomes a card the operator confirms; only the
@@ -33,6 +34,7 @@ export type AlfredProposal =
   | { kind: "work_started" }
   | { kind: "work_ended" }
   | { kind: "task_done"; task_id: string; title: string }
+  | { kind: "habit_done"; habit_id: string; name: string }
   | { kind: "task_new_date"; task_id: string; title: string; due_date: string }
   // WEEK-PLAN-001: the day he means to work on an open task (its planned date), not its due date.
   | { kind: "task_plan"; task_id: string; title: string; planned_date: string }
@@ -244,6 +246,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "work_started": return "Started work";
     case "work_ended": return "Work ended";
     case "task_done": return `Done: ${p.title}`;
+    case "habit_done": return `Done today: ${p.name}`;
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
     case "routine_tick": return `Tick: ${p.text} (${p.routine_title})`;
@@ -291,6 +294,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "open_training") return { open: "TRAIN" };
   if (p.kind === "capture_note") { await captureItem(p.text); return {}; }
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
+  if (p.kind === "habit_done") { await setHabitDone(p.habit_id, true); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
   if (p.kind === "correct_log") {

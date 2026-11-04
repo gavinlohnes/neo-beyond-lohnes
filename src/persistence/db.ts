@@ -27,6 +27,7 @@ import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 import type { ExternalSleepRecord, ExternalSleepRevision, HealthImportReceipt } from "../domain/health/sleepImport";
 import type { ExternalActivityHour, ExternalRestingHeartRate } from "../domain/health/activityImport";
 import type { LogTemplate, TextSnippet } from "../domain/snippets/types";
+import type { Habit } from "../domain/habits";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -56,6 +57,7 @@ export class BeyondDB extends Dexie {
   alfredReviews!: Table<AlfredReview, string>;
   projects!: Table<Project, string>;
   routines!: Table<Routine, string>;
+  habits!: Table<Habit, string>;
   textSnippets!: Table<TextSnippet, string>;
   logTemplates!: Table<LogTemplate, string>;
   savedInboxItems!: Table<SavedInboxItem, string>;
@@ -380,6 +382,10 @@ export class BeyondDB extends Dexie {
     // SHARE-INBOX-001: owner-approved additive inbox for text and links explicitly shared to BEYOND.
     this.version(21).stores({
       savedInboxItems: "id, createdAt, source, *tags",
+    });
+    // HABITS-001: owner-approved additive definitions. Completion/correction history uses events.
+    this.version(22).stores({
+      habits: "id, status, createdAt",
     });
   }
 }
