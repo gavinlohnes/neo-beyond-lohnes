@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
       - id: scope
         run: |
-          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }})
+          files=$(git diff --no-renames --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }})
           echo "Changed files:"; echo "$files"
           kind=docs
           while IFS= read -r f; do
@@ -84,7 +84,9 @@ jobs:
         run: npx vitest run --shard=${{ matrix.shard }}/4
       - name: Changed tests only
         if: needs.scope.outputs.kind == 'tests' && matrix.shard == 1 && needs.scope.outputs.tests != ''
-        run: npx vitest run ${{ needs.scope.outputs.tests }}
+        env:
+          CHANGED_TESTS: ${{ needs.scope.outputs.tests }}
+        run: npx vitest run $CHANGED_TESTS
 
   verify:
     name: PR Verification
