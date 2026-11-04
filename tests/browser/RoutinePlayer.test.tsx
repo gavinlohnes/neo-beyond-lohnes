@@ -108,6 +108,7 @@ it("exposes PLAY on the single TODAY row and labels a fully estimated scheduled 
   const day = await startDay();
   await createRoutine({ title: "Synthetic before shift", moment: "BEFORE_SHIFT", steps: [{ text: "Synthetic first", minutes: 10 }, { text: "Synthetic second", minutes: 5 }] });
   const screen = await render(<div className="screen"><TodayRoutine dayId={day.id} moment="BEFORE_SHIFT" active /></div>);
+  await expect.element(screen.getByText("BEFORE SHIFT · Synthetic before shift", { exact: true })).toBeVisible();
   expect(screen.container.querySelectorAll("summary")).toHaveLength(1);
   await screen.getByRole("button", { name: "PLAY", exact: true }).click();
   const player = screen.getByRole("dialog", { name: "Synthetic before shift", exact: true });
