@@ -26,6 +26,7 @@ import { DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 
 import type { ExternalSleepRecord, ExternalSleepRevision, HealthImportReceipt } from "../domain/health/sleepImport";
 import type { ExternalActivityHour, ExternalRestingHeartRate } from "../domain/health/activityImport";
+import type { LogTemplate, TextSnippet } from "../domain/snippets/types";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -55,6 +56,8 @@ export class BeyondDB extends Dexie {
   alfredReviews!: Table<AlfredReview, string>;
   projects!: Table<Project, string>;
   routines!: Table<Routine, string>;
+  textSnippets!: Table<TextSnippet, string>;
+  logTemplates!: Table<LogTemplate, string>;
   savedInboxItems!: Table<SavedInboxItem, string>;
 
   constructor() {
@@ -368,8 +371,14 @@ export class BeyondDB extends Dexie {
     this.version(19).stores({
       routines: "id, status, moment, createdAt",
     });
-    // SHARE-INBOX-001: owner-approved additive inbox for text and links explicitly shared to BEYOND.
+    // SNIPPETS-001: operator-authored text expansions and named sets of existing helper cards.
+    // Additive configuration only; no prior data exists to migrate. Native Dexie backups include both.
     this.version(20).stores({
+      textSnippets: "id, &trigger, updatedAt",
+      logTemplates: "id, &name, updatedAt",
+    });
+    // SHARE-INBOX-001: owner-approved additive inbox for text and links explicitly shared to BEYOND.
+    this.version(21).stores({
       savedInboxItems: "id, createdAt, source, *tags",
     });
   }

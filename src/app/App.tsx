@@ -65,6 +65,7 @@ import type { CaveVitalId } from "../application/caveVitals";
 import { SessionDraftProvider, useHasSessionDrafts } from "../ui/sessionDrafts";
 import type { IntentFocus } from "../ui/screens/more/IntentScreen";
 import type { SystemDestination } from "../ui/systemCatalog";
+import { SnippetExpander } from "../ui/components/SnippetExpander";
 
 /**
  * Product Experience Sprint, P1 (navigation authority reconciliation):
@@ -740,6 +741,7 @@ function AppWorkspaces() {
     <PresenceContext.Provider value={{ presence, openToday: goTodayRoot }}>
     <HeaderSearchContext.Provider value={() => { openMore("SEARCH"); }}>
     <HeaderAlfredContext.Provider value={() => setAlfredOpen(true)}>
+      <SnippetExpander />
     <StealthToggleContext.Provider value={() => changeStealth(!stealthOnRef.current)}>
     {/* Everything behind stealth is inert: not focusable, not read, not tappable. */}
     <div inert={stealthOn} style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
