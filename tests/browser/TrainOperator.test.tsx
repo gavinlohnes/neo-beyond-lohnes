@@ -217,16 +217,18 @@ describe("TRAIN-OPERATOR-001", () => {
     const held = new Promise<void>((resolve) => { release = resolve; });
     const real = vi.mocked(getActiveDay).getMockImplementation()!;
     vi.mocked(getActiveDay).mockImplementationOnce(async () => { await held; return real(); });
-    const reads = vi.mocked(getRecentSubstitutions).mock.calls.length;
+    const reads = vi.mocked(getPerformedSets).mock.calls.length;
+    const advisoryReads = vi.mocked(getRecentSubstitutions).mock.calls.length;
     await screen.getByRole("button", { name: "RETRY WORKOUT READ" }).click();
     const weight = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
     await expect.element(weight).toBeVisible();
     await weight.click();
     release();
+    await expect.poll(() => vi.mocked(getPerformedSets).mock.calls.length).toBeGreaterThan(reads);
     // Substitutions are the final advisory read (sets alone are too early). Wait for the whole
     // batch, then a frame for the handler's focus step, rather than guessing 50 ms is enough.
-    await expect.poll(() => vi.mocked(getRecentSubstitutions).mock.calls.length).toBeGreaterThan(reads);
-    await Promise.all(vi.mocked(getRecentSubstitutions).mock.results.slice(reads).map((result) => result.value));
+    await expect.poll(() => vi.mocked(getRecentSubstitutions).mock.calls.length).toBeGreaterThan(advisoryReads);
+    await Promise.all(vi.mocked(getRecentSubstitutions).mock.results.slice(advisoryReads).map((result) => result.value));
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     expect(document.activeElement).toBe(weight.element());
     await weight.fill("105");
