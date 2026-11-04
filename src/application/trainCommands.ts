@@ -1,5 +1,6 @@
 import type { WriteReceipt } from "./writeReceipt";
 import { db } from "../persistence/db";
+import { emitAutomationEvent } from "./iftttAutomations";
 import { deriveCapacity } from "../engine/capacity";
 import { assertRedOverrideConfirmed } from "../engine/redOverride";
 import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
@@ -315,6 +316,7 @@ export async function completeWorkout(
       correlationId,
     );
   });
+  emitAutomationEvent("workout_finished", sessionType);
 }
 
 /**

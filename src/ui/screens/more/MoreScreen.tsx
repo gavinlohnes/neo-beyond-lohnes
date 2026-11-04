@@ -84,12 +84,13 @@ const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
 // it can't drift again.
 const DATA_SCHEMA = db.verno;
 
-export type MoreView = "HIGHLIGHTS" | "COLLECTIONS" | "DAILY_NOTE" | "SNIPPETS" | "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE" | "SAVED";
+export type MoreView = "AUTOMATIONS" | "HIGHLIGHTS" | "COLLECTIONS" | "DAILY_NOTE" | "SNIPPETS" | "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE" | "SAVED";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import type { WholePictureDestination } from "../review/WholePicture";
 import { BatcomputerScreen } from "../command/BatcomputerScreen";
 import { SnippetsScreen } from "./SnippetsScreen";
+import { AutomationsScreen } from "./AutomationsScreen";
 
 export function MoreScreen({
   onViewChange,
@@ -513,6 +514,7 @@ export function MoreScreen({
           {view === "SYSTEMS" && <><SystemsReadout active={active} refreshKey={systemsRefreshKey} onOpenMetric={onOpenMetric} onOpenCave={onOpenCave} /></>}
           {view === "BATCOMPUTER" && <BatcomputerScreen active={active} onInspectSources={() => setView("REVIEW")} onReturnToField={() => onReturnToField?.()} />}
           <div hidden={view !== "SNIPPETS"}>{visited.has("SNIPPETS") && <SnippetsScreen active={active && view === "SNIPPETS"} />}</div>
+          <div hidden={view !== "AUTOMATIONS"}>{visited.has("AUTOMATIONS") && <><OperatorHeader destination="command">MORE // AUTOMATIONS</OperatorHeader><AutomationsScreen active={active && view === "AUTOMATIONS"} /></>}</div>
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<Opening><HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></Opening></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen />}

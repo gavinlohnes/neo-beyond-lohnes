@@ -7,6 +7,7 @@ import type { DomainEvent } from "../domain/common/types";
 import type { Routine, RoutineMoment } from "../domain/routines";
 import type { SchedulePhase } from "../engine/scheduledContext";
 import { byTimeThenSeq } from "./queries";
+import { emitAutomationEvent } from "./iftttAutomations";
 
 /**
  * ROUTINES-001. The Routine row is current state; every change writes one event in the same
@@ -72,7 +73,7 @@ export async function setRoutineArchived(routineId: string, archived: boolean): 
 
 /** Tick or untick one step on one lived day. A no-op when it's already in that state. */
 export async function setRoutineStep(dayId: string, routineId: string, stepId: string, done: boolean): Promise<boolean> {
-  return writeAtomically(ROUTINE_WRITE_TABLES, async () => {
+  const changed = await writeAtomically(ROUTINE_WRITE_TABLES, async () => {
     if (!(await db.beyondDays.get(dayId))) throw new Error(`DAY_NOT_FOUND: no day with id ${dayId}`);
     const routine = await db.routines.get(routineId);
     if (!routine) throw notFound(routineId);
@@ -82,6 +83,14 @@ export async function setRoutineStep(dayId: string, routineId: string, stepId: s
     await logEvent(dayId, "ROUTINE_STEP_SET", { commandId: correlationId, routineId, stepId, done }, "USER", correlationId);
     return true;
   });
+  if (changed && done) {
+    const routine = await db.routines.get(routineId);
+    const ticks = await getRoutineTicks(dayId);
+    if (routine && routine.steps.length > 0 && routine.steps.every((step) => ticks.has(stepKey(routineId, step.id)))) {
+      emitAutomationEvent("routine_finished", routine.title);
+    }
+  }
+  return changed;
 }
 
 export const stepKey = (routineId: string, stepId: string) => `${routineId}:${stepId}`;
