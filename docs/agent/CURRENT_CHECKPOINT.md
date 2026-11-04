@@ -8,13 +8,16 @@
 - Focused verification: 16 files / 232 tests PASS, including all named browser files and Factory;
   architecture, TypeScript and production/PWA build PASS. A full run found an additional two-hop
   Small Steps meal path and synthetic camera readiness race. Both repaired; expanded regression
-  set 5 files / 61 tests PASS; all 337 original assertions retained. Fresh full verification next.
+  set 5 files / 61 tests PASS; all original assertions retained (337 `expect` expressions checked).
+  Final full local run at code head `502cb286`: **416 files / 3,449 tests PASS**, zero failures,
+  existing one-file/two-test skips unchanged (541.28 seconds). Final TypeScript PASS.
   Completion requires five consecutive full-suite CI workflow
   passes on the one PR, with run links in its body; none claimed yet.
 - Git fetch/push work, but GitHub API requests return `Forbidden`, blocking PR creation/run control.
   The owner's three requested domains have been saved into the environment draft; publishing it
-  remains necessary to apply those settings. Next: finish local verification, push the repair,
-  and obtain the required CI evidence and Claude review. No self-merge.
+  remains necessary to apply those settings. Repair pushed; no PR number yet. Next: restore API
+  access, open the one PR, obtain the five consecutive full-workflow run/attempt links in its body,
+  then Claude review and merge. See the brief's CI handoff. No self-merge; checklist work stays paused.
 
 ---
 

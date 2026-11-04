@@ -56,7 +56,27 @@ REUSE / OWN / BUILD FROM SCRATCH in the body. Claude Code reviews and merges.
   chooser into RecordSheets. Synthetic camera tests also need a decoded frame, selected preview and
   saved receipt before their existing storage/crop assertions. Corrected those paths; the expanded
   meal/camera regression set is **5 files / 61 tests PASS**, and TypeScript again PASS.
-- All **337 original assertions** in the modified files are retained (TypeScript AST comparison).
-  A fresh full run of the corrected code is next. No isolated rerun is substituted for a full pass.
+- All original assertions in the modified files are retained (TypeScript AST comparison: 337
+  original `expect` expressions, none missing).
+- Final full local run at code head `502cb286206e333409c8caa077f6af1789b706c2`: **416 files PASS,
+  3,449 tests PASS**, zero failures; the existing one-file/two-test skips remain unchanged.
+  Command: `BEYOND_BROWSER_EXECUTABLE=/usr/bin/chromium npm test`; duration 541.28 seconds.
+  This is a completed full run, not a collection of isolated rerun passes. Final TypeScript PASS.
 - **CI acceptance: pending, 0/5 links recorded.** Do not treat local results as CI evidence or merge
   before the five consecutive full-suite PR workflow passes and Claude Code review.
+
+## Remaining CI handoff
+
+- Branch pushed: `codex/ci-flake-001`. PR creation failed with
+  `Post https://api.github.com/graphql: Forbidden`; REST workflow listing also returned `Forbidden`.
+  No PR number or CI run links exist for this objective yet. The saved environment domain draft
+  (`api.github.com`, `cdn.playwright.dev`, `storage.googleapis.com`) still requires publication;
+  runtime observations continue to report no applied custom domains. Recheck API access after publish.
+- Open **one** PR from this branch to master, including REUSE / OWN / BUILD FROM SCRATCH above.
+  Shared setup/helper changes select all four full-suite shards under #408.
+- Obtain five consecutive successful **whole PR Verification workflow runs**, rerunning the workflow
+  without empty commits or individual failed-test retries. Any failure resets the streak and requires
+  diagnosis. Keep the head unchanged during the streak. Put the actual five run/attempt links in the
+  PR body (`.../actions/runs/<id>/attempts/<attempt>` for reruns), checking each attempt's head SHA and
+  all four shard results. Do not substitute this local result or fabricate pending links.
+- Claude Code independently reviews and merges after acceptance. Further checklist work stays paused.
