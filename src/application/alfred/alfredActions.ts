@@ -17,6 +17,8 @@ import { getDays, searchRecords } from "./alfredSearch";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
 import { URGE_TRIGGERS, type UrgeTrigger } from "../../domain/common/types";
 import { setHabitDone } from "../habitCommands";
+import { addCollectionItem } from "../collectionCommands";
+import { getCollection } from "../collectionQueries";
 
 /**
  * ALFRED-001: what Alfred may propose. Each tool call becomes a card the operator confirms; only the
@@ -59,7 +61,8 @@ export type AlfredProposal =
   | { kind: "project_new"; title: string; finish?: string | undefined; steps: { title: string; due_date?: string | undefined }[] }
   // ROUTINES-001: a routine he describes, or a change he asked for to one of his ROUTINES.
   | { kind: "routine_new"; title: string; moment: RoutineMoment; steps: string[] }
-  | { kind: "routine_edit"; routine_id: string; title: string; moment?: RoutineMoment | undefined; steps?: string[] | undefined };
+  | { kind: "routine_edit"; routine_id: string; title: string; moment?: RoutineMoment | undefined; steps?: string[] | undefined }
+  | { kind: "collection_add"; collection_id: string; collection_name: string; field_id: string; field_label: string; value: string };
 type Scale = 1 | 2 | 3 | 4 | 5;
 type Zero = 0 | Scale;
 
@@ -241,6 +244,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "routine_new": return `New routine · ${ROUTINE_MOMENT_LABELS[p.moment]}: ${p.title} · ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}`;
     case "routine_edit": return `Change routine ${p.title}${p.moment ? ` · now ${ROUTINE_MOMENT_LABELS[p.moment].toLowerCase()}` : ""}${p.steps ? ` · steps: ${p.steps.map((st, n) => `${n + 1}. ${st}`).join("; ")}` : ""}`;
     case "project_new": return `New project: ${p.title}${p.finish ? ` (finished when ${p.finish})` : ""} · ${p.steps.length} ${p.steps.length === 1 ? "step" : "steps"}: ${p.steps.map((st, n) => `${n + 1}. ${st.title}${st.due_date ? ` (${humanDate(st.due_date)})` : ""}`).join("; ")}`;
+    case "collection_add": return `Add to ${p.collection_name} · ${p.field_label}: ${p.value}`;
     case "capture_note": return `Note: ${p.text}`;
     case "check_in": return `Check in · energy ${p.energy} · stress ${p.stress} · mood ${p.mood} · soreness ${p.soreness} · urge ${p.alcohol_urge}`;
     case "work_started": return "Started work";
@@ -293,6 +297,7 @@ function anchoredRepeat(rule: string, due: string | undefined): string {
 export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult> {
   if (p.kind === "open_training") return { open: "TRAIN" };
   if (p.kind === "capture_note") { await captureItem(p.text); return {}; }
+  if (p.kind === "collection_add") { const collection = await getCollection(p.collection_id); if (!collection || collection.name !== p.collection_name || collection.fields[0]?.id !== p.field_id) throw new Error("COLLECTION_MISMATCH"); await addCollectionItem(collection.id, { [p.field_id]: p.value }); return {}; }
   if (p.kind === "task_done") { await satisfyObligation(p.task_id); return {}; }
   if (p.kind === "habit_done") { await setHabitDone(p.habit_id, true); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }

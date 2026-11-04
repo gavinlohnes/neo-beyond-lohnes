@@ -29,6 +29,7 @@ import type { ExternalActivityHour, ExternalRestingHeartRate } from "../domain/h
 import type { LogTemplate, TextSnippet } from "../domain/snippets/types";
 import type { Habit } from "../domain/habits";
 import type { DailyNote } from "../domain/dailyNotes";
+import type { Collection, CollectionItem } from "../domain/collections";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -63,6 +64,8 @@ export class BeyondDB extends Dexie {
   logTemplates!: Table<LogTemplate, string>;
   savedInboxItems!: Table<SavedInboxItem, string>;
   dailyNotes!: Table<DailyNote, string>;
+  collections!: Table<Collection, string>;
+  collectionItems!: Table<CollectionItem, string>;
 
   constructor() {
     super("beyond");
@@ -392,6 +395,11 @@ export class BeyondDB extends Dexie {
     // DAILY-NOTE-001: one explicit-save note per lived day. Drafts remain session-local.
     this.version(23).stores({
       dailyNotes: "dayId, updatedAt",
+    });
+    // COLLECTIONS-001: operator-defined list schemas and their typed rows. Additive only.
+    this.version(24).stores({
+      collections: "id, &name, status, createdAt",
+      collectionItems: "id, collectionId, archivedAt, createdAt",
     });
   }
 }

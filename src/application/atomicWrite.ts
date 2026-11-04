@@ -46,6 +46,9 @@ export const INTENT_WRITE_TABLES = ["missions", "obligations", "captureItems", "
 /** ROUTINES-001: routine definitions; ticks are day events. */
 export const ROUTINE_WRITE_TABLES = ["routines", "beyondDays"] as const;
 
+/** COLLECTIONS-001 definitions and rows. */
+export const COLLECTION_WRITE_TABLES = ["collections", "collectionItems"] as const;
+
 /** Decision Journal create / modify / review. */
 export const JOURNAL_WRITE_TABLES = ["decisionJournalEntries"] as const;
 
