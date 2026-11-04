@@ -96,6 +96,7 @@ export const SYSTEM_CAPABILITIES = [
   { label: "CAPTURE", description: "Your notes inbox; turn a note into an obligation", aliases: ["notes", "inbox", "capture"], group: "Notes", destination: { kind: "daily", tool: "CAPTURE" } },
   { label: "SAVED", description: "Text and links shared into BEYOND", aliases: ["share", "inbox", "read later", "link"], group: "Notes", destination: { kind: "more", view: "SAVED" }, browse: false },
   { label: "COLLECTIONS", description: "Your own typed lists", aliases: ["list", "gift ideas", "gear sizes", "notion"], group: "Notes", destination: { kind: "more", view: "COLLECTIONS" }, browse: false },
+  { label: "HIGHLIGHTS", description: "Passages you chose to keep", aliases: ["quote", "readwise", "passage"], group: "Notes", destination: { kind: "more", view: "HIGHLIGHTS" }, browse: false },
   { label: "SHIFT HANDOFF NOTES", description: "Notes for your next shift", aliases: ["handoff", "shift note"], group: "Notes", destination: { kind: "daily", tool: "SHIFT_HANDOFF" } },
   { label: "MONTHLY REVIEW", description: "In Review: every fourth saved week adds the month", aliases: ["monthly", "four weeks"], group: "Review", destination: { kind: "more", view: "REVIEW" }, browse: false },
   { label: "AFTER ACTION REPORT", description: "Your after action report, any time", aliases: ["report", "briefing", "after action"], group: "Review", destination: { kind: "more", view: "REPORT" } },

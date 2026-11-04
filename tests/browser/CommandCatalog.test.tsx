@@ -55,6 +55,7 @@ const commandHeadings = {
   MEMORY: "MORE // MEMORY", ROUTINES: "MORE // ROUTINES", PEOPLE: "MORE // PEOPLE", HOME: "MORE // HOME", LIFE: "MORE // LIFE", SNIPPETS: "SNIPPETS",
   DAILY_NOTE: "MORE // DAILY NOTE",
   COLLECTIONS: "MORE // COLLECTIONS",
+  HIGHLIGHTS: "MORE // HIGHLIGHTS",
 };
 const sectionTargets = {
   HIDDEN_FEATURES: "command-hidden-features", BACKUP: "safety-heading", NUTRITION_TARGETS: "command-nutrition-targets", QUIT_TRACKER: "command-quit-tracker",
