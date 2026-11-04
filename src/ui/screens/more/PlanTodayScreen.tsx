@@ -2,7 +2,7 @@ import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import { createObligation } from "../../../application/intentCommands";
-import { getTodayPlan, type TodayPlan } from "../../../application/planTodayQueries";
+import { getTodayPlan, getTaskSmartLists, taskListDate, type TaskSmartLists } from "../../../application/planTodayQueries";
 import type { Obligation } from "../../../domain/intent/types";
 import { describeError } from "../../errorMessage";
 import { OperatorHeader } from "../../components/OperatorHeader";
@@ -10,7 +10,8 @@ import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence 
 import type { IntentFocus } from "./IntentScreen";
 
 export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void }) {
-  const [plan, setPlan] = useState<TodayPlan | null>(null);
+  const [plan, setPlan] = useState<TaskSmartLists | null>(null);
+  const [list, setList] = useState<"today" | "next7" | "noDate">("today");
   const [readError, setReadError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
@@ -23,12 +24,14 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const sequence = useRef(0);
+  const lastReadDate = useRef<string | null>(null);
   const titleInput = useRef<HTMLInputElement>(null);
   async function refresh() {
     const request = ++sequence.current;
+    lastReadDate.current = taskListDate();
     setReadError(null);
     try {
-      const next = await getTodayPlan();
+      const next = await getTaskSmartLists();
       if (request === sequence.current) setPlan(next);
     } catch (cause) {
       if (request === sequence.current) { setPlan(null); setReadError(describeError(cause, "Could not read your plan.")); }
@@ -39,7 +42,8 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     void refresh();
     function resume() { if (document.visibilityState === "visible") void refresh(); }
     document.addEventListener("visibilitychange", resume);
-    return () => { ++sequence.current; document.removeEventListener("visibilitychange", resume); };
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible" && taskListDate() !== lastReadDate.current) void refresh(); }, 60_000);
+    return () => { ++sequence.current; window.clearInterval(timer); document.removeEventListener("visibilitychange", resume); };
   }, [active]);
   async function addTask() {
     const acknowledge = captureCommitFeedback();
@@ -64,7 +68,10 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     return items.length ? <ul className="plan-list">{items.map((item) => <li key={item.id}>
       <button className="plan-task" onClick={() => onOpen({ kind: "OBLIGATION", obligationId: item.id })}>
         <strong>{item.title}</strong>
-        <span>{[item.status === "WAITING" ? "Waiting" : undefined, item.dueAt ? `${item.dueAt < plan!.date ? "Overdue" : item.dueAt === plan!.date ? "Due today" : "Due"} · ${item.dueAt}` : "Planned for today",
+        <span>{[item.status === "WAITING" ? "Waiting" : undefined,
+          item.plannedAt ? item.plannedAt === plan!.date ? "Planned today" : `Planned · ${planDate(item.plannedAt)}` : undefined,
+          item.dueAt ? item.dueAt < plan!.date ? `Due · from ${planDate(item.dueAt)}` : item.dueAt === plan!.date ? "Due today" : `Due · ${planDate(item.dueAt)}` : undefined,
+          !item.plannedAt && !item.dueAt ? "No due or planned date" : undefined,
           plan!.missions.find((parent) => parent.id === item.missionId)?.title].filter(Boolean).join(" · ")}</span>
         <span className="visually-hidden">Open task</span>
       </button>
@@ -74,10 +81,16 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     <OperatorHeader destination="mission" focusable>MORE // PLAN TODAY</OperatorHeader>
     <h2 className="more-title">Your plan</h2>
     <p className="meta">{plan ? planDate(plan.date) : "Today"} · Your choices and recorded deadlines. Not a recommendation.</p>
+    <div className="plan-smart-lists" role="group" aria-label="Task views">
+      {([['today', 'Today'], ['next7', 'Next 7'], ['noDate', 'No date']] as const).map(([value, label]) => <button key={value} type="button" className="btn-secondary" aria-pressed={list === value} onClick={() => setList(value)}>{label}</button>)}
+    </div>
     {readError ? <div role="alert"><p>{readError} Tasks are unavailable, not empty.</p><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>
       : !plan ? <p role="status">Reading your plan…</p> : <>
-        <section aria-labelledby="plan-chosen-heading"><h3 id="plan-chosen-heading" className="section-label">Planned today</h3>{rows(plan.planned, "Nothing planned for today. Add only what you want to commit to.")}</section>
-        <section aria-labelledby="plan-due-heading"><h3 id="plan-due-heading" className="section-label">Due & overdue</h3>{rows(plan.due, "No other due commitments.")}</section>
+        <section aria-labelledby="plan-list-heading">
+          <h3 id="plan-list-heading" className="section-label">{list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}</h3>
+          <p className="meta">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${planDate(plan.through)}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date."}</p>
+          {rows(plan[list], list === "today" ? "No planned or due tasks for today." : list === "next7" ? "No other tasks dated in the next seven days." : "No undated tasks.")}
+        </section>
       </>}
     <form className="plan-composer" onSubmit={(event) => { event.preventDefault(); void addTask(); }}>
       <label htmlFor="plan-task-title">Add a task for today</label>
