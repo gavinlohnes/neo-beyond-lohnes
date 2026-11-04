@@ -12,6 +12,7 @@ declare const __BUILD_TIME__: string;
 // `define` constant (fixed per commit).
 interface ImportMetaEnv {
   readonly VITE_USDA_FDC_API_KEY?: string;
+  readonly VITE_GOOGLE_CALENDAR_CLIENT_ID?: string;
 }
 interface ImportMeta {
   readonly env: ImportMetaEnv;
