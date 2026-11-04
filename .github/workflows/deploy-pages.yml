@@ -15,7 +15,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # CI-SPEED-001: the full suite always runs before publishing, split into 4 parallel shards.
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    name: tests (${{ matrix.shard }}/4)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Harvest Checkpoint 4: the "browser" Vitest project needs Chromium and its OS libraries.
+      - run: npx playwright install --with-deps chromium
+      - run: npx vitest run --shard=${{ matrix.shard }}/4
+
   build:
+    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,14 +45,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc -b
-      # Harvest Checkpoint 4: the "browser" Vitest project needs Chromium
-      # actually present — npm ci alone doesn't fetch Playwright's browser
-      # binary. --with-deps also installs the OS-level libraries Chromium
-      # needs on a bare Ubuntu runner (Linux-only flag; not needed/valid
-      # for local Windows/macOS installs, which is why this step lives
-      # only here, not in package.json).
-      - run: npx playwright install --with-deps chromium
-      - run: npx vitest run
       # NUTRITION-002: optional — falls back to USDA's public rate-limited
       # DEMO_KEY when this secret isn't set. See
       # application/foodLookupQueries.ts's doc comment.

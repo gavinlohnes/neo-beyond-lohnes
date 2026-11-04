@@ -11,9 +11,41 @@ concurrency:
   group: pr-verify-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# CI-SPEED-001 (Gavin, 2026-11-04: "Yes, do it"): the suite runs in 4 parallel shards, and a PR
+# that only touches docs or only touches tests runs a lighter set. Any app-code change still runs
+# everything. The final job keeps the required check name "PR Verification".
 jobs:
-  verify:
-    name: PR Verification
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      kind: ${{ steps.scope.outputs.kind }}
+      tests: ${{ steps.scope.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        run: |
+          files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }})
+          echo "Changed files:"; echo "$files"
+          kind=docs
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              docs/*|*.md) ;;
+              tests/*) [ "$kind" = docs ] && kind=tests ;;
+              *) kind=full; break ;;
+            esac
+          done <<< "$files"
+          # Only test files that still exist and are test files (not helpers/setup, which affect every test).
+          tests=$(echo "$files" | grep -E '^tests/.*\.test\.tsx?$' | while read -r t; do [ -f "$t" ] && echo "$t"; done | tr '\n' ' ')
+          if [ "$kind" = tests ] && echo "$files" | grep -E '^tests/' | grep -vqE '\.test\.tsx?$'; then kind=full; fi
+          echo "kind=$kind" >> "$GITHUB_OUTPUT"
+          echo "tests=$tests" >> "$GITHUB_OUTPUT"
+          echo "Scope: $kind"
+
+  checks:
+    needs: scope
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +58,47 @@ jobs:
       - run: npm ci
       - run: npm run check:architecture
       - run: npx tsc -b
-      - run: npx playwright install --with-deps chromium
-      - run: npx vitest run
       - run: node scripts/classify-risk.mjs ${{ github.event.pull_request.base.sha }}
-      - run: npm run build
+      - if: needs.scope.outputs.kind != 'docs'
+        run: npm run build
+
+  tests:
+    needs: scope
+    if: needs.scope.outputs.kind != 'docs'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    name: tests (${{ matrix.shard }}/4)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Full suite, this shard
+        if: needs.scope.outputs.kind == 'full'
+        run: npx vitest run --shard=${{ matrix.shard }}/4
+      - name: Changed tests only
+        if: needs.scope.outputs.kind == 'tests' && matrix.shard == 1 && needs.scope.outputs.tests != ''
+        run: npx vitest run ${{ needs.scope.outputs.tests }}
+
+  verify:
+    name: PR Verification
+    needs: [scope, checks, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required parts passed
+        run: |
+          echo "scope=${{ needs.scope.result }} checks=${{ needs.checks.result }} tests=${{ needs.tests.result }} kind=${{ needs.scope.outputs.kind }}"
+          [ "${{ needs.scope.result }}" = success ] || exit 1
+          [ "${{ needs.checks.result }}" = success ] || exit 1
+          if [ "${{ needs.scope.outputs.kind }}" = docs ]; then
+            [ "${{ needs.tests.result }}" = skipped ] || [ "${{ needs.tests.result }}" = success ] || exit 1
+          else
+            [ "${{ needs.tests.result }}" = success ] || exit 1
+          fi
