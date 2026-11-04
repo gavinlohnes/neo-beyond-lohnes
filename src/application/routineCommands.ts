@@ -23,7 +23,7 @@ export async function createRoutine(input: RoutineInput): Promise<Routine> {
     const now = new Date().toISOString();
     const routine: Routine = {
       id: newId(), title: parsed.title, moment: parsed.moment,
-      steps: parsed.steps.map((text) => ({ id: newId(), text })),
+      steps: parsed.steps.map((step) => ({ id: newId(), ...(typeof step === "string" ? { text: step } : { text: step.text, ...(step.minutes !== undefined ? { minutes: step.minutes } : {}) }) })),
       status: "ACTIVE", source: "USER", seq: await nextSeq(), createdAt: now, updatedAt: now,
     };
     await db.routines.add(routine);
@@ -41,7 +41,7 @@ export async function modifyRoutine(routineId: string, changes: RoutineModifyInp
     if (!existing) throw notFound(routineId);
     if (expectedUpdatedAt && existing.updatedAt !== expectedUpdatedAt) throw new Error("ROUTINE_CHANGED: this routine changed elsewhere. Nothing was saved.");
     const known = new Set(existing.steps.map((s) => s.id));
-    const steps = parsed.steps?.map((s) => ({ id: s.id && known.has(s.id) ? s.id : newId(), text: s.text }));
+    const steps = parsed.steps?.map((s) => ({ id: s.id && known.has(s.id) ? s.id : newId(), text: s.text, ...(s.minutes !== undefined ? { minutes: s.minutes } : {}) }));
     const updated: Routine = {
       ...existing,
       ...(parsed.title !== undefined ? { title: parsed.title } : {}),
@@ -138,7 +138,7 @@ export function routineMomentFor(input: { phase: SchedulePhase | null; workConte
 }
 
 /** Keeps the id (and today's tick) of any step whose words are unchanged; new or reworded lines are new steps. */
-export function matchSteps(routine: Routine, texts: string[]): { id?: string; text: string }[] {
+export function matchSteps(routine: Routine, texts: string[]): { id?: string; text: string; minutes?: number }[] {
   const pool = [...routine.steps];
   return texts.map((text) => {
     const i = pool.findIndex((s) => s.text === text.trim());

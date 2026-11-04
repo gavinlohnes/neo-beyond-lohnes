@@ -4,6 +4,7 @@ import { ROUTINE_MOMENT_LABELS, type Routine, type RoutineMoment } from "../../d
 import { captureCommitFeedback } from "../feel/feedback";
 import { describeError } from "../errorMessage";
 import "./alfred.css";
+import { RoutinePlayer } from "./RoutinePlayer";
 
 /**
  * ROUTINES-001 (owner ruling: "One quiet row on TODAY"). Only the routines for the current moment,
@@ -16,6 +17,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
   const [error, setError] = useState<string | null>(null);
   const [tickError, setTickError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const epoch = useRef(0);
 
   async function load() {
@@ -27,7 +29,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
       setRoutines(all.filter((r) => r.status === "ACTIVE")); setTicks(done); setError(null);
     } catch (cause) { if (mine === epoch.current) setError(describeError(cause, "Routines could not be read. Your records are unchanged.")); }
   }
-  useEffect(() => { setRoutines(null); setTicks(new Set()); setTickError(null); if (active && dayId && moment) void load(); return () => { ++epoch.current; }; }, [dayId, moment, active]);
+  useEffect(() => { setPlaying(false); setRoutines(null); setTicks(new Set()); setTickError(null); if (active && dayId && moment) void load(); return () => { ++epoch.current; }; }, [dayId, moment, active]);
   useEffect(() => {
     if (!active || !dayId || !moment) return;
     const reload = () => void load();
@@ -52,6 +54,7 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
   }
 
   return <section aria-label={`${ROUTINE_MOMENT_LABELS[moment]} routine`} className="today-routine">
+    <div className="today-routine__row">
     <details className="support-disclosure"><summary>{here.length === 1 ? `${ROUTINE_MOMENT_LABELS[moment].toUpperCase()} · ${here[0]!.title}` : `${ROUTINE_MOMENT_LABELS[moment].toUpperCase()} ROUTINES`}</summary><div className="support-disclosure__body">
     {here.map((r) => <fieldset key={r.id} className="writing-start">
       <legend className={here.length > 1 ? "tool-label" : "visually-hidden"}>{r.title}</legend>
@@ -66,6 +69,9 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
       </ul>
     </fieldset>)}
     </div></details>
+    <button type="button" className="btn-secondary today-routine__play" disabled={saving || busy} onClick={() => setPlaying(true)}>PLAY</button>
+    </div>
+    {playing && <RoutinePlayer routines={here} onClose={() => setPlaying(false)} />}
     {tickError && <p role="alert" className="meta">{tickError}</p>}
   </section>;
 }
