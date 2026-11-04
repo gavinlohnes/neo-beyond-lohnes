@@ -6,6 +6,7 @@ import { App } from "../../src/app/App";
 import { startDay, updateSchedulePattern } from "../../src/application/commands";
 import { getHydrationEntries } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
+import { settleVisuals } from "./helpers/settleVisuals";
 
 /** LOG-TIME-001: one extra tap says when it happened; the log lands there, then WHEN returns to NOW. */
 let dayId: string;
@@ -18,7 +19,7 @@ beforeEach(async () => {
   vi.setSystemTime(new Date(2026, 9, 28, 4, 30));
   await page.viewport(360, 800);
 });
-afterEach(() => { cleanup(); vi.useRealTimers(); });
+afterEach(async () => { await cleanup(); vi.useRealTimers(); });
 
 it("logs water an hour ago from the sheet, says so, and resets to NOW", async () => {
   const screen = await render(<App />);
@@ -32,6 +33,7 @@ it("logs water an hour ago from the sheet, says so, and resets to NOW", async ()
   const when = sheet.getByRole("group", { name: "When" });
   await expect.element(when.getByRole("button", { name: "NOW", exact: true })).toHaveAttribute("aria-pressed", "true");
   await when.getByRole("button", { name: "1 H AGO", exact: true }).click();
+  await settleVisuals(sheet.element());
   expect((await axe.run(document.body, { runOnly: ["wcag2a", "wcag2aa"] })).violations.map((v) => v.id)).toEqual([]);
   await sheet.getByRole("button", { name: "+16 oz", exact: true }).click();
   await expect.element(screen.getByText("16 oz recorded at 03:30.", { exact: true })).toBeVisible();

@@ -19,3 +19,37 @@ listeners, IndexedDB and Cache Storage.
 Done when: the full suite passes **5 consecutive CI runs** on the PR (re-run the workflow, don't push
 empty commits), with the run links in the PR body. One PR, `codex/ci-flake-001`, from fresh master.
 REUSE / OWN / BUILD FROM SCRATCH in the body. Claude Code reviews and merges.
+
+## Builder record
+
+- Builder: Codex; branch `codex/ci-flake-001`; PR pending. Starting fresh master:
+  `39ae60c9b41398804af99371ccd95be537465965` (#408 merged).
+- Gavin explicitly assigned this objective ahead of further checklist work. Routine player WIP
+  preserved separately at `ae1f7c6` on `codex/routine-player-001`; excluded here.
+- REUSE: existing Vitest browser locators/polling, native browser cleanup and canonical test fixtures.
+- OWN: test readiness and isolation around BEYOND's meal, review, camera and share flows.
+- BUILD FROM SCRATCH: none. No dependency, workflow or product changes intended.
+- Acceptance remains five consecutive full-suite CI runs on this PR, with links in its body.
+  Local passes alone do not complete this objective. GitHub API currently returns `Forbidden`;
+  Git fetch/push work. Continue local repair while keeping CI evidence explicitly pending.
+
+## Repair and verification
+
+- Vitest browser React's automatic cleanup is registered in `beforeEach`; BEYOND's shared
+  `afterEach` previously deleted IndexedDB while some components remained mounted. Shared teardown
+  now awaits unmounting before database deletion and clears BEYOND Cache Storage and instant scroll.
+- Meal helpers wait for the actual route control (preserving isolated TODAY's callback-only path).
+  Duplicate-tap tests wait for enabled controls before deliberately dispatching same-tick clicks.
+- TRAIN freezes/resets its clock, waits for Gym Mode focus and the final advisory-read batch.
+  Monthly review waits for its held read instead of sleeping; photos scroll into view before
+  native lazy-image decoding. Accessibility checks retain all rules/assertions and settle fonts,
+  images and finite entry motion first. Camera timers/tracks/mocks and share URL/cache state reset.
+- Focused run: **232/232 PASS**, including all named browser files, Drop2ShiftClock's isolated
+  harness, and Factory subprocess tests. No Factory timeout reproduced; its assertions remain intact.
+- Architecture, TypeScript and production/PWA build PASS. No app source changes; no new skips,
+  `.only`, retries, timeout increases, deleted tests or relaxed assertions.
+- An exploratory full run during repair had 4 failures (414 files passed, 1 skipped): one helper
+  regression in the isolated TODAY harness and three lazy-photo decode waits introduced during
+  repair. Both were corrected before the 232-test focused pass. A fresh full run is in progress.
+- **CI acceptance: pending, 0/5 links recorded.** Do not treat local results as CI evidence or merge
+  before the five consecutive full-suite PR workflow passes and Claude Code review.

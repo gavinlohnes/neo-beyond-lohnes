@@ -22,13 +22,15 @@ beforeEach(async () => {
   await updateSchedulePattern(schedule);
   dayId = (await startDay()).id;
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
+afterEach(async () => { await cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo({ top: 0, left: 0, behavior: "instant" }); });
 
 it("logs water in two taps, stays on TODAY, guards a duplicate tap, and confirms without UNDO", async () => {
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "Log water", exact: true }).click();
   const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
-  const add = sheet.getByRole("button", { name: "+12 oz", exact: true }).element() as HTMLButtonElement;
+  const amount = sheet.getByRole("button", { name: "+12 oz", exact: true });
+  await expect.element(amount).toBeEnabled();
+  const add = amount.element() as HTMLButtonElement;
   add.click(); add.click();
   await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(12);
   await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");
@@ -70,7 +72,9 @@ async function fillMeal(screen: Awaited<ReturnType<typeof render>>) {
 for (const fail of [false, true]) it(`opt-in meal save and LOG is atomic and exactly once (failure: ${fail})`, async () => {
   const screen = await render(<App />); await fillMeal(screen);
   const failure = fail ? vi.spyOn(db.events, "add").mockRejectedValue(new Error("Disk full")) : null;
-  const save = screen.getByRole("dialog").getByRole("button", { name: "LOG", exact: true }).element() as HTMLButtonElement;
+  const log = screen.getByRole("dialog").getByRole("button", { name: "LOG", exact: true });
+  await expect.element(log).toBeEnabled();
+  const save = log.element() as HTMLButtonElement;
   save.click(); save.click();
   if (fail) {
     await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal didn't save");

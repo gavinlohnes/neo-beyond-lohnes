@@ -25,7 +25,7 @@ beforeEach(async () => {
   await updateSchedulePattern(fields);
   dayId = (await startDay()).id;
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
+afterEach(async () => { await cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo({ top: 0, left: 0, behavior: "instant" }); });
 
 async function expectDailyRecord(screen: Screen) {
   await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();

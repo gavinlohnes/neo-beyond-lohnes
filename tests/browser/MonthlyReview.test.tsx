@@ -13,6 +13,7 @@ import { addProgressPhoto, hideProgressPhoto } from "../../src/application/progr
 import { getMonthlyReview } from "../../src/application/monthlyReviewQueries";
 import { latestReviewWeek } from "../../src/engine/weeklyReview";
 import { db } from "../../src/persistence/db";
+import { settleVisuals } from "./helpers/settleVisuals";
 
 vi.mock("../../src/application/monthlyReviewQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/monthlyReviewQueries")>();
@@ -21,7 +22,7 @@ vi.mock("../../src/application/monthlyReviewQueries", async (original) => {
 
 /** REVIEW-001 monthly review: 4 weeks after the first saved review, the review adds body composition. */
 function clock(at: Date) { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(at); }
-afterEach(async () => { await cleanup(); vi.useRealTimers(); await page.viewport(1280, 800); });
+afterEach(async () => { await cleanup(); vi.mocked(getMonthlyReview).mockReset(); vi.useRealTimers(); await page.viewport(1280, 800); });
 
 async function photoBlob(shade: string): Promise<Blob> {
   const canvas = document.createElement("canvas"); canvas.width = 60; canvas.height = 80;
@@ -71,8 +72,10 @@ for (const width of [320, 360, 412]) it(`opens the monthly review from TODAY wit
   const pair = body.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" });
   await expect.element(pair).toBeVisible();
   await expect.poll(() => pair.element().querySelectorAll("img").length).toBe(2);
+  // PhotoImage deliberately lazy-loads. Bring the pair into view before waiting for decoding.
+  pair.element().scrollIntoView({ block: "center", behavior: "instant" });
+  await settleVisuals(body.element());
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-  for (const animation of document.getAnimations()) animation.finish();
   expect((await axe.run(body.element(), { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] } })).violations).toEqual([]);
   expect(await db.events.count()).toBe(before);
 });
@@ -108,13 +111,15 @@ it("never shows a newly hidden photo while the re-read is pending, then shows on
   let release!: () => void;
   const held = new Promise<void>((resolve) => { release = resolve; });
   const actual = (await vi.importActual<typeof import("../../src/application/monthlyReviewQueries")>("../../src/application/monthlyReviewQueries")).getMonthlyReview;
-  vi.mocked(getMonthlyReview).mockImplementationOnce(async (week) => { await held; return actual(week); });
-  await screen.getByRole("button", { name: "MORE", exact: true }).click();
-  await expect.element(screen.getByRole("region", { name: "Weekly review", exact: true })).toBeVisible();
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  expect(document.querySelector(".monthly-body")).toBeNull();
-  expect(document.querySelectorAll(".weekly-dashboard img").length).toBe(0);
-  release();
+  let reading = false;
+  vi.mocked(getMonthlyReview).mockImplementationOnce(async (week) => { reading = true; await held; return actual(week); });
+  try {
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await expect.element(screen.getByRole("region", { name: "Weekly review", exact: true })).toBeVisible();
+    await expect.poll(() => reading).toBe(true);
+    expect(document.querySelector(".monthly-body")).toBeNull();
+    expect(document.querySelectorAll(".weekly-dashboard img").length).toBe(0);
+  } finally { release(); }
   const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
   await expect.element(body.getByText("-2.5 lb", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body figure")).toBeNull();

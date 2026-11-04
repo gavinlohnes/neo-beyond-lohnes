@@ -1,3 +1,21 @@
+# CI-FLAKE-001 — 2026-11-04 (Builder: Codex; reviewer/merger: Claude Code)
+
+- Gavin assigned [CI-FLAKE-001](CI-FLAKE-001.md) ahead of further checklist items. Branch
+  `codex/ci-flake-001` starts at fresh master `39ae60c9b41398804af99371ccd95be537465965`.
+- Repairing browser test readiness/isolation only; no app, dependency, retry, timeout or assertion
+  relaxation. Shared helpers/setup ensure this PR selects full-suite CI under #408.
+- Routine-player WIP is paused and preserved at `ae1f7c6` on `codex/routine-player-001`.
+- Focused verification: 16 files / 232 tests PASS, including all named browser files and Factory;
+  architecture, TypeScript and production/PWA build PASS. Fresh full-suite verification in progress.
+  Completion requires five consecutive full-suite CI workflow
+  passes on the one PR, with run links in its body; none claimed yet.
+- Git fetch/push work, but GitHub API requests return `Forbidden`, blocking PR creation/run control.
+  The owner's three requested domains have been saved into the environment draft; publishing it
+  remains necessary to apply those settings. Next: finish local verification, push the repair,
+  and obtain the required CI evidence and Claude review. No self-merge.
+
+---
+
 # APPS-CHECKLIST — 2026-11-03 (orchestrator: Claude Code; builder: Codex)
 
 - Gavin picked nine outside-app jobs for BEYOND: [checklist](../BEYOND_APPS_CHECKLIST.md), briefs in

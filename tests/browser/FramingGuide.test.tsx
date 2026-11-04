@@ -7,6 +7,7 @@ import { App } from "../../src/app/App";
 import { setWorkContext, startDay } from "../../src/application/commands";
 import { addProgressPhoto } from "../../src/application/progressPhotoCommands";
 import { getProgressPhotos } from "../../src/application/progressPhotoQueries";
+import { settleVisuals } from "./helpers/settleVisuals";
 
 vi.mock("../../src/application/progressPhotoQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/progressPhotoQueries")>();
@@ -17,6 +18,7 @@ import { db } from "../../src/persistence/db";
 /** REVIEW-001 optional framing guide: live camera + ghost of the last same-pose photo, saved through the existing flow. */
 const realGetUserMedia = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
 let tracks: MediaStreamTrack[] = [];
+const cameraStops: (() => void)[] = [];
 /**
  * A width × height stream: red outside the guide's 3:4 view, blue inside it (gray when even is set).
  * The views are worked out by hand, not with the production crop, so a wrong crop can't hide here.
@@ -35,6 +37,7 @@ function fakeCamera(width = 240, height = 320, even = true) {
     if (!even) { context.fillStyle = "#0000ff"; context.fillRect(view.sx, view.sy, view.sw, view.sh); }
   };
   paint(); const timer = setInterval(paint, 50);
+  cameraStops.push(() => clearInterval(timer));
   Object.defineProperty(navigator.mediaDevices, "getUserMedia", { configurable: true, value: vi.fn(async () => {
     const stream = canvas.captureStream(20);
     tracks = stream.getTracks();
@@ -43,7 +46,12 @@ function fakeCamera(width = 240, height = 320, even = true) {
   return () => clearInterval(timer);
 }
 afterEach(async () => {
-  await cleanup(); vi.useRealTimers(); await page.viewport(1280, 800);
+  await cleanup();
+  for (const stop of cameraStops.splice(0)) stop();
+  for (const track of tracks) track.stop();
+  tracks = [];
+  vi.mocked(getProgressPhotos).mockReset();
+  vi.useRealTimers(); await page.viewport(1280, 800);
   if (realGetUserMedia) Object.defineProperty(navigator.mediaDevices, "getUserMedia", { configurable: true, value: realGetUserMedia });
 });
 async function photoBlob(shade = "#000"): Promise<Blob> {
@@ -75,6 +83,7 @@ for (const width of [320, 360, 412]) it(`frames a new photo over the last same-p
     await expect.poll(() => guide.element().querySelector(".framing-guide__ghost")).not.toBeNull();
     await expect.element(guide.getByText("Line up with your last side photo. Same distance, same light. Nothing saves until you choose SAVE PHOTO.", { exact: true })).toBeVisible();
     await expect.element(guide.getByRole("button", { name: "CAPTURE", exact: true })).toBeEnabled();
+    await settleVisuals(guide.element());
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     for (const button of guide.element().querySelectorAll<HTMLElement>("button")) expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     expect((await axe.run(guide.element(), { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] } })).violations).toEqual([]);

@@ -18,6 +18,7 @@ import "../../src/ui/styles/fonts.ts";
 
 import Dexie from "dexie";
 import { afterEach, beforeEach, expect, vi } from "vitest";
+import { cleanup } from "vitest-browser-react";
 
 // Vitest 5 changed Browser Mode's string form of toHaveTextContent from substring matching to an
 // exact comparison. BEYOND's established acceptance suite uses it as a readable substring check;
@@ -51,6 +52,10 @@ beforeEach(() => { (globalThis as { __beyondShiftChange?: boolean }).__beyondShi
 // tests/setup.ts already uses for the Node suite is required here too,
 // for the same isolation reason.
 afterEach(async () => {
+  // Unmount first: subscriptions and component timers must stop before deleting their store.
+  await cleanup();
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   await Dexie.delete("beyond");
+  await Promise.all((await caches.keys()).filter((name) => name.startsWith("beyond-")).map((name) => caches.delete(name)));
   localStorage.clear();
 });
