@@ -31,6 +31,7 @@ import { schedulePatternInputSchema, type SchedulePatternInput } from "../persis
 import { checkLogTime, effectiveLogTimes } from "./logTimes";
 import { getStandingWorkContext, getWorkPeriodEnded, getWorkPeriodStarted, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
+import { emitAutomationEvent } from "./iftttAutomations";
 
 /**
  * Deterministic tie-break for "most recent X" queries — redesigned after
@@ -115,7 +116,7 @@ export function newId(): string {
  * actually happened" doctrine as logEvent's `recordedAt`.
  */
 export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
-  return writeAtomically(DAY_WRITE_TABLES, async () => {
+  const day = await writeAtomically(DAY_WRITE_TABLES, async () => {
     const existingActive = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
     if (existingActive) {
       await endDay(existingActive.id, "AUTO_CLOSED_ON_NEW_DAY_START");
@@ -152,6 +153,8 @@ export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
     }
     return day;
   });
+  emitAutomationEvent("day_started");
+  return day;
 }
 
 /**
@@ -812,7 +815,7 @@ export async function setWorkContext(
  * Explicit, never inferred from the clock; at most one per day; never after work has ended.
  */
 export async function markWorkStarted(beyondDayId: string): Promise<boolean> {
-  return writeAtomically(DAY_WRITE_TABLES, async () => {
+  const changed = await writeAtomically(DAY_WRITE_TABLES, async () => {
     const day = await db.beyondDays.get(beyondDayId);
     if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
       throw new Error("NOT_AN_ACTIVE_WORK_DAY: markWorkStarted requires the active BeyondDay to have workContext WORK.");
@@ -822,10 +825,12 @@ export async function markWorkStarted(beyondDayId: string): Promise<boolean> {
     await logEvent(beyondDayId, "WORK_PERIOD_STARTED", { commandId: correlationId }, "USER", correlationId);
     return true;
   });
+  if (changed) emitAutomationEvent("work_started");
+  return changed;
 }
 
 export async function markWorkEnded(beyondDayId: string): Promise<boolean> {
-  return writeAtomically(DAY_WRITE_TABLES, async () => {
+  const changed = await writeAtomically(DAY_WRITE_TABLES, async () => {
     const day = await db.beyondDays.get(beyondDayId);
     if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
       throw new Error(
@@ -844,6 +849,8 @@ export async function markWorkEnded(beyondDayId: string): Promise<boolean> {
     );
     return true;
   });
+  if (changed) emitAutomationEvent("work_ended");
+  return changed;
 }
 
 /**
