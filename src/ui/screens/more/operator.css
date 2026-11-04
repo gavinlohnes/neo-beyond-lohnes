@@ -73,7 +73,7 @@
 .command-search__clear { flex: none; width: auto; min-height: 44px; margin-right: 4px; padding-inline: 12px; }
 .command-results > section { margin-top: 16px; }
 .command-results__empty { margin: 16px 0; color: var(--text-2); font-size: 16px; }
-.command-result { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--border-subtle); background: transparent; }
+.command-result { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--border-subtle); background: transparent; font-size: 16px; }
 .command-result > span:first-child { display: grid; gap: 2px; flex: 1; min-width: 0; }
 .command-result strong { font-size: 16px; letter-spacing: .04em; }
 .command-result strong + span { color: var(--text-2); font-size: 16px; }
@@ -109,3 +109,4 @@
 .habit-actions button { flex: 1 1 120px; }
 .habits-create button { width: 100%; }
 .habit-actions button, .habits-create button, .habits-create input, .habits-create select { min-height: 44px; }
+.daily-note-screen{max-width:760px;margin:0 auto;padding:0 16px 32px}.daily-note-log{margin:24px 0}.daily-note-log ol{list-style:none;padding:0}.daily-note-log li{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--border-subtle);text-transform:capitalize}.wiki-editor label{display:grid;gap:8px}.wiki-editor textarea{min-height:180px;resize:vertical}.wiki-suggestions{display:grid;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden}.wiki-suggestions button{min-height:48px;padding:8px 12px;background:var(--surface);color:inherit;border:0;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;align-items:center;text-align:left}.wiki-suggestions button:first-child{border-top:0}.wiki-suggestions small{color:var(--text-2)}.wiki-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.wiki-links button{min-height:44px}.wiki-mentions{margin-top:12px;padding:12px;border-left:2px solid var(--accent)}.daily-note-screen .button-row{align-items:center;margin-top:16px}.daily-note-screen .btn-primary{min-height:44px}

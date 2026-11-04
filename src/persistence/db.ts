@@ -28,6 +28,7 @@ import type { ExternalSleepRecord, ExternalSleepRevision, HealthImportReceipt } 
 import type { ExternalActivityHour, ExternalRestingHeartRate } from "../domain/health/activityImport";
 import type { LogTemplate, TextSnippet } from "../domain/snippets/types";
 import type { Habit } from "../domain/habits";
+import type { DailyNote } from "../domain/dailyNotes";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -61,6 +62,7 @@ export class BeyondDB extends Dexie {
   textSnippets!: Table<TextSnippet, string>;
   logTemplates!: Table<LogTemplate, string>;
   savedInboxItems!: Table<SavedInboxItem, string>;
+  dailyNotes!: Table<DailyNote, string>;
 
   constructor() {
     super("beyond");
@@ -386,6 +388,10 @@ export class BeyondDB extends Dexie {
     // HABITS-001: owner-approved additive definitions. Completion/correction history uses events.
     this.version(22).stores({
       habits: "id, status, createdAt",
+    });
+    // DAILY-NOTE-001: one explicit-save note per lived day. Drafts remain session-local.
+    this.version(23).stores({
+      dailyNotes: "dayId, updatedAt",
     });
   }
 }
