@@ -3,6 +3,7 @@ import type { SavedInboxItem } from "../../../domain/saved/types";
 import { deleteSavedInboxItem, getSavedInboxItems, makeSavedItemTask, saveInboxItem, updateSavedInboxItem } from "../../../application/savedInbox";
 import { takeSharedInboxPayload } from "./sharedInboxPayload";
 import { describeError } from "../../errorMessage";
+import { createHighlight } from "../../../application/highlightCommands";
 
 export function SavedInboxScreen({ active }: { active: boolean }) {
   const [items, setItems] = useState<SavedInboxItem[]>([]);
@@ -50,6 +51,7 @@ function SavedItem({ item, deleting, onDelete, onCancelDelete, onRun }: {
     <div className="button-row">
       <button type="button" className="btn-primary" onClick={() => void onRun(() => updateSavedInboxItem(item.id, { note, tags: tags.split(",") }), "Saved item updated.")}>SAVE CHANGES</button>
       <button type="button" className="btn-secondary" onClick={() => void onRun(() => makeSavedItemTask(item.id), "Task created.")}>MAKE TASK</button>
+      <button type="button" className="btn-secondary" disabled={!item.text.trim()} onClick={() => void onRun(() => createHighlight({ savedItemId: item.id, text: item.text, note, tags: tags.split(",") }), "Highlight created.")}>MAKE HIGHLIGHT</button>
       {!deleting ? <button type="button" className="btn-secondary" onClick={onDelete}>DELETE</button> : <>
         <button type="button" className="btn-danger" onClick={() => void onRun(() => deleteSavedInboxItem(item.id), "Saved item deleted.")}>CONFIRM DELETE</button>
         <button type="button" className="btn-secondary" onClick={onCancelDelete}>KEEP IT</button>

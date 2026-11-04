@@ -43,12 +43,13 @@ export async function getWikiTargets(query = ""): Promise<WikiTarget[]> {
 
 export async function getMentions(label: string) {
   const needle = label.trim().toLowerCase();
-  const [notes, journal, days] = await Promise.all([db.dailyNotes.toArray(), getDecisionJournalEntries(), db.beyondDays.toArray()]);
+  const [notes, journal, days, highlights] = await Promise.all([db.dailyNotes.toArray(), getDecisionJournalEntries(), db.beyondDays.toArray(), db.highlights.toArray()]);
   const dayDates = new Map(days.map((day) => [day.id, day.startedAt.slice(0, 10)]));
   const has = (text: string) => wikiLabels(text).some((item) => item.toLowerCase() === needle);
   return [
     ...notes.filter((note) => has(note.text)).map((note) => ({ kind: "DAY" as const, id: note.dayId, label: dayDates.get(note.dayId) ?? note.dayId })),
     ...journal.filter((entry) => [entry.title, entry.context, entry.options, entry.decision, entry.reasoning, entry.expectation, entry.outcome, entry.lesson]
       .some((text) => text && has(text))).map((entry) => ({ kind: "JOURNAL" as const, id: entry.id, label: entry.title })),
+    ...highlights.filter((highlight) => has(highlight.text) || has(highlight.note)).map((highlight) => ({ kind: "HIGHLIGHT" as const, id: highlight.id, label: highlight.sourceTitle })),
   ];
 }

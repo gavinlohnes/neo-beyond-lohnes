@@ -1,0 +1,15 @@
+import { useEffect, useState } from "react";
+import { createHighlight, deleteHighlight } from "../../../application/highlightCommands";
+import { getHighlights } from "../../../application/highlightQueries";
+import type { Highlight } from "../../../domain/highlights";
+import { describeError } from "../../errorMessage";
+import { WikiLinkList, WikiTextArea } from "../../components/WikiTextArea";
+export function HighlightsScreen({ active }: { active: boolean }) {
+  const [items, setItems] = useState<Highlight[]>([]), [query, setQuery] = useState(""), [title, setTitle] = useState(""), [url, setUrl] = useState(""), [text, setText] = useState(""), [note, setNote] = useState(""), [tags, setTags] = useState(""), [message, setMessage] = useState(""), [error, setError] = useState("");
+  const [revision, setRevision] = useState(0);
+  useEffect(() => { if (active) void getHighlights(query).then(setItems); }, [active, query, revision]);
+  return <section className="highlights-screen" aria-label="Highlights"><header><p className="section-label">YOUR HIGHLIGHTS</p><h2>Highlights</h2><p className="meta">Passages you chose to keep. Nothing appears on TODAY.</p></header>
+    <details><summary>PASTE A HIGHLIGHT</summary><label>Source title<input className="input" value={title} onChange={(e) => setTitle(e.target.value)} /></label><label>Source URL (optional)<input className="input" type="url" value={url} onChange={(e) => setUrl(e.target.value)} /></label><WikiTextArea label="Highlight" value={text} onChange={setText} /><label>Note<textarea className="input" value={note} onChange={(e) => setNote(e.target.value)} /></label><label>Tags<input className="input" value={tags} onChange={(e) => setTags(e.target.value)} /></label><button type="button" className="btn-primary" onClick={() => { setError(""); void createHighlight({ sourceTitle: title, sourceUrl: url, text, note, tags: tags.split(",") }).then(() => { setTitle(""); setUrl(""); setText(""); setNote(""); setTags(""); setMessage("Highlight saved."); setRevision((current) => current + 1); }, (cause) => setError(describeError(cause, "Highlight could not be saved."))); }}>SAVE HIGHLIGHT</button></details>
+    <label>Search highlights<input className="input" type="search" value={query} onChange={(e) => setQuery(e.target.value)} /></label>{!items.length ? <p className="meta">No matching highlights.</p> : items.map((item) => <article className="operator-card" key={item.id}><p className="meta">{item.sourceSavedItemId ? "FROM SAVED" : "PASTED"}</p><h3>{item.sourceTitle}</h3><blockquote>{item.text}</blockquote>{item.sourceUrl && <a href={item.sourceUrl} target="_blank" rel="noreferrer">OPEN SOURCE</a>}<WikiLinkList text={item.text} emptyMessage="No other saved mentions." /><p>{item.note}</p><p className="meta">{item.tags.join(" · ")}</p><button type="button" className="btn-secondary" onClick={() => { if (confirm("Delete this highlight?")) void deleteHighlight(item.id).then(() => { setMessage("Highlight deleted."); setRevision((current) => current + 1); }); }}>DELETE</button></article>)}
+    {message && <p role="status">{message}</p>}{error && <p role="alert">{error}</p>}</section>;
+}

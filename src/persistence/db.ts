@@ -30,6 +30,7 @@ import type { LogTemplate, TextSnippet } from "../domain/snippets/types";
 import type { Habit } from "../domain/habits";
 import type { DailyNote } from "../domain/dailyNotes";
 import type { Collection, CollectionItem } from "../domain/collections";
+import type { Highlight } from "../domain/highlights";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -66,6 +67,7 @@ export class BeyondDB extends Dexie {
   dailyNotes!: Table<DailyNote, string>;
   collections!: Table<Collection, string>;
   collectionItems!: Table<CollectionItem, string>;
+  highlights!: Table<Highlight, string>;
 
   constructor() {
     super("beyond");
@@ -401,6 +403,8 @@ export class BeyondDB extends Dexie {
       collections: "id, &name, status, createdAt",
       collectionItems: "id, collectionId, archivedAt, createdAt",
     });
+    // HIGHLIGHTS-001: selected passages with preserved source provenance.
+    this.version(25).stores({ highlights: "id, createdAt, sourceSavedItemId, *tags" });
   }
 }
 

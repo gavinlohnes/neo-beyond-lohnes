@@ -6,6 +6,8 @@ import { getWeeklyReviewState, type WeeklyReviewState } from "../../../applicati
 import { saveWeeklyReview } from "../../../application/weeklyReviewCommands";
 import { useSessionDraft } from "../../sessionDrafts";
 import { describeError } from "../../errorMessage";
+import { getWeeklyHighlight } from "../../../application/highlightQueries";
+import type { Highlight } from "../../../domain/highlights";
 
 const label = (at: string) => new Date(at).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 const focusValue = (focus: WeeklyFocus | null) => !focus ? "NONE" : focus.kind === "CUSTOM" ? "CUSTOM" : JSON.stringify(focus);
@@ -17,6 +19,8 @@ const number = (n: number | undefined, suffix: string) => n === undefined ? "Not
  * COMPLETE REVIEW button opens the form (each new request opens and focuses it).
  */
 export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest = 0 }: { active?: boolean; showFacts?: boolean; openRequest?: number }) {
+  const [highlight, setHighlight] = useState<Highlight | null>(null);
+  useEffect(() => { if (active) void getWeeklyHighlight().then(setHighlight); }, [active]);
   const [now, setNow] = useState(() => new Date());
   const weekKey = latestReviewWeek(now).start;
   useEffect(() => {
@@ -121,6 +125,7 @@ export function WeeklyReviewPanel({ active = true, showFacts = true, openRequest
         <p className="card-body">{data.previousFocusCount === undefined ? "Written focus: reflect using the recorded evidence; no automatic verdict." : `${data.previousFocusCount} recorded in this week; your chosen count was ${"target" in data.previousFocus ? data.previousFocus.target : "not set"}.`}</p>
         <p className="meta">Counts cover the entire named week, including days before a late review.</p>
       </div>}
+      {highlight && <details className="equipment-row"><summary>One highlight</summary><blockquote>{highlight.text}</blockquote><p className="meta">{highlight.sourceTitle} · optional reading, not a prompt or recommendation.</p></details>}
       {differentWeek && <div role="status"><p>Your draft belongs to the week starting {draftWeek ? label(draftWeek.start) : "earlier"}. It has been kept. Copy any notes you want before opening the current week.</p>
         <button className="btn-secondary" onClick={() => { if (!dirty || window.confirm("Discard this unfinished review draft and open the current week?")) { loadForm(data); setReceipt(null); setError(null); } }} disabled={busy}>OPEN CURRENT WEEK</button>
       </div>}
