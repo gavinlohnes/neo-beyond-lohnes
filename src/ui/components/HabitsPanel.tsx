@@ -25,11 +25,13 @@ export function HabitsPanel({ active }: { active: boolean }) {
   return <section className="habits-panel" aria-label="Habits">
     <p className="tool-label">HABITS</p>
     <p className="meta">A quiet record of what you did. Tap once for this lived day; tap again to undo.</p>
+
     <div className="habits-create">
       <label className="field">
         <span>Habit name</span>
         <input className="input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Evening walk" />
       </label>
+
       <label className="field">
         <span>When</span>
         <select className="input" value={kind} onChange={(e) => setKind(e.target.value as HabitScheduleKind)}>
@@ -39,6 +41,7 @@ export function HabitsPanel({ active }: { active: boolean }) {
           <option value="DAYS_OFF">Days off</option>
         </select>
       </label>
+
       {kind === "WEEKDAYS" && (
         <fieldset className="habit-days-fieldset">
           <legend>Days</legend>
@@ -52,6 +55,7 @@ export function HabitsPanel({ active }: { active: boolean }) {
           </div>
         </fieldset>
       )}
+
       <button type="button" className="btn-primary" onClick={() => void save()}>SAVE HABIT</button>
     </div>
 
@@ -65,6 +69,7 @@ export function HabitsPanel({ active }: { active: boolean }) {
             <strong>{habit.name}</strong>
             <p className="meta">{thisWeek} this week · {fourWeeks} in 4 weeks{!applies ? " · Not scheduled today" : ""}</p>
           </div>
+
           <div className="habit-actions">
             <button
               type="button"
