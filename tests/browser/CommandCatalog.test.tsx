@@ -54,6 +54,7 @@ const commandHeadings = {
   WORK_SCHEDULE: "MORE // WORK SCHEDULE", EXERCISE_LIBRARY: "MORE // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "MORE // CUSTOM PROGRAMS",
   MEMORY: "MORE // MEMORY", ROUTINES: "MORE // ROUTINES", PEOPLE: "MORE // PEOPLE", HOME: "MORE // HOME", LIFE: "MORE // LIFE", SNIPPETS: "SNIPPETS",
   DAILY_NOTE: "MORE // DAILY NOTE",
+  COLLECTIONS: "MORE // COLLECTIONS",
 };
 const sectionTargets = {
   HIDDEN_FEATURES: "command-hidden-features", BACKUP: "safety-heading", NUTRITION_TARGETS: "command-nutrition-targets", QUIT_TRACKER: "command-quit-tracker",

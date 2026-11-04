@@ -18,6 +18,7 @@ export interface HelperContext {
   routines: { id: string; title: string; steps: { id: string; text: string }[] }[];
   habits?: { id: string; name: string }[];
   logTemplates?: { id: string; name: string; cards: AlfredProposal[] }[];
+  collections?: { id: string; name: string; firstFieldId: string; firstFieldLabel: string }[];
   /** GYM-SETS-001: the workout in progress, when there is one; sets can only be logged into it. */
   workout?: { sessionId: string; exercises: { id: string; name: string }[] } | null;
   /** CORRECTIONS-001: today's latest water, sleep and weight logs, the only ones a plain correction can change. */
@@ -226,7 +227,7 @@ function taskAction(c: string, ctx: HelperContext): AlfredProposal | null | "unc
 /** Split a logging message into clauses. A reminder, note or step keeps its whole text. */
 export function clauses(text: string): string[] {
   const t = text.trim();
-  if (/^(remind me|note\b|add (?:a )?step\b)/i.test(t)) return [t];
+  if (/^(remind me|note\b|add (?:a )?step\b|add to\b)/i.test(t)) return [t];
   // A reminder, note or step after other items keeps the rest of the message as one clause.
   const tail = t.search(/[,;]?\s*(?:\band\s+)?\b(remind me|note\s*[:\-–]|add (?:a )?step to)\b/i);
   if (tail > 0) {
@@ -259,6 +260,11 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     let card: AlfredProposal | null | "unclear" = null;
     const note = raw.trim().match(/^note\s*[:\-–]?\s+(.+)$/i);
     if (note) card = { kind: "capture_note", text: note[1]!.trim() };
+    else if (/^add to\b/i.test(raw.trim())) {
+      const match = raw.trim().match(/^add to\s+(.+?)\s*[:\-–]\s*(.+)$/i);
+      const collection = match ? matchOne(ctx.collections ?? [], match[1]!) : null;
+      card = collection && match?.[2]?.trim() ? { kind: "collection_add", collection_id: collection.id, collection_name: collection.name, field_id: collection.firstFieldId, field_label: collection.firstFieldLabel, value: match[2].trim() } : "unclear";
+    }
     else if (/^remind me\b/i.test(raw.trim())) card = remind(raw.trim(), ctx);
     else if (WORK_START.test(c)) card = { kind: "work_started" };
     else if (WORK_END.test(c)) card = { kind: "work_ended" };
