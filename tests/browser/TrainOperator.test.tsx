@@ -6,10 +6,11 @@ import axe from "axe-core";
 import { logEvent, startDay, submitCheckIn } from "../../src/application/commands";
 import { getActiveDay } from "../../src/application/queries";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
-import { getActiveWorkoutSession, getPerformedSets } from "../../src/application/trainQueries";
+import { getActiveWorkoutSession, getPerformedSets, getRecentSubstitutions } from "../../src/application/trainQueries";
 import { db } from "../../src/persistence/db";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { holdToConfirm } from "./helpers/hold";
+import { settleVisuals } from "./helpers/settleVisuals";
 
 // Real canonical commands/queries by default; fail one specific operation
 // to prove that retry never replays a write which already committed.
@@ -27,19 +28,23 @@ vi.mock("../../src/application/trainCommands", async (importOriginal) => {
 });
 vi.mock("../../src/application/trainQueries", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/application/trainQueries")>();
-  return { ...actual, getPerformedSets: vi.fn(actual.getPerformedSets) };
+  return { ...actual, getPerformedSets: vi.fn(actual.getPerformedSets), getRecentSubstitutions: vi.fn(actual.getRecentSubstitutions) };
 });
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 4, 17));
   vi.mocked(getActiveDay).mockReset();
   vi.mocked(logEvent).mockReset();
   vi.mocked(logSet).mockReset();
   vi.mocked(startWorkout).mockReset();
   vi.mocked(completeWorkout).mockReset();
   vi.mocked(getPerformedSets).mockReset();
+  vi.mocked(getRecentSubstitutions).mockReset();
 });
 afterEach(async () => {
   await cleanup();
+  vi.useRealTimers();
   await cdp().send("Emulation.setEmulatedMedia", { features: [] });
   await page.viewport(1280, 800);
 });
@@ -91,7 +96,7 @@ describe("TRAIN-OPERATOR-001", () => {
     }
     await expect.element(screen.getByText("LAST TIME: no recorded set", { exact: true })).toBeVisible();
     // Measure settled colors, not composited opacity during finite mount motion.
-    await Promise.all(document.getAnimations().map((animation) => animation.finished));
+    await settleVisuals(document.querySelector(".train-operator")!);
     const results = await axe.run(document.querySelector(".train-operator")!);
     expect(results.violations).toEqual([]);
   });
@@ -106,6 +111,7 @@ describe("TRAIN-OPERATOR-001", () => {
     expect(document.getAnimations()).toHaveLength(0);
     await screen.getByRole("button", { name: "GYM MODE" }).click();
     await expect.element(screen.getByRole("dialog", { name: "Gym mode" })).toBeVisible();
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("dialog", { name: "Gym mode" }).element());
     for (const element of document.querySelectorAll<HTMLElement>(".train-operator *")) {
       const ownText = [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim());
       if (ownText && element.getClientRects().length && getComputedStyle(element).visibility !== "hidden") {
@@ -212,14 +218,18 @@ describe("TRAIN-OPERATOR-001", () => {
     const real = vi.mocked(getActiveDay).getMockImplementation()!;
     vi.mocked(getActiveDay).mockImplementationOnce(async () => { await held; return real(); });
     const reads = vi.mocked(getPerformedSets).mock.calls.length;
+    const advisoryReads = vi.mocked(getRecentSubstitutions).mock.calls.length;
     await screen.getByRole("button", { name: "RETRY WORKOUT READ" }).click();
     const weight = screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" });
     await expect.element(weight).toBeVisible();
     await weight.click();
     release();
-    // The retry read has finished once it re-reads the sets; give its focus step a frame to run.
     await expect.poll(() => vi.mocked(getPerformedSets).mock.calls.length).toBeGreaterThan(reads);
-    await new Promise<void>((resolve) => setTimeout(resolve, 50));
+    // Substitutions are the final advisory read (sets alone are too early). Wait for the whole
+    // batch, then a frame for the handler's focus step, rather than guessing 50 ms is enough.
+    await expect.poll(() => vi.mocked(getRecentSubstitutions).mock.calls.length).toBeGreaterThan(advisoryReads);
+    await Promise.all(vi.mocked(getRecentSubstitutions).mock.results.slice(advisoryReads).map((result) => result.value));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     expect(document.activeElement).toBe(weight.element());
     await weight.fill("105");
     await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("8");

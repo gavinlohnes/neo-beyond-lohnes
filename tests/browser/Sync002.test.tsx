@@ -33,7 +33,15 @@ beforeEach(async () => {
   await page.viewport(412, 915);
   try { localStorage.clear(); } catch { /* ignore */ }
 });
-afterEach(() => { cleanup(); vi.useRealTimers(); const url = new URL(window.location.href); url.searchParams.delete("share"); window.history.replaceState(null, "", url.toString()); });
+afterEach(async () => {
+  await cleanup();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+  const url = new URL(window.location.href);
+  url.searchParams.delete("share"); url.searchParams.delete("go"); url.hash = "";
+  window.history.replaceState(null, "", url.toString());
+  await caches.delete("beyond-shared-health");
+});
 
 describe("SYNC-002", () => {
   it("right after SYNC GARMIN, the Bridge's files import straight away and TODAY says what came", async () => {

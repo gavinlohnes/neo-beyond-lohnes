@@ -24,7 +24,7 @@ beforeEach(async () => {
   await updateSchedulePattern(fields);
   dayId = (await startDay()).id;
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo(0, 0); });
+afterEach(async () => { await cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); window.scrollTo({ top: 0, left: 0, behavior: "instant" }); });
 
 async function openMeal(screen: Screen) {
   await openMealInBody(screen);
@@ -49,7 +49,7 @@ describe("TODAY meal round trip", () => {
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     const trigger = mealButton(screen).element() as HTMLButtonElement;
     trigger.focus();
-    trigger.scrollIntoView({ block: "center" });
+    trigger.scrollIntoView({ block: "center", behavior: "instant" });
     const originY = window.scrollY;
     await openMealInBodyDom(screen);
     await fillMeal(screen);
@@ -76,9 +76,10 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen, "Unfinished dinner");
     await screen.getByRole("button", { name: "CLOSE" }).click();
+    await expect.poll(() => document.activeElement).toBe(mealButton(screen).element());
     expect(await db.savedMeals.count()).toBe(0);
     expect(await loggedCount()).toBe(0);
-    window.scrollTo(0, 80);
+    window.scrollTo({ top: 80, left: 0, behavior: "instant" });
     const reopenedOrigin = window.scrollY;
     expect(reopenedOrigin).toBe(80);
     // A DOM click: a locator click first scrolls its target into view, which would move the origin under test.
@@ -164,6 +165,7 @@ describe("TODAY meal round trip", () => {
     const screen = await render(<App />);
     await openMeal(screen);
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.poll(loggedCount).toBe(1);
     const [original] = await getMealEntries(dayId);
     await screen.getByRole("button", { name: "CLOSE" }).click();
     await openMealInBody(screen);

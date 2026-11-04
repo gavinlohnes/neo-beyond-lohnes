@@ -7,6 +7,7 @@ import { App } from "../../src/app/App";
 import { setWorkContext, startDay } from "../../src/application/commands";
 import { addProgressPhoto } from "../../src/application/progressPhotoCommands";
 import { getProgressPhotos } from "../../src/application/progressPhotoQueries";
+import { settleVisuals } from "./helpers/settleVisuals";
 
 vi.mock("../../src/application/progressPhotoQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/progressPhotoQueries")>();
@@ -17,6 +18,18 @@ import { db } from "../../src/persistence/db";
 /** REVIEW-001 optional framing guide: live camera + ghost of the last same-pose photo, saved through the existing flow. */
 const realGetUserMedia = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
 let tracks: MediaStreamTrack[] = [];
+const cameraStops: (() => void)[] = [];
+const cameraFrames = new Set<() => void>();
+
+async function cameraFrame(video: HTMLVideoElement) {
+  await expect.poll(() => video.readyState).toBeGreaterThanOrEqual(HTMLMediaElement.HAVE_CURRENT_DATA);
+  // play() settling is not a decoded-frame signal for a synthetic canvas stream.
+  await new Promise<void>((resolve) => {
+    const id = video.requestVideoFrameCallback(() => { cameraFrames.delete(cancel); resolve(); });
+    const cancel = () => video.cancelVideoFrameCallback(id);
+    cameraFrames.add(cancel);
+  });
+}
 /**
  * A width × height stream: red outside the guide's 3:4 view, blue inside it (gray when even is set).
  * The views are worked out by hand, not with the production crop, so a wrong crop can't hide here.
@@ -35,6 +48,7 @@ function fakeCamera(width = 240, height = 320, even = true) {
     if (!even) { context.fillStyle = "#0000ff"; context.fillRect(view.sx, view.sy, view.sw, view.sh); }
   };
   paint(); const timer = setInterval(paint, 50);
+  cameraStops.push(() => clearInterval(timer));
   Object.defineProperty(navigator.mediaDevices, "getUserMedia", { configurable: true, value: vi.fn(async () => {
     const stream = canvas.captureStream(20);
     tracks = stream.getTracks();
@@ -43,7 +57,14 @@ function fakeCamera(width = 240, height = 320, even = true) {
   return () => clearInterval(timer);
 }
 afterEach(async () => {
-  await cleanup(); vi.useRealTimers(); await page.viewport(1280, 800);
+  await cleanup();
+  for (const cancel of cameraFrames) cancel();
+  cameraFrames.clear();
+  for (const stop of cameraStops.splice(0)) stop();
+  for (const track of tracks) track.stop();
+  tracks = [];
+  vi.mocked(getProgressPhotos).mockReset();
+  vi.useRealTimers(); await page.viewport(1280, 800);
   if (realGetUserMedia) Object.defineProperty(navigator.mediaDevices, "getUserMedia", { configurable: true, value: realGetUserMedia });
 });
 async function photoBlob(shade = "#000"): Promise<Blob> {
@@ -75,17 +96,21 @@ for (const width of [320, 360, 412]) it(`frames a new photo over the last same-p
     await expect.poll(() => guide.element().querySelector(".framing-guide__ghost")).not.toBeNull();
     await expect.element(guide.getByText("Line up with your last side photo. Same distance, same light. Nothing saves until you choose SAVE PHOTO.", { exact: true })).toBeVisible();
     await expect.element(guide.getByRole("button", { name: "CAPTURE", exact: true })).toBeEnabled();
+    await cameraFrame(guide.element().querySelector("video")!);
+    await settleVisuals(guide.element());
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     for (const button of guide.element().querySelectorAll<HTMLElement>("button")) expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     expect((await axe.run(guide.element(), { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] } })).violations).toEqual([]);
     const before = await db.progressPhotos.count();
     await guide.getByRole("button", { name: "CAPTURE", exact: true }).click();
+    await expect.element(screen.getByText("Selected photo · not saved yet", { exact: true })).toBeVisible();
     await expect.poll(() => document.querySelector(".framing-guide")).toBeNull();
     await expect.poll(() => tracks.length > 0 && tracks.every((track) => track.readyState === "ended")).toBe(true);
     expect(await db.progressPhotos.count()).toBe(before); // nothing saved yet
     await expect.element(screen.getByText("Selected photo · not saved yet", { exact: true })).toBeVisible();
     await expect.element(screen.getByRole("combobox", { name: "Photo pose" })).toHaveValue("SIDE");
     await screen.getByRole("button", { name: "SAVE PHOTO", exact: true }).click();
+    await expect.element(screen.getByText(/^Side photo saved ·/)).toBeVisible();
     await expect.poll(async () => (await getProgressPhotos({ pose: "SIDE" })).length).toBe(2);
     const saved = (await getProgressPhotos({ pose: "SIDE" })).at(-1)!;
     expect(saved.source).toBe("CAMERA");
@@ -111,8 +136,11 @@ for (const [width, height] of [[160, 90], [90, 200]] as const) it(`captures the 
     await screen.getByRole("button", { name: "USE FRAMING GUIDE", exact: true }).click();
     const guide = screen.getByRole("dialog", { name: /framing guide$/ });
     await expect.element(guide.getByRole("button", { name: "CAPTURE", exact: true })).toBeEnabled();
+    await cameraFrame(guide.element().querySelector("video")!);
     await guide.getByRole("button", { name: "CAPTURE", exact: true }).click();
+    await expect.element(screen.getByText("Selected photo · not saved yet", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "SAVE PHOTO", exact: true }).click();
+    await expect.element(screen.getByText(/^Front photo saved ·/)).toBeVisible();
     await expect.poll(async () => (await getProgressPhotos({})).length).toBe(1);
     const bitmap = await createImageBitmap((await getProgressPhotos({}))[0]!.image);
     expect(bitmap.width / bitmap.height).toBeCloseTo(3 / 4, 1);
