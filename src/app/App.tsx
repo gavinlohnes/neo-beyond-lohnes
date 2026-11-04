@@ -165,6 +165,7 @@ function AppWorkspaces() {
   const [shortcut] = useState(() => parseShortcut(window.location.search));
   // GARMIN-002 SEND TO BEYOND: the service worker parks shared Health Bridge files and opens ?share=health.
   const [sharedHealth] = useState(() => new URLSearchParams(window.location.search).get("share") === "health");
+  const [sharedInbox] = useState(() => new URLSearchParams(window.location.search).get("share") === "inbox");
   // SYNC-002: files sent back right after SYNC GARMIN import straight away and land on TODAY.
   // ALFRED-001: the man in the chair, from the header or LOG.
   // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
@@ -190,7 +191,7 @@ function AppWorkspaces() {
   const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
   const [garminSync, setGarminSync] = useState<"syncing" | { result: HealthSyncResult } | { error: string } | null>(oneTapSync ? "syncing" : null);
   // SHORTCUTS-001: START WORKOUT opens TRAIN; the others open BODY.
-  const [tab, setTab] = useState<Tab>(() => (sharedHealth && !oneTapSync ? "COMMAND" : shortcut === "workout" ? "TRAIN" : "TODAY"));
+  const [tab, setTab] = useState<Tab>(() => ((sharedHealth && !oneTapSync) || sharedInbox ? "COMMAND" : shortcut === "workout" ? "TRAIN" : "TODAY"));
   const tabRef = useRef(tab);
   tabRef.current = tab;
   // Screen instances are session-local. Hiding a destination never discards its forms.
@@ -332,14 +333,14 @@ function AppWorkspaces() {
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
-  const [moreView, setMoreView] = useState<MoreView>(sharedHealth && !oneTapSync ? "HEALTH_IMPORT" : "MENU");
+  const [moreView, setMoreView] = useState<MoreView>(sharedHealth && !oneTapSync ? "HEALTH_IMPORT" : sharedInbox ? "SAVED" : "MENU");
   const [reviewDestination, setReviewDestination] = useState<{ key: number; view: WholePictureDestination } | null>(null);
   useEffect(() => {
-    if (!sharedHealth) return;
+    if (!sharedHealth && !sharedInbox) return;
     const url = new URL(window.location.href);
     url.searchParams.delete("share");
     window.history.replaceState(null, "", url.toString());
-  }, [sharedHealth]);
+  }, [sharedHealth, sharedInbox]);
   useEffect(() => {
     if (!syncShortcut) return;
     markGarminSyncRequested();

@@ -62,7 +62,12 @@ export default defineConfig({
           action: "./share-target",
           method: "POST",
           enctype: "multipart/form-data",
-          params: { files: [{ name: "health", accept: ["application/json", ".json"] }] },
+          params: {
+            title: "title",
+            text: "text",
+            url: "url",
+            files: [{ name: "health", accept: ["application/json", ".json"] }],
+          },
         },
         shortcuts: [
           { name: "START WORKOUT", short_name: "START WORKOUT", url: "./?go=workout", icons: [{ src: "icons/beyond-v3-192.png", sizes: "192x192", type: "image/png" }] },
