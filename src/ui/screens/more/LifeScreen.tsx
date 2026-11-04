@@ -5,6 +5,7 @@ import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { RoutinesPanel } from "../../components/RoutinesPanel";
 import { PeoplePanel } from "../../components/PeoplePanel";
 import { HomePanel } from "../../components/HomePanel";
+import { HabitsPanel } from "../../components/HabitsPanel";
 import { askAlfred } from "../../components/AlfredSheet";
 import { IntentScreen } from "./IntentScreen";
 import "../../components/alfred.css";
@@ -14,12 +15,13 @@ import "../../components/alfred.css";
  * Each tab is the existing screen for that area, unchanged; nothing moves in the data. Visited tabs
  * stay mounted (hidden) so an unfinished draft survives switching tabs.
  */
-export const LIFE_TABS = ["Direction", "Plans", "Routines", "People", "Home", "Memory"] as const;
+export const LIFE_TABS = ["Direction", "Plans", "Routines", "Habits", "People", "Home", "Memory"] as const;
 export type LifeTab = (typeof LIFE_TABS)[number];
 const BLURB: Record<LifeTab, string> = {
   Direction: "What matters to you and what you're working around, in your own words.",
   Plans: "Missions, projects and the commitments under them.",
   Routines: "Your before, during and after shift routines.",
+  Habits: "Small things you choose to keep doing, without scores or pressure.",
   People: "Birthdays and what to remember about the people who matter.",
   Home: "House facts and the jobs that come round.",
   Memory: "What BEYOND and Alfred keep for you.",
@@ -59,6 +61,7 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
         </>}
         {t === "Plans" && <IntentScreen active={on(t)} />}
         {t === "Routines" && <RoutinesPanel active={on(t)} />}
+        {t === "Habits" && <HabitsPanel active={on(t)} />}
         {t === "People" && <PeoplePanel active={on(t)} />}
         {t === "Home" && <HomePanel active={on(t)} />}
         {t === "Memory" && <><OperatorContextPanel active={on(t)} onMemory={setMemoryFocus} /><MemoryPanel active={on(t)} focusFactId={memoryFocus} /><AlfredMemoryList active={on(t)} /></>}

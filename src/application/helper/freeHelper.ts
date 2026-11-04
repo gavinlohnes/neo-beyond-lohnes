@@ -16,6 +16,7 @@ export interface HelperContext {
   openTasks: { id: string; title: string }[];
   openProjects: { id: string; title: string }[];
   routines: { id: string; title: string; steps: { id: string; text: string }[] }[];
+  habits?: { id: string; name: string }[];
   logTemplates?: { id: string; name: string; cards: AlfredProposal[] }[];
   /** GYM-SETS-001: the workout in progress, when there is one; sets can only be logged into it. */
   workout?: { sessionId: string; exercises: { id: string; name: string }[] } | null;
@@ -211,6 +212,8 @@ function taskAction(c: string, ctx: HelperContext): AlfredProposal | null | "unc
   const wanted = (tick ?? done)?.[1];
   if (!wanted) return null;
   if (!tick) {
+    const habit = /^did\b/.test(c) ? matchOne(ctx.habits ?? [], wanted) : null;
+    if (habit) return { kind: "habit_done", habit_id: habit.id, name: habit.name };
     const task = matchOne(ctx.openTasks, wanted);
     if (task) return { kind: "task_done", task_id: task.id, title: task.title };
   }
