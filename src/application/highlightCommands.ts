@@ -3,7 +3,9 @@ import type { Highlight } from "../domain/highlights";
 
 const clean = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
 export async function createHighlight(input: { savedItemId?: string; sourceTitle?: string; sourceUrl?: string; text: string; note?: string; tags?: string[] }): Promise<Highlight> {
-  const text = clean(input.text, 12_000); if (!text) throw new Error("Paste or select highlight text first.");
+  const text = String(input.text ?? "").trim();
+  if (!text) throw new Error("Paste or select highlight text first.");
+  if (text.length > 12_000) throw new Error("Highlight text is too long (maximum 12,000 characters).");
   const saved = input.savedItemId ? await db.savedInboxItems.get(input.savedItemId) : undefined;
   if (input.savedItemId && !saved) throw new Error("Saved source not found.");
   const rawUrl = clean(saved?.url ?? input.sourceUrl, 2_000); const sourceUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : null;
