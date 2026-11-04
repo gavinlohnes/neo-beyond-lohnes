@@ -7,6 +7,23 @@ resume authorized work when ownership permits, or recommend one next objective f
 New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
+## Current priority — complete the 3.0 field gate
+
+**Apps Checklist completed, 2026-11-04.** All ten deliverables across A1–A9 are merged through
+PRs #405, #406 and #410–#417. Master is at Dexie v25 and the integrated gate passes 432 test files
+and 3,510 tests plus architecture, TypeScript, production build and PWA generation. Snippets,
+Share Inbox, Smart Lists, Routine Player, Habits, Daily Note, Collections, Highlights, Google
+Calendar and IFTTT are now one tested system; provider keys remain phone-local and outside backups.
+
+**Now: resume `ROTATION-FIELD-001`.** The checklist merge satisfies the mission's pause condition.
+The remaining 3.0 launch gate is not another speculative feature: Gavin daily-drives BEYOND through
+one complete work run and the first full day off, with checkpoints at final shift, next wake and
+full day off. Record `FIELD · INCIDENT`, `FRICTION`, `MISSING JOB`, `TRUST GAP`, or `CLEAR` through
+the existing LOG → NOTE path. Repository tests cannot substitute for this physical-phone evidence.
+The mission is report-only; any resulting repair or post-3.0 build receives its own bounded brief
+and owner approval. After a clean or reconciled rotation, the planned 3.1 direction is the
+self-running week described in [`BEYOND_AFTER_3`](BEYOND_AFTER_3.md), refined by field evidence.
+
 ## Active priority
 
 **Completed, 2026-10-31 — Alfred is part of BEYOND (#346–#350).** Owner rulings RULES-2026-10-31
