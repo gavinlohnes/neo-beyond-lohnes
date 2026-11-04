@@ -21,24 +21,66 @@ export function HabitsPanel({ active }: { active: boolean }) {
       setName(""); setKind("ANY_DAY"); setWeekdays([]); setError(""); load();
     } catch { setError("Add a name and choose at least one day."); }
   }
+
   return <section className="habits-panel" aria-label="Habits">
     <p className="tool-label">HABITS</p>
     <p className="meta">A quiet record of what you did. Tap once for this lived day; tap again to undo.</p>
     <div className="habits-create">
-      <label>Habit name<input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
-      <label>When<select value={kind} onChange={(e) => setKind(e.target.value as HabitScheduleKind)}>
-        <option value="ANY_DAY">Any day</option><option value="WEEKDAYS">Chosen days</option>
-        <option value="WORK_DAYS">Work days</option><option value="DAYS_OFF">Days off</option>
-      </select></label>
-      {kind === "WEEKDAYS" && <fieldset><legend>Days</legend><div className="habit-days">{DAYS.map((day, index) => <label key={day}><input type="checkbox" checked={weekdays.includes(index)} onChange={() => setWeekdays((old) => old.includes(index) ? old.filter((d) => d !== index) : [...old, index])} />{day}</label>)}</div></fieldset>}
+      <label className="field">
+        <span>Habit name</span>
+        <input className="input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Evening walk" />
+      </label>
+      <label className="field">
+        <span>When</span>
+        <select className="input" value={kind} onChange={(e) => setKind(e.target.value as HabitScheduleKind)}>
+          <option value="ANY_DAY">Any day</option>
+          <option value="WEEKDAYS">Chosen days</option>
+          <option value="WORK_DAYS">Work days</option>
+          <option value="DAYS_OFF">Days off</option>
+        </select>
+      </label>
+      {kind === "WEEKDAYS" && (
+        <fieldset className="habit-days-fieldset">
+          <legend>Days</legend>
+          <div className="habit-days">
+            {DAYS.map((day, index) => (
+              <label key={day} className="habit-day-toggle">
+                <input type="checkbox" checked={weekdays.includes(index)} onChange={() => setWeekdays((old) => old.includes(index) ? old.filter((d) => d !== index) : [...old, index])} />
+                <span>{day}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       <button type="button" className="btn-primary" onClick={() => void save()}>SAVE HABIT</button>
     </div>
-    {error && <p role="alert">{error}</p>}
-    {!workspace?.dayId && <p className="meta">Start today to mark a habit done.</p>}
-    <div className="habit-list">{workspace?.habits.map(({ habit, done, applies, thisWeek, fourWeeks }) => <article key={habit.id} className="habit-row">
-      <div><strong>{habit.name}</strong><p className="meta">{thisWeek} this week · {fourWeeks} in 4 weeks{!applies ? " · Not scheduled today" : ""}</p></div>
-      <div className="habit-actions"><button type="button" className={done ? "btn-primary" : "btn-secondary"} disabled={!workspace.dayId || !applies} aria-pressed={done} onClick={() => void setHabitDone(habit.id, !done, workspace.dayId ?? undefined).then(load)}> {done ? "DONE" : "MARK DONE"}</button>
-      <button type="button" className="btn-secondary" onClick={() => void setHabitArchived(habit.id, true).then(load)}>PUT AWAY</button></div>
-    </article>)}</div>
+
+    {error && <p role="alert" className="meta meta--error">{error}</p>}
+    {!workspace?.dayId && <p className="empty-state">Start today to mark a habit done.</p>}
+
+    <div className="habit-list">
+      {workspace?.habits.map(({ habit, done, applies, thisWeek, fourWeeks }) => (
+        <article key={habit.id} className="habit-row">
+          <div>
+            <strong>{habit.name}</strong>
+            <p className="meta">{thisWeek} this week · {fourWeeks} in 4 weeks{!applies ? " · Not scheduled today" : ""}</p>
+          </div>
+          <div className="habit-actions">
+            <button
+              type="button"
+              className={done ? "btn-primary" : "btn-secondary"}
+              disabled={!workspace.dayId || !applies}
+              aria-pressed={done}
+              onClick={() => void setHabitDone(habit.id, !done).then(load)}
+            >
+              {done ? "DONE" : "MARK DONE"}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => void setHabitArchived(habit.id, true).then(load)}>
+              PUT AWAY
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
   </section>;
 }
