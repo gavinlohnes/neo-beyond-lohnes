@@ -2762,3 +2762,11 @@ calendar/day-detail spine. Engine authority, required information, canonical rec
 confirmation cannot be hidden or replaced by customization. Social feeds, engagement streaks,
 generic scores and unbounded card walls are not part of the direction. Implementation begins with
 the bounded protected [MORE-LIBRARY-001 brief](agent/MORE-LIBRARY-001.md).
+
+## TODAY-GLANCE-001 — a personal overview with a dependable DATA library (owner approved 2026-11-04)
+
+Gavin approved starting TODAY at a Glance after MORE-LIBRARY-001 merged. This bounded ruling amends the visible name and drill-in path of TODAY's existing numbers surface; it does not change its readings, order, metric semantics, evidence sheets, Engine authority or one-red rule.
+
+- TODAY's existing live metric grid is named **AT A GLANCE**. It remains factual FIELD context, not a second recommendation or engagement dashboard.
+- **SEE ALL** opens the existing DATA home, establishing the dependable personal-library path. Individual metric tiles retain their existing evidence routes.
+- The first slice adds no new metric, trend, card customization or persistence. Those wait until Gavin tests this foundation as an actual daily-driver experience.
