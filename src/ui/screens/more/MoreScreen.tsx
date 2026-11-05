@@ -38,7 +38,7 @@ import { CalendarCheck } from "lucide-react";
 import { QuitHabitSettings } from "./QuitHabitSettings";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
-import { Icon } from "../../icons/Icon";
+import { Icon, type IconName } from "../../icons/Icon";
 import "./operator.css";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import {
@@ -75,6 +75,45 @@ const HistoryScreen = lazy(() => import("../history/HistoryScreen").then((m) => 
 const Opening = ({ children }: { children: ReactNode }) => <Suspense fallback={<p role="status" className="meta">Opening…</p>}>{children}</Suspense>;
 
 const REMINDER_HOUR_OPTIONS = [6, 7, 8, 9, 12, 17, 18, 19, 20, 21, 22];
+const MORE_FAVORITES_KEY = "beyond.more.favorites.v1";
+const MORE_RECENTS_KEY = "beyond.more.recents.v1";
+const MAX_RECENTS = 5;
+
+function readMoreLabels(key: string): string[] {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, MAX_RECENTS) : [];
+  } catch { return []; }
+}
+
+function writeMoreLabels(key: string, labels: string[]) {
+  try { localStorage.setItem(key, JSON.stringify(labels)); } catch { /* Navigation preferences are best effort. */ }
+}
+
+const GROUP_ICONS: Record<SystemCapability["group"], IconName> = {
+  Log: "body", "On shift": "shiftDown", Review: "review", Plan: "schedule", Notes: "decisionJournal",
+  Systems: "command", "Backup & recovery": "backup", Settings: "more",
+};
+
+function capabilityIcon(entry: SystemCapability): IconName {
+  if (entry.label === "HISTORY") return "history";
+  if (entry.label === "SEARCH RECORDS") return "search";
+  if (entry.label === "EXERCISE LIBRARY") return "exerciseLibrary";
+  if (entry.label === "CUSTOM PROGRAMS") return "customPrograms";
+  if (entry.label === "DECISION JOURNAL") return "decisionJournal";
+  if (entry.label === "WORK SCHEDULE" || entry.label.includes("CALENDAR")) return "schedule";
+  if (entry.label.includes("BACKUP")) return "backup";
+  if (entry.label === "WORKOUT" || entry.label === "TRAIN") return "train";
+  if (["DATA", "SLEEP", "MEAL", "WATER", "BODYWEIGHT", "IMPORT HEALTH DATA"].includes(entry.label)) return "body";
+  return GROUP_ICONS[entry.group];
+}
+
+function resolveMoreLabels(labels: string[]): SystemCapability[] {
+  return labels.flatMap((label) => {
+    const entry = SYSTEM_CAPABILITIES.find((candidate) => candidate.label === label);
+    return entry ? [entry as SystemCapability] : [];
+  });
+}
 
 // FIELD ALPHA Phase 0 truth-hygiene fix: this was hardcoded at 4 (stale
 // since the Drop 02a/schedulePatterns migration) while the live Dexie
@@ -147,10 +186,14 @@ export function MoreScreen({
   const [view, setViewState] = useState<MoreView>(initialView);
   // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
   const [query, setQuery] = useState("");
+  const [favoriteLabels, setFavoriteLabels] = useState(() => readMoreLabels(MORE_FAVORITES_KEY));
+  const [recentLabels, setRecentLabels] = useState(() => readMoreLabels(MORE_RECENTS_KEY));
   const hiddenFeatures = useHiddenFeatures();
   const [hiddenError, setHiddenError] = useState(false);
   // MORE-TRIM-001: the browse list shows each destination once; search still finds every one.
   const visibleCapabilities = SYSTEM_CAPABILITIES.filter((entry) => (!("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]) && !("browse" in entry));
+  const favoriteCapabilities = resolveMoreLabels(favoriteLabels);
+  const recentCapabilities = resolveMoreLabels(recentLabels).filter((entry) => !favoriteLabels.includes(entry.label));
   const matches = query.trim() ? findCapabilities(query).filter((entry) => !("hiddenFeature" in entry) || hiddenFeatures[entry.hiddenFeature]) : [];
   const [dailyFocus, setDailyFocus] = useState<ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" | null>(captureRequest ? "CAPTURE" : null);
   const [namedMeals, setNamedMeals] = useState<SavedMeal[]>([]);
@@ -486,6 +529,8 @@ export function MoreScreen({
   }
 
   function runCapability(entry: SystemCapability) {
+    const nextRecent = [entry.label, ...recentLabels.filter((label) => label !== entry.label)].slice(0, MAX_RECENTS);
+    setRecentLabels(nextRecent); writeMoreLabels(MORE_RECENTS_KEY, nextRecent);
     const destination = entry.destination;
     if (destination.kind === "daily") { setDailyFocus(destination.tool); setView("DAILY_CONTROLS"); }
     else if (destination.kind === "tools") { setDailyFocus(null); setView("DAILY_CONTROLS"); }
@@ -498,11 +543,29 @@ export function MoreScreen({
     else onOpenDestination?.(destination);
   }
 
-  function renderCapability(entry: SystemCapability) {
+  function toggleFavorite(entry: SystemCapability) {
+    const next = favoriteLabels.includes(entry.label)
+      ? favoriteLabels.filter((label) => label !== entry.label)
+      : [...favoriteLabels, entry.label];
+    setFavoriteLabels(next); writeMoreLabels(MORE_FAVORITES_KEY, next);
+  }
+
+  function renderCapability(entry: SystemCapability, allowFavorite = false) {
     const external = entry.destination.kind !== "more" && entry.destination.kind !== "section";
-    return <button key={entry.label} type="button" className="command-result" aria-label={`${entry.label} ${entry.description}`} disabled={external && !onOpenDestination} onClick={() => runCapability(entry)}>
-      <span><strong>{entry.label}{entry.label === "AFTER ACTION REPORT" && reportNew && <small className="pr-tag"> NEW</small>}</strong><span>{entry.description}</span></span>
-      <span aria-hidden="true" className="command-result__go">›</span>
+    const favorite = favoriteLabels.includes(entry.label);
+    return <div key={entry.label} className="more-library-row">
+      <button type="button" className="command-result" aria-label={`${entry.label} ${entry.description}`} disabled={external && !onOpenDestination} onClick={() => runCapability(entry)}>
+        <Icon name={capabilityIcon(entry)} size={22} />
+        <span><strong>{entry.label}{entry.label === "AFTER ACTION REPORT" && reportNew && <small className="pr-tag"> NEW</small>}</strong><span>{entry.description}</span></span>
+        <span aria-hidden="true" className="command-result__go">›</span>
+      </button>
+      {allowFavorite && <button type="button" className="more-library-row__favorite" aria-pressed={favorite} aria-label={`${favorite ? "Remove" : "Add"} ${entry.label} ${favorite ? "from" : "to"} favorites`} onClick={() => toggleFavorite(entry)}>{favorite ? "PINNED" : "PIN"}</button>}
+    </div>;
+  }
+
+  function renderQuickCapability(entry: SystemCapability, source: "favorite" | "recent") {
+    return <button key={entry.label} type="button" className="more-library-quick" aria-label={`Open ${source} ${entry.label}`} onClick={() => runCapability(entry)}>
+      <Icon name={capabilityIcon(entry)} size={20} /><span>{entry.label}</span>
     </button>;
   }
 
@@ -593,6 +656,16 @@ export function MoreScreen({
         </div>
       )}
       <div hidden={!!query.trim()}>
+      {(favoriteCapabilities.length > 0 || recentCapabilities.length > 0) && <section className="more-library" aria-label="Favorites and recent">
+        {favoriteCapabilities.length > 0 && <section aria-labelledby="more-favorites-heading">
+          <h2 id="more-favorites-heading" className="tool-label">FAVORITES</h2>
+          <div className="more-library__quick-list">{favoriteCapabilities.map((entry) => renderQuickCapability(entry, "favorite"))}</div>
+        </section>}
+        {recentCapabilities.length > 0 && <section aria-labelledby="more-recents-heading">
+          <h2 id="more-recents-heading" className="tool-label">RECENT</h2>
+          <div className="more-library__quick-list">{recentCapabilities.map((entry) => renderQuickCapability(entry, "recent"))}</div>
+        </section>}
+      </section>}
       {/* FIELD ALPHA Phase 4B: reorganized by functional meaning
           (OPERATIONS / RECORDS / SYSTEM) rather than historical screen
           order. OPERATIONS entries the operator navigates into
@@ -604,7 +677,7 @@ export function MoreScreen({
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
       <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery</summary>
-      {visibleCapabilities.filter((entry) => entry.group === "Backup & recovery").map((entry) => renderCapability(entry))}
+      {visibleCapabilities.filter((entry) => entry.group === "Backup & recovery").map((entry) => renderCapability(entry, true))}
       <section className="operational-index-zone" aria-labelledby="safety-heading">
         <h2 id="safety-heading" tabIndex={-1} className="section-label">Data safety</h2>
         <div className="equipment-row">
@@ -722,7 +795,7 @@ export function MoreScreen({
       </details>
 
       {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row command-group__control"><span className="command-group__name">{group}</span><span className="command-group__hint">{({ Log: "Record what happened", "On shift": "Daily controls and privacy", Review: "Free weekly debrief, progress and history", Plan: "Tasks, life, workouts and your schedule", Notes: "Capture now. Come back when you're ready.", Systems: "Readings, observations and device status" } as Partial<Record<typeof group, string>>)[group]}</span></summary>
-        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry))}
+        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry, true))}
       </details>)}
 
       {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
@@ -764,7 +837,7 @@ export function MoreScreen({
           Nutrition Targets moved here from BODY; the SYSTEM readings moved
           inside Diagnostic detail so the main list stays short. */}
       <details className="command-group" id="command-settings-panel"><summary className="disclosure-row">Settings</summary>
-      {visibleCapabilities.filter((entry) => entry.group === "Settings").map((entry) => renderCapability(entry))}
+      {visibleCapabilities.filter((entry) => entry.group === "Settings").map((entry) => renderCapability(entry, true))}
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
       <details id="command-guide" className="more-inspection more-help">

@@ -1,3 +1,22 @@
+# MORE-LIBRARY-001 — active protected build
+
+- Gavin approved the researched Home + Library direction and explicitly approved MORE instead of
+  COMMAND on 2026-11-04. Brief: [MORE-LIBRARY-001.md](MORE-LIBRARY-001.md). Builder: Codex;
+  branch `codex/more-ia-001`; baseline `cf0847c35fdcccf26048bf38c9a261b1303bc287`.
+- Implemented the first bounded foundation: consistent capability icons, browsable Apps Checklist
+  destinations, device-local Favorites and Recent quick strips, and plain-language grouped library
+  rows. Internal `COMMAND` route keys remain for compatibility; the operator sees MORE.
+- Focused Chromium evidence: complete capability/navigation suites 84/84 PASS; affected compact
+  layout, focus-return, draft-retention and accessibility suites 176/176 PASS at 320/360/412 px.
+  Production/PWA build PASS. Full gate: architecture 453 files PASS; 431 files / 3,510 tests PASS,
+  one existing load-sensitive Factory subprocess test timed out at five seconds and its complete
+  71-test Factory pair passed in isolation. Existing one-file/two-test skips unchanged.
+- No Engine, schema, event, backup, provider, dependency, recommendation or write-path change.
+- Next: record final isolated test/build evidence, commit and push, open a ready protected PR, then
+  obtain independent exact-head review and green required CI. Owner merge approval remains required.
+
+---
+
 # Current checkpoint — Apps Checklist integrated, field gate next
 
 Updated 2026-11-04 by Codex.

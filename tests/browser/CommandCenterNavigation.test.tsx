@@ -9,6 +9,7 @@ import { getActiveDay } from "../../src/application/queries";
 import { setModePin } from "../../src/application/modePinQueries";
 import { db } from "../../src/persistence/db";
 import { openCaptureFromLog, searchCommand } from "./helpers/todayTools";
+import axe from "axe-core";
 
 /**
  * COMMAND-CENTER-001 slice 4 — the emblem goes to TODAY's root; re-tapping an
@@ -16,6 +17,8 @@ import { openCaptureFromLog, searchCommand } from "./helpers/todayTools";
  */
 type Screen = Awaited<ReturnType<typeof render>>;
 beforeEach(async () => {
+  localStorage.removeItem("beyond.more.favorites.v1");
+  localStorage.removeItem("beyond.more.recents.v1");
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 9, 14, 17));
   await page.viewport(360, 800);
@@ -70,6 +73,27 @@ describe("emblem", () => {
 });
 
 describe("re-tap, back and retention", () => {
+  it("makes the library learnable with browse icons, favorites and recent destinations", async () => {
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await commandResult(screen, "PLAN TODAY");
+    await screen.getByRole("button", { name: "Add PLAN TODAY to favorites", exact: true }).click();
+    await screen.getByRole("button", { name: "PLAN TODAY Your chosen tasks and recorded deadlines", exact: true }).first().click();
+    await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "FAVORITES", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open favorite PLAN TODAY", exact: true })).toBeVisible();
+    expect(document.querySelectorAll(".command-result svg").length).toBeGreaterThan(0);
+
+    await searchCommand(screen, "history");
+    await screen.getByRole("button", { name: /^HISTORY Every record/ }).click();
+    await screen.getByRole("button", { name: "BACK TO MORE", exact: true }).click();
+    await screen.getByRole("button", { name: "Clear search" }).click();
+    await expect.element(screen.getByRole("heading", { name: "RECENT", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Open recent HISTORY", exact: true })).toBeVisible();
+    expect((await axe.run(document.querySelector("#workspace-COMMAND")!)).violations).toEqual([]);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+  });
+
   it("re-tapping COMMAND inside a destination returns to its index with the query kept", async () => {
     const screen = await render(<App />);
     await searchCommand(screen, "history");
