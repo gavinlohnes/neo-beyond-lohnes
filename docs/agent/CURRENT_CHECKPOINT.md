@@ -10,10 +10,14 @@
 - Focused Chromium evidence: TODAY 21/21 and navigation/TODAY regressions 93/93 PASS, including
   320 px no-overflow and a no-write SEE ALL path. TypeScript PASS. Interactive inspection at
   390×844 confirmed the active workout still leads, At a Glance remains compact, and SEE ALL lands
-  on DATA // NUMBERS. Production build and required protected review/CI remain.
-- Next: run the production build and risk check, push/open the PR, obtain independent exact-head
-  review and green CI, resolve findings, then request Gavin's merge approval. After merge, test the
-  experience through real daily use before adding customization, new summaries or another layer.
+  on DATA // NUMBERS. Production/PWA build PASS; risk classification confirms PROTECTED.
+- Independent review BLOCKED head `6f9d8ef5`: MORE → DAILY CONTROLS exposed a dead SEE ALL action,
+  and the checkpoint understated completed build evidence. The adapter now deliberately opens the
+  DATA workspace when no metric focus is supplied, with regression coverage; this changed head
+  requires renewed exact-head review and green CI.
+- Next: push the repair, obtain renewed independent exact-head review and green CI, resolve any
+  findings, then request Gavin's merge approval. After merge, test the experience through real
+  daily use before adding customization, new summaries or another layer.
 
 ---
 

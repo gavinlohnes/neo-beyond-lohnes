@@ -135,6 +135,8 @@ it('keeps displaced daily controls reachable in COMMAND without rendering them o
   await screen.getByRole('button', { name: /^TODAY TOOLS / }).click();
   await expect.element(screen.getByRole('button', { name: 'Open END DAY', exact: true })).toBeVisible();
   await expect.element(screen.getByRole('button', { name: 'MORE', exact: true })).toHaveAttribute('aria-current', 'page');
+  await screen.getByRole('button', { name: 'SEE ALL', exact: true }).click();
+  await expect.element(screen.getByRole('button', { name: 'DATA', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
 it('FIELD-AUTHORITY-001: missing guidance is calm, log-first, with one quiet check-in and no red', async () => {
