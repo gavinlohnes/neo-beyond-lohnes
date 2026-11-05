@@ -29,6 +29,18 @@
 
 ## Evidence and handoff
 
+- Final bounded polish authorized by Gavin's “We have 5% left… Make it amazing. Go”:
+  actual open workouts gain a prominent resume control; native routine progress indicators reflect
+  recorded ticks; interactive rows gain keyboard/hover feedback. No new data query, write command,
+  model, dependency or fabricated activity. Progress remains a step count, never a life score.
+  WholeLife/Life/RoutinePlayer: **22/22 PASS** including read-only workout resumption and native
+  progress values after explicit DONE. Architecture again PASS. After the final track-contrast
+  adjustment, WholeLife is **10/10 PASS** (including full axe) and the production/PWA build,
+  including TypeScript, is again PASS. The full-suite evidence below predates this small
+  presentation pass; exact-head CI and independent review remain pending.
+  [Resume preview](../screenshots/whole-life-001/resume.png) ·
+  [Recorded routine progress](../screenshots/whole-life-001/routine-progress.png).
+
 - Focused Chromium: 21/21 PASS across WholeLife, existing LIFE and RoutinePlayer tests. New
   acceptance covers 320/360/412/1440 px, full axe rules, partial read failure/retry, zero browse
   writes, workday routing, a genuinely empty day, draft/focus restoration and routine DONE feedback.

@@ -10,6 +10,7 @@ import { createProject, setProjectNext } from "../../src/application/projectComm
 import { createRoutine } from "../../src/application/routineCommands";
 import { saveDailyNote } from "../../src/application/dailyNoteCommands";
 import { getWholeLife } from "../../src/application/wholeLifeQueries";
+import { startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { settleVisuals } from "./helpers/settleVisuals";
 import "../../src/ui/screens/more/operator.css";
@@ -121,5 +122,18 @@ it("opens the routine player read-only and reflects completion after explicit DO
   await expect.element(screen.getByRole("heading", { name: "Put tomorrow's things together", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "CLOSE PLAYER", exact: true }).click();
   await expect.element(screen.getByText("1 / 2 steps recorded", { exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("progressbar", { name: "Recorded steps in An evening reset" })).toHaveAttribute("value", "1");
+  await expect.element(screen.getByRole("progressbar", { name: "Recorded steps in An evening reset" })).toHaveAttribute("max", "2");
   expect(await db.events.where("type").equals("ROUTINE_STEP_SET").count()).toBe(1);
+});
+
+it("surfaces an actual open workout and resumes through the shell without writing", async () => {
+  const { day } = await seed();
+  await startWorkout(day.id, "A", "STANDARD");
+  const count = await db.events.count();
+  const navigate = vi.fn();
+  const screen = await render(<LifeScreen active startAtOverview onNavigate={navigate} onTask={vi.fn()} />);
+  await screen.getByRole("button", { name: /Return to your workout/ }).click();
+  expect(navigate).toHaveBeenLastCalledWith({ kind: "workout" });
+  expect(await db.events.count()).toBe(count);
 });

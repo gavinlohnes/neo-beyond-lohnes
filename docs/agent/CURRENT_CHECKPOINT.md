@@ -16,6 +16,11 @@
   one-file/two-test skips; architecture/TypeScript/production/PWA build PASS. A final small player
   style-containment repair has renewed 21/21 focused PASS, architecture 455 files and build PASS;
   the full suite predates that containment repair. Exact-head remote CI/review remain pending.
+- Gavin authorized a final bounded pass with the remaining weekly budget. Prominent resumption of
+  an actual open workout, native recorded-step progress and keyboard/hover feedback are implemented.
+  Focused WholeLife/Life/RoutinePlayer **22/22 PASS**; final contrast-adjusted WholeLife **10/10 PASS**,
+  architecture and production/PWA/TypeScript build PASS. No new query, write command, schema or
+  dependency. The full-suite result above predates this small presentation pass.
 - [Actual App captures](../screenshots/whole-life-001/README.md) use synthetic records in a disposable
   browser context. Interactive inspection fixed the inherited 430 px desktop wrapper and tall phone
   introduction. CI repair #409 is already on master; live GitHub API access still returns Forbidden.

@@ -76,4 +76,14 @@
   .wl-hero { padding-bottom:20px; }
 }
 .whole-life button:active:not(:disabled) { transform:translateY(1px); }
+.whole-life .wl-resume { width:100%; margin-top:20px; padding:14px 16px; gap:14px; background:var(--surface-2); border-left:3px solid var(--red); }
+.wl-resume > span { flex:1; min-width:0; }
+.whole-life .wl-resume small { margin:0 0 5px; font:12px/1.5 var(--font-mono); letter-spacing:.06em; }
+.wl-resume strong { font-weight:500; font-size:18px; }
+.wl-routine-progress { display:block; appearance:none; width:100%; height:5px; border:0; margin:0 0 18px; background:var(--surface-2); color:var(--red); accent-color:var(--red); }
+.wl-routine-progress::-webkit-progress-bar { background:var(--surface-2); }
+.wl-routine-progress::-webkit-progress-value { background:var(--red); transition:width .18s ease-out; }
+.wl-routine-progress::-moz-progress-bar { background:var(--red); }
+.wl-agenda button:is(:hover,:focus-visible),.wl-routines button:is(:hover,:focus-visible) { background:var(--surface-2); box-shadow:inset 2px 0 var(--red); }
 @media(prefers-reduced-motion:reduce) { .whole-life *, .whole-life *::before, .whole-life *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+@media(prefers-reduced-motion:reduce) { .wl-routine-progress::-webkit-progress-value { transition:none; } }
