@@ -5,7 +5,7 @@ import axe from "axe-core";
 import Dexie from "dexie";
 import { setHiddenFeature } from "../../src/ui/hiddenFeatures";
 import { App } from "../../src/app/App";
-import { findCapabilities, SYSTEM_CAPABILITIES } from "../../src/ui/systemCatalog";
+import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES } from "../../src/ui/systemCatalog";
 import { startDay, updateSchedulePattern } from "../../src/application/commands";
 import { createSavedMeal } from "../../src/application/nutritionCommands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
@@ -121,9 +121,12 @@ describe("COMMAND catalog", () => {
     const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
     for (const name of before) expect(SYSTEM_CAPABILITIES.some((entry) => entry.label === name)).toBe(true);
     for (const summary of document.querySelectorAll<HTMLDetailsElement>(".command-group")) summary.open = true;
-    // MORE-TRIM-001: a row whose destination already has a home one tap away is search-only.
+    // MORE-LIBRARY-001 deliberately makes the newly added outside-app jobs browsable. Keep the
+    // complete library bounded overall and each job group short enough to scan; one-tap primary
+    // actions remain search-only.
     const browsed = SYSTEM_CAPABILITIES.filter((entry) => !("browse" in entry) && !("hiddenFeature" in entry));
-    expect(browsed.length).toBeLessThanOrEqual(25);
+    expect(browsed.length).toBeLessThanOrEqual(40);
+    for (const group of CAPABILITY_GROUPS) expect(browsed.filter((entry) => entry.group === group).length).toBeLessThanOrEqual(10);
     for (const entry of browsed) await expect.element(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true })).toBeVisible();
     for (const entry of SYSTEM_CAPABILITIES.filter((e) => "browse" in e)) {
       expect(screen.getByRole("button", { name: `${entry.label} ${entry.description}`, exact: true }).elements()).toHaveLength(0);

@@ -2749,3 +2749,16 @@ highlights and smart task lists, plus two new providers: **Google Calendar sync*
 sign-in) and **IFTTT webhooks** (off by default, events he chooses). Not selected: focus timer,
 sound, Obsidian export, time blocking, offer-only rules, Readwise/Raindrop import. Each item still needs
 its own brief, review and green CI. [Checklist](BEYOND_APPS_CHECKLIST.md).
+
+## 2026-11-04 — MORE-LIBRARY-001: understandable Home + Library architecture
+
+Gavin approved the researched direction derived from Garmin Connect, Oura, Apple Health, Google
+Health/Fitbit, WHOOP, Todoist, Day One, Notion and Samsung Health, and explicitly approved using
+**MORE instead of COMMAND**. The fourth primary destination is MORE: a complete visual library with
+search, Favorites, Recent, job-based groups, consistent icons and plain-language descriptions.
+TODAY remains the sparse current-moment FIELD rather than a generic dashboard; later approved
+slices may add restrained At a Glance customization, a universal capture action and a shared
+calendar/day-detail spine. Engine authority, required information, canonical records and explicit
+confirmation cannot be hidden or replaced by customization. Social feeds, engagement streaks,
+generic scores and unbounded card walls are not part of the direction. Implementation begins with
+the bounded protected [MORE-LIBRARY-001 brief](agent/MORE-LIBRARY-001.md).
