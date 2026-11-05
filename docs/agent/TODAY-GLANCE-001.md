@@ -31,4 +31,4 @@ Gavin approved starting **TODAY at a Glance from fresh master** on 2026-11-04 af
 - Starting commit: `6472d5fdb93dd7a94df6fea6a5d7b679a4807490`
 - Builder: Codex
 - Branch: `codex/today-at-a-glance-001`
-- PR: pending
+- PR: [#420](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/420)

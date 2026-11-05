@@ -2,7 +2,8 @@
 
 - Gavin approved starting TODAY at a Glance from fresh master after explicitly approving PR #419's
   merge on 2026-11-04. Brief: [TODAY-GLANCE-001.md](TODAY-GLANCE-001.md). Builder: Codex; branch
-  `codex/today-at-a-glance-001`; baseline `6472d5fdb93dd7a94df6fea6a5d7b679a4807490`; PR pending.
+  `codex/today-at-a-glance-001`; baseline `6472d5fdb93dd7a94df6fea6a5d7b679a4807490`;
+  active [PR #420](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/420).
 - The bounded first slice renames the existing metric grid AT A GLANCE and adds SEE ALL to the
   existing DATA home. Existing readings, evidence sheets, priority/order, one-red rule and writes
   are unchanged; no Engine, schema, event, backup, provider, dependency or recommendation change.
