@@ -1,9 +1,11 @@
-# TODAY-GLANCE-001 — active protected build
+# TODAY-GLANCE-001 — merged PR #420; daily-driver soak active
 
 - Gavin approved starting TODAY at a Glance from fresh master after explicitly approving PR #419's
   merge on 2026-11-04. Brief: [TODAY-GLANCE-001.md](TODAY-GLANCE-001.md). Builder: Codex; branch
   `codex/today-at-a-glance-001`; baseline `6472d5fdb93dd7a94df6fea6a5d7b679a4807490`;
-  active [PR #420](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/420).
+  merged [PR #420](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/420) at
+  `24c18890f9115f1f976fcc95cfa24a95a18438f1` on 2026-11-04 after independent exact-head PASS,
+  resolved findings and green required CI.
 - The bounded first slice renames the existing metric grid AT A GLANCE and adds SEE ALL to the
   existing DATA home. Existing readings, evidence sheets, priority/order, one-red rule and writes
   are unchanged; no Engine, schema, event, backup, provider, dependency or recommendation change.
@@ -11,13 +13,15 @@
   320 px no-overflow and a no-write SEE ALL path. TypeScript PASS. Interactive inspection at
   390×844 confirmed the active workout still leads, At a Glance remains compact, and SEE ALL lands
   on DATA // NUMBERS. Production/PWA build PASS; risk classification confirms PROTECTED.
-- Independent review BLOCKED head `6f9d8ef5`: MORE → DAILY CONTROLS exposed a dead SEE ALL action,
-  and the checkpoint understated completed build evidence. The adapter now deliberately opens the
-  DATA workspace when no metric focus is supplied, with regression coverage; this changed head
-  requires renewed exact-head review and green CI.
-- Next: push the repair, obtain renewed independent exact-head review and green CI, resolve any
-  findings, then request Gavin's merge approval. After merge, test the experience through real
-  daily use before adding customization, new summaries or another layer.
+- Independent review BLOCKED head `6f9d8ef5` because MORE → DAILY CONTROLS exposed a dead SEE ALL
+  action and the checkpoint understated build evidence. Head `bf1e3fb6` deliberately opens the DATA
+  workspace from that path, added regression coverage, and received renewed independent PASS; all
+  required CI passed before the owner-approved merge.
+- **Active report-only next step:** Gavin daily-drives TODAY at a Glance on the physical phone.
+  Verify that mode, one next action, logging and readings are immediately understandable; log a
+  real water or meal entry; open SEE ALL into DATA; return to TODAY; record any confusion, crowding,
+  buried job or trust gap. Do not add customization, new summaries or another major layer until
+  this evidence is reconciled into one bounded objective.
 
 ---
 
