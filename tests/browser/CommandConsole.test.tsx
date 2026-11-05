@@ -14,6 +14,7 @@ import { MAX_PHASE_ROWS } from "../../src/ui/screens/today/shiftClock";
 import { db } from "../../src/persistence/db";
 import { searchCommand, openTodayTools, revealAllGood } from "./helpers/todayTools";
 import { openMealInBody } from "./helpers/mealSheet";
+import { openLogTarget } from "./helpers/logSheet";
 
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -30,9 +31,9 @@ describe("Production Command Console", () => {
       vi.setSystemTime(new Date(2026, 9, day, hour));
       await startDay();
       const screen = await render(<App />);
-      for (const name of ["Log water", "Log a meal", "Open LOG"]) {
-        await expect.element(screen.getByRole("button", { name })).toBeVisible();
-      }
+      await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+      expect(screen.getByRole("button", { name: "Log water", exact: true }).elements()).toHaveLength(0);
+      expect(screen.getByRole("button", { name: "Log a meal", exact: true }).elements()).toHaveLength(0);
       expect(document.querySelectorAll("[data-shift-clock-row]").length).toBeLessThanOrEqual(MAX_PHASE_ROWS);
       if (day === 12) expect(screen.getByRole("button", { name: "ALL GOOD", exact: true }).elements()).toHaveLength(0);
       expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(0);
@@ -43,7 +44,7 @@ describe("Production Command Console", () => {
   it("uses the existing water workflow, preserves failed input and undo, then returns through existing navigation", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log water" }).click();
+    await openLogTarget(screen, "WATER");
     await screen.getByRole("button", { name: "Custom amount & entries" }).click();
     await expect.poll(() => document.activeElement?.textContent).toBe("+8 oz");
     await screen.getByRole("button", { name: "SHOW MANUAL ENTRY", exact: true }).click();
@@ -131,15 +132,12 @@ describe("Production Command Console", () => {
 
       const situation = document.querySelector<HTMLElement>(".today-situation");
       const guidance = document.querySelector<HTMLElement>(".console-guidance");
-      const operations = document.querySelector<HTMLElement>('.redesign-today > section[aria-label="Log"]');
+      const numbers = document.querySelector<HTMLElement>('.redesign-today > section[aria-label="Today\'s numbers"]');
       expect(situation).not.toBeNull();
       expect(guidance).not.toBeNull();
-      expect(operations).not.toBeNull();
-      expect(situation!.compareDocumentPosition(operations!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      // FIELD-AUTHORITY-001: a real recommendation leads the log row; an all-clear follows it.
-      const allClear = guidance!.querySelector(".all-clear") !== null;
-      const [first, second] = allClear ? [operations!, guidance!] : [guidance!, operations!];
-      expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(numbers).not.toBeNull();
+      expect(situation!.compareDocumentPosition(guidance!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(guidance!.compareDocumentPosition(numbers!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       // SUIT-001: SYSTEMS replaces the System Status line in the same place.
       expect(document.querySelector(".systems-line")).toBeNull();
       await expect.element(screen.getByRole("region", { name: "Next action" })).toBeVisible();
@@ -164,14 +162,12 @@ describe("Production Command Console", () => {
     expect(standing.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   });
 
-  it("does not abandon a TODAY write through same-tick persistent controls", async () => {
+  it("does not abandon a TODAY write while its check-in stays open", async () => {
     // COMMAND-CENTER-001: QUICK_LOG's +8 oz is gone; TODAY's own quick check-in is the in-flight write.
     const day = await startDay();
     const screen = await render(<App />);
     // TONIGHT-001: on a day off the check-in opens from the wake card.
     await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
-    // OWNER-GO-001: LOG left TODAY for the bottom bar; TODAY's own persistent controls are WATER and MEAL.
-    const controls = ["Log a meal", "Log water"].map(name => screen.getByRole("button", { name, exact: true }).element() as HTMLButtonElement);
     await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
     await revealAllGood(screen);
     await expect.element(screen.getByRole("button", { name: "ALL GOOD" })).toBeVisible();
@@ -181,7 +177,6 @@ describe("Production Command Console", () => {
     const write = vi.spyOn(db.events, "add").mockImplementation((...args) => Dexie.Promise.resolve(gate).then(() => original(...args)));
     try {
       (screen.getByRole("button", { name: "ALL GOOD" }).element() as HTMLButtonElement).click();
-      controls.forEach(button => button.click());
       await expect.element(screen.getByRole("dialog", { name: "CHECK IN", exact: true })).toBeVisible();
       expect(screen.getByRole("dialog").elements()).toHaveLength(1);
       await expect.element(screen.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-current", "page");

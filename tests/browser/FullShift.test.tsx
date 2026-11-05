@@ -4,6 +4,7 @@ import { page } from "vitest/browser";
 import axe from "axe-core";
 import { App } from "../../src/app/App";
 import { db } from "../../src/persistence/db";
+import { openLogTarget } from "./helpers/logSheet";
 import { getHydrationEntries } from "../../src/application/queries";
 import { getMealEntries } from "../../src/application/nutritionQueries";
 import { seedRotation } from "./helpers/rotation";
@@ -55,7 +56,7 @@ it("walks one whole shift through the screens: preflight, a late-logged meal, a 
   // 17:30 — no moment now; a quick-add meal eaten at 17:10, logged late.
   screen = await open(t(27, 17, 30), "2-after-start");
   expect(document.querySelector(".shift-change")).toBeNull();
-  await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
+  await openLogTarget(screen, "MEAL");
   let sheet = screen.getByRole("dialog", { name: "MEAL", exact: true });
   await sheet.getByRole("textbox", { name: "Pick a time" }).fill("17:10");
   await sheet.getByRole("button", { name: "QUICK ADD", exact: true }).click();
@@ -68,13 +69,13 @@ it("walks one whole shift through the screens: preflight, a late-logged meal, a 
 
   // 21:00 — water now, then moved: it was really drunk at 20:30.
   screen = await open(t(27, 21), "3-mid-shift");
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
   await sheet.getByRole("button", { name: "+16 oz", exact: true }).click();
   await expect.element(screen.getByText("16 oz recorded.", { exact: true })).toBeVisible();
   // The comms line re-reads at once: never "Water 0 oz" after a drink.
   await expect.poll(() => document.querySelector(".comms-line__text")?.textContent ?? "").not.toMatch(/Water 0 oz/);
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
   await sheet.getByRole("button", { name: "Custom amount & entries", exact: true }).click();
   await sheet.getByText(/SHOW TODAY.S ENTRIES/).click();

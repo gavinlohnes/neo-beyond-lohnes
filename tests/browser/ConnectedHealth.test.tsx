@@ -12,6 +12,7 @@ import { getHydrationEntries } from "../../src/application/queries";
 import { getBodyInsights } from "../../src/application/bodyInsightsQueries";
 import { getHealthSources, healthDayStart, offsetHealthDay } from "../../src/application/healthRecordQueries";
 import { db } from "../../src/persistence/db";
+import { openLogTarget } from "./helpers/logSheet";
 
 vi.mock("../../src/application/bodyInsightsQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/bodyInsightsQueries")>();
@@ -63,7 +64,7 @@ for (const width of [320, 360, 412]) it(`selects an overnight health day and its
   expect(await db.events.toArray()).toEqual(before);
   // An explicit ordinary log still belongs to the real active day after historical browsing.
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   await screen.getByRole("dialog").getByRole("button", { name: "+8 oz", exact: true }).click();
   await expect.poll(async () => (await getHydrationEntries(current.id)).length).toBe(2);
   expect((await getHydrationEntries(prior.id))[0]?.effectiveAmountOz).toBe(12);
@@ -187,7 +188,7 @@ it.each([false, true])("keeps TODAY FUEL accessible values current after protein
   await expect.poll(() => db.events.where("type").equals("PROTEIN_LOGGED").count()).toBe(2);
   await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   await screen.getByRole("dialog").getByRole("button", { name: "+16 oz", exact: true }).click();
   await screen.getByRole("button", { name: "DATA", exact: true }).click();
   await expect.element(screen.getByRole("button", { name: "water history", exact: true })).toHaveTextContent("24 oz");

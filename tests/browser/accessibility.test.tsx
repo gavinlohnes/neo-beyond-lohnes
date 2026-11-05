@@ -60,7 +60,7 @@ describe("accessibility (real browser, axe-core)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "AT A GLANCE", exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

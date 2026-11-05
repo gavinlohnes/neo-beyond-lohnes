@@ -76,6 +76,7 @@
 /* REDESIGN-001: SYSTEMS left the hero; keep the full city scene below wrapped
    mode context rather than borrowing the removed status line's height. */
 .redesign-today .cc-mode .cc-scene { height: 88px; }
+.redesign-today .cc-mode[data-mode="SCHEDULED_SHIFT"] .cc-scene { height: 44px; }
 @media (max-width: 370px) { .redesign-today .cc-mode .cc-scene { height: 68px; } }
 
 .redesign-today .mode-empty .cc-scene { height: 120px; }

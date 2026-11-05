@@ -57,7 +57,7 @@ describe("Focused BODY meals", () => {
     await openMealInBody(screen);
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished shift meal");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
-    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log a meal");
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open LOG");
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
     await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();

@@ -6,15 +6,13 @@ import { TodayRoutine } from "../../components/TodayRoutine";
 import { routineMomentFor } from "../../../application/routineCommands";
 import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
-import { LogActions } from "../../components/RecordSheets";
-import type { RecordSheetTarget } from "../../recordSheets";
 import { LogSheet } from "../../components/LogSheet";
 import { TodayReviewSupport } from "../../components/TodayReviewSupport";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
 import { SuitLines } from "./SuitLines";
@@ -272,7 +270,6 @@ export function TodayScreen({
   onOpenWeeklyReview,
   onOpenSystems,
   onOpenCave,
-  onOpenRecordSheet,
   operationsOnly = false,
   commandFocus, onReturnToFullTools,
   toolsRequest = 0,
@@ -299,7 +296,6 @@ export function TodayScreen({
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
-  onOpenRecordSheet?: (target: RecordSheetTarget) => void;
   operationsOnly?: boolean;
   commandFocus?: ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" | null;
   onReturnToFullTools?: () => void;
@@ -2107,13 +2103,13 @@ export function TodayScreen({
           </span>
         </div>
         <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}${calorieTile ? " cc-fuel--calories" : ""}`} role="group" aria-label={fuelLine}>
-          {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
+          {tile("protein", "PROTEIN", <><b><DecryptNumber value={Math.round(minimumDayProteinG)} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
             behind(proteinPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
             `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g${paceWords(proteinPace)}`, steady(proteinPace))}
           {calorieTile && <button type="button" className="cc-fuel-wide" disabled={busy}
             aria-label={`Calories eaten ${eatenToday === null ? "not logged" : eatenToday.toLocaleString("en-US")}, burned ${burnedToday === null ? "not measured" : `${burnedToday.toLocaleString("en-US")} so far`}, open calories`} onClick={openMeasured("calories")}>
-            <span className="cc-flab">CALORIES</span><span className="cc-num"><b>{eatenToday === null ? "—" : eatenToday.toLocaleString("en-US")}</b><small>eaten</small></span>
+            <span className="cc-flab">CALORIES</span><span className="cc-num"><b>{eatenToday === null ? "—" : Math.round(eatenToday).toLocaleString("en-US")}</b><small>eaten</small></span>
             <span className="cc-flab">{burnedToday === null ? "BURNED —" : `BURNED ${burnedToday.toLocaleString("en-US")}`}</span>
           </button>}
           {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>oz</small></>,
@@ -2488,42 +2484,19 @@ export function TodayScreen({
       </>}
   </div>;
 
-  // FIELD-AUTHORITY-001: a real next thing (day start, an operation, a shift-down, the late sleep
-  // prompt or an Engine recommendation that asks for something) leads TODAY; otherwise logging leads.
+  // FIELD-AUTHORITY-001 + TODAY-FOLD-001: a real next thing leads TODAY. The permanent center LOG
+  // action now owns ordinary logging, so TODAY no longer duplicates WATER and MEAL above the fold.
   const nextIsReal = !day || dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId
     || lateRecoverWithoutSleep || shiftClock.phase === "EXPECTED_POST_WORK" || (!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED");
   const statusSignal = !!systemStatus && systemStatus.level !== "GREEN" && systemStatus.level !== "NO_READ" && !nextIsReal;
   const checkInOwnedHere = !!day && !checkIn && dominant !== "OPERATION_CONFLICT" && !activeWorkout && !activeResetId && !activeShiftDownId && !lateRecoverWithoutSleep;
-  const logSection = <>
-    <section aria-label="Log">{onOpenRecordSheet ? <LogActions open={onOpenRecordSheet} busy={busy} isInFlight={() => busyRef.current} /> : <ConsoleControls
-          onWaterVisibilityChange={setWaterControlsVisible}
-          onLogWater={handleMinimumDayLogWater}
-          lastWaterAmount={lastWaterAmount}
-          busy={busy}
-          isInFlight={() => busyRef.current}
-          onOpenWater={onOpenBody ? () => onOpenBody("water") : undefined}
-          onOpenMeal={onOpenBody ? () => onOpenBody("meal") : undefined}
-          loadMeals={getRecentSavedMeals}
-          onLogMeal={handleLogSavedMeal}
-          onOpenLog={{
-            ...(onOpenBody ? {
-              water: () => onOpenBody("water"),
-              meal: () => onOpenBody("meal"),
-              sleep: () => onOpenBody("sleep"),
-              weight: () => onOpenBody("weight"),
-              // An urge is logged against a quit habit; without one there's nothing to log yet.
-              ...(quitHabitSetUp ? { urge: () => onOpenBody("urge") } : {}),
-            } : {}),
-            note: openFastCapture,
-            ...(onOpenTrain ? { workout: () => onOpenTrain("WORKOUT") } : {}),
-          }}
-        />}
+  const supportSection = <div className="today-context-support">
       <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
       {/* POST-SHIFT-001 (#373): right after a shift, hands-free logging is one tap. Quiet; never a prompt. */}
       {day && scheduledClock.phase === "EXPECTED_POST_WORK" && !activeWorkout && !activeResetId && !activeShiftDownId && <button type="button" className="btn-secondary today-drive-home" disabled={busy} onClick={() => window.dispatchEvent(new Event(DRIVE_HOME_EVENT))}>DRIVE HOME · HANDS-FREE</button>}
       {/* ROUTINES-001 (owner ruling 2026-10-31): one quiet row, only the current moment's routines. */}
-      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: predictedWorkPhase(shiftClockInput), workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} /></section>
-  </>;
+      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: predictedWorkPhase(shiftClockInput), workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
+  </div>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
         {checkInOutcome && <p className="meta check-in-outcome" role="status">{checkInOutcome}</p>}
@@ -2709,10 +2682,8 @@ export function TodayScreen({
           </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
     {/* SYNC-002: the shell's one line here (what SYNC GARMIN brought back), right under the hero. */}
     {banners && <div className="today-banners">{banners}</div>}
-    {/* Keyed so a state change reorders the two sections without remounting them (focus and drafts survive). */}
-    {(nextIsReal ? [["next", nextSection], ["log", logSection]] as const : [["log", logSection], ["next", nextSection]] as const).map(([key, node]) => <Fragment key={key}>{node}</Fragment>)}
-    {brief}
-    <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} />
+    {nextSection}
+    {supportSection}
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"
@@ -2728,6 +2699,8 @@ export function TodayScreen({
       </button>}
 
     </section>
+    {brief}
+    <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} />
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
     <SleepMetricSheet open={measuredOpen === "sleep"} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />

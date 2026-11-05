@@ -5,11 +5,19 @@ export function mealButton(screen: Screen) { return screen.getByRole("button", {
 
 /** Existing preset management/correction form, now behind the production meal sheet. */
 export async function openMealInBody(screen: Screen) {
-  const appShell = screen.container.querySelector("#workspace-TODAY") !== null;
-  await mealButton(screen).click();
+  const primary = screen.getByRole("navigation", { name: "Primary", exact: true });
+  await expect.poll(() => primary.elements().length + mealButton(screen).elements().length).toBeGreaterThan(0);
+  const appShell = primary.elements().length > 0;
+  if (appShell) {
+    await primary.getByRole("button", { name: "Open LOG", exact: true }).click();
+    await screen.getByRole("dialog", { name: "LOG", exact: true }).getByRole("button", { name: "MEAL", exact: true }).click();
+  } else await mealButton(screen).click();
   // Wait for the sheet's contents first; checking synchronously can run before it renders and skip the route.
   await expect.poll(() => document.querySelector("dialog[open] button") !== null).toBe(true);
-  await expect.poll(() => screen.getByRole("button", { name: /^New meal or manual entry/ }).elements().length + screen.getByRole("button", { name: "More meal tools & corrections", exact: true }).elements().length).toBeGreaterThan(0);
+  const loadingClose = () => screen.getByRole("dialog", { name: "MEAL", exact: true }).getByRole("button", { name: "CLOSE", exact: true }).elements().some((button) => (button as HTMLButtonElement).disabled);
+  await expect.poll(() => screen.getByRole("button", { name: /^New meal or manual entry/ }).elements().length + screen.getByRole("button", { name: "More meal tools & corrections", exact: true }).elements().length + screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true }).elements().length + Number(loadingClose())).toBeGreaterThan(0);
+  if (loadingClose()) return;
+  if (screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true }).elements().length) return;
   const oldRoute = screen.getByRole("button", { name: /^New meal or manual entry/ });
   // Small Steps in App uses the older chooser before RecordSheets. An isolated TODAY harness
   // only calls its DATA callback, so it has no second sheet to wait for.
@@ -20,7 +28,14 @@ export async function openMealInBody(screen: Screen) {
 }
 /** DOM clicks avoid a locator scrolling away the origin under test. */
 export async function openMealInBodyDom(screen: Screen) {
-  (mealButton(screen).element() as HTMLElement).click();
+  const primary = screen.getByRole("navigation", { name: "Primary", exact: true });
+  await expect.poll(() => primary.elements().length + mealButton(screen).elements().length).toBeGreaterThan(0);
+  const appShell = primary.elements().length > 0;
+  if (appShell) {
+    (primary.getByRole("button", { name: "Open LOG", exact: true }).element() as HTMLElement).click();
+    await expect.poll(() => screen.getByRole("dialog", { name: "LOG", exact: true }).elements().length).toBe(1);
+    (screen.getByRole("dialog", { name: "LOG", exact: true }).getByRole("button", { name: "MEAL", exact: true }).element() as HTMLElement).click();
+  } else (mealButton(screen).element() as HTMLElement).click();
   await expect.poll(() => document.querySelector("dialog[open]")).not.toBeNull();
   const option = () => [...document.querySelectorAll<HTMLButtonElement>("dialog[open] button")]
     .find((button) => button.textContent?.startsWith("More meal tools & corrections") || button.textContent?.startsWith("New meal or manual entry"));

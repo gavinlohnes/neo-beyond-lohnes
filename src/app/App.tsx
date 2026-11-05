@@ -753,7 +753,6 @@ function AppWorkspaces() {
           <RootErrorBoundary active={tab === "TODAY"}>
             <TodayScreen
               active={tab === "TODAY"}
-              onOpenRecordSheet={openRecordSheet}
               mealRefreshKey={todayRefreshKey}
               onReturnFromCapture={captureOrigin ? () => { showTab(captureOrigin); setCaptureOrigin(null); } : undefined}
               onWorkEnded={() => setWorkEndedKey((k) => k + 1)}

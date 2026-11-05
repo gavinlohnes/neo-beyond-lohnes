@@ -2770,3 +2770,14 @@ Gavin approved starting TODAY at a Glance after MORE-LIBRARY-001 merged. This bo
 - TODAY's existing live metric grid is named **AT A GLANCE**. It remains factual FIELD context, not a second recommendation or engagement dashboard.
 - **SEE ALL** opens the existing DATA home, establishing the dependable personal-library path. Individual metric tiles retain their existing evidence routes.
 - The first slice adds no new metric, trend, card customization or persistence. Those wait until Gavin tests this foundation as an actual daily-driver experience.
+## TODAY-FOLD-001 — LOG owns logging; TODAY reveals the day sooner (owner approved 2026-11-05)
+
+Gavin reviewed the first physical-phone TODAY at a Glance screenshots, approved the tighter fold,
+and explicitly removed TODAY's WATER and MEAL buttons because the permanent center LOG action owns
+those jobs. This amends FIELD-AUTHORITY-001's fixed action row and the corresponding placement rules.
+
+- TODAY keeps mode/COMMS and one next action first, then AT A GLANCE before recessed Alfred support.
+- WATER and MEAL remain canonical and equally available in LOG and DATA; only duplicate shortcuts
+  leave TODAY. This is consolidation, not capability removal.
+- The on-shift decorative scene compacts, header actions align, and glance-only protein/calorie
+  values use whole-unit display precision. Exact stored facts and detail evidence remain unchanged.
