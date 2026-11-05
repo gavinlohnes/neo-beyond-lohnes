@@ -1,4 +1,37 @@
-# TODAY-GLANCE-001 — active protected build
+# WHOLE-LIFE-001 — working prototype (2026-11-05)
+
+- Gavin approved a dramatic whole-life cockpit prototype, corrected the emphasis from shift work
+  to everyday life, then directed “Make it happen.” Brief: [WHOLE-LIFE-001.md](WHOLE-LIFE-001.md).
+  Builder Codex; branch `codex/whole-life-001`; fresh master
+  `95947a7ba539ab2691ed8e4aa24696a4da67e336` (TODAY-FOLD #422). PR pending.
+- Implemented a whole-life overview in LIFE with a YOUR LIFE entry on primary TODAY, actual dated
+  tasks, project next steps, routine playback/live recorded progress, daily notes, people/home,
+  and routes to habits, memory, collections, calendar, training, food and recovery. Existing area
+  editors stay mounted for drafts. No Engine, schema, event, backup, dependency or provider change.
+- Protected presentation under the owner's bounded approval; existing primary tabs/recommendation
+  authority remain. Independent exact-head review and green CI required; no self-merge/deployment.
+- Chromium acceptance: 21/21 PASS including 320/360/412/1440 widths, full axe, a task inside the phone
+  fold, no-write browsing, source failure/retry, free/work days, retained draft/focus and canonical
+  routine completion feedback. Full verify at `f866f7af`: **433 files / 3,523 tests PASS**, existing
+  one-file/two-test skips; architecture/TypeScript/production/PWA build PASS. A final small player
+  style-containment repair has renewed 21/21 focused PASS, architecture 455 files and build PASS;
+  the full suite predates that containment repair. Exact-head remote CI/review remain pending.
+- Gavin authorized a final bounded pass with the remaining weekly budget. Prominent resumption of
+  an actual open workout, native recorded-step progress and keyboard/hover feedback are implemented.
+  Focused WholeLife/Life/RoutinePlayer **22/22 PASS**; final contrast-adjusted WholeLife **10/10 PASS**,
+  architecture and production/PWA/TypeScript build PASS. No new query, write command, schema or
+  dependency. The full-suite result above predates this small presentation pass.
+- [Actual App captures](../screenshots/whole-life-001/README.md) use synthetic records in a disposable
+  browser context. Interactive inspection fixed the inherited 430 px desktop wrapper and tall phone
+  introduction. CI repair #409 is already on master; live GitHub API access still returns Forbidden.
+- Branch and captures pushed; PR creation failed with `Post https://api.github.com/graphql:
+  Forbidden`. No PR number or independent review claimed. Next: open the one prototype PR,
+  obtain independent exact-head review and green CI, then Gavin's merge/deployment decision. Gavin
+  judges the working experience before further expansion; the complete life vision is not claimed done.
+
+---
+
+# TODAY-GLANCE-001 — historical; merged as #420
 
 - Gavin approved starting TODAY at a Glance from fresh master after explicitly approving PR #419's
   merge on 2026-11-04. Brief: [TODAY-GLANCE-001.md](TODAY-GLANCE-001.md). Builder: Codex; branch

@@ -1,4 +1,5 @@
 import { describeShiftRun, shiftRun } from "../../../application/shiftRun";
+import "../more/wholeLife.css";
 import { DRIVE_HOME_EVENT } from "../../driveHomeEvent";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { WorkPreparation } from "../../components/WorkPreparation";
@@ -263,6 +264,7 @@ export function TodayScreen({
   captureRequest = 0,
   onReturnFromCapture,
   onOpenPlan,
+  onOpenLife,
   onViewCommitments,
   onOpenTrain,
   onOpenBody,
@@ -286,6 +288,7 @@ export function TodayScreen({
   captureRequest?: number;
   onReturnFromCapture?: (() => void) | undefined;
   onOpenPlan?: () => void;
+  onOpenLife?: () => void;
   onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: TrainDestination) => void;
   onOpenWeeklyReview?: () => void;
@@ -2683,6 +2686,9 @@ export function TodayScreen({
     {/* SYNC-002: the shell's one line here (what SYNC GARMIN brought back), right under the hero. */}
     {banners && <div className="today-banners">{banners}</div>}
     {nextSection}
+    {onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
+      <div><strong>YOUR LIFE</strong><span>Plans, people, projects & a little breathing room.</span></div><span aria-hidden="true">↗</span>
+    </button>}
     {supportSection}
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
@@ -3119,6 +3125,9 @@ export function TodayScreen({
         {renderToolsItem("CAPTURE")}
         <p className="meta">Nothing is recorded until you tap CAPTURE. Unfinished input stays here while you navigate.</p>
       </section>}
+      {onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
+        <div><strong>YOUR LIFE</strong><span>Plans, people, projects & a little breathing room.</span></div><span aria-hidden="true">↗</span>
+      </button>}
       {onOpenPlan && <button type="button" className="today-plan-link" onClick={onOpenPlan} disabled={busy}>
         <span>PLAN TODAY</span><span>Your commitments & dates →</span>
       </button>}

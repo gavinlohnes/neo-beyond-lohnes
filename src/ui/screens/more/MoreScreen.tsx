@@ -573,7 +573,7 @@ export function MoreScreen({
   }
 
   return (
-    <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}${view === "BATCOMPUTER" ? " more-batcomputer" : ""}`}>
+    <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}${view === "BATCOMPUTER" ? " more-batcomputer" : ""}${view === "LIFE" ? " more-whole-life" : ""}`}>
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
           <button ref={backRef} type="button" className="btn-secondary more-return" onClick={() => { if (returnToUnderstanding) { setView("REVIEW"); return; } if (onReturnToToday) { onReturnToToday(); return; } setReviewHistory(false); reviewOrigin.current = null; setHistoryFocusDayId(null); setHistoryFocusEventId(null); setView("MENU"); }}>{returnToUnderstanding ? "BACK TO REVIEW" : onReturnToToday ? "BACK TO TODAY" : "BACK TO MORE"}</button>
           <div hidden={view !== "DAILY_CONTROLS"}>{visited.has("DAILY_CONTROLS") && <DailyControls onReturnToFullTools={() => setDailyFocus(null)} commandFocus={dailyFocus} banners={dailyFocus === null ? dailyBanners : undefined} shiftHandoffRefreshKey={dailyRefreshKey} onWorkEnded={() => onDailyContextChanged?.()} onWorkContextChanged={() => onDailyContextChanged?.()} captureRequest={captureRequest} active={active && view === "DAILY_CONTROLS"} openToolsOnMount onOpenBody={(focus) => { onOpenDestination?.(focus ? { kind: "body", focus } : { kind: "workspace", tab: "BODY" }); }} onOpenTrain={() => { onOpenDestination?.({ kind: "workout" }); }} onOpenSystems={() => setView("SYSTEMS")} />}</div>
@@ -598,7 +598,11 @@ export function MoreScreen({
             setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
           }} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} onRunCapability={runCapability} hiddenCapability={(entry) => "hiddenFeature" in entry && !hiddenFeatures[entry.hiddenFeature]} />}
-          <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} /></>}</div>
+          <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} startAtOverview onTask={(id) => { setIntentFocus({ kind: "OBLIGATION", obligationId: id }); setView("INTENT"); }} onNavigate={(destination) => {
+            if (destination.kind === "more") setView(destination.view);
+            else if (destination.kind === "section") { setView("MENU"); revealSection(destination.section); }
+            else onOpenDestination?.(destination);
+          }} /></>}</div>
           <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} /></>}</div>
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
           <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
