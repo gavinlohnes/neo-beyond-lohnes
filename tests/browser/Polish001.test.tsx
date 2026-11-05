@@ -12,6 +12,7 @@ import { setModePin } from "../../src/application/modePinQueries";
 import { MODE_ORDER } from "../../src/ui/screens/today/shiftClock";
 import { ModeCity, ModeScene } from "../../src/ui/screens/today/ModeIdentity";
 import { openMealInBody } from "./helpers/mealSheet";
+import { openLogTarget } from "./helpers/logSheet";
 
 let dayId: string;
 beforeEach(async () => {
@@ -26,7 +27,7 @@ afterEach(async () => { await cleanup(); vi.restoreAllMocks(); vi.useRealTimers(
 
 it("logs water in two taps, stays on TODAY, guards a duplicate tap, and confirms without UNDO", async () => {
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
   const amount = sheet.getByRole("button", { name: "+12 oz", exact: true });
   await expect.element(amount).toBeEnabled();
@@ -43,7 +44,7 @@ it("logs water in two taps, stays on TODAY, guards a duplicate tap, and confirms
 it("repeats the latest canonical water amount", async () => {
   await logWater(dayId, 12);
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   await screen.getByRole("button", { name: "Repeat last (12 oz)", exact: true }).click();
   await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(24);
   expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(2);
@@ -51,7 +52,7 @@ it("repeats the latest canonical water amount", async () => {
 
 it("keeps a failed water sheet open for one safe retry", async () => {
   const screen = await render(<App />);
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   const failure = vi.spyOn(db.events, "add").mockRejectedValue(new Error("Disk full"));
   await screen.getByRole("button", { name: "+8 oz", exact: true }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Water didn't save");
@@ -62,7 +63,7 @@ it("keeps a failed water sheet open for one safe retry", async () => {
 });
 
 async function fillMeal(screen: Awaited<ReturnType<typeof render>>) {
-  await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
+  await openLogTarget(screen, "MEAL");
   await screen.getByRole("dialog").getByRole("button", { name: "NEW MEAL", exact: true }).click();
   await screen.getByRole("textbox", { name: "New meal name" }).fill("Shift dinner");
   await screen.getByRole("spinbutton", { name: "New meal Calories", exact: true }).fill("600");
@@ -123,7 +124,7 @@ it("NOT YET records no sleep or other domain event", async () => {
   expect(await db.events.toArray()).toEqual(before);
 });
 
-it("holds header/card/numbers/actions order and the phone fold in every pinned mode", async () => {
+it("holds header/card/numbers order and the phone fold in every pinned mode", async () => {
   await submitCheckIn(dayId, { energy: 1, stress: 5, mood: 1, soreness: 5, alcoholUrge: 5 });
   for (const [width, height] of [[360, 800], [390, 844]]) {
     await page.viewport(width!, height!);
@@ -135,12 +136,10 @@ it("holds header/card/numbers/actions order and the phone fold in every pinned m
       const header = document.querySelector(".today-situation")!.getBoundingClientRect();
       const card = document.querySelector(".console-guidance")!.getBoundingClientRect();
       const numbers = document.querySelector(".today-numbers")!.getBoundingClientRect();
-      const actions = document.querySelector(".console-controls")!.getBoundingClientRect();
-      // FIELD-AUTHORITY-001: a real (RED) recommendation leads; the log row follows within the fold.
+      // TODAY-FOLD-001: a real (RED) recommendation leads directly into At a Glance.
       expect(header.bottom).toBeLessThanOrEqual(card.top);
-      expect(card.bottom).toBeLessThanOrEqual(actions.top);
-      expect(actions.bottom).toBeLessThanOrEqual(numbers.top);
-      expect(actions.bottom).toBeLessThanOrEqual(height! - 64);
+      expect(card.bottom).toBeLessThanOrEqual(numbers.top);
+      expect(document.querySelector(".console-controls")).toBeNull();
       // POLISH-002 review: "See the reasoning" keeps a full 44px target while the fold holds.
       expect(document.querySelector(".console-guidance .why > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       // POLISH-002: buildings stand below the mode name and meta, as in the prototype; the beam

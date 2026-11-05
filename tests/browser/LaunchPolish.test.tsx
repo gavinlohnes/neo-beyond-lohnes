@@ -24,7 +24,7 @@ describe("Launch polish (real browser)", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "AT A GLANCE", exact: true })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Orient", level: 2 }).elements()).toHaveLength(0);
     expect(document.querySelector(".systems-line")).toBeNull();
     expect(document.querySelector(".console-guidance")).not.toBeNull();

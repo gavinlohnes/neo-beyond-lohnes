@@ -120,14 +120,7 @@ describe("Shift Clock — on shift (18:00 → 06:00)", () => {
     expect(screen.getByRole("button", { name: "MARK WORK ENDED" }).elements()).toHaveLength(0);
     expect(screen.getByText("Check in when you can", { exact: true }).elements()).toHaveLength(0);
 
-    await screen.getByRole("button", { name: "Log water" }).click();
-    await screen.getByRole("button", { name: "More → DATA water" }).click();
-    expect(onOpenBody).toHaveBeenLastCalledWith("water");
-    await openMealInBody(screen);
-    expect(onOpenBody).toHaveBeenLastCalledWith("meal");
-    await screen.getByRole("button", { name: "Open LOG" }).click();
-    await screen.getByRole("dialog", { name: "LOG" }).getByRole("button", { name: /^Urge/ }).click();
-    expect(onOpenBody).toHaveBeenLastCalledWith("urge");
+    expect(onOpenBody).not.toHaveBeenCalled();
   });
 });
 

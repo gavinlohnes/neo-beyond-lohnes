@@ -7,6 +7,7 @@ import { db } from "../../src/persistence/db";
 import { startDay } from "../../src/application/commands";
 import { createSavedMeal } from "../../src/application/nutritionCommands";
 import { getMealEntries, getTotalMealProteinGrams } from "../../src/application/nutritionQueries";
+import { openLogTarget } from "./helpers/logSheet";
 let dayId: string;
 beforeEach(async () => { window.history.replaceState(null, "", window.location.pathname); vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 12, 17, 10)); dayId = (await startDay()).id; });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
@@ -14,7 +15,7 @@ const meal = { name: "Dinner", calories: 600, proteinG: 40, carbsG: 50, fatG: 20
 for (const width of [320,360,390,412]) it(`logs a saved meal in two taps without navigating, once, at ${width}`, async () => {
   await page.viewport(width,844); await createSavedMeal(meal);
   const screen = await render(<App />);
-  await screen.getByRole('button',{name:'Log a meal',exact:true}).click();
+  await openLogTarget(screen, 'MEAL');
   const sheet = screen.getByRole('dialog',{name:'MEAL',exact:true});
   await expect.element(sheet.getByRole('button',{name:'Log Dinner',exact:true})).toBeVisible();
   expect((await axe.run(sheet.element())).violations).toEqual([]);
@@ -27,7 +28,7 @@ for (const width of [320,360,390,412]) it(`logs a saved meal in two taps without
   expect(await db.events.where('type').equals('MEAL_LOGGED').count()).toBe(1);
 });
 it('logs an unsaved new meal with optional macros without creating a preset', async()=>{
-  const screen=await render(<App />); await screen.getByRole('button',{name:'Log a meal',exact:true}).click();
+  const screen=await render(<App />); await openLogTarget(screen, 'MEAL');
   await screen.getByRole('searchbox',{name:'Search your meals and foods',exact:true}).fill('Soup');
   await screen.getByRole('button',{name:'NEW MEAL ‘Soup’',exact:true}).click();
   const sheet=screen.getByRole('dialog',{name:'NEW MEAL',exact:true});
@@ -40,7 +41,7 @@ it('logs an unsaved new meal with optional macros without creating a preset', as
   expect(await db.savedMeals.count()).toBe(0);
 });
 it('retains checked-save input on an atomic write failure, then retries exactly once', async()=>{
-  const screen=await render(<App />);await screen.getByRole('button',{name:'Log a meal',exact:true}).click();
+  const screen=await render(<App />);await openLogTarget(screen, 'MEAL');
   await screen.getByRole('button',{name:'NEW MEAL',exact:true}).click();
   const sheet=screen.getByRole('dialog',{name:'NEW MEAL',exact:true});
   await sheet.getByRole('textbox',{name:'New meal name'}).fill('Test meal');
@@ -58,7 +59,7 @@ it('retains checked-save input on an atomic write failure, then retries exactly 
 });
 it('updates servings in place and logs scaled canonical macros', async()=>{
   await createSavedMeal(meal);const screen=await render(<App />);
-  await screen.getByRole('button',{name:'Log a meal',exact:true}).click();
+  await openLogTarget(screen, 'MEAL');
   await screen.getByRole('dialog').getByRole('button',{name:'Servings for Dinner',exact:true}).click();
   const sheet=screen.getByRole('dialog',{name:'SERVINGS',exact:true}); const node=sheet.element();
   await sheet.getByRole('button',{name:'0.5 servings',exact:true}).click(); expect(sheet.element()).toBe(node);
@@ -114,7 +115,7 @@ for (const shortcut of ['water','meal','weight','urge'] as const) it(`opens ?go=
 
 it('explains a water write failure, keeps the sheet open and retries without duplicate writes', async () => {
   const screen = await render(<App />);
-  await screen.getByRole('button', { name: 'Log water', exact: true }).click();
+  await openLogTarget(screen, 'WATER');
   const sheet = screen.getByRole('dialog', { name: 'WATER', exact: true });
   const fail = vi.spyOn(db.events, 'add').mockRejectedValue(new Error('Disk full.'));
   await sheet.getByRole('button', { name: '+12 oz', exact: true }).click();

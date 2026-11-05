@@ -82,7 +82,7 @@ describe("HUD-001 — HUD design system", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "AT A GLANCE", exact: true })).toBeVisible();
     for (const sel of [".btn-secondary", ".btn-primary"]) {
       const el = document.querySelector(sel);
       if (el) expect(getComputedStyle(el).clipPath, sel).toMatch(/^polygon/);

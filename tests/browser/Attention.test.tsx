@@ -38,7 +38,7 @@ it.each(cases)("keeps optional prose below action/logging %s; actual phase owns 
   expect(support.open).toBe(false);
   await expect.element(screen.getByText("Optional supporting brief", { exact: true })).not.toBeVisible();
   expect(workspace.querySelector('[aria-label="Next action"]')!.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(workspace.querySelector('[aria-label="Log"]')!.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(workspace.querySelector('[aria-label="Today\'s numbers"]')!.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   if (work === "OFF") {
     await expect.element(screen.getByLabelText("Review when you want", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Saved weekly reflection", { exact: true })).not.toBeVisible();

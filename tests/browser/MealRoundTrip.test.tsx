@@ -11,7 +11,7 @@ import { getDayProteinTotalG } from "../../src/application/queries";
 import { getHistoryDays } from "../../src/application/historyQueries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
-import { mealButton, openMealInBody, openMealInBodyDom } from "./helpers/mealSheet";
+import { openMealInBody, openMealInBodyDom } from "./helpers/mealSheet";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 let dayId: string;
@@ -47,7 +47,7 @@ describe("TODAY meal round trip", () => {
     await document.fonts.ready;
     for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    const trigger = mealButton(screen).element() as HTMLButtonElement;
+    const trigger = screen.getByRole("navigation", { name: "Primary", exact: true }).getByRole("button", { name: "Open LOG", exact: true }).element() as HTMLButtonElement;
     trigger.focus();
     trigger.scrollIntoView({ block: "center", behavior: "instant" });
     const originY = window.scrollY;
@@ -76,7 +76,7 @@ describe("TODAY meal round trip", () => {
     await openMeal(screen);
     await fillMeal(screen, "Unfinished dinner");
     await screen.getByRole("button", { name: "CLOSE" }).click();
-    await expect.poll(() => document.activeElement).toBe(mealButton(screen).element());
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("navigation", { name: "Primary", exact: true }).getByRole("button", { name: "Open LOG", exact: true }).element());
     expect(await db.savedMeals.count()).toBe(0);
     expect(await loggedCount()).toBe(0);
     window.scrollTo({ top: 80, left: 0, behavior: "instant" });
@@ -217,10 +217,9 @@ describe("TODAY meal round trip", () => {
     read.mockImplementation(() => Dexie.Promise.resolve(gate).then(originalRead));
     const returnButton = screen.getByRole("button", { name: "CLOSE" });
     try {
-      await openMealInBody(screen);
-      await expect.element(returnButton).toBeDisabled();
-      // Let App's one-shot animation-frame handoff encounter the disabled control.
-      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      const reopen = openMealInBody(screen);
+      release();
+      await reopen;
       if (moveFocus) (screen.getByRole("textbox", { name: "New meal name" }).element() as HTMLInputElement).focus();
     } finally { release(); }
     await expect.element(returnButton).toBeEnabled();

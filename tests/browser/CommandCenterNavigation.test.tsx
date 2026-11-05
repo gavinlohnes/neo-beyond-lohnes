@@ -11,6 +11,7 @@ import { db } from "../../src/persistence/db";
 import { openCaptureFromLog, searchCommand } from "./helpers/todayTools";
 import axe from "axe-core";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
+import { openLogTarget } from "./helpers/logSheet";
 
 /**
  * COMMAND-CENTER-001 slice 4 — the emblem goes to TODAY's root; re-tapping an
@@ -161,11 +162,11 @@ describe("re-tap, back and retention", () => {
 
   it("returns to TODAY's place and focus after a LOG trip to BODY", async () => {
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log water" }).click();
+    await openLogTarget(screen, "WATER");
     await expect.element(screen.getByRole("dialog", { name: "WATER", exact: true })).toBeVisible();
     await expect.poll(current).toContain("TODAY");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(current).toContain("TODAY");
-    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Log water");
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open LOG");
   });
 });

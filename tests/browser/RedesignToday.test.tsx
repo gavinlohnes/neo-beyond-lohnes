@@ -19,7 +19,7 @@ beforeEach(async () => {
 });
 afterEach(async () => { cleanup(); vi.useRealTimers(); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); window.scrollTo(0, 0); });
 
-for (const width of [320, 360, 390, 412]) it(`keeps five TODAY sections, blank stable check-in, canonical submission and accessible layout at ${width}`, async () => {
+for (const width of [320, 360, 390, 412]) it(`keeps the compact TODAY hierarchy, blank stable check-in, canonical submission and accessible layout at ${width}`, async () => {
   await page.viewport(width, 844);
   const day = await startDay();
   for (const mode of MODE_ORDER) {
@@ -27,9 +27,8 @@ for (const width of [320, 360, 390, 412]) it(`keeps five TODAY sections, blank s
     const screen = await render(<App />);
     await expect.poll(() => document.querySelector('.mode-header')?.getAttribute('data-mode')).toBe(mode);
     const main = document.querySelector('.redesign-today')!;
-    // FIELD-AUTHORITY-001: with no Engine guidance a pin changes no priority: logging leads, no red,
-    // and the next card's one quiet line owns "not checked in" (no separate check-in section).
-    expect([...main.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'))).toEqual(['Day mode', 'Log', 'Next action', "Today's numbers"]);
+    // TODAY-FOLD-001: center LOG owns logging; the next card stays quiet and At a Glance follows.
+    expect([...main.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'))).toEqual(['Day mode', 'Next action', "Today's numbers"]);
     expect([...main.querySelectorAll<HTMLElement>('.btn-primary')].filter((el) => el.getClientRects().length)).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'CHECK IN', exact: true }).elements()).toHaveLength(1);
     expect(document.body.textContent).not.toContain('NOT CHECKED IN');
@@ -97,7 +96,8 @@ it('keeps the water confirmation above navigation during an active operation', a
   const day = await startDay();
   await startShiftDown(day.id, 10);
   const screen = await render(<App />);
-  await screen.getByRole('button', { name: 'Log water', exact: true }).click();
+  await screen.getByRole('button', { name: 'Open LOG', exact: true }).click();
+  await screen.getByRole('dialog', { name: 'LOG', exact: true }).getByRole('button', { name: 'WATER', exact: true }).click();
   await screen.getByRole('dialog', { name: 'WATER', exact: true }).getByRole('button', { name: '+8 oz', exact: true }).click();
   await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
   await expect.element(screen.getByText('8 oz recorded.', { exact: true })).toBeVisible();
@@ -106,7 +106,7 @@ it('keeps the water confirmation above navigation during an active operation', a
   expect(toast.top).toBeGreaterThanOrEqual(0);
   expect(toast.bottom).toBeLessThanOrEqual(nav.top);
   // Focus goes back to the opener once the sheet has closed, which can land a frame after the toast.
-  await expect.poll(() => document.activeElement?.getAttribute('aria-label')).toBe('Log water');
+  await expect.poll(() => document.activeElement?.getAttribute('aria-label')).toBe('Open LOG');
   expect(screen.getByRole('button', { name: 'UNDO', exact: true }).elements()).toHaveLength(0);
   expect(await db.events.where('type').equals('WATER_LOGGED').count()).toBe(1);
 });
@@ -139,14 +139,17 @@ it('keeps displaced daily controls reachable in COMMAND without rendering them o
   await expect.element(screen.getByRole('button', { name: 'DATA', exact: true })).toHaveAttribute('aria-current', 'page');
 });
 
-it('FIELD-AUTHORITY-001: missing guidance is calm, log-first, with one quiet check-in and no red', async () => {
+it('TODAY-FOLD-001: missing guidance is calm, center LOG owns logging, with one quiet check-in and no red', async () => {
   await startDay(); const screen = await render(<App />);
   await expect.element(screen.getByRole('heading', { name: 'Log when you want.', exact: true })).toBeVisible();
   const root = document.querySelector('.redesign-today')!;
   expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(0);
   for (const gone of ['No guidance recorded yet', 'Your tools are ready', 'CHOOSE AN ACTION', 'NOT CHECKED IN']) expect(document.body.textContent).not.toContain(gone);
   const sections = [...root.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'));
-  expect(sections.indexOf('Log')).toBeLessThan(sections.indexOf('Next action'));
+  expect(sections).toEqual(['Day mode', 'Next action', "Today's numbers"]);
+  expect(screen.getByRole('button', { name: 'Log water', exact: true }).elements()).toHaveLength(0);
+  expect(screen.getByRole('button', { name: 'Log a meal', exact: true }).elements()).toHaveLength(0);
+  await expect.element(screen.getByRole('button', { name: 'Open LOG', exact: true })).toBeVisible();
   const checkIn = screen.getByRole('button', { name: 'CHECK IN', exact: true });
   expect(checkIn.elements()).toHaveLength(1);
   expect(checkIn.element().className).toContain('btn-secondary');
@@ -165,7 +168,7 @@ it('FIELD-AUTHORITY-001: a fresh install has one red START DAY and nothing else 
   expect(screen.getByRole('button', { name: 'CHECK IN', exact: true }).elements()).toHaveLength(0);
   expect(document.body.textContent).not.toContain('CHOOSE AN ACTION');
   const sections = [...root.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'));
-  expect(sections).toEqual(['Day mode', 'Next action', 'Log', "Today's numbers"]);
+  expect(sections).toEqual(['Day mode', 'Next action', "Today's numbers"]);
 });
 
 it('FIELD-AUTHORITY-001: an all-clear wears no red', async () => {
@@ -219,7 +222,8 @@ it('keeps reduced-motion logging and check-in free of entry animations at phone 
   await screen.getByRole('dialog').getByRole('group', { name: 'Energy', exact: true }).getByRole('button', { name: '3', exact: true }).click();
   expect(document.getAnimations().filter((a) => a.playState === 'running')).toHaveLength(0);
   await screen.getByRole('dialog').getByRole('button', { name: 'CLOSE', exact: true }).click();
-  await screen.getByRole('button', { name: 'Log water', exact: true }).click();
+  await screen.getByRole('button', { name: 'Open LOG', exact: true }).click();
+  await screen.getByRole('dialog', { name: 'LOG', exact: true }).getByRole('button', { name: 'WATER', exact: true }).click();
   await expect.element(screen.getByRole('dialog', { name: 'WATER', exact: true })).toBeVisible();
   expect(document.getAnimations().filter((a) => a.playState === 'running')).toHaveLength(0);
 });

@@ -7,6 +7,7 @@ import { startDay, updateSchedulePattern } from "../../src/application/commands"
 import { getHydrationEntries } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { settleVisuals } from "./helpers/settleVisuals";
+import { openLogTarget } from "./helpers/logSheet";
 
 /** LOG-TIME-001: one extra tap says when it happened; the log lands there, then WHEN returns to NOW. */
 let dayId: string;
@@ -28,7 +29,7 @@ it("logs water an hour ago from the sheet, says so, and resets to NOW", async ()
   await expect.poll(() => screen.container.querySelector(".mode-header__value")?.textContent, { timeout: 10_000 }).toBe("ON SHIFT");
   // expect.poll advances Vitest's fake clock while waiting; logging uses this fixed instant.
   vi.setSystemTime(new Date(2026, 9, 28, 4, 30));
-  await screen.getByRole("button", { name: "Log water", exact: true }).click();
+  await openLogTarget(screen, "WATER");
   const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
   const when = sheet.getByRole("group", { name: "When" });
   await expect.element(when.getByRole("button", { name: "NOW", exact: true })).toHaveAttribute("aria-pressed", "true");

@@ -21,7 +21,7 @@ import { getDecisionJournalEntries } from "../../src/application/journalQueries"
 import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { getMissions } from "../../src/application/intentQueries";
 import { App } from "../../src/app/App";
-import { mealButton, openMealInBody } from "./helpers/mealSheet";
+import { mealButton } from "./helpers/mealSheet";
 import { searchCommand } from "./helpers/todayTools";
 
 vi.mock("../../src/application/guidedMoreQueries", async (original) => {
@@ -292,7 +292,10 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     meal.focus();
     meal.scrollIntoView({ block: "center" });
     const origin = window.scrollY;
-    await openMealInBody(screen);
+    meal.click();
+    await screen.getByRole("dialog").getByRole("button", { name: /^New meal or manual entry/ }).click();
+    await screen.getByRole("dialog").getByRole("button", { name: "More meal tools & corrections", exact: true }).click();
+    await expect.element(screen.getByRole("dialog", { name: "MEAL TOOLS", exact: true })).toBeVisible();
     await screen.getByRole("textbox", { name: "New meal name" }).fill("Unfinished meal");
     await screen.getByRole("dialog").getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.activeElement).toBe(meal);

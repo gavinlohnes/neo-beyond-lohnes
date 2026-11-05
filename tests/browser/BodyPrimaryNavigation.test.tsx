@@ -7,6 +7,7 @@ import { getEffectiveHydrationTotal } from "../../src/application/queries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
 import { openMealInBody } from "./helpers/mealSheet";
+import { openLogTarget } from "./helpers/logSheet";
 
 /**
  * DAILY-EXPERIENCE-001 review B1: a TODAY shortcut's focused BODY view and its
@@ -44,7 +45,7 @@ describe("BODY primary navigation after a TODAY shortcut", () => {
   it("shows the Daily Record after water and meal round trips, keeping the meal draft", async () => {
     const screen = await render(<App />);
 
-    await screen.getByRole("button", { name: "Log water" }).click();
+    await openLogTarget(screen, "WATER");
     await expect.element(screen.getByRole("dialog", { name: "WATER", exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "+8 oz", exact: true }).click();
     await expect.poll(() => getEffectiveHydrationTotal(dayId)).toBe(8);

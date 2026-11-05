@@ -9,6 +9,7 @@ import { createMission, createObligation, satisfyObligation } from "../../src/ap
 import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
+import { openLogTarget } from "./helpers/logSheet";
 import { openCaptureFromLog } from "./helpers/todayTools";
 
 type Screen = Awaited<ReturnType<typeof render>>;
@@ -19,7 +20,7 @@ async function tab(screen: Screen, name: "TODAY" | "TRAIN" | "DATA" | "MORE") {
 }
 async function manualMeal(screen: Screen) {
   await tab(screen, "TODAY");
-  await screen.getByRole("button", { name: "Log a meal", exact: true }).click();
+  await openLogTarget(screen, "MEAL");
   await screen.getByRole("dialog").getByRole("button", { name: "NEW MEAL", exact: true }).click();
 }
 beforeEach(async () => { await page.viewport(360, 800); vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 13, 22)); });

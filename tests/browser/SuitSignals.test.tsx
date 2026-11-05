@@ -61,7 +61,7 @@ it("shows offline in words on TODAY and SYSTEMS, glitches once, and keeps loggin
   await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   expect(glitching('[data-signal="offline-line"]')).toBe(false);
-  await expect.element(screen.getByRole("button", { name: "Log water" })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeEnabled();
   await screen.getByRole("button", { name: /Offline\. Logging still saves/ }).click();
   const device = screen.getByRole("region", { name: "DEVICE" });
   await expect.element(device.getByText("Offline. Logging still saves on this phone.", { exact: true })).toBeVisible();

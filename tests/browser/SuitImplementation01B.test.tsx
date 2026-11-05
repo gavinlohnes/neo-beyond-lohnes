@@ -38,7 +38,7 @@ describe("Suit Implementation 01B — dominant surface grammar", () => {
     const day = await startDay();
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TodayScreen />);
-    await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "AT A GLANCE", exact: true })).toBeVisible();
     // TONIGHT-001: the day is unanswered, so the work question sits below and the all-clear says so.
     await expect.element(screen.getByText("Nothing needs you.", { exact: true })).toBeVisible();
 

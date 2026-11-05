@@ -10,10 +10,10 @@ import { getEffectiveHydrationTotal } from "../../src/application/queries";
 import { getActiveWorkoutSession } from "../../src/application/trainQueries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
+import { openLogTarget } from "./helpers/logSheet";
 
 /**
- * COMMAND-CENTER-001 — the TODAY action row (+ WATER · + MEAL · + LOG). Every
- * entry is navigation to an existing canonical form; nothing logs on its own.
+ * TODAY-FOLD-001 — permanent LOG owns ordinary logging; every destination remains canonical.
  */
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -33,19 +33,17 @@ async function openLog(screen: Awaited<ReturnType<typeof render>>) {
   return sheet;
 }
 
-describe("TODAY action row", () => {
-  it("keeps WATER and MEAL on TODAY and LOG in the bar, in every mode", async () => {
+describe("TODAY logging", () => {
+  it("keeps one permanent LOG in the bar and no duplicate WATER or MEAL row, in every mode", async () => {
     for (const [d, h] of [[12, 17], [12, 22], [13, 7], [14, 17]] as const) {
       vi.setSystemTime(new Date(2026, 9, d, h));
       await startDay();
       const screen = await render(<App />);
       await expect.element(screen.getByRole("button", { name: "Open LOG" })).toBeVisible();
-      const labels = [...document.querySelectorAll(".console-controls button")].map((button) => button.getAttribute("aria-label"));
-      expect(labels.slice(0, 2)).toEqual(["Log water", "Log a meal"]);
+      expect(screen.getByRole("button", { name: "Log water", exact: true }).elements()).toHaveLength(0);
+      expect(screen.getByRole("button", { name: "Log a meal", exact: true }).elements()).toHaveLength(0);
       expect(document.querySelector(".shell-nav")!.contains(screen.getByRole("button", { name: "Open LOG" }).element())).toBe(true);
-      for (const button of document.querySelectorAll<HTMLElement>(".console-controls button")) {
-        expect(button.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
-      }
+      expect(screen.getByRole("button", { name: "Open LOG", exact: true }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
       // Nothing has been logged yet, so QUICK LOG offers nothing (its row may exist but is empty).
       expect(document.querySelector(".quick-log")).toBeNull();
       await screen.unmount();
@@ -108,10 +106,10 @@ describe("TODAY action row", () => {
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open LOG");
   });
 
-  it("+ WATER keeps exactly-once logging through the existing BODY flow", async () => {
+  it("LOG → WATER keeps exactly-once logging through the existing BODY flow", async () => {
     const day = await startDay();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "Log water" }).click();
+    await openLogTarget(screen, "WATER");
     await screen.getByRole("button", { name: "+8 oz" }).click();
     await expect.poll(() => getEffectiveHydrationTotal(day.id)).toBe(8);
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
