@@ -1,0 +1,23 @@
+/* LIFE-PATTERN-001 section primitives. The BEYOND look: black, red rule, mono labels, 44px+ targets. */
+.bx-section { padding:28px 0; border-bottom:1px solid var(--border-strong); text-align:left; min-width:0; }
+.bx-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.bx-head > div { min-width:0; }
+.bx-eyebrow { font:13px/1.5 var(--font-mono); color:var(--text-2); letter-spacing:.08em; margin:0 0 8px; text-transform:uppercase; }
+.bx-title { font-family:var(--font-display); font-size:clamp(22px,3vw,30px); line-height:1.15; font-weight:600; margin:0; color:var(--text-1); overflow-wrap:anywhere; }
+.bx-way-in { flex:none; display:inline-flex; align-items:center; gap:8px; min-height:48px; padding:10px 0; border:0; border-radius:0; background:transparent; color:var(--text-1); font:14px var(--font-body); cursor:pointer; text-align:left; }
+.bx-way-in:hover:not(:disabled) { text-decoration:underline; text-underline-offset:5px; }
+.bx-way-in:focus-visible, .bx-more > summary:focus-visible { outline:2px solid var(--focus); outline-offset:4px; }
+.bx-way-in:disabled { cursor:default; opacity:.6; }
+.bx-unavailable { color:var(--text-2); border-left:2px solid var(--brand-yellow); padding-left:12px; font-size:16px; line-height:1.6; margin:8px 0; }
+.bx-empty { padding:10px 0 4px; }
+.bx-empty > p { font:22px/1.25 var(--font-display); margin:0 0 10px; color:var(--text-1); }
+.bx-empty > span { display:block; color:var(--text-2); font-size:16px; line-height:1.6; }
+.bx-count { font:30px var(--font-display); color:var(--text-1); margin:16px 0 8px; }
+.bx-count > span { font:14px/1.5 var(--font-body); color:var(--text-2); }
+.bx-more { border-bottom:1px solid var(--border-strong); }
+.bx-more > summary { display:flex; align-items:center; min-height:48px; cursor:pointer; font:13px/1.5 var(--font-mono); letter-spacing:.08em; color:var(--text-2); text-transform:uppercase; list-style:none; }
+.bx-more > summary::-webkit-details-marker { display:none; }
+.bx-more > summary::after { content:"+"; margin-left:auto; font-size:18px; }
+.bx-more[open] > summary::after { content:"−"; }
+.bx-more[open] > summary { border-bottom:1px solid var(--border-subtle); }
+@media (prefers-reduced-motion:reduce) { .bx-section *, .bx-more * { transition:none!important; animation:none!important; } }

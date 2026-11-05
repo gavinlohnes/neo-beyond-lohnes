@@ -6,17 +6,15 @@ import { getHomeView } from "./homeCommands";
 import { getDailyNoteWorkspace } from "./dailyNoteQueries";
 import { getActiveWorkoutSession } from "./trainQueries";
 import { getActiveDay } from "./queries";
+import { readSection, type SectionRead } from "./sectionRead";
 
 async function routineDay() {
   const day = await getActiveDay();
   return { startedAt: day?.startedAt ?? null, ticks: day ? await getRoutineTicks(day.id) : new Set<string>() };
 }
 
-export type LifeRead<T> = { state: "ready"; value: T } | { state: "unavailable" };
-async function read<T>(query: () => Promise<T>): Promise<LifeRead<T>> {
-  try { return { state: "ready", value: await query() }; }
-  catch { return { state: "unavailable" }; }
-}
+export type LifeRead<T> = SectionRead<T>;
+const read = readSection;
 
 /** Read-only composition of existing records. No new ranking, scheduling or inferred priorities.
  * Calendar task dates and lived-day note ownership deliberately remain distinct.

@@ -2781,3 +2781,18 @@ those jobs. This amends FIELD-AUTHORITY-001's fixed action row and the correspon
   leave TODAY. This is consolidation, not capability removal.
 - The on-shift decorative scene compacts, header actions align, and glance-only protein/calorie
   values use whole-unit display precision. Exact stored facts and detail evidence remain unchanged.
+
+## LIFE-PATTERN-001 — the YOUR LIFE section pattern across BEYOND (owner approved 2026-11-05)
+
+Gavin said "Go" to applying what worked on the YOUR LIFE page (#423) across BEYOND, then confirmed it
+directly: "Plan confirmed." Presentation only, one screen per PR (TRAIN, BODY, MORE and Plans, weekly
+review, TODAY last), each with before and after phone screenshots and independent review.
+
+- Every section has one shape: an eyebrow, a plain heading, a line or two and one way in. The order is
+  where you are, then what's next, then the rest by importance, with "more" last.
+- Empty sections use calm, true wording, never a "0" or a nudge. Only recorded numbers are shown; missing
+  data says missing, and each section fails on its own.
+- BEYOND's plain voice stays, with no slogans. Phone pages stay short.
+- No change to the Engine, recommendations, what's saved, schema, events, backups or the four primary tabs.
+  On TODAY, the order and the Engine's next action above the fold stay exactly as they are.
+  [Brief and pattern guide](agent/LIFE-PATTERN-001.md).

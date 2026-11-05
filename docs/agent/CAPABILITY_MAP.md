@@ -383,3 +383,8 @@ readiness rules. Current-moment routines group behind one entry. LIFE retains mo
 routes personal-fact creation through MemoryPanel; AlfredMemoryList handles legacy evidence only.
 BUILD OWNED composition on existing native disclosures and brand tokens; no new recommendation
 policy, library, database or provider. Separate COMMAND operating surfaces retain their behavior.
+
+### LIFE-PATTERN-001 — shared screen sections (2026-11-05)
+- Reuse `src/ui/components/Section.tsx` (`Section`, `SectionEmpty`, `SectionUnavailable`, `RecordedCount`,
+  `MoreSections`) and `src/application/sectionRead.ts` (`readSection`) before building a section header,
+  empty state or per-source failure on any screen. Guide: [LIFE-PATTERN-001](LIFE-PATTERN-001.md).
