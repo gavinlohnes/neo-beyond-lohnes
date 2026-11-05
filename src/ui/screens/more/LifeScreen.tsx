@@ -9,6 +9,7 @@ import { HabitsPanel } from "../../components/HabitsPanel";
 import { askAlfred } from "../../components/AlfredSheet";
 import { IntentScreen } from "./IntentScreen";
 import "../../components/alfred.css";
+import { WholeLifeHome, type WholeLifeActions } from "./WholeLifeHome";
 
 /**
  * LIFE-HUB-001 (owner go 2026-11-01, "go life hub"): everything that's "you" in one MORE destination.
@@ -27,12 +28,13 @@ const BLURB: Record<LifeTab, string> = {
   Memory: "What BEYOND and Alfred keep for you.",
 };
 
-export function LifeScreen({ active, initialTab = "Direction" }: { active: boolean; initialTab?: LifeTab }) {
+export function LifeScreen({ active, initialTab = "Direction", startAtOverview = false, onNavigate, onTask }: { active: boolean; initialTab?: LifeTab; startAtOverview?: boolean } & Partial<Pick<WholeLifeActions, "onNavigate" | "onTask">>) {
+  const [overview, setOverview] = useState(startAtOverview);
   const [memoryFocus, setMemoryFocus] = useState<string | null>(null);
   const [tab, setTab] = useState<LifeTab>(initialTab);
   const [visited, setVisited] = useState<Set<LifeTab>>(() => new Set([initialTab]));
   const open = (next: LifeTab) => { setTab(next); setVisited((v) => (v.has(next) ? v : new Set([...v, next]))); };
-  const on = (t: LifeTab) => active && tab === t;
+  const on = (t: LifeTab) => active && !overview && tab === t;
   const uid = useId();
   // Review of #362: the WAI-ARIA tabs pattern. One Tab stop; arrows, Home and End move between tabs.
   function onKey(e: KeyboardEvent<HTMLButtonElement>) {
@@ -45,7 +47,10 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
     document.getElementById(`${uid}-tab-${next}`)?.focus();
   }
 
-  return <section aria-labelledby="life-heading" className="life-screen">
+  return <section aria-label={overview ? "Life workspace" : undefined} aria-labelledby={overview ? undefined : "life-heading"} className="life-screen">
+    <div hidden={!overview}><WholeLifeHome idPrefix={`${uid}-home`} active={active && overview} onArea={(area) => { open(area); setOverview(false); requestAnimationFrame(() => document.getElementById(`${uid}-tab-${area}`)?.focus()); }} onNavigate={onNavigate} onTask={onTask} /></div>
+    <div hidden={overview}>
+    {startAtOverview && <button type="button" className="btn-secondary life-home-return" onClick={() => { setOverview(true); requestAnimationFrame(() => document.getElementById(`${uid}-home-title`)?.focus()); }}>← Back to your life</button>}
     <header className="life-identity"><p className="tool-label">PERSONAL OPERATING CONTEXT</p><h2 id="life-heading">LIFE</h2><p>Direction, people and everyday life.</p></header>
     <div className="life-tabs" role="tablist" aria-label="Life areas">
       {LIFE_TABS.map((t) => <button key={t} type="button" role="tab" id={`${uid}-tab-${t}`} aria-selected={tab === t} aria-controls={`${uid}-panel-${t}`}
@@ -67,5 +72,6 @@ export function LifeScreen({ active, initialTab = "Direction" }: { active: boole
         {t === "Memory" && <><OperatorContextPanel active={on(t)} onMemory={setMemoryFocus} /><MemoryPanel active={on(t)} focusFactId={memoryFocus} /><AlfredMemoryList active={on(t)} /></>}
       </>}
     </div>)}
+    </div>
   </section>;
 }

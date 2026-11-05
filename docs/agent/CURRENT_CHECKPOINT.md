@@ -1,4 +1,27 @@
-# TODAY-GLANCE-001 — active protected build
+# WHOLE-LIFE-001 — working prototype (2026-11-05)
+
+- Gavin approved a dramatic whole-life cockpit prototype, corrected the emphasis from shift work
+  to everyday life, then directed “Make it happen.” Brief: [WHOLE-LIFE-001.md](WHOLE-LIFE-001.md).
+  Builder Codex; branch `codex/whole-life-001`; fresh master
+  `95947a7ba539ab2691ed8e4aa24696a4da67e336` (TODAY-FOLD #422). PR pending.
+- Implemented a whole-life overview in LIFE with a YOUR LIFE entry on primary TODAY, actual dated
+  tasks, project next steps, routine playback/live recorded progress, daily notes, people/home,
+  and routes to habits, memory, collections, calendar, training, food and recovery. Existing area
+  editors stay mounted for drafts. No Engine, schema, event, backup, dependency or provider change.
+- Protected presentation under the owner's bounded approval; existing primary tabs/recommendation
+  authority remain. Independent exact-head review and green CI required; no self-merge/deployment.
+- Chromium acceptance: 21/21 PASS including 320/360/412/1440 widths, full axe, a task inside the phone
+  fold, no-write browsing, source failure/retry, free/work days, retained draft/focus and canonical
+  routine completion feedback. TypeScript and initial production/PWA build PASS. Full gate running.
+- [Actual App captures](../screenshots/whole-life-001/README.md) use synthetic records in a disposable
+  browser context. Interactive inspection fixed the inherited 430 px desktop wrapper and tall phone
+  introduction. CI repair #409 is already on master; live GitHub API access still returns Forbidden.
+- Next: finish the full gate, push the prototype and prepare its single PR/review handoff. Gavin
+  judges the working experience before further expansion; the complete life vision is not claimed done.
+
+---
+
+# TODAY-GLANCE-001 — historical; merged as #420
 
 - Gavin approved starting TODAY at a Glance from fresh master after explicitly approving PR #419's
   merge on 2026-11-04. Brief: [TODAY-GLANCE-001.md](TODAY-GLANCE-001.md). Builder: Codex; branch

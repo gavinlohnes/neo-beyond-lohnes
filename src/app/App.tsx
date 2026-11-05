@@ -760,6 +760,7 @@ function AppWorkspaces() {
               shiftHandoffRefreshKey={workEndedKey}
               onViewCommitments={(id) => openMore("INTENT", id ? { kind: "OBLIGATION", obligationId: id } : null)}
               onOpenPlan={() => openMore("PLAN")}
+              onOpenLife={() => openMore("LIFE")}
               onOpenTrain={openTrain}
               openToolsOnMount={todayToolsOpen}
               onOpenBody={openBody}
