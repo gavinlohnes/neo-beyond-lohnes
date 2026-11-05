@@ -2099,7 +2099,13 @@ export function TodayScreen({
       </button>;
     return (
       <>
-        <p className="cc-lbl cc-numbers-head"><span>TODAY’S NUMBERS</span>{garminTiles && <SyncGarminLink />}</p>
+        <div className="cc-lbl cc-numbers-head">
+          <h2>AT A GLANCE</h2>
+          <span className="cc-numbers-actions">
+            {garminTiles && <SyncGarminLink />}
+            {onOpenBody && <button type="button" className="cc-see-all" disabled={busy} onClick={() => onOpenBody()}>SEE ALL</button>}
+          </span>
+        </div>
         <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}${calorieTile ? " cc-fuel--calories" : ""}`} role="group" aria-label={fuelLine}>
           {tile("protein", "PROTEIN", <><b><DecryptNumber value={minimumDayProteinG} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.

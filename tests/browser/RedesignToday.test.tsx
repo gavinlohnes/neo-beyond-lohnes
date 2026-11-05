@@ -80,6 +80,18 @@ it('renders a truthful empty day without a crash or write', async () => {
   expect(await db.beyondDays.count()).toBe(0);
 });
 
+it('presents existing readings at a glance and opens the full DATA library without writing', async () => {
+  await page.viewport(320, 844);
+  await startDay();
+  const screen = await render(<App />);
+  await expect.element(screen.getByRole('heading', { name: 'AT A GLANCE', exact: true })).toBeVisible();
+  const before = await db.events.toArray();
+  await screen.getByRole('button', { name: 'SEE ALL', exact: true }).click();
+  await expect.element(screen.getByRole('button', { name: 'DATA', exact: true })).toHaveAttribute('aria-current', 'page');
+  expect(await db.events.toArray()).toEqual(before);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+});
+
 it('keeps the water confirmation above navigation during an active operation', async () => {
   await page.viewport(360, 800);
   const day = await startDay();

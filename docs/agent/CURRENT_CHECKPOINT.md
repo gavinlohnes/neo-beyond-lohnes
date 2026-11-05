@@ -1,23 +1,30 @@
-# MORE-LIBRARY-001 — active protected build
+# TODAY-GLANCE-001 — active protected build
+
+- Gavin approved starting TODAY at a Glance from fresh master after explicitly approving PR #419's
+  merge on 2026-11-04. Brief: [TODAY-GLANCE-001.md](TODAY-GLANCE-001.md). Builder: Codex; branch
+  `codex/today-at-a-glance-001`; baseline `6472d5fdb93dd7a94df6fea6a5d7b679a4807490`; PR pending.
+- The bounded first slice renames the existing metric grid AT A GLANCE and adds SEE ALL to the
+  existing DATA home. Existing readings, evidence sheets, priority/order, one-red rule and writes
+  are unchanged; no Engine, schema, event, backup, provider, dependency or recommendation change.
+- Focused Chromium evidence: TODAY 21/21 and navigation/TODAY regressions 93/93 PASS, including
+  320 px no-overflow and a no-write SEE ALL path. TypeScript PASS. Interactive inspection at
+  390×844 confirmed the active workout still leads, At a Glance remains compact, and SEE ALL lands
+  on DATA // NUMBERS. Production build and required protected review/CI remain.
+- Next: run the production build and risk check, push/open the PR, obtain independent exact-head
+  review and green CI, resolve findings, then request Gavin's merge approval. After merge, test the
+  experience through real daily use before adding customization, new summaries or another layer.
+
+---
+
+# MORE-LIBRARY-001 — merged PR #419
 
 - Gavin approved the researched Home + Library direction and explicitly approved MORE instead of
-  COMMAND on 2026-11-04. Brief: [MORE-LIBRARY-001.md](MORE-LIBRARY-001.md). Builder: Codex;
-  branch `codex/more-ia-001`; baseline `cf0847c35fdcccf26048bf38c9a261b1303bc287`;
-  active [PR #419](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/419).
-- Implemented the first bounded foundation: consistent capability icons, browsable Apps Checklist
-  destinations, device-local Favorites and Recent quick strips, and plain-language grouped library
-  rows. Internal `COMMAND` route keys remain for compatibility; the operator sees MORE.
-- Focused Chromium evidence: complete capability/navigation suites 84/84 PASS; affected compact
-  layout, focus-return, draft-retention and accessibility suites 176/176 PASS at 320/360/412 px.
-  Production/PWA build PASS. Full gate: architecture 453 files PASS; 431 files / 3,510 tests PASS,
-  one existing load-sensitive Factory subprocess test timed out at five seconds and its complete
-  71-test Factory pair passed in isolation. Existing one-file/two-test skips unchanged.
-- No Engine, schema, event, backup, provider, dependency, recommendation or write-path change.
-- Independent review BLOCKED head `5413f37e`: Favorites reload truncation, false Recent entries,
-  missing remount/failure coverage and stale workflow records. All four are repaired on the same
-  branch; TypeScript and the complete capability/navigation suites (86/86) pass, including six
-  favorites across a real remount and refused-navigation recency. The changed head requires renewed
-  independent exact-head review and green CI. Owner merge approval remains required.
+  COMMAND. The protected build merged on 2026-11-04 at
+  `6472d5fdb93dd7a94df6fea6a5d7b679a4807490` after independent exact-head PASS, resolved findings
+  and green required CI.
+- Shipped consistent capability icons, browsable Apps Checklist destinations, device-local
+  Favorites and Recent quick strips, and plain-language grouped library rows. Internal `COMMAND`
+  route keys remain for compatibility; the operator sees MORE.
 
 ---
 
