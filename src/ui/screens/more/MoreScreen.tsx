@@ -79,10 +79,10 @@ const MORE_FAVORITES_KEY = "beyond.more.favorites.v1";
 const MORE_RECENTS_KEY = "beyond.more.recents.v1";
 const MAX_RECENTS = 5;
 
-function readMoreLabels(key: string): string[] {
+function readMoreLabels(key: string, limit = Number.POSITIVE_INFINITY): string[] {
   try {
     const value = JSON.parse(localStorage.getItem(key) ?? "[]");
-    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, MAX_RECENTS) : [];
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, limit) : [];
   } catch { return []; }
 }
 
@@ -187,7 +187,7 @@ export function MoreScreen({
   // COMMAND-CENTER-001: kept while COMMAND is hidden or a destination is open, like every draft here.
   const [query, setQuery] = useState("");
   const [favoriteLabels, setFavoriteLabels] = useState(() => readMoreLabels(MORE_FAVORITES_KEY));
-  const [recentLabels, setRecentLabels] = useState(() => readMoreLabels(MORE_RECENTS_KEY));
+  const [recentLabels, setRecentLabels] = useState(() => readMoreLabels(MORE_RECENTS_KEY, MAX_RECENTS));
   const hiddenFeatures = useHiddenFeatures();
   const [hiddenError, setHiddenError] = useState(false);
   // MORE-TRIM-001: the browse list shows each destination once; search still finds every one.
@@ -529,18 +529,21 @@ export function MoreScreen({
   }
 
   function runCapability(entry: SystemCapability) {
-    const nextRecent = [entry.label, ...recentLabels.filter((label) => label !== entry.label)].slice(0, MAX_RECENTS);
-    setRecentLabels(nextRecent); writeMoreLabels(MORE_RECENTS_KEY, nextRecent);
+    const recordRecent = () => {
+      const nextRecent = [entry.label, ...recentLabels.filter((label) => label !== entry.label)].slice(0, MAX_RECENTS);
+      setRecentLabels(nextRecent); writeMoreLabels(MORE_RECENTS_KEY, nextRecent);
+    };
     const destination = entry.destination;
-    if (destination.kind === "daily") { setDailyFocus(destination.tool); setView("DAILY_CONTROLS"); }
-    else if (destination.kind === "tools") { setDailyFocus(null); setView("DAILY_CONTROLS"); }
+    if (destination.kind === "daily") { setDailyFocus(destination.tool); setView("DAILY_CONTROLS"); recordRecent(); }
+    else if (destination.kind === "tools") { setDailyFocus(null); setView("DAILY_CONTROLS"); recordRecent(); }
     else if (destination.kind === "more") {
       if (destination.view === "INTENT") setIntentFocus(null);
       if (destination.view === "JOURNAL") setJournalFocus(undefined);
       if (destination.view === "REPORT") void getReportTiming().then((timing) => { if (timing) markSeen(seenKey(timing, new Date())); setReportNew(false); }, () => {});
       setView(destination.view);
-    } else if (destination.kind === "section") revealSection(destination.section);
-    else onOpenDestination?.(destination);
+      recordRecent();
+    } else if (destination.kind === "section") { revealSection(destination.section); recordRecent(); }
+    else if (onOpenDestination?.(destination)) recordRecent();
   }
 
   function toggleFavorite(entry: SystemCapability) {

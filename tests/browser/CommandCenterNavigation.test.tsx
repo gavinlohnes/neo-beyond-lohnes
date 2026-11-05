@@ -10,6 +10,7 @@ import { setModePin } from "../../src/application/modePinQueries";
 import { db } from "../../src/persistence/db";
 import { openCaptureFromLog, searchCommand } from "./helpers/todayTools";
 import axe from "axe-core";
+import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 
 /**
  * COMMAND-CENTER-001 slice 4 — the emblem goes to TODAY's root; re-tapping an
@@ -92,6 +93,29 @@ describe("re-tap, back and retention", () => {
     await expect.element(screen.getByRole("button", { name: "Open recent HISTORY", exact: true })).toBeVisible();
     expect((await axe.run(document.querySelector("#workspace-COMMAND")!)).violations).toEqual([]);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(document.documentElement.clientWidth);
+  });
+
+  it("keeps all favorites and recent places through a real remount", async () => {
+    const favorites = ["PLAN TODAY", "ROUTINES", "HABITS", "DAILY NOTE", "COLLECTIONS", "HIGHLIGHTS"];
+    localStorage.setItem("beyond.more.favorites.v1", JSON.stringify(favorites));
+    localStorage.setItem("beyond.more.recents.v1", JSON.stringify(["HISTORY"]));
+    const first = await render(<App />);
+    await first.getByRole("button", { name: "MORE", exact: true }).click();
+    for (const label of favorites) await expect.element(first.getByRole("button", { name: `Open favorite ${label}`, exact: true })).toBeVisible();
+    await expect.element(first.getByRole("button", { name: "Open recent HISTORY", exact: true })).toBeVisible();
+    await first.unmount();
+
+    const resumed = await render(<App />);
+    await resumed.getByRole("button", { name: "MORE", exact: true }).click();
+    for (const label of favorites) await expect.element(resumed.getByRole("button", { name: `Open favorite ${label}`, exact: true })).toBeVisible();
+    await expect.element(resumed.getByRole("button", { name: "Open recent HISTORY", exact: true })).toBeVisible();
+  });
+
+  it("does not claim a recent destination when shell navigation refuses it", async () => {
+    const screen = await render(<MoreScreen onOpenDestination={() => false} />);
+    await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("train");
+    await screen.getByRole("button", { name: "TRAIN Workouts, your programme, recovery and records", exact: true }).click();
+    expect(JSON.parse(localStorage.getItem("beyond.more.recents.v1") ?? "[]")).not.toContain("TRAIN");
   });
 
   it("re-tapping COMMAND inside a destination returns to its index with the query kept", async () => {

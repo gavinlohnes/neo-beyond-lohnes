@@ -5,7 +5,8 @@
 Gavin approved the researched Home + Library direction on 2026-11-04 and explicitly approved
 MORE instead of COMMAND. **PROTECTED**: this changes primary information architecture and amends a
 locked navigation ruling. Builder: Codex. Branch: `codex/more-ia-001`. Starting commit:
-`cf0847c35fdcccf26048bf38c9a261b1303bc287`. PR: pending.
+`cf0847c35fdcccf26048bf38c9a261b1303bc287`. Active PR:
+[#419](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/419).
 
 ## Outcome
 
