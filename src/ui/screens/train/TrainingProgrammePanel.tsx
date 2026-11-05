@@ -3,6 +3,7 @@ import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { useEffect, useRef, useState } from "react";
 import { getProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { saveTrainingProgramme } from "../../../application/trainingProgramme";
+import "../../components/section.css";
 import { WEEKDAY_SLOTS, ROTATION_SLOTS, type TrainingProgramme } from "../../../domain/workout/trainingProgramme";
 const WEEKDAYS: Record<string, string> = { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "0": "Sunday" };
 const slotLabel = (slot: string) => WEEKDAYS[slot] ?? slot.replace("WORK", "Work day ").replace("OFF", "Day off ");
@@ -29,7 +30,10 @@ export function TrainingProgrammePanel({ onStart, disabled = false, startDisable
     finally { saving.current = false; setBusy(false); }
   }
   const template = data?.templates.find((t) => t.id === data.planned.templateId);
-  return <section className="suit-panel" aria-label="My programme" aria-busy={busy || (active && !data && !error)}><h2 className="suit-panel__title">MY PROGRAMME</h2>
+  // LIFE-PATTERN-001: the shared section shape. The heading says where the plan stands today.
+  const standing = !data ? "Your weekly plan" : !data.revision.programme ? "No programme set" : !data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved" : template ? `Today: ${template.name}` : data.planned.templateId ? "Template no longer available" : "Nothing assigned today";
+  return <section className="suit-panel bx-section" aria-label="My programme" aria-busy={busy || (active && !data && !error)}>
+    <header className="bx-head"><div><p className="bx-eyebrow">MY PROGRAMME</p><h2 className="bx-title">{standing}</h2></div></header>
     {active && !data && !error && <p className="suit-panel__loading">Reading your programme…</p>}
     {error && <p role="alert">{error}<button type="button" className="btn-secondary" onClick={() => { setEditing(false); setKey((n) => n + 1); }}>RELOAD PROGRAMME</button></p>}
     {data && <>

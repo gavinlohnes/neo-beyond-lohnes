@@ -21,3 +21,7 @@
 .bx-more[open] > summary::after { content:"−"; }
 .bx-more[open] > summary { border-bottom:1px solid var(--border-subtle); }
 @media (prefers-reduced-motion:reduce) { .bx-section *, .bx-more * { transition:none!important; animation:none!important; } }
+/* A planning panel (TRAIN programme, BODY meal plan) taking the shared section shape: no boxed card. */
+.bx-section.suit-panel { margin-block:0; padding:28px 0; border:0; border-bottom:1px solid var(--border-strong); background:none; }
+.bx-section.suit-panel::after { content:none; }
+.bx-more.train-planned-work > summary { min-height:48px; }

@@ -11,7 +11,7 @@ import { CommandSurface } from "../../components/CommandSurface";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
-import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { Section } from "../../components/Section";
 import { RecordsList } from "./RecordsList";
 import { TrainingHistory } from "./TrainingHistory";
 import { LiftHistoryControl } from "./LiftHistory";
@@ -1240,17 +1240,6 @@ export function TrainScreen({
         void handleStart(templateId, variant);
       }} />
 
-      {/* LAUNCH POLISH (owner approval 2026-10-01): the suggested workout leads;
-          the planned-work question sits under it instead of above it. */}
-      {!session && !completionSummary && !workoutFinishedToday && (
-        <details className="train-planned-work"><summary className="disclosure-row">PLANNED WORK</summary><PlannedWorkCard
-          declaration={plannedWorkDeclaration}
-          open={plannedWorkOpen}
-          setOpen={setPlannedWorkOpen}
-          busy={busy}
-          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
-        /></details>
-      )}
 
       {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
           subordinate to the CommandSurface picker above — deliberately
@@ -1265,15 +1254,13 @@ export function TrainScreen({
           something that should consume full footprint before the one
           actual pre-workout decision is made. */}
       {!session && !completionSummary && !performanceBriefOpen && (
-        <CollapsibleRow
-          name="TRAINING SUMMARY"
-          summary={describeLastStrengthSession(lastStrengthSession)}
-          onOpen={() => setPerformanceBriefOpen(true)}
-        />
+        <Section id="train-summary" eyebrow="TRAINING SUMMARY" title="Last session"
+          wayIn={{ label: "Details", ariaLabel: "Open TRAINING SUMMARY", onClick: () => setPerformanceBriefOpen(true) }}>
+          <p className="card-body">{describeLastStrengthSession(lastStrengthSession)}</p>
+        </Section>
       )}
       {!session && !completionSummary && performanceBriefOpen && (
-        <>
-          <p className="section-label">TRAINING SUMMARY</p>
+        <Section id="train-summary" eyebrow="TRAINING SUMMARY" title="Last session">
           <div className="equipment-row">
             <p className="tool-label" style={{ marginBottom: 4 }}>LAST</p>
             <p className="card-body" style={{ marginBottom: 12 }}>{describeLastStrengthSession(lastStrengthSession)}</p>
@@ -1319,7 +1306,19 @@ export function TrainScreen({
               COLLAPSE
             </button>
           </div>
-        </>
+        </Section>
+      )}
+      {/* LAUNCH POLISH (owner approval 2026-10-01): the suggested workout leads;
+          the planned-work question sits under it instead of above it.
+          LIFE-PATTERN-001: it is the "more" section, so it comes last and stays one tap away. */}
+      {!session && !completionSummary && !workoutFinishedToday && (
+        <details className="train-planned-work bx-more"><summary>PLANNED WORK</summary><PlannedWorkCard
+          declaration={plannedWorkDeclaration}
+          open={plannedWorkOpen}
+          setOpen={setPlannedWorkOpen}
+          busy={busy}
+          onSetPlannedWork={(planned) => void handleSetPlannedWork(planned)}
+        /></details>
       )}
 
       {session && session.sessionType === "RECOVERY" && !completionSummary && (

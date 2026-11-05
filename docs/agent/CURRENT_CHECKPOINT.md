@@ -5,8 +5,10 @@
   [LIFE-PATTERN-001.md](LIFE-PATTERN-001.md). Start `dd191d83` (#423).
 - Rollout, one PR each: 1 primitives + guide (branch `ccr-90736806-z9op9b`) → 2 TRAIN → 3 BODY →
   4 MORE and Plans → 5 weekly review → 6 TODAY (the order and the Engine's next action stay unchanged).
-- Step 1: shared `Section` primitives and `readSection`, adopted by YOUR LIFE with no visible change.
-  Focused tests pass. Next: independent exact-head review, green CI, merge, then TRAIN.
+- Step 1 merged as #424 (shared `Section` primitives, `readSection`, guide, Decision Register entry).
+- Step 2 TRAIN: programme, training summary and planned work take the section shape; planned work
+  moves last as the "more" fold. START WORKOUT and the picker are unchanged. Review and CI pending.
+- Steps 3–5 (BODY, Plans, weekly review) are prepared locally on the Builder's machine and follow.
 - Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
 
 ---
