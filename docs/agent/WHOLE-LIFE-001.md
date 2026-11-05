@@ -38,11 +38,20 @@
 - Interactive inspection caught the inherited 430 px wrapper compressing desktop content and an
   overly tall phone introduction. LIFE now expands only in its own workspace, and the first
   recorded task fits above the phone navigation (explicit regression assertion).
-- TypeScript and an initial production build PASS; full final architecture/test/build gate running.
+- Full `npm run verify` at `f866f7af`: **433 files / 3,523 tests PASS**, with the existing
+  one-file/two-test skips; architecture, TypeScript, production build and PWA generation PASS.
+- Final visual containment repair renders the canonical player beside the overview, so overview
+  button/heading rules cannot override its established presentation. After this small UI-only
+  change, WholeLife/Life/RoutinePlayer are again **21/21 PASS**, including a new distinct DONE
+  action assertion; architecture (455 files), TypeScript and production/PWA build again PASS.
+  The full suite predates this last containment repair; exact-head required CI remains pending.
 - CI-FLAKE-001's repair is already merged on master as #409. GitHub API access in this environment
   still returns Forbidden; live CI attempt/review status cannot be established through that API.
 - No new runtime dependency, provider, Engine, event, schema or backup change. No automatic task
   selection, scheduling or recording. Source failures remain unavailable instead of claiming empty.
-- Next: complete the full gate, push this branch and open the single prototype PR if API access
-  permits. Independent exact-head review and green CI precede merge/deployment. This is a working
+- PR creation was attempted and rejected with `Post https://api.github.com/graphql: Forbidden`.
+  No PR number, remote CI result or independent review is claimed. The branch and evidence are
+  pushed for an independent reviewer to open the one PR when access permits.
+- Next: independent exact-head review and green required CI, then Gavin's merge/deployment
+  decision. This is a working
   prototype for Gavin to judge on his phone, not a claim that the full life vision is finished.

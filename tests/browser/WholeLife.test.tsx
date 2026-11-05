@@ -114,6 +114,8 @@ it("opens the routine player read-only and reflects completion after explicit DO
   await screen.getByRole("button", { name: /An evening reset.*Play/ }).click();
   await expect.element(screen.getByRole("dialog", { name: "An evening reset", exact: true })).toBeVisible();
   await expect.element(screen.getByRole("heading", { name: "Clear the desk", exact: true })).toBeVisible();
+  expect(getComputedStyle(screen.getByRole("button", { name: "DONE", exact: true }).element()).backgroundColor)
+    .not.toBe(getComputedStyle(screen.getByRole("dialog", { name: "An evening reset", exact: true }).element()).backgroundColor);
   expect(await db.events.count()).toBe(count);
   await screen.getByRole("button", { name: "DONE", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Put tomorrow's things together", exact: true })).toBeVisible();

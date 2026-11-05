@@ -12,11 +12,16 @@
   authority remain. Independent exact-head review and green CI required; no self-merge/deployment.
 - Chromium acceptance: 21/21 PASS including 320/360/412/1440 widths, full axe, a task inside the phone
   fold, no-write browsing, source failure/retry, free/work days, retained draft/focus and canonical
-  routine completion feedback. TypeScript and initial production/PWA build PASS. Full gate running.
+  routine completion feedback. Full verify at `f866f7af`: **433 files / 3,523 tests PASS**, existing
+  one-file/two-test skips; architecture/TypeScript/production/PWA build PASS. A final small player
+  style-containment repair has renewed 21/21 focused PASS, architecture 455 files and build PASS;
+  the full suite predates that containment repair. Exact-head remote CI/review remain pending.
 - [Actual App captures](../screenshots/whole-life-001/README.md) use synthetic records in a disposable
   browser context. Interactive inspection fixed the inherited 430 px desktop wrapper and tall phone
   introduction. CI repair #409 is already on master; live GitHub API access still returns Forbidden.
-- Next: finish the full gate, push the prototype and prepare its single PR/review handoff. Gavin
+- Branch and captures pushed; PR creation failed with `Post https://api.github.com/graphql:
+  Forbidden`. No PR number or independent review claimed. Next: open the one prototype PR,
+  obtain independent exact-head review and green CI, then Gavin's merge/deployment decision. Gavin
   judges the working experience before further expansion; the complete life vision is not claimed done.
 
 ---

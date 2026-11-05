@@ -52,7 +52,7 @@ export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: 
   const progress = data?.routineProgress.state === "ready" ? data.routineProgress.value : null;
   const date = new Date(data?.readAt ?? Date.now());
   const greeting = date.getHours() < 5 ? "Room for the rest of you." : date.getHours() < 12 ? "Make room for your life." : date.getHours() < 18 ? "Your day. Your direction." : "Bring your day together.";
-  return <div className="whole-life" aria-label="Your life">
+  return <><div className="whole-life" aria-label="Your life">
     <header className="wl-masthead"><span>BEYOND / LIFE</span><button type="button" onClick={() => void refresh()} disabled={reading} aria-label="Refresh your life"><RefreshCw size={18} /><span>{reading ? "Reading" : "Refresh"}</span></button></header>
     <section className="wl-hero" aria-labelledby={`${idPrefix}-title`}>
       <p className="wl-eyebrow">{date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
@@ -84,6 +84,7 @@ export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: 
     </div>}
     <section className="wl-explore" aria-labelledby={`${idPrefix}-explore-title`}><p className="wl-eyebrow">THE REST IS HERE, TOO</p><h3 id={`${idPrefix}-explore-title`}>More than getting things done.</h3><div><button type="button" disabled={!onNavigate} onClick={() => navigate({ kind: "more", view: "WORK_SCHEDULE" })}><CalendarDays size={20} /> Calendar & schedule</button><button type="button" onClick={() => onArea("Habits")}><Heart size={20} /> Habits</button><button type="button" onClick={() => onArea("Memory")}><Compass size={20} /> Memory</button><button type="button" disabled={!onNavigate} onClick={() => navigate({ kind: "more", view: "COLLECTIONS" })}><Layers size={20} /> Collections</button><button type="button" disabled={!onNavigate} onClick={() => navigate({ kind: "more", view: "JOURNAL" })}><BookOpen size={20} /> Decisions & reflection</button></div></section>
     <footer className="wl-footer"><span>Built around your life.</span><span>You choose what comes next.</span></footer>
+  </div>
     {playing && active && <RoutinePlayer routines={[playing]} onClose={() => { setPlaying(null); void refresh(); }} />}
-  </div>;
+  </>;
 }
