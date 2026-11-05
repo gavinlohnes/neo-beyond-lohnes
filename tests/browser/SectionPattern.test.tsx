@@ -32,7 +32,7 @@ it("says missing when a source is unavailable, and calm true words when it is em
 
 it("shows only recorded counts", async () => {
   const screen = await render(<RecordedCount done={2} total={3} unit="steps" />);
-  await expect.element(screen.getByText("2")).toBeVisible();
+  await expect.element(screen.getByText("2 / 3 steps recorded", { exact: true })).toBeVisible();
   expect(screen.container.textContent).toBe("2 / 3 steps recorded");
 });
 
