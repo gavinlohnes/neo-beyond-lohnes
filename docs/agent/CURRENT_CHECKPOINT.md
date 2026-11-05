@@ -1,4 +1,17 @@
-# WHOLE-LIFE-001 — working prototype (2026-11-05)
+# LIFE-PATTERN-001 — in progress (2026-11-05)
+
+- Objective: apply the YOUR LIFE section pattern across BEYOND, presentation only. Gavin approved it
+  ("Go", then "Plan confirmed" to the Builder directly). Builder Claude Code; brief and guide:
+  [LIFE-PATTERN-001.md](LIFE-PATTERN-001.md). Start `dd191d83` (#423).
+- Rollout, one PR each: 1 primitives + guide (branch `ccr-90736806-z9op9b`) → 2 TRAIN → 3 BODY →
+  4 MORE and Plans → 5 weekly review → 6 TODAY (the order and the Engine's next action stay unchanged).
+- Step 1: shared `Section` primitives and `readSection`, adopted by YOUR LIFE with no visible change.
+  Focused tests pass. Next: independent exact-head review, green CI, merge, then TRAIN.
+- Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
+
+---
+
+# WHOLE-LIFE-001 — merged as #423 (2026-11-05)
 
 - Gavin approved a dramatic whole-life cockpit prototype, corrected the emphasis from shift work
   to everyday life, then directed “Make it happen.” Brief: [WHOLE-LIFE-001.md](WHOLE-LIFE-001.md).
