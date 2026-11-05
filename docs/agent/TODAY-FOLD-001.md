@@ -37,4 +37,4 @@ readable in one phone glance without weakening its one-next-action authority or 
 - Starting commit: `24c18890f9115f1f976fcc95cfa24a95a18438f1`
 - Builder: Codex
 - Branch: `codex/today-fold-001`
-- PR: pending
+- PR: #422
