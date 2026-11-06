@@ -7,8 +7,12 @@
   4 MORE and Plans → 5 weekly review → 6 TODAY (the order and the Engine's next action stay unchanged).
 - Step 1 merged as #424 (shared `Section` primitives, `readSection`, guide, Decision Register entry).
 - Step 2 TRAIN merged as #425.
-- Step 3 BODY: "Not logged" instead of 0 for empty readings; weight leads PROGRESS. Review and CI pending.
-- Steps 4–6 (Plans, weekly review, TODAY) are prepared locally on the Builder's machine and follow.
+- Step 3 BODY merged as #426: "Not logged" instead of 0 for empty readings; weight leads PROGRESS.
+- Step 4 MORE and Plans merged as #427. The [Pages test job](https://github.com/gavinlohnes/neo-beyond-lohnes/actions/runs/42163642553/job/127715014629)
+  failed because two tests queried an unscoped "Settings" heading after both its disclosure and
+  operational section exposed that name. Assertions now scope to the Settings region; shard 4/4
+  passes (736 tests, 2 skipped). A separate Garmin004 failure did not reproduce in focused or shard reruns.
+- Steps 5–6 (weekly review, TODAY) follow the approved rollout.
 - Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
 - CI risk: `playwright install --with-deps` can stall on the Ubuntu mirror with no job timeout
   (seen twice on 2026-11-05). Suggest timeout-minutes plus a browser cache; needs owner OK.
