@@ -47,7 +47,7 @@ export async function openCommandDestination(screen: Screen, label: string) {
 }
 export async function openCommandPanel(screen: Screen, panel: 'backup' | 'settings') {
   // FIELD-AUTHORITY-001: the job rows "Backup & recovery" and "Settings" hold their tool panels.
-  const summary = screen.getByText(panel === 'backup' ? 'Backup & recovery' : 'Settings', { exact: true }).elements().find((element) => element.tagName === 'SUMMARY');
+  const summary = screen.getByText(panel === 'backup' ? 'Backup & recovery' : 'Settings', { exact: true }).elements().map((element) => element.closest('summary')).find((element) => element !== null);
   if (!summary) throw new Error(`Missing COMMAND panel: ${panel}`);
   if (!(summary.parentElement as HTMLDetailsElement).open) (summary as HTMLElement).click();
   await expect.poll(() => (summary.parentElement as HTMLDetailsElement).open).toBe(true);

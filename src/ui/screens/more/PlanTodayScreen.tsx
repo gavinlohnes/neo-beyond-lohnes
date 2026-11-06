@@ -6,6 +6,7 @@ import { getTodayPlan, getTaskSmartLists, taskListDate, type TaskSmartLists } fr
 import type { Obligation } from "../../../domain/intent/types";
 import { describeError } from "../../errorMessage";
 import { OperatorHeader } from "../../components/OperatorHeader";
+import { Section, SectionEmpty, SectionUnavailable } from "../../components/Section";
 import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence } from "./IntentScreen";
 import type { IntentFocus } from "./IntentScreen";
 
@@ -64,7 +65,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     } catch (cause) { setError(describeError(cause, "Could not add the task. Your input is kept.")); }
     finally { inFlight.current = false; setBusy(false); }
   }
-  function rows(items: Obligation[], empty: string) {
+  function rows(items: Obligation[], empty: { line: string; detail: string }) {
     return items.length ? <ul className="plan-list">{items.map((item) => <li key={item.id}>
       <button className="plan-task" onClick={() => onOpen({ kind: "OBLIGATION", obligationId: item.id })}>
         <strong>{item.title}</strong>
@@ -75,7 +76,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
           plan!.missions.find((parent) => parent.id === item.missionId)?.title].filter(Boolean).join(" · ")}</span>
         <span className="visually-hidden">Open task</span>
       </button>
-    </li>)}</ul> : <p className="meta">{empty}</p>;
+    </li>)}</ul> : <SectionEmpty line={empty.line} detail={empty.detail} />;
   }
   return <div className="plan-today">
     <OperatorHeader destination="mission" focusable>MORE // PLAN TODAY</OperatorHeader>
@@ -84,28 +85,31 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
     <div className="plan-smart-lists" role="group" aria-label="Task views">
       {([['today', 'Today'], ['next7', 'Next 7'], ['noDate', 'No date']] as const).map(([value, label]) => <button key={value} type="button" className="btn-secondary" aria-pressed={list === value} onClick={() => setList(value)}>{label}</button>)}
     </div>
-    {readError ? <div role="alert"><p>{readError} Tasks are unavailable, not empty.</p><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>
-      : !plan ? <p role="status">Reading your plan…</p> : <>
-        <section aria-labelledby="plan-list-heading">
-          <h3 id="plan-list-heading" className="section-label">{list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}</h3>
-          <p className="meta">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${planDate(plan.through)}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date."}</p>
-          {rows(plan[list], list === "today" ? "No planned or due tasks for today." : list === "next7" ? "No other tasks dated in the next seven days." : "No undated tasks.")}
-        </section>
-      </>}
+    <Section id="plan-commitments" eyebrow="YOUR COMMITMENTS" title={list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}
+      wayIn={{ label: "All missions", ariaLabel: "Open all missions and obligations", onClick: () => onOpen(null) }}>
+      <p className="more-section-purpose">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${plan ? planDate(plan.through) : "the next seven days"}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date."}</p>
+      {readError ? <div role="alert"><SectionUnavailable>{readError} Tasks are unavailable, not empty.</SectionUnavailable><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>
+        : !plan ? <p role="status">Reading your plan…</p> : rows(plan[list], list === "today"
+          ? { line: "A little breathing room.", detail: "No tasks are planned or due today." }
+          : list === "next7"
+            ? { line: "The coming days are open.", detail: "No other tasks are dated in the next seven days." }
+            : { line: "No undated tasks.", detail: "Every task has a planned or due date." })}
+    </Section>
     <form className="plan-composer" onSubmit={(event) => { event.preventDefault(); void addTask(); }}>
-      <label htmlFor="plan-task-title">Add a task for today</label>
-      <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} placeholder="What do you want to get done?" />
-      <details className="more-inspection"><summary>Date, Mission & repeat</summary>
-        <label htmlFor="plan-due">Due date (optional)</label><input id="plan-due" className="input" type="date" value={due} disabled={busy} onChange={(event) => setDue(event.target.value)} />
-        <label htmlFor="plan-mission">Mission (optional)</label><select id="plan-mission" className="input" value={mission} disabled={busy} onChange={(event) => setMission(event.target.value)}>
-          <option value="">No Mission</option>{plan?.missions.filter((item) => item.status === "ACTIVE").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-        </select>
-        <RecurrencePicker form={recurrence} onChange={setRecurrence} idPrefix="plan-recurrence" disabled={busy} />
-      </details>
-      <button className="btn-primary" disabled={busy || !title.trim() || !plan}>ADD TO TODAY</button>
-      {error && <p role="alert">{error}</p>}{receipt && <p role="status">{receipt}</p>}
+      <Section id="plan-add-task" eyebrow="YOUR PLAN" title="Add a task"
+        wayIn={{ label: "ADD TO TODAY", type: "submit", disabled: busy || !title.trim() || !plan }}>
+        <label htmlFor="plan-task-title">Add a task for today</label>
+        <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} placeholder="What do you want to get done?" />
+        <details className="more-inspection"><summary>Date, Mission & repeat</summary>
+          <label htmlFor="plan-due">Due date (optional)</label><input id="plan-due" className="input" type="date" value={due} disabled={busy} onChange={(event) => setDue(event.target.value)} />
+          <label htmlFor="plan-mission">Mission (optional)</label><select id="plan-mission" className="input" value={mission} disabled={busy} onChange={(event) => setMission(event.target.value)}>
+            <option value="">No Mission</option>{plan?.missions.filter((item) => item.status === "ACTIVE").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+          </select>
+          <RecurrencePicker form={recurrence} onChange={setRecurrence} idPrefix="plan-recurrence" disabled={busy} />
+        </details>
+        {error && <p role="alert">{error}</p>}{receipt && <p role="status">{receipt}</p>}
+      </Section>
     </form>
-    <button className="btn-secondary" onClick={() => onOpen(null)}>ALL MISSIONS & OBLIGATIONS</button>
     <p className="meta">Open a task to complete it, release it, or change its dates. Nothing is moved automatically.</p>
   </div>;
 }

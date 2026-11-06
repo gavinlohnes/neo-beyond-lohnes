@@ -178,14 +178,15 @@
 .more-control-center > .equipment-row .meta { margin-block: 8px; }
 .more-operator .command-group > .command-group__control {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 24px;
-  gap: 5px 12px; min-height: 84px; padding: 16px 10px; list-style: none;
+  gap: 4px 12px; min-height: 112px; padding: 16px 10px; list-style: none;
 }
 .command-group__control::-webkit-details-marker { display: none; }
 .command-group__control::before { content: none; display: none; }
-.command-group__control .command-group__name { grid-column: 1; font-size: 24px; line-height: 1.25; }
-.command-group__control .command-group__hint { grid-column: 1; margin: 0; font-weight: 400; letter-spacing: .015em; }
+.command-group__control .command-group__eyebrow { grid-column: 1; margin: 0; font-size: 13px; line-height: 1.4; }
+.command-group__control .command-group__name { grid-column: 1; grid-row: 2; font-size: 24px; line-height: 1.25; }
+.command-group__control .command-group__hint { grid-column: 1; grid-row: 3; margin: 0; font-weight: 400; letter-spacing: .015em; }
 .command-group__control::after {
-  content: "+"; grid-column: 2; grid-row: 1 / 3; align-self: center;
+  content: "+"; grid-column: 2; grid-row: 1 / 4; align-self: center;
   font: 400 24px var(--p-mono); text-align: center; color: var(--p-t2);
 }
 .command-group[open] > .command-group__control::after { content: "−"; }
