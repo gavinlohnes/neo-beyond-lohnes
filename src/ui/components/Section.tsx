@@ -7,7 +7,7 @@ import "./section.css";
  * small eyebrow label, plain heading, one or two lines, one clear way in.
  * Presentation only: these primitives never read, rank or save anything.
  */
-export interface SectionWayIn { label: string; onClick: () => void; disabled?: boolean; ariaLabel?: string }
+export interface SectionWayIn { label: string; onClick?: () => void; disabled?: boolean; ariaLabel?: string; type?: "button" | "submit" }
 
 export function Section({ id, eyebrow, title, wayIn, children, className }: {
   id: string; eyebrow: string; title: string; wayIn?: SectionWayIn | undefined; children?: ReactNode; className?: string;
@@ -21,8 +21,8 @@ export function Section({ id, eyebrow, title, wayIn, children, className }: {
   </section>;
 }
 
-export function WayIn({ label, onClick, disabled, ariaLabel }: SectionWayIn) {
-  return <button type="button" className="bx-way-in" disabled={disabled} aria-label={ariaLabel} onClick={onClick}>{label}<ArrowUpRight size={18} aria-hidden="true" /></button>;
+export function WayIn({ label, onClick, disabled, ariaLabel, type = "button" }: SectionWayIn) {
+  return <button type={type} className="bx-way-in" disabled={disabled} aria-label={ariaLabel} onClick={onClick}>{label}<ArrowUpRight size={18} aria-hidden="true" /></button>;
 }
 
 /** A source that could not be read. Missing data says missing; it is never shown as empty. */

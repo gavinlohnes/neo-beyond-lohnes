@@ -43,6 +43,25 @@ it.each([320, 360, 412])("browses three views, retains a draft and opens the exi
   expect(await db.obligations.toArray()).toEqual(obligations);
 });
 
+it("uses the shared section shape for commitments and task creation with a kind empty state", async () => {
+  await page.viewport(360, 800);
+  const onOpen = vi.fn();
+  const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={onOpen} /></div>);
+  const commitments = screen.getByRole("region", { name: "Today", exact: true });
+  await expect.element(commitments).toBeVisible();
+  await expect.element(commitments.getByText("A little breathing room.", { exact: true })).toBeVisible();
+  await expect.element(commitments.getByText("No tasks are planned or due today.", { exact: true })).toBeVisible();
+  const allMissions = screen.getByRole("button", { name: "Open all missions and obligations", exact: true });
+  expect(allMissions.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  await allMissions.click();
+  expect(onOpen).toHaveBeenCalledWith(null);
+  const addTask = screen.getByRole("region", { name: "Add a task", exact: true });
+  await expect.element(addTask.getByRole("button", { name: "ADD TO TODAY", exact: true })).toBeDisabled();
+  expect(document.body.textContent).not.toMatch(/\b0\b|you haven't|don't forget/i);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+});
+
 it("keeps the selected view and composer on read failure, then retries without writing", async () => {
   reads.fail = true;
   const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={() => {}} /></div>);
