@@ -83,7 +83,7 @@ describe("Weekly Review dashboard", () => {
   it("leads with what mattered and what's next, with detailed evidence folded", async () => {
     await seedWeek();
     const { dashboard } = await renderReview(vi.fn(), false);
-    await expect.element(dashboard.getByText("WHAT MATTERED", { exact: true })).toBeVisible();
+    await expect.element(dashboard.getByText("WEEKLY REVIEW · WHAT MATTERED", { exact: true })).toBeVisible();
     await expect.element(dashboard.getByText("WHAT'S NEXT", { exact: true })).toBeVisible();
     await expect.element(dashboard.getByRole("heading", { name: "Your focus" })).toBeVisible();
     await expect.element(dashboard.getByText("2 strength sessions on 2 days.", { exact: true })).toBeVisible();

@@ -64,7 +64,8 @@ for (const width of [320, 360, 412]) it(`opens the monthly review from TODAY wit
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
   const review = screen.getByRole("region", { name: "Weekly review", exact: true });
-  await expect.element(review.getByText("MONTHLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
+  await expect.element(review.getByText("MONTHLY REVIEW · WHAT MATTERED", { exact: true })).toBeVisible();
+  await review.getByText("More from the week", { exact: true }).click();
   const body = screen.getByRole("region", { name: "BODY COMPOSITION · LAST 4 WEEKS" });
   await expect.element(body.getByText("Oct 19 – Nov 15. First and last recorded values. Readings only; you draw the conclusions.", { exact: true })).toBeVisible();
   await expect.element(body.getByText("-2.5 lb", { exact: true })).toBeVisible();
@@ -95,7 +96,8 @@ it("keeps ordinary weeks weekly and says when the monthly review comes", async (
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
   const review = screen.getByRole("region", { name: "Weekly review", exact: true });
-  await expect.element(review.getByText("WEEKLY REVIEW · LATEST COMPLETED WEEK", { exact: true })).toBeVisible();
+  await expect.element(review.getByText("WEEKLY REVIEW · WHAT MATTERED", { exact: true })).toBeVisible();
+  await review.getByText("More from the week", { exact: true }).click();
   await expect.element(review.getByText("Monthly review in 3 weeks. It adds body composition: weight, measurements and photos.", { exact: true })).toBeVisible();
   expect(document.querySelector(".monthly-body")).toBeNull();
 });
@@ -105,6 +107,7 @@ it("never shows a newly hidden photo while the re-read is pending, then shows on
   const screen = await render(<App />);
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
+  await screen.getByRole("region", { name: "Weekly review", exact: true }).getByText("More from the week", { exact: true }).click();
   await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);
@@ -130,6 +133,7 @@ it("drops the cached body panel when a re-read fails, so a newly hidden photo is
   const screen = await render(<App />);
   await (await commandResult(screen, "REVIEW")).click();
   await openDetailedReviews(screen);
+  await screen.getByRole("region", { name: "Weekly review", exact: true }).getByText("More from the week", { exact: true }).click();
   await expect.element(screen.getByRole("figure", { name: "Front photos, Oct 1 and Nov 10" })).toBeVisible();
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await hideProgressPhoto(later.id);

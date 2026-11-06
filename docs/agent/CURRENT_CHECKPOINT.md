@@ -1,17 +1,27 @@
-# LIFE-PATTERN-001 — in progress (2026-11-05)
+# LIFE-PATTERN-001 Step 5 — Weekly Review (in progress, 2026-11-06)
 
-- Objective: apply the YOUR LIFE section pattern across BEYOND, presentation only. Gavin approved it
-  ("Go", then "Plan confirmed" to the Builder directly). Builder Claude Code; brief and guide:
-  [LIFE-PATTERN-001.md](LIFE-PATTERN-001.md). Start `dd191d83` (#423).
-- Rollout, one PR each: 1 primitives + guide (branch `ccr-90736806-z9op9b`) → 2 TRAIN → 3 BODY →
-  4 MORE and Plans → 5 weekly review → 6 TODAY (the order and the Engine's next action stay unchanged).
-- Step 1 merged as #424 (shared `Section` primitives, `readSection`, guide, Decision Register entry).
-- Step 2 TRAIN merged as #425.
-- Step 3 BODY: "Not logged" instead of 0 for empty readings; weight leads PROGRESS. Review and CI pending.
-- Steps 4–6 (Plans, weekly review, TODAY) are prepared locally on the Builder's machine and follow.
-- Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
-- CI risk: `playwright install --with-deps` can stall on the Ubuntu mirror with no job timeout
-  (seen twice on 2026-11-05). Suggest timeout-minutes plus a browser cache; needs owner OK.
+- Objective: apply the YOUR LIFE section pattern to MORE → REVIEW’s weekly dashboard only; presentation
+  only. Gavin approved the rollout ("Go", then "Plan confirmed" to the Builder directly). Builder
+  Claude Code; [brief and guide](LIFE-PATTERN-001.md); this is one PR for Step 5 against `master`.
+- Rollout: Steps 1–4 merged as #424–#427 (shared `Section` primitives, TRAIN, BODY, MORE and Plans).
+  Step 6 (TODAY) has **not started**.
+- Branch: `copilot/life-pattern-001-step-5-weekly-review`; starting master was #427 at
+  `d2aed8b`. PR creation is next; no PR link or review is claimed yet.
+- Implemented: WHAT MATTERED and WHAT’S NEXT lead the weekly dashboard; deeper evidence is under
+  “More from the week.” Empty and failed reads remain distinct. No Engine, schema, event, backup,
+  primary-tab, recommendation-authority, or TODAY-order change.
+- Reuse: shared `Section`, `SectionEmpty`, `SectionUnavailable`, and disclosure patterns from Steps
+  1–4. Own: weekly evidence and next-focus copy using existing queries and writes. Build from
+  scratch: none.
+- 360 × 800 Chromium before/after captures are in
+  [the screenshot evidence folder](../screenshots/life-pattern-001/README.md).
+- Verification: focused WeeklyDashboard 8/8, MonthlyReview 6/6, WeeklyReviewLoop 13/13; typecheck
+  and production build pass. Architecture check passes (457 files). Full verify: 3 files / 6 tests
+  fail in unrelated DailyExperience (3 viewport thresholds), Drop0FieldFixes (expects `0 oz`), and
+  MoreScreen (duplicate Settings heading); 431 files / 3,526 tests pass, 1 file / 2 tests skipped.
+  The build also completed independently; its existing large-chunk warning remains.
+- Next: finish exact-head review, open the single Step 5 PR, obtain independent review and green
+  required CI, then request Gavin’s merge approval. Do not start Step 6.
 
 ---
 

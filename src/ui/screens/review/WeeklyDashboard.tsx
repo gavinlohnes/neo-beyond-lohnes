@@ -116,7 +116,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
 
   return (
     <section className="weekly-dashboard" aria-label="Weekly review">
-      <Section id="weekly-mattered" eyebrow={monthlyReview?.monthly ? "MONTHLY REVIEW" : "WHAT MATTERED"} title={`${longDate(week.start)} — ${longDate(lastDayOf(week))}`} className="weekly-dashboard__lead">
+      <Section id="weekly-mattered" eyebrow={`${monthlyReview?.monthly ? "MONTHLY REVIEW" : "WEEKLY REVIEW"} · WHAT MATTERED`} title={`${longDate(week.start)} — ${longDate(lastDayOf(week))}`} className="weekly-dashboard__lead">
         <p className="meta">Monday through Sunday. {plural(headline.recordedDays, "of 7 days has", "of 7 days have")} completed records.</p>
         <div className="weekly-dashboard__nav">
           <button type="button" className="btn-secondary" disabled={!data.hasEarlier} onClick={() => setWeeksBack((n) => n + 1)}>← PREVIOUS WEEK</button>
