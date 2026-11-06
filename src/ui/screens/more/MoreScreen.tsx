@@ -816,17 +816,19 @@ export function MoreScreen({
       </section>
       </details>
 
-      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => {
-        const summary = COMMAND_GROUP_SUMMARY[group];
-        return <details className="command-group" key={group}>
-          <summary className="disclosure-row command-group__control">
-            <span className="command-group__eyebrow bx-eyebrow">{summary.eyebrow}</span>
-            <span className="command-group__name" role="heading" aria-level={2}>{group}</span>
-            <span className="command-group__hint">{summary.hint}</span>
-          </summary>
-          {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry, true))}
-        </details>;
-      })}
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group))
+        .sort((left, right) => left === "Plan" ? -1 : right === "Plan" ? 1 : 0)
+        .map((group) => {
+          const summary = COMMAND_GROUP_SUMMARY[group];
+          return <details className="command-group" key={group}>
+            <summary className="disclosure-row command-group__control">
+              <span className="command-group__eyebrow bx-eyebrow">{summary.eyebrow}</span>
+              <span className="command-group__name" role="heading" aria-level={2}>{group}</span>
+              <span className="command-group__hint">{summary.hint}</span>
+            </summary>
+            {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry, true))}
+          </details>;
+        })}
 
       {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
           distinct from OPERATIONS above. History stays a clean single

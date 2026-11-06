@@ -120,7 +120,7 @@ describe("Fix 2 — open screens move to the new day at 16:30", () => {
     expect(newDay).toBeDefined();
 
     await screen.getByRole("button", { name: "TODAY" }).click();
-    await expect.poll(waterReading).toBe("0 oz");
+    await expect.poll(waterReading).toBe("Not logged");
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
     await expect.element(screen.getByRole("textbox", { name: "New meal name" })).toHaveValue("Half-typed bowl");
     await expect.element(screen.getByRole("spinbutton", { name: "New meal calories" })).toHaveValue(640);
