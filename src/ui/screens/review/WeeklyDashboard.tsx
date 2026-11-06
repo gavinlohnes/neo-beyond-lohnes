@@ -10,6 +10,7 @@ import { describeError } from "../../errorMessage";
 import { WeeklyReviewPanel } from "./WeeklyReviewPanel";
 import { MonthlyBodyReview } from "./MonthlyBodyReview";
 import { getMonthlyReview, type MonthlyReview } from "../../../application/monthlyReviewQueries";
+import { MoreSections, Section, SectionEmpty, SectionUnavailable } from "../../components/Section";
 
 /**
  * REVIEW-001 Weekly Review dashboard (owner-approved 2026-10-18; Claude Code),
@@ -95,8 +96,12 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
   if (error) {
     return (
       <section className="weekly-dashboard" aria-label="Weekly review">
-        <p role="alert">{error} This week's evidence is unavailable, not empty.</p>
-        <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY WEEK</button>
+        <Section id="weekly-unavailable" eyebrow="WEEKLY REVIEW" title="Week unavailable">
+          <div role="alert">
+            <SectionUnavailable>{error} This week's evidence is unavailable, not empty.</SectionUnavailable>
+            <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY WEEK</button>
+          </div>
+        </Section>
       </section>
     );
   }
@@ -108,136 +113,15 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
   const isLatest = data.weeksBack === 0;
   const weightChange = headline.weight;
   const monthlyReview = !monthlyError && monthly?.weekStart === week.start ? monthly.review : null;
-  const kind = monthlyReview?.monthly ? "MONTHLY REVIEW" : "WEEKLY REVIEW";
 
   return (
     <section className="weekly-dashboard" aria-label="Weekly review">
-      {/* Week and headline numbers */}
-      <div className="weekly-dashboard__hero">
-        <p className="tool-label">{kind} · {isLatest ? "LATEST COMPLETED WEEK" : plural(data.weeksBack, "WEEK EARLIER", "WEEKS EARLIER")}</p>
-        <h2 id="weekly-dashboard-heading" className="weekly-dashboard__range">{longDate(week.start)} — {longDate(lastDayOf(week))}</h2>
+      <Section id="weekly-mattered" eyebrow={monthlyReview?.monthly ? "MONTHLY REVIEW" : "WHAT MATTERED"} title={`${longDate(week.start)} — ${longDate(lastDayOf(week))}`} className="weekly-dashboard__lead">
         <p className="meta">Monday through Sunday. {plural(headline.recordedDays, "of 7 days has", "of 7 days have")} completed records.</p>
         <div className="weekly-dashboard__nav">
           <button type="button" className="btn-secondary" disabled={!data.hasEarlier} onClick={() => setWeeksBack((n) => n + 1)}>← PREVIOUS WEEK</button>
           <button type="button" className="btn-secondary" disabled={isLatest} onClick={() => setWeeksBack((n) => Math.max(0, n - 1))}>NEXT WEEK →</button>
         </div>
-        <WeekInNumbers dashboard={data} />
-        {isLatest ? (
-          <div className="weekly-dashboard__status">
-            <div>
-              <p className="card-title">{data.saved ? "Review saved" : "Review ready"}</p>
-              <p className="meta">Explore the evidence, then decide what to carry forward.</p>
-            </div>
-            <button type="button" className="btn-primary" onClick={() => setReviewRequest((n) => n + 1)}>
-              {data.saved ? "EDIT REVIEW →" : "COMPLETE REVIEW →"}
-            </button>
-          </div>
-        ) : (
-          <p className="meta">{data.saved ? "A review was saved for this week; it is shown under Carry forward." : "No review was saved for this week."}</p>
-        )}
-        {isLatest && monthlyReview && !monthlyReview.monthly && monthlyReview.weeksUntil !== null && (
-          <p className="meta">Monthly review in {plural(monthlyReview.weeksUntil, "week", "weeks")}. It adds body composition: weight, measurements and photos.</p>
-        )}
-      </div>
-
-      {monthlyReview?.body && <MonthlyBodyReview body={monthlyReview.body} />}
-      {monthlyError && <p className="meta" role="status">Body composition for this month couldn’t be read. The weekly review below is unaffected.</p>}
-
-      {/* The seven lived days */}
-      <div className="weekly-dashboard__panel">
-        <h3 className="tool-label">THE SEVEN LIVED DAYS</h3>
-        <div className="weekly-dashboard__strip" role="group" aria-label="Days of this week">
-          {rows.map((row, index) => (
-            <button
-              key={row.start}
-              type="button"
-              className={`weekly-day${index === selected ? " weekly-day--selected" : ""}`}
-              aria-pressed={index === selected}
-              aria-label={`${weekday(row.start)} ${longDate(row.start)}: ${row.dayIds.length === 0 ? "no completed records" : `sleep ${fixed(row.sleepHours, 1, "h")}, protein ${fixed(row.protein, 0, "g")}, ${plural(row.sessions, "session", "sessions")}, ${contextLabel(row).toLowerCase()}`}`}
-              onClick={() => setSelected(index)}
-            >
-              <span aria-hidden="true" className="weekly-day__name">{weekday(row.start)}</span>
-              <span aria-hidden="true" className="weekly-day__date">{new Date(row.start).getDate()}</span>
-              <span aria-hidden="true" className="weekly-day__bars">
-                <i className="weekly-day__bar weekly-day__bar--sleep" style={{ height: `${Math.max(3, ((row.sleepHours ?? 0) / 9) * 32)}px` }} />
-                <i className="weekly-day__bar weekly-day__bar--protein" style={{ height: `${Math.max(3, Math.min(1, (row.protein ?? 0) / 200) * 32)}px` }} />
-                <i className="weekly-day__bar weekly-day__bar--training" style={{ height: `${row.sessions > 0 ? 28 : 3}px` }} />
-              </span>
-              <span aria-hidden="true" className="weekly-day__tag">{row.context === "WORK" ? "SHIFT" : row.context === "OFF" ? "OFF" : "—"}</span>
-            </button>
-          ))}
-        </div>
-        <p className="meta">Bars, left to right: sleep, protein, training. Select a day to see its record.</p>
-      </div>
-
-      {/* Day detail */}
-      <div className="weekly-dashboard__panel" aria-live="polite">
-        <h3 className="tool-label">DAY DETAIL · {weekday(day.start)} {longDate(day.start)}</h3>
-        {day.dayIds.length === 0 ? (
-          <p className="card-body">No completed records for this lived day.</p>
-        ) : (
-          <>
-            <p className="meta">{contextLabel(day)} · {day.sessions > 0 ? plural(day.sessions, "strength session", "strength sessions") : "No strength session"}</p>
-            <ReadoutGrid className="weekly-dashboard__detail">
-              <Readout label="SLEEP" value={day.ambiguousSleep ? "Multiple main sleeps" : fixed(day.sleepHours, 1, "h")} />
-              <Readout label="PROTEIN" value={fixed(day.protein, 0, "g")} />
-              <Readout label="WATER" value={fixed(day.water, 0, "oz")} />
-              <Readout label="WEIGHT" value={fixed(day.weight, 1, "lb")} />
-            </ReadoutGrid>
-            {onOpenHistory &&
-              day.dayIds.map((id, index) => (
-                <button key={id} type="button" className="btn-secondary" onClick={() => onOpenHistory(id)}>
-                  {day.dayIds.length > 1 ? `INSPECT DAY EVENTS, PART ${index + 1} →` : "INSPECT DAY EVENTS →"}
-                </button>
-              ))}
-          </>
-        )}
-      </div>
-
-      {/* Patterns */}
-      <div className="weekly-dashboard__panel">
-        <h3 className="tool-label">PATTERNS WORTH NOTICING</h3>
-        <div className="weekly-dashboard__toggle" role="group" aria-label="Which days to compare">
-          {(["ALL", "WORK", "OFF"] as const).map((m) => (
-            <button key={m} type="button" className={`chip${mode === m ? " chip--selected" : ""}`} aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>
-          ))}
-        </div>
-        <ReadoutGrid className="weekly-dashboard__metrics">
-          <Readout label="DAYS" value={pattern.days} detail={mode === "ALL" ? "All recorded days" : mode === "WORK" ? "Declared work days" : "Declared days off"} />
-          <Readout label="SLEEP" value={fixed(pattern.sleep.mean, 1, "h")} detail={pattern.sleep.mean === undefined && mode !== "ALL" ? `Needs ${CONTEXT_FLOOR_DAYS} sleep-logged days (${pattern.sleep.days})` : `Average · ${plural(pattern.sleep.days, "day", "days")}`} />
-          <Readout label="PROTEIN" value={fixed(pattern.protein.mean, 0, "g")} detail={pattern.protein.mean === undefined && mode !== "ALL" ? `Needs ${CONTEXT_FLOOR_DAYS} protein-logged days (${pattern.protein.days})` : `Average · ${plural(pattern.protein.days, "day", "days")}`} />
-        </ReadoutGrid>
-        <p className="tool-label" style={{ marginTop: 16 }}>SLEEP BY CONTEXT</p>
-        {([["Work days", headline.sleep.work], ["Days off", headline.sleep.off]] as const).map(([label, value]) => (
-          <div className="weekly-barline" key={label}>
-            <span className="weekly-barline__label">{label}</span>
-            <span className="weekly-barline__track" aria-hidden="true"><span className="weekly-barline__fill" style={{ width: `${Math.min(100, ((value.mean ?? 0) / 9) * 100)}%` }} /></span>
-            <span className="weekly-barline__value">{value.mean === undefined ? `Needs ${CONTEXT_FLOOR_DAYS} days (${value.days})` : `${value.mean.toFixed(1)} h`}</span>
-          </div>
-        ))}
-        <p className="meta">Evidence, not diagnosis: these are counts and recorded averages from declared work context. They do not establish a cause or a personal baseline.</p>
-      </div>
-
-      {/* Metric explorer */}
-      <MetricExplorer rows={rows} metric={metric} selected={selected} onMetric={setMetric} onSelect={setSelected} />
-
-      {/* Findings */}
-      <div className="weekly-dashboard__panel">
-        <h3 className="tool-label">FINDINGS · SHOW THE EVIDENCE</h3>
-        <p className="meta">The existing read-only findings, counted over the 45 days to the end of this week.</p>
-        {describeFindings(data.findings.findings, data.findings.exerciseNames).map((copy) => (
-          <div key={copy.key} className="weekly-dashboard__finding">
-            <p className="card-title">{copy.title}</p>
-            {copy.lines.map((line) => <p key={line} className="card-body">{line}</p>)}
-          </div>
-        ))}
-        {data.findings.findings.length === 0 && <p className="card-body">No findings yet for this window.</p>}
-        {describeWaitingFindings(data.findings.waiting) && <p className="meta">{describeWaitingFindings(data.findings.waiting)}</p>}
-      </div>
-
-      {/* Accomplishments */}
-      <div className="weekly-dashboard__panel">
-        <h3 className="tool-label">ACCOMPLISHMENTS &amp; MEANING</h3>
         <div className="weekly-dashboard__listrow">
           <p className="card-title">Training recorded</p>
           <p className="card-body">{headline.sessions > 0 ? `${plural(headline.sessions, "strength session", "strength sessions")} on ${plural(headline.trainingDays, "day", "days")}.` : "No strength session recorded this week."}</p>
@@ -245,7 +129,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
         <div className="weekly-dashboard__listrow">
           <p className="card-title">Personal records</p>
           {data.records.length === 0 ? (
-            <p className="card-body">None set this week.</p>
+            <SectionEmpty line="No personal records this week." />
           ) : (
             data.records.map((record) => (
               <p key={record.setId} className="card-body"><span className="pr-tag">PR</span> {record.exerciseName}: {describePersonalRecord(record.record).replace("NEW PR — ", "")}</p>
@@ -256,14 +140,19 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
           <p className="card-title">Weight observed</p>
           <p className="card-body">{weightChange ? `${Math.abs(weightChange.change).toFixed(1)} lb ${weightChange.change < 0 ? "lower" : weightChange.change > 0 ? "higher" : "unchanged"} between the first and last recorded weigh-in.` : "Not enough weigh-ins this week to compare."}</p>
         </div>
-        <p className="meta">A good week does not require perfect numbers. What mattered beyond the metrics goes in your note below.</p>
-      </div>
+      </Section>
 
-      {/* Carry forward */}
-      <div className="weekly-dashboard__panel">
-        <h3 className="tool-label">CARRY FORWARD</h3>
+      <Section id="weekly-next" eyebrow="WHAT'S NEXT" title="Your focus"
+        wayIn={isLatest ? {
+          label: data.saved ? "EDIT REVIEW" : "COMPLETE REVIEW",
+          ariaLabel: data.saved ? "Edit weekly review" : "Complete weekly review",
+          onClick: () => setReviewRequest((n) => n + 1),
+        } : undefined}>
         {isLatest ? (
-          <WeeklyReviewPanel active={active} showFacts={false} openRequest={reviewRequest} />
+          <>
+            <p className="meta">{data.saved ? "Your saved review stays yours to revise." : "Explore the evidence, then decide what to carry forward."}</p>
+            <WeeklyReviewPanel active={active} showFacts={false} openRequest={reviewRequest} />
+          </>
         ) : data.saved ? (
           <div>
             <p className="card-title">{data.saved.focus?.text ?? "No focus chosen"}</p>
@@ -271,9 +160,113 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
             <p className="meta">Saved {new Date(data.saved.recordedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Earlier versions remain in History.</p>
           </div>
         ) : (
-          <p className="card-body">No review was saved for this week. Reviews are saved for the latest completed week.</p>
+          <p className="card-body">No review was saved for this week.</p>
         )}
-      </div>
+      </Section>
+
+      {monthlyError && (
+        <Section id="monthly-unavailable" eyebrow="MONTHLY REVIEW" title="Body composition unavailable">
+          <div role="status">
+            <SectionUnavailable>Body composition for this month couldn’t be read. The weekly review below is unaffected.</SectionUnavailable>
+          </div>
+        </Section>
+      )}
+
+      <MoreSections label="More from the week">
+        {monthlyReview?.body && <MonthlyBodyReview body={monthlyReview.body} />}
+        {isLatest && monthlyReview && !monthlyReview.monthly && monthlyReview.weeksUntil !== null && (
+          <p className="meta">Monthly review in {plural(monthlyReview.weeksUntil, "week", "weeks")}. It adds body composition: weight, measurements and photos.</p>
+        )}
+
+        <Section id="week-numbers" eyebrow="RECORDED DATA" title="Recorded numbers" className="weekly-dashboard__panel">
+          <WeekInNumbers dashboard={data} />
+        </Section>
+
+        <Section id="week-days" eyebrow="THE WEEK" title="Seven lived days" className="weekly-dashboard__panel">
+          <div className="weekly-dashboard__strip" role="group" aria-label="Days of this week">
+            {rows.map((row, index) => (
+              <button
+                key={row.start}
+                type="button"
+                className={`weekly-day${index === selected ? " weekly-day--selected" : ""}`}
+                aria-pressed={index === selected}
+                aria-label={`${weekday(row.start)} ${longDate(row.start)}: ${row.dayIds.length === 0 ? "no completed records" : `sleep ${fixed(row.sleepHours, 1, "h")}, protein ${fixed(row.protein, 0, "g")}, ${plural(row.sessions, "session", "sessions")}, ${contextLabel(row).toLowerCase()}`}`}
+                onClick={() => setSelected(index)}
+              >
+                <span aria-hidden="true" className="weekly-day__name">{weekday(row.start)}</span>
+                <span aria-hidden="true" className="weekly-day__date">{new Date(row.start).getDate()}</span>
+                <span aria-hidden="true" className="weekly-day__bars">
+                  <i className="weekly-day__bar weekly-day__bar--sleep" style={{ height: `${Math.max(3, ((row.sleepHours ?? 0) / 9) * 32)}px` }} />
+                  <i className="weekly-day__bar weekly-day__bar--protein" style={{ height: `${Math.max(3, Math.min(1, (row.protein ?? 0) / 200) * 32)}px` }} />
+                  <i className="weekly-day__bar weekly-day__bar--training" style={{ height: `${row.sessions > 0 ? 28 : 3}px` }} />
+                </span>
+                <span aria-hidden="true" className="weekly-day__tag">{row.context === "WORK" ? "SHIFT" : row.context === "OFF" ? "OFF" : "—"}</span>
+              </button>
+            ))}
+          </div>
+          <p className="meta">Bars, left to right: sleep, protein, training. Select a day to see its record.</p>
+        </Section>
+
+        <Section id="day-detail" eyebrow="DAY DETAIL" title={`${weekday(day.start)} ${longDate(day.start)}`} className="weekly-dashboard__panel">
+          <div aria-live="polite">
+            {day.dayIds.length === 0 ? (
+              <SectionEmpty line="No completed records for this lived day." />
+            ) : (
+              <>
+                <p className="meta">{contextLabel(day)} · {day.sessions > 0 ? plural(day.sessions, "strength session", "strength sessions") : "No strength session"}</p>
+                <ReadoutGrid className="weekly-dashboard__detail">
+                  <Readout label="SLEEP" value={day.ambiguousSleep ? "Multiple main sleeps" : fixed(day.sleepHours, 1, "h")} />
+                  <Readout label="PROTEIN" value={fixed(day.protein, 0, "g")} />
+                  <Readout label="WATER" value={fixed(day.water, 0, "oz")} />
+                  <Readout label="WEIGHT" value={fixed(day.weight, 1, "lb")} />
+                </ReadoutGrid>
+                {onOpenHistory &&
+                  day.dayIds.map((id, index) => (
+                    <button key={id} type="button" className="btn-secondary" onClick={() => onOpenHistory(id)}>
+                      {day.dayIds.length > 1 ? `INSPECT DAY EVENTS, PART ${index + 1} →` : "INSPECT DAY EVENTS →"}
+                    </button>
+                  ))}
+              </>
+            )}
+          </div>
+        </Section>
+
+        <Section id="week-patterns" eyebrow="PATTERNS" title="Worth noticing" className="weekly-dashboard__panel">
+          <div className="weekly-dashboard__toggle" role="group" aria-label="Which days to compare">
+            {(["ALL", "WORK", "OFF"] as const).map((m) => (
+              <button key={m} type="button" className={`chip${mode === m ? " chip--selected" : ""}`} aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>
+            ))}
+          </div>
+          <ReadoutGrid className="weekly-dashboard__metrics">
+            <Readout label="DAYS" value={pattern.days === 0 ? "No recorded days" : pattern.days} detail={mode === "ALL" ? "All recorded days" : mode === "WORK" ? "Declared work days" : "Declared days off"} />
+            <Readout label="SLEEP" value={fixed(pattern.sleep.mean, 1, "h")} detail={pattern.sleep.mean === undefined && mode !== "ALL" ? `Needs ${CONTEXT_FLOOR_DAYS} sleep-logged days (${pattern.sleep.days})` : `Average · ${plural(pattern.sleep.days, "day", "days")}`} />
+            <Readout label="PROTEIN" value={fixed(pattern.protein.mean, 0, "g")} detail={pattern.protein.mean === undefined && mode !== "ALL" ? `Needs ${CONTEXT_FLOOR_DAYS} protein-logged days (${pattern.protein.days})` : `Average · ${plural(pattern.protein.days, "day", "days")}`} />
+          </ReadoutGrid>
+          <p className="tool-label" style={{ marginTop: 16 }}>SLEEP BY CONTEXT</p>
+          {([["Work days", headline.sleep.work], ["Days off", headline.sleep.off]] as const).map(([label, value]) => (
+            <div className="weekly-barline" key={label}>
+              <span className="weekly-barline__label">{label}</span>
+              <span className="weekly-barline__track" aria-hidden="true"><span className="weekly-barline__fill" style={{ width: `${Math.min(100, ((value.mean ?? 0) / 9) * 100)}%` }} /></span>
+              <span className="weekly-barline__value">{value.mean === undefined ? `Needs ${CONTEXT_FLOOR_DAYS} days (${value.days})` : `${value.mean.toFixed(1)} h`}</span>
+            </div>
+          ))}
+          <p className="meta">Evidence, not diagnosis: these are counts and recorded averages from declared work context. They do not establish a cause or a personal baseline.</p>
+        </Section>
+
+        <Section id="week-findings" eyebrow="FINDINGS" title="Evidence over time" className="weekly-dashboard__panel">
+          <p className="meta">The existing read-only findings, counted over the 45 days to the end of this week.</p>
+          {describeFindings(data.findings.findings, data.findings.exerciseNames).map((copy) => (
+            <div key={copy.key} className="weekly-dashboard__finding">
+              <p className="card-title">{copy.title}</p>
+              {copy.lines.map((line) => <p key={line} className="card-body">{line}</p>)}
+            </div>
+          ))}
+          {data.findings.findings.length === 0 && <SectionEmpty line="No findings in this window yet." />}
+          {describeWaitingFindings(data.findings.waiting) && <p className="meta">{describeWaitingFindings(data.findings.waiting)}</p>}
+        </Section>
+
+        <MetricExplorer rows={rows} metric={metric} selected={selected} onMetric={setMetric} onSelect={setSelected} />
+      </MoreSections>
     </section>
   );
 }
@@ -294,8 +287,7 @@ function MetricExplorer({ rows, metric, selected, onMetric, onSelect }: {
   const y = (v: number) => 100 - ((v - min) / Math.max(1e-9, max - min || 1)) * 72;
   const points = values.flatMap((v, i) => (v === undefined ? [] : [{ i, v }]));
   return (
-    <div className="weekly-dashboard__panel">
-      <h3 className="tool-label">METRIC EXPLORER</h3>
+    <Section id="week-metric-explorer" eyebrow="EXPLORE A METRIC" title="Metric explorer" className="weekly-dashboard__panel">
       <div className="weekly-dashboard__toggle" role="group" aria-label="Metric to explore">
         {METRICS.map((m) => (
           <button key={m.key} type="button" className={`chip${metric === m.key ? " chip--selected" : ""}`} aria-pressed={metric === m.key} onClick={() => onMetric(m.key)}>{m.label}</button>
@@ -318,6 +310,6 @@ function MetricExplorer({ rows, metric, selected, onMetric, onSelect }: {
           : `Recorded on ${plural(known.length, "day", "days")} of 7 · ${min.toFixed(spec.digits)} to ${max.toFixed(spec.digits)} ${spec.unit}. Selected: ${weekday(rows[selected]!.start)} ${fixed(values[selected], spec.digits, spec.unit)}.`}
         {" "}Missing days are not treated as zero.
       </p>
-    </div>
+    </Section>
   );
 }

@@ -15,3 +15,5 @@ full-page shots, so the fixed tab bar sits where it does on a phone. Synthetic, 
 - Plans: `plans-before-1/2.png` and `plans-after-1/2.png`. Plan Today's selected task list and add-task form
   use the shared section shape. Empty lists stay kind, failed reads stay unavailable, and existing tasks and
   write paths are unchanged.
+- Weekly Review: `weekly-review-before-1/2.png` and `weekly-review-after-1/2.png`. What mattered and what's
+  next lead the page; the week’s numbers, lived days and deeper evidence stay available under More from the week.

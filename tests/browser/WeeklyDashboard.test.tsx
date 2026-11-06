@@ -66,11 +66,12 @@ afterEach(async () => {
   window.scrollTo(0, 0);
 });
 
-async function renderReview(onOpenHistory = vi.fn()) {
+async function renderReview(onOpenHistory = vi.fn(), openMore = true) {
   const screen = await render(<ReviewScreen onOpenHistory={onOpenHistory} />);
   await openDetailedReviews(screen);
   const dashboard = screen.getByRole("region", { name: "Weekly review", exact: true });
   await expect.element(dashboard.getByRole("heading", { name: "Oct 12 — Oct 18" })).toBeVisible();
+  if (openMore) await dashboard.getByText("More from the week", { exact: true }).click();
   return { screen, dashboard, onOpenHistory };
 }
 
@@ -79,6 +80,17 @@ const readout = (label: string, scope = ".weekly-dashboard") =>
 const patterns = ".weekly-dashboard__panel:has(.weekly-barline)";
 
 describe("Weekly Review dashboard", () => {
+  it("leads with what mattered and what's next, with detailed evidence folded", async () => {
+    await seedWeek();
+    const { dashboard } = await renderReview(vi.fn(), false);
+    await expect.element(dashboard.getByText("WHAT MATTERED", { exact: true })).toBeVisible();
+    await expect.element(dashboard.getByText("WHAT'S NEXT", { exact: true })).toBeVisible();
+    await expect.element(dashboard.getByRole("heading", { name: "Your focus" })).toBeVisible();
+    await expect.element(dashboard.getByText("2 strength sessions on 2 days.", { exact: true })).toBeVisible();
+    await expect.element(dashboard.getByRole("button", { name: "Complete weekly review" })).toBeVisible();
+    expect(document.querySelector<HTMLDetailsElement>(".weekly-dashboard > .bx-more")?.open).toBe(false);
+  });
+
   it("shows the closed week's headline numbers from the recorded days", async () => {
     await seedWeek();
     await renderReview();
@@ -99,7 +111,7 @@ describe("Weekly Review dashboard", () => {
     await expect.element(dashboard.getByRole("button", { name: /^SUN Oct 18:/ })).toHaveAttribute("aria-pressed", "true");
 
     await dashboard.getByRole("button", { name: "THU Oct 15: sleep 8.0 h, protein 160 g, 1 session, day off" }).click();
-    await expect.element(dashboard.getByText("DAY DETAIL · THU Oct 15")).toBeVisible();
+    await expect.element(dashboard.getByRole("heading", { name: "THU Oct 15" })).toBeVisible();
     const detail = document.querySelector(".weekly-dashboard__detail")!.textContent!;
     expect(detail).toContain("8.0 h");
     expect(detail).toContain("160 g");
@@ -141,7 +153,7 @@ describe("Weekly Review dashboard", () => {
   it("COMPLETE REVIEW opens Carry forward; earlier weeks are read only", async () => {
     await seedWeek();
     const { dashboard } = await renderReview();
-    await dashboard.getByRole("button", { name: "COMPLETE REVIEW →" }).click();
+    await dashboard.getByRole("button", { name: "Complete weekly review" }).click();
     const carry = dashboard.getByRole("region", { name: "Carry forward", exact: true });
     await expect.element(carry.getByRole("textbox", { name: "What stood out? (optional)" })).toBeVisible();
 
@@ -149,7 +161,7 @@ describe("Weekly Review dashboard", () => {
     await expect.element(dashboard.getByRole("heading", { name: "Oct 5 — Oct 11" })).toBeVisible();
     await expect.element(dashboard.getByText("No review was saved for this week.", { exact: true })).toBeVisible();
     expect(readout("PROTEIN / AVERAGE")?.textContent).toContain("90 g");
-    expect(dashboard.getByRole("button", { name: "COMPLETE REVIEW →" }).elements()).toHaveLength(0);
+    expect(dashboard.getByRole("button", { name: "Complete weekly review" }).elements()).toHaveLength(0);
     await expect.element(dashboard.getByRole("button", { name: "← PREVIOUS WEEK" })).toBeDisabled();
     await dashboard.getByRole("button", { name: "NEXT WEEK →" }).click();
     await expect.element(dashboard.getByRole("heading", { name: "Oct 12 — Oct 18" })).toBeVisible();

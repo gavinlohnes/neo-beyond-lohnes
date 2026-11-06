@@ -33,17 +33,13 @@
 /* REVIEW-001 Weekly Review dashboard (2026-10-18). Neutral ink throughout:
    red stays for the primary button and the earned PR tag only. */
 .weekly-dashboard { border-bottom: 1px solid var(--border-subtle); margin-bottom: 28px; padding-bottom: 8px; }
-.weekly-dashboard__range { font-size: 1.5rem; margin: 4px 0; }
 .weekly-dashboard__nav { display: flex; gap: 8px; margin: 12px 0; }
 .weekly-dashboard__nav > button { flex: 1; width: auto; min-height: 44px; }
 .weekly-dashboard__metrics { margin: 12px 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .weekly-dashboard__metrics .readout { min-width: 0; }
 .weekly-dashboard__metrics .readout__value { overflow-wrap: anywhere; }
 .weekly-dashboard__detail { margin: 8px 0 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.weekly-dashboard__status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--border-subtle); padding-top: 12px; }
-.weekly-dashboard__status > div { flex: 1 1 180px; }
-.weekly-dashboard__status > button { width: auto; flex: 0 1 auto; }
-.weekly-dashboard__panel { border-top: 1px solid var(--border-subtle); padding: 16px 0; }
+.weekly-dashboard .weekly-dashboard__panel { border-top: 0; padding: 20px 0; }
 .weekly-dashboard__panel > button { width: auto; margin: 4px 8px 0 0; min-height: 44px; }
 .weekly-dashboard__strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 8px 0; }
 .weekly-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; min-height: 44px; padding: 6px 0; background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border-subtle); border-radius: var(--radius); cursor: pointer; font: inherit; }
