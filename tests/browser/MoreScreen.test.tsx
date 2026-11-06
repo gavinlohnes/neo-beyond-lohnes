@@ -67,7 +67,9 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Data safety", { exact: true })).toBeVisible();
     await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
-    await expect.element(screen.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
+    await expect.element(
+      screen.getByRole("region", { name: "Settings", exact: true }).getByRole("heading", { name: "Settings", exact: true }),
+    ).toBeVisible();
 
     await expect.element((await commandResult(screen, "MISSIONS & OBLIGATIONS"))).toBeVisible();
     await expect.element((await commandResult(screen, "WORK SCHEDULE"))).toBeVisible();
@@ -131,9 +133,10 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
 
-    for (const name of ["Data safety", "Settings"]) {
-      await expect.element(screen.getByRole("heading", { name, exact: true })).toBeVisible();
-    }
+    await expect.element(screen.getByRole("heading", { name: "Data safety", exact: true })).toBeVisible();
+    await expect.element(
+      screen.getByRole("region", { name: "Settings", exact: true }).getByRole("heading", { name: "Settings", exact: true }),
+    ).toBeVisible();
 
     const restoreSummary = screen.getByText("RESTORE — REPLACES ALL DATA", { exact: true });
     await expect.element(restoreSummary).toBeVisible();
