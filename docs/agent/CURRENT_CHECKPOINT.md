@@ -8,10 +8,11 @@
 - Step 1 merged as #424 (shared `Section` primitives, `readSection`, guide, Decision Register entry).
 - Step 2 TRAIN merged as #425.
 - Step 3 BODY: "Not logged" instead of 0 for empty readings; weight leads PROGRESS. Review and CI pending.
-- Step 4 MORE + Plans is PR #427. Its original CI failed browser shards 1, 3 and 4; this repair
-  prioritizes Plan near the top, scopes the Settings heading checks, and aligns rollover coverage
-  with the truthful "Not logged" empty-day state. Focused Chromium: 67/67; architecture and
-  TypeScript PASS. Required CI and independent exact-head review must be rerun on this head.
+- Step 4 MORE + Plans merged as PR #427. Its original CI failed browser shards 1, 3 and 4; the
+  repair is on `copilot/fix-failing-tests-1-3-4`: Plan is prioritized near the top, Settings
+  heading checks are scoped to their region, and rollover coverage expects the truthful
+  "Not logged" empty-day state. Focused Chromium: 67/67; architecture, TypeScript, build, and
+  CodeQL PASS. Next: open a follow-up PR, then run required CI and independent exact-head review.
   Steps 5–6 follow.
 - Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
 - CI risk: `playwright install --with-deps` can stall on the Ubuntu mirror with no job timeout
