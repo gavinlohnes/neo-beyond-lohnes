@@ -32,3 +32,10 @@
 .health-history-views { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 12px; }
 .health-history-views .btn-secondary { min-height: 44px; }
 .health-history-views .btn-secondary[aria-pressed="true"] { border-color: var(--p-t1, var(--text-1)); color: var(--p-t1, var(--text-1)); }
+/* LIFE-PATTERN-001: the weight reading sits in the shared section shape, not a second box. */
+.body-home .bx-section .data-weight-instrument { border: 0; padding: 0; margin: 0; background: none; }
+.body-home .bx-section .data-weight-instrument::after { content: none; }
+.body-home .bx-section .data-weight-instrument > .btn-secondary { width: 100%; min-height: 48px; margin-top: 12px; }
+.body-home .data-progress { padding-block: 22px; }
+.health-overview .readout__value .health-empty, .body-home .health-overview .health-nutrition .readout__value .health-empty { display: block; font: 500 20px/1.3 var(--p-display, var(--font-display)); letter-spacing: 0; color: var(--text-2); }
+.body-home .data-more-progress { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border-strong); }

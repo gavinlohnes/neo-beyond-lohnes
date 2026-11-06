@@ -50,19 +50,21 @@ export function HealthOverview({ day, calories, protein, water, sleep, lastMainS
   const mains = sleep.filter((entry) => entry.kind === "PRIMARY").length;
   const naps = sleep.filter((entry) => entry.kind === "SUPPLEMENTAL");
   const lastWeight = weight.at(-1);
+  // LIFE-PATTERN-001: an empty reading says "Not logged", as sleep and weight already do, never a bare "0".
+  const notLogged = <span className="health-empty">Not logged</span>;
   return (
     <section className="health-overview" aria-label="Your daily health record">
       {/* UX-COHESION-001: the lived-day boundary is internal; only say something when no day exists yet. */}
       {!day && <p className="meta health-day">Your day begins with your first record.</p>}
       <ReadoutGrid emphasis="primary" className="health-nutrition">
-        <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={<><TickNumber value={calories} /><span className="health-unit"> kcal</span></>} detail={calorieCopy} />
-        <HealthMeasure metric="protein" onExplore={onExplore} label="PROTEIN" value={<><TickNumber value={protein} /><span className="health-unit"> g</span></>} detail={proteinCopy} />
+        <HealthMeasure metric="calories" onExplore={onExplore} label="CALORIES" value={mealEntries.length === 0 ? notLogged : <><TickNumber value={calories} /><span className="health-unit"> kcal</span></>} detail={calorieCopy} />
+        <HealthMeasure metric="protein" onExplore={onExplore} label="PROTEIN" value={protein === 0 && mealEntries.length === 0 ? notLogged : <><TickNumber value={protein} /><span className="health-unit"> g</span></>} detail={proteinCopy} />
       </ReadoutGrid>
       <ReadoutGrid className="health-readings">
-        <HealthMeasure metric="water" onExplore={onExplore} label="WATER" value={`${water} oz`} />
-        {showWeight && <HealthMeasure metric="weight" onExplore={onExplore} label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : "Not logged"}
+        <HealthMeasure metric="water" onExplore={onExplore} label="WATER" value={water === 0 ? notLogged : `${water} oz`} />
+        {showWeight && <HealthMeasure metric="weight" onExplore={onExplore} label="LAST WEIGHT" value={lastWeight ? `${lastWeight.weightLbs} lbs` : notLogged}
           detail={lastWeight ? new Date(lastWeight.recordedAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }) : undefined} />}
-        <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : lastMainSleep ? formatDuration(lastMainSleep.minutes) : "Not logged"}
+        <HealthMeasure metric="sleep" onExplore={onExplore} label="MAIN SLEEP" value={main ? formatDuration(main.effectiveDurationMinutes) : lastMainSleep ? formatDuration(lastMainSleep.minutes) : notLogged}
           detail={mains > 1 ? `Latest of ${mains} main-sleep records` : !main && lastMainSleep ? (lastMainSleep.fromGarmin ? "Garmin · last main sleep" : "Last main sleep") : main?.fromGarmin ? "Garmin" : undefined} />
         {/* UX-COHESION-001: naps appear when there are naps, not as a standing "Not logged". */}
         {naps.length > 0 && <Readout label="NAPS" value={formatDuration(naps.reduce((total, entry) => total + entry.effectiveDurationMinutes, 0))}

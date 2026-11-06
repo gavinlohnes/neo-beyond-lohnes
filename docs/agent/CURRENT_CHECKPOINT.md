@@ -6,10 +6,12 @@
 - Rollout, one PR each: 1 primitives + guide (branch `ccr-90736806-z9op9b`) → 2 TRAIN → 3 BODY →
   4 MORE and Plans → 5 weekly review → 6 TODAY (the order and the Engine's next action stay unchanged).
 - Step 1 merged as #424 (shared `Section` primitives, `readSection`, guide, Decision Register entry).
-- Step 2 TRAIN: programme, training summary and planned work take the section shape; planned work
-  moves last as the "more" fold. START WORKOUT and the picker are unchanged. Review and CI pending.
-- Steps 3–5 (BODY, Plans, weekly review) are prepared locally on the Builder's machine and follow.
+- Step 2 TRAIN merged as #425.
+- Step 3 BODY: "Not logged" instead of 0 for empty readings; weight leads PROGRESS. Review and CI pending.
+- Steps 4–6 (Plans, weekly review, TODAY) are prepared locally on the Builder's machine and follow.
 - Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
+- CI risk: `playwright install --with-deps` can stall on the Ubuntu mirror with no job timeout
+  (seen twice on 2026-11-05). Suggest timeout-minutes plus a browser cache; needs owner OK.
 
 ---
 

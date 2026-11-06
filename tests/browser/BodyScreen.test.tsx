@@ -67,15 +67,15 @@ afterEach(() => {
 });
 
 describe("BodyScreen (real browser) — empty state", () => {
-  it("shows Not logged / zero readings with no day and no entries yet", async () => {
+  it("says Not logged, never a bare 0, with no day and no entries yet", async () => {
     const screen = await render(<BodyScreen />);
 
-    await expect.element(screen.getByText("0 oz", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("0 g", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not logged", { exact: true }).first()).toBeVisible();
-    // DECLUTTER Drop 2 / UX-COHESION-001: only WEIGHT and MAIN SLEEP say "Not logged"; NAPS appears
-    // only once a nap exists.
-    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(2);
+    // LIFE-PATTERN-001: calories, protein, water, weight and main sleep all say "Not logged" until
+    // something is recorded. NAPS appears only once a nap exists (UX-COHESION-001).
+    expect(screen.getByText("Not logged", { exact: true }).elements()).toHaveLength(5);
+    expect(screen.getByText("0 oz", { exact: true }).elements()).toHaveLength(0);
+    expect(screen.getByText("0 g", { exact: true }).elements()).toHaveLength(0);
   });
 
   it("presents calories and protein first, with honest separate main-sleep and nap readings", async () => {
