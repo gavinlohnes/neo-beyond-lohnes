@@ -16,9 +16,10 @@ try {
   await page.clock.install({ time: new Date("2026-11-05T17:10:00-06:00") });
   await page.goto("http://127.0.0.1:5194/neo-beyond-lohnes/");
   const start = page.getByRole("button", { name: "START DAY", exact: true });
-  if (await start.isVisible({ timeout: 4000 }).catch(() => false)) await start.click();
+  if (await start.waitFor({ timeout: 4000 }).then(() => true, () => false)) await start.click();
   await page.waitForTimeout(400);
-  await page.getByRole("navigation").getByRole("button", { name: tab, exact: true }).click();
+  await page.keyboard.press("Escape").catch(() => {});
+  if (tab !== "TODAY") await page.getByRole("navigation").getByRole("button", { name: tab, exact: true }).click();
   await page.waitForTimeout(500);
   for (const name of taps) { await page.getByText(name, { exact: true }).first().click(); await page.waitForTimeout(400); }
   await settle(page);

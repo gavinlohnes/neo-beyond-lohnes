@@ -37,7 +37,7 @@ describe("BODY daily health record", () => {
       await startDay();
       const screen = await render(<BodyScreen />);
       await expect.element(screen.getByRole("button", { name: "OPEN MEALS" })).toBeVisible();
-      await expect.poll(() => reading("CALORIES")).toContain("0 kcal");
+      await expect.poll(() => reading("CALORIES")).toContain("Not logged");
       await document.fonts.ready;
       for (const animation of document.getAnimations()) animation.finish();
       for (const name of ["OPEN MEALS", "YOUR PROGRESS", "+8 oz", "+12 oz", "+16 oz"]) {
@@ -185,7 +185,7 @@ describe("BODY daily health record", () => {
   it("guards a same-tick progress switch while canonical water logging is in flight", async () => {
     await startDay();
     const screen = await render(<BodyScreen />);
-    await expect.poll(() => reading("WATER")).toContain("0 oz");
+    await expect.poll(() => reading("WATER")).toContain("Not logged");
     screen.getByRole("button", { name: "+8 oz" }).element().dispatchEvent(new MouseEvent("click", { bubbles: true }));
     screen.getByRole("button", { name: "YOUR PROGRESS" }).element().dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await expect.element(screen.getByText("8 oz added.", { exact: true })).toBeVisible();

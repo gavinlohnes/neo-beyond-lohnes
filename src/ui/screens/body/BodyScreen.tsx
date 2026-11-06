@@ -76,6 +76,7 @@ import {
   type WeighIn,
 } from "../../../application/bodyTrendQueries";
 import { DailyHealthRecord, HealthOverview, type HealthRecord } from "./DailyHealthRecord";
+import { WayIn } from "../../components/Section";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import { HealthHistory } from "./HealthHistory";
@@ -2468,14 +2469,20 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
-      <section aria-label="Progress"><h2 className="section-label">PROGRESS</h2>
-        <div className="body-progress-card data-weight-instrument"><h3>WEIGHT</h3><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${weighInDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
-          <div className="body-progress-pair">{onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}<button type="button" className="btn-secondary" onClick={() => showProgress("weight")}>WEIGHT HISTORY</button></div></div>
-        <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
-        <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
-        <div className="body-progress-pair" aria-label="Patterns">
-          <button type="button" className="btn-secondary body-progress-card" onClick={openPicture}>WHOLE PICTURE</button>
-          <button type="button" className="btn-secondary body-progress-card" onClick={() => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" })}>YOUR ROTATION</button>
+      {/* LIFE-PATTERN-001: weight first with one way in, then the other progress views; DATA keeps its three sections. */}
+      <section aria-label="Progress" className="bx-section data-progress">
+        <header className="bx-head"><div><p className="bx-eyebrow">PROGRESS</p><h2 className="bx-title">Weight</h2></div>
+          <WayIn label="Weight history" ariaLabel="WEIGHT HISTORY" onClick={() => showProgress("weight")} /></header>
+        <div className="body-progress-card data-weight-instrument"><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${weighInDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
+          {onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}</div>
+        <div role="group" aria-labelledby="data-more-progress" className="data-more-progress">
+        <header className="bx-head"><div><p className="bx-eyebrow">MORE PROGRESS</p><h3 id="data-more-progress" className="bx-title">Records, photos and patterns</h3></div></header>
+          <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
+          <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
+          <div className="body-progress-pair" aria-label="Patterns">
+            <button type="button" className="btn-secondary body-progress-card" onClick={openPicture}>WHOLE PICTURE</button>
+            <button type="button" className="btn-secondary body-progress-card" onClick={() => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" })}>YOUR ROTATION</button>
+          </div>
         </div>
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
