@@ -42,6 +42,9 @@ Use `src/ui/components/Section.tsx` and `src/application/sectionRead.ts`.
 **Voice.** Keep BEYOND's plain, direct voice: say what is there and what it does. No slogans ("Take yourself
 with you", "Your day. Your direction.").
 
+**Screen floors win.** Where a screen has its own readable-text floor (TRAIN: 16 px for all text), the
+shared labels follow it.
+
 **Phone length.** The top two sections do the work. The rest folds into `MoreSections` or moves to MORE.
 
 **Screenshots.** Check each page at a real 360 × 800 viewport. Full-page screenshots misplace the fixed tab
