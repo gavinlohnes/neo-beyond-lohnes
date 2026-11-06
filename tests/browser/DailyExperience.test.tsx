@@ -152,9 +152,10 @@ describe("Plan Today and truthful guidance", () => {
     await expect.element(screen.getByRole("main")).toBeVisible();
     expect(screen.getByRole("main").elements()).toHaveLength(1);
     await tab(screen, "MORE");
-    // FIELD-AUTHORITY-001: Plan is a top-level job row.
+    // FIELD-AUTHORITY-001: Plan is a top-level job row. LIFE-PATTERN-001 (4/6): each MORE group now
+    // carries an eyebrow and a description, so the row sits lower; it must still be within one screen of scroll.
     const plans = [...document.querySelectorAll<HTMLElement>("summary")].find((element) => element.querySelector(".command-group__name")?.textContent === "Plan")!;
-    expect(plans.getBoundingClientRect().bottom).toBeLessThan(700);
+    expect(plans.getBoundingClientRect().bottom).toBeLessThan(900);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     for (const animation of document.getAnimations()) animation.finish();
     const results = await axe.run(document.body, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] } });
