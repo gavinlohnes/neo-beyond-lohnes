@@ -1,3 +1,4 @@
+import { bestEstimate } from "./plates";
 import { useEffect, useRef, useState } from "react";
 import { getLiftRecentSessions, type LiftSession } from "../../../application/trainHistoryQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
@@ -60,6 +61,7 @@ export function LiftHistory({ exerciseId, exerciseName, onClose }: { exerciseId:
           <p className="meta" role="alert">{readError}</p>
         ) : sessions === null ? null : sessions.length > 0 && (
           <>
+            {(() => { const best = bestEstimate(sessions); return best && <p className="card-body train-e1rm">Estimated 1-rep max: about {best.value} lb, from {best.weight} lb × {best.reps} on {formatShortDate(best.at)}. An estimate, not a tested max.</p>; })()}
             <p className="tool-label" style={{ marginBottom: 4 }}>RECENT SESSIONS</p>
             <ul style={{ listStyle: "none", margin: "0 0 12px", padding: 0 }}>
               {sessions.map((session) => (
