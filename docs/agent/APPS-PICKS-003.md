@@ -29,16 +29,16 @@
 | 7 | Waiting-for list | Plan Today / Missions & Obligations | `markObligationWaiting` + a "check back" planned date |
 | 29 | Home maintenance schedule | MORE → Home | Home reminders as repeating obligations (`homeCommands`) |
 | 30 | Gift ideas per person | Person page (#436) | PERSON facts; a "gift" phrase in a fact, no new store |
-| 34 | Ask your records anything | Alfred | `alfredSearch.ts`, read tools; answers cite sources |
+| 34 | Ask your records anything | Alfred | Existing `search_records` tool; adds an "Ask my records" starter so it can be found |
 | 39 | Week-over-week card | Review | `WeeklyDashboard.tsx` comparisons |
 | 12 | Daily note templates | Daily note | Snippets/templates (A1); insert on tap |
 | 36 | Note search with highlights | Search | existing Search Records; highlight matched words |
 | 18 🔒 | Supersets / circuits | TRAIN templates | needs a template/session field — schema bump per `.claude/rules/persistence.md` |
 | 20 | Muscle map | Review / TRAIN history | exercise library `muscleGroup` |
-| 26 | Goal trend | DATA weight / lift goal | `WeightTrend`, goal weight; "at this rate" with uncertainty |
-| 31 🔒 | Places | MORE → Life | new store; backup round-trip and old-backup restore required |
-| 35 | Weekly planning chat | Alfred | `PLAN_MY_WEEK_ASK` |
-| 40 | Day-off morning brief | Alfred brief | `AlfredBrief.tsx`; days off only, drafted on open, no notification |
+| 26 | Goal trend | DATA weight / lift goal | **Already shipped**: `WeightTrend` projects a goal date (`projectGoalDate`); Review weight details show it. No change. |
+| 31 | Places | MORE → Collections | A one-tap **Places** list in the existing Collections store (Name, Kind, Note, Map link). No new store or schema, so no longer Protected. |
+| 35 | Weekly planning chat | Alfred | **Already shipped**: "Plan my week" / "Draft my week" (cards to save). No change. |
+| 40 | Day-off morning brief | Alfred brief | **Already shipped** as Alfred's brief at the top of TODAY on every day; a separate day-off brief would change TODAY's top (rule 2), so no change. |
 
 **Leverage gate.** REUSE: the existing code named per row and each pick's source pattern. OWN: the BEYOND mapping.
 BUILD FROM SCRATCH: none, except the two approved Protected stores (18, 31).

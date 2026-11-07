@@ -41,3 +41,4 @@
 .people-names { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 16px; }
 .bx-unlinked > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-2); }
 .home-presets > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+mark.search-mark { background: transparent; color: var(--text-1); font-weight: 700; text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }

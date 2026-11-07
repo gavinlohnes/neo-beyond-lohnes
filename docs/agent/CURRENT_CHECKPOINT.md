@@ -3,7 +3,8 @@
 - Gavin picked 18 more ideas ([brief and UX rules](APPS-PICKS-003.md)); 18 (supersets) and 31 (places) are approved
   Protected additions. Gavin: Claude Code is the Builder for all of them today. Pick 11 merged as #440.
 - Picks 17 + 19 merged as #441. Pick 38 already existed (DATA meals: SAME AS YESTERDAY / SAME AS LAST), so nothing was added.
-- Picks 13 + 7 + 29: unlinked mentions with one-tap LINK; WAITING FOR in Plan Today; common house jobs that fill the Home form. Review and CI pending.
+- Picks 13 + 7 + 29 merged as #442.
+- Picks 30, 39, 20, 12, 36, 34, 31 together. 26, 35 and 40 already existed (goal date, Plan my week, Alfred brief), so no change. Places uses Collections, so no new store. Remaining: 18 supersets (Protected). Review and CI pending.
 - APPS-PICKS-002 is complete (#435–#439). CONNECTED-001 complete (#431–#434). CI-HANG-001 merged (#430).
 - Rotation field test (#402) still waits for Gavin's next work night.
 

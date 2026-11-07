@@ -59,7 +59,8 @@ export async function getUnlinkedMentions(label: string): Promise<UnlinkedMentio
   return notes.filter((note) => plainIndex(note.text, pattern) >= 0 && !wikiLabels(note.text).some((item) => item.toLowerCase() === needle.toLowerCase()))
     .map((note) => {
       const at = plainIndex(note.text, pattern);
-      return { dayId: note.dayId, date: dates.get(note.dayId) ?? "", excerpt: note.text.slice(Math.max(0, at - 30), at + needle.length + 40).trim() };
+      const word = at + (note.text[at]?.toLowerCase() === needle[0]!.toLowerCase() ? 0 : 1); // the match may include one boundary character
+      return { dayId: note.dayId, date: dates.get(note.dayId) ?? "", excerpt: note.text.slice(Math.max(0, word - 30), word + needle.length + 40).trim() };
     })
     .sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 }

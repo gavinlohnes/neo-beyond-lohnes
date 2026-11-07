@@ -432,3 +432,12 @@ describe("SearchScreen (real browser) — request lifecycle", () => {
     spy.mockRestore();
   });
 });
+
+it("SEARCH-MARK-001: marks the searched words in results without changing them", async () => {
+  const { createObligation } = await import("../../src/application/intentCommands");
+  await createObligation({ title: "Call the roofer about gutters" });
+  const screen = await render(<SearchScreen />);
+  await screen.getByRole("textbox", { name: "Search everything" }).fill("roofer");
+  await expect.poll(() => [...document.querySelectorAll("mark.search-mark")].map((m) => m.textContent)).toContain("roofer");
+  await expect.element(screen.getByText("Call the roofer about gutters")).toBeVisible();
+});
