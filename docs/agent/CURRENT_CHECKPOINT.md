@@ -1,8 +1,8 @@
 # APPS-PICKS-002 — in progress (2026-11-07)
 
 - Gavin picked 8 ideas ([brief](APPS-PICKS-002.md)); one PR each, in the brief's order.
-- Pick 1 (tappable links): Connections entries and [[link]] mentions open their record; a tapped day opens
-  that day's daily note. Review and CI pending.
+- Pick 1 merged as #435 (tappable links).
+- Pick 2 (person pages): People lists names; a person page shows dates, kept facts and Connections. Review and CI pending.
 - CONNECTED-001 is complete (#431 Connections, #432 Patterns, #433 Calendar, #434 Alfred).
 
 ---
