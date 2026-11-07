@@ -45,6 +45,13 @@ export async function readPersonalSources(): Promise<ContextSource[]> {
   ];
 }
 
+/** CONNECTED-001: what the personal opt-in also shares, counted the same way the context selects it. */
+export async function readPersonalExtras(): Promise<{ dailyNotes: number; calendarEvents: number }> {
+  const notes = (await db.dailyNotes.orderBy("updatedAt").reverse().limit(7).toArray()).filter((n) => n.text.trim()).length;
+  const calendar = readCalendarWithDay();
+  return { dailyNotes: notes, calendarEvents: calendar.connected ? calendar.events.length : 0 };
+}
+
 export async function personalContextVersion(includePersonal: boolean): Promise<string> {
   const [personal, legacy] = await Promise.all([includePersonal ? readPersonalSources() : Promise.resolve([]), getMemories()]);
   return JSON.stringify([includePersonal, personal, legacy]);

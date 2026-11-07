@@ -1,6 +1,6 @@
 import { ContextSourceDetails } from "./OperatorContextPanel";
 import { useEffect, useRef, useState } from "react";
-import { inspectContextSource, readPersonalSources, type ContextSource, type PlanningContext } from "../../application/alfred/personalContext";
+import { inspectContextSource, readPersonalExtras, readPersonalSources, type ContextSource, type PlanningContext } from "../../application/alfred/personalContext";
 
 const canOpen = (kind: ContextSource["kind"]) => ["MISSION", "MEMORY", "ALFRED_MEMORY", "PERSONAL_FACT", "DAY", "OBLIGATION", "SCHEDULE", "ROUTINE", "PROJECT"].includes(kind);
 const date = (at: string) => new Date(at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -16,11 +16,13 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
   const [open, setOpen] = useState(false), [limit, setLimit] = useState(5);
   const [available, setAvailable] = useState<ContextSource[]>([]), [error, setError] = useState<string | null>(null);
   const [sourceReadAt, setSourceReadAt] = useState<string | null>(null);
+  const [extras, setExtras] = useState<{ dailyNotes: number; calendarEvents: number } | null>(null);
   const [current, setCurrent] = useState<ContextSource | null>(null), [reading, setReading] = useState(false);
   useEffect(() => {
     if (!open) return;
     let alive = true, sequence = 0;
     const read = () => { const request = ++sequence; setPreviewLoading(true); void readPersonalSources().then((s) => { if (alive && request === sequence) { setAvailable(s); setError(null); } }).catch(() => { if (alive && request === sequence) { setAvailable([]); setError("Personal context is unavailable, not empty. Reopen this panel to retry."); } }).finally(() => { if (alive && request === sequence) setPreviewLoading(false); }); };
+    void readPersonalExtras().then((x) => { if (alive) setExtras(x); }).catch(() => { if (alive) setExtras(null); });
     read(); window.addEventListener("beyond:memory-changed", read); window.addEventListener("focus", read);
     return () => { alive = false; window.removeEventListener("beyond:memory-changed", read); window.removeEventListener("focus", read); };
   }, [open, included]);
@@ -42,10 +44,11 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
     <details onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>CONTEXT & SOURCES</summary>
       <p className="meta">Claude already receives your current day, recent recorded days, schedule, tasks, notes, targets, saved meals and active personal facts (including unconverted Alfred entries) when you send. Read tools can retrieve older records. Sending needs a connection.</p>
-      <label><input type="checkbox" checked={included} disabled={busy} onChange={(e) => onIncluded(e.target.checked)} /> Include my Missions and confirmed personal memory in this conversation</label>
+      <label><input type="checkbox" checked={included} disabled={busy} onChange={(e) => onIncluded(e.target.checked)} /> Include my Missions, confirmed personal memory, recent daily notes and synced calendar events in this conversation</label>
       <p className="meta">Off for this conversation by default. Missions, direction and constraints stay out of automatic briefs and weekly reviews; those keep their existing prep/recovery context. Changing this choice starts a fresh model conversation; earlier requests sent to Claude cannot be recalled.</p>
       {open && <>
         <h3>Personal sources available on this phone</h3>
+        {extras && <p className="meta">Also shared when included: {extras.dailyNotes} recent {extras.dailyNotes === 1 ? "daily note" : "daily notes"} and {extras.calendarEvents} synced calendar {extras.calendarEvents === 1 ? "event" : "events"}.</p>}
         {previewLoading && <p role="status">Reading local personal sources…</p>}
         {!available.length && !previewLoading && !error && <p className="meta">No active personal sources recorded.</p>}
         {available.slice(0, limit).map((s) => <details key={s.key}><summary>{s.title}</summary><ContextSourceDetails source={s} />
