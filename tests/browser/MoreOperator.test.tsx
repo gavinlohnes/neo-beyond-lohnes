@@ -76,7 +76,9 @@ describe("MORE-OPERATOR-001", () => {
     const summaries = [...screen.container.querySelectorAll<HTMLElement>(".command-group > .command-group__control")];
     expect(summaries.length).toBeGreaterThan(0);
     for (const summary of summaries) {
-      expect(summary.querySelector(".command-group__eyebrow")).not.toBeNull();
+      // LIFE-PATTERN-001: menu rows keep a plain name and one line; an eyebrow would repeat the name
+      // and push Plan below the phone fold (DailyExperience).
+      expect(summary.querySelector(".command-group__eyebrow")).toBeNull();
       expect(summary.querySelector(".command-group__name")).not.toBeNull();
       expect(summary.querySelector(".command-group__hint")).not.toBeNull();
       expect(summary.querySelectorAll("button, a")).toHaveLength(0);
@@ -84,7 +86,6 @@ describe("MORE-OPERATOR-001", () => {
       expect(summary.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     }
     const plan = summaries.find((summary) => summary.querySelector(".command-group__name")?.textContent?.trim() === "Plan")!;
-    expect(plan.querySelector(".command-group__eyebrow")?.textContent).toBe("YOUR PLAN");
     await plan.click();
     await expect.element(screen.getByRole("button", { name: "PLAN TODAY Your chosen tasks and recorded deadlines", exact: true })).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);

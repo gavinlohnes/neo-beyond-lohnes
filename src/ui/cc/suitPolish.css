@@ -178,7 +178,7 @@
 .more-control-center > .equipment-row .meta { margin-block: 8px; }
 .more-operator .command-group > .command-group__control {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 24px;
-  gap: 4px 12px; min-height: 112px; padding: 16px 10px; list-style: none;
+  gap: 2px 12px; min-height: 84px; padding: 12px 10px; list-style: none;
 }
 .command-group__control::-webkit-details-marker { display: none; }
 .command-group__control::before { content: none; display: none; }
