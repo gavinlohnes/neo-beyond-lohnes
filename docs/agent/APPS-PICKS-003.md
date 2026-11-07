@@ -4,7 +4,7 @@
   18, 20, 26, 31, 35, 40**. His standing direction: "keeping in mind the user experience and keeping the app simple
   to use and looking great." Two picks cross a Protected line and are approved by picking them:
   **18 supersets** (workout structure / stored data) and **31 places** (a new kind of saved record).
-- **Builders:** Claude Code (11 On this day) and Codex for the rest. One PR per pick or small related pair, each with
+- **Builder:** Claude Code for all picks (Gavin, 2026-11-07: "You will be the builder today"). One PR per pick or small related pair, each with
   independent exact-head review, green CI and before/after phone screenshots at 360 px.
 
 ## UX rules for every pick (binding for this objective)
