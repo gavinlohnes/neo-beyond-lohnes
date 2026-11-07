@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useId } from "react";
 import { captureCommitFeedback } from "../../feel/feedback";
+import { Connections } from "../../components/Connections";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
 import type { Mission, ProjectStatus } from "../../../domain/intent/types";
@@ -158,6 +159,7 @@ function ProjectCard({ view, missions, busy, run, onOpenObligation }: {
             </select>
           </label>}
         </>}
+        <Connections id={`project-${project.id}-connections`} label={project.title} self={{ kind: "PROJECT", id: project.id }} />
         <div className="intent-actions" style={{ marginTop: 8 }}>
           {project.status === "ACTIVE" && <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void status("PAUSED")}>PAUSE</button>}
           {project.status === "PAUSED" && <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void status("ACTIVE")}>RESUME</button>}
