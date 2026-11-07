@@ -1,8 +1,9 @@
 # APPS-PICKS-003 — in progress (2026-11-07)
 
 - Gavin picked 18 more ideas ([brief and UX rules](APPS-PICKS-003.md)); 18 (supersets) and 31 (places) are approved
-  Protected additions. Claude Code builds pick 11 (On this day) in this PR; Codex builds the rest, one PR per pick
-  or small pair, in the brief's table order, each with review, green CI and 360 px before/after screenshots.
+  Protected additions. Gavin: Claude Code is the Builder for all of them today. Pick 11 merged as #440.
+- Picks 17 + 19: estimated 1-rep max in lift history; warm-up ramp on a barbell lift's first set (TRAIN now reuses
+  Gym Mode's plate math instead of a copy). Review and CI pending.
 - APPS-PICKS-002 is complete (#435–#439). CONNECTED-001 complete (#431–#434). CI-HANG-001 merged (#430).
 - Rotation field test (#402) still waits for Gavin's next work night.
 

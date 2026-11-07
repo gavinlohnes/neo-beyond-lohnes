@@ -12,7 +12,7 @@ import { OperatorHeader } from "../../components/OperatorHeader";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
 import { Section } from "../../components/Section";
-import { describePlates, usesBarbellPlates } from "./plates";
+import { describePlates, describeWarmUpFor, usesBarbellPlates } from "./plates";
 import { RecordsList } from "./RecordsList";
 import { TrainingHistory } from "./TrainingHistory";
 import { LiftHistoryControl } from "./LiftHistory";
@@ -1614,6 +1614,7 @@ export function TrainScreen({
                     </div>
                     {/* PLATES-001: what to load, for free-weight barbell lifts. Display only. */}
                     {usesBarbellPlates(ex.name) && describePlates(Number(display.weight)) && <p className="meta train-plates" aria-live="polite">{describePlates(Number(display.weight))}</p>}
+                    {usesBarbellPlates(ex.name) && setNumber === 1 && describeWarmUpFor(Number(display.weight)) && <p className="meta train-plates">{describeWarmUpFor(Number(display.weight))} · a suggestion, not logged</p>}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                       <span className="meta" style={{ width: 56, flexShrink: 0 }}>REPS</span>
                       <button

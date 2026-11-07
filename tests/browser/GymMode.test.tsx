@@ -136,12 +136,12 @@ describe("GYM-001 — gym screen", () => {
     const dialog = screen.getByRole("dialog", { name: "Gym mode" });
     await expect.element(dialog).toBeVisible();
     await expect.element(screen.getByText("Last time 185 × 5")).toBeVisible();
-    await expect.element(screen.getByText("Warm-up: 45 ×10 · 95 ×5 · 130 ×3 · 155 ×1")).toBeVisible();
-    await expect.element(screen.getByText("185 lb = bar + 45 + 25 per side")).toBeVisible();
+    await expect.element(dialog.getByText("Warm-up: 45 ×10 · 95 ×5 · 130 ×3 · 155 ×1")).toBeVisible();
+    await expect.element(dialog.getByText("185 lb = bar + 45 + 25 per side")).toBeVisible();
     expect(request).toHaveBeenCalledWith("screen");
 
     await screen.getByRole("button", { name: "Weight up" }).click();
-    await expect.element(screen.getByText("190 lb = bar + 45 + 25 + 2.5 per side")).toBeVisible();
+    await expect.element(dialog.getByText("190 lb = bar + 45 + 25 + 2.5 per side")).toBeVisible();
     await screen.getByRole("button", { name: "LOG SET 1" }).click();
 
     await expect.element(dialog.getByRole("button", { name: "LOG SET 2" })).toBeVisible();
