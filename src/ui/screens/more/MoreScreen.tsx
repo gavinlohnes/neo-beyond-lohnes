@@ -149,7 +149,7 @@ export function MoreScreen({
   dailyBanners, dailyRefreshKey = 0, onDailyContextChanged,
   active = true,
   navigationRequest = 0,
-  recordFocus = null, memoryFocusId = null,
+  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null,
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
@@ -183,6 +183,8 @@ export function MoreScreen({
   navigationRequest?: number;
   recordFocus?: IntentFocus | null;
   memoryFocusId?: string | null;
+  /** CONNECT-002: the lived day a tapped [[link]] opened; null is the current day. */
+  dailyNoteDayId?: string | null;
   /** Existing subviews can be opened by SYSTEM; the top-bar icon still opens SEARCH. */
   initialView?: MoreView;
   /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
@@ -618,7 +620,7 @@ export function MoreScreen({
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
           <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
           <div hidden={view !== "SAVED"}>{visited.has("SAVED") && <><OperatorHeader destination="command">MORE // SAVED</OperatorHeader><SavedInboxScreen active={active && view === "SAVED"} /></>}</div>
-          <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} /></>}</div>
+          <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} dayId={dailyNoteDayId} /></>}</div>
           <div hidden={view !== "COLLECTIONS"}>{visited.has("COLLECTIONS") && <><OperatorHeader destination="command">MORE // COLLECTIONS</OperatorHeader><CollectionsScreen active={active && view === "COLLECTIONS"} /></>}</div>
           <div hidden={view !== "HIGHLIGHTS"}>{visited.has("HIGHLIGHTS") && <><OperatorHeader destination="command">MORE // HIGHLIGHTS</OperatorHeader><HighlightsScreen active={active && view === "HIGHLIGHTS"} /></>}</div>
           <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>

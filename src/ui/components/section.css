@@ -27,6 +27,9 @@
 .bx-more.train-planned-work > summary { min-height:48px; }
 /* CONNECT-001: a plain list of what links here. */
 .bx-connection-list { list-style:none; margin:0; padding:0; }
-.bx-connection-list li { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border-subtle); min-width:0; }
-.bx-connection-list li > span { overflow-wrap:anywhere; }
+.bx-connection-list li { border-bottom:1px solid var(--border-subtle); min-width:0; }
+.bx-connection { display:flex; width:100%; justify-content:space-between; align-items:center; gap:12px; min-height:48px; padding:12px 0; border:0; background:transparent; color:var(--text-1); font:inherit; text-align:left; cursor:pointer; }
+.bx-connection > span { overflow-wrap:anywhere; min-width:0; }
+.bx-connection:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.bx-connection:hover > span { text-decoration:underline; text-underline-offset:4px; }
 .bx-connection-list small { flex:none; color:var(--text-2); font:13px/1.5 var(--font-mono); letter-spacing:.04em; }

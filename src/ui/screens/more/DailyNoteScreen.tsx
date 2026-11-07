@@ -6,7 +6,7 @@ import { describeError } from "../../errorMessage";
 
 type Workspace = NonNullable<Awaited<ReturnType<typeof getDailyNoteWorkspace>>>;
 
-export function DailyNoteScreen({ active }: { active: boolean }) {
+export function DailyNoteScreen({ active, dayId = null }: { active: boolean; dayId?: string | null }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [draft, setDraft] = useState("");
   const [savedText, setSavedText] = useState("");
@@ -14,13 +14,13 @@ export function DailyNoteScreen({ active }: { active: boolean }) {
   const [error, setError] = useState("");
   useEffect(() => {
     if (!active) return;
-    void getDailyNoteWorkspace().then((next) => {
+    void getDailyNoteWorkspace(dayId ?? undefined).then((next) => {
       setWorkspace(next);
       if (!next) return;
       const stored = next.note?.text ?? "";
       setSavedText(stored); setDraft(sessionStorage.getItem(`beyond.daily-note.draft.${next.day.id}`) ?? stored);
     });
-  }, [active]);
+  }, [active, dayId]);
   useEffect(() => {
     if (!workspace) return;
     const key = `beyond.daily-note.draft.${workspace.day.id}`;

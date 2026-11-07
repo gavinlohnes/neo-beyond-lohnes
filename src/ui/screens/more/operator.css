@@ -135,3 +135,5 @@
 .highlights-screen{max-width:760px;margin:0 auto;padding:0 16px 32px}.highlights-screen>details,.highlights-screen>label{display:grid;gap:8px;margin:18px 0}.highlights-screen details label{display:grid;gap:6px;margin:10px 0}.highlights-screen button,.highlights-screen input,.highlights-screen textarea,.highlights-screen summary{min-height:44px}.highlights-screen blockquote{margin:12px 0;padding-left:12px;border-left:2px solid var(--accent);white-space:pre-wrap}.highlight-link{display:inline-block;margin:8px 8px 8px 0;color:var(--accent)}
 .automations-screen .automation-choice { min-height: 44px; display: flex; align-items: center; gap: 10px; }
 .automations-screen .automation-event { border-top: 1px solid var(--border); padding-block: 6px; }
+/* CONNECT-002: each mention opens its record; a full-size target. */
+.wiki-mentions li > .text-button { min-height:44px; display:inline-flex; align-items:center; text-align:left; }
