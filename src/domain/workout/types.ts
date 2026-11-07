@@ -50,6 +50,8 @@ export interface ExercisePrescription {
   repRangeLow: number;
   repRangeHigh: number;
   incrementLbs: number;
+  /** SUPERSET-001 (APPS-PICKS-003 pick 18, after Hevy): do this and the next exercise back to back. Optional; absent = on its own. */
+  supersetWithNext?: boolean | undefined;
 }
 
 export interface WorkoutTemplateDefinition {

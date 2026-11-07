@@ -1440,6 +1440,10 @@ export function TrainScreen({
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
               <h2 ref={exerciseHeadingRef} tabIndex={-1} className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
+              {/* SUPERSET-001: a plain cue; it changes no order, rest or logging. */}
+              {(() => { const prev = activeExercises[currentExerciseIndex - 1]; const next = activeExercises[currentExerciseIndex + 1];
+                return currentExercise.supersetWithNext && next ? <p className="meta train-plates">Superset: then {next.name}, back to back</p>
+                  : prev?.supersetWithNext ? <p className="meta train-plates">Superset with {prev.name}</p> : null; })()}
               <p className="meta-strong" style={{ marginBottom: 8 }}>
                 {currentExercise.sets} sets x {currentExercise.repRangeLow}-{currentExercise.repRangeHigh} reps
                 {currentSetNumber !== null ? ` · Set ${currentSetNumber} of ${currentExercise.sets}` : " · All sets logged"}

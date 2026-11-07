@@ -63,6 +63,22 @@ describe("CustomTemplateScreen (real browser)", () => {
     expect(consoleErrors).toEqual([]);
   });
 
+  it("SUPERSET-001: marks an exercise as a superset with the next one, and the last one can't be", async () => {
+    await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
+    await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
+    const screen = await render(<CustomTemplateScreen />);
+    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+    await screen.getByPlaceholder("Template name").fill("Pull pair");
+    await screen.getByRole("button", { name: "Barbell Row (Back)" }).click();
+    await screen.getByRole("button", { name: "Face Pull (Shoulders)" }).click();
+    const boxes = screen.getByRole("checkbox", { name: "Superset with next" });
+    expect(boxes.elements()).toHaveLength(1);
+    await boxes.click();
+    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
+    const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
+    await expect.poll(async () => (await getCustomTemplates())[0]?.exercises.map((e) => e.supersetWithNext ?? false)).toEqual([true, false]);
+  });
+
   it("TRAIN-PROGRESSION-001: derives a real equipment-based increment through the actual screen, not the old flat placeholder", async () => {
     await createCustomExercise({ name: "Leg Press Machine", muscleGroup: "Legs", equipment: "Machine", repRangeLow: 8, repRangeHigh: 12 });
     const screen = await render(<CustomTemplateScreen />);

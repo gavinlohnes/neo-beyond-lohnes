@@ -62,6 +62,7 @@ export function CustomTemplateScreen() {
 
   const [name, setName] = useState("");
   const [selectedSets, setSelectedSets] = useState<Record<string, number>>({});
+  const [supersets, setSupersets] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     void refresh();
@@ -104,7 +105,7 @@ export function CustomTemplateScreen() {
     if (!name.trim() || selectedIds.length === 0) return;
     await withBusy(async () => {
     const acknowledge = captureCommitFeedback();
-      const exercises: ExercisePrescription[] = selectedIds.map((exerciseId) => {
+      const exercises: ExercisePrescription[] = selectedIds.map((exerciseId, index) => {
         const source = savedExercises.find((ex) => ex.id === exerciseId)!;
         return {
           exerciseId: source.id,
@@ -113,12 +114,13 @@ export function CustomTemplateScreen() {
           repRangeLow: source.repRangeLow,
           repRangeHigh: source.repRangeHigh,
           incrementLbs: deriveIncrementLbs(source.equipment, source.muscleGroup),
+          ...(supersets[exerciseId] && index < selectedIds.length - 1 ? { supersetWithNext: true } : {}),
         };
       });
       await createCustomTemplate({ name: name.trim(), exercises });
       acknowledge("LIGHT");
       setName("");
-      setSelectedSets({});
+      setSelectedSets({}); setSupersets({});
       setCreateOpen(false);
       await refresh();
     });
@@ -207,6 +209,9 @@ export function CustomTemplateScreen() {
                             >
                               +
                             </button>
+                            {selectedIds.indexOf(ex.id) < selectedIds.length - 1 && <label className="meta" style={{ display: "flex", alignItems: "center", gap: 4, minHeight: 44 }}>
+                              <input type="checkbox" checked={supersets[ex.id] === true} disabled={busy} onChange={(e) => setSupersets((all) => ({ ...all, [ex.id]: e.target.checked }))} /> Superset with next
+                            </label>}
                           </div>
                         )}
                       </div>
