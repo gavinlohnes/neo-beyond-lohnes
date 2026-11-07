@@ -342,3 +342,17 @@ function correction(c: string, ctx: HelperContext): AlfredProposal | null | "unc
   }
   return null;
 }
+
+/**
+ * QUICK-ADD-001 (APPS-PICKS-002 pick 1, after Todoist/Things): "dentist Tue 3pm" → a title, a date and an
+ * optional time note, using the same offline reader as "remind me to…". Returns null when nothing
+ * date-like was understood, or when the words repeat or are ambiguous, so the plain form stays in charge.
+ */
+export interface QuickAdd { title: string; date: string; time?: string }
+export function parseQuickAdd(text: string, now = new Date()): QuickAdd | null {
+  const words = text.trim();
+  if (!words || /^remind me\b/i.test(words)) return null;
+  const card = remind(`remind me to ${words}`, { now } as HelperContext);
+  if (!card || card.kind !== "add_reminder" || !card.due_date || card.repeat_rrule) return null;
+  return { title: card.title, date: card.due_date, ...(card.when_note ? { time: card.when_note } : {}) };
+}

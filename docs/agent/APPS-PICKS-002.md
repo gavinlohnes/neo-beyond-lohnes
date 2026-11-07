@@ -10,7 +10,7 @@
 | Order | Pick | Pattern from | What BEYOND gets |
 |---|---|---|---|
 | 1 | 8 Tappable links | Obsidian, Logseq | Connections entries and [[link]] mentions open the record (task, project, day, journal, highlight). |
-| 2 | 9 Person pages | Clay, Monica | [[Name]] opens a page: saved dates and facts about that person, plus everything linking to them. |
+| 2 | 9 Person pages | Clay, Monica | [[Name]] opens a page: saved dates and facts about that person, plus everything linking to them. A person is a name, so two people sharing a first name share a page for now. |
 | 3 | 1 Quick add | Todoist, Things | "dentist Tue 3pm" becomes a dated task card to confirm, parsed on the phone. |
 | 4 | 3 End-of-shift shutdown | Sunsama | Done today, move to tomorrow, one line for the note. |
 | 5 | 16 Plate calculator | Strong, Hevy | Plates per side for a target weight. |

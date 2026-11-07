@@ -2,7 +2,8 @@
 
 - Gavin picked 8 ideas ([brief](APPS-PICKS-002.md)); one PR each, in the brief's order.
 - Pick 1 merged as #435 (tappable links).
-- Pick 2 (person pages): People lists names; a person page shows dates, kept facts and Connections. Review and CI pending.
+- Pick 2 merged as #436 (person pages; two people sharing a first name share one page for now).
+- Picks 1 and 3 together (both Plan Today): quick add parses a date in the words; END OF DAY moves planned tasks to tomorrow. Review and CI pending.
 - CONNECTED-001 is complete (#431 Connections, #432 Patterns, #433 Calendar, #434 Alfred).
 
 ---
