@@ -44,3 +44,18 @@ it("CONNECTED-001 Patterns: puts short-sleep and training days side by side, or 
   await thin.getByRole("button", { name: "How do my check-ins look after short sleep?" }).click();
   await expect.element(thin.getByText(/^Not enough recorded yet: this needs 3 days under 6 h main sleep/)).toBeVisible();
 });
+
+it("PIXELS-001: one square per day, empty when not recorded, each opening its day", async () => {
+  const { DayPixels } = await import("../../src/ui/screens/review/DayPixels");
+  const days = [1, 2, 3, 4, 5, 6, 7].map((day) => row(day, "OFF", day === 3 ? {} : { energy: day % 5 + 1, sleepHours: 7 }));
+  const onInspect = vi.fn();
+  const screen = await render(<div className="whole-picture"><DayPixels rows={days} onInspect={onInspect} /></div>);
+  expect(screen.container.querySelectorAll(".day-pixels__day")).toHaveLength(7);
+  expect(screen.container.querySelectorAll('.day-pixels__day[data-level="none"]')).toHaveLength(1);
+  await expect.element(screen.getByText("6 of 7 days have check-in energy recorded. Empty squares are days without it, not zero.", { exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: /^Thu, Sep 3: not recorded\. Open records\.$/ }).click();
+  expect(onInspect).toHaveBeenCalledWith(expect.objectContaining({ start: start(3) }));
+  await screen.getByRole("button", { name: "Main sleep" }).click();
+  await expect.element(screen.getByText("6 of 7 days have main sleep recorded. Empty squares are days without it, not zero.", { exact: true })).toBeVisible();
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+});
