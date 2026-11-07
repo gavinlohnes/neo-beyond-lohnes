@@ -137,3 +137,28 @@ it("surfaces an actual open workout and resumes through the shell without writin
   expect(navigate).toHaveBeenLastCalledWith({ kind: "workout" });
   expect(await db.events.count()).toBe(count);
 });
+
+it("CONNECTED-001: shows Google Calendar events beside tasks when connected, read-only, and nothing when not", async () => {
+  await seed();
+  const count = await db.events.count();
+  localStorage.setItem("beyond.googleCalendar", JSON.stringify({ accessToken: "t", expiresAt: Date.now() + 3600_000, calendarId: null, calendarName: null, includePlans: false, syncOnOpen: false, lastSyncAt: new Date(2026, 10, 5, 16).toISOString() }));
+  localStorage.setItem("beyond.googleCalendar.events", JSON.stringify([
+    { id: "e1", title: "Dentist", start: new Date(2026, 10, 5, 18, 30).toISOString(), end: new Date(2026, 10, 5, 19).toISOString(), allDay: false, calendar: "primary" },
+    { id: "e2", title: "Dinner at Mom's", start: "2026-11-08", end: "2026-11-09", allDay: true, calendar: "primary" },
+  ]));
+  try {
+    const screen = await render(<div className="screen more-operator more-whole-life"><LifeScreen active startAtOverview /></div>);
+    await expect.element(screen.getByText("Dentist", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/From your Google Calendar, synced .*Read-only here\./)).toBeVisible();
+    expect(screen.getByText("Dinner at Mom's", { exact: true }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "Next seven days", exact: true }).click();
+    await expect.element(screen.getByText("Dinner at Mom's", { exact: true })).toBeVisible();
+    expect((await axe.run(screen.container)).violations).toEqual([]);
+    expect(await db.events.count()).toBe(count);
+    await cleanup();
+    localStorage.removeItem("beyond.googleCalendar");
+    const offline = await render(<div className="screen more-operator more-whole-life"><LifeScreen active startAtOverview /></div>);
+    await expect.element(offline.getByRole("heading", { name: "What matters next" })).toBeVisible();
+    expect(offline.getByText("ON YOUR CALENDAR", { exact: true }).elements()).toHaveLength(0);
+  } finally { localStorage.removeItem("beyond.googleCalendar"); localStorage.removeItem("beyond.googleCalendar.events"); }
+});
