@@ -37,6 +37,7 @@ if (typeof window !== "undefined") window.setTimeout(preloadLazyScreens, 2000);
 // DRIVE-HOME-001: the hands-free screen loads only when opened.
 const DriveHome = lazy(() => import("../ui/components/DriveHome").then((m) => ({ default: m.DriveHome })));
 import { DRIVE_HOME_EVENT } from "../ui/driveHomeEvent";
+import { OPEN_RECORD_EVENT, type OpenRecordTarget } from "../ui/openRecordEvent";
 const TabLoading = () => <p className="meta" role="status">Loading…</p>;
 import type { WholePictureDestination } from "../ui/screens/review/WholePicture";
 import { Icon, type IconName } from "../ui/icons/Icon";
@@ -173,6 +174,17 @@ function AppWorkspaces() {
   const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
   const [driveOpen, setDriveOpen] = useState(false);
   useEffect(() => { const open = () => setDriveOpen(true); window.addEventListener(DRIVE_HOME_EVENT, open); return () => window.removeEventListener(DRIVE_HOME_EVENT, open); }, []);
+  // CONNECT-002: a tapped link opens where its record lives.
+  const [dailyNoteDayId, setDailyNoteDayId] = useState<string | null>(null);
+  const openRecordRef = useRef<(target: OpenRecordTarget) => void>(() => {});
+  openRecordRef.current = (target) => {
+    if (target.kind === "TASK") openMore("INTENT", { kind: "OBLIGATION", obligationId: target.id });
+    else if (target.kind === "PROJECT") openMore("INTENT");
+    else if (target.kind === "DAY") { openMore("DAILY_NOTE"); setDailyNoteDayId(target.id); }
+    else if (target.kind === "JOURNAL") openMore("JOURNAL");
+    else openMore("HIGHLIGHTS");
+  };
+  useEffect(() => { const open = (e: Event) => openRecordRef.current((e as CustomEvent<OpenRecordTarget>).detail); window.addEventListener(OPEN_RECORD_EVENT, open); return () => window.removeEventListener(OPEN_RECORD_EVENT, open); }, []);
   const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
   useEffect(() => {
     if (!alfredLaunch) return;
@@ -572,7 +584,7 @@ function AppWorkspaces() {
     if (!canNavigate()) return false;
     setCommandTodayOrigin(tab === "TODAY" && view !== "MENU");
     setHealthHistoryOrigin(false); setHealthHistory(null);
-    setIntentFocus(focus); setMemoryFocusId(null);
+    setIntentFocus(focus); setMemoryFocusId(null); setDailyNoteDayId(null);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
     showTab("COMMAND", false);
@@ -788,7 +800,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}

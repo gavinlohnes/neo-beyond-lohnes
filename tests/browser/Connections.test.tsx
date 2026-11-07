@@ -41,3 +41,31 @@ it("says plainly when nothing links here yet", async () => {
   await expect.element(screen.getByText("Nothing links here yet.")).toBeVisible();
   await expect.element(screen.getByText("Type [[Garage]] in a daily note, task or journal entry to connect it.")).toBeVisible();
 });
+
+it("CONNECT-002: tapping a connection opens the record it names", async () => {
+  const task = await createObligation({ title: "Order shelves", description: "For [[Workshop]]" });
+  const events: unknown[] = [];
+  const listen = (e: Event) => events.push((e as CustomEvent).detail);
+  window.addEventListener("beyond:open-record", listen);
+  try {
+    const screen = await render(<Connections id="t" label="Workshop" />);
+    await expect.element(screen.getByText("Order shelves")).toBeVisible();
+    const open = screen.getByRole("button", { name: "Open task: Order shelves" });
+    expect(open.element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    await open.click();
+    expect(events).toEqual([{ kind: "TASK", id: task.id }]);
+  } finally { window.removeEventListener("beyond:open-record", listen); }
+});
+
+it("CONNECT-002: the app opens a tapped task's detail and a tapped day's note", async () => {
+  const { App } = await import("../../src/app/App");
+  const { openRecord } = await import("../../src/ui/openRecordEvent");
+  const day = await startDay();
+  await saveDailyNote(day.id, "Notes for [[Workshop]].");
+  const task = await createObligation({ title: "Order shelves" });
+  const screen = await render(<App />);
+  openRecord({ kind: "TASK", id: task.id });
+  await expect.element(screen.getByRole("heading", { name: "Order shelves" }).first()).toBeVisible();
+  openRecord({ kind: "DAY", id: day.id });
+  await expect.element(screen.getByRole("textbox", { name: "Your note" })).toHaveValue("Notes for [[Workshop]].");
+});

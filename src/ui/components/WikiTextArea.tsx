@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { getMentions, getWikiTargets, wikiLabels } from "../../application/dailyNoteQueries";
 import type { WikiTarget } from "../../domain/dailyNotes";
+import { openRecord } from "../openRecordEvent";
 
 export function WikiLinkList({ text, emptyMessage = "Only this unsaved draft mentions it." }: { text: string; emptyMessage?: string }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [mentions, setMentions] = useState<{ kind: string; id: string; label: string }[]>([]);
+  const [mentions, setMentions] = useState<Awaited<ReturnType<typeof getMentions>>>([]);
   useEffect(() => { if (selected) void getMentions(selected).then(setMentions); else setMentions([]); }, [selected]);
   const linked = useMemo(() => [...new Set(wikiLabels(text))], [text]);
   if (!linked.length) return null;
@@ -12,7 +13,7 @@ export function WikiLinkList({ text, emptyMessage = "Only this unsaved draft men
     <div className="wiki-links" aria-label="Links in this text">{linked.map((item) =>
       <button type="button" className="text-button" key={item} onClick={() => setSelected(selected === item ? null : item)}>[[{item}]]</button>)}</div>
     {selected && <section className="wiki-mentions" aria-label={`Mentioned in ${selected}`}><p className="section-label">Mentioned in</p>
-      {mentions.length ? <ul>{mentions.map((item) => <li key={`${item.kind}:${item.id}`}>{item.label} · {item.kind.toLowerCase()}</li>)}</ul> : <p className="meta">{emptyMessage}</p>}
+      {mentions.length ? <ul>{mentions.map((item) => <li key={`${item.kind}:${item.id}`}><button type="button" className="text-button" aria-label={`Open ${item.kind.toLowerCase()}: ${item.label}`} onClick={() => openRecord({ kind: item.kind, id: item.id })}>{item.label} · {item.kind.toLowerCase()}</button></li>)}</ul> : <p className="meta">{emptyMessage}</p>}
     </section>}
   </>;
 }

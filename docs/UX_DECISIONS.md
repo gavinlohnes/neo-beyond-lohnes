@@ -2804,3 +2804,10 @@ to a project or task, from explicit `[[links]]` only), descriptive Patterns in R
 beside tasks in LIFE and Plans, and connected context for Alfred. Each slice is read-only composition with no
 Engine, recommendation, schema, event, backup or primary-tab change, and nothing inferred is shown as fact.
 [Brief](agent/CONNECTED-001.md).
+
+## APPS-PICKS-002 — eight more proven ideas (owner selected 2026-11-07)
+
+From a list of 35, Gavin picked: tappable links, person pages, quick add in plain words, end-of-shift shutdown,
+a plate calculator, year in pixels, daily resurfacing and "plan my day off" with Alfred. Each is BEYOND's own
+version, built from existing records and commands, with no new stored data type, dependency, Engine or TODAY
+change. Saving always goes through a confirm card or an existing command. [Brief](agent/APPS-PICKS-002.md).
