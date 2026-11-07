@@ -3,6 +3,7 @@ import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
 import { createObligation, modifyObligation } from "../../../application/intentCommands";
 import { parseQuickAdd } from "../../../application/helper/freeHelper";
+import { askAlfred, PLAN_MY_DAY_OFF_ASK } from "../../components/AlfredSheet";
 import { getTodayPlan, getTaskSmartLists, taskListDate, type TaskSmartLists } from "../../../application/planTodayQueries";
 import type { Obligation } from "../../../domain/intent/types";
 import { describeError } from "../../errorMessage";
@@ -148,6 +149,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
       </> : <SectionEmpty line="Nothing planned is left open today." detail="A good place to stop. Leave yourself a line in the daily note if it helps." />}
       {due.length > 0 && <p className="meta">{due.length === 1 ? "1 task is due" : `${due.length} tasks are due`} today or earlier; it stays here until done or given a new due date.</p>}
     </Section>)({ movable: plan.today.filter((item) => !(item.dueAt && item.dueAt <= plan.date)), due: plan.today.filter((item) => item.dueAt && item.dueAt <= plan.date) })}
+    <button type="button" className="btn-secondary" onClick={() => askAlfred(PLAN_MY_DAY_OFF_ASK)}>PLAN MY DAY OFF WITH ALFRED</button>
     <p className="meta">Open a task to complete it, release it, or change its dates. Nothing is moved automatically.</p>
   </div>;
 }

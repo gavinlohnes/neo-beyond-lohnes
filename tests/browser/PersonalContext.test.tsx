@@ -66,7 +66,7 @@ it("opts in explicitly, supplies source-linked context and inspects a cited reco
   await optIn(screen);
   responses.push(() => response("You asked to keep the morning quiet. [[MEMORY:quiet]] [[invented:key]]"));
   await screen.getByText("MORE THINGS ALFRED CAN DO", { exact: true }).click();
-  await screen.getByRole("button", { name: "Plan my next days off", exact: true }).click();
+  await screen.getByRole("button", { name: "Plan my next day off", exact: true }).click();
   await expect.element(screen.getByRole("button", { name: "Source: Keep my first morning quiet." })).toBeVisible();
   expect(JSON.stringify(requests.at(-1))).toContain("More energy outside work");
   expect(JSON.stringify(requests.at(-1))).toContain("Keep my first morning quiet");
