@@ -25,3 +25,8 @@
 .bx-section.suit-panel { margin-block:0; padding:28px 0; border:0; border-bottom:1px solid var(--border-strong); background:none; }
 .bx-section.suit-panel::after { content:none; }
 .bx-more.train-planned-work > summary { min-height:48px; }
+/* CONNECT-001: a plain list of what links here. */
+.bx-connection-list { list-style:none; margin:0; padding:0; }
+.bx-connection-list li { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border-subtle); min-width:0; }
+.bx-connection-list li > span { overflow-wrap:anywhere; }
+.bx-connection-list small { flex:none; color:var(--text-2); font:13px/1.5 var(--font-mono); letter-spacing:.04em; }

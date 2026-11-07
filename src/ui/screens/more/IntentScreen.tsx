@@ -1,4 +1,5 @@
 import { captureCommitFeedback } from "../../feel/feedback";
+import { Connections } from "../../components/Connections";
 import { useEffect, useRef, useState, useId } from "react";
 import { useSessionDraft } from "../../sessionDrafts";
 import type { DomainEvent } from "../../../domain/common/types";
@@ -897,6 +898,8 @@ function ObligationDetail({
             )}
             {error && <p className="meta meta--error" style={{ marginTop: 8 }}>{error}</p>}
           </article>
+
+          <Connections id={`obligation-${obligation.id}-connections`} label={obligation.title} self={{ kind: "TASK", id: obligation.id }} refreshKey={history.length} />
 
           <div className="intent-history">
           <FieldDisclosure summary={`HISTORY · ${history.length} ${history.length === 1 ? "EVENT" : "EVENTS"}`} open={historyOpen} onToggle={setHistoryOpen}>

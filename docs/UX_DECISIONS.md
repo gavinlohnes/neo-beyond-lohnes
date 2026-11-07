@@ -2796,3 +2796,11 @@ review, TODAY last), each with before and after phone screenshots and independen
 - No change to the Engine, recommendations, what's saved, schema, events, backups or the four primary tabs.
   On TODAY, the order and the Engine's next action above the fold stay exactly as they are.
   [Brief and pattern guide](agent/LIFE-PATTERN-001.md).
+
+## CONNECTED-001 — a more interconnected, smarter BEYOND (owner approved 2026-11-07)
+
+Gavin asked to make BEYOND "more interconnected and smarter" and chose all four slices: Connections (what links
+to a project or task, from explicit `[[links]]` only), descriptive Patterns in Review, Google Calendar events
+beside tasks in LIFE and Plans, and connected context for Alfred. Each slice is read-only composition with no
+Engine, recommendation, schema, event, backup or primary-tab change, and nothing inferred is shown as fact.
+[Brief](agent/CONNECTED-001.md).

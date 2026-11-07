@@ -1,3 +1,13 @@
+# CONNECTED-001 — in progress (2026-11-07)
+
+- Gavin chose all four slices ([brief](CONNECTED-001.md)): Connections, Patterns, Calendar with your day,
+  Alfred's connected context. Builder Claude Code; branch `ccr-90736806-z9op9b`.
+- Slice 1 Connections: `getConnections` plus a `Connections` section on project cards and task details.
+  Focused tests pass. Review and CI pending. Next: slice 2, Patterns.
+- Rotation field test (#402) still waits for Gavin's next work night.
+
+---
+
 # LIFE-PATTERN-001 — in progress (2026-11-05)
 
 - Objective: apply the YOUR LIFE section pattern across BEYOND, presentation only. Gavin approved it

@@ -388,3 +388,5 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
 - Reuse `src/ui/components/Section.tsx` (`Section`, `SectionEmpty`, `SectionUnavailable`, `RecordedCount`,
   `MoreSections`) and `src/application/sectionRead.ts` (`readSection`) before building a section header,
   empty state or per-source failure on any screen. Guide: [LIFE-PATTERN-001](LIFE-PATTERN-001.md).
+- CONNECT-001: `src/application/connectionQueries.ts` (`getConnections`) and `src/ui/components/Connections.tsx` list
+  explicit `[[links]]` to a record. Reuse before building another backlink or "related" view.
