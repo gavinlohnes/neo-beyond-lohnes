@@ -7,8 +7,9 @@
   4 MORE and Plans → 5 weekly review → 6 TODAY (the order and the Engine's next action stay unchanged).
 - Step 1 merged as #424 (shared `Section` primitives, `readSection`, guide, Decision Register entry).
 - Step 2 TRAIN merged as #425.
-- Step 3 BODY: "Not logged" instead of 0 for empty readings; weight leads PROGRESS. Review and CI pending.
-- Steps 4–6 (Plans, weekly review, TODAY) are prepared locally on the Builder's machine and follow.
+- Steps 3 and 4 merged as #426 (BODY) and #427 (MORE and Plans, built by Copilot).
+- Step 5 weekly review: plain voice, no bare 0s; also fixes the Drop0FieldFixes "0 oz" expectation #426 left red. Review and CI pending.
+- Step 6 (TODAY) is prepared locally on the Builder's machine and follow.
 - Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
 - CI risk: `playwright install --with-deps` can stall on the Ubuntu mirror with no job timeout
   (seen twice on 2026-11-05). Suggest timeout-minutes plus a browser cache; needs owner OK.
