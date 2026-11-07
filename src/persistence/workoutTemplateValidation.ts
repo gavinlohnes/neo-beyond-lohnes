@@ -18,6 +18,8 @@ const exerciseSlotFields = {
   repRangeLow: z.number().int().min(1),
   repRangeHigh: z.number().int().min(1),
   incrementLbs: z.number().min(0),
+  // SUPERSET-001: optional and additive; rows and backups without it read as before.
+  supersetWithNext: z.boolean().optional(),
 };
 
 const exerciseSlotSchema = z

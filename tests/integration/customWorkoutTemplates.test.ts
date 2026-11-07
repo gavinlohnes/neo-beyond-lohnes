@@ -215,3 +215,24 @@ describe("Backup/restore round-trip — CustomWorkoutTemplate survives", () => {
     expect(restored[0]!.exercises).toHaveLength(2);
   });
 });
+
+describe("SUPERSET-001 — an optional superset flag on a template exercise", () => {
+  const ex = (exerciseId: string, extra: object = {}) => ({ exerciseId, name: exerciseId, sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5, ...extra });
+
+  it("keeps the flag through create, resolve and a real export -> clear -> import round-trip", async () => {
+    const template = await createCustomTemplate({ name: "Push superset", exercises: [ex("a", { supersetWithNext: true }), ex("b")] });
+    expect((await resolveTemplateExercises(template.id, "STANDARD")).map((e) => e.supersetWithNext)).toEqual([true, undefined]);
+    const blob = await db.export({ prettyJson: true });
+    await createCustomTemplate({ name: "Divergent", exercises: [ex("c")] });
+    await db.import(new File([blob], "native-backup.json", { type: "application/json" }), { clearTablesBeforeImport: true });
+    const restored = await getCustomTemplates();
+    expect(restored).toHaveLength(1);
+    expect(restored[0]!.exercises.map((e) => e.supersetWithNext)).toEqual([true, undefined]);
+  });
+
+  it("reads an older template row without the flag exactly as before", async () => {
+    await db.customWorkoutTemplates.add({ id: "old", name: "Old template", exercises: [ex("a"), ex("b")], createdAt: "2026-10-01T12:00:00.000Z" });
+    const [old] = await getCustomTemplates();
+    expect(old!.exercises.every((e) => !("supersetWithNext" in e))).toBe(true);
+  });
+});

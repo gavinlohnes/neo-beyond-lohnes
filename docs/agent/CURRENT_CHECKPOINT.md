@@ -4,7 +4,8 @@
   Protected additions. Gavin: Claude Code is the Builder for all of them today. Pick 11 merged as #440.
 - Picks 17 + 19 merged as #441. Pick 38 already existed (DATA meals: SAME AS YESTERDAY / SAME AS LAST), so nothing was added.
 - Picks 13 + 7 + 29 merged as #442.
-- Picks 30, 39, 20, 12, 36, 34, 31 together. 26, 35 and 40 already existed (goal date, Plan my week, Alfred brief), so no change. Places uses Collections, so no new store. Remaining: 18 supersets (Protected). Review and CI pending.
+- Picks 30, 39, 20, 12, 36, 34, 31 merged as #443 (26, 35, 40 already existed; Places uses Collections).
+- Pick 18 supersets (approved Protected): optional `supersetWithNext` on a template exercise; no Dexie version (unindexed field), backup round-trip and old-row tests added. Review and CI pending. Last APPS-PICKS-003 PR.
 - APPS-PICKS-002 is complete (#435–#439). CONNECTED-001 complete (#431–#434). CI-HANG-001 merged (#430).
 - Rotation field test (#402) still waits for Gavin's next work night.
 

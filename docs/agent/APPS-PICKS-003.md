@@ -33,7 +33,7 @@
 | 39 | Week-over-week card | Review | `WeeklyDashboard.tsx` comparisons |
 | 12 | Daily note templates | Daily note | Snippets/templates (A1); insert on tap |
 | 36 | Note search with highlights | Search | existing Search Records; highlight matched words |
-| 18 🔒 | Supersets / circuits | TRAIN templates | needs a template/session field — schema bump per `.claude/rules/persistence.md` |
+| 18 🔒 | Supersets / circuits | TRAIN templates | Optional `supersetWithNext` on a template exercise. Unindexed, so no Dexie version; the read schema keeps it; native backups round-trip it and older rows read unchanged (tests). |
 | 20 | Muscle map | Review / TRAIN history | exercise library `muscleGroup` |
 | 26 | Goal trend | DATA weight / lift goal | **Already shipped**: `WeightTrend` projects a goal date (`projectGoalDate`); Review weight details show it. No change. |
 | 31 | Places | MORE → Collections | A one-tap **Places** list in the existing Collections store (Name, Kind, Note, Map link). No new store or schema, so no longer Protected. |
