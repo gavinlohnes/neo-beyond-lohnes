@@ -183,7 +183,7 @@ it("refreshes a retained commitment after completion elsewhere", async () => {
   const task = await createObligation({ title: "A shared commitment", plannedAt: "2026-10-13" });
   const screen = await render(<App />);
   await (await commandResult(screen, "PLAN TODAY")).click();
-  await screen.getByRole("button", { name: /A shared commitment/ }).click();
+  await screen.getByRole("button", { name: /^A shared commitment/ }).click();
   await expect.element(screen.getByRole("heading", { name: "A shared commitment", exact: true })).toBeVisible();
   await tab(screen, "DATA");
   await satisfyObligation(task.id);

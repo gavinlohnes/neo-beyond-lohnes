@@ -102,7 +102,7 @@ it("QUICK-ADD-001: plain words with a date plan the task for that day, shown bef
   const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
   const box = screen.getByRole("textbox", { name: "Add a task for today" });
   await box.fill("dentist tomorrow 3pm");
-  await expect.element(screen.getByText("Understood: “Dentist” on Thu, Nov 5 at 15:00. Choose a date below to override.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText(/^Understood: “Dentist” on Thu, Nov 5 at 15:00\. Choose a date below to override\./)).toBeVisible();
   await screen.getByRole("button", { name: "ADD FOR THU, NOV 5", exact: true }).click();
   await expect.element(screen.getByText("Added “Dentist” for Thu, Nov 5 at 15:00.", { exact: true })).toBeVisible();
   const saved = (await db.obligations.toArray()).find((o) => o.title === "Dentist");
@@ -125,4 +125,14 @@ it("SHUTDOWN-001: wraps up today by moving planned tasks to tomorrow, one tap ea
   expect((await db.obligations.toArray()).find((o) => o.title === "Clean the gutters")?.plannedAt).toBe("2026-11-05");
   await expect.element(screen.getByText("Nothing planned is left open today.").or(screen.getByRole("button", { name: "Move Return library book to tomorrow" }))).toBeVisible();
   expect((await axe.run(screen.container)).violations).toEqual([]);
+});
+
+it("QUICK-ADD-001: one tap keeps the words exactly as typed, for today", async () => {
+  await page.viewport(360, 800);
+  const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
+  await screen.getByRole("textbox", { name: "Add a task for today" }).fill("Sunday school prep");
+  await screen.getByRole("button", { name: "Keep as typed, today" }).click();
+  await screen.getByRole("button", { name: "ADD TO TODAY", exact: true }).click();
+  await expect.element(screen.getByText("Added “Sunday school prep” to your plan.", { exact: true })).toBeVisible();
+  expect((await db.obligations.toArray()).find((o) => o.title === "Sunday school prep")?.plannedAt).toBe("2026-11-04");
 });

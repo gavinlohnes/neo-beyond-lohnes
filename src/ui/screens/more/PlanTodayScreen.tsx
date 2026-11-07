@@ -19,6 +19,8 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
   const [due, setDue] = useState("");
   const [mission, setMission] = useState("");
   const [recurrence, setRecurrence] = useState(EMPTY_RECURRENCE);
+  // QUICK-ADD-001: one tap keeps the words exactly as typed, for today.
+  const [asTyped, setAsTyped] = useState(false);
   // Review blocker 2: a due date, Mission or repetition alone is unfinished input too.
   useSessionDraft("plan-create", [title, due, mission].some((value) => value.length > 0) || !sameRecurrence(recurrence, EMPTY_RECURRENCE));
   const [error, setError] = useState<string | null>(null);
@@ -57,31 +59,35 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
       const current = await getTodayPlan();
       const rule = recurrenceInputFor(recurrence, due || current.date);
       // QUICK-ADD-001: a date in the words plans it for that day, unless a date was chosen in the form.
-      const quick = !due && !rule ? parseQuickAdd(name) : null;
+      const quick = !due && !rule && !asTyped ? parseQuickAdd(name) : null;
       await createObligation({ title: quick?.title ?? name, plannedAt: quick?.date ?? current.date, ...(due ? { dueAt: due } : {}),
         ...(quick?.time ? { description: `At ${quick.time}` } : {}),
         ...(mission ? { missionId: mission } : {}), ...(rule ? { recurrence: rule } : {}) });
       acknowledge("LIGHT");
-      setTitle(""); setDue(""); setMission(""); setRecurrence(EMPTY_RECURRENCE);
+      setTitle(""); setDue(""); setMission(""); setRecurrence(EMPTY_RECURRENCE); setAsTyped(false);
       setReceipt(quick ? `Added “${quick.title}” for ${planDate(quick.date)}${quick.time ? ` at ${quick.time}` : ""}.` : `Added “${name}” to your plan.`);
       await refresh();
       titleInput.current?.focus({ preventScroll: true });
     } catch (cause) { setError(describeError(cause, "Could not add the task. Your input is kept.")); }
     finally { inFlight.current = false; setBusy(false); }
   }
-  const quick = !due && sameRecurrence(recurrence, EMPTY_RECURRENCE) ? parseQuickAdd(title) : null;
+  const quick = !due && !asTyped && sameRecurrence(recurrence, EMPTY_RECURRENCE) ? parseQuickAdd(title) : null;
   async function moveToTomorrow(items: readonly Obligation[]) {
     if (inFlight.current || !items.length) return;
     inFlight.current = true; setBusy(true); setError(null); setReceipt(null);
+    let moved = 0;
     try {
       const current = await getTodayPlan();
       const [y, m, d] = current.date.split("-").map(Number);
       const next = new Date(y!, m! - 1, d! + 1);
       const tomorrow = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
-      for (const item of items) await modifyObligation(item.id, { plannedAt: tomorrow });
+      for (const item of items) { await modifyObligation(item.id, { plannedAt: tomorrow }); moved++; }
       setReceipt(items.length === 1 ? `Moved “${items[0]!.title}” to ${planDate(tomorrow)}.` : `Moved ${items.length} tasks to ${planDate(tomorrow)}.`);
       await refresh();
-    } catch (cause) { setError(describeError(cause, "Could not move that. Nothing else changed.")); }
+    } catch (cause) {
+      setError(describeError(cause, moved ? `Moved ${moved} of ${items.length}; the rest did not move.` : "Could not move that. Nothing changed."));
+      if (moved) await refresh();
+    }
     finally { inFlight.current = false; setBusy(false); }
   }
   function rows(items: Obligation[], empty: { line: string; detail: string }) {
@@ -118,8 +124,8 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
       <Section id="plan-add-task" eyebrow="YOUR PLAN" title="Add a task"
         wayIn={{ label: quick ? `ADD FOR ${planDate(quick.date).toUpperCase()}` : "ADD TO TODAY", type: "submit", disabled: busy || !title.trim() || !plan }}>
         <label htmlFor="plan-task-title">Add a task for today</label>
-        <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} placeholder="What do you want to get done? Try “dentist Tue 3pm”" />
-        {quick && <p className="meta" role="status" aria-live="polite">Understood: “{quick.title}” on {planDate(quick.date)}{quick.time ? ` at ${quick.time}` : ""}. Choose a date below to override.</p>}
+        <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => { setTitle(event.target.value); setAsTyped(false); }} placeholder="What do you want to get done? Try “dentist Tue 3pm”" />
+        {quick && <p className="meta" role="status" aria-live="polite">Understood: “{quick.title}” on {planDate(quick.date)}{quick.time ? ` at ${quick.time}` : ""}. Choose a date below to override. <button type="button" className="text-button" onClick={() => setAsTyped(true)}>Keep as typed, today</button></p>}
         <details className="more-inspection"><summary>Date, Mission & repeat</summary>
           <label htmlFor="plan-due">Due date (optional)</label><input id="plan-due" className="input" type="date" value={due} disabled={busy} onChange={(event) => setDue(event.target.value)} />
           <label htmlFor="plan-mission">Mission (optional)</label><select id="plan-mission" className="input" value={mission} disabled={busy} onChange={(event) => setMission(event.target.value)}>
