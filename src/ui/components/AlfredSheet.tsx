@@ -56,6 +56,8 @@ const STARTERS: { label: string; group: StarterGroup; ask?: string; fill?: strin
   { label: "Remember a birthday", group: "Remember", fill: "Remember a birthday: " },
   { label: "Add a house job", group: "Remember", fill: "House job: " },
   { label: "How am I doing?", group: "Review" },
+  // ASK-RECORDS-001 (APPS-PICKS-003 pick 34, after Rewind): Alfred already searches your history; this makes it findable.
+  { label: "Ask my records", group: "Review", fill: "From my records, when did I last " },
   { label: "What am I forgetting?", group: "Review" },
   { label: "Weekly review", group: "Review", ask: "Give me my weekly review: my last 7 lived days against the 7 before (sleep against shifts, protein, water, training, urges and clean days). What slipped, and one thing to try this week." },
   { label: "Plan my flip", group: "Plan", ask: "Plan my next flip between nights and days from my schedule: when to sleep, when to stop caffeine, when to eat and when to get light. Offer reminders for the parts I want." },

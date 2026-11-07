@@ -44,3 +44,13 @@ it("forgets an older session draft after the operator reverts to the saved text"
   screen = await render(<DailyNoteScreen active />);
   await expect.element(screen.getByRole("textbox", { name: "Your note", exact: true })).toHaveValue("");
 });
+
+it("NOTE-TEMPLATES-001: offers prompts only while the note is empty, and they save nothing", async () => {
+  await startDay();
+  const screen = await render(<DailyNoteScreen active />);
+  const before = await db.events.count();
+  await screen.getByRole("button", { name: "DAY OFF PROMPTS" }).click();
+  await expect.element(screen.getByRole("textbox", { name: "Your note", exact: true })).toHaveValue("What I did for me:\nWho I spent time with:\nOne thing for tomorrow:\n");
+  expect(screen.getByRole("button", { name: "WORK DAY PROMPTS" }).elements()).toHaveLength(0);
+  expect(await db.events.count()).toBe(before);
+});

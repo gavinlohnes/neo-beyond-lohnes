@@ -41,3 +41,12 @@ it("reads a person's name from their dates, not the occasion", async () => {
   const { getPeopleNames } = await import("../../src/application/personQueries");
   expect(await getPeopleNames()).toEqual(["Alex"]);
 });
+
+it("GIFTS-001: gift ideas you kept show on the person's page, apart from other facts", async () => {
+  await addPersonDate({ person: "Sam", occasion: "Birthday", month: 3, day: 3 });
+  await db.alfredMemories.add({ id: "g1", text: "Gift idea for Sam: a good chef's knife", topic: "PERSON", savedAt: "2026-11-02T12:00:00.000Z" });
+  const screen = await render(<PeoplePanel active focusPerson="Sam" />);
+  await expect.element(screen.getByRole("heading", { name: "For next time" })).toBeVisible();
+  await expect.element(screen.getByText("Gift idea for Sam: a good chef's knife")).toBeVisible();
+  expect(screen.getByText("Gift idea for Sam: a good chef's knife").elements()).toHaveLength(1);
+});

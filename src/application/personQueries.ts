@@ -7,8 +7,9 @@ import { readSection, type SectionRead } from "./sectionRead";
  * dates (ordinary repeating commitments) and the facts you asked Alfred to keep. Read-only; a person is
  * a name you used, not a new stored record. Linked notes come from Connections.
  */
-export interface PersonPage { name: string; dates: PeopleView["upcoming"]; facts: PeopleView["facts"] }
+export interface PersonPage { name: string; dates: PeopleView["upcoming"]; facts: PeopleView["facts"]; gifts: PeopleView["facts"] }
 
+const GIFT = /\b(gift|present|would love|wishlist|wish list)\b/i;
 const mentions = (text: string, name: string) => new RegExp(`(^|[^\\p{L}])${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^\\p{L}]|$)`, "iu").test(text);
 
 export async function getPeopleNames(now = new Date()): Promise<string[]> {
@@ -21,7 +22,9 @@ export function getPersonPage(name: string, now = new Date()): Promise<SectionRe
     return {
       name,
       dates: view.upcoming.filter(({ reminder }) => mentions(reminder.title, name)),
-      facts: view.facts.filter((fact) => mentions(fact.text, name)),
+      facts: view.facts.filter((fact) => mentions(fact.text, name) && !GIFT.test(fact.text)),
+      // GIFTS-001 (APPS-PICKS-003 pick 30, after Monica): facts you kept that read as gift ideas.
+      gifts: view.facts.filter((fact) => mentions(fact.text, name) && GIFT.test(fact.text)),
     };
   });
 }

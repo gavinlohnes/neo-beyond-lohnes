@@ -9,6 +9,8 @@ export function WeekInNumbers({ dashboard }: { dashboard: WeeklyDashboard }) {
   const [data, setData] = useState<Awaited<ReturnType<typeof getWeekInNumbers>> | null>(null), [error, setError] = useState(false), [retry, setRetry] = useState(0);
   const numbers = deriveWeekInNumbers(dashboard.rows, []);
   const weight = dashboard.headline.weight;
+  // WEEK-COMPARE-001 (APPS-PICKS-003 pick 39, after Garmin/Oura): the week before, side by side. Logged days only.
+  const prior = data?.before ?? null;
   useEffect(() => {
     let current = true; setData(null); setError(false);
     void getWeekInNumbers(dashboard).then((result) => { if (current) setData(result); }).catch(() => { if (current) setError(true); });
@@ -26,6 +28,8 @@ export function WeekInNumbers({ dashboard }: { dashboard: WeeklyDashboard }) {
       {data && <><Readout label="COMMITMENTS" value={`${data.commitments.done} completed`} detail={`Completed on ${data.commitments.days} of 7 days · ${data.commitments.open} eligible commitments still open now`} />
       <Readout label="SHIFTS" value={`${data.shifts.worked} work-ended records`} detail={`Work ended on ${data.shifts.worked} of 7 days · ${data.shifts.scheduled === null ? "no saved schedule" : `${data.shifts.scheduled} scheduled from your current saved schedule`} · ${data.shifts.recordedDays} of 7 days have completed records. A missing work-ended record does not mean a shift wasn't worked.`} /></>}
     </ReadoutGrid>
+    {data && data.muscles.length > 0 && <p className="meta weekly-muscles"><strong>Sets by muscle</strong>: {data.muscles.map(([group, count]) => `${group} ${count}`).join(" · ")}.</p>}
+    {prior && <p className="meta weekly-compare"><strong>The week before</strong> ({dateLabel(prior.start)}): sleep {display(prior.sleep, "h")} · protein {display(prior.protein, "g", 0)} · {prior.sessions} {prior.sessions === 1 ? "session" : "sessions"} · water {display(prior.water, "oz")}. Side by side, not a grade.</p>}
     <p className="meta">Averages cover logged days only. Food figures are logged amounts, not verified total intake.</p>
     {error ? <div><p role="alert">The remaining numbers couldn't be read. Your records have not changed.</p><button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY NUMBERS</button></div> : !data ? <p role="status">Reading recorded numbers…</p> : <p className="meta">{data.comparison}</p>}
   </section>;

@@ -90,6 +90,18 @@ describe("Weekly Review dashboard", () => {
     expect(readout("WEIGHT CHANGE")?.textContent).toContain("Oct 12 to Oct 18, first to last recorded");
   });
 
+  it("WEEK-COMPARE-001: puts the week before beside this one, from logged days only", async () => {
+    await seedWeek();
+    await renderReview();
+    await expect.poll(() => document.querySelector(".weekly-compare")?.textContent ?? "").toContain("The week before (Oct 5)");
+    expect(document.querySelector(".weekly-compare")?.textContent).toContain("protein 90 g");
+    expect(document.querySelector(".weekly-compare")?.textContent).toContain("sleep Not recorded");
+  });
+  it("MUSCLE-MAP-001: counts the week's sets by muscle group", async () => {
+    await seedWeek();
+    await renderReview();
+    await expect.poll(() => document.querySelector(".weekly-muscles")?.textContent ?? "").toMatch(/^Sets by muscle: Chest \d+\.$/);
+  });
   it("selects a lived day from the strip, shows its detail, and opens it in History", async () => {
     await seedWeek();
     const { dashboard, onOpenHistory } = await renderReview();

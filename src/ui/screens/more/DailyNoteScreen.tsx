@@ -6,6 +6,11 @@ import { describeError } from "../../errorMessage";
 
 type Workspace = NonNullable<Awaited<ReturnType<typeof getDailyNoteWorkspace>>>;
 
+const NOTE_TEMPLATES = {
+  "WORK DAY PROMPTS": "How the shift went:\nOne thing to hand off:\nHow I'm feeling:\n",
+  "DAY OFF PROMPTS": "What I did for me:\nWho I spent time with:\nOne thing for tomorrow:\n",
+} as const;
+
 export function DailyNoteScreen({ active, dayId = null }: { active: boolean; dayId?: string | null }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [draft, setDraft] = useState("");
@@ -34,6 +39,10 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
     <section className="daily-note-log" aria-label="Recorded day"><p className="section-label">Recorded today</p>
       {workspace.logs.length ? <ol>{workspace.logs.map((log) => <li key={log.id}><span>{log.label}</span><time dateTime={log.at}>{new Date(log.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time></li>)}</ol> : <p className="meta">No recorded actions yet.</p>}
     </section>
+    {/* NOTE-TEMPLATES-001 (APPS-PICKS-003 pick 12, after Obsidian templates): prompts, only while the note is empty. */}
+    {!draft.trim() && <div className="button-row" role="group" aria-label="Start from prompts">
+      {(Object.keys(NOTE_TEMPLATES) as (keyof typeof NOTE_TEMPLATES)[]).map((key) => <button type="button" key={key} className="btn-secondary" onClick={() => setDraft(NOTE_TEMPLATES[key])}>{key}</button>)}
+    </div>}
     <WikiTextArea label="Your note" value={draft} onChange={(next) => { setDraft(next); setMessage(""); }} />
     <div className="button-row"><button type="button" className="btn-primary" disabled={!dirty || !draft.trim()} onClick={() => {
       setError(""); setMessage(""); void saveDailyNote(workspace.day.id, draft).then((note) => {

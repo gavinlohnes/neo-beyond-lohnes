@@ -1,3 +1,4 @@
+import "../../components/section.css";
 import { useEffect, useRef, useState } from "react";
 import { searchAll, type SearchResult } from "../../../application/searchQueries";
 import { describeSearchDomain } from "./searchCopy";
@@ -33,6 +34,17 @@ async function readCommand(q: string): Promise<Command> {
  * navigate. This screen never decides what "navigate" means for a
  * given domain; that's the caller's job (see MoreScreen.tsx).
  */
+/**
+ * SEARCH-MARK-001 (APPS-PICKS-003 pick 36, after Bear): the words you searched for are marked in each result.
+ * Presentation only; the search itself is unchanged.
+ */
+function Marked({ text, query }: { text: string; query: string }) {
+  const words = [...new Set(query.trim().toLowerCase().split(/\s+/).filter((w) => w.length >= 2))];
+  if (!words.length) return <>{text}</>;
+  const pattern = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+  return <>{text.split(pattern).map((part, i) => i % 2 ? <mark key={i} className="search-mark">{part}</mark> : part)}</>;
+}
+
 export function SearchScreen({ onSelectResult, onRunCapability, hiddenCapability }: { onSelectResult?: (result: SearchResult) => void; onRunCapability?: (entry: SystemCapability) => void; hiddenCapability?: (entry: SystemCapability) => boolean } = {}) {
   const [command, setCommand] = useState<Command | null>(null);
   const [query, setQuery] = useState("");
@@ -153,8 +165,8 @@ export function SearchScreen({ onSelectResult, onRunCapability, hiddenCapability
                 {describeSearchDomain(result.domain)}
                 {result.status ? ` · ${result.status}` : ""}
               </p>
-              <p className="card-body" style={{ margin: 0 }}>{result.title}</p>
-              {result.context && <p className="meta" style={{ marginTop: 4 }}>{result.context}</p>}
+              <p className="card-body" style={{ margin: 0 }}><Marked text={result.title} query={query} /></p>
+              {result.context && <p className="meta" style={{ marginTop: 4 }}><Marked text={result.context} query={query} /></p>}
             </>
           );
           if (!onSelectResult) {
