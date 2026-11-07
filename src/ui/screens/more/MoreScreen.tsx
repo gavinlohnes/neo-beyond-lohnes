@@ -695,8 +695,7 @@ export function MoreScreen({
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
       <details className="command-group" id="command-backup-panel"><summary className="disclosure-row command-group__control">
-        <span className="command-group__eyebrow bx-eyebrow">{COMMAND_GROUP_SUMMARY["Backup & recovery"].eyebrow}</span>
-        <span className="command-group__name" role="heading" aria-level={2}>Backup & recovery</span>
+        <span className="command-group__name">Backup & recovery</span>
         <span className="command-group__hint">{COMMAND_GROUP_SUMMARY["Backup & recovery"].hint}</span>
       </summary>
       {visibleCapabilities.filter((entry) => entry.group === "Backup & recovery").map((entry) => renderCapability(entry, true))}
@@ -820,8 +819,7 @@ export function MoreScreen({
         const summary = COMMAND_GROUP_SUMMARY[group];
         return <details className="command-group" key={group}>
           <summary className="disclosure-row command-group__control">
-            <span className="command-group__eyebrow bx-eyebrow">{summary.eyebrow}</span>
-            <span className="command-group__name" role="heading" aria-level={2}>{group}</span>
+            <span className="command-group__name">{group}</span>
             <span className="command-group__hint">{summary.hint}</span>
           </summary>
           {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry, true))}
@@ -867,8 +865,7 @@ export function MoreScreen({
           Nutrition Targets moved here from BODY; the SYSTEM readings moved
           inside Diagnostic detail so the main list stays short. */}
       <details className="command-group" id="command-settings-panel"><summary className="disclosure-row command-group__control">
-        <span className="command-group__eyebrow bx-eyebrow">{COMMAND_GROUP_SUMMARY.Settings.eyebrow}</span>
-        <span className="command-group__name" role="heading" aria-level={2}>Settings</span>
+        <span className="command-group__name">Settings</span>
         <span className="command-group__hint">{COMMAND_GROUP_SUMMARY.Settings.hint}</span>
       </summary>
       {visibleCapabilities.filter((entry) => entry.group === "Settings").map((entry) => renderCapability(entry, true))}

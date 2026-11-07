@@ -27,7 +27,7 @@ async function seed() {
 for (const width of [320, 390, 1280]) it(`connects comparisons to exact contributing days and returns focus at ${width}px without writes`, async () => {
   await page.viewport(width, 850); await seed(); const before = await db.events.toArray(), onOpenHistory = vi.fn();
   const screen = await render(<WholePicture onOpenHistory={onOpenHistory} />);
-  await expect.element(screen.getByRole("heading", { name: "How have you really been?" })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "How you've been" })).toBeVisible();
   await screen.getByRole("tab", { name: "Compare", exact: true }).click();
   const average = screen.getByRole("button", { name: "6h 00m 4 recorded days · inspect →", exact: true });
   await average.click(); await expect.element(screen.getByRole("dialog")).toBeVisible();
@@ -48,7 +48,7 @@ it("saves the chosen focus through the existing weekly command and preserves its
   await seed(); const week = latestReviewWeek(new Date());
   await saveWeeklyReview({ weekStart: week.start, weekEnd: week.end, note: "Keep this original reflection.", focus: null, expectedPreviousId: null });
   const recommendations = await db.recommendations.toArray(); const screen = await render(<WholePicture />);
-  await expect.element(screen.getByRole("heading", { name: "How have you really been?" })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "How you've been" })).toBeVisible();
   await screen.getByRole("tab", { name: "Your next move", exact: true }).click();
   await screen.getByRole("radio", { name: /Understand my energy/ }).click();
   await screen.getByRole("textbox", { name: "What would this look like in your life?", exact: true }).fill("Leave some space after the last shift.");
@@ -62,7 +62,7 @@ it("saves the chosen focus through the existing weekly command and preserves its
 });
 it("keeps a dirty focus on inactive navigation and rejects a competing saved review before explicit adoption", async () => {
   await seed(); const screen = await render(<WholePicture />);
-  await expect.element(screen.getByRole("heading", { name: "How have you really been?" })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "How you've been" })).toBeVisible();
   await screen.getByRole("tab", { name: "Your next move", exact: true }).click();
   await screen.getByRole("textbox", { name: "What would this look like in your life?", exact: true }).fill("My unsaved intention.");
   await screen.rerender(<WholePicture active={false} />);

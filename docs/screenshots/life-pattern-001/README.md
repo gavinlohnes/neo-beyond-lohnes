@@ -15,3 +15,6 @@ full-page shots, so the fixed tab bar sits where it does on a phone. Synthetic, 
 - Plans: `plans-before-1/2.png` and `plans-after-1/2.png`. Plan Today's selected task list and add-task form
   use the shared section shape. Empty lists stay kind, failed reads stay unavailable, and existing tasks and
   write paths are unchanged.
+- Weekly review (Whole Picture): `review-before-1/2.png` and `review-after-1/2.png`. Slogans become plain
+  lines ("What you recorded in this period, side by side."), headings say what a section holds, and
+  empty counts read in words ("None", "No recorded days", "NONE RECORDED") instead of a bare 0.
