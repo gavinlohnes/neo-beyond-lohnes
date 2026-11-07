@@ -8,7 +8,7 @@ it("PLATES-001: loads the largest plates first, per side, on a 45 lb bar", () =>
   expect(platesPerSide(45)).toEqual({ plates: [], leftover: 0 });
   expect(platesPerSide(40)).toBeNull();
   expect(platesPerSide(Number.NaN)).toBeNull();
-  expect(describePlates(226)).toBe("Per side: 45 + 45 (1 lb plates can't make) · 45 lb bar");
+  expect(describePlates(226)).toBe("Per side: 45 + 45 (1 lb more than plates allow) · 45 lb bar");
   expect(describePlates(45)).toBe("Per side: empty bar · 45 lb bar");
 });
 

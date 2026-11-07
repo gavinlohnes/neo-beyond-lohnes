@@ -38,6 +38,8 @@ function writeAlfredKey(value: string | null) { try { if (value) localStorage.se
 
 /** WEEK-PLAN-001: the one question Alfred is asked; each placement comes back as a card to SAVE or SKIP. */
 export const PLAN_MY_WEEK_ASK = "Plan my next 7 days. Use my shifts and sleep, my open tasks and project steps, birthdays and home jobs that are due. Offer each placement as a card for a specific day; I'll save the ones I want. Keep work nights light, never plan over sleep, and treat unknown time as unknown, not free. Say what you left unplanned and why.";
+/** DAY-OFF-PLAN-001 (APPS-PICKS-002 pick 33, after Motion/Reclaim): one day off, drafted as cards to SAVE or SKIP. */
+export const PLAN_MY_DAY_OFF_ASK = "Plan my next day off. Use my sleep and recovery, open tasks and project steps, routines, people's dates, home jobs that are due, my calendar and recent daily notes if I've shared them. Leave room to rest after nights. Offer each item as a card for a specific time of that day; I'll save the ones I want. Treat unknown time as unknown, not free, and say what you left out and why.";
 /** ALFRED-COACH-001: three bounded jobs, grounded in existing BEYOND authority and records. */
 export const COACH_NOW_ASK = "Explain today's situation from BEYOND's current records and existing Engine recommendation. Separate what is recorded, what BEYOND already recommends, and what is still unknown. Tell me what is already handled and what choice is actually mine. Do not create or rank a new recommendation.";
 export const COACH_REVIEW_ASK = "Review my last 7 lived days against the 7 before. Use get_days, cite the recorded numbers and sample sizes, name uncertainty, and distinguish observation from interpretation. End with one optional question for me to consider, not a new BEYOND recommendation.";
@@ -46,7 +48,7 @@ type StarterGroup = "Plan" | "Remember" | "Review";
 const STARTER_GROUPS: StarterGroup[] = ["Plan", "Remember", "Review"];
 // ALFRED-004: the starters are the ideas the owner asked for; each is one question Alfred already knows how to answer.
 const STARTERS: { label: string; group: StarterGroup; ask?: string; fill?: string }[] = [
-  { label: "Plan my next days off", group: "Plan", ask: "Help me plan my next days off around what matters to me. Use recorded context, say what is unknown, and offer a draft I can choose from." },
+  { label: "Plan my next day off", group: "Plan", ask: PLAN_MY_DAY_OFF_ASK },
   { label: "Plan my week", group: "Plan", ask: PLAN_MY_WEEK_ASK },
   { label: "Help me get something done", group: "Plan", fill: "Help me get this done: " },
   // UX-POLISH-001: one tap into each personal-OS area; each fills the sentence for him to finish.

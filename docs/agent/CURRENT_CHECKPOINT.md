@@ -4,7 +4,8 @@
 - Pick 1 merged as #435 (tappable links).
 - Pick 2 merged as #436 (person pages; two people sharing a first name share one page for now).
 - Picks 1 and 3 merged as #437 (quick add, end of day).
-- Picks 16 and 23 together: plate calculator under the TRAIN weight input; day pixels in Whole Picture. Review and CI pending.
+- Picks 16 and 23 merged as #438 (plates, day pixels).
+- Picks 10 and 33 together: BACK FOR TODAY resurfacing in YOUR LIFE; Plan my day off with Alfred (cards to save). Review and CI pending. This is the last APPS-PICKS-002 PR.
 - CONNECTED-001 is complete (#431 Connections, #432 Patterns, #433 Calendar, #434 Alfred).
 
 ---

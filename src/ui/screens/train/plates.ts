@@ -21,5 +21,5 @@ export function describePlates(totalLbs: number): string | null {
   const result = platesPerSide(totalLbs);
   if (!result) return null;
   const list = result.plates.length ? result.plates.join(" + ") : "empty bar";
-  return `Per side: ${list}${result.leftover ? ` (${result.leftover} lb plates can't make)` : ""} · ${BAR_LBS} lb bar`;
+  return `Per side: ${list}${result.leftover ? ` (${result.leftover} lb more than plates allow)` : ""} · ${BAR_LBS} lb bar`;
 }

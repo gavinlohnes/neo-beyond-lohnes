@@ -90,3 +90,4 @@
 .wl-calendar { margin-top:22px; }
 .wl-calendar-row { display:block; padding:14px 0; overflow-wrap:anywhere; }
 .wl-calendar-row strong { font-size:18px; line-height:1.4; font-weight:500; }
+.wl-resurfaced blockquote { margin: 0 0 8px; border-left: 2px solid var(--red); padding-left: 12px; }

@@ -98,12 +98,12 @@
 .whole-picture .ask-answer>ul>li{padding:10px 0;border-bottom:1px solid var(--line)}
 .whole-picture .ask-days summary{cursor:pointer;min-height:44px;padding:10px 0;font-size:13px;color:var(--muted)}
 .whole-picture .ask-days ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
-/* PIXELS-001: descriptive day squares. Red family only, lightest to strongest; empty = outlined. */
+/* PIXELS-001: descriptive day squares on a neutral ramp (red stays for action); empty = outlined. */
 .whole-picture .day-pixels { margin-block: 32px; }
-.whole-picture .day-pixels__grid { list-style: none; margin: 16px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 360px; }
-.whole-picture .day-pixels__day { display: block; width: 100%; aspect-ratio: 1; min-height: 32px; border: 1px solid var(--border-strong, #444); background: transparent; padding: 0; cursor: pointer; }
-.whole-picture .day-pixels__day[data-level="1"] { background: color-mix(in srgb, var(--red, #d71920) 25%, transparent); }
-.whole-picture .day-pixels__day[data-level="2"] { background: color-mix(in srgb, var(--red, #d71920) 50%, transparent); }
-.whole-picture .day-pixels__day[data-level="3"] { background: color-mix(in srgb, var(--red, #d71920) 75%, transparent); }
-.whole-picture .day-pixels__day[data-level="4"] { background: var(--red, #d71920); }
+.whole-picture .day-pixels__grid { list-style: none; margin: 16px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; max-width: 360px; }
+.whole-picture .day-pixels__day { display: block; width: 100%; aspect-ratio: 1; min-height: 36px; border: 1px solid var(--border-strong, #444); background: transparent; padding: 0; cursor: pointer; }
+.whole-picture .day-pixels__day[data-level="1"] { background: color-mix(in srgb, var(--text-1, #f2f2f2) 25%, transparent); }
+.whole-picture .day-pixels__day[data-level="2"] { background: color-mix(in srgb, var(--text-1, #f2f2f2) 45%, transparent); }
+.whole-picture .day-pixels__day[data-level="3"] { background: color-mix(in srgb, var(--text-1, #f2f2f2) 70%, transparent); }
+.whole-picture .day-pixels__day[data-level="4"] { background: var(--text-1, #f2f2f2); }
 .whole-picture .day-pixels__day:focus-visible { outline: 2px solid var(--focus, #fff); outline-offset: 2px; }

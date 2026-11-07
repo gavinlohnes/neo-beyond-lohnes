@@ -162,3 +162,34 @@ it("CONNECTED-001: shows Google Calendar events beside tasks when connected, rea
     expect(offline.getByText("ON YOUR CALENDAR", { exact: true }).elements()).toHaveLength(0);
   } finally { localStorage.removeItem("beyond.googleCalendar"); localStorage.removeItem("beyond.googleCalendar.events"); }
 });
+
+it("RESURFACE-001: brings back one thing you kept, the same all day, and opens it", async () => {
+  await db.highlights.add({ id: "h1", sourceTitle: "Meditations", sourceUrl: null, text: "You have power over your mind.", note: "", tags: [], createdAt: "2026-10-01T12:00:00.000Z", updatedAt: "2026-10-01T12:00:00.000Z" });
+  const { getResurfaced } = await import("../../src/application/resurfaceQueries");
+  const first = await getResurfaced(new Date(2026, 10, 5, 9)), later = await getResurfaced(new Date(2026, 10, 5, 21));
+  expect(first).toEqual(later);
+  const events: unknown[] = [];
+  const listen = (e: Event) => events.push((e as CustomEvent).detail);
+  window.addEventListener("beyond:open-record", listen);
+  try {
+    const screen = await render(<div className="screen more-operator more-whole-life"><LifeScreen active startAtOverview /></div>);
+    await expect.element(screen.getByRole("heading", { name: "Something you kept" })).toBeVisible();
+    await expect.element(screen.getByText("You have power over your mind.")).toBeVisible();
+    await screen.getByRole("button", { name: "Open highlights" }).click();
+    expect(events).toEqual([{ kind: "HIGHLIGHT", id: "h1" }]);
+  } finally { window.removeEventListener("beyond:open-record", listen); }
+});
+
+it("DAY-OFF-PLAN-001: asks Alfred for a day-off draft as cards, from YOUR LIFE", async () => {
+  const { ASK_ALFRED_EVENT, PLAN_MY_DAY_OFF_ASK } = await import("../../src/ui/components/AlfredSheet");
+  const asked: string[] = [];
+  const listen = (e: Event) => asked.push((e as CustomEvent<string>).detail);
+  window.addEventListener(ASK_ALFRED_EVENT, listen);
+  try {
+    const screen = await render(<div className="screen more-operator more-whole-life"><LifeScreen active startAtOverview /></div>);
+    await screen.getByRole("button", { name: "Plan my day off" }).click();
+    expect(asked).toEqual([PLAN_MY_DAY_OFF_ASK]);
+    expect(PLAN_MY_DAY_OFF_ASK).toContain("I'll save the ones I want");
+    expect(PLAN_MY_DAY_OFF_ASK).toContain("unknown, not free");
+  } finally { window.removeEventListener(ASK_ALFRED_EVENT, listen); }
+});
