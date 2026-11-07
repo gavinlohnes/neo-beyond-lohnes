@@ -129,3 +129,16 @@ it("resolves authorized historical tool sources even outside the initial catalog
   expect(sources).toHaveLength(1); expect(sources[0]!.id).toBe(old.id);
   expect((await inspectContextSource(sources[0]!, false))?.id).toBe(old.id);
 });
+
+it("CONNECTED-001: shares recent daily notes only when personal context is opted in, without writes", async () => {
+  const day = await startDay();
+  await db.dailyNotes.put({ dayId: day.id, text: "Planned the reading corner with [[Sam]].", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  const before = await all();
+  const shared = await buildPlanningContext(true);
+  expect(shared.text).toContain("DAILY NOTE");
+  expect(shared.text).toContain("Planned the reading corner");
+  const withheld = await buildPlanningContext(false);
+  expect(withheld.text).not.toContain("Planned the reading corner");
+  expect(withheld.coverage.find((c) => c.category === "Daily notes and calendar")?.state).toBe("excluded");
+  expect(await all()).toEqual(before);
+});
