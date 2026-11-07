@@ -4,7 +4,7 @@ import { readOperatorContext, personalContextVersion } from "../operatorContext"
 import type { OperatorContext, ContextSource } from "../../domain/operatorContext";
 import { computeDueRollover, mostRecentBoundaryAtOrBefore } from "../../engine/dayRollover";
 export type { ContextKind, ContextSource } from "../../domain/operatorContext";
-export { readPersonalSources, personalContextVersion } from "../operatorContext";
+export { readPersonalSources, readPersonalExtras, personalContextVersion } from "../operatorContext";
 export type PlanningContext = OperatorContext & { personalVersion: string; actionVersion: string };
 
 /** Confirmation must not apply a proposal to a different lived day or changed task. */

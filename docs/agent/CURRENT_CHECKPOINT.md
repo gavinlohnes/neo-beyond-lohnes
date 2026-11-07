@@ -4,7 +4,8 @@
   Alfred's connected context. Builder Claude Code; branch `ccr-90736806-z9op9b`.
 - Slice 1 merged as #431 (Connections).
 - Slice 2 merged as #432 (Patterns).
-- Slice 3 Calendar: Google Calendar events (last sync, read-only) under YOUR LIFE "What matters next", only when connected. Review and CI pending.
+- Slice 3 merged as #433 (Calendar).
+- Slice 4 Alfred: with personal context opted in, Alfred also reads the last 7 daily notes and cached calendar events; excluded otherwise. Review and CI pending.
 - Rotation field test (#402) still waits for Gavin's next work night.
 
 ---

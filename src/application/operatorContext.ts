@@ -1,3 +1,4 @@
+import { readCalendarWithDay } from "./calendarWithDay";
 import { db } from "../persistence/db";
 import type { ContextClassification, ContextCoverage, ContextKind, ContextSource, OperatorContext } from "../domain/operatorContext";
 import { getActiveMissions, getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
@@ -42,6 +43,13 @@ export async function readPersonalSources(): Promise<ContextSource[]> {
       `${MEMORY_LABELS[f.kind]}: ${f.statement} Source: OPERATOR; last confirmed ${date(f.lastConfirmedAt)}.`, "Operator statement",
       { at: f.recordedAt, confirmedAt: f.lastConfirmedAt, lifecycle: "BEYOND memory — revision history available" })),
   ];
+}
+
+/** CONNECTED-001: what the personal opt-in also shares, counted the same way the context selects it. */
+export async function readPersonalExtras(): Promise<{ dailyNotes: number; calendarEvents: number }> {
+  const notes = (await db.dailyNotes.orderBy("updatedAt").reverse().limit(7).toArray()).filter((n) => n.text.trim()).length;
+  const calendar = readCalendarWithDay();
+  return { dailyNotes: notes, calendarEvents: calendar.connected ? calendar.events.length : 0 };
 }
 
 export async function personalContextVersion(includePersonal: boolean): Promise<string> {
@@ -96,6 +104,13 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
     }
     if (options.includePersonal || options.purpose === "local") await read("Personal statements", readPersonalSources, (v) => v, true);
     else coverage.push({ category: "Personal statements", state: "excluded", count: 0, supplied: 0 });
+    // CONNECTED-001 slice 4: daily notes and calendar events are personal, so they share the same opt-in.
+    if (options.includePersonal || options.purpose === "local") {
+      await read("Daily notes", async () => (await db.dailyNotes.orderBy("updatedAt").reverse().limit(7).toArray()).filter((n) => n.text.trim()),
+        (v) => v.map((n) => s("DAILY_NOTE", n.dayId, n.updatedAt, "Daily note", `DAILY NOTE (lived day ${n.dayId}, updated ${date(n.updatedAt)}): ${n.text}`, "Operator statement", { at: n.updatedAt })));
+      await read("Calendar", async () => readCalendarWithDay(), (c) => c.connected ? c.events.map((e) => s("CALENDAR", e.id, JSON.stringify(e), e.title,
+        `GOOGLE CALENDAR: "${e.title}" ${e.allDay ? `all day ${e.start}` : `${date(e.start)} → ${date(e.end)}`}. From his last sync${c.lastSyncAt ? ` (${date(c.lastSyncAt)})` : ""}; read-only, may be out of date.`, "Recorded event", { at: e.start })) : []);
+    } else coverage.push({ category: "Daily notes and calendar", state: "excluded", count: 0, supplied: 0 });
     // Automatic consumers retain only their already-approved PREP/RECOVERY allowance.
     if (options.purpose === "automatic" && options.includePreparationMemory !== false) await read("Preparation and recovery memory", getMemoryFacts,
       (facts) => facts.filter((f) => f.status === "ACTIVE" && (f.kind.startsWith("PREP_") || f.kind === "RECOVERY")).map((f) => s("MEMORY", f.factId, f.id, f.statement,
