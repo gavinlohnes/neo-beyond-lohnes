@@ -120,6 +120,7 @@ export function askTrainingDays(rows: readonly PictureRow[]): AskAnswer {
   const lines: AskLine[] = [];
   if (energy) lines.push({ text: `Check-in energy: ${energy.left.toFixed(1)} on days you trained, ${energy.right.toFixed(1)} on days you didn't.`, rows: [...trained, ...rest] });
   if (sleep) lines.push({ text: `Main sleep: ${hm(sleep.left)} on days you trained, ${hm(sleep.right)} on days you didn't.`, rows: [...trained, ...rest] });
+  lines.push({ text: `${trained.length} of ${recorded.length} recorded days had a workout. Side by side, not a cause.`, rows: trained });
   return { status: "ANSWER", lines };
 }
 

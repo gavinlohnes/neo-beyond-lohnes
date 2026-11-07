@@ -86,3 +86,7 @@
 .wl-agenda button:is(:hover,:focus-visible),.wl-routines button:is(:hover,:focus-visible) { background:var(--surface-2); box-shadow:inset 2px 0 var(--red); }
 @media(prefers-reduced-motion:reduce) { .whole-life *, .whole-life *::before, .whole-life *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
 @media(prefers-reduced-motion:reduce) { .wl-routine-progress::-webkit-progress-value { transition:none; } }
+/* CONNECTED-001 slice 3: calendar events beside tasks, read-only. */
+.wl-calendar { margin-top:22px; }
+.wl-calendar-row { display:block; padding:14px 0; overflow-wrap:anywhere; }
+.wl-calendar-row strong { font-size:18px; line-height:1.4; font-weight:500; }

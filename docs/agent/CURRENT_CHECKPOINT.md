@@ -3,7 +3,8 @@
 - Gavin chose all four slices ([brief](CONNECTED-001.md)): Connections, Patterns, Calendar with your day,
   Alfred's connected context. Builder Claude Code; branch `ccr-90736806-z9op9b`.
 - Slice 1 merged as #431 (Connections).
-- Slice 2 Patterns: two new Ask questions (short sleep, training days) under the existing floor rule; Connections now shows task/project status. Review and CI pending.
+- Slice 2 merged as #432 (Patterns).
+- Slice 3 Calendar: Google Calendar events (last sync, read-only) under YOUR LIFE "What matters next", only when connected. Review and CI pending.
 - Rotation field test (#402) still waits for Gavin's next work night.
 
 ---

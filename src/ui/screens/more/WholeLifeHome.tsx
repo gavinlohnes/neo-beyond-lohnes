@@ -8,6 +8,8 @@ import type { LifeTab } from "./LifeScreen";
 import { RoutinePlayer } from "../../components/RoutinePlayer";
 import { stepKey } from "../../../application/routineCommands";
 import { SectionUnavailable as Unavailable } from "../../components/Section";
+import { eventsInWindow } from "../../../application/calendarWithDay";
+import type { GoogleCalendarEvent } from "../../../application/googleCalendar";
 import "./wholeLife.css";
 
 export interface WholeLifeActions {
@@ -19,6 +21,8 @@ const shortDate = (date: string) => {
   const value = new Date(`${date}T12:00:00`);
   return value.toLocaleDateString(undefined, { month: "short", day: "numeric", ...(value.getFullYear() !== new Date().getFullYear() ? { year: "numeric" as const } : {}) });
 };
+const eventWhen = (event: GoogleCalendarEvent) => event.allDay ? `${shortDate(event.start.slice(0, 10))} · All day`
+  : `${new Date(event.start).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · ${new Date(event.start).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
 const dateKey = () => new Date().toLocaleDateString();
 
 export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: WholeLifeActions & { active: boolean; idPrefix: string }) {
@@ -48,6 +52,7 @@ export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: 
   const projects = data?.projects.state === "ready" ? data.projects.value.filter(({ project }) => project.status === "ACTIVE" || project.status === "PAUSED") : null;
   const routines = data?.routines.state === "ready" ? data.routines.value.filter((r) => r.status === "ACTIVE") : null;
   const note = data?.note.state === "ready" ? data.note.value : null;
+  const calendar = data?.calendar.state === "ready" ? data.calendar.value : null;
   const workout = data?.workout.state === "ready" ? data.workout.value : null;
   const progress = data?.routineProgress.state === "ready" ? data.routineProgress.value : null;
   const date = new Date(data?.readAt ?? Date.now());
@@ -70,6 +75,13 @@ export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: 
           <header className="wl-section-head"><div><p className="wl-eyebrow">YOUR COMMITMENTS</p><h3 id={`${idPrefix}-plan-title`}>What matters next</h3></div><button type="button" disabled={!onNavigate} onClick={() => navigate({ kind: "more", view: "PLAN" })}>Plan <ArrowUpRight size={18} /></button></header>
           <div className="wl-period" role="group" aria-label="Commitment period"><button type="button" aria-pressed={period === "today"} onClick={() => setPeriod("today")}>Today</button><button type="button" aria-pressed={period === "next7"} onClick={() => setPeriod("next7")}>Next seven days</button></div>
           {!plan ? <Unavailable /> : plan[period].length ? <ul className="wl-agenda">{plan[period].map((item) => <li key={item.id}><button type="button" disabled={!onTask} onClick={() => onTask?.(item.id)}><span className="wl-agenda-mark" aria-hidden="true" /><span><strong>{item.title}</strong><small>{[item.status === "WAITING" ? "Waiting" : null, item.plannedAt ? `Planned ${item.plannedAt === plan.date ? "today" : shortDate(item.plannedAt)}` : null, item.dueAt ? `Due ${item.dueAt === plan.date ? "today" : shortDate(item.dueAt)}` : null].filter(Boolean).join(" · ")}</small></span><ArrowUpRight size={18} /></button></li>)}</ul> : <div className="wl-breathing-room"><p>{period === "today" ? "A little breathing room." : "The coming days are open here."}</p><span>{period === "today" ? "No tasks planned or due in these records. You can leave that space open." : "No other dated commitments in this window. Undated tasks remain in your plan."}</span></div>}
+          {calendar?.connected && plan && (({ events }) => <div className="wl-calendar" aria-label="On your calendar">
+            <p className="wl-eyebrow">ON YOUR CALENDAR</p>
+            {events.length ? <ul className="wl-agenda">{events.map((event) => <li key={event.id}><span className="wl-calendar-row"><strong>{event.title}</strong><small>{eventWhen(event)}</small></span></li>)}</ul>
+              : <p className="wl-caption">{period === "today" ? "Nothing on your calendar today." : "Nothing on your calendar in the next seven days."}</p>}
+            {calendar.lastSyncAt && <p className="wl-caption">From your Google Calendar, synced {new Date(calendar.lastSyncAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}. Read-only here.</p>}
+          </div>)({ events: period === "today" ? eventsInWindow(calendar.events, plan.date) : eventsInWindow(calendar.events, plan.date, plan.through) })}
+          {data.calendar.state === "unavailable" && <Unavailable>Calendar events could not be read.</Unavailable>}
         </section>
         <section className="wl-section" aria-labelledby={`${idPrefix}-project-title`}><header className="wl-section-head"><div><p className="wl-eyebrow">YOUR PROJECTS</p><h3 id={`${idPrefix}-project-title`}>Things you're building</h3></div><button type="button" onClick={() => onArea("Plans")}>Projects <ArrowUpRight size={18} /></button></header>
           {!projects ? <Unavailable /> : projects.length ? <div className="wl-projects">{projects.map(({ project, progress }) => <article key={project.id} className="wl-project"><p className="wl-eyebrow">{project.status === "PAUSED" ? "Paused by you" : "Active project"}</p><h4>{project.title}</h4>{project.finish && <p>{project.finish}</p>}<p className="wl-project-count">{progress.done}<span> / {progress.total} steps recorded done</span></p><button type="button" disabled={progress.next ? !onTask : false} onClick={() => progress.next ? onTask?.(progress.next.id) : onArea("Plans")}><span>{progress.next ? `Chosen next: ${progress.next.title}` : "Choose a next step when you're ready"}</span><ArrowUpRight size={18} /></button></article>)}</div> : <div className="wl-breathing-room"><p>Something worth making room for?</p><span>Keep a project, a personal goal or a home undertaking here.</span><button type="button" onClick={() => onArea("Plans")}>Start with your plans <ArrowUpRight size={18} /></button></div>}
