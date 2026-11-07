@@ -18,3 +18,6 @@ full-page shots, so the fixed tab bar sits where it does on a phone. Synthetic, 
 - Weekly review (Whole Picture): `review-before-1/2.png` and `review-after-1/2.png`. Slogans become plain
   lines ("What you recorded in this period, side by side."), headings say what a section holds, and
   empty counts read in words ("None", "No recorded days", "NONE RECORDED") instead of a bare 0.
+- TODAY: `today-before-2.png` and `today-after-2.png` (scrolled to the support sections). The order and the
+  Engine's next action above the fold are unchanged. In AT A GLANCE, PROTEIN and WATER read "—" / NOT LOGGED
+  when nothing is logged, as WEIGHT and SLEEP already did; the YOUR LIFE line reads plainly.

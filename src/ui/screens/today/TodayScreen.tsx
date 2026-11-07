@@ -2106,7 +2106,7 @@ export function TodayScreen({
           </span>
         </div>
         <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}${calorieTile ? " cc-fuel--calories" : ""}`} role="group" aria-label={fuelLine}>
-          {tile("protein", "PROTEIN", <><b><DecryptNumber value={Math.round(minimumDayProteinG)} dayId={day?.id ?? "unstarted"} reading="protein" /></b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
+          {tile("protein", "PROTEIN", <><b>{minimumDayProteinG === 0 ? "—" : <DecryptNumber value={Math.round(minimumDayProteinG)} dayId={day?.id ?? "unstarted"} reading="protein" />}</b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : minimumDayProteinG === 0 ? "" : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
             behind(proteinPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
             `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g${paceWords(proteinPace)}`, steady(proteinPace))}
@@ -2115,8 +2115,9 @@ export function TodayScreen({
             <span className="cc-flab">CALORIES</span><span className="cc-num"><b>{eatenToday === null ? "—" : Math.round(eatenToday).toLocaleString("en-US")}</b><small>eaten</small></span>
             <span className="cc-flab">{burnedToday === null ? "BURNED —" : `BURNED ${burnedToday.toLocaleString("en-US")}`}</span>
           </button>}
-          {tile("water", "WATER", <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>oz</small></>,
-            behind(waterPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : <span className="cc-flab">{waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>,
+          {/* LIFE-PATTERN-001: nothing logged reads "—" / NOT LOGGED, as WEIGHT and SLEEP already do, never a bare 0. */}
+          {tile("water", "WATER", waterLogCount === 0 ? <b>—</b> : <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>oz</small></>,
+            behind(waterPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : <span className="cc-flab">{waterLogCount === 0 ? "NOT LOGGED" : waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>,
             `Water ${minimumDayHydrateOz} oz${paceWords(waterPace)}`, steady(waterPace))}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
             <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
@@ -2687,7 +2688,7 @@ export function TodayScreen({
     {banners && <div className="today-banners">{banners}</div>}
     {nextSection}
     {onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
-      <div><strong>YOUR LIFE</strong><span>Plans, people, projects & a little breathing room.</span></div><span aria-hidden="true">↗</span>
+      <div><strong>YOUR LIFE</strong><span>Plans, projects, routines and people.</span></div><span aria-hidden="true">↗</span>
     </button>}
     {supportSection}
     <section className="today-numbers" aria-label="Today's numbers">
@@ -3126,7 +3127,7 @@ export function TodayScreen({
         <p className="meta">Nothing is recorded until you tap CAPTURE. Unfinished input stays here while you navigate.</p>
       </section>}
       {onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
-        <div><strong>YOUR LIFE</strong><span>Plans, people, projects & a little breathing room.</span></div><span aria-hidden="true">↗</span>
+        <div><strong>YOUR LIFE</strong><span>Plans, projects, routines and people.</span></div><span aria-hidden="true">↗</span>
       </button>}
       {onOpenPlan && <button type="button" className="today-plan-link" onClick={onOpenPlan} disabled={busy}>
         <span>PLAN TODAY</span><span>Your commitments & dates →</span>
