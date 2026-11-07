@@ -70,18 +70,18 @@ describe("blocker 1 — unfinished record edits survive cross-record navigation"
     const eventsBefore = await db.events.count();
 
     await openPlan(screen);
-    await screen.getByRole("button", { name: /Task A/ }).click();
+    await screen.getByRole("button", { name: /^Task A/ }).click();
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await screen.getByRole("textbox", { name: "Obligation title" }).fill("Unfinished renamed task");
     await screen.getByLabelText("Due", { exact: true }).fill("2026-10-20");
     await screen.getByRole("combobox", { name: "Repeats" }).selectOptions("WEEKLY");
 
     await openPlan(screen);
-    await screen.getByRole("button", { name: /Task B/ }).click();
+    await screen.getByRole("button", { name: /^Task B/ }).click();
     await expect.element(screen.getByRole("heading", { name: "Task B", exact: true })).toBeVisible();
 
     await openPlan(screen);
-    await screen.getByRole("button", { name: /Task A/ }).click();
+    await screen.getByRole("button", { name: /^Task A/ }).click();
     await expect.element(screen.getByRole("textbox", { name: "Obligation title" })).toHaveValue("Unfinished renamed task");
     await expect.element(screen.getByLabelText("Due", { exact: true })).toHaveValue("2026-10-20");
     await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("WEEKLY");

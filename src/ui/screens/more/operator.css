@@ -137,3 +137,4 @@
 .automations-screen .automation-event { border-top: 1px solid var(--border); padding-block: 6px; }
 /* CONNECT-002: each mention opens its record; a full-size target. */
 .wiki-mentions li > .text-button { min-height:44px; display:inline-flex; align-items:center; text-align:left; }
+.plan-shutdown-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border-subtle); } .plan-shutdown-row > span { overflow-wrap:anywhere; min-width:0; } .plan-shutdown-row > .btn-secondary { flex:none; width:auto; min-height:44px; padding:8px 14px; }

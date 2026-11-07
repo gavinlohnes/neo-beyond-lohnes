@@ -96,3 +96,43 @@ it("refreshes across midnight on resume and only adds to the current date after 
   await expect.element(screen.getByRole("button", { name: /^Synthetic explicit add/ })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: /^Synthetic tomorrow becomes today/ })).toBeVisible();
 });
+
+it("QUICK-ADD-001: plain words with a date plan the task for that day, shown before adding", async () => {
+  await page.viewport(360, 800);
+  const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
+  const box = screen.getByRole("textbox", { name: "Add a task for today" });
+  await box.fill("dentist tomorrow 3pm");
+  await expect.element(screen.getByText(/^Understood: “Dentist” on Thu, Nov 5 at 15:00\. Choose a date below to override\./)).toBeVisible();
+  await screen.getByRole("button", { name: "ADD FOR THU, NOV 5", exact: true }).click();
+  await expect.element(screen.getByText("Added “Dentist” for Thu, Nov 5 at 15:00.", { exact: true })).toBeVisible();
+  const saved = (await db.obligations.toArray()).find((o) => o.title === "Dentist");
+  expect(saved).toMatchObject({ plannedAt: "2026-11-05", description: "At 15:00" });
+  await box.fill("Water the plants");
+  await expect.element(screen.getByRole("button", { name: "ADD TO TODAY", exact: true })).toBeVisible();
+  expect(screen.getByText(/^Understood:/).elements()).toHaveLength(0);
+});
+
+it("SHUTDOWN-001: wraps up today by moving planned tasks to tomorrow, one tap each or all", async () => {
+  await page.viewport(360, 800);
+  await createObligation({ title: "Clean the gutters", plannedAt: "2026-11-04" });
+  await createObligation({ title: "Return library book", plannedAt: "2026-11-04" });
+  await createObligation({ title: "Pay the water bill", dueAt: "2026-11-04" });
+  const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
+  await expect.element(screen.getByRole("heading", { name: "Wrap up today" })).toBeVisible();
+  await expect.element(screen.getByText("1 task is due today or earlier; it stays here until done or given a new due date.", { exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "Move Clean the gutters to tomorrow" }).click();
+  await expect.element(screen.getByText("Moved “Clean the gutters” to Thu, Nov 5.", { exact: true })).toBeVisible();
+  expect((await db.obligations.toArray()).find((o) => o.title === "Clean the gutters")?.plannedAt).toBe("2026-11-05");
+  await expect.element(screen.getByText("Nothing planned is left open today.").or(screen.getByRole("button", { name: "Move Return library book to tomorrow" }))).toBeVisible();
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+});
+
+it("QUICK-ADD-001: one tap keeps the words exactly as typed, for today", async () => {
+  await page.viewport(360, 800);
+  const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
+  await screen.getByRole("textbox", { name: "Add a task for today" }).fill("Sunday school prep");
+  await screen.getByRole("button", { name: "Keep as typed, today" }).click();
+  await screen.getByRole("button", { name: "ADD TO TODAY", exact: true }).click();
+  await expect.element(screen.getByText("Added “Sunday school prep” to your plan.", { exact: true })).toBeVisible();
+  expect((await db.obligations.toArray()).find((o) => o.title === "Sunday school prep")?.plannedAt).toBe("2026-11-04");
+});
