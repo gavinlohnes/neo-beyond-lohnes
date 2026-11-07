@@ -7,7 +7,7 @@ import { flips, flipSummary, groupRuns, runPositions, type RotationRun } from ".
  * be inspected; a comparison needs PICTURE_MEAN_FLOOR days on each side or it says what is missing.
  * Never a cause, a score, an instruction or an Engine input. Pure.
  */
-export type AskQuestion = "CHANGED" | "LAST_FLIP" | "WORK_VS_OFF" | "WHEN_TRAIN";
+export type AskQuestion = "CHANGED" | "LAST_FLIP" | "WORK_VS_OFF" | "WHEN_TRAIN" | "SHORT_SLEEP" | "TRAINING_DAYS";
 export interface AskLine { text: string; rows: PictureRow[] }
 export type AskAnswer = { status: "ANSWER"; lines: AskLine[] } | { status: "NOT_YET"; need: string };
 
@@ -21,7 +21,7 @@ const at = (start: string, offset: number) =>
   new Date(Date.parse(start) + offset * 60000).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 /** Mean of a measure for two groups, only when both reach the floor. */
-function compare(a: readonly PictureRow[], b: readonly PictureRow[], key: "sleepHours" | "energy") {
+function compare(a: readonly PictureRow[], b: readonly PictureRow[], key: "sleepHours" | "energy" | "stress") {
   const left = pictureMean(pictureValues(a, key)), right = pictureMean(pictureValues(b, key));
   return left === undefined || right === undefined ? undefined : { left, right };
 }
@@ -95,9 +95,39 @@ export function askWhenTrain(rows: readonly PictureRow[]): AskAnswer {
   return { status: "ANSWER", lines };
 }
 
+/** CONNECTED-001 Patterns: the main-sleep line BEYOND compares against (hours). A description, not a target. */
+export const SHORT_SLEEP_HOURS = 6;
+
+/** "How do my check-ins look after short sleep?" — same-day check-ins, split by that day's main sleep. */
+export function askShortSleep(rows: readonly PictureRow[]): AskAnswer {
+  const slept = rows.filter((row) => row.sleepHours !== undefined && !row.ambiguousSleep);
+  const short = slept.filter((row) => row.sleepHours! < SHORT_SLEEP_HOURS), longer = slept.filter((row) => row.sleepHours! >= SHORT_SLEEP_HOURS);
+  const energy = compare(short, longer, "energy"), stress = compare(short, longer, "stress");
+  if (!energy && !stress) return { status: "NOT_YET", need: `${PICTURE_MEAN_FLOOR} days under ${SHORT_SLEEP_HOURS} h main sleep and ${PICTURE_MEAN_FLOOR} days with ${SHORT_SLEEP_HOURS} h or more, each with a check-in` };
+  const lines: AskLine[] = [];
+  if (energy) lines.push({ text: `Check-in energy: ${energy.left.toFixed(1)} on days under ${SHORT_SLEEP_HOURS} h main sleep, ${energy.right.toFixed(1)} on days with ${SHORT_SLEEP_HOURS} h or more.`, rows: [...short, ...longer] });
+  if (stress) lines.push({ text: `Check-in stress: ${stress.left.toFixed(1)} on days under ${SHORT_SLEEP_HOURS} h, ${stress.right.toFixed(1)} on days with ${SHORT_SLEEP_HOURS} h or more.`, rows: [...short, ...longer] });
+  lines.push({ text: `${short.length} of ${slept.length} days with a main sleep were under ${SHORT_SLEEP_HOURS} h. Side by side, not a cause.`, rows: short });
+  return { status: "ANSWER", lines };
+}
+
+/** "How do days I train compare?" — recorded days with a finished workout against recorded days without one. */
+export function askTrainingDays(rows: readonly PictureRow[]): AskAnswer {
+  const recorded = rows.filter((row) => row.dayIds.length);
+  const trained = recorded.filter((row) => row.sessions > 0), rest = recorded.filter((row) => row.sessions === 0);
+  const energy = compare(trained, rest, "energy"), sleep = compare(trained, rest, "sleepHours");
+  if (!energy && !sleep) return { status: "NOT_YET", need: `${PICTURE_MEAN_FLOOR} days with a workout and ${PICTURE_MEAN_FLOOR} without, each with main sleep or a check-in` };
+  const lines: AskLine[] = [];
+  if (energy) lines.push({ text: `Check-in energy: ${energy.left.toFixed(1)} on days you trained, ${energy.right.toFixed(1)} on days you didn't.`, rows: [...trained, ...rest] });
+  if (sleep) lines.push({ text: `Main sleep: ${hm(sleep.left)} on days you trained, ${hm(sleep.right)} on days you didn't.`, rows: [...trained, ...rest] });
+  return { status: "ANSWER", lines };
+}
+
 export const ASK_QUESTIONS: readonly { id: AskQuestion; label: string; answer: (rows: readonly PictureRow[]) => AskAnswer }[] = [
   { id: "CHANGED", label: "What changed in my last block?", answer: askWhatChanged },
   { id: "LAST_FLIP", label: "How did my last flip into nights go?", answer: askLastFlip },
   { id: "WORK_VS_OFF", label: "What's normal for me, work days vs days off?", answer: askWorkVsOff },
   { id: "WHEN_TRAIN", label: "When do I usually train?", answer: askWhenTrain },
+  { id: "SHORT_SLEEP", label: "How do my check-ins look after short sleep?", answer: askShortSleep },
+  { id: "TRAINING_DAYS", label: "How do days I train compare?", answer: askTrainingDays },
 ];

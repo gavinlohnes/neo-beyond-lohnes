@@ -2,8 +2,8 @@
 
 - Gavin chose all four slices ([brief](CONNECTED-001.md)): Connections, Patterns, Calendar with your day,
   Alfred's connected context. Builder Claude Code; branch `ccr-90736806-z9op9b`.
-- Slice 1 Connections: `getConnections` plus a `Connections` section on project cards and task details.
-  Focused tests pass. Review and CI pending. Next: slice 2, Patterns.
+- Slice 1 merged as #431 (Connections).
+- Slice 2 Patterns: two new Ask questions (short sleep, training days) under the existing floor rule; Connections now shows task/project status. Review and CI pending.
 - Rotation field test (#402) still waits for Gavin's next work night.
 
 ---
