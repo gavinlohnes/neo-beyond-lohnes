@@ -33,3 +33,9 @@
 .bx-connection:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 .bx-connection:hover > span { text-decoration:underline; text-underline-offset:4px; }
 .bx-connection-list small { flex:none; color:var(--text-2); font:13px/1.5 var(--font-mono); letter-spacing:.04em; }
+/* PEOPLE-PAGE-001 */
+.person-page > .bx-title { margin-bottom:8px; }
+.person-row { display:flex; justify-content:space-between; gap:12px; padding:12px 0; min-width:0; }
+.person-row > span { overflow-wrap:anywhere; min-width:0; }
+.person-row small { flex:none; color:var(--text-2); }
+.people-names { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 16px; }

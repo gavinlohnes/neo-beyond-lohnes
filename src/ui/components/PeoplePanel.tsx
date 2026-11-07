@@ -4,6 +4,8 @@ import { captureCommitFeedback } from "../feel/feedback";
 import { useSessionDraft } from "../sessionDrafts";
 import { describeError } from "../errorMessage";
 import { askAlfred } from "./AlfredSheet";
+import { getPeopleNames } from "../../application/personQueries";
+import { PersonPage } from "./PersonPage";
 
 /**
  * RELATIONSHIPS-001: the people who matter, from records BEYOND already keeps — yearly dates as
@@ -14,7 +16,10 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const when = (days: number) => days === 0 ? "today" : days === 1 ? "tomorrow" : days > 1 ? `in ${days} days` : `${-days} ${days === -1 ? "day" : "days"} ago, still open`;
 const shortDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
-export function PeoplePanel({ active }: { active: boolean }) {
+export function PeoplePanel({ active, focusPerson = null }: { active: boolean; focusPerson?: string | null }) {
+  const [names, setNames] = useState<string[]>([]);
+  const [openName, setOpenName] = useState<string | null>(focusPerson);
+  useEffect(() => { setOpenName(focusPerson); }, [focusPerson]);
   const [view, setView] = useState<PeopleView | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
   const [person, setPerson] = useState("");
@@ -33,7 +38,7 @@ export function PeoplePanel({ active }: { active: boolean }) {
     try { const next = await getPeopleView(); if (mine === sequence.current) { setView(next); setReadError(null); } }
     catch (cause) { if (mine === sequence.current) setReadError(describeError(cause, "Could not read people.")); }
   }
-  useEffect(() => { if (active) void load(); }, [active]);
+  useEffect(() => { if (active) { void load(); void getPeopleNames().then(setNames).catch(() => setNames([])); } }, [active]);
 
   async function save() {
     if (busy || !person.trim() || !month || !day) return;
@@ -51,10 +56,12 @@ export function PeoplePanel({ active }: { active: boolean }) {
     } finally { setBusy(false); }
   }
 
+  if (openName) return <PersonPage name={openName} onBack={() => setOpenName(null)} />;
   return <section aria-label="People">
     <h2 className="tool-label">THE PEOPLE WHO MATTER</h2>
     <p>Their dates come round every year as ordinary reminders, and you'll see them in the week ahead. Keep only what helps.</p>
     {readError && <div><p role="alert">{readError} People are unavailable, not empty. Nothing changed.</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY PEOPLE</button></div>}
+    {names.length > 0 && <><h3 className="tool-label">PEOPLE</h3><div className="people-names">{names.map((name) => <button type="button" key={name} className="btn-secondary" onClick={() => setOpenName(name)}>{name}</button>)}</div></>}
     {view && <>
       <h3 className="tool-label">COMING UP</h3>
       {view.upcoming.length === 0 && <p className="meta">No yearly dates yet.</p>}

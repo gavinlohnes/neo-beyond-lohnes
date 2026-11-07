@@ -22,8 +22,9 @@ export async function getDailyNoteWorkspace(dayId?: string) {
   return { day, note, logs: events.map((event) => ({ id: event.id, label: event.type.replaceAll("_", " ").toLowerCase(), at: event.occurredAt })) };
 }
 
-function personNames(view: Awaited<ReturnType<typeof getPeopleView>>): string[] {
-  const fromDates = view.upcoming.map(({ reminder }) => reminder.title.replace(/^[^:]+:\s*/, "").replace(/\s+—.*$/, "").trim());
+export function personNames(view: Awaited<ReturnType<typeof getPeopleView>>): string[] {
+  // "Sam's birthday" (RELATIONSHIPS-001 titles) names Sam, not "Sam's birthday".
+  const fromDates = view.upcoming.map(({ reminder }) => reminder.title.replace(/^[^:]+:\s*/, "").replace(/\s+—.*$/, "").replace(/['’]s\s+\S.*$/, "").trim());
   const fromFacts = view.facts.map((fact) => fact.text.match(/^([^:—-]{1,80})/)?.[1]?.trim() ?? "");
   return [...new Set([...fromDates, ...fromFacts].filter(Boolean))];
 }

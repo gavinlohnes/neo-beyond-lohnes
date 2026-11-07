@@ -149,7 +149,7 @@ export function MoreScreen({
   dailyBanners, dailyRefreshKey = 0, onDailyContextChanged,
   active = true,
   navigationRequest = 0,
-  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null,
+  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null,
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
@@ -185,6 +185,8 @@ export function MoreScreen({
   memoryFocusId?: string | null;
   /** CONNECT-002: the lived day a tapped [[link]] opened; null is the current day. */
   dailyNoteDayId?: string | null;
+  /** PEOPLE-PAGE-001: the person a tapped [[name]] opened. */
+  personFocus?: string | null;
   /** Existing subviews can be opened by SYSTEM; the top-bar icon still opens SEARCH. */
   initialView?: MoreView;
   /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
@@ -616,7 +618,7 @@ export function MoreScreen({
             else if (destination.kind === "section") { setView("MENU"); revealSection(destination.section); }
             else onOpenDestination?.(destination);
           }} /></>}</div>
-          <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} /></>}</div>
+          <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} focusPerson={personFocus} /></>}</div>
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
           <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
           <div hidden={view !== "SAVED"}>{visited.has("SAVED") && <><OperatorHeader destination="command">MORE // SAVED</OperatorHeader><SavedInboxScreen active={active && view === "SAVED"} /></>}</div>
