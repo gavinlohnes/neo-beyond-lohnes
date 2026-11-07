@@ -193,3 +193,13 @@ it("DAY-OFF-PLAN-001: asks Alfred for a day-off draft as cards, from YOUR LIFE",
     expect(PLAN_MY_DAY_OFF_ASK).toContain("unknown, not free");
   } finally { window.removeEventListener(ASK_ALFRED_EVENT, listen); }
 });
+
+it("ON-THIS-DAY-001: a note from this date last year comes back first", async () => {
+  await db.highlights.add({ id: "h2", sourceTitle: "Book", sourceUrl: null, text: "A highlight.", note: "", tags: [], createdAt: "2026-10-01T12:00:00.000Z", updatedAt: "2026-10-01T12:00:00.000Z" });
+  await db.beyondDays.add({ id: "old-day", startedAt: new Date(2025, 10, 5, 16, 30).toISOString() } as never);
+  await db.dailyNotes.put({ dayId: "old-day", text: "First snow at the station.", createdAt: "2025-11-05T23:00:00.000Z", updatedAt: "2025-11-05T23:00:00.000Z" });
+  const screen = await render(<div className="screen more-operator more-whole-life"><LifeScreen active startAtOverview /></div>);
+  await expect.element(screen.getByRole("heading", { name: "A year ago, you wrote" })).toBeVisible();
+  await expect.element(screen.getByText("First snow at the station.")).toBeVisible();
+  await expect.element(screen.getByText(/^On this day, 2025 · /)).toBeVisible();
+});
