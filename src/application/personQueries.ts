@@ -9,7 +9,7 @@ import { readSection, type SectionRead } from "./sectionRead";
  */
 export interface PersonPage { name: string; dates: PeopleView["upcoming"]; facts: PeopleView["facts"]; gifts: PeopleView["facts"] }
 
-const GIFT = /\b(gift|present|would love|wants|wishlist|wish list)\b/i;
+const GIFT = /\b(gift|present|would love|wishlist|wish list)\b/i;
 const mentions = (text: string, name: string) => new RegExp(`(^|[^\\p{L}])${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^\\p{L}]|$)`, "iu").test(text);
 
 export async function getPeopleNames(now = new Date()): Promise<string[]> {
