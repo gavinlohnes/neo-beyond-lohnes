@@ -16,7 +16,7 @@ export function Connections({ id, label, self, refreshKey = 0 }: { id: string; l
   return <Section id={id} eyebrow="CONNECTIONS" title={`Linked to ${label}`} className="bx-connections">
     {!read ? <p className="meta" role="status">Reading links…</p>
       : read.state === "unavailable" ? <SectionUnavailable>Links could not be read. Try again in a moment.</SectionUnavailable>
-      : read.value.length ? <ul className="bx-connection-list">{read.value.map((item) => <li key={`${item.kind}:${item.id}`}><span>{item.label}</span><small>{KIND_WORD[item.kind]}</small></li>)}</ul>
+      : read.value.length ? <ul className="bx-connection-list">{read.value.map((item) => <li key={`${item.kind}:${item.id}`}><span>{item.label}</span><small>{KIND_WORD[item.kind]}{item.status && item.status !== "OPEN" && item.status !== "ACTIVE" ? ` · ${item.status.charAt(0)}${item.status.slice(1).toLowerCase()}` : ""}</small></li>)}</ul>
       : <SectionEmpty line="Nothing links here yet." detail={`Type [[${label}]] in a daily note, task or journal entry to connect it.`} />}
   </Section>;
 }

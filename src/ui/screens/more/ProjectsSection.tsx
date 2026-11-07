@@ -159,7 +159,7 @@ function ProjectCard({ view, missions, busy, run, onOpenObligation }: {
             </select>
           </label>}
         </>}
-        <Connections id={`project-${project.id}-connections`} label={project.title} self={{ kind: "PROJECT", id: project.id }} />
+        <Connections id={`project-${project.id}-connections`} label={project.title} self={{ kind: "PROJECT", id: project.id }} refreshKey={steps.length} />
         <div className="intent-actions" style={{ marginTop: 8 }}>
           {project.status === "ACTIVE" && <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void status("PAUSED")}>PAUSE</button>}
           {project.status === "PAUSED" && <button className="btn-secondary" style={{ width: "auto", padding: "8px 16px" }} disabled={busy} onClick={() => void status("ACTIVE")}>RESUME</button>}

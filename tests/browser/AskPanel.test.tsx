@@ -30,3 +30,17 @@ for (const width of [320, 390]) it(`answers a question from recorded days and op
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
   expect((await axe.run(document.body)).violations).toEqual([]);
 });
+
+it("CONNECTED-001 Patterns: puts short-sleep and training days side by side, or says what is missing", async () => {
+  const days = [1, 2, 3, 4, 5, 6].map((day) => row(day, "OFF", { sleepHours: day <= 3 ? 5 : 7.5, energy: day <= 3 ? 2 : 4, stress: day <= 3 ? 4 : 2, sessions: day % 2 }));
+  const screen = await render(<div className="whole-picture"><AskPanel rows={days} onInspect={vi.fn()} /></div>);
+  await screen.getByRole("button", { name: "How do my check-ins look after short sleep?" }).click();
+  await expect.element(screen.getByText("Check-in energy: 2.0 on days under 6 h main sleep, 4.0 on days with 6 h or more.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("3 of 6 days with a main sleep were under 6 h. Side by side, not a cause.", { exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "How do days I train compare?" }).click();
+  await expect.element(screen.getByText(/^Check-in energy: .* on days you trained, .* on days you didn't\.$/)).toBeVisible();
+  await cleanup();
+  const thin = await render(<div className="whole-picture"><AskPanel rows={days.slice(0, 2)} onInspect={vi.fn()} /></div>);
+  await thin.getByRole("button", { name: "How do my check-ins look after short sleep?" }).click();
+  await expect.element(thin.getByText(/^Not enough recorded yet: this needs 3 days under 6 h main sleep/)).toBeVisible();
+});
