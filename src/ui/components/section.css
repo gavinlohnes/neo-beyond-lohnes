@@ -39,3 +39,5 @@
 .person-row > span { overflow-wrap:anywhere; min-width:0; }
 .person-row small { flex:none; color:var(--text-2); }
 .people-names { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 16px; }
+.bx-unlinked > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-2); }
+.home-presets > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }

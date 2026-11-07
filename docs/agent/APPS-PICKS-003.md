@@ -24,7 +24,7 @@
 | 11 | On this day | YOUR LIFE "Back for today" | `resurfaceQueries.ts` (#439) — **Claude Code, this PR** |
 | 17 | Estimated 1RM + PR timeline per lift | TRAIN → Records / lift history | `StrengthAnswers.tsx`, `LiftHistory.tsx`, `RecordsList.tsx` |
 | 19 | Warm-up sets | TRAIN set entry, next to plates | Gym Mode warm-ups (`gymModeQueries.ts`), `plates.ts` |
-| 38 | Same as last time (meals) | LOG / DATA meals | existing re-log in `RecordSheets.tsx`, `BodyScreen.tsx` |
+| 38 | Same as last time (meals) | LOG / DATA meals | **Already shipped**: SAME AS YESTERDAY / SAME AS LAST in `BodyScreen.tsx`; no change (rule 1) |
 | 13 | Unlinked mentions | Connections section | `getMentions`, `connectionQueries.ts`; suggest only, link on tap |
 | 7 | Waiting-for list | Plan Today / Missions & Obligations | `markObligationWaiting` + a "check back" planned date |
 | 29 | Home maintenance schedule | MORE → Home | Home reminders as repeating obligations (`homeCommands`) |

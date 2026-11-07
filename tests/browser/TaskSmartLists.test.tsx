@@ -136,3 +136,20 @@ it("QUICK-ADD-001: one tap keeps the words exactly as typed, for today", async (
   await expect.element(screen.getByText("Added “Sunday school prep” to your plan.", { exact: true })).toBeVisible();
   expect((await db.obligations.toArray()).find((o) => o.title === "Sunday school prep")?.plannedAt).toBe("2026-11-04");
 });
+
+it("WAITING-FOR-001: lists tasks waiting on someone else, with their check-back date, only when there are any", async () => {
+  await page.viewport(360, 800);
+  const { markObligationWaiting } = await import("../../src/application/intentCommands");
+  const screen1 = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
+  await expect.element(screen1.getByRole("heading", { name: "Wrap up today" })).toBeVisible();
+  expect(screen1.getByRole("heading", { name: "With someone else" }).elements()).toHaveLength(0);
+  await cleanup();
+  const task = await createObligation({ title: "Quote from the roofer", plannedAt: "2026-11-09" });
+  await markObligationWaiting(task.id);
+  const onOpen = vi.fn();
+  const screen = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={onOpen} /></div>);
+  await expect.element(screen.getByRole("heading", { name: "With someone else" })).toBeVisible();
+  await expect.element(screen.getByText("Check back Mon, Nov 9", { exact: true })).toBeVisible();
+  await screen.getByText("Check back Mon, Nov 9", { exact: true }).click();
+  expect(onOpen).toHaveBeenCalledWith({ kind: "OBLIGATION", obligationId: task.id });
+});

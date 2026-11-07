@@ -15,3 +15,12 @@ export async function saveDailyNote(dayId: string, rawText: string): Promise<Dai
     return note;
   });
 }
+
+/** UNLINKED-001: link the first plain mention of `label` in one day's note, through the ordinary save. */
+export async function linkMentionInDailyNote(dayId: string, label: string) {
+  const { linkFirstMention } = await import("./connectionQueries");
+  const note = await db.dailyNotes.get(dayId);
+  const next = note ? linkFirstMention(note.text, label) : null;
+  if (!next) throw new Error("NOTHING_TO_LINK");
+  return saveDailyNote(dayId, next);
+}

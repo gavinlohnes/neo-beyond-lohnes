@@ -15,6 +15,8 @@ export interface TaskSmartLists {
   today: Obligation[];
   next7: Obligation[];
   noDate: Obligation[];
+  /** WAITING-FOR-001 (APPS-PICKS-003 pick 7, after GTD): open tasks you marked Waiting on someone else. */
+  waiting: Obligation[];
   missions: Mission[];
 }
 
@@ -35,6 +37,7 @@ export async function getTaskSmartLists(now = new Date()): Promise<TaskSmartList
     today: obligations.filter(inToday),
     next7: obligations.filter((item) => !inToday(item) && [item.plannedAt, item.dueAt].some((at) => at !== undefined && at > date && at <= through)),
     noDate: obligations.filter((item) => item.plannedAt === undefined && item.dueAt === undefined),
+    waiting: obligations.filter((item) => item.status === "WAITING"),
   };
 }
 
