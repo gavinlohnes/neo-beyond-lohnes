@@ -1,3 +1,4 @@
+import "./section.css";
 import { useEffect, useRef, useState } from "react";
 import { addHomeItem, describeRepeat, getHomeView, HOME_PREFIX, REPEAT_UNITS, type HomeView, type RepeatUnit } from "../../application/homeCommands";
 import { formatLocalDate } from "../../engine/scheduledContext";
@@ -10,6 +11,16 @@ import { askAlfred } from "./AlfredSheet";
  * HOME-001: the house, from records BEYOND already keeps: "Home: " repeating commitments and the
  * facts you asked Alfred to keep. A view, not a maintenance tracker: no scores, no overdue alarms.
  */
+const HOME_PRESETS: readonly { item: string; details: string; every: number; unit: RepeatUnit }[] = [
+  { item: "Furnace filter", details: "Check the size on the old one.", every: 3, unit: "MONTHS" },
+  { item: "Smoke alarms", details: "Press test on each one.", every: 1, unit: "MONTHS" },
+  { item: "Smoke alarm batteries", details: "", every: 1, unit: "YEARS" },
+  { item: "Gutters", details: "Clear leaves and check downspouts.", every: 6, unit: "MONTHS" },
+  { item: "Water heater flush", details: "", every: 1, unit: "YEARS" },
+  { item: "Fridge coils", details: "Vacuum behind or under the fridge.", every: 6, unit: "MONTHS" },
+  { item: "Dryer vent", details: "Clear lint from the duct.", every: 1, unit: "YEARS" },
+  { item: "Fire extinguisher", details: "Check the gauge is in the green.", every: 1, unit: "YEARS" },
+];
 const UNIT_LABEL: Record<RepeatUnit, string> = { WEEKS: "weeks", MONTHS: "months", YEARS: "years" };
 const when = (days: number | null) => days === null ? "no date" : days === 0 ? "today" : days === 1 ? "tomorrow" : days > 1 ? `in ${days} days` : "date passed, still open";
 const shortDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -71,6 +82,11 @@ export function HomePanel({ active }: { active: boolean }) {
       <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me with the house. Use what I've told you about it and what's coming round, and tell me what you don't know.")}>ASK ALFRED</button>
     </>}
     <h3 className="tool-label">ADD SOMETHING</h3>
+    {/* HOME-SCHEDULE-001 (APPS-PICKS-003 pick 29, after Centriq): common jobs fill the form; nothing saves until ADD. */}
+    <details className="home-presets"><summary>Common house jobs</summary>
+      <div className="people-names">{HOME_PRESETS.map((preset) => <button type="button" key={preset.item} className="btn-secondary" disabled={busy} onClick={() => { setItem(preset.item); setDetails(preset.details); setEvery(String(preset.every)); setUnit(preset.unit); }}>{preset.item}</button>)}</div>
+      <p className="meta">Fills in the form below. Choose the next due date, then ADD.</p>
+    </details>
     <label className="field">What<input className="input" value={item} maxLength={80} placeholder="Furnace filter" disabled={busy} onChange={(e) => setItem(e.target.value)} /></label>
     <label className="field">Details (optional)<input className="input" value={details} maxLength={200} placeholder="16x25x1, Home Depot" disabled={busy} onChange={(e) => setDetails(e.target.value)} /></label>
     <div className="intent-dates">

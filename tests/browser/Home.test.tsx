@@ -34,3 +34,16 @@ it("keeps a plain fact without a repeat", async () => {
   await expect.element(screen.getByText("Plumber: Ace Plumbing")).toBeVisible();
   expect(await db.obligations.count()).toBe(0);
 });
+
+it("HOME-SCHEDULE-001: a common house job fills the form and saves nothing until ADD", async () => {
+  await page.viewport(360, 800);
+  const screen = await render(<HomePanel active />);
+  const before = await db.events.count();
+  await screen.getByText("Common house jobs", { exact: true }).click();
+  await screen.getByRole("button", { name: "Furnace filter", exact: true }).click();
+  await expect.element(screen.getByRole("textbox", { name: "What" })).toHaveValue("Furnace filter");
+  await expect.element(screen.getByRole("spinbutton", { name: /Repeat every/ })).toHaveValue(3);
+  expect(await db.events.count()).toBe(before);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+});

@@ -137,6 +137,12 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
         {error && <p role="alert">{error}</p>}{receipt && <p role="status">{receipt}</p>}
       </Section>
     </form>
+    {/* WAITING-FOR-001: shown only when something is waiting on someone else. Mark a task Waiting from its detail. */}
+    {plan && plan.waiting.length > 0 && <Section id="plan-waiting" eyebrow="WAITING FOR" title="With someone else">
+      <ul className="plan-list">{plan.waiting.map((item) => <li key={item.id}><button className="plan-task" onClick={() => onOpen({ kind: "OBLIGATION", obligationId: item.id })}>
+        <strong>{item.title}</strong><span>{item.plannedAt ? `Check back ${planDate(item.plannedAt)}` : "No check-back date"}{item.dueAt ? ` · due ${planDate(item.dueAt)}` : ""}</span>
+      </button></li>)}</ul>
+    </Section>}
     {/* SHUTDOWN-001 (APPS-PICKS-002 pick 3, after Sunsama): end the day on purpose. Each move is your tap. */}
     {plan && (({ movable, due }) => <Section id="plan-shutdown" eyebrow="END OF DAY" title="Wrap up today">
       {movable.length ? <>

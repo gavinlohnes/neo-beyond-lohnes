@@ -69,3 +69,17 @@ it("CONNECT-002: the app opens a tapped task's detail and a tapped day's note", 
   openRecord({ kind: "DAY", id: day.id });
   await expect.element(screen.getByRole("textbox", { name: "Your note" })).toHaveValue("Notes for [[Workshop]].");
 });
+
+it("UNLINKED-001: suggests plain-word mentions and links one only on LINK", async () => {
+  const day = await startDay();
+  await saveDailyNote(day.id, "Spent the evening on the garage shelves.");
+  const before = await db.events.count();
+  const screen = await render(<Connections id="u" label="garage" />);
+  await screen.getByText("Mentioned without a link (1)").click();
+  expect(await db.events.count()).toBe(before);
+  expect((await db.dailyNotes.get(day.id))?.text).toBe("Spent the evening on the garage shelves.");
+  await screen.getByRole("button", { name: /^Link garage in the note from / }).click();
+  await expect.poll(async () => (await db.dailyNotes.get(day.id))?.text).toBe("Spent the evening on the [[garage]] shelves.");
+  await expect.element(screen.getByRole("button", { name: /^Open daily note: / })).toBeVisible();
+  expect(screen.getByText(/^Mentioned without a link/).elements()).toHaveLength(0);
+});
