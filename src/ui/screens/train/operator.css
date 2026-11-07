@@ -50,3 +50,4 @@
 .train-prescription--preview li > span { display: inline; }
 /* LIFE-PATTERN-001: shared section labels keep TRAIN's 16px readable-text floor (TRAIN-OPERATOR-001). */
 .train-operator :is(.bx-eyebrow, .bx-way-in, .bx-more > summary) { font-size: 16px; }
+.train-operator .train-plates { margin: -2px 0 10px 64px; font-size: 16px; color: var(--text-2); }
