@@ -38,15 +38,27 @@ export async function getConnections(label: string, self?: { kind: ConnectionKin
 export interface UnlinkedMention { dayId: string; date: string; excerpt: string }
 const plainPattern = (label: string) => new RegExp(`(^|[^\\p{L}\\[])(${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(?![\\p{L}\\]])`, "iu");
 
+/** Existing [[links]], kept whole so a mention inside one is never treated as plain text. */
+const LINK_SPAN = /(\[\[[^\]\n]*\]\])/;
+/** Where the first plain-text mention starts, ignoring text inside existing [[links]], or -1. */
+function plainIndex(text: string, pattern: RegExp): number {
+  let offset = 0;
+  for (const [i, part] of text.split(LINK_SPAN).entries()) {
+    if (i % 2 === 0) { const at = part.search(pattern); if (at >= 0) return offset + at; }
+    offset += part.length;
+  }
+  return -1;
+}
+
 export async function getUnlinkedMentions(label: string): Promise<UnlinkedMention[]> {
   const needle = label.trim();
   if (needle.length < 3) return [];
   const [notes, days] = await Promise.all([db.dailyNotes.toArray(), db.beyondDays.toArray()]);
   const dates = new Map(days.map((day) => [day.id, day.startedAt.slice(0, 10)]));
   const pattern = plainPattern(needle);
-  return notes.filter((note) => pattern.test(note.text) && !wikiLabels(note.text).some((item) => item.toLowerCase() === needle.toLowerCase()))
+  return notes.filter((note) => plainIndex(note.text, pattern) >= 0 && !wikiLabels(note.text).some((item) => item.toLowerCase() === needle.toLowerCase()))
     .map((note) => {
-      const at = note.text.search(pattern);
+      const at = plainIndex(note.text, pattern);
       return { dayId: note.dayId, date: dates.get(note.dayId) ?? "", excerpt: note.text.slice(Math.max(0, at - 30), at + needle.length + 40).trim() };
     })
     .sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
@@ -55,5 +67,10 @@ export async function getUnlinkedMentions(label: string): Promise<UnlinkedMentio
 /** The note text with the first plain mention of `label` wrapped as [[label]], or null when there is none. */
 export function linkFirstMention(text: string, label: string): string | null {
   const pattern = plainPattern(label.trim());
-  return pattern.test(text) ? text.replace(pattern, (_all, before: string, word: string) => `${before}[[${word}]]`) : null;
+  const parts = text.split(LINK_SPAN);
+  // Even parts are plain text, odd parts are existing [[links]], which are never touched.
+  const index = parts.findIndex((part, i) => i % 2 === 0 && pattern.test(part));
+  if (index < 0) return null;
+  parts[index] = parts[index]!.replace(pattern, (_all, before: string, word: string) => `${before}[[${word}]]`);
+  return parts.join("");
 }

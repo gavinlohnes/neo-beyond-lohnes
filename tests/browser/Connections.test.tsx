@@ -83,3 +83,10 @@ it("UNLINKED-001: suggests plain-word mentions and links one only on LINK", asyn
   await expect.element(screen.getByRole("button", { name: /^Open daily note: / })).toBeVisible();
   expect(screen.getByText(/^Mentioned without a link/).elements()).toHaveLength(0);
 });
+
+it("UNLINKED-001: a name inside someone else's [[link]] is not suggested", async () => {
+  const day = await startDay();
+  await saveDailyNote(day.id, "Wrote up [[Ann and Bob plan]] tonight.");
+  const { getUnlinkedMentions } = await import("../../src/application/connectionQueries");
+  expect(await getUnlinkedMentions("Bob")).toEqual([]);
+});
