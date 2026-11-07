@@ -23,6 +23,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     name: tests (${{ matrix.shard }}/4)
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +32,17 @@ jobs:
           cache: npm
       - run: npm ci
       # Harvest Checkpoint 4: the "browser" Vitest project needs Chromium and its OS libraries.
-      - run: npx playwright install --with-deps chromium
+      # CI-HANG-001: a stalled Ubuntu mirror once hung this step for 10+ minutes. apt now gives up on a
+      # dead connection after 20 s and retries; the whole install retries up to three times, 5 min each.
+      - name: Install Chromium and its OS libraries
+        timeout-minutes: 16
+        run: |
+          printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' | sudo tee /etc/apt/apt.conf.d/99beyond-timeouts >/dev/null
+          for attempt in 1 2 3; do
+            timeout 300 npx playwright install --with-deps chromium && exit 0
+            echo "Chromium install attempt $attempt failed or timed out; retrying."
+          done
+          exit 1
       - run: npx vitest run --shard=${{ matrix.shard }}/4
 
   build:

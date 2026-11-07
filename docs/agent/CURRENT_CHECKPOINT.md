@@ -9,10 +9,12 @@
 - Step 2 TRAIN merged as #425.
 - Steps 3 and 4 merged as #426 (BODY) and #427 (MORE and Plans, built by Copilot).
 - Step 5 merged as #428 (also fixed the Drop0, DailyExperience fold and duplicate-Settings failures left on master).
-- Step 6 TODAY: AT A GLANCE says "—" / NOT LOGGED instead of 0; plain YOUR LIFE line. Order and next action unchanged. Review and CI pending.
+- Step 6 merged as #429. LIFE-PATTERN-001 is complete. Reviewer note: WATER BEHIND PACE with 0 oz is
+  intended (SuitPace test: behind your usual pace is true information), so no change.
+- Next: CI-HANG-001, then the rotation field test (#402).
 - Open non-blocking follow-up from the #423 review: TODAY imports all of wholeLife.css for one button.
-- CI risk: `playwright install --with-deps` can stall on the Ubuntu mirror with no job timeout
-  (seen twice on 2026-11-05). Suggest timeout-minutes plus a browser cache; needs owner OK.
+- CI-HANG-001 (owner OK 2026-11-07): browser install gets apt timeouts, 3 retries of 5 min and a
+  30-minute job limit in pr-verify and deploy-pages.
 
 ---
 
