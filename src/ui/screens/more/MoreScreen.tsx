@@ -63,6 +63,17 @@ import { DailyNoteScreen } from "./DailyNoteScreen";
 import { CollectionsScreen } from "./CollectionsScreen";
 import { HighlightsScreen } from "./HighlightsScreen";
 
+const COMMAND_GROUP_SUMMARY: Record<(typeof CAPABILITY_GROUPS)[number], { eyebrow: string; hint: string }> = {
+  Log: { eyebrow: "RECORD", hint: "Record what happened" },
+  "On shift": { eyebrow: "TODAY", hint: "Daily controls and privacy" },
+  Review: { eyebrow: "LOOK BACK", hint: "Free weekly debrief, progress and history" },
+  Plan: { eyebrow: "YOUR PLAN", hint: "Tasks, life, workouts and your schedule" },
+  Notes: { eyebrow: "NOTES", hint: "Capture now. Come back when you're ready." },
+  Systems: { eyebrow: "STATUS", hint: "Readings, observations and device status" },
+  "Backup & recovery": { eyebrow: "DATA SAFETY", hint: "Export, restore or inspect a backup on this device." },
+  Settings: { eyebrow: "PREFERENCES", hint: "Adjust nutrition targets, reminders and optional tools." },
+};
+
 /**
  * BUNDLE-001: MORE-only screens load on first open, so the main bundle stays under the offline
  * precache limit (Workbox skips files over 2 MiB). Split files are still precached: the service
@@ -683,7 +694,11 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
-      <details className="command-group" id="command-backup-panel"><summary className="disclosure-row">Backup & recovery</summary>
+      <details className="command-group" id="command-backup-panel"><summary className="disclosure-row command-group__control">
+        <span className="command-group__eyebrow bx-eyebrow">{COMMAND_GROUP_SUMMARY["Backup & recovery"].eyebrow}</span>
+        <span className="command-group__name" role="heading" aria-level={2}>Backup & recovery</span>
+        <span className="command-group__hint">{COMMAND_GROUP_SUMMARY["Backup & recovery"].hint}</span>
+      </summary>
       {visibleCapabilities.filter((entry) => entry.group === "Backup & recovery").map((entry) => renderCapability(entry, true))}
       <section className="operational-index-zone" aria-labelledby="safety-heading">
         <h2 id="safety-heading" tabIndex={-1} className="section-label">Data safety</h2>
@@ -801,9 +816,17 @@ export function MoreScreen({
       </section>
       </details>
 
-      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => <details className="command-group" key={group}><summary className="disclosure-row command-group__control"><span className="command-group__name">{group}</span><span className="command-group__hint">{({ Log: "Record what happened", "On shift": "Daily controls and privacy", Review: "Free weekly debrief, progress and history", Plan: "Tasks, life, workouts and your schedule", Notes: "Capture now. Come back when you're ready.", Systems: "Readings, observations and device status" } as Partial<Record<typeof group, string>>)[group]}</span></summary>
-        {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry, true))}
-      </details>)}
+      {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => {
+        const summary = COMMAND_GROUP_SUMMARY[group];
+        return <details className="command-group" key={group}>
+          <summary className="disclosure-row command-group__control">
+            <span className="command-group__eyebrow bx-eyebrow">{summary.eyebrow}</span>
+            <span className="command-group__name" role="heading" aria-level={2}>{group}</span>
+            <span className="command-group__hint">{summary.hint}</span>
+          </summary>
+          {visibleCapabilities.filter((entry) => entry.group === group).map((entry) => renderCapability(entry, true))}
+        </details>;
+      })}
 
       {/* FIELD ALPHA Phase 4B/4H: RECORDS — historical/review-oriented,
           distinct from OPERATIONS above. History stays a clean single
@@ -843,7 +866,11 @@ export function MoreScreen({
       {/* DECLUTTER Drop 3 (owner ruling 2026-09-30): a Settings group.
           Nutrition Targets moved here from BODY; the SYSTEM readings moved
           inside Diagnostic detail so the main list stays short. */}
-      <details className="command-group" id="command-settings-panel"><summary className="disclosure-row">Settings</summary>
+      <details className="command-group" id="command-settings-panel"><summary className="disclosure-row command-group__control">
+        <span className="command-group__eyebrow bx-eyebrow">{COMMAND_GROUP_SUMMARY.Settings.eyebrow}</span>
+        <span className="command-group__name" role="heading" aria-level={2}>Settings</span>
+        <span className="command-group__hint">{COMMAND_GROUP_SUMMARY.Settings.hint}</span>
+      </summary>
       {visibleCapabilities.filter((entry) => entry.group === "Settings").map((entry) => renderCapability(entry, true))}
       <section className="operational-index-zone" aria-labelledby="settings-heading">
       <h2 id="settings-heading" className="section-label">Settings</h2>
@@ -1006,4 +1033,3 @@ function describeLastBackup(days: number | null): string {
 function isDatabaseClosedError(error: unknown): error is Error {
   return error instanceof Error && error.name === "DatabaseClosedError";
 }
-

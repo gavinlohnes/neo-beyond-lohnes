@@ -62,7 +62,8 @@
 .plan-task strong, .plan-task span { display: block; overflow-wrap: anywhere; }
 .plan-task strong { font-size: 18px; }
 .plan-task span { color: var(--text-2); font-size: 14px; margin-top: 6px; }
-.plan-composer { display: grid; gap: 10px; margin-block: 24px; }
+.plan-composer { margin-block: 24px; }
+.plan-composer .bx-section { margin-block: 0; }
 .plan-composer label { display: block; margin-block: 8px; }
 .plan-composer input, .plan-composer select { min-width: 0; width: 100%; }
 /* COMMAND-CENTER-001: COMMAND's search and its results (HUD tokens only). */

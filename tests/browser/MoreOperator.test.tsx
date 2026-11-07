@@ -70,6 +70,26 @@ const destinations = [
 ] as const;
 
 describe("MORE-OPERATOR-001", () => {
+  it("uses the shared section shape and one native way in for each MORE group", async () => {
+    await page.viewport(360, 800);
+    const screen = await render(<MoreScreen />);
+    const summaries = [...screen.container.querySelectorAll<HTMLElement>(".command-group > .command-group__control")];
+    expect(summaries.length).toBeGreaterThan(0);
+    for (const summary of summaries) {
+      expect(summary.querySelector(".command-group__eyebrow")).not.toBeNull();
+      expect(summary.querySelector(".command-group__name")).not.toBeNull();
+      expect(summary.querySelector(".command-group__hint")).not.toBeNull();
+      expect(summary.querySelectorAll("button, a")).toHaveLength(0);
+      expect(summary.closest("details")?.querySelectorAll(":scope > summary")).toHaveLength(1);
+      expect(summary.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    }
+    const plan = summaries.find((summary) => summary.querySelector(".command-group__name")?.textContent?.trim() === "Plan")!;
+    expect(plan.querySelector(".command-group__eyebrow")?.textContent).toBe("YOUR PLAN");
+    await plan.click();
+    await expect.element(screen.getByRole("button", { name: "PLAN TODAY Your chosen tasks and recorded deadlines", exact: true })).toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  });
+
   it("Weekly hides a previous successful summary throughout failed refresh, pending retry and recovery", async () => {
     const now = new Date(2026, 9, 10, 12);
     const initial = await getWeeklySummary(now);
@@ -176,7 +196,7 @@ describe("MORE-OPERATOR-001", () => {
     await page.viewport(width, 800);
     const screen = await render(<MoreScreen />);
     // FIELD-AUTHORITY-001: recovery is a top-level job row on the first screen, opened from the keyboard.
-    const summary = [...screen.container.querySelectorAll<HTMLElement>("summary")].find((element) => element.textContent === "Backup & recovery")!;
+    const summary = [...screen.container.querySelectorAll<HTMLElement>("summary")].find((element) => element.querySelector(".command-group__name")?.textContent?.trim() === "Backup & recovery")!;
     expect(summary.getBoundingClientRect().bottom).toBeLessThan(600);
     summary.focus();
     await userEvent.keyboard("{Enter}");
