@@ -2811,3 +2811,10 @@ From a list of 35, Gavin picked: tappable links, person pages, quick add in plai
 a plate calculator, year in pixels, daily resurfacing and "plan my day off" with Alfred. Each is BEYOND's own
 version, built from existing records and commands, with no new stored data type, dependency, Engine or TODAY
 change. Saving always goes through a confirm card or an existing command. [Brief](agent/APPS-PICKS-002.md).
+
+## APPS-PICKS-003 — eighteen more, kept simple (owner selected 2026-11-07)
+
+Gavin picked 17, 19, 38, 11, 13, 7, 29, 30, 34, 39, 12, 36, 18, 20, 26, 31, 35, 40 from the big list, with the
+direction to keep BEYOND simple to use and looking great. Each pick folds into the screen that already owns its job,
+stays quiet by default, shows only true recorded values and saves only on a tap. Supersets (18) and Places (31) are
+approved Protected additions with their own schema/backup evidence. [Brief and UX rules](agent/APPS-PICKS-003.md).
