@@ -84,7 +84,7 @@ it("preserves an interrupted home draft through the overview and tabs", async ()
   await screen.getByRole("navigation", { name: "Life shortcuts" }).getByRole("button", { name: "Home", exact: true }).click();
   await screen.getByRole("textbox", { name: "What", exact: true }).fill("Furnace filter size");
   await screen.getByRole("button", { name: "← Back to your life", exact: true }).click();
-  await expect.element(screen.getByRole("heading", { name: /YOUR LIFE\.\s*IN MOTION\./ })).toHaveFocus();
+  await expect.element(screen.getByRole("heading", { name: "YOUR LIFE.", exact: true })).toHaveFocus();
   await screen.getByRole("navigation", { name: "Life shortcuts" }).getByRole("button", { name: "People", exact: true }).click();
   await screen.getByRole("tab", { name: "Home", exact: true }).click();
   await expect.element(screen.getByRole("textbox", { name: "What", exact: true })).toHaveValue("Furnace filter size");
@@ -96,7 +96,7 @@ it("opens from TODAY on a workday, routes a real task, and retains the existing 
   const count = await db.events.count();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "Open your life", exact: true }).click();
-  await expect.element(screen.getByRole("heading", { name: /YOUR LIFE\.\s*IN MOTION\./ })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "YOUR LIFE.", exact: true })).toBeVisible();
   await expect.element(screen.getByRole("button", { name: /Call Sam about Saturday/ })).toBeVisible();
   expect(screen.getByRole("button", { name: /Call Sam about Saturday/ }).element().getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight - 64);
   await screen.getByRole("button", { name: /Call Sam about Saturday/ }).click();

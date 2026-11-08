@@ -1,3 +1,13 @@
+# POLISH-002 — in progress (2026-11-08)
+
+- Gavin chose a polish pass after ~35 features in two days ("Polish pass"): phone screenshots of what shipped,
+  then plain wording, less noise, no bare zeros. No new features. Builder Claude Code.
+- Batch 1: YOUR LIFE slogans → plain words, internal lived-day caption and footer slogans removed; Plan Today
+  END OF DAY hidden when empty, shorter hint; DATA hides "0 entries". Review and CI pending.
+- APPS-PICKS-003 complete (#440–#444). Rotation field test (#402) waits for Gavin's next work night.
+
+---
+
 # APPS-PICKS-003 — in progress (2026-11-07)
 
 - Gavin picked 18 more ideas ([brief and UX rules](APPS-PICKS-003.md)); 18 (supersets) and 31 (places) are approved

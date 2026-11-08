@@ -141,7 +141,9 @@ it("WAITING-FOR-001: lists tasks waiting on someone else, with their check-back 
   await page.viewport(360, 800);
   const { markObligationWaiting } = await import("../../src/application/intentCommands");
   const screen1 = await render(<div className="screen more-operator"><PlanTodayScreen onOpen={vi.fn()} /></div>);
-  await expect.element(screen1.getByRole("heading", { name: "Wrap up today" })).toBeVisible();
+  await expect.element(screen1.getByRole("heading", { name: "Add a task" })).toBeVisible();
+  // POLISH: End of Day is hidden when there is nothing to wrap up.
+  expect(screen1.getByRole("heading", { name: "Wrap up today" }).elements()).toHaveLength(0);
   expect(screen1.getByRole("heading", { name: "With someone else" }).elements()).toHaveLength(0);
   await cleanup();
   const task = await createObligation({ title: "Quote from the roofer", plannedAt: "2026-11-09" });

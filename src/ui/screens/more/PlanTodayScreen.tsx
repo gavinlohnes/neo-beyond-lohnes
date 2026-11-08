@@ -125,7 +125,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
       <Section id="plan-add-task" eyebrow="YOUR PLAN" title="Add a task"
         wayIn={{ label: quick ? `ADD FOR ${planDate(quick.date).toUpperCase()}` : "ADD TO TODAY", type: "submit", disabled: busy || !title.trim() || !plan }}>
         <label htmlFor="plan-task-title">Add a task for today</label>
-        <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => { setTitle(event.target.value); setAsTyped(false); }} placeholder="What do you want to get done? Try “dentist Tue 3pm”" />
+        <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => { setTitle(event.target.value); setAsTyped(false); }} placeholder="e.g. dentist Tue 3pm" />
         {quick && <p className="meta" role="status" aria-live="polite">Understood: “{quick.title}” on {planDate(quick.date)}{quick.time ? ` at ${quick.time}` : ""}. Choose a date below to override. <button type="button" className="text-button" onClick={() => setAsTyped(true)}>Keep as typed, today</button></p>}
         <details className="more-inspection"><summary>Date, Mission & repeat</summary>
           <label htmlFor="plan-due">Due date (optional)</label><input id="plan-due" className="input" type="date" value={due} disabled={busy} onChange={(event) => setDue(event.target.value)} />
@@ -144,7 +144,7 @@ export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; o
       </button></li>)}</ul>
     </Section>}
     {/* SHUTDOWN-001 (APPS-PICKS-002 pick 3, after Sunsama): end the day on purpose. Each move is your tap. */}
-    {plan && (({ movable, due }) => <Section id="plan-shutdown" eyebrow="END OF DAY" title="Wrap up today">
+    {plan && (({ movable, due }) => (movable.length > 0 || due.length > 0) && <Section id="plan-shutdown" eyebrow="END OF DAY" title="Wrap up today">
       {movable.length ? <>
         <p className="meta">Planned for today and still open. Move what can wait.</p>
         <ul className="plan-list">{movable.map((item) => <li key={item.id} className="plan-shutdown-row">
