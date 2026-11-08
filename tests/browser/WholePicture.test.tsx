@@ -85,7 +85,7 @@ it("offers a visible retry and honest empty/insufficient states, never demo data
   await expect.element(screen.getByRole("alert")).toBeVisible();
   expect(screen.getByRole("alert").element().textContent).toContain("unavailable, not empty");
   await screen.getByRole("button", { name: "RETRY WHOLE PICTURE", exact: true }).click();
-  await expect.element(screen.getByRole("heading", { name: "Your record starts with what you choose to record.", exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("heading", { name: "Not enough records yet.", exact: true })).toBeVisible();
   await screen.getByRole("tab", { name: "Compare", exact: true }).click();
   await expect.element(screen.getByText("0 recorded days · needs 3 · inspect →").first()).toBeVisible();
   expect(await db.events.count()).toBe(0);

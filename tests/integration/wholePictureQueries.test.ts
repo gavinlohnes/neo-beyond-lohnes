@@ -62,6 +62,6 @@ it("joins imported measures by measurement time, preserves partial coverage and 
 it("does not make a pattern, count or mean from an empty record", async () => {
   const result = await getWholePicture(at(20));
   expect(pictureValues(result.rows, "sessions")).toEqual([]); expect(pictureValues(result.rows, "energy")).toEqual([]);
-  expect(describePicture(result.rows.slice(-28), result.rows.slice(0, 28))).toMatchObject({ title: "Your record starts with what you choose to record." });
+  expect(describePicture(result.rows.slice(-28), result.rows.slice(0, 28))).toMatchObject({ title: "Not enough records yet." });
   expect(result.stories).toEqual([]); expect(result.canSave).toBe(false);
 });

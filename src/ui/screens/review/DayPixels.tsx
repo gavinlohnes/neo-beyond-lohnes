@@ -22,14 +22,15 @@ export function DayPixels({ rows, onInspect }: { rows: readonly PictureRow[]; on
     <div className="filter-row" role="group" aria-label="Shade squares by">
       {(Object.keys(LABEL) as Measure[]).map((key) => <button type="button" key={key} aria-pressed={measure === key} onClick={() => setMeasure(key)}>{LABEL[key]}</button>)}
     </div>
-    <ol className="day-pixels__grid" aria-label={`${LABEL[measure]} by day`}>
+    {/* POLISH-002: no wall of empty squares before anything is recorded. */}
+    {recorded > 0 && <ol className="day-pixels__grid" aria-label={`${LABEL[measure]} by day`}>
       {rows.map((row) => {
         const value = valueOf(row);
         const day = new Date(row.start).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
         return <li key={row.start}><button type="button" className="day-pixels__day" data-level={value === undefined ? "none" : level(measure, value)}
           aria-label={`${day}: ${value === undefined ? "not recorded" : describe(measure, value)}. Open records.`} onClick={() => onInspect(row)} /></li>;
       })}
-    </ol>
+    </ol>}
     <p className="small muted">{recorded ? `${recorded} of ${rows.length} days have ${LABEL[measure].toLowerCase()} recorded. Empty squares are days without it, not zero.` : `No ${LABEL[measure].toLowerCase()} recorded in these ${rows.length} days yet.`}</p>
   </section>;
 }
