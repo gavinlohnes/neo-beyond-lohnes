@@ -1,4 +1,4 @@
-# POLISH-002 phone evidence
+# POLISH-003 phone evidence
 
 Real 360 × 800 viewport captures of the built app (`scripts/shoot-life-pattern.mjs`), synthetic empty records.
 
