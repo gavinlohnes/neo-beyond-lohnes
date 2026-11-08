@@ -22,7 +22,7 @@ export function DayPixels({ rows, onInspect }: { rows: readonly PictureRow[]; on
     <div className="filter-row" role="group" aria-label="Shade squares by">
       {(Object.keys(LABEL) as Measure[]).map((key) => <button type="button" key={key} aria-pressed={measure === key} onClick={() => setMeasure(key)}>{LABEL[key]}</button>)}
     </div>
-    {/* POLISH-002: no wall of empty squares before anything is recorded. */}
+    {/* POLISH-003: no wall of empty squares before anything is recorded. */}
     {recorded > 0 && <ol className="day-pixels__grid" aria-label={`${LABEL[measure]} by day`}>
       {rows.map((row) => {
         const value = valueOf(row);

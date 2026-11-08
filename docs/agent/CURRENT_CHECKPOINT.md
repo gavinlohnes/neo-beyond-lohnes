@@ -1,3 +1,12 @@
+# TEMPLATE-EDIT-001 — in progress (2026-11-08)
+
+- Gavin chose "Edit saved workout templates" (the main gap after supersets #444). EDIT on each custom template loads
+  it into the builder; SAVE CHANGES uses the existing `updateCustomTemplate` (same id, no new data). Edited exercises
+  keep their rep range and increment; exercises no longer in the library stay. Review and CI pending.
+- POLISH-003 complete (#445, #446).
+
+---
+
 # POLISH-003 — in progress (2026-11-08)
 
 - Gavin chose a polish pass after ~35 features in two days ("Polish pass"): phone screenshots of what shipped,

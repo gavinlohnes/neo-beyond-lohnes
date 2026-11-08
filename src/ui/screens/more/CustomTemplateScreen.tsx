@@ -5,7 +5,7 @@ import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { deriveIncrementLbs, type ExercisePrescription } from "../../../domain/workout/types";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
-import { archiveCustomTemplate, createCustomTemplate } from "../../../application/customTemplateCommands";
+import { archiveCustomTemplate, createCustomTemplate, updateCustomTemplate } from "../../../application/customTemplateCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { describeError } from "../../errorMessage";
 
@@ -29,7 +29,7 @@ import { describeError } from "../../errorMessage";
  */
 const DEFAULT_SETS = 3;
 
-function TemplateRow({ template, onArchive }: { template: CustomWorkoutTemplate; onArchive: () => void }) {
+function TemplateRow({ template, onArchive, onEdit }: { template: CustomWorkoutTemplate; onArchive: () => void; onEdit: () => void }) {
   return (
     <div className="equipment-row" style={{ marginBottom: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
@@ -40,14 +40,17 @@ function TemplateRow({ template, onArchive }: { template: CustomWorkoutTemplate;
             {template.exercises.map((ex) => ex.name).join(", ")}
           </p>
         </div>
-        <button
-          type="button"
-          className="btn-secondary"
-          style={{ width: "auto", padding: "4px 10px", fontSize: 14, flexShrink: 0 }}
-          onClick={onArchive}
-        >
-          ARCHIVE
-        </button>
+        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+          <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", fontSize: 14, minHeight: 44 }} aria-label={`Edit ${template.name}`} onClick={onEdit}>EDIT</button>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ width: "auto", padding: "4px 10px", fontSize: 14, minHeight: 44 }}
+            onClick={onArchive}
+          >
+            ARCHIVE
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -63,6 +66,8 @@ export function CustomTemplateScreen() {
   const [name, setName] = useState("");
   const [selectedSets, setSelectedSets] = useState<Record<string, number>>({});
   const [supersets, setSupersets] = useState<Record<string, boolean>>({});
+  // TEMPLATE-EDIT-001: editing reuses the builder; the original template keeps exercises the library no longer lists.
+  const [editing, setEditing] = useState<CustomWorkoutTemplate | null>(null);
 
   useEffect(() => {
     void refresh();
@@ -101,12 +106,29 @@ export function CustomTemplateScreen() {
 
   const selectedIds = Object.keys(selectedSets);
 
+  // Exercises in the template being edited that the library no longer lists (archived): shown so they can be removed.
+  const retired = editing ? editing.exercises.filter((ex) => ex.exerciseId in selectedSets && !savedExercises.some((saved) => saved.id === ex.exerciseId)) : [];
+
+  function startEdit(template: CustomWorkoutTemplate) {
+    setEditing(template); setName(template.name);
+    setSelectedSets(Object.fromEntries(template.exercises.map((ex) => [ex.exerciseId, ex.sets])));
+    setSupersets(Object.fromEntries(template.exercises.filter((ex) => ex.supersetWithNext).map((ex) => [ex.exerciseId, true])));
+    setCreateOpen(true);
+  }
+  function resetForm() { setEditing(null); setName(""); setSelectedSets({}); setSupersets({}); setCreateOpen(false); }
+
   async function handleCreate() {
     if (!name.trim() || selectedIds.length === 0) return;
     await withBusy(async () => {
     const acknowledge = captureCommitFeedback();
       const exercises: ExercisePrescription[] = selectedIds.map((exerciseId, index) => {
-        const source = savedExercises.find((ex) => ex.id === exerciseId)!;
+        const original = editing?.exercises.find((ex) => ex.exerciseId === exerciseId);
+        const source = savedExercises.find((ex) => ex.id === exerciseId);
+        // An edited exercise keeps its own rep range and increment; only sets and superset change here.
+        if (original || !source) {
+          const { supersetWithNext: _old, ...rest } = original!;
+          return { ...rest, sets: selectedSets[exerciseId]!, ...(supersets[exerciseId] && index < selectedIds.length - 1 ? { supersetWithNext: true } : {}) };
+        }
         return {
           exerciseId: source.id,
           name: source.name,
@@ -117,11 +139,10 @@ export function CustomTemplateScreen() {
           ...(supersets[exerciseId] && index < selectedIds.length - 1 ? { supersetWithNext: true } : {}),
         };
       });
-      await createCustomTemplate({ name: name.trim(), exercises });
+      if (editing) await updateCustomTemplate(editing.id, { name: name.trim(), exercises });
+      else await createCustomTemplate({ name: name.trim(), exercises });
       acknowledge("LIGHT");
-      setName("");
-      setSelectedSets({}); setSupersets({});
-      setCreateOpen(false);
+      resetForm();
       await refresh();
     });
   }
@@ -148,13 +169,13 @@ export function CustomTemplateScreen() {
         <div role="group" aria-label="My templates">
           {templates.length === 0 && <p className="empty-state">No custom templates yet.</p>}
           {templates.map((t) => (
-            <TemplateRow key={t.id} template={t} onArchive={() => void handleArchive(t.id)} />
+            <TemplateRow key={t.id} template={t} onArchive={() => void handleArchive(t.id)} onEdit={() => startEdit(t)} />
           ))}
         </div>
 
         <div className="intent-create">
-          <FieldDisclosure summary="CREATE TEMPLATE" open={createOpen} onToggle={setCreateOpen}>
-            {savedExercises.length === 0 ? (
+          <FieldDisclosure summary={editing ? `EDIT ${editing.name.toUpperCase()}` : "CREATE TEMPLATE"} open={createOpen} onToggle={(open) => { if (!open && editing) resetForm(); else setCreateOpen(open); }}>
+            {savedExercises.length === 0 && !editing ? (
               <p className="card-body">
                 You don't have any saved exercises yet — add some in the Exercise Library first, then come back here to build a template from them.
               </p>
@@ -218,14 +239,22 @@ export function CustomTemplateScreen() {
                     </div>
                   );
                 })}
+                {retired.length > 0 && <div role="group" aria-label="No longer in your library" style={{ marginTop: 12 }}>
+                  <p className="meta" style={{ marginBottom: 8 }}>NO LONGER IN YOUR LIBRARY</p>
+                  {retired.map((ex) => <div key={ex.exerciseId} className="equipment-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span className="card-body" style={{ margin: 0 }}>{ex.name} <span className="meta">· {selectedSets[ex.exerciseId]} sets</span></span>
+                    <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", minHeight: 44 }} disabled={busy} aria-label={`Remove ${ex.name}`} onClick={() => toggleExercise(ex.exerciseId)}>REMOVE</button>
+                  </div>)}
+                </div>}
                 <button
                   className="btn-primary"
                   style={{ marginTop: 12 }}
                   disabled={busy || !name.trim() || selectedIds.length === 0}
                   onClick={() => void handleCreate()}
                 >
-                  SAVE TEMPLATE
+                  {editing ? "SAVE CHANGES" : "SAVE TEMPLATE"}
                 </button>
+                {editing && <button type="button" className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} onClick={resetForm}>CANCEL EDIT</button>}
               </>
             )}
           </FieldDisclosure>
