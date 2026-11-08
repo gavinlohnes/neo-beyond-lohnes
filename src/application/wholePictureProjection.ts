@@ -72,7 +72,7 @@ export function describePicture(rows: readonly PictureRow[], previous: readonly 
   const prior = pictureMean(pictureValues(previous, "sleepHours"));
   const low = pictureLowEnergy(rows);
   if (!rows.some((row) => row.dayIds.length || row.steps !== undefined || row.resting !== undefined)) {
-    return { title: "Your record starts with what you choose to record.", body: "No completed source days or measured activity in this view. Missing history is not a verdict about your life." };
+    return { title: "Not enough records yet.", body: "No completed days or measured activity in this view yet. What stands out appears once a few days are recorded." };
   }
   if (sleep === undefined || prior === undefined) return {
     title: "A picture still taking shape.",

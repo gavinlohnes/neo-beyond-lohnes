@@ -6,3 +6,5 @@ Real 360 × 800 viewport captures of the built app (`scripts/shoot-life-pattern.
   "Everything else"); the internal lived-day caption and the footer slogans are gone.
 - Plan Today (`plan-today-*`): END OF DAY appears only when something is left to wrap up; shorter add-box hint.
 - DATA (`data-*`): "0 entries" is no longer shown above "Nothing recorded yet."
+- Review (`review-*`, batch 2): the empty-state headline is "Not enough records yet." instead of a slogan; lines that
+  read "across 0 …" now say what is missing in words; the day-squares grid stays hidden until something is recorded.

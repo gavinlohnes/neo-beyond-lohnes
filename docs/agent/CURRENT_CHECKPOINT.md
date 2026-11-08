@@ -3,8 +3,8 @@
 - Gavin chose a polish pass after ~35 features in two days ("Polish pass"): phone screenshots of what shipped,
   then plain wording, less noise, no bare zeros. No new features. Builder Claude Code.
   Brief: [POLISH-003.md](POLISH-003.md). (POLISH-002 is an older, unrelated Protected brief.)
-- Batch 1: YOUR LIFE slogans → plain words, internal lived-day caption and footer slogans removed; Plan Today
-  END OF DAY hidden when empty, shorter hint; DATA hides "0 entries". Review and CI pending.
+- Batch 1 merged as #445.
+- Batch 2: Review empty states in words, no 0s; day squares hidden until recorded. Review and CI pending.
 - APPS-PICKS-003 complete (#440–#444). Rotation field test (#402) waits for Gavin's next work night.
 
 ---
