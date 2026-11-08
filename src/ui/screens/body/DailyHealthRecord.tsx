@@ -109,7 +109,7 @@ export function DailyHealthRecord({ water, sleep, weight, protein, meals, disabl
   records.sort((a, b) => b.entry.recordedAt.localeCompare(a.entry.recordedAt) || a.entry.rootEventId.localeCompare(b.entry.rootEventId));
   return (
     <section className="health-record" aria-label="Recorded this day">
-      <div className="health-section-heading"><h2 className="section-label">Recorded this day</h2><span className="meta">{records.length} {records.length === 1 ? "entry" : "entries"}</span></div>
+      <div className="health-section-heading"><h2 className="section-label">Recorded this day</h2>{records.length > 0 && <span className="meta">{records.length} {records.length === 1 ? "entry" : "entries"}</span>}</div>
       {records.length === 0 && <p className="meta">Nothing recorded yet. Record what is useful to you.</p>}
       {(allOpen ? records : records.slice(0, 5)).map((record) => (
         <button className="health-record-row" key={record.entry.rootEventId} disabled={disabled}
