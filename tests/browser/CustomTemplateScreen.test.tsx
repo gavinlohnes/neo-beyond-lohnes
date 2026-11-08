@@ -79,6 +79,34 @@ describe("CustomTemplateScreen (real browser)", () => {
     await expect.poll(async () => (await getCustomTemplates())[0]?.exercises.map((e) => e.supersetWithNext ?? false)).toEqual([true, false]);
   });
 
+  it("TEMPLATE-EDIT-001: edits a saved template in place: name, sets and superset, keeping its rep ranges", async () => {
+    await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
+    await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
+    const screen = await render(<CustomTemplateScreen />);
+    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+    await screen.getByPlaceholder("Template name").fill("Pull pair");
+    await screen.getByRole("button", { name: "Barbell Row (Back)" }).click();
+    await screen.getByRole("button", { name: "Face Pull (Shoulders)" }).click();
+    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
+    const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
+    await expect.poll(async () => (await getCustomTemplates()).length).toBe(1);
+    const [before] = await getCustomTemplates();
+
+    await screen.getByRole("button", { name: "Edit Pull pair" }).click();
+    await expect.element(screen.getByPlaceholder("Template name")).toHaveValue("Pull pair");
+    await screen.getByPlaceholder("Template name").fill("Pull superset");
+    await screen.getByRole("button", { name: "Increase sets for Barbell Row" }).click();
+    await screen.getByRole("checkbox", { name: "Superset with next" }).click();
+    await screen.getByRole("button", { name: "SAVE CHANGES" }).click();
+
+    await expect.poll(async () => (await getCustomTemplates())[0]?.name).toBe("Pull superset");
+    const [after] = await getCustomTemplates();
+    expect(after!.id).toBe(before!.id);
+    expect(after!.exercises.map((e) => [e.exerciseId, e.sets, e.supersetWithNext ?? false])).toEqual([[before!.exercises[0]!.exerciseId, 4, true], [before!.exercises[1]!.exerciseId, 3, false]]);
+    expect(after!.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs])).toEqual(before!.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs]));
+    await expect.element(screen.getByRole("button", { name: "CREATE TEMPLATE" })).toBeVisible();
+  });
+
   it("TRAIN-PROGRESSION-001: derives a real equipment-based increment through the actual screen, not the old flat placeholder", async () => {
     await createCustomExercise({ name: "Leg Press Machine", muscleGroup: "Legs", equipment: "Machine", repRangeLow: 8, repRangeHigh: 12 });
     const screen = await render(<CustomTemplateScreen />);
