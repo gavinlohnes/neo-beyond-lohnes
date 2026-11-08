@@ -106,6 +106,9 @@ export function CustomTemplateScreen() {
 
   const selectedIds = Object.keys(selectedSets);
 
+  // Exercises in the template being edited that the library no longer lists (archived): shown so they can be removed.
+  const retired = editing ? editing.exercises.filter((ex) => ex.exerciseId in selectedSets && !savedExercises.some((saved) => saved.id === ex.exerciseId)) : [];
+
   function startEdit(template: CustomWorkoutTemplate) {
     setEditing(template); setName(template.name);
     setSelectedSets(Object.fromEntries(template.exercises.map((ex) => [ex.exerciseId, ex.sets])));
@@ -172,7 +175,7 @@ export function CustomTemplateScreen() {
 
         <div className="intent-create">
           <FieldDisclosure summary={editing ? `EDIT ${editing.name.toUpperCase()}` : "CREATE TEMPLATE"} open={createOpen} onToggle={(open) => { if (!open && editing) resetForm(); else setCreateOpen(open); }}>
-            {savedExercises.length === 0 ? (
+            {savedExercises.length === 0 && !editing ? (
               <p className="card-body">
                 You don't have any saved exercises yet — add some in the Exercise Library first, then come back here to build a template from them.
               </p>
@@ -236,6 +239,13 @@ export function CustomTemplateScreen() {
                     </div>
                   );
                 })}
+                {retired.length > 0 && <div role="group" aria-label="No longer in your library" style={{ marginTop: 12 }}>
+                  <p className="meta" style={{ marginBottom: 8 }}>NO LONGER IN YOUR LIBRARY</p>
+                  {retired.map((ex) => <div key={ex.exerciseId} className="equipment-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span className="card-body" style={{ margin: 0 }}>{ex.name} <span className="meta">· {selectedSets[ex.exerciseId]} sets</span></span>
+                    <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", minHeight: 44 }} disabled={busy} aria-label={`Remove ${ex.name}`} onClick={() => toggleExercise(ex.exerciseId)}>REMOVE</button>
+                  </div>)}
+                </div>}
                 <button
                   className="btn-primary"
                   style={{ marginTop: 12 }}

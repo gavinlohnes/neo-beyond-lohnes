@@ -107,6 +107,22 @@ describe("CustomTemplateScreen (real browser)", () => {
     await expect.element(screen.getByRole("button", { name: "CREATE TEMPLATE" })).toBeVisible();
   });
 
+  it("TEMPLATE-EDIT-001: shows exercises no longer in the library while editing, and can remove them", async () => {
+    const { archiveCustomExercise } = await import("../../src/application/exerciseLibraryCommands");
+    const row = await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
+    const pull = await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
+    const { createCustomTemplate } = await import("../../src/application/customTemplateCommands");
+    await createCustomTemplate({ name: "Pull pair", exercises: [row, pull].map((e) => ({ exerciseId: e.id, name: e.name, sets: 3, repRangeLow: e.repRangeLow, repRangeHigh: e.repRangeHigh, incrementLbs: 5 })) });
+    await archiveCustomExercise(pull.id);
+    const screen = await render(<CustomTemplateScreen />);
+    await screen.getByRole("button", { name: "Edit Pull pair" }).click();
+    await expect.element(screen.getByRole("group", { name: "No longer in your library" }).getByText("Face Pull")).toBeVisible();
+    await screen.getByRole("button", { name: "Remove Face Pull" }).click();
+    await screen.getByRole("button", { name: "SAVE CHANGES" }).click();
+    const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
+    await expect.poll(async () => (await getCustomTemplates())[0]?.exercises.map((e) => e.name)).toEqual(["Barbell Row"]);
+  });
+
   it("TRAIN-PROGRESSION-001: derives a real equipment-based increment through the actual screen, not the old flat placeholder", async () => {
     await createCustomExercise({ name: "Leg Press Machine", muscleGroup: "Legs", equipment: "Machine", repRangeLow: 8, repRangeHigh: 12 });
     const screen = await render(<CustomTemplateScreen />);
