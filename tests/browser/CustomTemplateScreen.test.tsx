@@ -116,7 +116,7 @@ describe("CustomTemplateScreen (real browser)", () => {
     await archiveCustomExercise(pull.id);
     const screen = await render(<CustomTemplateScreen />);
     await screen.getByRole("button", { name: "Edit Pull pair" }).click();
-    await expect.element(screen.getByRole("group", { name: "No longer in your library" }).getByText("Face Pull")).toBeVisible();
+    await expect.element(screen.getByRole("group", { name: "No longer in your library" })).toHaveTextContent("Face Pull · 3 sets");
     await screen.getByRole("button", { name: "Remove Face Pull" }).click();
     await screen.getByRole("button", { name: "SAVE CHANGES" }).click();
     const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
