@@ -64,7 +64,7 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await openCommandPanel(screen, "backup");
     await openCommandPanel(screen, "settings");
 
-    await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Plan", exact: true })).toBeVisible();
     await expect.element(screen.getByText("Data safety", { exact: true })).toBeVisible();
     await expect.element(await commandResult(screen, "REVIEW")).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
@@ -475,7 +475,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByRole("heading", { name: "Missions · durable direction" })).toBeVisible();
 
     await screen.getByRole("button", { name: "BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Plan", exact: true })).toBeVisible();
   });
 
   it("opens Work Schedule and returns to MENU", async () => {
@@ -488,7 +488,7 @@ describe("MoreScreen (real browser) — nested navigation", () => {
     await expect.element(screen.getByText(/working days/i).first()).toBeVisible();
 
     await screen.getByRole("button", { name: "BACK TO MORE" }).click();
-    await expect.element(screen.getByText("Plan", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Plan", exact: true })).toBeVisible();
   });
 
   it("opens History and returns to MENU", async () => {

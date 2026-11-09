@@ -1,3 +1,12 @@
+# MORE-HOME-001 — approved, in review (2026-11-09)
+
+- Gavin: "Redo more". MORE opens like YOUR LIFE: YOUR SYSTEMS., area shortcuts and status cards; nothing removed.
+  Protected (MORE IA), approved directly. Brief: [MORE-HOME-001.md](MORE-HOME-001.md).
+- SLEEP-RHYTHM-001 merged (#451). Drive backup copy fix #452 is in review. Gavin set up Drive backup on his phone,
+  and the first backup is confirmed in Drive.
+
+---
+
 # SLEEP-RHYTHM-001 — in review (2026-11-09)
 
 - Gavin asked for "really impressive", Builder's choice. Claude Code chose big-list idea 27, sleep regularity across
