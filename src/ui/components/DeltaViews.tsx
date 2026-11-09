@@ -49,6 +49,7 @@ export function DeltaPanel({ active }: { active: boolean }) {
       {knowledge.topics.map((t) => <li key={t.id} data-state={t.state}><strong>{t.label}</strong><span className="meta"> · {describeTopic(t)}</span></li>)}
     </ul>
     {knowledge.suggestion && <ExperimentOffer suggestion={knowledge.suggestion} />}
+    <DeltaAhead active={active} />
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
       ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)}:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}</li>)}</ol>
@@ -122,4 +123,44 @@ export function DeltaWeek({ active, week }: { active: boolean; week: { start: st
       : <p className="meta">Nothing new this week. DELTA only speaks when your records show something.</p>}
     {lines.length > 3 && <p className="meta">{lines.length - 3} more in DELTA's notebook (Review → Personal Understanding).</p>}
   </div>;
+}
+
+/**
+ * DELTA-NEXT 2 + 3: looking ahead. The next run forecast from your saved schedule, what your past runs looked
+ * like at each place (shift 1, shift 2…), and your best window on days off (where you trained most). A forecast
+ * and your own records — it suggests, it never schedules, and it never changes advice. Reuses ROTATION-001.
+ */
+export function DeltaAhead({ active }: { active: boolean }) {
+  const [ahead, setAhead] = useState<{ lines: string[] } | null | "ERROR">(null);
+  useEffect(() => {
+    if (!active) return;
+    let live = true;
+    void (async () => {
+      const [{ getWholePicture }, rotation, copy] = await Promise.all([import("../../application/wholePictureQueries"), import("../../application/rotationProjection"), import("../screens/review/rotationCopy")]);
+      const picture = await getWholePicture();
+      const positions = rotation.runPositions(picture.rows);
+      const next = rotation.nextForecastRun(picture.weekAhead.days), off = rotation.nextDaysOff(picture.weekAhead.days);
+      const lines: string[] = [];
+      const when = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+      if (next?.work === "WORK") {
+        lines.push(`Your next work run is forecast from ${when(next.from)} · ${next.days} ${next.days === 1 ? "shift" : "shifts"}.`);
+        for (const place of positions.filter((p) => p.context === "WORK").slice(0, Math.min(next.days, 3))) lines.push(`Past runs, ${copy.positionName(place).toLowerCase()}: ${copy.describePosition(place)}.`);
+      }
+      if (off) {
+        lines.push(off.now ? "You're in days off now." : `Days off are forecast from ${when(off.from)} · ${off.days} ${off.days === 1 ? "day" : "days"}.`);
+        const best = copy.mostTrainedDayOff(positions);
+        if (best) lines.push(`Your best training window on days off has been ${copy.positionName(best).toLowerCase()}: trained on ${best.trained.days} of ${best.trained.of}.`);
+      }
+      if (live) setAhead({ lines });
+    })().catch(() => { if (live) setAhead("ERROR"); });
+    return () => { live = false; };
+  }, [active]);
+  if (ahead === "ERROR") return <p className="meta">DELTA couldn't read your rotation. Nothing was changed.</p>;
+  if (!ahead) return null;
+  return <section className="delta-ahead" aria-label="DELTA looking ahead">
+    <h2 className="tool-label">DELTA · LOOKING AHEAD</h2>
+    {ahead.lines.length ? ahead.lines.map((l) => <p key={l} className="card-body" style={{ margin: "0 0 6px" }}>{l}</p>)
+      : <p className="meta">Save your work schedule and I can look ahead at your next run.</p>}
+    <p className="meta">A forecast from your schedule and your own records. I suggest; I never book anything or change advice.</p>
+  </section>;
 }
