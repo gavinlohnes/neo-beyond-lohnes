@@ -17,6 +17,7 @@ import { RecordsList } from "./RecordsList";
 import { TrainingHistory } from "./TrainingHistory";
 import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
+import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
 import { GymMode } from "./GymMode";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
@@ -96,7 +97,7 @@ const VARIANT_ORDER: SessionType[] = ["STANDARD", "REDUCED", "RECOVERY"];
  * moment via ± only — no settings surface for this, per this Drop's
  * exclusions.
  */
-const REST_DURATION_SECONDS = 90;
+// REST-MEMORY-001: the 90 s default now lives in application/restMemory.ts (DEFAULT_REST_SECONDS).
 /** How long the rest widget stays fully expanded after the lifter last touched it before compressing to the ambient timer + next-action line. */
 const REST_COMPRESS_AFTER_MS = 8000;
 
@@ -244,6 +245,8 @@ export function TrainScreen({
   // logic decide" — set explicitly only when the lifter taps into a
   // different exercise out of order via the compact list below.
   const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
+  /** REST-MEMORY-001: which exercise the running rest follows, so ± taps teach that exercise. */
+  const restExerciseRef = useRef<string | null>(null);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
   // Drop 4 (live PR alerts): sets from every other session, loaded once per
   // active session. Records for this session's sets are derived from it and
@@ -599,9 +602,11 @@ export function TrainScreen({
    * expanded, not immediately compressed from whatever idle window a
    * prior rest left behind.
    */
-  async function startRestAfterCommit() {
+  async function startRestAfterCommit(exerciseId: string) {
     if (!session) return;
-    await startRest(session.id, REST_DURATION_SECONDS);
+    // REST-MEMORY-001: the rest you settled on for this exercise last time, else the default.
+    restExerciseRef.current = exerciseId;
+    await startRest(session.id, restSecondsFor(exerciseId));
     const now = Date.now();
     setRestTouchedAt(now);
     // The ticking effect below only advances `nowTick` once its 1s
@@ -632,7 +637,7 @@ export function TrainScreen({
       haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
-      await startRestAfterCommit();
+      await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
       else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
@@ -666,7 +671,7 @@ export function TrainScreen({
       haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
-      await startRestAfterCommit();
+      await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
       else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
@@ -712,6 +717,7 @@ export function TrainScreen({
     setRestTouchedAt(Date.now());
     try {
       await adjustRest(session.id, deltaSeconds);
+      rememberRestAdjustment(restExerciseRef.current, deltaSeconds);
       await refreshSession();
     } catch (error) {
       reportOperationFailure(error);
