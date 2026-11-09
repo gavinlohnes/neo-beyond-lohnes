@@ -3,6 +3,7 @@ import { getDeltaKnowledge, newLearnings, type DeltaKnowledge, type ExperimentSu
 import { startExperiment } from "../../application/tryExperiment";
 import { hoursMinutes } from "../screens/health/healthFormat";
 import { describeError } from "../errorMessage";
+import { describeUnusual } from "../screens/today/unusualCopy";
 import { describeGroup } from "../screens/today/SleepRhythm";
 import { describeComparison } from "../screens/more/TagPatternsSection";
 
@@ -14,6 +15,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month
 
 export function describeLearning(l: Learning): string {
   if (l.kind === "SLEEP_WINDOW") return `Learned when you sleep. ${describeGroup(l.group)}`;
+  if (l.kind === "UNUSUAL") { const c = describeUnusual(l.metric, l.reading); return `Noticed: ${c.headline} ${c.basis}`; }
   if (l.kind === "EXPERIMENT") return `Learned from your experiment "${l.what}" (${l.days} days): ${l.outcome}.${l.lesson ? ` Your lesson: ${l.lesson}` : ""}`;
   return `Learned what #${l.tag} lines up with, over ${l.taggedDays} tagged days. ${describeComparison(l.comparison)}`;
 }
@@ -49,7 +51,7 @@ export function DeltaPanel({ active }: { active: boolean }) {
     {knowledge.suggestion && <ExperimentOffer suggestion={knowledge.suggestion} />}
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
-      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">Learned {day(l.learnedOn)} · now:</span> {describeLearning(l)}</li>)}</ol>
+      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)}:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}</li>)}</ol>
       : <p className="meta">Nothing learned yet. Measured sleep, tags in your daily note and check-ins teach me.</p>}
     <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
@@ -69,7 +71,7 @@ export function DeltaNewsLine({ active }: { active: boolean }) {
   if (!fresh.length) return null;
   return <section className="backup-due delta-news" aria-label="DELTA learned something new">
     <div className="backup-due__row">
-      <p className="meta backup-due__text">DELTA learned something new about you</p>
+      <p className="meta backup-due__text">{fresh.every((l) => l.kind === "UNUSUAL") ? "DELTA noticed something unusual for you" : "DELTA learned something new about you"}</p>
       <button type="button" className="btn-secondary backup-due__action" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "LESS" : "READ"}</button>
       <button type="button" className="backup-due__later" onClick={() => { try { localStorage.setItem(SEEN, fresh[0]!.learnedOn); } catch { /* shows again */ } setHidden(true); }}>GOT IT</button>
     </div>

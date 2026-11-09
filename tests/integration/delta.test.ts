@@ -73,6 +73,17 @@ describe("DELTA", () => {
     expect(running.topics.find((t) => t.id === "experiments")?.state).toBe("LEARNING");
   });
 
+  it("notices a run of days outside your usual range, dated on its newest day, and says nothing otherwise", () => {
+    const from = (d: number) => new Date(2026, 10, d, 16, 30).getTime();
+    const reading = { direction: "ABOVE" as const, samples: 20, days: [6, 7, 8].map((d) => ({ from: from(d), value: 62, kind: null, low: 50, high: 56 })) };
+    const k = deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], unusual: { resting: reading, sleep: null }, now: NOW });
+    const noticed = k.learnings.filter((l) => l.kind === "UNUSUAL");
+    expect(noticed).toHaveLength(1);
+    expect(noticed[0]!.learnedOn).toBe(new Date(from(8)).toISOString());
+    expect(describeLearning(noticed[0]!)).toMatch(/^Noticed: Resting heart rate has been above your usual range for 3 days: .*62 bpm\. Your usual range: 50–56 bpm.*not a diagnosis or a cause\.$/);
+    expect(deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], unusual: { resting: null }, now: NOW }).learnings).toEqual([]);
+  });
+
   it("tracks tags and check-ins as still learning until they have enough days", () => {
     const summaries = [1, 2].map((i) => summary(i, "OFF"));
     const k = deriveDelta({ sleeps: [], summaries, notes: [{ dayId: "d1", text: "#sauna" }], checkIns: [{ id: "c", beyondDayId: "d1", recordedAt: startOf(1).toISOString(), energy: 3, mood: 3 } as unknown as StateCheckIn], now: NOW });
