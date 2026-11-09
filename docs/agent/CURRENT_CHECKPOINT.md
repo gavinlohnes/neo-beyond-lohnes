@@ -1,3 +1,13 @@
+# SLEEP-RHYTHM-001 — in review (2026-11-09)
+
+- Gavin asked for "really impressive", Builder's choice. Claude Code chose big-list idea 27, sleep regularity across
+  shifts. It adds a read-only RHYTHM section to the existing sleep page. Brief: [SLEEP-RHYTHM-001.md](SLEEP-RHYTHM-001.md).
+  Routine lane. Review and CI pending.
+- DRIVE-BACKUP-001 complete: #448, #449, #450 merged. Next for Gavin: SET UP in MORE → Data safety → Automatic backups.
+- Deferred: the monthly restore check against the latest Drive backup. The rotation field test (#402) is still waiting.
+
+---
+
 # DRIVE-BACKUP-001 — approved, building (2026-11-09)
 
 - Gavin chose encrypted Google Drive backups (Protected: backup contract + provider). Brief:
