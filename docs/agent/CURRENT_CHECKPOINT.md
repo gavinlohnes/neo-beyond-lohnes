@@ -1,3 +1,20 @@
+# Queue for the 23:30 session (Gavin's picks, 2026-11-09: "A, B, 25, 5, C")
+
+In order:
+1. **A. TRAIN-HOME-001:** TRAIN in the YOUR LIFE / MORE / DATA style (date, title, Start workout, shortcuts;
+   nothing removed). Protected (TRAIN IA). **Approved directly by Gavin by picking "A".** Keep the active-workout
+   view untouched.
+2. **B. DATA-HOME-001 tidy-ups** (#456 review notes): extract `openComposition(view)` / `openRotation()`, rAF for
+   History's scroll, and test every shortcut.
+3. **25. Monthly letter:** a deterministic month summary from recorded data, warmed by Alfred only if a key is
+   present; saved only on a tap.
+4. **5. Inbox zero:** triage saved notes into task / project / keep / done through existing commands.
+5. **C. Monthly Drive restore check:** download, decrypt and compare counts via `checkBackupFile`.
+
+Merged tonight: #448–#456 (Drive backup, sleep rhythm, MORE-HOME, rest memory, DATA-HOME).
+
+---
+
 # Session handoff (2026-11-09, late) — DATA-HOME-001 in review; next: guided TRAIN
 
 - Merged tonight:
