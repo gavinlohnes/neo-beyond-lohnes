@@ -4,6 +4,7 @@ import { AlfredText, askAlfred } from "../../components/AlfredSheet";
 import { listReviews, weekLabel } from "../../../application/alfred/alfredReview";
 import type { AlfredReview } from "../../../domain/alfred/types";
 import { describeError } from "../../errorMessage";
+import { monthLetterAsk, writeMonthLetter } from "../../../application/monthLetter";
 
 /**
  * MONTH-001 (owner go 2026-10-31, ideas 9–11): the month on one page — each lived day's shift, sleep,
@@ -71,6 +72,12 @@ export function CaveMonthView() {
       </ul> : <p className="meta">Nothing logged that day.</p>}
       <button type="button" className="btn-secondary" onClick={() => askAlfred(`Tell me about ${longDate(day.date)}: what happened, what went well, what didn't, and why. Use get_days for that day and the days around it.`)}>ASK ALFRED ABOUT THIS DAY</button>
     </section>}
+    {/* MONTH-LETTER-001: the month as a short plain letter; Alfred writes a warmer one only on a tap. */}
+    {days && (() => { const letter = writeMonthLetter(cursor.y, cursor.m, days); return <section className="cave__block month__letter" aria-label="Your month in a letter">
+      <h3 className="cave__cap">Your month · {letter.title}</h3>
+      {letter.lines.map((line) => <p key={line} className="card-body" style={{ margin: "0 0 6px" }}>{line}</p>)}
+      {letter.daysLogged > 0 && <button type="button" className="btn-secondary" onClick={() => askAlfred(monthLetterAsk(letter))}>ASK ALFRED TO WRITE IT</button>}
+    </section>; })()}
     {/* ALFRED-006: every weekly review Alfred has written, newest first. */}
     {reviews.length > 0 && <section className="cave__block month__reviews" aria-label="Weekly reviews">
       <h3 className="cave__cap">Weekly reviews</h3>
