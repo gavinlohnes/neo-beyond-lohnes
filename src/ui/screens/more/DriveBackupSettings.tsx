@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   backUpToDrive,
+  checkLatestDriveBackup,
   connectDriveBackup,
   disconnectDriveBackup,
   getDriveBackupState,
@@ -8,6 +9,7 @@ import {
 } from "../../../application/driveBackup/driveBackupService";
 import { loadGoogleIdentity } from "../../../application/driveBackup/googleAuth";
 import { describeError } from "../../errorMessage";
+import { describeRestoreCheck } from "../../components/restoreCheckCopy";
 
 /**
  * DRIVE-BACKUP-001: MORE → Data safety → Automatic backups, the GOOGLE DRIVE row. Off until set up.
@@ -60,6 +62,20 @@ export function DriveBackupSettings({ onChanged }: { onChanged?: () => void }) {
       const result = await backUpToDrive({ interactive: true });
       setMessage(result.kind === "OK" ? "Backed up to Drive." : "message" in result ? result.message : null);
       refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Read-only: open the newest Drive backup with this phone's key and compare counts. Never restores. */
+  async function check() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const checked = await checkLatestDriveBackup();
+      setMessage(checked ? describeRestoreCheck(checked.result, new File([], checked.file.name, { lastModified: Date.parse(checked.file.createdTime) })) : "No Drive backup to check yet.");
+    } catch (e) {
+      setMessage(describeError(e, "Couldn't check the Drive backup."));
     } finally {
       setBusy(false);
     }
@@ -129,6 +145,7 @@ export function DriveBackupSettings({ onChanged }: { onChanged?: () => void }) {
           <button className="btn-secondary" style={{ width: "auto" }} disabled={busy} onClick={() => void backUp()}>
             {busy ? "BACKING UP…" : state.failure === "PAUSED" ? "RECONNECT" : "BACK UP NOW"}
           </button>
+          <button className="btn-secondary" style={{ width: "auto" }} disabled={busy} onClick={() => void check()}>CHECK LATEST</button>
           <button className="backup-due__later" disabled={busy} onClick={() => setMode("DISCONNECT")}>DISCONNECT</button>
         </div>
       )}

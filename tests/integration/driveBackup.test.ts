@@ -6,7 +6,7 @@ import { startDay } from "../../src/application/commands";
 import { decideBackupPrompt, getBackupPrompt, isDriveBackupDue, setAutoBackupPreferenceAndReset } from "../../src/application/autoBackupQueries";
 import { setUpBackupKey, forgetBackupKey } from "../../src/application/driveBackup/backupKeys";
 import { backupsToDelete, type DriveFile } from "../../src/application/driveBackup/driveApi";
-import { backUpToDrive, getDriveBackupState, listDriveBackups, openDriveBackup } from "../../src/application/driveBackup/driveBackupService";
+import { backUpToDrive, checkLatestDriveBackup, getDriveBackupState, listDriveBackups, openDriveBackup } from "../../src/application/driveBackup/driveBackupService";
 import { __setDriveTokenForTests } from "../../src/application/driveBackup/googleAuth";
 import { updateDriveBackupState } from "../../src/persistence/driveBackupState";
 
@@ -108,6 +108,24 @@ describe("backUpToDrive", () => {
     const preview = await previewAnyRestore(file);
     expect(preview.format).toBe("NATIVE");
     expect(preview.tables.find((t) => t.name === "beyondDays")?.rowCount).toBe(1);
+  });
+
+  it("the monthly check opens the newest Drive backup with this phone's key, compares counts, and never restores", async () => {
+    mockDrive();
+    await startDay();
+    await setUpBackupKey("correct horse battery", FAST);
+    updateDriveBackupState({ on: true });
+    __setDriveTokenForTests("token");
+    expect(await checkLatestDriveBackup()).toBeNull(); // nothing in Drive yet
+    expect((await backUpToDrive({ interactive: false })).kind).toBe("OK");
+    const before = await db.events.count();
+    const checked = await checkLatestDriveBackup();
+    expect(checked?.result.kind).toBe("MATCH");
+    expect(await db.events.count()).toBe(before);
+    expect(localStorage.getItem("beyond:lastRestoreCheckAt")).not.toBeNull();
+    // After a new key (e.g. DISCONNECT then SET UP again), an old file reads as couldn't unlock, not as a match.
+    await setUpBackupKey("another passphrase", FAST);
+    await expect(checkLatestDriveBackup()).rejects.toThrow(/couldn't open the newest Drive backup/);
   });
 
   it("an expired sign-in pauses (tap to reconnect); other errors read as failed; neither records success", async () => {

@@ -74,8 +74,10 @@ check), `AutoBackupSettings` and `BackupDueLine`. Drive backup **extends it rath
 - **Share sheet:** unchanged and always available as a manual "Back up now" and as the fallback when Drive is paused
   or not set up. Drive never removes it.
 - **Restore check:** the monthly check also offers to verify the latest Drive backup (download, decrypt, compare table
-  counts) through the existing `checkBackupFile` comparison. *Deferred from PR 2:* the file-based monthly check is
-  unchanged, and SYSTEMS → Restore → CHOOSE FROM GOOGLE DRIVE already proves a Drive backup unlocks and previews.
+  counts) through the existing `checkBackupFile` comparison. **Built (Gavin's queue pick C, 2026-11-09):** CHECK DRIVE BACKUP on TODAY's monthly line and CHECK LATEST in
+  the GOOGLE DRIVE settings download the newest Drive backup, open it with this phone's own key (no passphrase) and
+  compare counts through `checkBackupFile`. It is read only and never restores. If the phone's key can't open it
+  (for example after re-setup), it says so instead of claiming a match. CHECK A FILE stays for share-sheet files.
 
 ## Acceptance evidence (implementation PRs)
 
