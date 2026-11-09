@@ -41,6 +41,17 @@ describe("DELTA", () => {
     expect(newLearnings(k, summaries[1]!.livedDayStart)).toHaveLength(1);
   });
 
+  it("dates a tag on the day both sides first had enough evidence, not the 3rd tagged day", () => {
+    // #sauna on Oct 1–3; untagged notes only on Oct 10–12. Next-day sleep is logged every day through Oct 13.
+    const summaries = Array.from({ length: 13 }, (_, k) => summary(k + 1, "OFF", 420));
+    const notes = [1, 2, 3].map((i) => ({ dayId: `d${i}`, text: "#sauna" })).concat([10, 11, 12].map((i) => ({ dayId: `d${i}`, text: "fine" })));
+    const k = deriveDelta({ sleeps: [], summaries, notes, checkIns: [], now: NOW });
+    const learned = k.learnings.find((l) => l.id === "tag-sauna")!;
+    // Oct 12: the 3rd untagged day exists, so "trained that day" (same-day) first compares; next-day sleep follows Oct 13.
+    expect(learned.learnedOn).toBe(summaries[11]!.startedAt);
+    expect(newLearnings(k, summaries[3]!.startedAt)).toContain(learned); // still "new" after Oct 3
+  });
+
   it("tracks tags and check-ins as still learning until they have enough days", () => {
     const summaries = [1, 2].map((i) => summary(i, "OFF"));
     const k = deriveDelta({ sleeps: [], summaries, notes: [{ dayId: "d1", text: "#sauna" }], checkIns: [{ id: "c", beyondDayId: "d1", recordedAt: startOf(1).toISOString(), energy: 3, mood: 3 } as unknown as StateCheckIn], now: NOW });

@@ -2,7 +2,6 @@ import { db } from "../persistence/db";
 import { getImportedSleep } from "./externalSleepQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { deriveSleepRhythm, RHYTHM_MIN_NIGHTS, type RhythmGroup } from "../engine/sleepRhythm";
-import { noteTags } from "./noteTags";
 import { compareTags, dayFacts, MIN_TAGGED_DAYS, type MeasureComparison } from "./tagPatterns";
 import type { DaySummary } from "../engine/dayLedger";
 import type { StateCheckIn } from "../domain/common/types";
@@ -41,13 +40,12 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, now }: Inputs)
     if (group && nights.length >= RHYTHM_MIN_NIGHTS) learnings.push({ id: `sleep-${kind}`, kind: "SLEEP_WINDOW", learnedOn: nights[RHYTHM_MIN_NIGHTS - 1]!.livedDayStart, group });
   }
 
-  const startedAt = new Map(summaries.map((s) => [s.beyondDayId, s.startedAt]));
   const { ready, learning } = compareTags(dayFacts(notes, summaries, checkIns));
+  const learnedOnFor = tagLearnedOn(notes, summaries, checkIns);
   for (const p of ready) {
-    const dates = notes.filter((n) => noteTags(n.text).includes(p.tag)).flatMap((n) => { const at = startedAt.get(n.dayId); return at ? [at] : []; }).sort();
     topics.push({ id: `tag-${p.tag}`, label: `What #${p.tag} lines up with`, state: p.comparisons.length ? "KNOWN" : "LEARNING", have: p.taggedDays, need: MIN_TAGGED_DAYS, unit: "tagged days" });
-    const first = p.comparisons[0];
-    if (first && dates[MIN_TAGGED_DAYS - 1]) learnings.push({ id: `tag-${p.tag}`, kind: "TAG", learnedOn: dates[MIN_TAGGED_DAYS - 1]!, tag: p.tag, taggedDays: p.taggedDays, comparison: first });
+    const first = p.comparisons[0], learnedOn = learnedOnFor(p.tag);
+    if (first && learnedOn) learnings.push({ id: `tag-${p.tag}`, kind: "TAG", learnedOn, tag: p.tag, taggedDays: p.taggedDays, comparison: first });
   }
   for (const l of learning) topics.push({ id: `tag-${l.tag}`, label: `What #${l.tag} lines up with`, state: "LEARNING", have: l.taggedDays, need: MIN_TAGGED_DAYS, unit: "tagged days" });
   if (!ready.length && !learning.length) topics.push({ id: "tags", label: "What your tags line up with", state: "NOT_STARTED", have: 0, need: MIN_TAGGED_DAYS, unit: "tagged days" });
@@ -58,6 +56,30 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, now }: Inputs)
 
   learnings.sort((a, b) => b.learnedOn.localeCompare(a.learnedOn));
   return { topics, learnings };
+}
+
+/**
+ * When a tag was first learned: replay history day by day and return the start of the first recorded day by
+ * which a comparison existed for it — both sides need enough values, and a next-day value exists only once
+ * that next day is recorded. So the date is when the evidence truly existed, not just the 3rd tagged day.
+ */
+function tagLearnedOn(notes: Inputs["notes"], summaries: readonly DaySummary[], checkIns: readonly StateCheckIn[]) {
+  const ordered = [...summaries].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  const cache = new Map<string, string | null>();
+  let replayed: { through: string; ready: Set<string> }[] | null = null;
+  const replay = () => {
+    if (replayed) return replayed;
+    replayed = ordered.map((day, i) => {
+      const known = new Set(ordered.slice(0, i + 1).map((d) => d.beyondDayId));
+      const facts = dayFacts(notes.filter((n) => known.has(n.dayId)), ordered.slice(0, i + 1), checkIns.filter((c) => known.has(c.beyondDayId)));
+      return { through: day.startedAt, ready: new Set(compareTags(facts).ready.filter((p) => p.comparisons.length).map((p) => p.tag)) };
+    });
+    return replayed;
+  };
+  return (tag: string): string | null => {
+    if (!cache.has(tag)) cache.set(tag, replay().find((r) => r.ready.has(tag))?.through ?? null);
+    return cache.get(tag)!;
+  };
 }
 
 export async function getDeltaKnowledge(now = new Date()): Promise<DeltaKnowledge> {

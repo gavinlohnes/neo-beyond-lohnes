@@ -44,9 +44,9 @@ export function DeltaPanel({ active }: { active: boolean }) {
     </ul>
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
-      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{day(l.learnedOn)}</span> {describeLearning(l)}</li>)}</ol>
+      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">Learned {day(l.learnedOn)} · now:</span> {describeLearning(l)}</li>)}</ol>
       : <p className="meta">Nothing learned yet. Measured sleep, tags in your daily note and check-ins teach me.</p>}
-    <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed. Nothing here changes advice.</p>
+    <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
 }
 
