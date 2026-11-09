@@ -12,7 +12,7 @@ import "./systemsHome.css";
  */
 export interface SystemsHomeArea { group: string; hint: string }
 
-export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onBackUp, onSearch, onArea, onGarmin, onSchedule }: {
+export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onBackUp, onSearch, onArea, onGarmin, onSchedule, onDriveSettings }: {
   active: boolean;
   refreshKey: number;
   areas: readonly SystemsHomeArea[];
@@ -23,16 +23,20 @@ export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onB
   onArea: (group: string) => void;
   onGarmin: () => void;
   onSchedule: () => void;
+  /** Opens Backup & recovery's automatic backups, where Drive's RECONNECT lives. */
+  onDriveSettings: () => void;
 }) {
-  const [overview, setOverview] = useState<SystemsOverview | null>(null);
+  const [overview, setOverview] = useState<SystemsOverview | null | "ERROR">(null);
   useEffect(() => {
     if (!active) return;
     let live = true;
-    void getSystemsOverview().then((next) => { if (live) setOverview(next); }).catch(() => { if (live) setOverview(null); });
+    void getSystemsOverview().then((next) => { if (live) setOverview(next); }).catch(() => { if (live) setOverview("ERROR"); });
     return () => { live = false; };
   }, [active, refreshKey]);
   const now = new Date();
   const hasAlfredKey = Boolean(readAlfredKey());
+  const facts = overview === "ERROR" ? null : overview;
+  const drivePaused = facts?.backup.drive.on === true && facts.backup.drive.failure === "PAUSED";
 
   return (
     <div className="sys-home">
@@ -59,11 +63,11 @@ export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onB
         <p className="sys-eyebrow">HOW THINGS ARE</p>
         <h3 id="sys-status-title">Status</h3>
         <ul className="sys-cards">
-          <li><StatusCard icon={<HardDriveDownload size={22} />} name="Backup" line={describeBackup(overview)} /></li>
+          <li><StatusCard icon={<HardDriveDownload size={22} />} name="Backup" line={describeBackup(overview)} {...(drivePaused ? { action: { label: "Reconnect Drive", onClick: onDriveSettings } } : {})} /></li>
           <li><StatusCard icon={<Watch size={22} />} name="Garmin" line={describeGarmin(overview, now)} action={{ label: "Sync or import", onClick: onGarmin }} /></li>
-          <li><StatusCard icon={<CalendarDays size={22} />} name="Work schedule" line="Your shifts decide work days and days off." action={{ label: "Open schedule", onClick: onSchedule }} /></li>
+          <li><StatusCard icon={<CalendarDays size={22} />} name="Work schedule" line={describeSchedule(overview)} action={{ label: "Open schedule", onClick: onSchedule }} /></li>
           <li><StatusCard icon={<MessageCircle size={22} />} name="Alfred" line={hasAlfredKey ? "Your Claude key is on this phone." : "No Claude key on this phone. BEYOND works without it."} /></li>
-          {overview?.calendar.connected && <li><StatusCard icon={<CalendarDays size={22} />} name="Google Calendar" line={overview.calendar.lastSyncAt ? `Connected · synced ${since(Date.parse(overview.calendar.lastSyncAt), now)}.` : "Connected · not synced yet."} /></li>}
+          {facts?.calendar.connected && <li><StatusCard icon={<CalendarDays size={22} />} name="Google Calendar" line={facts.calendar.lastSyncAt ? `Connected · synced ${since(Date.parse(facts.calendar.lastSyncAt), now)}.` : "Connected · not synced yet."} /></li>}
         </ul>
       </section>
 
@@ -94,11 +98,15 @@ export function since(at: number, now: Date): string {
   return `${days} days ago`;
 }
 
-export function describeBackup(overview: SystemsOverview | null): string {
+type Overview = SystemsOverview | null | "ERROR";
+const UNREAD = "Couldn't read status. Your records are unchanged.";
+
+export function describeBackup(overview: Overview): string {
+  if (overview === "ERROR") return UNREAD;
   if (!overview) return "Reading…";
   const { drive, daysSinceLastBackup } = overview.backup;
   if (drive.on) {
-    if (drive.failure === "PAUSED") return "Google Drive · paused. Tap BACK UP on TODAY to reconnect.";
+    if (drive.failure === "PAUSED") return "Google Drive · paused until you reconnect.";
     if (drive.lastSuccessAt) return `Google Drive, locked · last backup ${new Date(drive.lastSuccessAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}${drive.failure === "FAILED" ? " · last attempt didn't finish" : ""}.`;
     return "Google Drive, locked · no backup yet.";
   }
@@ -106,7 +114,15 @@ export function describeBackup(overview: SystemsOverview | null): string {
   return daysSinceLastBackup === 0 ? "Last backup today." : `Last backup ${daysSinceLastBackup === 1 ? "1 day" : `${daysSinceLastBackup} days`} ago.`;
 }
 
-export function describeGarmin(overview: SystemsOverview | null, now: Date): string {
+export function describeSchedule(overview: Overview): string {
+  if (overview === "ERROR") return UNREAD;
+  if (!overview) return "Reading…";
+  if (overview.scheduleSaved === undefined) return "Couldn't read your schedule.";
+  return overview.scheduleSaved ? "Your saved shifts decide work days and days off." : "Not saved yet. BEYOND won't decide your work days from a schedule until you save yours.";
+}
+
+export function describeGarmin(overview: Overview, now: Date): string {
+  if (overview === "ERROR") return UNREAD;
   if (!overview) return "Reading…";
   if (overview.garminAsOf === undefined) return "Couldn't read Garmin data.";
   if (overview.garminAsOf === null) return "No Garmin data imported yet.";

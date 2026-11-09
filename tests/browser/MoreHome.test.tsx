@@ -23,6 +23,7 @@ describe("MORE-HOME-001", () => {
     await expect.element(screen.getByRole("article", { name: "Backup" }).getByText("No backup on record yet.")).toBeVisible();
     await expect.element(screen.getByRole("article", { name: "Garmin" }).getByText("No Garmin data imported yet.")).toBeVisible();
     await expect.element(screen.getByRole("article", { name: "Alfred" }).getByText(/No Claude key on this phone/)).toBeVisible();
+    await expect.element(screen.getByRole("article", { name: "Work schedule" }).getByText("Not saved yet. BEYOND won't decide your work days from a schedule until you save yours.", { exact: true })).toBeVisible();
 
     const plan = document.querySelector<HTMLDetailsElement>('details[data-area="Plan"]')!;
     expect(plan.open).toBe(false);
@@ -47,5 +48,16 @@ describe("MORE-HOME-001", () => {
     localStorage.setItem("beyond:driveBackupState", JSON.stringify({ on: true, folderId: "f", lastSuccessAt: "2026-11-08T19:52:00.000Z", failure: null }));
     const screen = await render(<MoreScreen />);
     await expect.element(screen.getByRole("article", { name: "Backup" }).getByText(/^Google Drive, locked · last backup /)).toBeVisible();
+    await expect.element(screen.getByRole("article", { name: "Backup" }).getByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("a paused Drive backup offers Reconnect Drive, which opens automatic backups", async () => {
+    localStorage.setItem("beyond:driveBackupState", JSON.stringify({ on: true, folderId: "f", lastSuccessAt: null, failure: "PAUSED" }));
+    const screen = await render(<MoreScreen />);
+    const card = screen.getByRole("article", { name: "Backup" });
+    await expect.element(card.getByText("Google Drive · paused until you reconnect.")).toBeVisible();
+    await card.getByRole("button", { name: "Reconnect Drive" }).click();
+    expect(document.querySelector<HTMLDetailsElement>('details[data-area="Backup & recovery"]')!.open).toBe(true);
+    await expect.element(screen.getByRole("button", { name: "RECONNECT" }).first()).toBeVisible();
   });
 });
