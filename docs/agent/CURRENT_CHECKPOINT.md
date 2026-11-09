@@ -1,3 +1,17 @@
+# Session handoff (2026-11-09, late) — next: guided TRAIN or DATA
+
+- Merged tonight:
+  - DRIVE-BACKUP-001: #448, #449, #450 and #452. Gavin set it up and his first backup is confirmed in Drive.
+  - SLEEP-RHYTHM-001: #451.
+  - MORE-HOME-001 (Protected, approved "Redo more"): #453 and #454.
+- In review: REST-MEMORY-001 (big-list idea 37). TRAIN's rest starts at your remembered length per exercise,
+  learned from ± taps, in localStorage only. Routine lane.
+- Next, offered to Gavin: the same YOUR LIFE-style guided top for TRAIN or DATA (Protected IA, so it needs his OK
+  per tab), then the Monthly letter (idea 25). Deferred: the monthly restore check against the latest Drive backup.
+  The rotation field test (#402) is still waiting.
+
+---
+
 # MORE-HOME-001 — approved, in review (2026-11-09)
 
 - Gavin: "Redo more". MORE opens like YOUR LIFE: YOUR SYSTEMS., area shortcuts and status cards; nothing removed.
