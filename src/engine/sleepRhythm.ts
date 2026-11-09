@@ -96,8 +96,8 @@ function group(kind: DayKind, nights: readonly RhythmNight[]): RhythmGroup | nul
   return { kind, nights: own.length, start, end, midpoint, spread: median(midpoints.map((m) => Math.abs(clockDifference(midpoint, m)))) };
 }
 
-export function deriveSleepRhythm(sleeps: readonly ExternalSleep[], summaries: readonly DaySummary[], now: Date): SleepRhythm {
-  const since = now.getTime() - RHYTHM_WINDOW_DAYS * DAY * 60_000;
+export function deriveSleepRhythm(sleeps: readonly ExternalSleep[], summaries: readonly DaySummary[], now: Date, windowDays = RHYTHM_WINDOW_DAYS): SleepRhythm {
+  const since = now.getTime() - windowDays * DAY * 60_000;
   const kinds = groupLivedDays(summaries);
   const longest = new Map<string, { sleep: ExternalSleep; minutes: number }>();
   for (const sleep of sleeps) {
