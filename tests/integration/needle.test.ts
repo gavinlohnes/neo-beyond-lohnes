@@ -41,3 +41,10 @@ describe("what moves the needle", () => {
     expect(needle.ready && needle.habits.filter((h) => h.habit === "#sauna")).toEqual([]);
   });
 });
+
+it("doesn't rank a tag until both sides have at least 3 weeks with notes", () => {
+  // 9 weeks, but notes only in weeks 0–1 (good) and 3–8 (other): good side has 2 noted weeks.
+  const { summaries, checkIns, notes } = build(9, (w) => (w < 3 ? 5 : 2), (w) => (w < 3 ? 4 : 1), (w) => (w === 2 ? 0 : 7));
+  const needle = whatMovesTheNeedle(summaries, checkIns, notes);
+  expect(needle.ready && needle.habits.filter((h) => h.habit === "#sauna")).toEqual([]);
+});

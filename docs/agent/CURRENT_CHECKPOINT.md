@@ -1,3 +1,11 @@
+# SUPERCHARGE-001 — approved (1, 2, 4, 5), in review (2026-11-09)
+
+- Ask DELTA free, Alfred knows what DELTA knows (with the personal opt-in for note-based facts), DELTA lines tap
+  through, and more free answers. Brief: [SUPERCHARGE-001.md](SUPERCHARGE-001.md). DELTA-NEXT-001 is complete
+  (#467, #468); item 8 (rotation field test #402) waits for Gavin.
+
+---
+
 # DELTA-NEXT-001 — approved ("All"), batch 1 in review (2026-11-09)
 
 - Gavin approved all 8 next items. Batch 1 is in review: 1 unusual, 7 one-tap answer, 4 workout tags, 5 weekly,

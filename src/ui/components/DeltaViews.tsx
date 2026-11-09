@@ -4,6 +4,7 @@ import { startExperiment } from "../../application/tryExperiment";
 import { hoursMinutes } from "../screens/health/healthFormat";
 import { describeError } from "../errorMessage";
 import { describeUnusual } from "../screens/today/unusualCopy";
+import { openRecord } from "../openRecordEvent";
 import { describeGroup } from "../screens/today/SleepRhythm";
 import { describeComparison } from "../screens/more/TagPatternsSection";
 
@@ -60,10 +61,21 @@ export function DeltaPanel({ active }: { active: boolean }) {
     </section>}
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
-      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}</li>)}</ol>
+      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}<Proof learning={l} /></li>)}</ol>
       : <p className="meta">Nothing learned yet. Measured sleep, tags in your daily note and check-ins teach me.</p>}
     <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
+}
+
+/** SUPERCHARGE-001 item 4: every notebook line taps through to the records behind it. */
+function Proof({ learning }: { learning: Learning }) {
+  const e = learning.evidence;
+  if (!e) return null;
+  if ("journalId" in e) return <button type="button" className="backup-due__later" onClick={() => openRecord({ kind: "JOURNAL", id: e.journalId })}>OPEN IN JOURNAL</button>;
+  if (!e.days.length) return null;
+  return <details className="delta-proof"><summary className="meta">Show the {e.days.length} {e.days.length === 1 ? "day" : "days"} behind this</summary>
+    <div className="button-row">{e.days.slice(0, 30).map((d) => <button type="button" key={d.id} className="btn-secondary" aria-label={`Open ${new Date(d.at).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}`} onClick={() => openRecord({ kind: "DAY", id: d.id })}>{new Date(d.at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</button>)}</div>
+  </details>;
 }
 
 const SEEN = "beyond:deltaSeen";

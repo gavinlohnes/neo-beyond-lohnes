@@ -10,6 +10,8 @@ import { describeShiftRun, shiftRun } from "../shiftRun";
 import { getSchedulePattern } from "../queries";
 import { getEffectiveProteinTargetG } from "../nutritionTargetQueries";
 import * as chrono from "chrono-node";
+import { getMeasuredSnapshot } from "../measuredQueries";
+import { getMostRecentBodyweight } from "../queries";
 
 /**
  * FREE-HELPER-001: plain questions answered straight from his records, free and offline. Read-only.
@@ -59,6 +61,37 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
     const t = await today();
     if (!t) return "No day is started yet.";
     return t.kcal !== undefined ? `Calories today: ${Math.round(t.kcal)} kcal.` : "No food logged today yet.";
+  }
+  // SUPERCHARGE-001 item 5: more answered free from his records — steps, resting heart rate, weight, this week vs last.
+  if (!advice && /\bsteps?\b/.test(q) && !/\byesterday\b/.test(q)) {
+    const snap = await getMeasuredSnapshot(now.getTime());
+    // The series starts with a 0 anchor; one point means no hours imported yet — missing, never 0.
+    const total = snap.stepsToday.length > 1 ? snap.stepsToday.at(-1)!.total : undefined;
+    return total !== undefined ? `Steps so far today: ${Math.round(total).toLocaleString("en-US")} (Garmin).` : "No Garmin steps for today yet.";
+  }
+  if (!advice && /\b(resting (heart rate|hr|pulse)|rhr)\b/.test(q)) {
+    const snap = await getMeasuredSnapshot(now.getTime());
+    const last = [...snap.resting].reverse().find((p) => p.value !== null);
+    return last ? `Resting heart rate: ${Math.round(last.value!)} bpm (${day(new Date(last.from).toISOString())}, Garmin).` : "No Garmin resting heart rate yet.";
+  }
+  // Body weight only: "what weight did I squat" is a lift question and keeps its own route.
+  if (!advice && /\b(my weight|body ?weight|how much do i weigh|what do i weigh|latest weigh-?in)\b/.test(q) && !/\b(goal|squat|bench|deadlift|press|lift|row|curl|reps?)\b/.test(q)) {
+    const w = await getMostRecentBodyweight();
+    return w !== undefined ? `Latest weight logged: ${w} lb.` : "No weight logged yet.";
+  }
+  if (!advice && /\b(this week (vs|versus|compared (to|with)|against) last( week)?|week over week|compare (this|my) week)\b/.test(q)) {
+    const days = [...(await getDaySummaries())].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart));
+    const start = livedDayStartOf(now);
+    const inWeek = (back: number) => days.filter((d) => { const t = Date.parse(d.livedDayStart); return t <= start.getTime() - back * 7 * 86_400_000 && t > start.getTime() - (back + 1) * 7 * 86_400_000; });
+    const describe = (list: typeof days) => {
+      const sleep = list.flatMap((d) => (d.sleep.primaryMinutes === undefined ? [] : [d.sleep.primaryMinutes]));
+      const protein = list.flatMap((d) => (d.proteinG === undefined ? [] : [d.proteinG]));
+      const workouts = list.reduce((n, d) => n + d.workouts.length, 0);
+      return `sleep ${sleep.length ? `${hm(sleep.reduce((a, b) => a + b, 0) / sleep.length)} avg (${sleep.length} days)` : "not logged"}, protein ${protein.length ? `${Math.round(protein.reduce((a, b) => a + b, 0) / protein.length)} g avg (${protein.length} days)` : "not logged"}, ${workouts} ${workouts === 1 ? "workout" : "workouts"}`;
+    };
+    const now7 = inWeek(0), last7 = inWeek(1);
+    if (!now7.length && !last7.length) return "No days recorded in the last two weeks.";
+    return `Last 7 lived days: ${describe(now7)}.\nThe 7 before: ${describe(last7)}.`;
   }
   if (!advice && /\byesterday\b/.test(q) && /\b(eat|ate|food|calories|protein)\b/.test(q)) {
     // The lived day before the one he's in now (16:30 to 16:30), not just the second-newest record.
