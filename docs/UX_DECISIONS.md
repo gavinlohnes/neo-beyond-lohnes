@@ -2848,3 +2848,10 @@ Gavin: "Next is data. Make it fall in line with our new screens." DATA now opens
 Log weight and Sleep, then shortcuts to its existing views (Weight, Training records, Photos, Measurements, Whole
 picture, Your rotation, History). Everything below is unchanged and nothing is removed. This amends DATA's primary
 information architecture. [Brief](agent/DATA-HOME-001.md).
+
+
+## TRAIN-HOME-001 — TRAIN opens like the other screens (owner approval 2026-11-09)
+
+Gavin picked "A". When no workout is running, TRAIN opens with a compact hero: the date, **YOUR TRAINING.** and its
+purpose line. It is compact so START WORKOUT stays on the first phone screen (DECLUTTER-001). The live workout view
+and everything else is unchanged. [Brief](agent/TRAIN-HOME-001.md).

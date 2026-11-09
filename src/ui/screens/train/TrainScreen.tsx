@@ -9,6 +9,7 @@ import { describeError } from "../../errorMessage";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { OperatorHeader } from "../../components/OperatorHeader";
+import "../more/systemsHome.css";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
 import { Section } from "../../components/Section";
@@ -1012,7 +1013,18 @@ export function TrainScreen({
           (unlike TODAY's own moment-to-moment Engine truth), so a fixed
           statement of what TRAIN is fits here without inventing data. */}
       <OperatorHeader destination="train" headingRef={headingRef} focusable>BEYOND // TRAIN</OperatorHeader>
-      {!session && trainView === "WORKOUT" && <p className="train-purpose">{completionSummary ? "Review what you recorded." : "Prepare your workout. You choose the session."}</p>}
+      {/* TRAIN-HOME-001 (Gavin's pick "A", 2026-11-09): TRAIN opens like YOUR LIFE, MORE and DATA — the date,
+          YOUR TRAINING. and its purpose line — kept compact so START WORKOUT still lands on the first phone
+          screen (DECLUTTER-001). Hidden during a workout: the live session view is unchanged. */}
+      {!session && trainView === "WORKOUT" && (completionSummary
+        ? <p className="train-purpose">Review what you recorded.</p>
+        : <section className="sys-home train-home" aria-labelledby="train-home-title">
+            <div className="sys-hero">
+              <p className="sys-eyebrow">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
+              <h2 id="train-home-title">YOUR TRAINING.</h2>
+              <p className="sys-intro train-purpose">Prepare your workout. You choose the session.</p>
+            </div>
+          </section>)}
 
       <div className="train-switcher" role="group" aria-label="Training views">
         {(["WORKOUT", "HISTORY", "RECORDS"] as const).map((view) => <button key={view} type="button"
