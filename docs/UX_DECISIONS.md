@@ -2818,3 +2818,11 @@ Gavin picked 17, 19, 38, 11, 13, 7, 29, 30, 34, 39, 12, 36, 18, 20, 26, 31, 35, 
 direction to keep BEYOND simple to use and looking great. Each pick folds into the screen that already owns its job,
 stays quiet by default, shows only true recorded values and saves only on a tap. Supersets (18) and Places (31) are
 approved Protected additions with their own schema/backup evidence. [Brief and UX rules](agent/APPS-PICKS-003.md).
+
+## DRIVE-BACKUP-001 — Google Drive for encrypted backups only (owner rulings 2026-11-08; brief pending approval)
+
+Gavin approved Google Drive as a provider **for encrypted backups only**, extending RULES-2026-10-31: scope
+`drive.file`, one BEYOND folder, Google stores ciphertext only. Backups unlock with a passphrase or a one-time recovery
+code; losing both means nobody can open them, and the app says so. "Automatic" means once a day on first open after
+16:30, with a quiet reconnect line when Google needs sign-in. Implementation waits for his approval of the brief.
+[Brief](agent/DRIVE-BACKUP-001.md).
