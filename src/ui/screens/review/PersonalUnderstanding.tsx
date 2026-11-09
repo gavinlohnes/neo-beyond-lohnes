@@ -6,6 +6,8 @@ import { describeBaselines } from "../weekly/weeklyCopy";
 import { describePosition, positionName } from "./rotationCopy";
 import { describeError } from "../../errorMessage";
 import "./personalUnderstanding.css";
+import { TagPatternsSection } from "../more/TagPatternsSection";
+import { SleepRhythmLines } from "./SleepRhythmLines";
 
 export type UnderstandingSource = { kind: "MISSION" | "JOURNAL"; id: string } | { kind: "TARGETS" | "SCHEDULE" };
 type Props = { active: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenSource?: ((source: UnderstandingSource) => void) | undefined };
@@ -100,6 +102,11 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: P
             <p className="meta">{place.rows.length} comparable recorded positions. Unknown context and the run clipped by the history boundary are excluded. The sleep and energy averages each need 3 measured days.</p>
             <EvidenceList key={`${place.context}-${place.position}`} title="Inspect comparable days" points={place.rows.map((row) => ({ at: row.start, ids: row.dayIds, text: `sleep ${row.sleepHours === undefined ? "not recorded" : amount("MAIN_SLEEP", row.sleepHours * 60)} · energy ${row.energy ?? "not recorded"} · ${row.sessions} counted training sessions` }))} onOpenHistory={onOpenHistory} />
           </>}
+          {/* JOURNAL-LEARN-001 (part 3): the rest of what BEYOND has learned, in the same place. */}
+          <h2 className="tool-label">WHEN YOU SLEEP</h2>
+          <SleepRhythmLines active={active && open && view === "Patterns"} />
+          <h2 className="tool-label">WHAT YOUR TAGS LINE UP WITH</h2>
+          <TagPatternsSection active={active && open && view === "Patterns"} />
         </section>}
         {view === "Lessons" && <section aria-label="Your written lessons">
           <h2 className="tool-label">WHAT YOU HAVE LEARNED</h2>

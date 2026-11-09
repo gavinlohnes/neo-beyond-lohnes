@@ -13,7 +13,11 @@
    measures BEYOND already records: that night's main sleep, the next check-in's energy and mood, and training.
    Counts and averages only, each with its number of days. "Not enough days yet" otherwise. No score, cause claim
    or advice.
-3. **"What BEYOND knows about you."** One read-only page that gathers what is already learned: confirmed Alfred
+3. **"What BEYOND knows about you."** *As built:* this page already exists as Review → **Personal Understanding**
+   (choices, usual ranges, comparable positions, lessons and My context, including Alfred's memory). Under the
+   fold-in rule, part 3 adds what was missing to its **Patterns** view: **WHEN YOU SLEEP** (SLEEP-RHYTHM-001's
+   lines) and **WHAT YOUR TAGS LINE UP WITH** (part 2). It replaces the originally proposed new page, which would
+   have been one read-only page that gathers what is already learned: confirmed Alfred
    memory facts (each forgettable through the existing flow), usual ranges by day kind, sleep rhythm and tag
    patterns, each with its source.
 
@@ -40,3 +44,8 @@
   cause. Nothing here changes advice."
 - `tests/integration/tagPatterns.test.ts`: exact comparisons and wording, still-learning tags, and missing measures
   left out.
+
+## Evidence (part 3)
+- `tests/browser/KnowsYou.test.tsx`: Patterns shows WHEN YOU SLEEP (honestly empty without Garmin nights) and the
+  tag section ("Still learning: #latecoffee (1 of 3 days)").
+- The Personal Understanding suites pass (22 tests).
