@@ -38,3 +38,18 @@ the seen mark: device bookkeeping in localStorage, like the other quiet lines.
   question goes into the draft without saving; the TODAY line stays silent when nothing is new.
 - PersonalUnderstanding suites updated to open Choices explicitly (DELTA is now the first view).
 - Node 2147 tests, and 40 TODAY/App browser files (382 tests), pass locally.
+
+## Follow-on: DELTA and experiments (Gavin: "Yes, experiments", 2026-11-09)
+Personal experiments already exist (LOOP step 3, `tryExperiment.ts`: start in the Journal, TODAY's active line,
+results against your usual, close with an outcome and lesson). They are connected to DELTA, not rebuilt:
+- **DELTA suggests a test:** when a ready tag lines up with next-day sleep at least 30 min shorter, and no
+  experiment is running or has tested that tag, DELTA's view offers "DELTA SUGGESTS A TEST… Want to test it for 14
+  days?". **START 14-DAY TEST** writes the experiment through the existing `startExperiment` (a "Try:" journal
+  entry), only on that tap.
+- **The notebook learns from finished experiments**, in your own words: "Learned from your experiment 'Skip
+  #latecoffee' (14 days): It helped. Your lesson: …", dated when you closed it.
+- **The map** gains "What your experiments showed": known after one finished experiment, still learning while one
+  runs.
+
+Tests: `tests/integration/delta.test.ts` (the offer, already tested, finished, running) and
+`tests/browser/Delta.test.tsx` (the offer writes exactly one experiment, only on the tap).
