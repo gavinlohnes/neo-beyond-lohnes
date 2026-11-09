@@ -12,7 +12,7 @@ import { noteTags } from "./noteTags";
  * nothing. It describes; it never claims a cause, scores or advises. Read only.
  */
 export const MIN_TAGGED_DAYS = 3;
-export const MIN_SIDE_DAYS = 2;
+export const MIN_SIDE_DAYS = 3;
 
 export type MeasureId = "NEXT_SLEEP" | "NEXT_ENERGY" | "NEXT_MOOD" | "TRAINED";
 export interface MeasureComparison { id: MeasureId; withTag: { value: number; days: number }; without: { value: number; days: number } }
