@@ -81,10 +81,11 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
   }).sort((a, b) => b.minutesLess - a.minutesLess);
   const suggestion = running.length ? null : candidates[0] ?? null;
 
-  // DELTA-NEXT 1: the measured sheets' "unusual for you" streaks, dated on their newest day. Silent otherwise.
+  // DELTA-NEXT 1: the measured sheets' "unusual for you" streaks, while they last. Silent otherwise.
   for (const metric of ["resting", "sleep", "steps"] as const) {
     const reading = unusual[metric];
-    if (reading?.days.length) learnings.push({ id: `unusual-${metric}`, kind: "UNUSUAL", learnedOn: new Date(reading.days.at(-1)!.from).toISOString(), metric, reading });
+    // Dated at the run's FIRST day, so a run is announced once and an ongoing run doesn't return after GOT IT.
+    if (reading?.days.length) learnings.push({ id: `unusual-${metric}-${reading.days[0]!.from}`, kind: "UNUSUAL", learnedOn: new Date(reading.days[0]!.from).toISOString(), metric, reading });
   }
 
   learnings.sort((a, b) => b.learnedOn.localeCompare(a.learnedOn));

@@ -44,16 +44,15 @@ export async function getTagChoices(): Promise<string[]> {
  * DELTA-NEXT 4: tag today from somewhere other than the note (after a workout). Adds the tag to the active
  * lived day's note through the ordinary save — on the tap that asked for it. Returns the day's tags after.
  */
-export async function addTagToActiveDay(rawTag: string): Promise<string[]> {
+export async function addTagToActiveDay(rawTag: string): Promise<{ dayId: string; tags: string[] }> {
   const { getDailyNoteWorkspace } = await import("./dailyNoteQueries");
   const { saveDailyNote } = await import("./dailyNoteCommands");
   const workspace = await getDailyNoteWorkspace();
   if (!workspace) throw new Error("NO_ACTIVE_DAY: Start a lived day to tag it.");
   const text = workspace.note?.text ?? "";
   const tag = normalizeTag(rawTag);
-  if (!tag) return noteTags(text);
-  if (noteTags(text).includes(tag)) return noteTags(text);
-  return noteTags((await saveDailyNote(workspace.day.id, toggleNoteTag(text, tag))).text);
+  if (!tag || noteTags(text).includes(tag)) return { dayId: workspace.day.id, tags: noteTags(text) };
+  return { dayId: workspace.day.id, tags: noteTags((await saveDailyNote(workspace.day.id, toggleNoteTag(text, tag))).text) };
 }
 
 /** Today's tags, for showing which quick tags are already on. */

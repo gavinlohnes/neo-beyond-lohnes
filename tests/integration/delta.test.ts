@@ -79,7 +79,13 @@ describe("DELTA", () => {
     const k = deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], unusual: { resting: reading, sleep: null }, now: NOW });
     const noticed = k.learnings.filter((l) => l.kind === "UNUSUAL");
     expect(noticed).toHaveLength(1);
-    expect(noticed[0]!.learnedOn).toBe(new Date(from(8)).toISOString());
+    expect(noticed[0]!.learnedOn).toBe(new Date(from(6)).toISOString()); // the run's first day
+    // After GOT IT (seen = that date), the same run growing a day doesn't come back; a new run does.
+    const seen = noticed[0]!.learnedOn;
+    const longer = { ...reading, days: [...reading.days, { from: from(9), value: 63, kind: null, low: 50, high: 56 }] };
+    expect(newLearnings(deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], unusual: { resting: longer }, now: NOW }), seen)).toEqual([]);
+    const fresh = { ...reading, days: [10, 11, 12].map((d) => ({ from: from(d), value: 62, kind: null, low: 50, high: 56 })) };
+    expect(newLearnings(deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], unusual: { resting: fresh }, now: NOW }), seen)).toHaveLength(1);
     expect(describeLearning(noticed[0]!)).toMatch(/^Noticed: Resting heart rate has been above your usual range for 3 days: .*62 bpm\. Your usual range: 50–56 bpm.*not a diagnosis or a cause\.$/);
     expect(deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], unusual: { resting: null }, now: NOW }).learnings).toEqual([]);
   });

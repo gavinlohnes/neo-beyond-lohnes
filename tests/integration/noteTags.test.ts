@@ -38,11 +38,11 @@ describe("note tags", () => {
 describe("tagging today from elsewhere (DELTA-NEXT 4)", () => {
   it("adds the tag to today's note through the ordinary save, once, keeping what was written", async () => {
     const day = await startDay();
-    expect(await addTagToActiveDay("felt-strong")).toEqual(["felt-strong"]);
+    expect((await addTagToActiveDay("felt-strong")).tags).toEqual(["felt-strong"]);
     expect((await db.dailyNotes.get(day.id))?.text).toBe("#felt-strong");
     await db.dailyNotes.put({ dayId: day.id, text: "Long shift\n\n#felt-strong", createdAt: "x", updatedAt: "x" } as never);
-    expect(await addTagToActiveDay("Sore")).toEqual(["felt-strong", "sore"]);
+    expect((await addTagToActiveDay("Sore")).tags).toEqual(["felt-strong", "sore"]);
     expect((await db.dailyNotes.get(day.id))?.text).toBe("Long shift\n\n#felt-strong #sore");
-    expect(await addTagToActiveDay("sore")).toEqual(["felt-strong", "sore"]);
+    expect(await addTagToActiveDay("sore")).toEqual({ dayId: day.id, tags: ["felt-strong", "sore"] });
   });
 });
