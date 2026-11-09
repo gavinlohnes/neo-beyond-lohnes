@@ -106,3 +106,14 @@ export async function decryptBackup(file: Bytes, secret: string, kind: "passphra
   } catch { throw new Error("BACKUP_DAMAGED"); }
   finally { raw.fill(0); }
 }
+
+/**
+ * DRIVE-BACKUP-001 restore check: open a backup with this phone's own data key (no passphrase needed). Read
+ * only. Throws BACKUP_DAMAGED when the file wasn't made with this key or was changed.
+ */
+export async function decryptWithDataKey(file: Bytes, dataKey: CryptoKey): Promise<Bytes> {
+  const { header, headerBytes, cipher } = readHeader(file);
+  try {
+    return new Uint8Array(await subtle().decrypt({ name: "AES-GCM", iv: unb64(header.iv), additionalData: headerBytes }, dataKey, cipher));
+  } catch { throw new Error("BACKUP_DAMAGED"); }
+}

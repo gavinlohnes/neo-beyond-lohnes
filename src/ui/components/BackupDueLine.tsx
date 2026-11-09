@@ -6,7 +6,7 @@ import {
   snoozeBackupPrompt,
   type BackupPrompt,
 } from "../../application/autoBackupQueries";
-import { backUpToDrive, type DriveBackupResult } from "../../application/driveBackup/driveBackupService";
+import { backUpToDrive, checkLatestDriveBackup, getDriveBackupState, type DriveBackupResult } from "../../application/driveBackup/driveBackupService";
 import { loadGoogleIdentity } from "../../application/driveBackup/googleAuth";
 import { describeError } from "../errorMessage";
 import { Signal } from "./Signal";
@@ -80,6 +80,21 @@ export function BackupDueLine() {
     }
   }
 
+  /** DRIVE-BACKUP-001: the monthly check on the newest Drive backup — read only, never a restore. */
+  async function handleDriveCheck() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const checked = await checkLatestDriveBackup();
+      setMessage(checked ? describeRestoreCheck(checked.result, new File([], checked.file.name, { lastModified: Date.parse(checked.file.createdTime) })) : "No Drive backup to check yet.");
+      setPrompt(getBackupPrompt());
+    } catch (e) {
+      setMessage(describeError(e, "Couldn't check the Drive backup."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function handleLater() {
     snoozeBackupPrompt();
     setPrompt(null);
@@ -116,8 +131,11 @@ export function BackupDueLine() {
       {prompt?.kind === "RESTORE_CHECK_DUE" && (
         <div className="backup-due__row">
           <p className="meta backup-due__text">Check your latest backup</p>
+          {getDriveBackupState().on && <button className="btn-secondary backup-due__action" disabled={busy} onClick={() => void handleDriveCheck()}>
+            CHECK DRIVE BACKUP
+          </button>}
           <button className="btn-secondary backup-due__action" disabled={busy} onClick={() => fileInputRef.current?.click()}>
-            CHECK NOW
+            {getDriveBackupState().on ? "CHECK A FILE" : "CHECK NOW"}
           </button>
           <button className="backup-due__later" disabled={busy} onClick={handleLater}>
             LATER

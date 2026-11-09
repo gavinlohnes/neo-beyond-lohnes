@@ -1,6 +1,6 @@
 import { db } from "../../persistence/db";
 import { clearDriveKey, readDriveKey, saveDriveKey } from "../../persistence/driveKeyStore";
-import { createKeySet, decryptBackup, encryptBackup, generateRecoveryCode, KDF_ITERATIONS } from "./backupCrypto";
+import { createKeySet, decryptBackup, decryptWithDataKey, encryptBackup, generateRecoveryCode, KDF_ITERATIONS } from "./backupCrypto";
 
 /**
  * DRIVE-BACKUP-001: the device side of encrypted backups. Setup makes a data key wrapped under the
@@ -28,4 +28,11 @@ export async function encryptCurrentBackup(): Promise<Uint8Array<ArrayBuffer>> {
 /** An encrypted backup unlocked into the ordinary backup File that today's restore path accepts. */
 export async function unlockBackup(encrypted: Uint8Array<ArrayBuffer>, secret: string, kind: "passphrase" | "recovery", name = "beyond-drive-backup.json"): Promise<File> {
   return new File([await decryptBackup(encrypted, secret, kind)], name, { type: "application/json" });
+}
+
+/** The restore check: unlock with this phone's key into the ordinary backup File (read only). */
+export async function unlockWithDeviceKey(encrypted: Uint8Array<ArrayBuffer>, name = "beyond-drive-backup.json"): Promise<File> {
+  const key = await readDriveKey();
+  if (!key) throw new Error("BACKUP_KEY_NOT_SET_UP");
+  return new File([await decryptWithDataKey(encrypted, key.dataKey)], name, { type: "application/json" });
 }

@@ -1,8 +1,8 @@
 import { recordBackupExported } from "../../persistence/backup";
 import { DEFAULT_AUTO_BACKUP_DAYS, getAutoBackupPreference } from "../../persistence/autoBackup";
 import { clearDriveBackupState, getDriveBackupState, updateDriveBackupState, type DriveBackupState, type DriveFailure } from "../../persistence/driveBackupState";
-import { isDriveBackupDue, setAutoBackupPreferenceAndReset } from "../autoBackupQueries";
-import { encryptCurrentBackup, forgetBackupKey, hasBackupKey, setUpBackupKey, unlockBackup } from "./backupKeys";
+import { checkBackupFile, isDriveBackupDue, setAutoBackupPreferenceAndReset, type RestoreCheckResult } from "../autoBackupQueries";
+import { encryptCurrentBackup, forgetBackupKey, hasBackupKey, setUpBackupKey, unlockBackup, unlockWithDeviceKey } from "./backupKeys";
 import { backupFileName, backupsToDelete, deleteBackup, downloadBackup, ensureFolder, findFolder, listBackups, uploadBackup, type DriveFile } from "./driveApi";
 import { currentDriveToken, dropDriveToken, requestDriveToken, revokeDriveAccess } from "./googleAuth";
 
@@ -113,4 +113,21 @@ export async function openDriveBackup(file: DriveFile, secret: string, kind: "pa
   } catch {
     throw new Error(`COULDNT_UNLOCK: Couldn't unlock this backup. Check the ${kind === "passphrase" ? "passphrase" : "recovery code"}.`);
   }
+}
+
+/**
+ * The monthly restore check for Drive, from a tap: download the newest Drive backup, open it with this
+ * phone's key and compare its row counts with this device through the existing read-only check. Never
+ * restores anything; records the check like the file check does.
+ */
+export async function checkLatestDriveBackup(): Promise<{ file: DriveFile; result: RestoreCheckResult } | null> {
+  const token = await requestDriveToken();
+  const folderId = await findFolder(token, getDriveBackupState().folderId);
+  const newest = folderId ? (await listBackups(token, folderId))[0] : undefined;
+  if (!newest) return null;
+  const encrypted = await downloadBackup(token, newest.id);
+  let file: File;
+  try { file = await unlockWithDeviceKey(encrypted, newest.name.replace(/\.beyond$/, ".json")); }
+  catch { throw new Error("COULDNT_UNLOCK: This phone's key couldn't open the newest Drive backup. Use RESTORE with your passphrase to check it."); }
+  return { file: newest, result: await checkBackupFile(file) };
 }
