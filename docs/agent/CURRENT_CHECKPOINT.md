@@ -1,3 +1,13 @@
+# Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
+
+- Build in order from [BIG-IDEAS-001.md](BIG-IDEAS-001.md): 1 shift what-if → 2 week energy forecast → 3 circadian
+  plan (🔒 approved; research first) → 5 weekly interview / timeline → 6 recap → 7 on-device Alfred (🔒; spike
+  first) → 8 shared view for his wife (🔒; privacy design and Gavin's re-confirm first).
+- Everything before this is merged through #471 (SUPERCHARGE-001 complete). The rotation field test (#402) still
+  waits for Gavin.
+
+---
+
 # SUPERCHARGE-001 — 1, 2, 4, 5 merged (#469); item 6 "Talk it through with Alfred" in review (2026-11-09)
 
 - Gavin's weekly plan usage is ~93% (resets Fri); a fresh session is recommended. Next: rotation field test (#402)
