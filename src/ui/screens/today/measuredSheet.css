@@ -55,15 +55,16 @@
 .sleep-rhythm { display: grid; gap: 6px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle, #2a2a2a); }
 .sleep-rhythm__line { margin: 0; }
 .sleep-rhythm__chart { display: grid; gap: 3px; margin-top: 6px; }
-.sleep-rhythm__row, .sleep-rhythm__axis { display: grid; grid-template-columns: 3.2em 1fr; align-items: center; gap: 6px; }
-.sleep-rhythm__day { font-size: 11px; color: var(--text-3, #808080); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sleep-rhythm__row, .sleep-rhythm__axis { display: grid; grid-template-columns: 4.2em 1fr; align-items: center; gap: 6px; }
+/* 16 px floor (UX_DECISIONS): labels sit on every 7th row and may overhang their thin row without moving it. */
+.sleep-rhythm__day { font-size: 16px; line-height: 9px; color: var(--text-3, #808080); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sleep-rhythm__track { position: relative; height: 9px; background: var(--surface-2, #0f0f0f); }
 .sleep-rhythm__track i { position: absolute; top: 0; bottom: 0; box-sizing: border-box; }
 .sleep-rhythm__row[data-kind="WORK"] .sleep-rhythm__track i { background: var(--text-1, #f2f2f2); }
 .sleep-rhythm__row[data-kind="OFF"] .sleep-rhythm__track i { border: 1.5px solid var(--text-2, #a8a8a8); }
 .sleep-rhythm__row[data-kind="UNKNOWN"] .sleep-rhythm__track i { background: var(--text-3, #808080); opacity: 0.55; }
-.sleep-rhythm__ticks { position: relative; height: 14px; }
-.sleep-rhythm__ticks b { position: absolute; transform: translateX(-50%); font-size: 10px; font-weight: 400; color: var(--text-3, #808080); white-space: nowrap; }
+.sleep-rhythm__ticks { position: relative; height: 22px; margin-top: 4px; }
+.sleep-rhythm__ticks b { position: absolute; transform: translateX(-50%); font-size: 16px; font-weight: 400; color: var(--text-3, #808080); white-space: nowrap; }
 .sleep-rhythm__ticks b:first-child { transform: none; }
 .sleep-rhythm__ticks b:last-child { transform: translateX(-100%); }
 .sleep-rhythm__legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }

@@ -33,6 +33,16 @@ describe("SLEEP-RHYTHM-001", () => {
     // The fixture sleeps at the same clock time every day, so no clock-change line is claimed.
     expect(sheet.element().textContent).not.toMatch(/On days off your sleep sits/);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+    // The app-wide 16 px floor (UX_DECISIONS): every visible piece of text in the section.
+    const section = chart.element().closest("section")!;
+    const walker = document.createTreeWalker(section, NodeFilter.SHOW_TEXT);
+    const sizes: { text: string; px: number }[] = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (!node.textContent?.trim()) continue;
+      sizes.push({ text: node.textContent.trim(), px: parseFloat(getComputedStyle(node.parentElement!).fontSize) });
+    }
+    expect(sizes.length).toBeGreaterThan(5);
+    expect(sizes.filter((s) => s.px < 16)).toEqual([]);
     expect(await db.events.toArray()).toEqual(before);
   });
 });

@@ -9,7 +9,7 @@ import { hoursMinutes } from "../health/healthFormat";
 export function SleepRhythmSection({ rhythm }: { rhythm: SleepRhythm }) {
   const { nights, groups, offMinusWork, axisStart } = rhythm;
   if (nights.length === 0) return null;
-  const ticks = [0, 6, 12, 18, 24].map((h) => ({ at: h / 24, label: hourLabel(axisStart + h * 60) }));
+  const ticks = [0, 12, 24].map((h) => ({ at: h / 24, label: hourLabel(axisStart + h * 60) }));
   return (
     <section className="sleep-rhythm" aria-labelledby="sleep-rhythm-title">
       <p id="sleep-rhythm-title" className="tool-label">RHYTHM · LAST {RHYTHM_WINDOW_DAYS / 7} WEEKS</p>
@@ -17,9 +17,10 @@ export function SleepRhythmSection({ rhythm }: { rhythm: SleepRhythm }) {
       {offMinusWork !== null && Math.abs(offMinusWork) >= 30 && <p className="card-body sleep-rhythm__line">{describeShift(offMinusWork)}</p>}
       {groups.length < 2 && <p className="meta">{describeMissing(groups, nights)}</p>}
       <div className="sleep-rhythm__chart" role="img" aria-label={`When you slept, ${nights.length} measured ${nights.length === 1 ? "night" : "nights"}, newest first`}>
-        {nights.map((n) => (
+        {nights.map((n, i) => (
           <div key={n.livedDayStart} className="sleep-rhythm__row" data-kind={n.kind}>
-            <span className="sleep-rhythm__day" aria-hidden="true">{dayLabel(n)}</span>
+            {/* A date on every 7th row keeps labels at the app's 16 px floor without crowding the strip. */}
+            <span className="sleep-rhythm__day" aria-hidden="true">{i % 7 === 0 ? dayLabel(n) : ""}</span>
             <span className="sleep-rhythm__track" aria-hidden="true">
               {segments(n, axisStart).map(([left, width], i) => <i key={i} style={{ left: `${left * 100}%`, width: `${Math.max(width * 100, 0.8)}%` }} />)}
             </span>
@@ -31,7 +32,7 @@ export function SleepRhythmSection({ rhythm }: { rhythm: SleepRhythm }) {
         </div>
       </div>
       <p className="meta sleep-rhythm__legend"><i data-kind="WORK" /> work day <i data-kind="OFF" /> day off <i data-kind="UNKNOWN" /> not set</p>
-      <p className="meta">Each row is the longest Garmin sleep of a BEYOND day (naps left out). Nights Garmin didn't measure aren't shown. Nothing here changes advice.</p>
+      <p className="meta">Each row is the longest Garmin sleep of a BEYOND day, grouped by the day it starts in (naps left out). Newest at the top. Nights Garmin didn't measure aren't shown. Nothing here changes advice.</p>
     </section>
   );
 }
@@ -70,7 +71,7 @@ function describeMissing(groups: readonly RhythmGroup[], nights: readonly Rhythm
 function dayLabel(n: RhythmNight): string {
   // The lived day begins at 16:30; label it by the calendar day it mostly covers (the next morning).
   const d = new Date(Date.parse(n.livedDayStart) + 12 * 3_600_000);
-  return `${d.toLocaleDateString("en-US", { weekday: "narrow" })} ${d.getDate()}`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 /** A night's bar as [left, width] fractions of the axis, split in two if it crosses the axis edge. */

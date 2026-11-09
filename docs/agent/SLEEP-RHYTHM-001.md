@@ -1,8 +1,8 @@
 # SLEEP-RHYTHM-001 — when you sleep, across shifts
 
 - **Authorization:** Gavin, 2026-11-09: "I'd like the next thing we do to be really impressive and add a lot of
-  value. It can be anything you'd like." Builder (Claude Code) chose idea **27, sleep regularity across shifts**,
-  from his big list. **Lane: routine.** It is read only and adds no stored data, schema, dependency or provider. It
+  value. It can be anything you'd like." Builder (Claude Code) chose **sleep regularity across shifts**
+  (numbered 27 in the 2026-11-08 "what's left" list he picked from). **Lane: routine.** It is read only and adds no stored data, schema, dependency or provider. It
   changes nothing in Engine advice or TODAY's composition, so it is not Protected.
 - **What:** the existing sleep page (TODAY's sleep tile / DATA sleep / the cave's VITALS) gains a **RHYTHM · LAST 4
   WEEKS** section:
