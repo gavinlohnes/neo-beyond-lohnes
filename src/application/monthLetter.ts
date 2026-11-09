@@ -20,7 +20,10 @@ export function writeMonthLetter(year: number, month: number, days: readonly Mon
   if (logged.length === 0) return { title, lines: ["Nothing was recorded this month."], daysLogged: 0 };
 
   const work = logged.filter((d) => d.work === "WORK").length, off = logged.filter((d) => d.work === "OFF").length;
-  const lines = [`You recorded ${plural(logged.length, "day")}${work || off ? `: ${plural(work, "work day")} and ${plural(off, "day")} off` : ""}.`];
+  const unset = logged.length - work - off;
+  // Only the kinds that occurred: never "0 days off" for days whose context simply wasn't set.
+  const kinds = [work ? plural(work, "work day") : "", off ? `${plural(off, "day")} off` : "", work || off ? (unset ? `${unset} with no work or off set` : "") : ""].filter(Boolean);
+  const lines = [`You recorded ${plural(logged.length, "day")}${kinds.length ? `: ${kinds.join(", ").replace(/, ([^,]*)$/, kinds.length > 1 ? " and $1" : ", $1")}` : ""}.`];
 
   const sleep = logged.flatMap((d) => (d.sleepMinutes === undefined ? [] : [d.sleepMinutes]));
   lines.push(sleep.length

@@ -28,6 +28,13 @@ describe("writeMonthLetter", () => {
     expect(empty.lines.join(" ")).not.toMatch(/\b0 g|0h 00m/);
   });
 
+  it("names only the kinds of day that occurred, never a bare zero", () => {
+    const days = [1, 2, 3, 4].map((n) => day(n, { work: "WORK" })).concat([5, 6, 7, 8, 9, 10].map((n) => day(n)));
+    expect(writeMonthLetter(2026, 9, days, LATER).lines[0]).toBe("You recorded 10 days: 4 work days and 6 with no work or off set.");
+    expect(writeMonthLetter(2026, 9, [day(1, { work: "OFF" })], LATER).lines[0]).toBe("You recorded 1 day: 1 day off.");
+    expect(writeMonthLetter(2026, 9, [day(1)], LATER).lines[0]).toBe("You recorded 1 day.");
+  });
+
   it("handles an empty month and a month in progress, and the Alfred ask carries the facts", () => {
     expect(writeMonthLetter(2026, 9, [{ date: "2026-10-01", workouts: 0, urges: 0, clean: false }], LATER)).toEqual({ title: "October 2026", lines: ["Nothing was recorded this month."], daysLogged: 0 });
     const now = writeMonthLetter(2026, 9, [day(1, { clean: true, urges: 2 })], new Date(2026, 9, 15));
