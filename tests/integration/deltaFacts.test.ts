@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { deltaFacts } from "../../src/application/deltaFacts";
 import type { DeltaKnowledge } from "../../src/application/delta";
+import { deltaTalkAsk } from "../../src/ui/components/DeltaViews";
+import { isQuestion } from "../../src/application/helper/freeHelper";
 
 /** SUPERCHARGE-001 item 2: DELTA's learnings for Alfred — counted facts; note/journal facts only with the personal opt-in. */
 const knowledge = {
@@ -19,5 +21,16 @@ describe("DELTA facts for Alfred", () => {
     const personal = deltaFacts(knowledge, true);
     expect(personal.map((f) => f.id)).toEqual(["sleep-WORK", "tag-latecoffee"]);
     expect(personal[1]!.text).toBe("DELTA LEARNED (#latecoffee, 5 tagged days): sleep logged the next day was 5h30 on tagged days (4) against 7h00 on other noted days (9). A pattern, not a cause.");
+  });
+});
+
+describe("talk it through with Alfred (item 6)", () => {
+  it("hands Alfred the notebook lines with exact counts, worded so DELTA's free answers don't intercept it", () => {
+    const ask = deltaTalkAsk(knowledge);
+    expect(ask).toMatch(/^Talk me through DELTA's notebook below/);
+    expect(ask).toContain("Keep every number and day count exactly as written");
+    expect(ask).toContain("- Learned when you sleep. Work days: asleep around 8:10 am, up around 3:20 pm · usually within 15m · 16 nights.");
+    expect(ask).toContain("#latecoffee");
+    expect(isQuestion(ask)).toBe(false);
   });
 });
