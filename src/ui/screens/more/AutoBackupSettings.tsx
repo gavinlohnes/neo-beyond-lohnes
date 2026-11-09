@@ -9,6 +9,7 @@ import {
 import { describeError } from "../../errorMessage";
 import { describeRestoreCheck } from "../../components/restoreCheckCopy";
 import { DriveBackupSettings } from "./DriveBackupSettings";
+import { getDriveBackupState } from "../../../application/driveBackup/driveBackupService";
 
 /**
  * BACKUP-AUTO-001 (owner brief 2026-10-04, decision 2A): MORE → Data safety's
@@ -19,6 +20,7 @@ import { DriveBackupSettings } from "./DriveBackupSettings";
  */
 export function AutoBackupSettings() {
   const [preference, setPreference] = useState<AutoBackupPreference>(() => getAutoBackupPreference());
+  const [driveOn, setDriveOn] = useState(() => getDriveBackupState().on);
   const [checkMessage, setCheckMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,17 +47,18 @@ export function AutoBackupSettings() {
     <div className="equipment-row">
       <p className="tool-label" style={{ marginBottom: 4 }}>AUTOMATIC BACKUP</p>
       <p className="card-body" style={{ marginBottom: 8 }}>
-        {preference.enabled ? `On, every ${describeInterval(preference.everyDays)}.` : "Off."}
+        {!preference.enabled ? "Off." : driveOn ? "On, once a day to Google Drive." : `On, every ${describeInterval(preference.everyDays)}.`}
       </p>
       <p className="meta" style={{ marginBottom: 8 }}>
-        When one is due, TODAY asks when you open BEYOND. You pick where it goes in your phone's share menu: Drive,
-        Files or a file share.
+        {driveOn
+          ? "When one is due, TODAY asks when you open BEYOND, and it goes to Google Drive, locked. SHARE BACKUP above still works any time."
+          : "When one is due, TODAY asks when you open BEYOND. You pick where it goes in your phone's share menu: Drive, Files or a file share."}
       </p>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <button className="btn-secondary" style={{ width: "auto" }} onClick={() => save({ ...preference, enabled: !preference.enabled })}>
           {preference.enabled ? "TURN OFF" : "TURN ON"}
         </button>
-        {preference.enabled && (
+        {preference.enabled && !driveOn && (
           <select
             aria-label="Back up every"
             value={preference.everyDays}
@@ -87,7 +90,7 @@ export function AutoBackupSettings() {
           {checkMessage}
         </p>
       )}
-      <DriveBackupSettings onChanged={() => setPreference(getAutoBackupPreference())} />
+      <DriveBackupSettings onChanged={() => { setPreference(getAutoBackupPreference()); setDriveOn(getDriveBackupState().on); }} />
     </div>
   );
 }
