@@ -67,6 +67,8 @@ export function DeltaPanel({ active }: { active: boolean }) {
     {knowledge.learnings.length > 0 && <div className="delta-talk">
       <button type="button" className="btn-secondary" onClick={() => askAlfred(deltaTalkAsk(knowledge))}>TALK IT THROUGH WITH ALFRED</button>
       <p className="meta">Opens Alfred with DELTA's notebook ready to send. Nothing is sent until you tap send there; it uses your Claude key.</p>
+      {/* #470 review: the draft is the full notebook, whatever the personal opt-in says, so say when notes are in it. */}
+      {knowledge.learnings.slice(0, 8).some((l) => l.kind === "TAG" || l.kind === "EXPERIMENT") && <p className="meta">The draft includes patterns from your notes and experiments. You can edit or delete them before sending.</p>}
     </div>}
     <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
