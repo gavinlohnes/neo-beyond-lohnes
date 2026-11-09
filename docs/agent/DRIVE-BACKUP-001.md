@@ -1,6 +1,7 @@
 # DRIVE-BACKUP-001 — automatic encrypted backups to Google Drive
 
-**Status: brief for Gavin's bounded approval. Nothing touching backups is built until he approves this file.**
+**Status: APPROVED by Gavin, 2026-11-09 ("Approve the Drive Backup plan").** Built in two PRs: (1) encryption and the
+device key store; (2) Drive connection, settings, due-on-open, status and restore.
 
 - **Authorization so far:** Gavin chose this objective (#1 of the big ideas) in the reviewer session on 2026-11-08,
   created the Google OAuth client, and told the Builder "I think I set it all up now" (2026-11-09).
@@ -39,7 +40,7 @@
   bytes are never stored or uploaded.
 - **Threat model (one line):** protects backups at rest in Google Drive and against anyone with the Drive file alone;
   it does not protect against someone who already controls the unlocked phone, which holds the live data anyway.
-- **Recovery code:** 128 random bits shown once as 8 groups of 4 characters, to write down; never shown again.
+- **Recovery code:** 160 random bits (Crockford base32) shown once as 8 groups of 4 characters, to write down; never shown again.
 - **Retention:** keep the **last 7 daily** backups plus the **first backup of each of the last 6 months**. Older files
   are deleted only inside the BEYOND folder.
 - **Status:** BackupDueLine and SYSTEMS show the last successful encrypted Drive backup time and the Drive state

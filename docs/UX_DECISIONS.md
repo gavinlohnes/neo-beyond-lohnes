@@ -2824,5 +2824,6 @@ approved Protected additions with their own schema/backup evidence. [Brief and U
 Gavin approved Google Drive as a provider **for encrypted backups only**, extending RULES-2026-10-31: scope
 `drive.file`, one BEYOND folder, Google stores ciphertext only. Backups unlock with a passphrase or a one-time recovery
 code; losing both means nobody can open them, and the app says so. "Automatic" means once a day on first open after
-16:30, with a quiet reconnect line when Google needs sign-in. Implementation waits for his approval of the brief.
-[Brief](agent/DRIVE-BACKUP-001.md).
+16:30, with a quiet reconnect line when Google needs sign-in. **Gavin approved the brief on 2026-11-09.** This
+**supersedes** the 2026-08-19 BODY & Backup Decisions rejection of in-app Google/Drive OAuth, for encrypted backups
+only; the share-sheet backup stays. [Brief](agent/DRIVE-BACKUP-001.md).
