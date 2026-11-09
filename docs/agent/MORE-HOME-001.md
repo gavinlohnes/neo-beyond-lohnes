@@ -32,7 +32,7 @@
 - The existing MORE suites have two locator updates for the new area row:
   - FIELD-AUTHORITY-001's "recovery on the first screen" now uses the Backup & recovery area row, which opens the
     same panel;
-  - "Plan" is now located as the area button.
+  - "Plan" is now located as the area button (MoreScreen, and DailyExperience's first-screen check).
 - Screenshot: `docs/screenshots/more-home-001/more.png` (invented state).
 
 ## Capability inventory (before → after)
