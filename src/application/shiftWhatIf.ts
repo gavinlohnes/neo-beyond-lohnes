@@ -19,7 +19,8 @@ export function shiftWhatIf(rows: readonly PictureRow[], shifts: number): ShiftW
   const runs = groupRuns(rows);
   const matches = runs.flatMap((run, i) => {
     const next = runs[i + 1];
-    return run.context === "WORK" && run.rows.length === shifts && next?.context === "OFF" ? [{ run, off: next }] : [];
+    // The first run may be clipped by the start of the history window (as in runPositions), so it never counts.
+    return i > 0 && run.context === "WORK" && run.rows.length === shifts && next?.context === "OFF" ? [{ run, off: next }] : [];
   });
   return {
     shifts,

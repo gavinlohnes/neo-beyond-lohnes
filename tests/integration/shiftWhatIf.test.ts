@@ -8,7 +8,7 @@ const cycle = (lastEnergy: number, off1: number, off2: number) => [row("WORK", 4
 
 describe("shift what-if", () => {
   it("looks only at complete runs of exactly that length and says what followed, with counts", () => {
-    const rows = [...cycle(2, 9, 7), ...cycle(2, 10, 8), ...cycle(1, 11, 7), row("WORK", 3), row("WORK", 3), row("OFF", 4, 7)];
+    const rows = [row("OFF", 3, 8), ...cycle(2, 9, 7), ...cycle(2, 10, 8), ...cycle(1, 11, 7), row("WORK", 3), row("WORK", 3), row("OFF", 4, 7)];
     const w = shiftWhatIf(rows, 4);
     expect(w).toMatchObject({ shifts: 4, runs: 3, enough: true });
     expect(w.lastShiftEnergy).toEqual({ mean: 5 / 3, days: 3 });
@@ -17,7 +17,9 @@ describe("shift what-if", () => {
   });
 
   it("says nothing it can't support: too few comparable runs, or a run still going", () => {
-    expect(shiftWhatIf([...cycle(2, 9, 7)], 4)).toMatchObject({ runs: 1, enough: false, lastShiftEnergy: { mean: undefined, days: 1 } });
+    expect(shiftWhatIf([row("OFF"), ...cycle(2, 9, 7)], 4)).toMatchObject({ runs: 1, enough: false, lastShiftEnergy: { mean: undefined, days: 1 } });
+    // A WORK run at the very start may be clipped by the history window, so it never counts.
+    expect(shiftWhatIf([...cycle(2, 9, 7)], 4).runs).toBe(0);
     expect(shiftWhatIf([row("WORK", 3), row("WORK", 3), row("WORK", 3), row("WORK", 3)], 4).runs).toBe(0);
   });
 });
