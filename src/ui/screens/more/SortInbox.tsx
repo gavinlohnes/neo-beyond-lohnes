@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SavedInboxItem } from "../../../domain/saved/types";
 import { deleteSavedInboxItem, makeSavedItemTask } from "../../../application/savedInbox";
 import { createHighlight } from "../../../application/highlightCommands";
@@ -16,16 +16,22 @@ export function SortInbox({ items, onChanged, onDone }: { items: readonly SavedI
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Skip queued items that no longer exist (removed elsewhere), so "All sorted." never shows early.
+  useEffect(() => {
+    if (index < queue.length && !items.some((i) => i.id === queue[index])) setIndex((n) => n + 1);
+  }, [index, items, queue]);
   const item = items.find((i) => i.id === queue[index]);
   const next = () => { setAfter(null); setConfirmRemove(false); setError(""); setIndex((n) => n + 1); };
 
   async function act(action: () => Promise<unknown>, then: "next" | string) {
     setBusy(true); setError("");
-    try { await action(); await onChanged(); if (then === "next") next(); else setAfter(then); }
+    // Move on before refreshing, so the skip-missing effect never also advances past a removed item.
+    try { await action(); if (then === "next") next(); else setAfter(then); await onChanged(); }
     catch (cause) { setError(describeError(cause, "That change could not be saved.")); }
     finally { setBusy(false); }
   }
 
+  if (!item && index < queue.length) return null;
   if (!item) return <section className="operator-card sort-inbox" aria-label="Sort inbox">
     <p className="card-title">All sorted.</p>
     <p className="meta">{items.length ? `${items.length} kept for later.` : "Your Saved inbox is empty."}</p>
