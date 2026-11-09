@@ -2840,3 +2840,11 @@ Gavin approved rebuilding MORE's top in YOUR LIFE's guided style ("Redo more"). 
 status card per system (Backup, Garmin, Work schedule, Alfred, and Calendar when connected). Nothing is removed;
 every panel, command and route below is unchanged. Status shows only recorded facts. This amends MORE's primary
 information architecture. [Brief](agent/MORE-HOME-001.md).
+
+
+## DATA-HOME-001 — DATA opens like YOUR LIFE and MORE (owner approval 2026-11-09)
+
+Gavin: "Next is data. Make it fall in line with our new screens." DATA now opens with the date, **YOUR NUMBERS.**,
+Log weight and Sleep, then shortcuts to its existing views (Weight, Training records, Photos, Measurements, Whole
+picture, Your rotation, History). Everything below is unchanged and nothing is removed. This amends DATA's primary
+information architecture. [Brief](agent/DATA-HOME-001.md).
