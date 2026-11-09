@@ -81,14 +81,18 @@ export function DeltaNewsLine({ active }: { active: boolean }) {
  * DELTA-EXPERIMENTS: when a tag lines up with shorter next-day sleep, DELTA offers to test it. START writes a
  * personal experiment through the existing LOOP command (a "Try:" journal entry) — only on that tap.
  */
+/** The counts behind the sleep figure itself, and what it was shorter than. */
+export function describeOffer(s: ExperimentSuggestion): string {
+  return `After ${s.withDays} days with #${s.tag}, the sleep you logged the next day was ${hoursMinutes(s.minutesLess)} shorter than after ${s.withoutDays} other noted days. That lines up; it doesn't prove a cause. Want to test it for ${s.days} days?`;
+}
+
 export function ExperimentOffer({ suggestion }: { suggestion: ExperimentSuggestion }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   return <section className="equipment-row delta-offer" aria-label="DELTA suggests an experiment">
     <p className="tool-label" style={{ marginBottom: 4 }}>DELTA SUGGESTS A TEST</p>
     <p className="card-body" style={{ margin: "0 0 6px" }}>
-      On {suggestion.taggedDays} days with #{suggestion.tag}, the sleep you logged the next day was {hoursMinutes(suggestion.minutesLess)} shorter.
-      That lines up; it doesn't prove a cause. Want to test it for {suggestion.days} days?
+      {describeOffer(suggestion)}
     </p>
     {message ? <p role="status" className="meta">{message}</p> : <button type="button" className="btn-secondary" disabled={busy} onClick={() => {
       setBusy(true);

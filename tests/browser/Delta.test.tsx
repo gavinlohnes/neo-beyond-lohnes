@@ -33,8 +33,8 @@ describe("DELTA-GROWS-001", () => {
   it("DELTA's experiment offer starts a real 14-day experiment only on the tap", async () => {
     await startDay();
     const before = await db.decisionJournalEntries.count();
-    const screen = await render(<ExperimentOffer suggestion={{ tag: "latecoffee", what: "Skip #latecoffee", days: 14, minutesLess: 70, taggedDays: 5 }} />);
-    await expect.element(screen.getByText(/On 5 days with #latecoffee, the sleep you logged the next day was 1h 10m shorter\. That lines up; it doesn't prove a cause\./)).toBeVisible();
+    const screen = await render(<ExperimentOffer suggestion={{ tag: "latecoffee", what: "Skip #latecoffee", days: 14, minutesLess: 70, taggedDays: 5, withDays: 5, withoutDays: 9 }} />);
+    await expect.element(screen.getByText(/After 5 days with #latecoffee, the sleep you logged the next day was 1h 10m shorter than after 9 other noted days\./)).toBeVisible();
     expect(await db.decisionJournalEntries.count()).toBe(before);
     await screen.getByRole("button", { name: "START 14-DAY TEST" }).click();
     await expect.element(screen.getByText(/Started: "Skip #latecoffee" for 14 days/)).toBeVisible();

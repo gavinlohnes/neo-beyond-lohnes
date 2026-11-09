@@ -21,7 +21,7 @@ export type Learning =
   | { id: string; kind: "TAG"; learnedOn: string; tag: string; taggedDays: number; comparison: MeasureComparison }
   | { id: string; kind: "EXPERIMENT"; learnedOn: string; what: string; days: number; outcome: string; lesson?: string };
 /** DELTA's offer to test a tag that lines up with shorter sleep. Starting it is the existing experiment command, on a tap. */
-export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number }
+export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number; withDays: number; withoutDays: number }
 export interface DeltaKnowledge { topics: Topic[]; learnings: Learning[]; suggestion: ExperimentSuggestion | null }
 /** A gap this size (next-day sleep) is worth testing; smaller reads as about the same. */
 export const SUGGEST_SLEEP_GAP_MINUTES = 30;
@@ -72,7 +72,7 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
     const sleep = p.comparisons.find((c) => c.id === "NEXT_SLEEP");
     const gap = sleep ? sleep.without.value - sleep.withTag.value : 0;
     const tested = experiments.some((e) => e.what.toLowerCase().includes(`#${p.tag}`));
-    return gap >= SUGGEST_SLEEP_GAP_MINUTES && !tested ? [{ tag: p.tag, what: `Skip #${p.tag}`, days: SUGGESTED_EXPERIMENT_DAYS, minutesLess: Math.round(gap), taggedDays: p.taggedDays }] : [];
+    return gap >= SUGGEST_SLEEP_GAP_MINUTES && !tested ? [{ tag: p.tag, what: `Skip #${p.tag}`, days: SUGGESTED_EXPERIMENT_DAYS, minutesLess: Math.round(gap), taggedDays: p.taggedDays, withDays: sleep!.withTag.days, withoutDays: sleep!.without.days }] : [];
   }).sort((a, b) => b.minutesLess - a.minutesLess);
   const suggestion = running.length ? null : candidates[0] ?? null;
 

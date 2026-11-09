@@ -4,7 +4,7 @@ import type { DaySummary } from "../../src/engine/dayLedger";
 import type { ExternalSleep } from "../../src/domain/health/sleepImport";
 import type { StateCheckIn } from "../../src/domain/common/types";
 import { mostRecentBoundaryAtOrBefore } from "../../src/engine/dayRollover";
-import { describeLearning } from "../../src/ui/components/DeltaViews";
+import { describeLearning, describeOffer } from "../../src/ui/components/DeltaViews";
 
 /** DELTA-GROWS-001. Invented records only. */
 const NOW = new Date(2026, 10, 9, 20, 0);
@@ -58,7 +58,8 @@ describe("DELTA", () => {
     const summaries = Array.from({ length: 12 }, (_, k) => summary(k + 1, "OFF", [2, 4, 6, 8].includes(k + 1) ? 300 : 420));
     const notes = Array.from({ length: 11 }, (_, k) => ({ dayId: `d${k + 1}`, text: [1, 3, 5, 7].includes(k + 1) ? "#latecoffee" : "fine" }));
     const offer = deriveDelta({ sleeps: [], summaries, notes, checkIns: [], now: NOW });
-    expect(offer.suggestion).toEqual({ tag: "latecoffee", what: "Skip #latecoffee", days: 14, minutesLess: 120, taggedDays: 4 });
+    expect(offer.suggestion).toEqual({ tag: "latecoffee", what: "Skip #latecoffee", days: 14, minutesLess: 120, taggedDays: 4, withDays: 4, withoutDays: 7 });
+    expect(describeOffer(offer.suggestion!)).toBe("After 4 days with #latecoffee, the sleep you logged the next day was 2h 0m shorter than after 7 other noted days. That lines up; it doesn't prove a cause. Want to test it for 14 days?");
     const exp = (status: "OPEN" | "REVIEWED", fromDay: number) => ({
       entry: { id: `e${fromDay}`, title: "Try: Skip #latecoffee", status, outcome: status === "REVIEWED" ? "It helped" : undefined, reviewedAt: status === "REVIEWED" ? new Date(2026, 10, 1).toISOString() : undefined },
       what: "Skip #latecoffee", from: new Date(2026, 9, fromDay, 16, 30), to: new Date(2026, 9, fromDay + 14, 16, 30), scope: "ALL", days: 14,
