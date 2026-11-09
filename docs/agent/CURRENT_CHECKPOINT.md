@@ -1,3 +1,12 @@
+# DRIVE-BACKUP-001 — brief for approval (2026-11-09)
+
+- Gavin chose encrypted Google Drive backups (Protected: backup contract + provider). Brief:
+  [DRIVE-BACKUP-001.md](DRIVE-BACKUP-001.md). This PR adds only the brief, the Decision Register entry and the public
+  privacy page Google requires. **Implementation waits for Gavin's approval of the brief.**
+- TEMPLATE-EDIT-001 merged as #447. POLISH-003 complete (#445, #446).
+
+---
+
 # TEMPLATE-EDIT-001 — in progress (2026-11-08)
 
 - Gavin chose "Edit saved workout templates" (the main gap after supersets #444). EDIT on each custom template loads

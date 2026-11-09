@@ -31,6 +31,8 @@ export default defineConfig({
       // requirement this checkpoint set out to fix, not a nice-to-have.
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // DRIVE-BACKUP-001: the public privacy page is for Google's app review, not the offline app.
+        globIgnores: ["privacy.html"],
         // BRAND-MARK-003: a new cache id so installed phones drop the old icons with the old precache.
         cacheId: "beyond-mark-v3",
         cleanupOutdatedCaches: true,
