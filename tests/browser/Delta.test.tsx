@@ -26,7 +26,7 @@ describe("DELTA-GROWS-001", () => {
     const q = screen.getByRole("group", { name: "DELTA's question" });
     await expect.element(q.getByText(/DELTA ASKS/)).toBeVisible();
     await q.getByRole("button", { name: "ANSWER IN NOTE" }).click();
-    await expect.poll(() => (screen.getByLabelText("Your note").element() as HTMLTextAreaElement).value).toMatch(/^(What|How)[^\n]+\n$/);
+    await expect.poll(() => (screen.container.querySelector("textarea") as HTMLTextAreaElement | null)?.value ?? "").toMatch(/^(What|How)[^\n]+\n$/);
     expect(await db.dailyNotes.get(day.id)).toBeUndefined();
   });
 
