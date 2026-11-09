@@ -34,3 +34,21 @@
     same panel;
   - "Plan" is now located as the area button.
 - Screenshot: `docs/screenshots/more-home-001/more.png` (invented state).
+
+## Capability inventory (before → after)
+
+| Before (MORE menu) | After |
+|---|---|
+| "Back up my data" row (export) + "Keep a copy of your records." + status line | **Moved up:** the hero's first action, "Back up my data". Same `handleExportBackup`, and the status line shows under the hero. The one-line caption is replaced by the hero intro. |
+| Search box ("Find a screen or action") + results + "Search all records" | Unchanged, same place. The hero's "Find anything" scrolls to it and focuses it. |
+| Favorites / Recent | Unchanged. |
+| Backup & recovery panel: Data safety (EXPORT / SHARE BACKUP, last backup), Automatic backups & file check (incl. Google Drive), Restore | Unchanged. It also opens from the "Backup & recovery" area shortcut. |
+| Groups Log, On shift, Review, Plan, Notes, Systems (each catalog capability as a row) | Unchanged. Each also opens from its area shortcut. |
+| Settings panel (A place to start, Hidden features, Time capsule, Reminders, nutrition targets, …) | Unchanged. It also opens from the "Settings" area shortcut. |
+| Destinations (views) such as SYSTEMS, HEALTH_IMPORT, WORK_SCHEDULE, … | Unchanged. The Garmin and Work schedule cards open HEALTH_IMPORT and WORK_SCHEDULE through the existing `setView`. |
+
+- **`systemCatalog.ts`:** not edited. Every entry, alias, group and destination is the same.
+- **Routes:** `MoreView`, `openMore`, `openRecord` / `OPEN_RECORD_EVENT`, `revealSection`, deep links (`?go=…`) and
+  the `command-backup-panel` / `command-settings-panel` ids are all unchanged. Panels gain only a `data-area`
+  attribute.
+- **Removed:** nothing.
