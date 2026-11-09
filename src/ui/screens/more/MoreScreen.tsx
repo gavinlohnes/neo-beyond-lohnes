@@ -63,6 +63,7 @@ import { SavedInboxScreen } from "./SavedInboxScreen";
 import { DailyNoteScreen } from "./DailyNoteScreen";
 import { CollectionsScreen } from "./CollectionsScreen";
 import { HighlightsScreen } from "./HighlightsScreen";
+import { SystemsHome } from "./SystemsHome";
 
 const COMMAND_GROUP_SUMMARY: Record<(typeof CAPABILITY_GROUPS)[number], { eyebrow: string; hint: string }> = {
   Log: { eyebrow: "RECORD", hint: "Record what happened" },
@@ -588,6 +589,17 @@ export function MoreScreen({
     </button>;
   }
 
+  /** MORE-HOME-001: the areas in the order MORE shows them, each opened by its row at the top. */
+  const menuAreas = ["Backup & recovery", ...CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)), "Settings"]
+    .map((group) => ({ group, hint: COMMAND_GROUP_SUMMARY[group as (typeof CAPABILITY_GROUPS)[number]].hint }));
+  function openArea(group: string) {
+    const panel = menuRef.current?.querySelector<HTMLDetailsElement>(`details[data-area="${CSS.escape(group)}"]`);
+    if (!panel) return;
+    panel.open = true;
+    panel.scrollIntoView({ block: "start" });
+    panel.querySelector<HTMLElement>("summary")?.focus({ preventScroll: true });
+  }
+
   return (
     <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}${view === "BATCOMPUTER" ? " more-batcomputer" : ""}${view === "LIFE" ? " more-whole-life" : ""}`}>
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
@@ -647,12 +659,20 @@ export function MoreScreen({
           heading text/class. */}
       <OperatorHeader destination="command" focusable>MORE</OperatorHeader>
       {returnToUnderstanding && <button type="button" className="btn-secondary" onClick={() => setView("REVIEW")}>BACK TO REVIEW</button>}
-      {/* NAV-001: two taps from TODAY to a real backup, reusing the existing export command. */}
-      <section className="equipment-row" aria-label="Back up my data">
-        <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleExportBackup()}>Back up my data</button>
-        <p className="meta">Keep a copy of your records.</p>
-        {archiveStatus && <p role="status" className="meta">{archiveStatus}</p>}
-      </section>
+      {/* MORE-HOME-001: MORE opens like YOUR LIFE — date, YOUR SYSTEMS., status cards, areas. NAV-001's
+          two taps to a real backup stay: "Back up my data" is the first action, same export command. */}
+      <SystemsHome
+        active={active && view === "MENU"}
+        refreshKey={daysSinceBackup ?? -1}
+        areas={menuAreas}
+        busy={busy}
+        backupStatus={archiveStatus}
+        onBackUp={() => void handleExportBackup()}
+        onSearch={() => { const input = document.getElementById("command-query"); input?.scrollIntoView({ block: "center" }); input?.focus(); }}
+        onArea={openArea}
+        onGarmin={() => setView("HEALTH_IMPORT")}
+        onSchedule={() => setView("WORK_SCHEDULE")}
+      />
       <div className="command-search" role="search">
         <label htmlFor="command-query" className="visually-hidden">Find a screen or action</label>
         <Icon name="search" size={20} />
@@ -699,7 +719,7 @@ export function MoreScreen({
           view-swap, so this is genuine reuse, not a forced fit. Backup/
           Archive/Restore are immediate actions, not navigation, so they
           use .equipment-row instead. */}
-      <details className="command-group" id="command-backup-panel"><summary className="disclosure-row command-group__control">
+      <details className="command-group" id="command-backup-panel" data-area="Backup & recovery"><summary className="disclosure-row command-group__control">
         <span className="command-group__name">Backup & recovery</span>
         <span className="command-group__hint">{COMMAND_GROUP_SUMMARY["Backup & recovery"].hint}</span>
       </summary>
@@ -823,7 +843,7 @@ export function MoreScreen({
 
       {CAPABILITY_GROUPS.filter((group) => group !== "Backup & recovery" && group !== "Settings" && visibleCapabilities.some((entry) => entry.group === group)).map((group) => {
         const summary = COMMAND_GROUP_SUMMARY[group];
-        return <details className="command-group" key={group}>
+        return <details className="command-group" key={group} data-area={group}>
           <summary className="disclosure-row command-group__control">
             <span className="command-group__name">{group}</span>
             <span className="command-group__hint">{summary.hint}</span>
@@ -870,7 +890,7 @@ export function MoreScreen({
       {/* DECLUTTER Drop 3 (owner ruling 2026-09-30): a Settings group.
           Nutrition Targets moved here from BODY; the SYSTEM readings moved
           inside Diagnostic detail so the main list stays short. */}
-      <details className="command-group" id="command-settings-panel"><summary className="disclosure-row command-group__control">
+      <details className="command-group" id="command-settings-panel" data-area="Settings"><summary className="disclosure-row command-group__control">
         <span className="command-group__name">Settings</span>
         <span className="command-group__hint">{COMMAND_GROUP_SUMMARY.Settings.hint}</span>
       </summary>

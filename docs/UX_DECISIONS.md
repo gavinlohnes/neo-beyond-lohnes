@@ -2831,3 +2831,12 @@ only; the share-sheet backup stays. [Brief](agent/DRIVE-BACKUP-001.md).
 **Amendment (Gavin, 2026-11-09, directly to the Builder: "One tap is okay. Merge it"):** because phone browsers only
 allow Google sign-in from a tap and tokens last about an hour, the daily Drive backup is usually one tap on TODAY's
 quiet "Drive backup due" line (BACK UP / LATER); it runs by itself when the session already holds a token.
+
+
+## MORE-HOME-001 — MORE opens like YOUR LIFE (owner approval 2026-11-09)
+
+Gavin approved rebuilding MORE's top in YOUR LIFE's guided style ("Redo more"). MORE now opens with the date,
+**YOUR SYSTEMS.**, Back up my data and Find anything, then area shortcuts that open the existing panels, then one
+status card per system (Backup, Garmin, Work schedule, Alfred, and Calendar when connected). Nothing is removed;
+every panel, command and route below is unchanged. Status shows only recorded facts. This amends MORE's primary
+information architecture. [Brief](agent/MORE-HOME-001.md).

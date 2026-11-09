@@ -197,9 +197,10 @@ describe("MORE-OPERATOR-001", () => {
     await page.viewport(width, 800);
     const screen = await render(<MoreScreen />);
     // FIELD-AUTHORITY-001: recovery is a top-level job row on the first screen, opened from the keyboard.
-    const summary = [...screen.container.querySelectorAll<HTMLElement>("summary")].find((element) => element.querySelector(".command-group__name")?.textContent?.trim() === "Backup & recovery")!;
-    expect(summary.getBoundingClientRect().bottom).toBeLessThan(600);
-    summary.focus();
+    // MORE-HOME-001: that row is now the first area under YOUR SYSTEMS.; it opens the same panel.
+    const row = screen.getByRole("button", { name: "Backup & recovery", exact: true }).element() as HTMLElement;
+    expect(row.getBoundingClientRect().bottom).toBeLessThan(600);
+    row.focus();
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: "Data safety", exact: true })).toBeVisible();
     await openCommandPanel(screen, "settings");
