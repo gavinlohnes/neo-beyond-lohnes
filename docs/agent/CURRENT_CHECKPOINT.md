@@ -1,7 +1,7 @@
 # JOURNAL-LEARN-001 — approved, building (2026-11-09)
 
 - Gavin: "Yes, build it. Then we add to it." Three parts, one PR each. Brief: [JOURNAL-LEARN-001.md](JOURNAL-LEARN-001.md).
-  Part 1 (guided note and #tags) is in review; parts 2 (tag patterns) and 3 (What BEYOND knows) are next.
+  Part 1 merged (#463). Parts 2 (tag patterns) and 3 (Personal Understanding → Patterns) are in review together.
   Gavin will add more after.
 - The 23:30 queue is complete: #458–#462 merged.
 

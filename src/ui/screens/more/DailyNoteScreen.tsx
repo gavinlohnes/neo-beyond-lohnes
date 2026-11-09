@@ -3,6 +3,7 @@ import { saveDailyNote } from "../../../application/dailyNoteCommands";
 import { getDailyNoteWorkspace } from "../../../application/dailyNoteQueries";
 import { WikiTextArea } from "../../components/WikiTextArea";
 import { describeError } from "../../errorMessage";
+import { TagPatternsSection } from "./TagPatternsSection";
 import { getTagChoices, noteTags, normalizeTag, toggleNoteTag } from "../../../application/noteTags";
 
 type Workspace = NonNullable<Awaited<ReturnType<typeof getDailyNoteWorkspace>>>;
@@ -73,5 +74,6 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
       }, (cause) => setError(describeError(cause, "Daily note could not be saved.")));
     }}>SAVE NOTE</button>{dirty && <span className="meta">Draft stays on this phone until SAVE.</span>}</div>
     {message && <p role="status">{message}</p>}{error && <p role="alert">{error}</p>}
+    <details className="more-inspection"><summary>What your tags line up with</summary><TagPatternsSection active={active} /></details>
   </section>;
 }
