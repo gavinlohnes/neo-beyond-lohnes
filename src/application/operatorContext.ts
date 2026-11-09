@@ -20,6 +20,8 @@ import { getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitSummary } from "./quitQueries";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import { sleepMinutes } from "../domain/health/measuredSeries";
+import { getDeltaKnowledge } from "./delta";
+import { deltaFacts } from "./deltaFacts";
 
 export const CONTEXT_SOURCE_LIMIT = 60;
 export const CONTEXT_TEXT_LIMIT = 20_000;
@@ -131,6 +133,9 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
       `GARMIN: ${v.lastNight ? `last main sleep ${hm(sleepMinutes(v.lastNight))}, ${date(v.lastNight.startTime)} → ${date(v.lastNight.endTime)}` : "no Garmin sleep in the last 36 hours"}; steps so far today ${v.stepsToday.length > 1 ? v.stepsToday.at(-1)!.total : "not measured"}; latest resting HR ${v.resting.at(-1)?.value ?? v.resting.at(-2)?.value ?? "not measured"}.`, "Measurement", { freshness: "Last main sleep uses the existing 36-hour wake-time window; other readings retain their source dates" })]);
     await read("Sleep comparison", () => getSleepDebt(now), (d) => d.days ? [s("SLEEP_SUMMARY", "sleep", JSON.stringify(d), "Recorded sleep comparison",
       `SLEEP OWED: ${hm(d.owedMinutes)} over the last ${d.days} days with sleep logged, against ${SLEEP_NEED_MINUTES / 60} h a day. A fixed-baseline comparison, not a medical debt or recovery verdict.`)] : []);
+    // SUPERCHARGE-001: what DELTA has learned, as counted facts. Note- and journal-based facts follow the personal opt-in.
+    await read("What DELTA has learned", () => getDeltaKnowledge(now), (k) => deltaFacts(k, options.includePersonal || options.purpose === "local").map((f) =>
+      s("DELTA", f.id, f.text, "What DELTA has learned", f.text, "Derived from records", { at: f.at })));
     await read("Recent lived days", getDaySummaries, (v) => [...v].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).map((d) => s("DAY", d.beyondDayId, JSON.stringify(d), `Recorded day ${date(d.livedDayStart)}`,
       `LAST 14 LIVED DAYS: ${dayLine(d)}`, "Derived from records", { at: d.livedDayStart, lifecycle: "Recorded history" })));
     await read("Open notes", getAllCaptureItems, (v) => v.filter((n) => n.status === "OPEN").reverse().map((n) => s("NOTE", n.id, JSON.stringify(n), "Recorded note", `OPEN NOTES: "${n.text}" (${date(n.capturedAt)}).`, "Recorded event", { at: n.capturedAt })));

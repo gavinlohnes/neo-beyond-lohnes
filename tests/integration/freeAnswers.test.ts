@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../src/persistence/db";
 import { logBodyweight, logSleep, logWater, startDay } from "../../src/application/commands";
 import { createObligation } from "../../src/application/intentCommands";
@@ -67,4 +67,15 @@ it("says how much protein is left against his own target, or that none is set (F
 
 it("next day off comes from the saved schedule, or says there is none (SHIFT-RUN-001)", async () => {
   expect(await answerQuestion("when is my next day off?")).toBe("There's no saved schedule to read that from. Set it in MORE → WORK SCHEDULE.");
+});
+
+describe("SUPERCHARGE-001 item 5: more answered free", () => {
+  it("answers steps, resting heart rate, weight and this week vs last honestly when nothing is recorded", async () => {
+    const { answerQuestion } = await import("../../src/application/helper/freeAnswers");
+    expect(await answerQuestion("How many steps today?")).toBe("No Garmin steps for today yet.");
+    expect(await answerQuestion("What's my resting heart rate?")).toBe("No Garmin resting heart rate yet.");
+    expect(await answerQuestion("What's my weight?")).toBe("No weight logged yet.");
+    expect(await answerQuestion("What weight did I squat last time?")).not.toBe("No weight logged yet.");
+    expect(await answerQuestion("Compare this week vs last week?")).toBe("No days recorded in the last two weeks.");
+  });
 });

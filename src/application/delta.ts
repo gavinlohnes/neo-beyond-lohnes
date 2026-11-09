@@ -1,7 +1,9 @@
 import { db } from "../persistence/db";
 import { getImportedSleep } from "./externalSleepQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
+import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { deriveSleepRhythm, RHYTHM_MIN_NIGHTS, type RhythmGroup } from "../engine/sleepRhythm";
+import { noteTags } from "./noteTags";
 import { compareTags, dayFacts, MIN_TAGGED_DAYS, type MeasureComparison } from "./tagPatterns";
 import type { DaySummary } from "../engine/dayLedger";
 import type { StateCheckIn } from "../domain/common/types";
@@ -19,12 +21,14 @@ import type { UnusualReading } from "../domain/health/unusual";
  */
 export type TopicState = "KNOWN" | "LEARNING" | "NOT_STARTED";
 export interface Topic { id: string; label: string; state: TopicState; have: number; need: number; unit: string }
-export type Learning =
+/** SUPERCHARGE-001 item 4: the records behind a learning, so every notebook line taps through. */
+export type Evidence = { days: { id: string; at: string }[] } | { journalId: string };
+export type Learning = { evidence?: Evidence } & (
   | { id: string; kind: "SLEEP_WINDOW"; learnedOn: string; group: RhythmGroup }
   | { id: string; kind: "TAG"; learnedOn: string; tag: string; taggedDays: number; comparison: MeasureComparison }
   | { id: string; kind: "EXPERIMENT"; learnedOn: string; what: string; days: number; outcome: string; lesson?: string }
   /** DELTA-NEXT 1: noticed, not learned — a run of days outside your own usual range, while it lasts. */
-  | { id: string; kind: "UNUSUAL"; learnedOn: string; metric: UnusualMetric; reading: UnusualReading };
+  | { id: string; kind: "UNUSUAL"; learnedOn: string; metric: UnusualMetric; reading: UnusualReading });
 export type UnusualMetric = "resting" | "sleep" | "steps";
 /** DELTA's offer to test a tag that lines up with shorter sleep. Starting it is the existing experiment command, on a tap. */
 export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number; withDays: number; withoutDays: number }
@@ -41,6 +45,7 @@ interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySumm
 /** Pure. */
 export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = [], unusual = {}, now }: Inputs): DeltaKnowledge {
   const all = deriveSleepRhythm(sleeps, summaries, now, 100_000);
+  const idsFor = (starts: Set<string>) => summaries.filter((d) => starts.has(d.livedDayStart)).sort((a, b) => b.startedAt.localeCompare(a.startedAt)).map((d) => ({ id: d.beyondDayId, at: d.startedAt }));
   const recent = deriveSleepRhythm(sleeps, summaries, now);
   const topics: Topic[] = [];
   const learnings: Learning[] = [];
@@ -50,7 +55,10 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
     const label = kind === "WORK" ? "When you sleep on work days" : "When you sleep on days off";
     topics.push({ id: `sleep-${kind}`, label, state: nights.length >= RHYTHM_MIN_NIGHTS ? "KNOWN" : nights.length ? "LEARNING" : "NOT_STARTED", have: nights.length, need: RHYTHM_MIN_NIGHTS, unit: "measured nights" });
     const group = recent.groups.find((g) => g.kind === kind) ?? all.groups.find((g) => g.kind === kind);
-    if (group && nights.length >= RHYTHM_MIN_NIGHTS) learnings.push({ id: `sleep-${kind}`, kind: "SLEEP_WINDOW", learnedOn: nights[RHYTHM_MIN_NIGHTS - 1]!.livedDayStart, group });
+    if (group && nights.length >= RHYTHM_MIN_NIGHTS) {
+      const recentStarts = new Set(recent.nights.filter((n) => n.kind === kind).map((n) => n.livedDayStart));
+      learnings.push({ id: `sleep-${kind}`, kind: "SLEEP_WINDOW", learnedOn: nights[RHYTHM_MIN_NIGHTS - 1]!.livedDayStart, group, evidence: { days: idsFor(recentStarts.size ? recentStarts : new Set(nights.map((n) => n.livedDayStart))) } });
+    }
   }
 
   const { ready, learning } = compareTags(dayFacts(notes, summaries, checkIns));
@@ -58,7 +66,9 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
   for (const p of ready) {
     topics.push({ id: `tag-${p.tag}`, label: `What #${p.tag} lines up with`, state: p.comparisons.length ? "KNOWN" : "LEARNING", have: p.taggedDays, need: MIN_TAGGED_DAYS, unit: "tagged days" });
     const first = p.comparisons[0], learnedOn = learnedOnFor(p.tag);
-    if (first && learnedOn) learnings.push({ id: `tag-${p.tag}`, kind: "TAG", learnedOn, tag: p.tag, taggedDays: p.taggedDays, comparison: first });
+    const tagged = new Set(notes.filter((n) => noteTags(n.text).includes(p.tag)).map((n) => n.dayId));
+    const evidence = { days: summaries.filter((d) => tagged.has(d.beyondDayId)).sort((a, b) => b.startedAt.localeCompare(a.startedAt)).map((d) => ({ id: d.beyondDayId, at: d.startedAt })) };
+    if (first && learnedOn) learnings.push({ id: `tag-${p.tag}`, kind: "TAG", learnedOn, tag: p.tag, taggedDays: p.taggedDays, comparison: first, evidence });
   }
   for (const l of learning) topics.push({ id: `tag-${l.tag}`, label: `What #${l.tag} lines up with`, state: "LEARNING", have: l.taggedDays, need: MIN_TAGGED_DAYS, unit: "tagged days" });
   if (!ready.length && !learning.length) topics.push({ id: "tags", label: "What your tags line up with", state: "NOT_STARTED", have: 0, need: MIN_TAGGED_DAYS, unit: "tagged days" });
@@ -70,7 +80,7 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
   // DELTA-EXPERIMENTS: a finished experiment is something learned, in your own words (the outcome you chose).
   const finished = experiments.filter((e) => e.entry.status === "REVIEWED" && e.entry.outcome);
   const running = activeExperiments(experiments, now);
-  for (const e of finished) learnings.push({ id: `exp-${e.entry.id}`, kind: "EXPERIMENT", learnedOn: e.entry.reviewedAt ?? e.to.toISOString(), what: e.what, days: e.days, outcome: e.entry.outcome!, ...(e.entry.lesson ? { lesson: e.entry.lesson } : {}) });
+  for (const e of finished) learnings.push({ evidence: { journalId: e.entry.id }, id: `exp-${e.entry.id}`, kind: "EXPERIMENT", learnedOn: e.entry.reviewedAt ?? e.to.toISOString(), what: e.what, days: e.days, outcome: e.entry.outcome!, ...(e.entry.lesson ? { lesson: e.entry.lesson } : {}) });
   topics.push({ id: "experiments", label: "What your experiments showed", state: finished.length ? "KNOWN" : running.length ? "LEARNING" : "NOT_STARTED", have: finished.length, need: 1, unit: finished.length === 1 ? "finished experiment" : "finished experiments" });
 
   // Offer to test the tag with the biggest next-day sleep gap, once, while no experiment is running.
@@ -86,7 +96,8 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
   for (const metric of ["resting", "sleep", "steps"] as const) {
     const reading = unusual[metric];
     // Dated at the run's FIRST day, so a run is announced once and an ongoing run doesn't return after GOT IT.
-    if (reading?.days.length) learnings.push({ id: `unusual-${metric}-${reading.days[0]!.from}`, kind: "UNUSUAL", learnedOn: new Date(reading.days[0]!.from).toISOString(), metric, reading });
+    if (reading?.days.length) learnings.push({ id: `unusual-${metric}-${reading.days[0]!.from}`, kind: "UNUSUAL", learnedOn: new Date(reading.days[0]!.from).toISOString(), metric, reading,
+      evidence: { days: idsFor(new Set(reading.days.map((d) => mostRecentBoundaryAtOrBefore(new Date(d.from)).toISOString()))) } });
   }
 
   // DELTA-NEXT 6: what lines up with your good weeks — silent until enough judged weeks exist.

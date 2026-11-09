@@ -23,7 +23,9 @@ const send = async (screen: Awaited<ReturnType<typeof show>>, text: string, wait
 };
 const optIn = async (screen: Awaited<ReturnType<typeof show>>) => {
   await screen.getByText("CONTEXT & SOURCES", { exact: true }).click();
-  await screen.getByRole("checkbox", { name: "Include my Missions, confirmed personal memory, recent daily notes and synced calendar events in this conversation" }).click();
+  // SUPERCHARGE-001: DELTA's context is disclosed — always-sent measurement learnings, and note-based patterns under the opt-in.
+  await expect.element(screen.getByText(/what DELTA has learned from your measurements \(sleep timing, unusual readings\)/)).toBeInTheDocument();
+  await screen.getByRole("checkbox", { name: "Include my Missions, confirmed personal memory, recent daily notes, synced calendar events and DELTA's patterns from my notes and experiments in this conversation" }).click();
 };
 beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 9, 31, 17));
@@ -87,7 +89,7 @@ it("removes superseded text from the actual next request and resets history afte
   await send(screen, "Use my current constraint"); await expect.poll(() => requests.length).toBe(2);
   expect(JSON.stringify(requests.at(-1))).not.toContain("Keep my first morning quiet");
   expect(JSON.stringify(requests.at(-1))).toContain("Keep my second morning quiet");
-  await screen.getByRole("checkbox", { name: "Include my Missions, confirmed personal memory, recent daily notes and synced calendar events in this conversation" }).click();
+  await screen.getByRole("checkbox", { name: "Include my Missions, confirmed personal memory, recent daily notes, synced calendar events and DELTA's patterns from my notes and experiments in this conversation" }).click();
   responses.push(() => response("", { name: "search_records", input: { query: "morning quiet" } }), () => response("No matching active context."));
   await send(screen, "Search for morning quiet"); await expect.poll(() => requests.length).toBe(4);
   expect(JSON.stringify(requests.at(-1))).not.toContain("Keep my second morning quiet");
@@ -206,7 +208,7 @@ it("CONNECTED-001: the opt-in names daily notes and calendar, counts them, and s
   responses.push(() => response("Noted."));
   await send(screen, "What's on tonight?");
   expect(JSON.stringify(requests.at(-1))).not.toContain("Quiet evening planned with Sam");
-  await screen.getByRole("checkbox", { name: "Include my Missions, confirmed personal memory, recent daily notes and synced calendar events in this conversation" }).click();
+  await screen.getByRole("checkbox", { name: "Include my Missions, confirmed personal memory, recent daily notes, synced calendar events and DELTA's patterns from my notes and experiments in this conversation" }).click();
   responses.push(() => response("Noted."));
   await send(screen, "What's on tonight?");
   expect(JSON.stringify(requests.at(-1))).toContain("Quiet evening planned with Sam");

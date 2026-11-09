@@ -37,6 +37,8 @@ describe("DELTA", () => {
     expect(k.topics.find((t) => t.id === "sleep-OFF")?.state).toBe("NOT_STARTED");
     const learned = k.learnings.find((l) => l.id === "sleep-WORK")!;
     expect(learned.learnedOn).toBe(summaries[2]!.livedDayStart);
+    // SUPERCHARGE 4: the line taps through to the nights behind it.
+    expect(learned.evidence).toEqual({ days: [23, 22, 21, 20].map((i) => ({ id: `d${i}`, at: startOf(i).toISOString() })) });
     expect(describeLearning(learned)).toMatch(/^Learned when you sleep\. Work days: asleep around 7:00 pm, up around 2:00 am/);
     expect(newLearnings(k, summaries[2]!.livedDayStart)).toEqual([]);
     expect(newLearnings(k, summaries[1]!.livedDayStart)).toHaveLength(1);

@@ -55,7 +55,8 @@ export function whatMovesTheNeedle(summaries: readonly DaySummary[], checkIns: r
   }
   const noted = (list: typeof judged) => list.filter((w) => (notedDays.get(w.week) ?? 0) > 0);
   const goodNoted = noted(goodWeeks), otherNoted = noted(otherWeeks);
-  if (goodNoted.length && otherNoted.length) for (const [tag, weeks] of tagDays) {
+  // A tag ranks only when both sides rest on at least 3 weeks with notes (the 3-day floor used elsewhere).
+  if (goodNoted.length >= 3 && otherNoted.length >= 3) for (const [tag, weeks] of tagDays) {
     const share = (list: typeof judged) => list.reduce((n, w) => n + (weeks.get(w.week) ?? 0), 0) / list.reduce((n, w) => n + notedDays.get(w.week)!, 0);
     const h = { habit: `#${tag}`, unit: "SHARE_OF_NOTED_DAYS" as const, good: share(goodNoted), other: share(otherNoted), goodWeeks: goodNoted.length, otherWeeks: otherNoted.length };
     if (Math.abs(h.good - h.other) >= MIN_GAP_SHARE) habits.push(h);

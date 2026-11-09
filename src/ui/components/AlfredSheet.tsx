@@ -12,6 +12,7 @@ import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMem
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
 import { readHelperContext } from "../../application/helper/helperContext";
 import { answerQuestion } from "../../application/helper/freeAnswers";
+import { deltaAnswer } from "./DeltaViews";
 import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
@@ -140,7 +141,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     let route: "alfred" | "done" = "done";
     try {
       if (isQuestion(q)) {
-        const answer = await answerQuestion(q);
+        const answer = (await deltaAnswer(q).catch(() => null)) ?? await answerQuestion(q);
         if (answer) { setText(""); setTurns((all) => [...all, { role: "user", text: q }, { role: "alfred", free: true, text: answer }]); return; }
         // Not something the helper answers: Alfred's path reports plainly if he can't be reached.
         route = "alfred"; return;

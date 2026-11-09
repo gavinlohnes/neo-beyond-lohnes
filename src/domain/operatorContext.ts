@@ -2,7 +2,7 @@
 export type ContextKind = "MISSION" | "MEMORY" | "ALFRED_MEMORY" | "PERSONAL_FACT" | "DAY" | "OBLIGATION" | "SCHEDULE"
   | "PROJECT" | "ROUTINE" | "CURRENT_DAY" | "WORK" | "CHECK_IN" | "FOOD" | "QUIT"
   | "RECOMMENDATION" | "TARGETS" | "FORECAST" | "MEASURED" | "SLEEP_SUMMARY" | "NOTE" | "SAVED_MEAL"
-  | "DAILY_NOTE" | "CALENDAR";
+  | "DAILY_NOTE" | "CALENDAR" | "DELTA";
 export type ContextClassification = "Operator statement" | "Recorded event" | "Measurement" | "Configured forecast" | "Derived from records";
 export interface ContextSource {
   key: string; kind: ContextKind; id: string; revision: string; title: string; text: string;

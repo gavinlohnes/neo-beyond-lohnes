@@ -4,6 +4,7 @@ import { startExperiment } from "../../application/tryExperiment";
 import { hoursMinutes } from "../screens/health/healthFormat";
 import { describeError } from "../errorMessage";
 import { describeUnusual } from "../screens/today/unusualCopy";
+import { openRecord } from "../openRecordEvent";
 import { describeGroup } from "../screens/today/SleepRhythm";
 import { describeComparison } from "../screens/more/TagPatternsSection";
 
@@ -60,10 +61,21 @@ export function DeltaPanel({ active }: { active: boolean }) {
     </section>}
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
-      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}</li>)}</ol>
+      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}<Proof learning={l} /></li>)}</ol>
       : <p className="meta">Nothing learned yet. Measured sleep, tags in your daily note and check-ins teach me.</p>}
     <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
+}
+
+/** SUPERCHARGE-001 item 4: every notebook line taps through to the records behind it. */
+function Proof({ learning }: { learning: Learning }) {
+  const e = learning.evidence;
+  if (!e) return null;
+  if ("journalId" in e) return <button type="button" className="backup-due__later" onClick={() => openRecord({ kind: "JOURNAL", id: e.journalId })}>OPEN IN JOURNAL</button>;
+  if (!e.days.length) return null;
+  return <details className="delta-proof"><summary className="meta">Show the {e.days.length} {e.days.length === 1 ? "day" : "days"} behind this</summary>
+    <div className="button-row">{e.days.slice(0, 30).map((d) => <button type="button" key={d.id} className="btn-secondary" aria-label={`Open ${new Date(d.at).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}`} onClick={() => openRecord({ kind: "DAY", id: d.id })}>{new Date(d.at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</button>)}</div>
+  </details>;
 }
 
 const SEEN = "beyond:deltaSeen";
@@ -179,4 +191,49 @@ export function DeltaAhead({ active }: { active: boolean }) {
       : <p className="meta">Save your work schedule and I can look ahead at your next run.</p>}
     <p className="meta">A forecast from your schedule and your own records. I suggest; I never book anything or change advice.</p>
   </section>;
+}
+
+/**
+ * SUPERCHARGE-001 item 1: ask DELTA in plain words, answered free and offline from what it has learned. Returns
+ * null for anything else, so the free helper and Alfred keep their usual routes. Same counted words as the
+ * notebook; "not yet" is a valid answer.
+ */
+export async function deltaAnswer(question: string): Promise<string | null> {
+  const q = question.toLowerCase().replace(/[?!.]+$/, "").trim();
+  const asksLearned = /\b(what (have you|has delta|did you) learn(ed|t)?|what do(es)? (you|delta) know about me|what has beyond learned)\b/.test(q);
+  const asksUnusual = /\b(anything unusual|what'?s unusual|anything off|out of (my )?(usual )?range)\b/.test(q);
+  const tagAsk = /#([a-z][a-z0-9-]{0,31})/.exec(q) ?? (/\bwhat does (?:my )?([a-z][a-z0-9-]{1,31}) (?:line up with|do to me|affect)\b/.exec(q));
+  const asksSleepTime = /\bwhen do i (usually )?(sleep|go to (bed|sleep)|fall asleep|wake( up)?)\b/.test(q);
+  const asksExperiment = /\b(my )?experiments?\b/.test(q) && /\b(how|what|did|show|go|went|result)\b/.test(q);
+  const asksNeedle = /\b(good weeks|moves? the needle|best weeks)\b/.test(q);
+  if (!asksLearned && !asksUnusual && !tagAsk && !asksSleepTime && !asksExperiment && !asksNeedle) return null;
+  const k = await getDeltaKnowledge();
+  const line = (l: Learning) => describeLearning(l);
+  if (asksLearned) {
+    const known = k.topics.filter((t) => t.state === "KNOWN").length;
+    return [`DELTA knows ${known} of ${k.topics.length} things so far.`, ...k.learnings.slice(0, 3).map(line), k.learnings.length > 3 ? `${k.learnings.length - 3} more in DELTA's notebook (Review → Personal Understanding).` : ""].filter(Boolean).join("\n");
+  }
+  if (asksUnusual) {
+    const u = k.learnings.filter((l) => l.kind === "UNUSUAL");
+    return u.length ? u.map(line).join("\n") : "Nothing unusual for you right now. DELTA only speaks when a reading stays outside your usual range for several days.";
+  }
+  if (tagAsk) {
+    const tag = tagAsk[1]!.replace(/-/g, "").length ? tagAsk[1]! : "";
+    const learned = k.learnings.find((l) => l.kind === "TAG" && l.tag === tag);
+    if (learned) return line(learned);
+    const topic = k.topics.find((t) => t.id === `tag-${tag}`);
+    return topic ? `Still learning #${tag}: ${topic.have} of ${topic.need} ${topic.unit}.` : `You haven't tagged #${tag} yet. Tag it in your daily note and DELTA will compare.`;
+  }
+  if (asksSleepTime) {
+    const s = k.learnings.filter((l) => l.kind === "SLEEP_WINDOW");
+    return s.length ? s.map(line).join("\n") : "Not enough measured Garmin nights yet. DELTA needs 3 on work days or days off.";
+  }
+  if (asksExperiment) {
+    const done = k.learnings.filter((l) => l.kind === "EXPERIMENT");
+    const t = k.topics.find((x) => x.id === "experiments");
+    return done.length ? done.map(line).join("\n") : t?.state === "LEARNING" ? "Your experiment is still running. Its results show in your Journal when it ends." : "No finished experiments yet. Start one from your Journal, or from DELTA's suggestion.";
+  }
+  const n = k.needle;
+  return n.ready ? (n.habits.length ? n.habits.map(describeNeedle).join("\n") : "Nothing you tag or train differs much between your good weeks and the rest yet.")
+    : `Not enough weeks yet: ${n.judgedWeeks} of ${n.need} weeks with 3+ check-ins.`;
 }
