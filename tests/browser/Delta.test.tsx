@@ -16,7 +16,7 @@ describe("DELTA-GROWS-001", () => {
     const screen = await render(<PersonalUnderstanding active />);
     await screen.getByText("PERSONAL UNDERSTANDING").click();
     await expect.element(screen.getByText("DELTA · WHAT I KNOW ABOUT YOU", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("I know 0 of 6 things so far. I learn from what you log; I never guess.")).toBeVisible();
+    await expect.element(screen.getByText("I know 0 of 7 things so far. I learn from what you log; I never guess.")).toBeVisible();
     await expect.element(screen.getByText(/Nothing learned yet\./)).toBeVisible();
     await expect.element(screen.getByText("DELTA · LOOKING AHEAD")).toBeVisible();
     await expect.element(screen.getByText("A forecast from your schedule and your own records. I suggest; I never book anything or change advice.")).toBeVisible();

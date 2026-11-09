@@ -22,7 +22,7 @@ describe("DELTA", () => {
   it("starts knowing nothing, and says exactly what would teach it", () => {
     const k = deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], now: NOW });
     expect(k.learnings).toEqual([]);
-    expect(k.topics.map((t) => [t.id, t.state])).toEqual([["sleep-WORK", "NOT_STARTED"], ["sleep-OFF", "NOT_STARTED"], ["tags", "NOT_STARTED"], ["check-ins", "NOT_STARTED"], ["training", "NOT_STARTED"], ["experiments", "NOT_STARTED"]]);
+    expect(k.topics.map((t) => [t.id, t.state])).toEqual([["sleep-WORK", "NOT_STARTED"], ["sleep-OFF", "NOT_STARTED"], ["tags", "NOT_STARTED"], ["check-ins", "NOT_STARTED"], ["training", "NOT_STARTED"], ["experiments", "NOT_STARTED"], ["needle", "NOT_STARTED"]]);
     expect(k.suggestion).toBeNull();
     expect(deltaQuestion(k, "OFF").text).toBe("What did you do for yourself today?");
     expect(deltaQuestion(k, "WORK").text).toBe("What's one thing that shaped today? Tag it below.");

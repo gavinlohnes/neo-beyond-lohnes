@@ -8,6 +8,7 @@ import type { StateCheckIn } from "../domain/common/types";
 import type { ExternalSleep } from "../domain/health/sleepImport";
 import { activeExperiments, getExperiments, type Experiment } from "./tryExperiment";
 import { getMeasuredSnapshot } from "./measuredQueries";
+import { whatMovesTheNeedle, type Needle } from "./needle";
 import type { UnusualReading } from "../domain/health/unusual";
 
 /**
@@ -27,7 +28,7 @@ export type Learning =
 export type UnusualMetric = "resting" | "sleep" | "steps";
 /** DELTA's offer to test a tag that lines up with shorter sleep. Starting it is the existing experiment command, on a tap. */
 export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number; withDays: number; withoutDays: number }
-export interface DeltaKnowledge { topics: Topic[]; learnings: Learning[]; suggestion: ExperimentSuggestion | null }
+export interface DeltaKnowledge { topics: Topic[]; learnings: Learning[]; suggestion: ExperimentSuggestion | null; needle: Needle }
 /** A gap this size (next-day sleep) is worth testing; smaller reads as about the same. */
 export const SUGGEST_SLEEP_GAP_MINUTES = 30;
 export const SUGGESTED_EXPERIMENT_DAYS = 14;
@@ -88,8 +89,12 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
     if (reading?.days.length) learnings.push({ id: `unusual-${metric}-${reading.days[0]!.from}`, kind: "UNUSUAL", learnedOn: new Date(reading.days[0]!.from).toISOString(), metric, reading });
   }
 
+  // DELTA-NEXT 6: what lines up with your good weeks — silent until enough judged weeks exist.
+  const needle = whatMovesTheNeedle(summaries, checkIns, notes);
+  topics.push({ id: "needle", label: "What lines up with your good weeks", state: needle.ready ? "KNOWN" : needle.judgedWeeks ? "LEARNING" : "NOT_STARTED", have: needle.judgedWeeks, need: needle.ready ? needle.judgedWeeks : needle.need, unit: "weeks with 3+ check-ins" });
+
   learnings.sort((a, b) => b.learnedOn.localeCompare(a.learnedOn));
-  return { topics, learnings, suggestion };
+  return { topics, learnings, suggestion, needle };
 }
 
 /**

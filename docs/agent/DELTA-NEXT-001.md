@@ -13,7 +13,7 @@
 | 7 | **One-tap answer:** ROUGH / OK / GOOD under DELTA's question draft "<question> Good." into the note; SAVE NOTE still saves | this PR (with 1) |
 | 2 | **Shift-run forecast:** DELTA · LOOKING AHEAD gives the next work run from your schedule, then what past runs looked like at shift 1–3 (ROTATION-001 positions, with counts) | this PR |
 | 3 | **Best windows:** the next days off plus the day off you've trained on most ("trained on N of M"); suggests, never books | this PR |
-| 6 | What moves the needle (data-first gate: months of data) | next |
+| 6 | **What moves the needle (Protected, approved):** once 9 weeks have 3+ check-ins, DELTA compares days per week of each #tag and of training in your top-third energy weeks against the rest, biggest gap first, with week counts | PR 2 |
 | 8 | Rotation field test #402 | waits for Gavin |
 
 ## Item 1
@@ -42,3 +42,16 @@ tags use the note's tag row (#stressed added to the suggestions), so TODAY's che
   `mostTrainedDayOff`, already shown in Review's rotation map, gathered into DELTA's view.
 - Labelled "A forecast from your schedule and your own records. I suggest; I never book anything or change advice."
 - **Test:** `tests/browser/Delta.test.tsx` checks that the section and its forecast label render.
+
+## Item 6 (Protected: it ranks; approved by "All")
+- **Good weeks** are your top third by average check-in energy, among weeks with at least 3 check-ins.
+- **Training** is days per week over all judged weeks; it shows at a gap of 0.5 days or more.
+- **A #tag** is the share of your *noted* days that carried it, over only the judged weeks that have notes, so a
+  week without notes is unknown, never zero, and writing more notes never earns credit. It shows at a gap of 15
+  points or more: "#sauna: on 57% of your noted days in good weeks (3 weeks with notes), against 14% in your other
+  weeks (6)."
+- The top 5 by gap are shown, each with its week counts.
+- **Data first:** nothing until 9 judged weeks exist. Until then the map says "Still learning: n of 9 weeks with 3+
+  check-ins".
+- "Patterns across your weeks, not proof. Ranked by the size of the difference. Nothing here changes advice."
+- **Test:** `tests/integration/needle.test.ts` covers the gate and the exact comparison and ordering.
