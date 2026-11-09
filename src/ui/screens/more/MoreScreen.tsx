@@ -672,7 +672,7 @@ export function MoreScreen({
         onArea={openArea}
         onGarmin={() => setView("HEALTH_IMPORT")}
         onSchedule={() => setView("WORK_SCHEDULE")}
-        onDriveSettings={() => { openArea("Backup & recovery"); const auto = [...(menuRef.current?.querySelectorAll<HTMLDetailsElement>("details.more-inspection") ?? [])].find((d) => d.querySelector("summary")?.textContent?.startsWith("Automatic backups")); if (auto) { auto.open = true; auto.scrollIntoView({ block: "start" }); } }}
+        onDriveSettings={() => { openArea("Backup & recovery"); const auto = menuRef.current?.querySelector<HTMLDetailsElement>('details[data-panel="automatic-backups"]'); if (auto) { auto.open = true; auto.scrollIntoView({ block: "start" }); } }}
       />
       <div className="command-search" role="search">
         <label htmlFor="command-query" className="visually-hidden">Find a screen or action</label>
@@ -747,7 +747,7 @@ export function MoreScreen({
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
         </div>
 
-        <details className="more-inspection">
+        <details className="more-inspection" data-panel="automatic-backups">
           <summary>Automatic backups & file check</summary>
           <AutoBackupSettings />
         </details>

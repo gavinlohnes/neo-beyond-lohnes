@@ -23,7 +23,7 @@ describe("MORE-HOME-001", () => {
     await expect.element(screen.getByRole("article", { name: "Backup" }).getByText("No backup on record yet.")).toBeVisible();
     await expect.element(screen.getByRole("article", { name: "Garmin" }).getByText("No Garmin data imported yet.")).toBeVisible();
     await expect.element(screen.getByRole("article", { name: "Alfred" }).getByText(/No Claude key on this phone/)).toBeVisible();
-    await expect.element(screen.getByRole("article", { name: "Work schedule" }).getByText(/^Not saved yet/)).toBeVisible();
+    await expect.element(screen.getByRole("article", { name: "Work schedule" }).getByText("Not saved yet. BEYOND won't decide your work days from a schedule until you save yours.", { exact: true })).toBeVisible();
 
     const plan = document.querySelector<HTMLDetailsElement>('details[data-area="Plan"]')!;
     expect(plan.open).toBe(false);

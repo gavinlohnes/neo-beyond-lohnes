@@ -118,7 +118,7 @@ export function describeSchedule(overview: Overview): string {
   if (overview === "ERROR") return UNREAD;
   if (!overview) return "Reading…";
   if (overview.scheduleSaved === undefined) return "Couldn't read your schedule.";
-  return overview.scheduleSaved ? "Your saved shifts decide work days and days off." : "Not saved yet. BEYOND is using its built-in rotation; open it to save yours.";
+  return overview.scheduleSaved ? "Your saved shifts decide work days and days off." : "Not saved yet. BEYOND won't decide your work days from a schedule until you save yours.";
 }
 
 export function describeGarmin(overview: Overview, now: Date): string {
