@@ -8,11 +8,13 @@ import { SleepEvidence } from "../health/ImportedSleepEvidence";
 import { hoursMinutes } from "../health/healthFormat";
 import { BarChart, Hypnogram, STAGE_COLORS, describeGarminAsOf, describeUsual, SyncGarminLink, UnusualNote } from "./MeasuredSheet";
 import { getDaySummaries } from "../../../application/dayLedgerQueries";
+import { sleepRhythmFrom, type SleepRhythm } from "../../../application/sleepRhythmQueries";
+import { SleepRhythmSection } from "./SleepRhythm";
 import { moveSleepWindow, sleepWindow, sleepWindowValues, withLoggedSleep, type SleepZoom } from "./sleepPeriods";
 
 const date = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const month = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfiled: Map<string, GarminSleepUnfiled>; logged: Map<string, number> };
+type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfiled: Map<string, GarminSleepUnfiled>; logged: Map<string, number>; rhythm: SleepRhythm };
 
 /** NAV-001: navigation over existing measured evidence, never a new sleep ledger or guidance. */
 export function SleepMetricSheet({ open, onClose, onAllRecords }: {
@@ -39,7 +41,7 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
     void Promise.all([getMeasuredSnapshot(), getImportedSleep(), getUnfiledGarminSleep(), getDaySummaries()]).then(([snapshot, records, unfiled, summaries]) => {
       if (cancelled) return;
       const logged = new Map(summaries.flatMap((d) => d.sleep.primaryMinutes === undefined ? [] : [[d.beyondDayId, d.sleep.primaryMinutes] as const]));
-      setData({ snapshot, records, unfiled, logged }); setAnchor(snapshot.current.from);
+      setData({ snapshot, records, unfiled, logged, rhythm: sleepRhythmFrom(records, summaries) }); setAnchor(snapshot.current.from);
     }).catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [open, attempt]);
@@ -95,6 +97,7 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
       {zoom === "D" && nights.slice(0, limit).map((r) => <SleepEvidence key={r.id} revision={r} unfiled={data.unfiled.get(r.recordKey)} />)}
       {zoom === "D" && nights.length > limit && <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 10)}>SHOW MORE</button>}
       {zoom !== "D" && <p className="meta">Tap a bar to inspect {zoom === "Y" ? "that month" : "that night"}. Swipe right for earlier, left for later.</p>}
+      <SleepRhythmSection rhythm={data.rhythm} />
       <p className="meta">Chart: longest Garmin session per BEYOND day; a night Garmin missed shows the main sleep you logged. Corrections can differ; inspect all sleep records to review or correct it. Nothing here changes advice.</p>
       <p className="meta">Chart history starts {date(earliest)}. {bounds.from < earliest ? "This period has partial history." : ""}</p>
       {data.snapshot.garminAsOf !== null && <p className="meta">{describeGarminAsOf(data.snapshot.garminAsOf, data.snapshot.readAt)}</p>}
