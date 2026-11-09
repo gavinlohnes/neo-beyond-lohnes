@@ -28,3 +28,9 @@
 .sys-area-nav span { min-width: 0; overflow-wrap: anywhere; }
 @media (min-width: 760px) { .sys-area-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 760px) { .sys-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; } }
+/* TRAIN-HOME-001: the compact version, so START WORKOUT stays on the first phone screen. */
+.train-home { margin-bottom: 12px; }
+.train-home .sys-hero { padding: 8px 0 12px; }
+.train-home .sys-hero h2 { font-size: clamp(36px, 9vw, 64px); }
+.train-home .sys-intro { margin: 8px 0 0; font-size: 18px; }
+.train-home .sys-eyebrow { margin-bottom: 6px; }

@@ -1,7 +1,7 @@
 # Queue for the 23:30 session (Gavin's picks, 2026-11-09: "A, B, 25, 5, C")
 
 In order:
-1. **A. TRAIN-HOME-001:** TRAIN in the YOUR LIFE / MORE / DATA style (date, title, Start workout, shortcuts;
+1. **A. TRAIN-HOME-001 — in review.** TRAIN in the YOUR LIFE / MORE / DATA style (date, title, Start workout, shortcuts;
    nothing removed). Protected (TRAIN IA). **Approved directly by Gavin by picking "A".** Keep the active-workout
    view untouched.
 2. **B. DATA-HOME-001 tidy-ups** (#456 review notes): extract `openComposition(view)` / `openRotation()`, rAF for
