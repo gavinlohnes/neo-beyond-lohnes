@@ -2456,6 +2456,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         )}
         <MealPlanPanel />
       </div>);
+  /** DATA-HOME-001: one handler per view, shared by DATA's buttons and its shortcuts so they can't drift. */
+  function openComposition(view: "photos" | "measurements") { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }
+  function openRotation() { setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" }); }
   if (overviewOnly) return <div className="screen body-field body-home">
     <SleepMetricSheet open={sleepMetricOpen} onClose={() => setSleepMetricOpen(false)} onAllRecords={() => { setSleepMetricOpen(false); showProgress("sleep"); }} />
     <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
@@ -2464,10 +2467,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <div hidden={progressOpen || pictureOpen}><DataHome busy={busy || foodSearchBusy} onLogWeight={onLogWeight} onSleep={() => setSleepMetricOpen(true)} shortcuts={[
       { label: "Weight", onOpen: () => showProgress("weight") },
       ...(onOpenTrainingRecords ? [{ label: "Training records", onOpen: onOpenTrainingRecords }] : []),
-      ...(([["photos", "Photos"], ["measurements", "Measurements"]] as const).map(([view, label]) => ({ label, onOpen: () => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); } }))),
+      ...(([["photos", "Photos"], ["measurements", "Measurements"]] as const).map(([view, label]) => ({ label, onOpen: () => openComposition(view) }))),
       { label: "Whole picture", onOpen: openPicture },
-      { label: "Your rotation", onOpen: () => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" }) },
-      { label: "History", onOpen: () => { setHealthHistoryOpen(true); document.querySelector<HTMLElement>('section[aria-label="History"]')?.scrollIntoView({ block: "start" }); } },
+      { label: "Your rotation", onOpen: openRotation },
+      { label: "History", onOpen: () => { setHealthHistoryOpen(true); requestAnimationFrame(() => document.querySelector<HTMLElement>('section[aria-label="History"]')?.scrollIntoView({ block: "start" })); } },
     ]} /></div>
     {/* CAVE-DATA (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
     <div hidden={progressOpen || pictureOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
@@ -2488,10 +2491,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         <div role="group" aria-labelledby="data-more-progress" className="data-more-progress">
         <header className="bx-head"><div><p className="bx-eyebrow">MORE PROGRESS</p><h3 id="data-more-progress" className="bx-title">Records, photos and patterns</h3></div></header>
           <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
-          <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); }}>{label}</button>)}</div>
+          <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => openComposition(view)}>{label}</button>)}</div>
           <div className="body-progress-pair" aria-label="Patterns">
             <button type="button" className="btn-secondary body-progress-card" onClick={openPicture}>WHOLE PICTURE</button>
-            <button type="button" className="btn-secondary body-progress-card" onClick={() => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" })}>YOUR ROTATION</button>
+            <button type="button" className="btn-secondary body-progress-card" onClick={openRotation}>YOUR ROTATION</button>
           </div>
         </div>
       </section>
