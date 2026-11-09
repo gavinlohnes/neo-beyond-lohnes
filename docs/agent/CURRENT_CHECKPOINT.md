@@ -1,4 +1,4 @@
-# DELTA-GROWS-001 — approved, in review (2026-11-09)
+# DELTA-GROWS-001 — merged (#465); DELTA × experiments in review (2026-11-09)
 
 - Gavin: "Yes, build DELTA. Yes, with the TODAY line." The notebook, what DELTA knows, one question a day, and the
   TODAY line. Brief: [DELTA-GROWS-001.md](DELTA-GROWS-001.md). JOURNAL-LEARN-001 is complete (#463, #464).

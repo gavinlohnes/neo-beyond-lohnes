@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { PersonalUnderstanding } from "../../src/ui/screens/review/PersonalUnderstanding";
 import { DailyNoteScreen } from "../../src/ui/screens/more/DailyNoteScreen";
-import { DeltaNewsLine } from "../../src/ui/components/DeltaViews";
+import { DeltaNewsLine, ExperimentOffer } from "../../src/ui/components/DeltaViews";
 import { startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 
@@ -16,7 +16,7 @@ describe("DELTA-GROWS-001", () => {
     const screen = await render(<PersonalUnderstanding active />);
     await screen.getByText("PERSONAL UNDERSTANDING").click();
     await expect.element(screen.getByText("DELTA · WHAT I KNOW ABOUT YOU", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("I know 0 of 5 things so far. I learn from what you log; I never guess.")).toBeVisible();
+    await expect.element(screen.getByText("I know 0 of 6 things so far. I learn from what you log; I never guess.")).toBeVisible();
     await expect.element(screen.getByText(/Nothing learned yet\./)).toBeVisible();
   });
 
@@ -28,6 +28,18 @@ describe("DELTA-GROWS-001", () => {
     await q.getByRole("button", { name: "ANSWER IN NOTE" }).click();
     await expect.poll(() => (screen.container.querySelector("textarea") as HTMLTextAreaElement | null)?.value ?? "").toMatch(/^(What|How)[^\n]+\n$/);
     expect(await db.dailyNotes.get(day.id)).toBeUndefined();
+  });
+
+  it("DELTA's experiment offer starts a real 14-day experiment only on the tap", async () => {
+    await startDay();
+    const before = await db.decisionJournalEntries.count();
+    const screen = await render(<ExperimentOffer suggestion={{ tag: "latecoffee", what: "Skip #latecoffee", days: 14, minutesLess: 70, taggedDays: 5 }} />);
+    await expect.element(screen.getByText(/On 5 days with #latecoffee, the sleep you logged the next day was 1h 10m shorter\. That lines up; it doesn't prove a cause\./)).toBeVisible();
+    expect(await db.decisionJournalEntries.count()).toBe(before);
+    await screen.getByRole("button", { name: "START 14-DAY TEST" }).click();
+    await expect.element(screen.getByText(/Started: "Skip #latecoffee" for 14 days/)).toBeVisible();
+    const entries = await db.decisionJournalEntries.toArray();
+    expect(entries.filter((e) => e.title === "Try: Skip #latecoffee")).toHaveLength(1);
   });
 
   it("TODAY's DELTA line stays silent when nothing new was learned", async () => {

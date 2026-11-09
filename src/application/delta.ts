@@ -6,6 +6,7 @@ import { compareTags, dayFacts, MIN_TAGGED_DAYS, type MeasureComparison } from "
 import type { DaySummary } from "../engine/dayLedger";
 import type { StateCheckIn } from "../domain/common/types";
 import type { ExternalSleep } from "../domain/health/sleepImport";
+import { activeExperiments, getExperiments, type Experiment } from "./tryExperiment";
 
 /**
  * DELTA-GROWS-001: DELTA's view of what BEYOND has learned about you, and how it grew. Everything is derived
@@ -17,16 +18,22 @@ export type TopicState = "KNOWN" | "LEARNING" | "NOT_STARTED";
 export interface Topic { id: string; label: string; state: TopicState; have: number; need: number; unit: string }
 export type Learning =
   | { id: string; kind: "SLEEP_WINDOW"; learnedOn: string; group: RhythmGroup }
-  | { id: string; kind: "TAG"; learnedOn: string; tag: string; taggedDays: number; comparison: MeasureComparison };
-export interface DeltaKnowledge { topics: Topic[]; learnings: Learning[] }
+  | { id: string; kind: "TAG"; learnedOn: string; tag: string; taggedDays: number; comparison: MeasureComparison }
+  | { id: string; kind: "EXPERIMENT"; learnedOn: string; what: string; days: number; outcome: string; lesson?: string };
+/** DELTA's offer to test a tag that lines up with shorter sleep. Starting it is the existing experiment command, on a tap. */
+export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number }
+export interface DeltaKnowledge { topics: Topic[]; learnings: Learning[]; suggestion: ExperimentSuggestion | null }
+/** A gap this size (next-day sleep) is worth testing; smaller reads as about the same. */
+export const SUGGEST_SLEEP_GAP_MINUTES = 30;
+export const SUGGESTED_EXPERIMENT_DAYS = 14;
 
 export const CHECK_INS_NEEDED = 7;
 export const WORKOUTS_NEEDED = 3;
 
-interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySummary[]; notes: readonly { dayId: string; text: string }[]; checkIns: readonly StateCheckIn[]; now: Date }
+interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySummary[]; notes: readonly { dayId: string; text: string }[]; checkIns: readonly StateCheckIn[]; experiments?: readonly Experiment[]; now: Date }
 
 /** Pure. */
-export function deriveDelta({ sleeps, summaries, notes, checkIns, now }: Inputs): DeltaKnowledge {
+export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = [], now }: Inputs): DeltaKnowledge {
   const all = deriveSleepRhythm(sleeps, summaries, now, 100_000);
   const recent = deriveSleepRhythm(sleeps, summaries, now);
   const topics: Topic[] = [];
@@ -54,8 +61,23 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, now }: Inputs)
   const workouts = summaries.reduce((n, s) => n + s.workouts.length, 0);
   topics.push({ id: "training", label: "How you train", state: workouts >= WORKOUTS_NEEDED ? "KNOWN" : workouts ? "LEARNING" : "NOT_STARTED", have: workouts, need: WORKOUTS_NEEDED, unit: "workouts" });
 
+  // DELTA-EXPERIMENTS: a finished experiment is something learned, in your own words (the outcome you chose).
+  const finished = experiments.filter((e) => e.entry.status === "REVIEWED" && e.entry.outcome);
+  const running = activeExperiments(experiments, now);
+  for (const e of finished) learnings.push({ id: `exp-${e.entry.id}`, kind: "EXPERIMENT", learnedOn: e.entry.reviewedAt ?? e.to.toISOString(), what: e.what, days: e.days, outcome: e.entry.outcome!, ...(e.entry.lesson ? { lesson: e.entry.lesson } : {}) });
+  topics.push({ id: "experiments", label: "What your experiments showed", state: finished.length ? "KNOWN" : running.length ? "LEARNING" : "NOT_STARTED", have: finished.length, need: 1, unit: finished.length === 1 ? "finished experiment" : "finished experiments" });
+
+  // Offer to test the tag with the biggest next-day sleep gap, once, while no experiment is running.
+  const candidates = ready.flatMap((p) => {
+    const sleep = p.comparisons.find((c) => c.id === "NEXT_SLEEP");
+    const gap = sleep ? sleep.without.value - sleep.withTag.value : 0;
+    const tested = experiments.some((e) => e.what.toLowerCase().includes(`#${p.tag}`));
+    return gap >= SUGGEST_SLEEP_GAP_MINUTES && !tested ? [{ tag: p.tag, what: `Skip #${p.tag}`, days: SUGGESTED_EXPERIMENT_DAYS, minutesLess: Math.round(gap), taggedDays: p.taggedDays }] : [];
+  }).sort((a, b) => b.minutesLess - a.minutesLess);
+  const suggestion = running.length ? null : candidates[0] ?? null;
+
   learnings.sort((a, b) => b.learnedOn.localeCompare(a.learnedOn));
-  return { topics, learnings };
+  return { topics, learnings, suggestion };
 }
 
 /**
@@ -83,8 +105,8 @@ function tagLearnedOn(notes: Inputs["notes"], summaries: readonly DaySummary[], 
 }
 
 export async function getDeltaKnowledge(now = new Date()): Promise<DeltaKnowledge> {
-  const [records, summaries, notes, checkIns] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), db.checkIns.toArray()]);
-  return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, now });
+  const [records, summaries, notes, checkIns, experiments] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), db.checkIns.toArray(), getExperiments()]);
+  return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, experiments, now });
 }
 
 /**

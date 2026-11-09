@@ -22,7 +22,8 @@ describe("DELTA", () => {
   it("starts knowing nothing, and says exactly what would teach it", () => {
     const k = deriveDelta({ sleeps: [], summaries: [], notes: [], checkIns: [], now: NOW });
     expect(k.learnings).toEqual([]);
-    expect(k.topics.map((t) => [t.id, t.state])).toEqual([["sleep-WORK", "NOT_STARTED"], ["sleep-OFF", "NOT_STARTED"], ["tags", "NOT_STARTED"], ["check-ins", "NOT_STARTED"], ["training", "NOT_STARTED"]]);
+    expect(k.topics.map((t) => [t.id, t.state])).toEqual([["sleep-WORK", "NOT_STARTED"], ["sleep-OFF", "NOT_STARTED"], ["tags", "NOT_STARTED"], ["check-ins", "NOT_STARTED"], ["training", "NOT_STARTED"], ["experiments", "NOT_STARTED"]]);
+    expect(k.suggestion).toBeNull();
     expect(deltaQuestion(k, "OFF").text).toBe("What did you do for yourself today?");
     expect(deltaQuestion(k, "WORK").text).toBe("What's one thing that shaped today? Tag it below.");
   });
@@ -50,6 +51,25 @@ describe("DELTA", () => {
     // Oct 12: the 3rd untagged day exists, so "trained that day" (same-day) first compares; next-day sleep follows Oct 13.
     expect(learned.learnedOn).toBe(summaries[11]!.startedAt);
     expect(newLearnings(k, summaries[3]!.startedAt)).toContain(learned); // still "new" after Oct 3
+  });
+
+  it("offers to test a tag that lines up with shorter next-day sleep, notes finished experiments, and stays quiet while one runs", () => {
+    // #latecoffee on Oct 1, 3, 5, 7: the next day's sleep is 5h; other noted days, 7h.
+    const summaries = Array.from({ length: 12 }, (_, k) => summary(k + 1, "OFF", [2, 4, 6, 8].includes(k + 1) ? 300 : 420));
+    const notes = Array.from({ length: 11 }, (_, k) => ({ dayId: `d${k + 1}`, text: [1, 3, 5, 7].includes(k + 1) ? "#latecoffee" : "fine" }));
+    const offer = deriveDelta({ sleeps: [], summaries, notes, checkIns: [], now: NOW });
+    expect(offer.suggestion).toEqual({ tag: "latecoffee", what: "Skip #latecoffee", days: 14, minutesLess: 120, taggedDays: 4 });
+    const exp = (status: "OPEN" | "REVIEWED", fromDay: number) => ({
+      entry: { id: `e${fromDay}`, title: "Try: Skip #latecoffee", status, outcome: status === "REVIEWED" ? "It helped" : undefined, reviewedAt: status === "REVIEWED" ? new Date(2026, 10, 1).toISOString() : undefined },
+      what: "Skip #latecoffee", from: new Date(2026, 9, fromDay, 16, 30), to: new Date(2026, 9, fromDay + 14, 16, 30), scope: "ALL", days: 14,
+    }) as never;
+    const done = deriveDelta({ sleeps: [], summaries, notes, checkIns: [], experiments: [exp("REVIEWED", 10)], now: NOW });
+    expect(done.suggestion).toBeNull(); // already tested
+    expect(done.topics.find((t) => t.id === "experiments")).toMatchObject({ state: "KNOWN", have: 1 });
+    expect(describeLearning(done.learnings.find((l) => l.kind === "EXPERIMENT")!)).toBe('Learned from your experiment "Skip #latecoffee" (14 days): It helped.');
+    const running = deriveDelta({ sleeps: [], summaries, notes: notes.map((n) => ({ ...n, text: n.text.replace("latecoffee", "nap") })), checkIns: [], experiments: [{ ...(exp("OPEN", 2) as object), what: "Something else", from: new Date(2026, 10, 2, 16, 30), to: new Date(2026, 10, 16, 16, 30) } as never], now: NOW });
+    expect(running.suggestion).toBeNull();
+    expect(running.topics.find((t) => t.id === "experiments")?.state).toBe("LEARNING");
   });
 
   it("tracks tags and check-ins as still learning until they have enough days", () => {
