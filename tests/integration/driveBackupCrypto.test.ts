@@ -40,6 +40,33 @@ describe("encrypted backup format", () => {
     expect(JSON.stringify(header)).not.toMatch(/correct horse battery/);
     await expect(createKeySet("short", generateRecoveryCode(), FAST)).rejects.toThrow("PASSPHRASE_TOO_SHORT");
   });
+
+  it("rejects an unauthenticated header that is truncated, malformed, or asks for absurd work, before deriving any key", async () => {
+    const { dataKey, wraps } = await createKeySet("correct horse battery", generateRecoveryCode(), FAST);
+    const file = await encryptBackup(bytes("records"), dataKey, wraps, FAST);
+    const magicLength = 10;
+    const { header } = readHeader(file);
+    const withHeader = (h: unknown) => {
+      const headerBytes = bytes(JSON.stringify(h)), out = new Uint8Array(magicLength + 4 + headerBytes.length) as Uint8Array<ArrayBuffer>;
+      out.set(file.slice(0, magicLength)); new DataView(out.buffer).setUint32(magicLength, headerBytes.length); out.set(headerBytes, magicLength + 4);
+      return out;
+    };
+    const oversized = withHeader({ ...header, kdf: { ...header.kdf, iterations: 4_000_000_000 } });
+    const started = Date.now();
+    await expect(decryptBackup(oversized, "correct horse battery", "passphrase")).rejects.toThrow("BACKUP_DAMAGED");
+    expect(Date.now() - started).toBeLessThan(1_000);
+    await expect(decryptBackup(withHeader({ ...header, kdf: { ...header.kdf, hash: "SHA-1" } }), "x", "passphrase")).rejects.toThrow("BACKUP_DAMAGED");
+    await expect(decryptBackup(withHeader({ ...header, wraps: { passphrase: {} } }), "x", "passphrase")).rejects.toThrow("BACKUP_DAMAGED");
+    await expect(decryptBackup(file.slice(0, magicLength + 20), "x", "passphrase")).rejects.toThrow("BACKUP_DAMAGED");
+    const badJson = file.slice(); badJson[magicLength + 4] = 0x7b ^ 0xff;
+    await expect(decryptBackup(badJson, "x", "passphrase")).rejects.toThrow("BACKUP_DAMAGED");
+  });
+
+  it("treats NFC and NFD spellings of the same passphrase as the same", async () => {
+    const { dataKey, wraps } = await createKeySet("caf\u00e9 au lait", generateRecoveryCode(), FAST);
+    const file = await encryptBackup(bytes("ok"), dataKey, wraps, FAST);
+    expect(new TextDecoder().decode(await decryptBackup(file, "cafe\u0301 au lait", "passphrase"))).toBe("ok");
+  });
 });
 
 describe("encrypt → upload → download → decrypt → restore", () => {
@@ -47,7 +74,9 @@ describe("encrypt → upload → download → decrypt → restore", () => {
     const { dataKey, wraps } = await createKeySet("correct horse battery", generateRecoveryCode(), FAST);
     const uploaded = await encryptBackup(plain, dataKey, wraps, FAST);
     const downloaded = new Uint8Array(uploaded.buffer.slice(0)) as Uint8Array<ArrayBuffer>; // mock Drive: bytes in, bytes out
-    return new File([await decryptBackup(downloaded, "correct horse battery", "passphrase")], "drive.json", { type: "application/json" });
+    const decrypted = await decryptBackup(downloaded, "correct horse battery", "passphrase");
+    expect(Buffer.from(decrypted).equals(Buffer.from(plain))).toBe(true); // byte-equal, not just equivalent
+    return new File([decrypted], "drive.json", { type: "application/json" });
   };
 
   it("restores every protected historical backup exactly as the unencrypted file does", async () => {
