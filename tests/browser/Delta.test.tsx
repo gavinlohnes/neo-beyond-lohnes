@@ -30,6 +30,15 @@ describe("DELTA-GROWS-001", () => {
     expect(await db.dailyNotes.get(day.id)).toBeUndefined();
   });
 
+  it("answers DELTA's question in one tap, drafted with the question, not saved", async () => {
+    const day = await startDay();
+    const screen = await render(<DailyNoteScreen active />);
+    const q = screen.getByRole("group", { name: "DELTA's question" });
+    await q.getByRole("button", { name: "GOOD" }).click();
+    await expect.poll(() => (screen.container.querySelector("textarea") as HTMLTextAreaElement | null)?.value ?? "").toMatch(/^(What|How)[^\n]+ Good\.\n$/);
+    expect(await db.dailyNotes.get(day.id)).toBeUndefined();
+  });
+
   it("DELTA's experiment offer starts a real 14-day experiment only on the tap", async () => {
     await startDay();
     const before = await db.decisionJournalEntries.count();

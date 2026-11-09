@@ -60,7 +60,11 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
     {knowledge && knowledge !== "ERROR" && (() => { const q = deltaQuestion(knowledge, workspace.day.workContext); return <div className="delta-question" role="group" aria-label="DELTA's question">
       <p className="card-body" style={{ margin: 0 }}><span className="tool-label">DELTA ASKS · </span>{q.text}</p>
       <p className="meta" style={{ margin: "2px 0 6px" }}>Answering teaches me {q.teaches}.</p>
-      {!draft.includes(q.text) && <button type="button" className="btn-secondary" onClick={() => { setDraft(draft.trim() ? `${draft.trimEnd()}\n\n${q.text}\n` : `${q.text}\n`); setMessage(""); }}>ANSWER IN NOTE</button>}
+      {/* DELTA-NEXT 7: answer in one tap, or write it out. Either only drafts; SAVE NOTE saves. */}
+      {!draft.includes(q.text) && <div className="button-row">
+        {(["Rough", "OK", "Good"] as const).map((word) => <button type="button" key={word} className="btn-secondary" onClick={() => { const line = `${q.text} ${word}.`; setDraft(draft.trim() ? `${draft.trimEnd()}\n\n${line}\n` : `${line}\n`); setMessage(""); }}>{word.toUpperCase()}</button>)}
+        <button type="button" className="btn-secondary" onClick={() => { setDraft(draft.trim() ? `${draft.trimEnd()}\n\n${q.text}\n` : `${q.text}\n`); setMessage(""); }}>ANSWER IN NOTE</button>
+      </div>}
     </div>; })()}
     <WikiTextArea label="Your note" value={draft} onChange={(next) => { setDraft(next); setMessage(""); }} />
     {/* JOURNAL-LEARN-001: one-tap #tags, written into the note as words. BEYOND compares tagged days later. */}

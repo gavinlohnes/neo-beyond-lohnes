@@ -10,7 +10,7 @@
 | 1 | **Unusual for you:** DELTA's notebook and TODAY line show the measured sheets' existing "unusual for you" streaks (resting HR, sleep, steps) while they last | this PR |
 | 4 | Tags on check-ins and workouts | next |
 | 5 | Weekly "what changed" | next |
-| 7 | One-tap answer to DELTA's question | next |
+| 7 | **One-tap answer:** ROUGH / OK / GOOD under DELTA's question draft "<question> Good." into the note; SAVE NOTE still saves | this PR (with 1) |
 | 2 | Shift-run forecast (labelled forecast, reading only) | next |
 | 3 | Best windows in the rotation (suggests, never books) | next |
 | 6 | What moves the needle (data-first gate: months of data) | next |
@@ -24,3 +24,7 @@
 - **BUILD FROM SCRATCH:** none.
 - **Tests:** `tests/integration/delta.test.ts` checks that a streak is noticed and dated on its newest day, and that
   there is silence without one.
+
+## Item 7
+- **REUSE:** the existing question and draft. **OWN:** three words. **BUILD FROM SCRATCH:** none.
+- **Tests:** `tests/browser/Delta.test.tsx`: GOOD drafts "<question> Good." and nothing is saved.
