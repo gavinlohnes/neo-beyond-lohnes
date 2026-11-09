@@ -1,3 +1,12 @@
+# JOURNAL-LEARN-001 — approved, building (2026-11-09)
+
+- Gavin: "Yes, build it. Then we add to it." Three parts, one PR each. Brief: [JOURNAL-LEARN-001.md](JOURNAL-LEARN-001.md).
+  Part 1 (guided note and #tags) is in review; parts 2 (tag patterns) and 3 (What BEYOND knows) are next.
+  Gavin will add more after.
+- The 23:30 queue is complete: #458–#462 merged.
+
+---
+
 # Queue for the 23:30 session (Gavin's picks, 2026-11-09: "A, B, 25, 5, C") — A #458, B #459, 25 #460, 5 #461 merged; C in review
 
 In order:
