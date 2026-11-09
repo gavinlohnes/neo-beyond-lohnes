@@ -31,6 +31,7 @@ import { WorkScheduleScreen } from "./WorkScheduleScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
 import { AutoBackupSettings } from "./AutoBackupSettings";
+import { DriveRestorePicker } from "./DriveRestorePicker";
 import { TimeCapsuleSettings } from "./TimeCapsuleSettings";
 import { WeeklyCheckInScreen } from "../weekly/WeeklyCheckInScreen";
 import { LineIcon } from "../../icons/LineIcon";
@@ -776,6 +777,7 @@ export function MoreScreen({
           disabled={busy}
           onChange={(e) => void handleFileChosen(e.target.files?.[0])}
         />
+        <DriveRestorePicker disabled={busy} onFile={(file) => void handleFileChosen(file)} />
         {preview && (
             <div className="card card--warning restore-preview">
             <p className="card-title" style={{ fontSize: 16 }}>

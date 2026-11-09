@@ -1,5 +1,7 @@
 import { getDaysSinceLastBackup, shareBackup } from "../persistence/backup";
 import { previewAnyRestore } from "../persistence/restore";
+import { getDriveBackupState, type DriveBackupState, type DriveFailure } from "../persistence/driveBackupState";
+import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import {
   AUTO_BACKUP_INTERVALS,
   clearAutoBackupSnooze,
@@ -34,6 +36,7 @@ export const RESTORE_CHECK_EVERY_DAYS = 30;
 
 export type BackupPrompt =
   | { kind: "BACKUP_DUE"; daysSinceLastBackup: number | null }
+  | { kind: "DRIVE_DUE"; failure: DriveFailure | null }
   | { kind: "RESTORE_CHECK_DUE" }
   | null;
 
@@ -43,6 +46,18 @@ interface PromptInputs {
   snoozedUntil: number | null;
   lastRestoreCheckAt: number | null;
   now: number;
+  /** DRIVE-BACKUP-001: when Drive is set up it is the destination; missing means share sheet. */
+  drive?: DriveBackupState;
+}
+
+/**
+ * DRIVE-BACKUP-001, pure: a Drive backup is due at most once per lived day — on the first open after
+ * the 16:30 boundary that follows the last confirmed Drive backup.
+ */
+export function isDriveBackupDue(state: DriveBackupState, now: Date): boolean {
+  if (!state.on) return false;
+  if (!state.lastSuccessAt) return true;
+  return new Date(state.lastSuccessAt) < mostRecentBoundaryAtOrBefore(now);
 }
 
 /**
@@ -52,10 +67,12 @@ interface PromptInputs {
  * month and only after at least one backup exists to check.
  */
 export function decideBackupPrompt(inputs: PromptInputs): BackupPrompt {
-  const { preference, daysSinceLastBackup, snoozedUntil, lastRestoreCheckAt, now } = inputs;
+  const { preference, daysSinceLastBackup, snoozedUntil, lastRestoreCheckAt, now, drive } = inputs;
   if (!preference.enabled) return null;
   if (snoozedUntil !== null && now < snoozedUntil) return null;
-  if (daysSinceLastBackup === null || daysSinceLastBackup >= preference.everyDays) {
+  if (drive?.on) {
+    if (isDriveBackupDue(drive, new Date(now))) return { kind: "DRIVE_DUE", failure: drive.failure };
+  } else if (daysSinceLastBackup === null || daysSinceLastBackup >= preference.everyDays) {
     return { kind: "BACKUP_DUE", daysSinceLastBackup };
   }
   if (lastRestoreCheckAt === null || now - lastRestoreCheckAt >= RESTORE_CHECK_EVERY_DAYS * DAY_MS) {
@@ -71,6 +88,7 @@ export function getBackupPrompt(now: Date = new Date()): BackupPrompt {
     snoozedUntil: getAutoBackupSnoozedUntil(),
     lastRestoreCheckAt: getLastRestoreCheckAt(),
     now: now.getTime(),
+    drive: getDriveBackupState(),
   });
 }
 

@@ -1,12 +1,14 @@
 # DRIVE-BACKUP-001 — approved, building (2026-11-09)
 
 - Gavin chose encrypted Google Drive backups (Protected: backup contract + provider). Brief:
-  [DRIVE-BACKUP-001.md](DRIVE-BACKUP-001.md). This PR adds only the brief, the Decision Register entry and the public
-  privacy page Google requires (#448). **Gavin approved the brief 2026-11-09.**
-- PR 1 (this): WebCrypto encryption (`application/driveBackup/backupCrypto.ts`), device key store in its own
-  IndexedDB (`persistence/driveKeyStore.ts`), setup/encrypt/unlock helpers, tests incl. protected-fixture round-trip.
-  Review and CI pending. PR 2 next: Drive connection, settings in SYSTEMS, due-on-open, status line, restore list.
-- TEMPLATE-EDIT-001 merged as #447. POLISH-003 complete (#445, #446).
+  [DRIVE-BACKUP-001.md](DRIVE-BACKUP-001.md). **Gavin approved the brief 2026-11-09.** Brief + privacy page #448.
+- Google console done by Gavin 2026-11-09: `drive.file` scope, home + privacy links, app **In production**.
+- PR 1 merged as #449: WebCrypto encryption, device key store, setup/encrypt/unlock helpers.
+- PR 2 (this): Google sign-in (GIS token flow, token in memory only), Drive v3 calls, retention (7 newest + first of
+  6 months), Drive as the BACKUP-AUTO-001 destination (due once per lived day after 16:30), SYSTEMS setup with the
+  one-time recovery code, TODAY's quiet line, restore list feeding the existing preview-and-confirm restore.
+  Review and CI pending. Next: Gavin sets it up on his phone (MORE → Data safety → Automatic backups → SET UP).
+- Deferred: monthly restore check against the latest Drive backup (file check unchanged).
 
 ---
 
