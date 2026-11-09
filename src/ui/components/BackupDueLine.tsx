@@ -7,6 +7,7 @@ import {
   type BackupPrompt,
 } from "../../application/autoBackupQueries";
 import { backUpToDrive, type DriveBackupResult } from "../../application/driveBackup/driveBackupService";
+import { loadGoogleIdentity } from "../../application/driveBackup/googleAuth";
 import { describeError } from "../errorMessage";
 import { Signal } from "./Signal";
 import { describeRestoreCheck } from "./restoreCheckCopy";
@@ -25,7 +26,9 @@ export function BackupDueLine() {
 
   // DRIVE-BACKUP-001: if this session already holds a Google token, a due Drive backup just runs, quietly.
   useEffect(() => {
-    if (prompt?.kind !== "DRIVE_DUE" || prompt.failure) return;
+    if (prompt?.kind !== "DRIVE_DUE") return;
+    void loadGoogleIdentity().catch(() => {}); // warm up so the tap opens Google's sign-in straight away
+    if (prompt.failure) return;
     let live = true;
     void backUpToDrive({ interactive: false }).then((result) => { if (live && result.kind !== "NEEDS_TAP") settleDrive(result); });
     return () => { live = false; };

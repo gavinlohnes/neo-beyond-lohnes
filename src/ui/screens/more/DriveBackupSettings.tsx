@@ -68,9 +68,11 @@ export function DriveBackupSettings({ onChanged }: { onChanged?: () => void }) {
   async function disconnect() {
     setBusy(true);
     try {
-      await disconnectDriveBackup();
+      const { revoked } = await disconnectDriveBackup();
       setMode("IDLE");
-      setMessage("Disconnected. Backups already in Drive stay there.");
+      setMessage(revoked
+        ? "Disconnected. Google access removed; backups already in Drive stay there."
+        : "Disconnected here. To remove BEYOND's Google access too, open myaccount.google.com/permissions.");
       refresh();
     } finally {
       setBusy(false);

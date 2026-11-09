@@ -68,13 +68,21 @@ export async function requestDriveToken(): Promise<string> {
 /** Forget the in-memory token (e.g. after Drive said it expired). */
 export function dropDriveToken(): void { token = null; }
 
-/** DISCONNECT: revoke this app's Drive access with Google and forget the token. */
-export async function revokeDriveAccess(): Promise<void> {
-  const value = token?.value;
+/**
+ * DISCONNECT, from a tap: revoke this app's Drive access with Google. With no token in memory (the usual
+ * case, since tokens last about an hour) it asks Google for one first so there is something to revoke.
+ * Returns false if that sign-in was closed or failed — access may still be granted at Google.
+ */
+export async function revokeDriveAccess(): Promise<boolean> {
+  let value = currentDriveToken();
+  if (!value) {
+    try { value = await requestDriveToken(); } catch { token = null; return false; }
+  }
   token = null;
-  if (!value) return;
   const oauth = (window as GoogleWindow).google?.accounts?.oauth2;
-  await new Promise<void>((resolve) => { if (oauth) oauth.revoke(value, () => resolve()); else resolve(); });
+  if (!oauth) return false;
+  await new Promise<void>((resolve) => oauth.revoke(value, () => resolve()));
+  return true;
 }
 
 /** Tests only. */

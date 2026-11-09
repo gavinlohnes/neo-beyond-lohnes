@@ -12,12 +12,14 @@ import { __setDriveTokenForTests } from "../../src/application/driveBackup/googl
  */
 type W = Window & { google?: unknown };
 
-function stubGoogle() {
+function stubGoogle({ signInCloses = false } = {}) {
+  const revoke = vi.fn((_t: string, done: () => void) => done());
   (window as W).google = { accounts: { oauth2: {
-    initTokenClient: ({ callback }: { callback: (r: { access_token: string; expires_in: number }) => void }) =>
-      ({ requestAccessToken: () => callback({ access_token: "token", expires_in: 3600 }) }),
-    revoke: (_t: string, done: () => void) => done(),
+    initTokenClient: ({ callback, error_callback }: { callback: (r: { access_token: string; expires_in: number }) => void; error_callback: (e: unknown) => void }) =>
+      ({ requestAccessToken: () => (signInCloses ? error_callback({ type: "popup_closed" }) : callback({ access_token: "token", expires_in: 3600 })) }),
+    revoke,
   } } };
+  return revoke;
 }
 
 function stubDrive(status = 200) {
@@ -68,10 +70,35 @@ describe("DRIVE-BACKUP-001 — setup and status", () => {
     expect(JSON.stringify(localStorage)).not.toMatch(/correct horse|token/);
   });
 
+  it("DISCONNECT with no token in memory signs in first so Google access is really revoked", async () => {
+    const setUp = { on: true, folderId: "folder-1", lastSuccessAt: null, failure: null };
+    localStorage.setItem("beyond:driveBackupState", JSON.stringify(setUp));
+    const revoke = stubGoogle();
+    const screen = await render(<DriveBackupSettings />);
+    await screen.getByRole("button", { name: "DISCONNECT" }).click();
+    await screen.getByRole("button", { name: "DISCONNECT" }).click();
+    await expect.element(screen.getByText(/Google access removed/)).toBeVisible();
+    expect(revoke).toHaveBeenCalledWith("token", expect.any(Function));
+    await expect.element(screen.getByText("Not set up.")).toBeVisible();
+  });
+
+  it("DISCONNECT when Google's sign-in is closed still forgets this phone and says how to finish at Google", async () => {
+    localStorage.setItem("beyond:driveBackupState", JSON.stringify({ on: true, folderId: "folder-1", lastSuccessAt: null, failure: null }));
+    const revokeClosed = stubGoogle({ signInCloses: true });
+    const screen = await render(<DriveBackupSettings />);
+    await screen.getByRole("button", { name: "DISCONNECT" }).click();
+    await screen.getByRole("button", { name: "DISCONNECT" }).click();
+    await expect.element(screen.getByText(/open myaccount\.google\.com\/permissions/)).toBeVisible();
+    expect(revokeClosed).not.toHaveBeenCalled();
+    await expect.element(screen.getByText("Not set up.")).toBeVisible();
+    expect(localStorage.getItem("beyond:driveBackupState")).toBeNull();
+  });
+
   it("TODAY: a paused Drive backup is one quiet line with RECONNECT, and no success is shown", async () => {
     localStorage.setItem("beyond:autoBackupPreference", JSON.stringify({ enabled: true, everyDays: 1 }));
     localStorage.setItem("beyond:lastRestoreCheckAt", new Date().toISOString());
     localStorage.setItem("beyond:driveBackupState", JSON.stringify({ on: true, folderId: "folder-1", lastSuccessAt: null, failure: "PAUSED" }));
+    stubGoogle();
     const screen = await render(<BackupDueLine />);
     await expect.element(screen.getByText("Drive backup paused — tap to reconnect")).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "RECONNECT" })).toBeVisible();

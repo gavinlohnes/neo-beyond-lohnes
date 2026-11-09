@@ -3,7 +3,7 @@ import { DEFAULT_AUTO_BACKUP_DAYS, getAutoBackupPreference } from "../../persist
 import { clearDriveBackupState, getDriveBackupState, updateDriveBackupState, type DriveBackupState, type DriveFailure } from "../../persistence/driveBackupState";
 import { isDriveBackupDue, setAutoBackupPreferenceAndReset } from "../autoBackupQueries";
 import { encryptCurrentBackup, forgetBackupKey, hasBackupKey, setUpBackupKey, unlockBackup } from "./backupKeys";
-import { backupFileName, backupsToDelete, deleteBackup, downloadBackup, ensureFolder, listBackups, uploadBackup, type DriveFile } from "./driveApi";
+import { backupFileName, backupsToDelete, deleteBackup, downloadBackup, ensureFolder, findFolder, listBackups, uploadBackup, type DriveFile } from "./driveApi";
 import { currentDriveToken, dropDriveToken, requestDriveToken, revokeDriveAccess } from "./googleAuth";
 
 /**
@@ -81,20 +81,24 @@ export async function connectDriveBackup(passphrase: string): Promise<{ recovery
   return { recoveryCode, firstBackup: await backUpToDrive({ interactive: true }) };
 }
 
-/** DISCONNECT: revoke Google access and forget this phone's key. Local data and files already in Drive stay. */
-export async function disconnectDriveBackup(): Promise<void> {
-  await revokeDriveAccess();
+/**
+ * DISCONNECT, from a tap: revoke Google access and forget this phone's key. Local data and files already
+ * in Drive stay. The key and state are forgotten even if Google couldn't be reached; `revoked` says so.
+ */
+export async function disconnectDriveBackup(): Promise<{ revoked: boolean }> {
+  const revoked = await revokeDriveAccess();
   await forgetBackupKey();
   clearDriveBackupState();
   const preference = getAutoBackupPreference();
   setAutoBackupPreferenceAndReset({ ...preference, everyDays: DEFAULT_AUTO_BACKUP_DAYS });
+  return { revoked };
 }
 
 /** Restore, from a tap: the BEYOND folder's backups, newest first. Works on a new phone too. */
 export async function listDriveBackups(): Promise<DriveFile[]> {
   const token = await requestDriveToken();
-  const folderId = await ensureFolder(token, getDriveBackupState().folderId);
-  return listBackups(token, folderId);
+  const folderId = await findFolder(token, getDriveBackupState().folderId);
+  return folderId ? listBackups(token, folderId) : [];
 }
 
 /**

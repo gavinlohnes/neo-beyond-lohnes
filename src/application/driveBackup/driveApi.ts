@@ -26,6 +26,18 @@ const q = (query: string) => encodeURIComponent(query);
 
 /** The BEYOND folder: the remembered one if it still exists, else found or created. */
 export async function ensureFolder(token: string, rememberedId: string | null): Promise<string> {
+  const existing = await findFolder(token, rememberedId);
+  if (existing) return existing;
+  const created = await (await drive(token, `${API}/files?fields=id`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: FOLDER_MIME }),
+  })).json() as { id: string };
+  return created.id;
+}
+
+/** The BEYOND folder if it exists; never creates one (for listing). */
+export async function findFolder(token: string, rememberedId: string | null): Promise<string | null> {
   if (rememberedId) {
     try {
       const file = await (await drive(token, `${API}/files/${rememberedId}?fields=id,trashed`)).json() as { id?: string; trashed?: boolean };
@@ -35,13 +47,7 @@ export async function ensureFolder(token: string, rememberedId: string | null): 
     }
   }
   const found = await (await drive(token, `${API}/files?q=${q(`name='${DRIVE_FOLDER_NAME}' and mimeType='${FOLDER_MIME}' and trashed=false`)}&fields=files(id)&spaces=drive`)).json() as { files?: { id: string }[] };
-  if (found.files?.[0]) return found.files[0].id;
-  const created = await (await drive(token, `${API}/files?fields=id`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: FOLDER_MIME }),
-  })).json() as { id: string };
-  return created.id;
+  return found.files?.[0]?.id ?? null;
 }
 
 export async function uploadBackup(token: string, folderId: string, name: string, bytes: Uint8Array<ArrayBuffer>): Promise<DriveFile> {
