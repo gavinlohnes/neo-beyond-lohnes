@@ -3,6 +3,7 @@ import type { DaySummary } from "../engine/dayLedger";
 import type { StateCheckIn } from "../domain/common/types";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { noteTags } from "./noteTags";
+import { livedDayBoundary } from "../engine/livedDaySeries";
 
 /**
  * JOURNAL-LEARN-001 (part 2): what each #tag lines up with. For a tag on at least MIN_TAGGED_DAYS recorded
@@ -46,21 +47,27 @@ export function compareTags(days: readonly DayFacts[]): TagPatterns {
   return { ready, learning };
 }
 
-/** Pure: join notes, day summaries and check-ins into one fact row per recorded day with a note. */
+/**
+ * Pure: join notes, day summaries and check-ins into one fact row per recorded day with a note. "Next day" means
+ * the lived day right after (16:30 to 16:30, DST-safe), never just the next one recorded: after a gap the
+ * next-day measures are simply missing.
+ */
 export function dayFacts(notes: readonly { dayId: string; text: string }[], summaries: readonly DaySummary[], checkIns: readonly StateCheckIn[]): DayFacts[] {
-  const ordered = [...summaries].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  const byLivedDay = new Map<string, DaySummary[]>();
+  for (const s of summaries) byLivedDay.set(s.livedDayStart, [...(byLivedDay.get(s.livedDayStart) ?? []), s]);
   const noteByDay = new Map(notes.map((n) => [n.dayId, n.text]));
-  const lastCheckIn = new Map<string, StateCheckIn>();
-  for (const c of [...checkIns].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))) lastCheckIn.set(c.beyondDayId, c);
-  return ordered.flatMap((day, i) => {
+  const checkInsByDay = new Map<string, StateCheckIn[]>();
+  for (const c of checkIns) checkInsByDay.set(c.beyondDayId, [...(checkInsByDay.get(c.beyondDayId) ?? []), c]);
+  return [...summaries].sort((a, b) => a.startedAt.localeCompare(b.startedAt)).flatMap((day) => {
     const text = noteByDay.get(day.beyondDayId);
     if (text === undefined) return [];
-    const next = ordered[i + 1];
-    const checkIn = next ? lastCheckIn.get(next.beyondDayId) : undefined;
+    const next = byLivedDay.get(livedDayBoundary(new Date(day.livedDayStart), -1).toISOString()) ?? [];
+    const nextSleep = next.find((d) => d.sleep.primaryMinutes !== undefined)?.sleep.primaryMinutes;
+    const checkIn = next.flatMap((d) => checkInsByDay.get(d.beyondDayId) ?? []).sort((a, b) => a.recordedAt.localeCompare(b.recordedAt)).at(-1);
     return [{
       dayId: day.beyondDayId,
       tags: noteTags(text),
-      ...(next?.sleep.primaryMinutes !== undefined ? { nextSleep: next.sleep.primaryMinutes } : {}),
+      ...(nextSleep !== undefined ? { nextSleep } : {}),
       ...(checkIn ? { nextEnergy: checkIn.energy, nextMood: checkIn.mood } : {}),
       trained: day.workouts.length > 0,
     }];

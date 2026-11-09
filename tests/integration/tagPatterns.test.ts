@@ -3,13 +3,15 @@ import { compareTags, dayFacts, MIN_TAGGED_DAYS } from "../../src/application/ta
 import type { DaySummary } from "../../src/engine/dayLedger";
 import type { StateCheckIn } from "../../src/domain/common/types";
 import { describeComparison } from "../../src/ui/screens/more/TagPatternsSection";
+import { mostRecentBoundaryAtOrBefore } from "../../src/engine/dayRollover";
 
 /** JOURNAL-LEARN-001 part 2. Invented days only. */
+const startOf = (i: number) => new Date(2026, 9, i, 18, 0).toISOString(); // local 18:00, inside lived day i
 const summary = (i: number, sleep?: number, workouts = 0) => ({
-  beyondDayId: `d${i}`, startedAt: `2026-10-${String(i).padStart(2, "0")}T21:30:00Z`,
+  beyondDayId: `d${i}`, startedAt: startOf(i), livedDayStart: mostRecentBoundaryAtOrBefore(new Date(startOf(i))).toISOString(),
   sleep: sleep === undefined ? {} : { primaryMinutes: sleep }, workouts: Array.from({ length: workouts }, () => ({})),
 }) as unknown as DaySummary;
-const checkIn = (i: number, energy: number, mood: number) => ({ id: `c${i}`, beyondDayId: `d${i}`, recordedAt: `2026-10-${String(i).padStart(2, "0")}T22:00:00Z`, energy, mood }) as unknown as StateCheckIn;
+const checkIn = (i: number, energy: number, mood: number) => ({ id: `c${i}`, beyondDayId: `d${i}`, recordedAt: new Date(2026, 9, i, 20, 0).toISOString(), energy, mood }) as unknown as StateCheckIn;
 
 describe("tag patterns", () => {
   // Days 1–10 each have a note; #latecoffee on 1, 3, 5, 7. The NEXT day's sleep and check-in follow each.
@@ -30,6 +32,14 @@ describe("tag patterns", () => {
     expect(describeComparison(by.NEXT_SLEEP!)).toBe("Sleep logged the next day: 5h 30m on average (4 days), against 7h 0m (6).");
     expect(describeComparison(by.TRAINED!)).toBe("Trained that day: 1 of 4 days, against 0 of 6.");
     expect(learning).toEqual([{ tag: "sauna", taggedDays: 1 }]);
+  });
+
+  it("uses only the lived day right after, never the next recorded day after a gap", () => {
+    // Day 1 tagged; day 2 missing; day 5 recorded. Day 1 must get no next-day measures.
+    const facts = dayFacts([{ dayId: "d1", text: "#nap" }], [summary(1), summary(5, 300)], [checkIn(5, 1, 1)]);
+    expect(facts).toEqual([{ dayId: "d1", tags: ["nap"], trained: false }]);
+    const adjacent = dayFacts([{ dayId: "d1", text: "#nap" }], [summary(1), summary(2, 300)], [checkIn(2, 1, 2)]);
+    expect(adjacent[0]).toMatchObject({ nextSleep: 300, nextEnergy: 1, nextMood: 2 });
   });
 
   it(`says nothing for a tag on fewer than ${MIN_TAGGED_DAYS} days, or a measure missing on either side`, () => {

@@ -38,7 +38,7 @@
 
 ## Evidence (part 2)
 - `application/tagPatterns.ts`: for each day with a note, the next recorded day's main sleep and last check-in
-  (energy, mood), and whether a workout was recorded that day. Tagged days are compared with the other noted days.
+  (energy, mood) — only the lived day right after, so after a gap those are missing — and whether a workout was recorded that day. Tagged days are compared with the other noted days.
   A tag shows after 3 days; a measure shows only with at least 3 values on each side.
 - The view sits on the daily note, under "What your tags line up with". It ends: "These line up; they don't prove a
   cause. Nothing here changes advice."
