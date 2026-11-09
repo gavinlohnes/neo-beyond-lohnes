@@ -50,6 +50,14 @@ export function DeltaPanel({ active }: { active: boolean }) {
     </ul>
     {knowledge.suggestion && <ExperimentOffer suggestion={knowledge.suggestion} />}
     <DeltaAhead active={active} />
+    {knowledge.needle.ready && <section className="delta-needle" aria-label="What lines up with your good weeks">
+      <h2 className="tool-label">DELTA · WHAT LINES UP WITH YOUR GOOD WEEKS</h2>
+      <p className="meta">Your good weeks are your top third by check-in energy ({knowledge.needle.goodWeeks} of {knowledge.needle.judgedWeeks} weeks with 3+ check-ins).</p>
+      {knowledge.needle.habits.length
+        ? knowledge.needle.habits.map((h) => <p key={h.habit} className="card-body" style={{ margin: "0 0 6px" }}>{describeNeedle(h)}</p>)
+        : <p className="meta">Nothing you tag or train differs much between your good weeks and the rest yet.</p>}
+      <p className="meta">Patterns across your weeks, not proof. Ranked by the size of the difference. Nothing here changes advice.</p>
+    </section>}
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
       ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}</li>)}</ol>
@@ -84,6 +92,12 @@ export function DeltaNewsLine({ active }: { active: boolean }) {
  * DELTA-EXPERIMENTS: when a tag lines up with shorter next-day sleep, DELTA offers to test it. START writes a
  * personal experiment through the existing LOOP command (a "Try:" journal entry) — only on that tap.
  */
+const perWeek = (n: number) => (Math.round(n * 10) / 10).toFixed(1);
+export function describeNeedle(h: { habit: string; good: number; other: number; goodWeeks: number; otherWeeks: number }): string {
+  const name = h.habit === "training" ? "Training" : h.habit;
+  return `${name}: ${perWeek(h.good)} days a week in your good weeks (${h.goodWeeks}), against ${perWeek(h.other)} in your other weeks (${h.otherWeeks}).`;
+}
+
 /** The counts behind the sleep figure itself, and what it was shorter than. */
 export function describeOffer(s: ExperimentSuggestion): string {
   return `After ${s.withDays} days with #${s.tag}, the sleep you logged the next day was ${hoursMinutes(s.minutesLess)} shorter than after ${s.withoutDays} other noted days. That lines up; it doesn't prove a cause. Want to test it for ${s.days} days?`;
