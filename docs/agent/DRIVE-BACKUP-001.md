@@ -31,9 +31,14 @@
 - **Encryption (WebCrypto only, no new dependency):** a random 256-bit data key encrypts the backup with AES-GCM and a
   fresh 96-bit IV per file. The data key is wrapped twice — under a key from the passphrase (PBKDF2-SHA256, 600,000
   iterations, random salt) and under a key from the recovery code (same KDF, its own salt) — so either unlocks it.
-  The file header holds only version, salts, IVs, KDF parameters and the two wrapped keys. The passphrase, recovery
-  code and raw keys are never stored or uploaded; the phone keeps only the wrapped data key needed to make new
-  backups, and asks for the passphrase again to restore.
+  The file header holds only version, salts, IVs, KDF parameters and the two wrapped keys.
+- **Key storage on the phone:** after setup the phone keeps the data key as a **non-extractable WebCrypto
+  `CryptoKey`** in its own IndexedDB store, so daily backups need no passphrase. The passphrase or recovery code is
+  needed only to set up, to restore, or to re-key on a new device. That key store is **excluded from the backup
+  export** (with a test), so a backup never contains the key that opens it. The passphrase, recovery code and raw key
+  bytes are never stored or uploaded.
+- **Threat model (one line):** protects backups at rest in Google Drive and against anyone with the Drive file alone;
+  it does not protect against someone who already controls the unlocked phone, which holds the live data anyway.
 - **Recovery code:** 128 random bits shown once as 8 groups of 4 characters, to write down; never shown again.
 - **Retention:** keep the **last 7 daily** backups plus the **first backup of each of the last 6 months**. Older files
   are deleted only inside the BEYOND folder.
@@ -49,12 +54,29 @@
   `https://gavinlohnes.github.io/neo-beyond-lohnes/privacy.html`, excluded from the precache. Required by Google before
   the app can be published.
 
+## Reuse: BACKUP-AUTO-001 (existing)
+
+BEYOND already has automatic "due on open" backups: `persistence/autoBackup.ts` (preference and timestamps),
+`application/autoBackupQueries.ts` (`decideBackupPrompt`, snooze, `backUpNow`, monthly `checkBackupFile` restore
+check), `AutoBackupSettings` and `BackupDueLine`. Drive backup **extends it rather than adding a second system**:
+
+- **Destination:** the preference gains a destination — *share sheet* (today, unchanged and still the default) or
+  *Google Drive*. Same interval preference, due check, snooze, status line and monthly restore check.
+- **Once a day after 16:30:** choosing Drive sets `everyDays = 1`, and "due" is measured in lived days (due on the
+  first open after the 16:30 boundary following the last successful Drive backup), so it runs at most once per lived
+  day. The other intervals stay available.
+- **Share sheet:** unchanged and always available as a manual "Back up now" and as the fallback when Drive is paused
+  or not set up. Drive never removes it.
+- **Restore check:** the monthly check also offers to verify the latest Drive backup (download, decrypt, compare table
+  counts) through the existing `checkBackupFile` comparison.
+
 ## Acceptance evidence (implementation PRs)
 
 - Unit tests: encrypt → decrypt with passphrase; with recovery code; wrong passphrase and tampered file both fail
   cleanly with no partial restore.
 - Round-trip: encrypt → mock upload → download → decrypt → restore of `test-fixtures/protected` backups, byte-equal
   after restore. Old unencrypted backups still restore exactly as before.
+- The device key store is excluded from the backup export (test), and a decrypted backup never contains it.
 - Browser tests: setup shows the recovery code once and the "lose both" warning; paused state shows one quiet line;
   status never shows success without a recorded successful backup.
 - No secrets in the repo; only the public OAuth client ID in app config.
@@ -71,5 +93,6 @@
 
 ## Leverage gate
 
-REUSE: dexie-export-import, WebCrypto, Google Identity Services token flow (no client secret), Drive v3 REST.
+REUSE: BACKUP-AUTO-001 (preference, due-on-open, snooze, BackupDueLine, restore check), dexie-export-import,
+WebCrypto, Google Identity Services token flow (no client secret), Drive v3 REST.
 OWN: the scheduling, status and key wrapping around the existing format. BUILD FROM SCRATCH: none.
