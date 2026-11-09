@@ -8,6 +8,7 @@ import {
 } from "../../../application/autoBackupQueries";
 import { describeError } from "../../errorMessage";
 import { describeRestoreCheck } from "../../components/restoreCheckCopy";
+import { DriveBackupSettings } from "./DriveBackupSettings";
 
 /**
  * BACKUP-AUTO-001 (owner brief 2026-10-04, decision 2A): MORE → Data safety's
@@ -86,6 +87,7 @@ export function AutoBackupSettings() {
           {checkMessage}
         </p>
       )}
+      <DriveBackupSettings onChanged={() => setPreference(getAutoBackupPreference())} />
     </div>
   );
 }

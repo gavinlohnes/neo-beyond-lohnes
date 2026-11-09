@@ -2827,3 +2827,7 @@ code; losing both means nobody can open them, and the app says so. "Automatic" m
 16:30, with a quiet reconnect line when Google needs sign-in. **Gavin approved the brief on 2026-11-09.** This
 **supersedes** the 2026-08-19 BODY & Backup Decisions rejection of in-app Google/Drive OAuth, for encrypted backups
 only; the share-sheet backup stays. [Brief](agent/DRIVE-BACKUP-001.md).
+
+**Amendment (Gavin, 2026-11-09, directly to the Builder: "One tap is okay. Merge it"):** because phone browsers only
+allow Google sign-in from a tap and tokens last about an hour, the daily Drive backup is usually one tap on TODAY's
+quiet "Drive backup due" line (BACK UP / LATER); it runs by itself when the session already holds a token.

@@ -14,7 +14,8 @@ import { importInto } from "dexie-export-import";
  */
 const LAST_BACKUP_AT_KEY = "beyond:lastBackupAt";
 
-function recordBackupExported(): void {
+/** Also called when an encrypted Drive backup is confirmed (DRIVE-BACKUP-001): one "last backup" clock. */
+export function recordBackupExported(): void {
   localStorage.setItem(LAST_BACKUP_AT_KEY, new Date().toISOString());
 }
 

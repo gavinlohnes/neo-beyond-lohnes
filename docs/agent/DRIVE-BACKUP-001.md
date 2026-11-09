@@ -24,6 +24,11 @@ device key store; (2) Drive connection, settings, due-on-open, status and restor
   popups, badges or nagging. While the Google app is in **Testing**, Google ends that sign-in every **7 days**, so a
   weekly reconnect is normal until the app is published.
 - Your data always stays on your phone; Drive is an extra copy.
+- **As built (PR 2):** browsers only open Google's sign-in from a tap, and the token lives about an hour in memory.
+  So the daily backup runs by itself only when BEYOND still holds a token from earlier that session; otherwise TODAY
+  shows one quiet line, *"Drive backup due"* with **BACK UP** — one tap, Google's popup closes itself, done. LATER
+  snoozes it for a day as before. *"Paused — tap to reconnect"* is kept for when Google refuses or the sign-in is
+  closed; *"didn't finish"* for any other failure. **Gavin accepted this on 2026-11-09 ("One tap is okay").**
 
 ## Design
 
@@ -69,7 +74,8 @@ check), `AutoBackupSettings` and `BackupDueLine`. Drive backup **extends it rath
 - **Share sheet:** unchanged and always available as a manual "Back up now" and as the fallback when Drive is paused
   or not set up. Drive never removes it.
 - **Restore check:** the monthly check also offers to verify the latest Drive backup (download, decrypt, compare table
-  counts) through the existing `checkBackupFile` comparison.
+  counts) through the existing `checkBackupFile` comparison. *Deferred from PR 2:* the file-based monthly check is
+  unchanged, and SYSTEMS → Restore → CHOOSE FROM GOOGLE DRIVE already proves a Drive backup unlocks and previews.
 
 ## Acceptance evidence (implementation PRs)
 

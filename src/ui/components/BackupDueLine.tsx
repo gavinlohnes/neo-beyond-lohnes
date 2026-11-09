@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   backUpNow,
   checkBackupFile,
@@ -6,6 +6,8 @@ import {
   snoozeBackupPrompt,
   type BackupPrompt,
 } from "../../application/autoBackupQueries";
+import { backUpToDrive, type DriveBackupResult } from "../../application/driveBackup/driveBackupService";
+import { loadGoogleIdentity } from "../../application/driveBackup/googleAuth";
 import { describeError } from "../errorMessage";
 import { Signal } from "./Signal";
 import { describeRestoreCheck } from "./restoreCheckCopy";
@@ -22,7 +24,32 @@ export function BackupDueLine() {
   const [message, setMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // DRIVE-BACKUP-001: if this session already holds a Google token, a due Drive backup just runs, quietly.
+  useEffect(() => {
+    if (prompt?.kind !== "DRIVE_DUE") return;
+    void loadGoogleIdentity().catch(() => {}); // warm up so the tap opens Google's sign-in straight away
+    if (prompt.failure) return;
+    let live = true;
+    void backUpToDrive({ interactive: false }).then((result) => { if (live && result.kind !== "NEEDS_TAP") settleDrive(result); });
+    return () => { live = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!prompt && !message) return null;
+
+  function settleDrive(result: DriveBackupResult) {
+    setPrompt(getBackupPrompt());
+    setMessage(result.kind === "OK" ? "Backed up to Drive." : "message" in result ? result.message : null);
+  }
+
+  async function handleDrive() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      settleDrive(await backUpToDrive({ interactive: true }));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function handleBackUp() {
     if (busy) return;
@@ -75,6 +102,17 @@ export function BackupDueLine() {
           </button>
         </div>
       )}
+      {prompt?.kind === "DRIVE_DUE" && (
+        <div className="backup-due__row">
+          <p className="meta backup-due__text">{DRIVE_LINE[prompt.failure ?? "DUE"].text}</p>
+          <button className="btn-secondary backup-due__action" disabled={busy} onClick={() => void handleDrive()}>
+            {busy ? "BACKING UP…" : DRIVE_LINE[prompt.failure ?? "DUE"].action}
+          </button>
+          <button className="backup-due__later" disabled={busy} onClick={handleLater}>
+            LATER
+          </button>
+        </div>
+      )}
       {prompt?.kind === "RESTORE_CHECK_DUE" && (
         <div className="backup-due__row">
           <p className="meta backup-due__text">Check your latest backup</p>
@@ -101,6 +139,13 @@ export function BackupDueLine() {
     </section>
   );
 }
+
+/** One quiet line per Drive state: no popups, badges or red. */
+const DRIVE_LINE = {
+  DUE: { text: "Drive backup due", action: "BACK UP" },
+  PAUSED: { text: "Drive backup paused — tap to reconnect", action: "RECONNECT" },
+  FAILED: { text: "Drive backup didn't finish", action: "TRY AGAIN" },
+} as const;
 
 function describeOverdue(days: number | null): string {
   if (days === null) return "";
