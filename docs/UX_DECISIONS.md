@@ -2855,3 +2855,13 @@ information architecture. [Brief](agent/DATA-HOME-001.md).
 Gavin picked "A". When no workout is running, TRAIN opens with a compact hero: the date, **YOUR TRAINING.** and its
 purpose line. It is compact so START WORKOUT stays on the first phone screen (DECLUTTER-001). The live workout view
 and everything else is unchanged. [Brief](agent/TRAIN-HOME-001.md).
+
+
+## DELTA-GROWS-001 — DELTA grows and learns with you (owner approval 2026-11-09)
+
+Gavin: "Make it like Delta… It grows and learns with me," then "Yes, build DELTA. Yes, with the TODAY line."
+DELTA is BEYOND's own original voice, not the show's character. Personal Understanding opens on DELTA: what it
+knows, what it is still learning (with counts) and a dated notebook of what it learned, all derived from records
+with nothing new stored. The daily note carries one DELTA question a day. **TODAY amendment:** one quiet line, "DELTA
+learned something new about you", shows only when a new learning exists and hides on GOT IT. Patterns not causes; no
+advice change. [Brief](agent/DELTA-GROWS-001.md).

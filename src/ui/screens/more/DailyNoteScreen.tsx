@@ -4,6 +4,8 @@ import { getDailyNoteWorkspace } from "../../../application/dailyNoteQueries";
 import { WikiTextArea } from "../../components/WikiTextArea";
 import { describeError } from "../../errorMessage";
 import { TagPatternsSection } from "./TagPatternsSection";
+import { deltaQuestion } from "../../../application/delta";
+import { useDeltaKnowledge } from "../../components/DeltaViews";
 import { getTagChoices, noteTags, normalizeTag, toggleNoteTag } from "../../../application/noteTags";
 
 type Workspace = NonNullable<Awaited<ReturnType<typeof getDailyNoteWorkspace>>>;
@@ -25,6 +27,7 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
   const [error, setError] = useState("");
   const [tagChoices, setTagChoices] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const knowledge = useDeltaKnowledge(active);
   useEffect(() => { if (active) void getTagChoices().then(setTagChoices).catch(() => {}); }, [active]);
   useEffect(() => {
     if (!active) return;
@@ -53,6 +56,12 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
     {!draft.trim() && <div className="button-row" role="group" aria-label="Start from prompts">
       {(Object.keys(NOTE_TEMPLATES) as (keyof typeof NOTE_TEMPLATES)[]).sort((a, b) => Number(b === matchingTemplate(workspace.day.workContext)) - Number(a === matchingTemplate(workspace.day.workContext))).map((key) => <button type="button" key={key} className={key === matchingTemplate(workspace.day.workContext) ? "btn-primary" : "btn-secondary"} onClick={() => setDraft(NOTE_TEMPLATES[key])}>{key}</button>)}
     </div>}
+    {/* DELTA-GROWS-001: one question a day, aimed at what DELTA knows least. Answering goes into the note. */}
+    {knowledge && knowledge !== "ERROR" && (() => { const q = deltaQuestion(knowledge, workspace.day.workContext); return <div className="delta-question" role="group" aria-label="DELTA's question">
+      <p className="card-body" style={{ margin: 0 }}><span className="tool-label">DELTA ASKS · </span>{q.text}</p>
+      <p className="meta" style={{ margin: "2px 0 6px" }}>Answering teaches me {q.teaches}.</p>
+      {!draft.includes(q.text) && <button type="button" className="btn-secondary" onClick={() => { setDraft(draft.trim() ? `${draft.trimEnd()}\n\n${q.text}\n` : `${q.text}\n`); setMessage(""); }}>ANSWER IN NOTE</button>}
+    </div>; })()}
     <WikiTextArea label="Your note" value={draft} onChange={(next) => { setDraft(next); setMessage(""); }} />
     {/* JOURNAL-LEARN-001: one-tap #tags, written into the note as words. BEYOND compares tagged days later. */}
     <div className="daily-note-tags" role="group" aria-label="Tags for today">

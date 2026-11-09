@@ -10,6 +10,7 @@ import { useHiddenFeatures } from "../../hiddenFeatures";
 import { LogSheet } from "../../components/LogSheet";
 import { TodayReviewSupport } from "../../components/TodayReviewSupport";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
+import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -2924,6 +2925,8 @@ export function TodayScreen({
       {/* An active workout resumes from right under the card, above the fold. */}
       {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} fromEarlierDay={!!activeWorkout && activeWorkout.beyondDayId !== day.id} onOpenTrain={onOpenTrain} /></div>}
       {day && <ShiftRecoveryBrief active={active} now={now} />}
+      {/* DELTA-GROWS-001 (Gavin: "Yes, with the TODAY line"): one quiet line, only when DELTA learned something new. */}
+      {day && <DeltaNewsLine active={active} />}
       {day && onOpenWeeklyReview && <div className="today-review-line"><WeeklyReviewReadyLine active={active} phase={scheduledClock.phase} now={now} onOpen={onOpenWeeklyReview} /></div>}
       {day && <section className="today-numbers" aria-label="Today's numbers">{renderFuel()}</section>}
       <section className="console-operations" aria-labelledby="console-operations-heading">

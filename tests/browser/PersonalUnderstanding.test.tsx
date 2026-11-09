@@ -29,6 +29,7 @@ it.each([320, 390, 844, 1280])("connects choices and written lessons without wri
   const before = await db.events.toArray();
   const screen = await render(<PersonalUnderstanding active onOpenSource={onOpenSource} />);
   await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "Choices", exact: true }).click(); // DELTA-GROWS-001: DELTA is now the first view
   await expect.element(screen.getByRole("heading", { name: "Practical work meals" })).toBeVisible();
   await screen.getByText("Related written lessons (1)", { exact: true }).click();
   await expect.element(screen.getByText(/Matched by words/)).toBeVisible();
@@ -47,6 +48,7 @@ it("bounds lists and keeps real absence distinct from a reading failure", async 
   for (let index = 0; index < 7; index++) await createMission({ title: `Direction ${index}` });
   const screen = await render(<PersonalUnderstanding active />);
   await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "Choices", exact: true }).click(); // DELTA-GROWS-001: DELTA is now the first view
   await expect.element(screen.getByRole("button", { name: "SHOW MORE MISSIONS" })).toBeVisible();
   expect(screen.getByRole("heading", { level: 3 }).elements()).toHaveLength(5);
   await screen.getByRole("button", { name: "SHOW MORE MISSIONS" }).click();
@@ -73,6 +75,7 @@ it("inspects comparable days through existing History with sample sizes and miss
   vi.setSystemTime(new Date(2026, 9, 27, 20));
   const onOpenHistory = vi.fn(); const screen = await render(<PersonalUnderstanding active onOpenHistory={onOpenHistory} />);
   await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "Choices", exact: true }).click(); // DELTA-GROWS-001: DELTA is now the first view
   await screen.getByRole("button", { name: "Patterns", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "Choose a comparable situation" })).toBeVisible();
   await screen.getByText("Inspect comparable days", { exact: true }).click();
@@ -86,6 +89,7 @@ it("opens the exact Mission and Journal, returns to Review and refreshes edited 
   const { mission, entry } = await seed();
   const screen = await render(<MoreScreen initialView="REVIEW" />);
   await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "Choices", exact: true }).click(); // DELTA-GROWS-001: DELTA is now the first view
   await screen.getByRole("button", { name: "OPEN MISSION", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Practical work meals", exact: true })).toBeVisible();
   await modifyMission(mission.id, { title: "Simple work meals" });
@@ -101,6 +105,7 @@ it("opens the exact Mission and Journal, returns to Review and refreshes edited 
 it("opens canonical Targets and Work Schedule with a return path to the same understanding view", async () => {
   const screen = await render(<MoreScreen initialView="REVIEW" />);
   await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "Choices", exact: true }).click(); // DELTA-GROWS-001: DELTA is now the first view
   await screen.getByRole("button", { name: "REVIEW OR CHANGE TARGETS", exact: true }).click();
   await expect.poll(() => document.activeElement?.id).toBe("command-nutrition-targets");
   await screen.getByRole("button", { name: "BACK TO REVIEW", exact: true }).click();
@@ -118,6 +123,7 @@ it("ignores an older in-flight understanding read after leaving and re-entering"
   vi.mocked(getPersonalUnderstanding).mockImplementationOnce(() => new Promise((resolve) => { finishOld = resolve; }));
   const screen = await render(<PersonalUnderstanding active />);
   await screen.getByText("PERSONAL UNDERSTANDING", { exact: true }).click();
+  await screen.getByRole("button", { name: "Choices", exact: true }).click(); // DELTA-GROWS-001: DELTA is now the first view
   await expect.element(screen.getByRole("status")).toBeVisible();
   await screen.rerender(<PersonalUnderstanding active={false} />);
   await modifyMission(mission.id, { title: "Changed current priority" });

@@ -8,6 +8,7 @@ import { describeError } from "../../errorMessage";
 import "./personalUnderstanding.css";
 import { TagPatternsSection } from "../more/TagPatternsSection";
 import { SleepRhythmLines } from "./SleepRhythmLines";
+import { DeltaPanel } from "../../components/DeltaViews";
 
 export type UnderstandingSource = { kind: "MISSION" | "JOURNAL"; id: string } | { kind: "TARGETS" | "SCHEDULE" };
 type Props = { active: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenSource?: ((source: UnderstandingSource) => void) | undefined };
@@ -18,7 +19,7 @@ const measureName = (measure: string) => measure === "MAIN_SLEEP" ? "Main sleep"
 /** Optional Inspect depth. All knowledge is derived; nothing here records or infers a preference. */
 export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: Props) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<"Choices" | "Patterns" | "Lessons" | "My context">("Choices");
+  const [view, setView] = useState<"DELTA" | "Choices" | "Patterns" | "Lessons" | "My context">("DELTA");
   const [data, setData] = useState<Understanding | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
@@ -47,12 +48,13 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: P
     {open && <div className="understanding-body">
       <p className="card-body">What you have chosen, what your records show, and what you have learned. This is a view of your records, not a judgment about who you are.</p>
       <div className="understanding-navigation" role="group" aria-label="Personal understanding views">
-        {(["Choices", "Patterns", "Lessons", "My context"] as const).map((name) => <button type="button" className="btn-secondary" key={name} aria-pressed={view === name} onClick={() => { setView(name); setLimit(5); }}>{name}</button>)}
+        {(["DELTA", "Choices", "Patterns", "Lessons", "My context"] as const).map((name) => <button type="button" className="btn-secondary" key={name} aria-pressed={view === name} onClick={() => { setView(name); setLimit(5); }}>{name}</button>)}
       </div>
       {reading && <p role="status">Connecting your recorded context…</p>}
       {error && <div><p role="alert">{error} Your knowledge is unavailable, not empty. No records were changed.</p><button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY PERSONAL UNDERSTANDING</button></div>}
       {data && !reading && !error && <>
         <p className="meta">Read on {date(data.readAt)} · on this device · nothing here changes your plan</p>
+        {view === "DELTA" && <DeltaPanel active={active && open} />}
         {view === "Choices" && <section aria-label="Your recorded choices">
           <h2 className="tool-label">WHAT MATTERS TO YOU</h2>
           <p className="meta">Active Missions you recorded. Their order is not a priority ranking.</p>

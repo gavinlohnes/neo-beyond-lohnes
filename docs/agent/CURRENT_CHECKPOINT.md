@@ -1,3 +1,10 @@
+# DELTA-GROWS-001 — approved, in review (2026-11-09)
+
+- Gavin: "Yes, build DELTA. Yes, with the TODAY line." The notebook, what DELTA knows, one question a day, and the
+  TODAY line. Brief: [DELTA-GROWS-001.md](DELTA-GROWS-001.md). JOURNAL-LEARN-001 is complete (#463, #464).
+
+---
+
 # JOURNAL-LEARN-001 — approved, building (2026-11-09)
 
 - Gavin: "Yes, build it. Then we add to it." Three parts, one PR each. Brief: [JOURNAL-LEARN-001.md](JOURNAL-LEARN-001.md).
