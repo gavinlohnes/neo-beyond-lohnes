@@ -5,6 +5,7 @@ import { hoursMinutes } from "../screens/health/healthFormat";
 import { describeError } from "../errorMessage";
 import { describeUnusual } from "../screens/today/unusualCopy";
 import { openRecord } from "../openRecordEvent";
+import { askAlfred } from "./AlfredSheet";
 import { describeGroup } from "../screens/today/SleepRhythm";
 import { describeComparison } from "../screens/more/TagPatternsSection";
 
@@ -63,8 +64,21 @@ export function DeltaPanel({ active }: { active: boolean }) {
     {knowledge.learnings.length
       ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}<Proof learning={l} /></li>)}</ol>
       : <p className="meta">Nothing learned yet. Measured sleep, tags in your daily note and check-ins teach me.</p>}
+    {knowledge.learnings.length > 0 && <div className="delta-talk">
+      <button type="button" className="btn-secondary" onClick={() => askAlfred(deltaTalkAsk(knowledge))}>TALK IT THROUGH WITH ALFRED</button>
+      <p className="meta">Opens Alfred with DELTA's notebook ready to send. Nothing is sent until you tap send there; it uses your Claude key.</p>
+    </div>}
     <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
+}
+
+/**
+ * SUPERCHARGE-001 item 6: DELTA's notebook handed to Alfred for a conversational explanation, on a tap. Worded as
+ * an instruction (not a question DELTA's free answers would catch), with every line's counts kept exact.
+ */
+export function deltaTalkAsk(k: DeltaKnowledge): string {
+  const lines = k.learnings.slice(0, 8).map((l) => `- ${describeLearning(l)}`);
+  return `Talk me through DELTA's notebook below, in plain words, like a calm coach who knows my records. Keep every number and day count exactly as written, say what each one is based on, treat them as patterns and never causes, and end with one thing worth watching this week. No advice that overrides BEYOND's recommendation.\n\n${lines.join("\n")}`;
 }
 
 /** SUPERCHARGE-001 item 4: every notebook line taps through to the records behind it. */

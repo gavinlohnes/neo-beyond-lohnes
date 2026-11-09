@@ -36,3 +36,11 @@
 - `tests/integration/freeAnswers.test.ts`: the new answers, missing-not-zero, and the lift question left alone.
 - `tests/integration/needle.test.ts`: the noted-week floor.
 - Alfred, search and operator-context suites pass (170 browser tests and 27 node tests).
+
+## Item 6 (Gavin: "Do 2 is fine. Go ahead", 2026-11-09)
+**Talk it through with Alfred:** DELTA's view gains TALK IT THROUGH WITH ALFRED (shown when the notebook has
+lines). It opens Alfred's sheet with DELTA's notebook drafted (up to 8 counted lines), using the existing
+`askAlfred` draft pattern. It asks for a plain-words explanation that keeps every number exact, treats lines as
+patterns and never causes, and doesn't override BEYOND's recommendation. **Nothing is sent until he taps send**,
+and the copy says it uses his Claude key. The draft is worded as an instruction, so DELTA's free answers don't
+intercept it (`isQuestion` is false; tested in `deltaFacts.test.ts`).

@@ -1,5 +1,7 @@
-# SUPERCHARGE-001 — approved (1, 2, 4, 5), in review (2026-11-09)
+# SUPERCHARGE-001 — 1, 2, 4, 5 merged (#469); item 6 "Talk it through with Alfred" in review (2026-11-09)
 
+- Gavin's weekly plan usage is ~93% (resets Fri); a fresh session is recommended. Next: rotation field test (#402)
+  with Gavin, then fixes from a week of real DELTA use.
 - Ask DELTA free, Alfred knows what DELTA knows (with the personal opt-in for note-based facts), DELTA lines tap
   through, and more free answers. Brief: [SUPERCHARGE-001.md](SUPERCHARGE-001.md). DELTA-NEXT-001 is complete
   (#467, #468); item 8 (rotation field test #402) waits for Gavin.
