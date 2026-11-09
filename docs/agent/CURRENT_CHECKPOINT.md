@@ -1,8 +1,11 @@
-# DRIVE-BACKUP-001 — brief for approval (2026-11-09)
+# DRIVE-BACKUP-001 — approved, building (2026-11-09)
 
 - Gavin chose encrypted Google Drive backups (Protected: backup contract + provider). Brief:
   [DRIVE-BACKUP-001.md](DRIVE-BACKUP-001.md). This PR adds only the brief, the Decision Register entry and the public
-  privacy page Google requires. **Implementation waits for Gavin's approval of the brief.**
+  privacy page Google requires (#448). **Gavin approved the brief 2026-11-09.**
+- PR 1 (this): WebCrypto encryption (`application/driveBackup/backupCrypto.ts`), device key store in its own
+  IndexedDB (`persistence/driveKeyStore.ts`), setup/encrypt/unlock helpers, tests incl. protected-fixture round-trip.
+  Review and CI pending. PR 2 next: Drive connection, settings in SYSTEMS, due-on-open, status line, restore list.
 - TEMPLATE-EDIT-001 merged as #447. POLISH-003 complete (#445, #446).
 
 ---

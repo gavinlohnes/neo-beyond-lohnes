@@ -1,6 +1,7 @@
 # DRIVE-BACKUP-001 — automatic encrypted backups to Google Drive
 
-**Status: brief for Gavin's bounded approval. Nothing touching backups is built until he approves this file.**
+**Status: APPROVED by Gavin, 2026-11-09 ("Approve the Drive Backup plan").** Built in two PRs: (1) encryption and the
+device key store; (2) Drive connection, settings, due-on-open, status and restore.
 
 - **Authorization so far:** Gavin chose this objective (#1 of the big ideas) in the reviewer session on 2026-11-08,
   created the Google OAuth client, and told the Builder "I think I set it all up now" (2026-11-09).
