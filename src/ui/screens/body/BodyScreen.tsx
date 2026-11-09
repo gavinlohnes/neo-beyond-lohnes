@@ -17,6 +17,7 @@ import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { Cave, type CaveRequest } from "../systems/CaveVitals";
 import { OperatorHeader } from "../../components/OperatorHeader";
+import { DataHome } from "./DataHome";
 import { Icon } from "../../icons/Icon";
 import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
 import {
@@ -2459,6 +2460,15 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <SleepMetricSheet open={sleepMetricOpen} onClose={() => setSleepMetricOpen(false)} onAllRecords={() => { setSleepMetricOpen(false); showProgress("sleep"); }} />
     <OperatorHeader destination="body" focusable>DATA</OperatorHeader>
     {onReturnToToday && <button type="button" className="btn-secondary" onClick={onReturnToToday}>{returnLabel}</button>}
+    {/* DATA-HOME-001: DATA opens like YOUR LIFE and MORE; each shortcut uses the handler DATA already had. */}
+    <div hidden={progressOpen || pictureOpen}><DataHome busy={busy || foodSearchBusy} onLogWeight={onLogWeight} onSleep={() => setSleepMetricOpen(true)} shortcuts={[
+      { label: "Weight", onOpen: () => showProgress("weight") },
+      ...(onOpenTrainingRecords ? [{ label: "Training records", onOpen: onOpenTrainingRecords }] : []),
+      ...(([["photos", "Photos"], ["measurements", "Measurements"]] as const).map(([view, label]) => ({ label, onOpen: () => { rememberOrigin(); setProgressVisited(true); setProgressOpen(true); setCompositionRequest((old) => ({ key: (old?.key ?? 0) + 1, view })); } }))),
+      { label: "Whole picture", onOpen: openPicture },
+      { label: "Your rotation", onOpen: () => setCaveView({ key: ++caveViewKey.current, tab: "file", section: "rotation" }) },
+      { label: "History", onOpen: () => { setHealthHistoryOpen(true); document.querySelector<HTMLElement>('section[aria-label="History"]')?.scrollIntoView({ block: "start" }); } },
+    ]} /></div>
     {/* CAVE-DATA (Gavin, 2026-10-28, option A): DATA is the cave; its own page is the first view, NUMBERS. */}
     <div hidden={progressOpen || pictureOpen}><Cave initial={{ tab: "lead" }} request={caveView} onOpenMetric={(metric) => showProgress(metric)}
       onOpenUnderstanding={onOpenReview ? () => onOpenReview("overview") : undefined}
