@@ -1,4 +1,4 @@
-# Queue for the 23:30 session (Gavin's picks, 2026-11-09: "A, B, 25, 5, C")
+# Queue for the 23:30 session (Gavin's picks, 2026-11-09: "A, B, 25, 5, C") — A #458, B #459, 25 #460, 5 #461 merged; C in review
 
 In order:
 1. **A. TRAIN-HOME-001 — in review.** TRAIN in the YOUR LIFE / MORE / DATA style (date, title, Start workout, shortcuts;
