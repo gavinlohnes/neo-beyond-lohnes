@@ -43,8 +43,8 @@ export function AlfredContextPanel({ included, onIncluded, busy, snapshot, selec
   return <section className="alfred-context" aria-label="Alfred context">
     <details onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>CONTEXT & SOURCES</summary>
-      <p className="meta">Claude already receives your current day, recent recorded days, schedule, tasks, notes, targets, saved meals and active personal facts (including unconverted Alfred entries) when you send. Read tools can retrieve older records. Sending needs a connection.</p>
-      <label><input type="checkbox" checked={included} disabled={busy} onChange={(e) => onIncluded(e.target.checked)} /> Include my Missions, confirmed personal memory, recent daily notes and synced calendar events in this conversation</label>
+      <p className="meta">Claude already receives your current day, recent recorded days, schedule, tasks, notes, targets, saved meals, active personal facts (including unconverted Alfred entries) and what DELTA has learned from your measurements (sleep timing, unusual readings) when you send. Read tools can retrieve older records. Sending needs a connection.</p>
+      <label><input type="checkbox" checked={included} disabled={busy} onChange={(e) => onIncluded(e.target.checked)} /> Include my Missions, confirmed personal memory, recent daily notes, synced calendar events and DELTA's patterns from my notes and experiments in this conversation</label>
       <p className="meta">Off for this conversation by default. Missions, direction and constraints stay out of automatic briefs and weekly reviews; those keep their existing prep/recovery context. Changing this choice starts a fresh model conversation; earlier requests sent to Claude cannot be recalled.</p>
       {open && <>
         <h3>Personal sources available on this phone</h3>
