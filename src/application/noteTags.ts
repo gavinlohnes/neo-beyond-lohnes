@@ -5,7 +5,7 @@ import { db } from "../persistence/db";
  * data — so it backs up, searches and edits like any other text. A tag starts at the beginning of the text or
  * after whitespace (so a link's #fragment never counts): a letter, then letters, digits or "-", up to 32.
  */
-export const SUGGESTED_TAGS = ["latecoffee", "alcohol", "nap", "sauna", "argument", "goodtalk"] as const;
+export const SUGGESTED_TAGS = ["latecoffee", "alcohol", "nap", "sauna", "argument", "goodtalk", "stressed"] as const;
 const TAG = /(^|\s)#([a-z][a-z0-9-]{0,31})(?=$|[\s.,;:!?)])/gi;
 
 export function noteTags(text: string): string[] {
@@ -38,4 +38,27 @@ export async function getTagChoices(): Promise<string[]> {
   for (const note of await db.dailyNotes.toArray()) for (const tag of noteTags(note.text)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
   const used = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
   return [...used, ...SUGGESTED_TAGS.filter((t) => !counts.has(t))];
+}
+
+/**
+ * DELTA-NEXT 4: tag today from somewhere other than the note (after a workout). Adds the tag to the active
+ * lived day's note through the ordinary save — on the tap that asked for it. Returns the day's tags after.
+ */
+export async function addTagToActiveDay(rawTag: string): Promise<string[]> {
+  const { getDailyNoteWorkspace } = await import("./dailyNoteQueries");
+  const { saveDailyNote } = await import("./dailyNoteCommands");
+  const workspace = await getDailyNoteWorkspace();
+  if (!workspace) throw new Error("NO_ACTIVE_DAY: Start a lived day to tag it.");
+  const text = workspace.note?.text ?? "";
+  const tag = normalizeTag(rawTag);
+  if (!tag) return noteTags(text);
+  if (noteTags(text).includes(tag)) return noteTags(text);
+  return noteTags((await saveDailyNote(workspace.day.id, toggleNoteTag(text, tag))).text);
+}
+
+/** Today's tags, for showing which quick tags are already on. */
+export async function getActiveDayTags(): Promise<string[]> {
+  const { getDailyNoteWorkspace } = await import("./dailyNoteQueries");
+  const workspace = await getDailyNoteWorkspace();
+  return workspace ? noteTags(workspace.note?.text ?? "") : [];
 }

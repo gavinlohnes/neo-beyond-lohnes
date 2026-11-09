@@ -10,6 +10,7 @@ import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { CommandSurface } from "../../components/CommandSurface";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import "../more/systemsHome.css";
+import { QuickTags } from "../../components/QuickTags";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
 import { Section } from "../../components/Section";
@@ -1108,6 +1109,8 @@ export function TrainScreen({
               ))}
             </div>
           )}
+          {/* DELTA-NEXT 4: how the workout felt, as a tag on today's note. */}
+          <QuickTags label="How did it feel" tags={["felt-strong", "felt-flat", "short-on-time", "sore"]} />
           {/* ALFRED-007: ask Alfred about the workout just finished. */}
           <button className="btn-secondary" style={{ marginTop: 8, width: "auto", padding: "8px 16px", marginRight: 8 }} onClick={() => askAlfred(
             `I just finished a ${sentenceCase(completionSummary.bodyAreas) || "workout"}: ${completionSummary.setsLogged} sets${completionSummary.volumeLbs > 0 ? `, ${completionSummary.volumeLbs.toLocaleString("en-US")} lb volume` : ""}${completionSummary.records.length ? `, ${completionSummary.records.length} new PR${completionSummary.records.length === 1 ? "" : "s"}` : ""}. How does it compare with my last ones, and what should I do next time?`)}>

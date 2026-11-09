@@ -8,7 +8,7 @@
 | # | Item | Status |
 |---|---|---|
 | 1 | **Unusual for you:** DELTA's notebook and TODAY line show the measured sheets' existing "unusual for you" streaks (resting HR, sleep, steps) while they last | this PR |
-| 4 | Tags on check-ins and workouts | next |
+| 4 | **Tags after a workout:** HOW DID IT FEEL (#felt-strong, #felt-flat, #short-on-time, #sore) on the workout summary adds the tag to today's daily note; #stressed joins the note's suggestions | this PR (with 1, 7) |
 | 5 | Weekly "what changed" | next |
 | 7 | **One-tap answer:** ROUGH / OK / GOOD under DELTA's question draft "<question> Good." into the note; SAVE NOTE still saves | this PR (with 1) |
 | 2 | Shift-run forecast (labelled forecast, reading only) | next |
@@ -28,3 +28,11 @@
 ## Item 7
 - **REUSE:** the existing question and draft. **OWN:** three words. **BUILD FROM SCRATCH:** none.
 - **Tests:** `tests/browser/Delta.test.tsx`: GOOD drafts "<question> Good." and nothing is saved.
+
+## Item 4 (as built, no new data)
+Check-ins and workouts have no note field, and adding one would be a schema and command change that wasn't
+flagged. So tags from elsewhere go into **today's daily note** through the ordinary `saveDailyNote`, on the tap.
+JOURNAL-LEARN tag patterns and DELTA then compare them like any tag. A tag is removed in the note itself. Check-in
+tags use the note's tag row (#stressed added to the suggestions), so TODAY's check-in flow is unchanged.
+- **Tests:** `tests/integration/noteTags.test.ts`: adds once, keeps the written text, normalises. The TRAIN suites
+  pass (179).
