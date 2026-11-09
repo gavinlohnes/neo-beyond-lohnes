@@ -4,6 +4,7 @@ import { searchAll, type SearchResult } from "../../../application/searchQueries
 import { describeSearchDomain } from "./searchCopy";
 import { interpret, isQuestion } from "../../../application/helper/freeHelper";
 import { answerQuestion } from "../../../application/helper/freeAnswers";
+import { deltaAnswer } from "../../components/DeltaViews";
 import { readHelperContext } from "../../../application/helper/helperContext";
 import { describeProposal } from "../../../application/alfred/alfredActions";
 import { findCapabilities, type SystemCapability } from "../../systemCatalog";
@@ -13,7 +14,7 @@ import { askAlfred, doInBeyond } from "../../components/AlfredSheet";
 interface Command { q: string; go: SystemCapability[]; doIt: string[]; answer: string | null }
 async function readCommand(q: string): Promise<Command> {
   const go = findCapabilities(q).slice(0, 4);
-  if (isQuestion(q)) return { q, go, doIt: [], answer: await answerQuestion(q).catch(() => null) };
+  if (isQuestion(q)) return { q, go, doIt: [], answer: (await deltaAnswer(q).catch(() => null)) ?? await answerQuestion(q).catch(() => null) };
   const result = interpret(q, await readHelperContext());
   return { q, go, doIt: result.unknown.length ? [] : result.cards.map(describeProposal), answer: null };
 }
