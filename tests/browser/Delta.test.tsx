@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { PersonalUnderstanding } from "../../src/ui/screens/review/PersonalUnderstanding";
 import { DailyNoteScreen } from "../../src/ui/screens/more/DailyNoteScreen";
-import { DeltaNewsLine, ExperimentOffer } from "../../src/ui/components/DeltaViews";
+import { DeltaNewsLine, DeltaWeek, ExperimentOffer } from "../../src/ui/components/DeltaViews";
 import { startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 
@@ -49,6 +49,13 @@ describe("DELTA-GROWS-001", () => {
     await expect.element(screen.getByText(/Started: "Skip #latecoffee" for 14 days/)).toBeVisible();
     const entries = await db.decisionJournalEntries.toArray();
     expect(entries.filter((e) => e.title === "Try: Skip #latecoffee")).toHaveLength(1);
+  });
+
+  it("the weekly review's DELTA panel says plainly when nothing changed that week", async () => {
+    await startDay();
+    const screen = await render(<DeltaWeek active week={{ start: "2026-10-05T21:30:00.000Z", end: "2026-10-12T21:30:00.000Z" }} />);
+    await expect.element(screen.getByText("DELTA · WHAT CHANGED THIS WEEK")).toBeVisible();
+    await expect.element(screen.getByText("Nothing new this week. DELTA only speaks when your records show something.")).toBeVisible();
   });
 
   it("TODAY's DELTA line stays silent when nothing new was learned", async () => {

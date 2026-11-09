@@ -105,3 +105,21 @@ export function ExperimentOffer({ suggestion }: { suggestion: ExperimentSuggesti
     }}>START {suggestion.days}-DAY TEST</button>}
   </section>;
 }
+
+/**
+ * DELTA-NEXT 5: in the weekly review, what DELTA learned or noticed during that week — the counted notebook
+ * lines dated inside it. "Nothing new this week" is a valid answer.
+ */
+export function DeltaWeek({ active, week }: { active: boolean; week: { start: string; end: string } }) {
+  const knowledge = useDeltaKnowledge(active);
+  if (!knowledge || knowledge === "ERROR") return null;
+  const from = Date.parse(week.start), to = Date.parse(week.end);
+  const lines = knowledge.learnings.filter((l) => { const at = Date.parse(l.learnedOn); return at >= from && at < to; });
+  return <div className="weekly-dashboard__panel delta-week" aria-label="DELTA this week">
+    <h3 className="tool-label">DELTA · WHAT CHANGED THIS WEEK</h3>
+    {lines.length
+      ? lines.slice(0, 3).map((l) => <p key={l.id} className="card-body" style={{ margin: "0 0 6px" }}>{describeLearning(l)}</p>)
+      : <p className="meta">Nothing new this week. DELTA only speaks when your records show something.</p>}
+    {lines.length > 3 && <p className="meta">{lines.length - 3} more in DELTA's notebook (Review → Personal Understanding).</p>}
+  </div>;
+}

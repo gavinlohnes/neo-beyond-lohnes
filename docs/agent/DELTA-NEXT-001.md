@@ -9,7 +9,7 @@
 |---|---|---|
 | 1 | **Unusual for you:** DELTA's notebook and TODAY line show the measured sheets' existing "unusual for you" streaks (resting HR, sleep, steps) while they last | this PR |
 | 4 | **Tags after a workout:** HOW DID IT FEEL (#felt-strong, #felt-flat, #short-on-time, #sore) on the workout summary adds the tag to today's daily note; #stressed joins the note's suggestions | this PR (with 1, 7) |
-| 5 | Weekly "what changed" | next |
+| 5 | **Weekly "what changed":** the weekly review shows DELTA · WHAT CHANGED THIS WEEK, up to 3 notebook lines dated in that week, or "Nothing new this week" | this PR (with 1, 7, 4) |
 | 7 | **One-tap answer:** ROUGH / OK / GOOD under DELTA's question draft "<question> Good." into the note; SAVE NOTE still saves | this PR (with 1) |
 | 2 | Shift-run forecast (labelled forecast, reading only) | next |
 | 3 | Best windows in the rotation (suggests, never books) | next |
