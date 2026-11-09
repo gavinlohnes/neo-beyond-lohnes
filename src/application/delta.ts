@@ -7,6 +7,8 @@ import type { DaySummary } from "../engine/dayLedger";
 import type { StateCheckIn } from "../domain/common/types";
 import type { ExternalSleep } from "../domain/health/sleepImport";
 import { activeExperiments, getExperiments, type Experiment } from "./tryExperiment";
+import { getMeasuredSnapshot } from "./measuredQueries";
+import type { UnusualReading } from "../domain/health/unusual";
 
 /**
  * DELTA-GROWS-001: DELTA's view of what BEYOND has learned about you, and how it grew. Everything is derived
@@ -19,7 +21,10 @@ export interface Topic { id: string; label: string; state: TopicState; have: num
 export type Learning =
   | { id: string; kind: "SLEEP_WINDOW"; learnedOn: string; group: RhythmGroup }
   | { id: string; kind: "TAG"; learnedOn: string; tag: string; taggedDays: number; comparison: MeasureComparison }
-  | { id: string; kind: "EXPERIMENT"; learnedOn: string; what: string; days: number; outcome: string; lesson?: string };
+  | { id: string; kind: "EXPERIMENT"; learnedOn: string; what: string; days: number; outcome: string; lesson?: string }
+  /** DELTA-NEXT 1: noticed, not learned — a run of days outside your own usual range, while it lasts. */
+  | { id: string; kind: "UNUSUAL"; learnedOn: string; metric: UnusualMetric; reading: UnusualReading };
+export type UnusualMetric = "resting" | "sleep" | "steps";
 /** DELTA's offer to test a tag that lines up with shorter sleep. Starting it is the existing experiment command, on a tap. */
 export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number; withDays: number; withoutDays: number }
 export interface DeltaKnowledge { topics: Topic[]; learnings: Learning[]; suggestion: ExperimentSuggestion | null }
@@ -30,10 +35,10 @@ export const SUGGESTED_EXPERIMENT_DAYS = 14;
 export const CHECK_INS_NEEDED = 7;
 export const WORKOUTS_NEEDED = 3;
 
-interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySummary[]; notes: readonly { dayId: string; text: string }[]; checkIns: readonly StateCheckIn[]; experiments?: readonly Experiment[]; now: Date }
+interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySummary[]; notes: readonly { dayId: string; text: string }[]; checkIns: readonly StateCheckIn[]; experiments?: readonly Experiment[]; unusual?: Partial<Record<UnusualMetric, UnusualReading | null>>; now: Date }
 
 /** Pure. */
-export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = [], now }: Inputs): DeltaKnowledge {
+export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = [], unusual = {}, now }: Inputs): DeltaKnowledge {
   const all = deriveSleepRhythm(sleeps, summaries, now, 100_000);
   const recent = deriveSleepRhythm(sleeps, summaries, now);
   const topics: Topic[] = [];
@@ -76,6 +81,13 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
   }).sort((a, b) => b.minutesLess - a.minutesLess);
   const suggestion = running.length ? null : candidates[0] ?? null;
 
+  // DELTA-NEXT 1: the measured sheets' "unusual for you" streaks, while they last. Silent otherwise.
+  for (const metric of ["resting", "sleep", "steps"] as const) {
+    const reading = unusual[metric];
+    // Dated at the run's FIRST day, so a run is announced once and an ongoing run doesn't return after GOT IT.
+    if (reading?.days.length) learnings.push({ id: `unusual-${metric}-${reading.days[0]!.from}`, kind: "UNUSUAL", learnedOn: new Date(reading.days[0]!.from).toISOString(), metric, reading });
+  }
+
   learnings.sort((a, b) => b.learnedOn.localeCompare(a.learnedOn));
   return { topics, learnings, suggestion };
 }
@@ -105,8 +117,8 @@ function tagLearnedOn(notes: Inputs["notes"], summaries: readonly DaySummary[], 
 }
 
 export async function getDeltaKnowledge(now = new Date()): Promise<DeltaKnowledge> {
-  const [records, summaries, notes, checkIns, experiments] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), db.checkIns.toArray(), getExperiments()]);
-  return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, experiments, now });
+  const [records, summaries, notes, checkIns, experiments, snapshot] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), db.checkIns.toArray(), getExperiments(), getMeasuredSnapshot(now.getTime()).catch(() => null)]);
+  return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, experiments, unusual: snapshot?.unusual ?? {}, now });
 }
 
 /**

@@ -1,4 +1,5 @@
 import { WeekInNumbers } from "./WeekInNumbers";
+import { DeltaWeek } from "../../components/DeltaViews";
 import { useEffect, useRef, useState } from "react";
 import { getWeeklyDashboard, type WeeklyDashboard as Dashboard } from "../../../application/weeklyDashboardQueries";
 import { CONTEXT_FLOOR_DAYS, weekPattern, type PatternMode } from "../../../engine/weeklyDashboard";
@@ -122,6 +123,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
           <button type="button" className="btn-secondary" disabled={isLatest} onClick={() => setWeeksBack((n) => Math.max(0, n - 1))}>NEXT WEEK →</button>
         </div>
         <WeekInNumbers dashboard={data} />
+        <DeltaWeek active={active} week={week} />
         {isLatest ? (
           <div className="weekly-dashboard__status">
             <div>

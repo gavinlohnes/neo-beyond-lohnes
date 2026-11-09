@@ -3,6 +3,7 @@ import { getDeltaKnowledge, newLearnings, type DeltaKnowledge, type ExperimentSu
 import { startExperiment } from "../../application/tryExperiment";
 import { hoursMinutes } from "../screens/health/healthFormat";
 import { describeError } from "../errorMessage";
+import { describeUnusual } from "../screens/today/unusualCopy";
 import { describeGroup } from "../screens/today/SleepRhythm";
 import { describeComparison } from "../screens/more/TagPatternsSection";
 
@@ -14,6 +15,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month
 
 export function describeLearning(l: Learning): string {
   if (l.kind === "SLEEP_WINDOW") return `Learned when you sleep. ${describeGroup(l.group)}`;
+  if (l.kind === "UNUSUAL") { const c = describeUnusual(l.metric, l.reading); return `Noticed: ${c.headline} ${c.basis}`; }
   if (l.kind === "EXPERIMENT") return `Learned from your experiment "${l.what}" (${l.days} days): ${l.outcome}.${l.lesson ? ` Your lesson: ${l.lesson}` : ""}`;
   return `Learned what #${l.tag} lines up with, over ${l.taggedDays} tagged days. ${describeComparison(l.comparison)}`;
 }
@@ -47,9 +49,10 @@ export function DeltaPanel({ active }: { active: boolean }) {
       {knowledge.topics.map((t) => <li key={t.id} data-state={t.state}><strong>{t.label}</strong><span className="meta"> · {describeTopic(t)}</span></li>)}
     </ul>
     {knowledge.suggestion && <ExperimentOffer suggestion={knowledge.suggestion} />}
+    <DeltaAhead active={active} />
     <h2 className="tool-label">DELTA'S NOTEBOOK</h2>
     {knowledge.learnings.length
-      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">Learned {day(l.learnedOn)} · now:</span> {describeLearning(l)}</li>)}</ol>
+      ? <ol className="delta-notebook" aria-label="What DELTA learned, newest first">{knowledge.learnings.map((l) => <li key={l.id}><span className="meta">{l.kind === "UNUSUAL" ? `Noticed ${day(l.learnedOn)} · now:` : `Learned ${day(l.learnedOn)} · now:`}</span> {describeLearning(l)}</li>)}</ol>
       : <p className="meta">Nothing learned yet. Measured sleep, tags in your daily note and check-ins teach me.</p>}
     <p className="meta">Patterns from your records, not causes. Each date is the day enough evidence first existed; the numbers are as they stand now. Nothing here changes advice.</p>
   </section>;
@@ -69,7 +72,7 @@ export function DeltaNewsLine({ active }: { active: boolean }) {
   if (!fresh.length) return null;
   return <section className="backup-due delta-news" aria-label="DELTA learned something new">
     <div className="backup-due__row">
-      <p className="meta backup-due__text">DELTA learned something new about you</p>
+      <p className="meta backup-due__text">{fresh.every((l) => l.kind === "UNUSUAL") ? "DELTA noticed something unusual for you" : "DELTA learned something new about you"}</p>
       <button type="button" className="btn-secondary backup-due__action" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "LESS" : "READ"}</button>
       <button type="button" className="backup-due__later" onClick={() => { try { localStorage.setItem(SEEN, fresh[0]!.learnedOn); } catch { /* shows again */ } setHidden(true); }}>GOT IT</button>
     </div>
@@ -101,5 +104,63 @@ export function ExperimentOffer({ suggestion }: { suggestion: ExperimentSuggesti
           (e) => setMessage(describeError(e, "The experiment couldn't be started.")))
         .finally(() => setBusy(false));
     }}>START {suggestion.days}-DAY TEST</button>}
+  </section>;
+}
+
+/**
+ * DELTA-NEXT 5: in the weekly review, what DELTA learned or noticed during that week — the counted notebook
+ * lines dated inside it. "Nothing new this week" is a valid answer.
+ */
+export function DeltaWeek({ active, week }: { active: boolean; week: { start: string; end: string } }) {
+  const knowledge = useDeltaKnowledge(active);
+  if (!knowledge || knowledge === "ERROR") return null;
+  const from = Date.parse(week.start), to = Date.parse(week.end);
+  const lines = knowledge.learnings.filter((l) => { const at = Date.parse(l.learnedOn); return at >= from && at < to; });
+  return <div className="weekly-dashboard__panel delta-week" aria-label="DELTA this week">
+    <h3 className="tool-label">DELTA · WHAT CHANGED THIS WEEK</h3>
+    {lines.length
+      ? lines.slice(0, 3).map((l) => <p key={l.id} className="card-body" style={{ margin: "0 0 6px" }}>{describeLearning(l)}</p>)
+      : <p className="meta">Nothing new this week. DELTA only speaks when your records show something.</p>}
+    {lines.length > 3 && <p className="meta">{lines.length - 3} more in DELTA's notebook (Review → Personal Understanding).</p>}
+  </div>;
+}
+
+/**
+ * DELTA-NEXT 2 + 3: looking ahead. The next run forecast from your saved schedule, what your past runs looked
+ * like at each place (shift 1, shift 2…), and your best window on days off (where you trained most). A forecast
+ * and your own records — it suggests, it never schedules, and it never changes advice. Reuses ROTATION-001.
+ */
+export function DeltaAhead({ active }: { active: boolean }) {
+  const [ahead, setAhead] = useState<{ lines: string[] } | null | "ERROR">(null);
+  useEffect(() => {
+    if (!active) return;
+    let live = true;
+    void (async () => {
+      const [{ getWholePicture }, rotation, copy] = await Promise.all([import("../../application/wholePictureQueries"), import("../../application/rotationProjection"), import("../screens/review/rotationCopy")]);
+      const picture = await getWholePicture();
+      const positions = rotation.runPositions(picture.rows);
+      const next = rotation.nextForecastRun(picture.weekAhead.days), off = rotation.nextDaysOff(picture.weekAhead.days);
+      const lines: string[] = [];
+      const when = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+      if (next?.work === "WORK") {
+        lines.push(`Your next work run is forecast from ${when(next.from)} · ${next.days} ${next.days === 1 ? "shift" : "shifts"}.`);
+        for (const place of positions.filter((p) => p.context === "WORK").slice(0, Math.min(next.days, 3))) lines.push(`Past runs, ${copy.positionName(place).toLowerCase()}: ${copy.describePosition(place)}.`);
+      }
+      if (off) {
+        lines.push(off.now ? "You're in days off now." : `Days off are forecast from ${when(off.from)} · ${off.days} ${off.days === 1 ? "day" : "days"}.`);
+        const best = copy.mostTrainedDayOff(positions);
+        if (best) lines.push(`Your best training window on days off has been ${copy.positionName(best).toLowerCase()}: trained on ${best.trained.days} of ${best.trained.of}.`);
+      }
+      if (live) setAhead({ lines });
+    })().catch(() => { if (live) setAhead("ERROR"); });
+    return () => { live = false; };
+  }, [active]);
+  if (ahead === "ERROR") return <p className="meta">DELTA couldn't read your rotation. Nothing was changed.</p>;
+  if (!ahead) return null;
+  return <section className="delta-ahead" aria-label="DELTA looking ahead">
+    <h2 className="tool-label">DELTA · LOOKING AHEAD</h2>
+    {ahead.lines.length ? ahead.lines.map((l) => <p key={l} className="card-body" style={{ margin: "0 0 6px" }}>{l}</p>)
+      : <p className="meta">Save your work schedule and I can look ahead at your next run.</p>}
+    <p className="meta">A forecast from your schedule and your own records. I suggest; I never book anything or change advice.</p>
   </section>;
 }

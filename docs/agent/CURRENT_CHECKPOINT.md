@@ -1,3 +1,11 @@
+# DELTA-NEXT-001 — approved ("All"), batch 1 in review (2026-11-09)
+
+- Gavin approved all 8 next items. Batch 1 is in review: 1 unusual, 7 one-tap answer, 4 workout tags, 5 weekly,
+  and 2+3 looking ahead. Next: item 6 (what moves the needle, Protected, data-first). Item 8 (rotation field test
+  #402) waits for Gavin. Brief: [DELTA-NEXT-001.md](DELTA-NEXT-001.md). DELTA × experiments merged (#466).
+
+---
+
 # DELTA-GROWS-001 — merged (#465); DELTA × experiments in review (2026-11-09)
 
 - Gavin: "Yes, build DELTA. Yes, with the TODAY line." The notebook, what DELTA knows, one question a day, and the
