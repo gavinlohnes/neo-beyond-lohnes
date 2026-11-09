@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { DriveBackupSettings } from "../../src/ui/screens/more/DriveBackupSettings";
 import { BackupDueLine } from "../../src/ui/components/BackupDueLine";
+import { AutoBackupSettings } from "../../src/ui/screens/more/AutoBackupSettings";
 import { startDay } from "../../src/application/commands";
 import { forgetBackupKey } from "../../src/application/driveBackup/backupKeys";
 import { __setDriveTokenForTests } from "../../src/application/driveBackup/googleAuth";
@@ -92,6 +93,16 @@ describe("DRIVE-BACKUP-001 — setup and status", () => {
     expect(revokeClosed).not.toHaveBeenCalled();
     await expect.element(screen.getByText("Not set up.")).toBeVisible();
     expect(localStorage.getItem("beyond:driveBackupState")).toBeNull();
+  });
+
+  it("with Drive connected, AUTOMATIC BACKUP says backups go to Drive, not the share menu", async () => {
+    localStorage.setItem("beyond:autoBackupPreference", JSON.stringify({ enabled: true, everyDays: 1 }));
+    localStorage.setItem("beyond:driveBackupState", JSON.stringify({ on: true, folderId: "folder-1", lastSuccessAt: null, failure: null }));
+    const screen = await render(<AutoBackupSettings />);
+    await expect.element(screen.getByText("On, once a day to Google Drive.")).toBeVisible();
+    await expect.element(screen.getByText(/it goes to Google Drive, locked/)).toBeVisible();
+    expect(document.body.textContent).not.toMatch(/share menu: Drive, Files/);
+    expect(document.querySelector('select[aria-label="Back up every"]')).toBeNull();
   });
 
   it("TODAY: a paused Drive backup is one quiet line with RECONNECT, and no success is shown", async () => {
