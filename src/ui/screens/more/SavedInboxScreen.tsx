@@ -4,12 +4,14 @@ import { deleteSavedInboxItem, getSavedInboxItems, makeSavedItemTask, saveInboxI
 import { takeSharedInboxPayload } from "./sharedInboxPayload";
 import { describeError } from "../../errorMessage";
 import { createHighlight } from "../../../application/highlightCommands";
+import { SortInbox } from "./SortInbox";
 
 export function SavedInboxScreen({ active }: { active: boolean }) {
   const [items, setItems] = useState<SavedInboxItem[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sorting, setSorting] = useState(false);
   async function read() { setItems(await getSavedInboxItems()); }
   useEffect(() => {
     if (!active) return;
@@ -28,10 +30,13 @@ export function SavedInboxScreen({ active }: { active: boolean }) {
     <p className="meta">Links and text you shared with BEYOND. Nothing is fetched from a link.</p>
     {error && <p role="alert">{error}</p>}
     {message && <p role="status">{message}</p>}
-    {!items.length && <p>Nothing saved yet. Share text or a link to BEYOND from another app.</p>}
+    {!items.length && !sorting && <p>Nothing saved yet. Share text or a link to BEYOND from another app.</p>}
+    {sorting ? <SortInbox items={items} onChanged={read} onDone={() => { setSorting(false); void read(); }} /> : <>
+    {items.length > 0 && <button type="button" className="btn-primary" onClick={() => { setMessage(""); setSorting(true); }}>SORT INBOX · {items.length}</button>}
     {items.map((item) => <SavedItem key={item.id} item={item} deleting={deleting === item.id}
       onDelete={() => setDeleting(item.id)} onCancelDelete={() => setDeleting(null)}
       onRun={run} />)}
+    </>}
   </section>;
 }
 
