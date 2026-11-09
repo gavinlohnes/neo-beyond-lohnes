@@ -12,8 +12,14 @@ import { noteTags } from "./noteTags";
 export const WEEK_MIN_CHECK_INS = 3;
 export const MIN_JUDGED_WEEKS = 9;
 export const MIN_GAP_DAYS = 0.5;
+/** For tags: a gap of at least this share of noted days (15 percentage points). */
+export const MIN_GAP_SHARE = 0.15;
 
-export interface NeedleHabit { habit: string; good: number; other: number; goodWeeks: number; otherWeeks: number }
+/**
+ * Training is days per week over all judged weeks. A #tag is the share of *noted* days that carried it, over the
+ * judged weeks that have notes — a week with no notes is unknown for tags, never zero.
+ */
+export interface NeedleHabit { habit: string; unit: "DAYS_PER_WEEK" | "SHARE_OF_NOTED_DAYS"; good: number; other: number; goodWeeks: number; otherWeeks: number }
 export type Needle = { ready: false; judgedWeeks: number; need: number } | { ready: true; judgedWeeks: number; goodWeeks: number; habits: NeedleHabit[] };
 
 const weekKey = (iso: string) => {
@@ -30,14 +36,31 @@ export function whatMovesTheNeedle(summaries: readonly DaySummary[], checkIns: r
   if (judged.length < MIN_JUDGED_WEEKS) return { ready: false, judgedWeeks: judged.length, need: MIN_JUDGED_WEEKS };
   const sorted = [...judged].sort((a, b) => b.avg - a.avg);
   const good = new Set(sorted.slice(0, Math.max(1, Math.floor(sorted.length / 3))).map((w) => w.week));
-  const habitDays = new Map<string, Map<string, number>>(); // habit -> week -> days
-  const bump = (habit: string, week: string) => { const m = habitDays.get(habit) ?? new Map(); m.set(week, (m.get(week) ?? 0) + 1); habitDays.set(habit, m); };
-  for (const s of summaries) { const w = weekKey(s.livedDayStart); if (s.workouts.length) bump("training", w); }
-  for (const n of notes) { const w = dayWeek.get(n.dayId); if (w) for (const t of noteTags(n.text)) bump(`#${t}`, w); }
   const goodWeeks = judged.filter((w) => good.has(w.week)), otherWeeks = judged.filter((w) => !good.has(w.week));
-  const habits = [...habitDays.entries()].map(([habit, weeks]) => {
-    const per = (list: typeof judged) => list.reduce((n, w) => n + (weeks.get(w.week) ?? 0), 0) / list.length;
-    return { habit, good: per(goodWeeks), other: per(otherWeeks), goodWeeks: goodWeeks.length, otherWeeks: otherWeeks.length };
-  }).filter((h) => Math.abs(h.good - h.other) >= MIN_GAP_DAYS).sort((a, b) => Math.abs(b.good - b.other) - Math.abs(a.good - a.other));
+  const habits: NeedleHabit[] = [];
+
+  const trainingDays = new Map<string, number>();
+  for (const s of summaries) if (s.workouts.length) { const w = weekKey(s.livedDayStart); trainingDays.set(w, (trainingDays.get(w) ?? 0) + 1); }
+  if (trainingDays.size) {
+    const per = (list: typeof judged) => list.reduce((n, w) => n + (trainingDays.get(w.week) ?? 0), 0) / list.length;
+    const h = { habit: "training", unit: "DAYS_PER_WEEK" as const, good: per(goodWeeks), other: per(otherWeeks), goodWeeks: goodWeeks.length, otherWeeks: otherWeeks.length };
+    if (Math.abs(h.good - h.other) >= MIN_GAP_DAYS) habits.push(h);
+  }
+
+  const notedDays = new Map<string, number>(), tagDays = new Map<string, Map<string, number>>();
+  for (const n of notes) {
+    const w = dayWeek.get(n.dayId); if (!w) continue;
+    notedDays.set(w, (notedDays.get(w) ?? 0) + 1);
+    for (const t of noteTags(n.text)) { const m = tagDays.get(t) ?? new Map<string, number>(); m.set(w, (m.get(w) ?? 0) + 1); tagDays.set(t, m); }
+  }
+  const noted = (list: typeof judged) => list.filter((w) => (notedDays.get(w.week) ?? 0) > 0);
+  const goodNoted = noted(goodWeeks), otherNoted = noted(otherWeeks);
+  if (goodNoted.length && otherNoted.length) for (const [tag, weeks] of tagDays) {
+    const share = (list: typeof judged) => list.reduce((n, w) => n + (weeks.get(w.week) ?? 0), 0) / list.reduce((n, w) => n + notedDays.get(w.week)!, 0);
+    const h = { habit: `#${tag}`, unit: "SHARE_OF_NOTED_DAYS" as const, good: share(goodNoted), other: share(otherNoted), goodWeeks: goodNoted.length, otherWeeks: otherNoted.length };
+    if (Math.abs(h.good - h.other) >= MIN_GAP_SHARE) habits.push(h);
+  }
+  const size = (h: NeedleHabit) => Math.abs(h.good - h.other) / (h.unit === "DAYS_PER_WEEK" ? 7 : 1);
+  habits.sort((a, b) => size(b) - size(a));
   return { ready: true, judgedWeeks: judged.length, goodWeeks: goodWeeks.length, habits: habits.slice(0, 5) };
 }

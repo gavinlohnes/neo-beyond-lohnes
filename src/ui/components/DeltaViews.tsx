@@ -88,14 +88,12 @@ export function DeltaNewsLine({ active }: { active: boolean }) {
   </section>;
 }
 
-/**
- * DELTA-EXPERIMENTS: when a tag lines up with shorter next-day sleep, DELTA offers to test it. START writes a
- * personal experiment through the existing LOOP command (a "Try:" journal entry) — only on that tap.
- */
+
 const perWeek = (n: number) => (Math.round(n * 10) / 10).toFixed(1);
-export function describeNeedle(h: { habit: string; good: number; other: number; goodWeeks: number; otherWeeks: number }): string {
-  const name = h.habit === "training" ? "Training" : h.habit;
-  return `${name}: ${perWeek(h.good)} days a week in your good weeks (${h.goodWeeks}), against ${perWeek(h.other)} in your other weeks (${h.otherWeeks}).`;
+export function describeNeedle(h: { habit: string; unit: "DAYS_PER_WEEK" | "SHARE_OF_NOTED_DAYS"; good: number; other: number; goodWeeks: number; otherWeeks: number }): string {
+  if (h.unit === "DAYS_PER_WEEK") return `Training: ${perWeek(h.good)} days a week in your good weeks (${h.goodWeeks}), against ${perWeek(h.other)} in your other weeks (${h.otherWeeks}).`;
+  const pct = (n: number) => `${Math.round(n * 100)}%`;
+  return `${h.habit}: on ${pct(h.good)} of your noted days in good weeks (${h.goodWeeks} weeks with notes), against ${pct(h.other)} in your other weeks (${h.otherWeeks}).`;
 }
 
 /** The counts behind the sleep figure itself, and what it was shorter than. */
@@ -103,6 +101,10 @@ export function describeOffer(s: ExperimentSuggestion): string {
   return `After ${s.withDays} days with #${s.tag}, the sleep you logged the next day was ${hoursMinutes(s.minutesLess)} shorter than after ${s.withoutDays} other noted days. That lines up; it doesn't prove a cause. Want to test it for ${s.days} days?`;
 }
 
+/**
+ * DELTA-EXPERIMENTS: when a tag lines up with shorter next-day sleep, DELTA offers to test it. START writes a
+ * personal experiment through the existing LOOP command (a "Try:" journal entry) — only on that tap.
+ */
 export function ExperimentOffer({ suggestion }: { suggestion: ExperimentSuggestion }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
