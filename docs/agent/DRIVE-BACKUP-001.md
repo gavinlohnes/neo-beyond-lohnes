@@ -28,7 +28,7 @@ device key store; (2) Drive connection, settings, due-on-open, status and restor
   So the daily backup runs by itself only when BEYOND still holds a token from earlier that session; otherwise TODAY
   shows one quiet line, *"Drive backup due"* with **BACK UP** — one tap, Google's popup closes itself, done. LATER
   snoozes it for a day as before. *"Paused — tap to reconnect"* is kept for when Google refuses or the sign-in is
-  closed; *"didn't finish"* for any other failure.
+  closed; *"didn't finish"* for any other failure. **Gavin accepted this on 2026-11-09 ("One tap is okay").**
 
 ## Design
 
