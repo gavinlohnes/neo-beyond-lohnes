@@ -66,11 +66,14 @@ source, and draws only on the saved schedule and measured sleep.
 
 ## Decisions (Gavin, 2026-11-11: "Approved", taking the recommended answers)
 1. **Surface: ROUTE, in the cave.** Revisiting ROUTE's "Last coffee" exclusion is approved for a cutoff *time*.
-   Caffeine is still never recorded. ROUTE's next three points also appear on TODAY. The build keeps the cards
+   Caffeine is still never recorded. The amendment is in its source, `docs/UX_DECISIONS.md` SUIT-ALIVE-003. ROUTE's next three points also appear on TODAY. The build keeps the cards
    **out of TODAY's next three points** by default, because adding them there would change TODAY's primary reading.
    That needs Gavin's separate OK.
 2. **SAVE creates a plan item** through the existing `createObligation`, after a tap and a preview. SKIP stays on
-   the device.
+   the device. SAVE sets **`plannedAt` only, never `dueAt`** (review of #477). A saved card is then at most
+   PLANNED_TODAY, which stays advisory-only. Only OVERDUE/DUE_TODAY reach `evaluate` (through
+   `hasEligibleObligationDueOrOverdue`), so a saved card can never change the Recommendation. The build's tests
+   must prove this.
 3. **The nap window's numbers** are settled from the full-text sources in the build PR, which quotes them.
 
 ## Sources and gaps

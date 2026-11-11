@@ -2322,6 +2322,9 @@ in-app only." Protected: it changes TODAY's primary layout. Brief:
   - **A break time.** It needs a new schedule field, which is a schema change, so it waits for its
     own ruling.
   - **"Last coffee."** BEYOND records no caffeine.
+    **Amended (Gavin, 2026-11-11, CIRCADIAN-SPIKE-001 "Approved"):** ROUTE may show a cited caffeine *cutoff
+    time*, derived from the saved schedule and your usual sleep start. Caffeine is still never recorded. The cutoff
+    stays out of TODAY's next three points unless Gavin separately approves.
 - **Unchanged:** the Engine, recommendations, TODAY's rows and their order, and every stored record.
 
 ## SUIT-ALIVE-004 — pace and the dark cockpit (owner approval, 2026-10-28)
