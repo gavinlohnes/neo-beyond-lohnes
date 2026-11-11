@@ -12,6 +12,7 @@ import { HeatGrid } from "./HeatGrid";
 import { MirrorView } from "./MirrorView";
 import { ReportView } from "../report/ReportView";
 import { WeekAheadView } from "./WeekAheadView";
+import { WeeklyInterviewView } from "./WeeklyInterviewView";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 
 /**
@@ -32,6 +33,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [weekAheadOpen, setWeekAheadOpen] = useState(false);
+  const [interviewOpen, setInterviewOpen] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -59,6 +61,13 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
         !readError && <p className="empty-state" role="status">Loading…</p>
       ) : (
         <>
+          {/* BIG-IDEAS-001 item 5: the week as recorded and a short interview; saves only on CONFIRM. */}
+          <Section label="WEEKLY INTERVIEW">
+            <FieldDisclosure summary={interviewOpen ? "HIDE INTERVIEW" : "OPEN WEEKLY INTERVIEW"} open={interviewOpen} onToggle={setInterviewOpen}>
+              {interviewOpen && <WeeklyInterviewView now={now} />}
+            </FieldDisclosure>
+          </Section>
+
           {/* The Ribbon (2026-10-03): the last 28 lived days at a glance, above the week's numbers. */}
           <Section label="LAST 28 DAYS">
             <Ribbon days={summary.ribbon.days} templateLabels={summary.ribbon.templateLabels} proteinTargetG={summary.ribbon.proteinTargetG} />

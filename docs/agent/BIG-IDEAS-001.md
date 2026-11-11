@@ -32,6 +32,11 @@
 5. **Weekly interview → life timeline** (routine). Sunday: 3 questions chosen from that week's DELTA learnings and
    gaps. Answers save into the daily note through `saveDailyNote` with a `#timeline` tag, so there's no new data
    type. A Timeline view lists #timeline entries newest first, searchable via the existing search.
+   **Gavin's objective (2026-11-11, "Implement Weekly Interview / Timeline"):** in MORE → Weekly check-in, the last 7
+   lived days as recorded (shift/off, sleep, naps, energy, workouts, notes and tags), then 4 short questions from that
+   week's best day, hardest day and gaps plus one carry-forward. SAVE previews, then adds a #timeline block to the
+   day's note via `saveDailyNote` (existing text kept); the carry-forward becomes an undated plan item only on its own
+   CONFIRM. Past interviews list newest first. No TODAY change, schema or AI.
 6. **Year/Month in BEYOND recap** (routine). A story-style sequence of cards from records: best run, sleep rhythm
    change, top tags, finished experiments, most-mentioned [[people]], workouts. Built on MONTH-LETTER-001 and
    DELTA. Reachable from DATA → MONTH.
