@@ -26,9 +26,10 @@ const side = (values: (number | undefined)[]): WhatIfSide => {
 export function shiftWhatIf(rows: readonly PictureRow[], shifts: number): ShiftWhatIf {
   const runs = groupRuns(rows);
   const matches = runs.flatMap((run, i) => {
-    const next = runs[i + 1];
-    // The first run may be clipped by the start of the history window (as in runPositions), so it never counts.
-    return i > 0 && run.context === "WORK" && run.rows.length === shifts && next?.context === "OFF" ? [{ run, off: next }] : [];
+    const before = runs[i - 1], next = runs[i + 1];
+    // A run's length is known only with recorded days off on both sides. The first run may be clipped by the
+    // start of the history window, and an unrecorded (UNKNOWN) day could hide more of the run (review of #475).
+    return before?.context === "OFF" && run.context === "WORK" && run.rows.length === shifts && next?.context === "OFF" ? [{ run, off: next }] : [];
   });
   return {
     shifts,
