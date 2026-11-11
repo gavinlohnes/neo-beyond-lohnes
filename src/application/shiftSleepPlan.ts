@@ -155,13 +155,15 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
     const usual = summary.before;
     const anchor = livedStart(now, offset);
     const at = (m: number) => new Date(anchor.getTime() + m * MIN);
+    // Review of #481: the cited guidance is about night shifts, so a day shift gets your own record only.
+    const soon = overnight ? "Sleep soon after this shift. " : "";
     cards.push({
       kind: "FIRST_SLEEP", title: "First sleep after the run",
       detail: usual
-        ? `Sleep soon after this shift. After your last shift in past runs, your main sleep usually ran ${clock(at(usual.start))}–${clock(at(usual.end))}.`
-        : `Sleep soon after this shift. BEYOND shows your own first sleep after a run once ${RUN_MEAN_FLOOR} runs have Garmin-timed sleep (${summary.flips.length} runs on file).`,
-      basis: usual ? `Your shift's end, and your records: ${usual.days} past runs with Garmin-timed sleep (ROTATION-003). No length is prescribed.` : "Your shift's end. No length is prescribed.",
-      source: SOURCES.FIRST_SLEEP,
+        ? `${soon}After your last shift in past runs, your main sleep usually ran ${clock(at(usual.start))}–${clock(at(usual.end))}.`
+        : `${soon}BEYOND shows your own first sleep after a run once ${RUN_MEAN_FLOOR} runs have Garmin-timed sleep (${summary.flips.length} runs on file).`,
+      basis: usual ? `${overnight ? "Your shift's end, and your records" : "Your records"}: ${usual.days} past runs with Garmin-timed sleep (ROTATION-003). No length is prescribed.` : `${overnight ? "Your shift's end. " : "Your records only. "}No length is prescribed.`,
+      source: overnight ? SOURCES.FIRST_SLEEP : null,
       plan: { title: usual ? `Sleep after the run, usually ${clock(at(usual.start))}` : "Sleep after the run", plannedAt: formatLocalDate(end) },
     });
   }

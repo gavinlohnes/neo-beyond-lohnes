@@ -71,6 +71,13 @@ describe("CIRCADIAN PLAN: the next shift transition's cards", () => {
     const d = deriveShiftSleepPlan({ now: new Date(2026, 9, 25, 8), pattern: days, rhythm: null, rows: [] })!;
     expect(d.shift.overnight).toBe(false);
     expect(d.cards.map((c) => c.kind)).toEqual(["CAFFEINE"]);
+    // Review of #481: a day shift that ends a run gets your own record only, never the night-shift guidance.
+    const lastDay = deriveShiftSleepPlan({ now: new Date(2026, 9, 30, 8), pattern: days, rhythm: null, rows: [] })!;
+    expect(lastDay.shift).toMatchObject({ overnight: false, lastOfRun: true });
+    const first = lastDay.cards.find((c) => c.kind === "FIRST_SLEEP")!;
+    expect(first.detail).not.toMatch(/Sleep soon/);
+    expect(first.detail).toMatch(/^BEYOND shows your own first sleep after a run once 3 runs/);
+    expect(first.source).toBeNull();
     expect(deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: DEFAULT_SCHEDULE_PATTERN, rhythm, rows })).toBeNull();
   });
 
