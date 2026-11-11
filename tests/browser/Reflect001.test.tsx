@@ -40,7 +40,7 @@ it("the daily note leads into the weekly interview, which shows what the week ta
   expect(screen.getByText("What your tags line up with").elements()).toHaveLength(0);
   await userEvent.fill(screen.getByRole("textbox", { name: "Your note", exact: true }), "Quiet shift #goodtalk");
   await screen.getByRole("button", { name: "SAVE NOTE", exact: true }).click();
-  await expect.element(screen.getByText("1 note this week. They come back in your weekly interview.")).toBeVisible();
+  await expect.element(screen.getByText("1 note in the last 7 days. Each comes back in a weekly interview once its day is done.")).toBeVisible();
   expect((await db.dailyNotes.get(day.id))?.text).toBe("Quiet shift #goodtalk");
   expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
 
@@ -62,4 +62,33 @@ it("Search all records opens WEEKLY INTERVIEW in place too", async () => {
   await userEvent.fill(screen.getByRole("textbox", { name: "Search everything" }), "interview");
   await screen.getByRole("button", { name: "Go: WEEKLY INTERVIEW Look back at the week and answer a few questions" }).click();
   await expect.element(screen.getByText("WHAT THIS WEEK SHOWED")).toBeVisible();
+});
+
+it("review of #479/#480: an unsaved draft and a confirmed interview both survive SAVE NOTE", async () => {
+  const day = await startDay();
+  const screen = await render(<MoreScreen />);
+  await openByName(screen, "daily note", "DAILY NOTE", "Write about today, tag it, answer DELTA's question");
+  const editor = () => screen.getByRole("textbox", { name: "Your note", exact: true });
+  await userEvent.fill(editor(), "Morning.");
+  await screen.getByRole("button", { name: "SAVE NOTE", exact: true }).click();
+  await expect.element(screen.getByText("Daily note saved.")).toBeVisible();
+  await userEvent.fill(editor(), "Morning. Then a long shift.");
+
+  await screen.getByRole("button", { name: "OPEN WEEKLY INTERVIEW" }).click();
+  await userEvent.fill(screen.getByLabelText("What's one thing to carry into next week?"), "Rest first");
+  await screen.getByRole("button", { name: "SAVE TO NOTE" }).click();
+  await screen.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
+  await expect.element(screen.getByText(/^Saved to the note for /)).toBeVisible();
+  // No second block by accident: SAVE TO NOTE waits for a changed answer.
+  await expect.element(screen.getByRole("button", { name: "SAVE TO NOTE" })).toBeDisabled();
+
+  await screen.getByRole("button", { name: "BACK TO MORE" }).click();
+  await openByName(screen, "daily note", "DAILY NOTE", "Write about today, tag it, answer DELTA's question");
+  await expect.element(editor()).toHaveValue("Morning. Then a long shift.");
+  await expect.element(screen.getByText(/^This note was saved somewhere else since you started this draft/)).toBeVisible();
+  await screen.getByRole("button", { name: "SAVE NOTE", exact: true }).click();
+  await expect.element(screen.getByText("Daily note saved. What was added elsewhere is kept at the end.")).toBeVisible();
+  const text = (await db.dailyNotes.get(day.id))!.text;
+  expect(text.startsWith("Morning. Then a long shift.\n\n#timeline Week ")).toBe(true);
+  expect(text).toContain("A: Rest first");
 });

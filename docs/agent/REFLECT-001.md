@@ -18,3 +18,9 @@
 - **Leverage gate:** REUSE the capability catalog, Personal Understanding's views, `useDeltaKnowledge` /
   `describeLearning`, the weekly interview, daily notes and tags. OWN the deep-link focus and the wording. BUILD FROM
   SCRATCH: none.
+- **Review follow-up (#481, post-merge BLOCK on #479/#480):** an unsaved daily-note draft could overwrite a confirmed
+  interview block on SAVE NOTE. The draft now keeps the stored text it began from (`ui/dailyNoteDraft.ts`, one key, older
+  plain drafts still load); `saveDailyNoteDraft` saves when unchanged, keeps anything appended since (an interview
+  block, a quick tag), and on any other change saves nothing and asks (USE THE SAVED NOTE / SAVE MY DRAFT OVER IT).
+  Also: past interviews tagged in any case show correctly, SAVE TO NOTE waits for a changed answer after a save, a
+  search focus applies once, and the note count says "in the last 7 days … once its day is done".
