@@ -87,15 +87,17 @@
 .redesign-today .mode-empty .cc-scene { height: 52px; }
 .redesign-today .mode-empty { padding-bottom: 12px; }
 /* SUIT-ALIVE S3: the comms line closes the hero, flush to its bottom edge. Amber marks off-normal; red stays reserved. */
-.cc-mode .comms-line { display: grid; gap: 4px; width: calc(100% + 32px); min-height: 48px; margin: 12px -16px -16px; padding: 10px 16px; border: 0; border-top: 1px solid var(--p-line); background: var(--p-bg); box-shadow: inset 2px 0 0 var(--p-t3); color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; z-index: 1; }
+.cc-mode :is(.comms-line, .comms-pending) { display: grid; gap: 4px; width: calc(100% + 32px); min-height: 48px; margin: 12px -16px -16px; padding: 10px 16px; border: 0; border-top: 1px solid var(--p-line); background: var(--p-bg); box-shadow: inset 2px 0 0 var(--p-t3); color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; z-index: 1; }
 .cc-mode .comms-line--off { box-shadow: inset 2px 0 0 var(--warning); }
-.cc-mode .comms-line:has(+ :is(.systems-line, .work-start)) { margin-bottom: 0; }
-.cc-mode .comms-line + .systems-line { margin-top: 0; }
+.cc-mode :is(.comms-line, .comms-pending):has(+ :is(.systems-line, .work-start)) { margin-bottom: 0; }
+.cc-mode :is(.comms-line, .comms-pending) + .systems-line { margin-top: 0; }
+/* FLAKE-CHECKIN-001: the band's place, held while its first reading loads, so nothing below it moves. */
+.cc-mode .comms-pending { cursor: default; }
 .comms-line__head { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; letter-spacing: .16em; color: var(--p-t3); }
 .comms-line__text { font-size: 15px; line-height: 1.45; color: var(--p-t1); }
 /* SUIT-ALIVE S4: ROUTE sits above COMMS, its key beside the points to keep the hero short in the hero's closing band. Usual points read quieter. */
 .cc-mode .route-line { display: grid; grid-template-columns: 64px 1fr; align-items: start; gap: 8px; width: calc(100% + 32px); margin: 12px -16px 0; padding: 10px 16px; border: 0; border-top: 1px solid var(--p-line); background: var(--p-bg); color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; z-index: 1; }
-.cc-mode .route-line + .comms-line { margin-top: 0; }
+.cc-mode .route-line + :is(.comms-line, .comms-pending) { margin-top: 0; }
 .route-line__key { font-size: 11px; letter-spacing: .16em; color: var(--p-t3); padding-top: 2px; }
 .route-line__ways { display: grid; gap: 2px; }
 .route-line__way { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 13px; letter-spacing: .1em; color: var(--p-t1); }
