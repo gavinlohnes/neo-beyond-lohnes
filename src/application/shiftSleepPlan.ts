@@ -18,7 +18,11 @@ import type { PictureRow } from "./wholePictureProjection";
  * SAVE adds a plan item through createObligation with plannedAt only (never dueAt), so it stays advisory and can't
  * reach evaluate's arbitration. No schema change, no network, no notification.
  */
-export interface PlanSource { label: string; url: string; quote: string }
+export interface PlanSource {
+  label: string; url: string; quote: string;
+  /** How the quote was checked, when not read in full text here (Gavin chose "search-confirmed", 2026-11-11). */
+  checked?: string;
+}
 export type PlanCardKind = "CAFFEINE" | "NAP" | "FIRST_SLEEP" | "LIGHT";
 export interface PlanCard {
   kind: PlanCardKind;
@@ -53,6 +57,12 @@ export const SOURCES = {
     label: "Hilditch & McHill 2019, Sleep inertia: current insights. Nat Sci Sleep 11:155–165",
     url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6710480/",
     quote: "While the initial dissipation of impairment is rapid, full recovery does not appear to be complete until at least an hour after awakening.",
+  },
+  FIRST_SLEEP: {
+    label: "Kalkanis et al. 2023, Recovery from shift work. Front Neurol 14:1270043",
+    url: "https://www.frontiersin.org/journals/neurology/articles/10.3389/fneur.2023.1270043/full",
+    quote: "The night-shift worker should aim to go to bed as early as possible after the shift to avoid longer exposure to morning light and excessive delay of the temperature nadir.",
+    checked: "Quote from search results; the full text could not be read automatically.",
   },
   LIGHT: {
     label: "Smith, Fogg & Eastman 2009, Practical interventions to promote circadian adaptation to permanent night shift work. SLEEP 32(11)",
@@ -138,7 +148,8 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
     });
   }
 
-  // 3. First sleep after the run: on the last shift of a run, your own record from past runs. No rule is prescribed.
+  // 3. First sleep after the run: on the last shift of a run, sleep soon after (SOURCES.FIRST_SLEEP) and your own
+  //    record from past runs. No length is prescribed: the sources disagree (CIRCADIAN-SPIKE-001).
   if (lastOfRun) {
     const summary = flipSummary(flips(rows), "OUT_OF_WORK");
     const usual = summary.before;
@@ -147,10 +158,10 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
     cards.push({
       kind: "FIRST_SLEEP", title: "First sleep after the run",
       detail: usual
-        ? `After your last shift in past runs, your main sleep usually ran ${clock(at(usual.start))}–${clock(at(usual.end))}.`
-        : `This is the last shift of the run. BEYOND shows your own first sleep after a run once ${RUN_MEAN_FLOOR} runs have Garmin-timed sleep (${summary.flips.length} runs on file).`,
-      basis: usual ? `Your records: ${usual.days} past runs with Garmin-timed sleep (ROTATION-003). A pattern, not a prescribed length.` : "Your records only. No length is prescribed.",
-      source: null,
+        ? `Sleep soon after this shift. After your last shift in past runs, your main sleep usually ran ${clock(at(usual.start))}–${clock(at(usual.end))}.`
+        : `Sleep soon after this shift. BEYOND shows your own first sleep after a run once ${RUN_MEAN_FLOOR} runs have Garmin-timed sleep (${summary.flips.length} runs on file).`,
+      basis: usual ? `Your shift's end, and your records: ${usual.days} past runs with Garmin-timed sleep (ROTATION-003). No length is prescribed.` : "Your shift's end. No length is prescribed.",
+      source: SOURCES.FIRST_SLEEP,
       plan: { title: usual ? `Sleep after the run, usually ${clock(at(usual.start))}` : "Sleep after the run", plannedAt: formatLocalDate(end) },
     });
   }

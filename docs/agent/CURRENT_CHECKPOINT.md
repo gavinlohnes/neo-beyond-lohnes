@@ -2,12 +2,10 @@
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).
 - Item 2, WEEK ENERGY FORECAST: merged (#475). The run-length rule also went into Shift What-If (#476, merged).
-- Item 3, CIRCADIAN PLAN: merged (#478). Open: a quotable source for "sleep soon after the run".
+- Item 3, CIRCADIAN PLAN: merged (#478). "Sleep soon after" added, citing Kalkanis 2023 as search-confirmed (Gavin), in #481.
 - Item 5, WEEKLY INTERVIEW / TIMELINE: merged (#479).
-- REFLECT-001 (Gavin, 2026-11-11, limited pass on reflective surfaces): built on `ccr-88f5c085-07op3k`, PR pending.
-  Search finds DELTA / PATTERNS / WEEKLY INTERVIEW and opens them in place; calmer daily note and Personal
-  Understanding; daily note → weekly interview link; interview opens with what the week showed. Brief:
-  [REFLECT-001.md](REFLECT-001.md). Next: independent exact-head review, then Gavin's merge.
+- REFLECT-001: merged (#480). Follow-ups in #481 (search-route test; the circadian source). Independent post-merge
+  reviews of #479/#480 and a review of #481 were requested from a separate session.
 - Build in order from [BIG-IDEAS-001.md](BIG-IDEAS-001.md), using Gavin's numbers: 1 shift what-if → 2 week energy
   forecast → 3 circadian plan (🔒 approved; research first) → 5 weekly interview / timeline → 6 recap → 7 on-device
   Alfred (🔒; spike first) → 8 shared view for his wife (🔒; privacy design and Gavin's re-confirm first). 4 (voice) is
