@@ -1,7 +1,7 @@
 # Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
 
-- Item 1, SHIFT WHAT-IF (Gavin, 2026-11-11: "Implement Shift What-If"): built on branch `ccr-88f5c085-07op3k`, PR
-  pending, which carries #473's comparison too. Week Ahead days get WHAT IF I WORK? / WHAT IF I'M OFF?; the read-only panel shows
+- Item 1, SHIFT WHAT-IF (Gavin, 2026-11-11: "Implement Shift What-If"): built on branch `ccr-88f5c085-07op3k`, PR #474,
+  which carries #473's comparison too. Week Ahead days get WHAT IF I WORK? / WHAT IF I'M OFF?; the read-only panel shows
   the run, days off, off-duty window, workout suggestion changes, that day's commitments and past runs of that length.
   Code: `application/shiftWhatIf.ts`, `ui/screens/weekly/ShiftWhatIfPanel.tsx`. Next: independent exact-head review, then Gavin's merge.
 - Build in order from [BIG-IDEAS-001.md](BIG-IDEAS-001.md), using Gavin's numbers: 1 shift what-if → 2 week energy
