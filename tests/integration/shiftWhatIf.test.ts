@@ -87,6 +87,19 @@ describe("SHIFT-WHAT-IF: flipping one Week Ahead day", () => {
     expect(w.history.before).toMatchObject({ shifts: 3, runs: 3, enough: true });
   });
 
+  it("a day shift picked up stays on its own day, as the Engine assigns it", () => {
+    // Review of #474: Mon–Fri 07:00–19:00. A picked-up Sat holds Sat 07–19, so the window after it runs to Mon 07:00.
+    const days: SchedulePattern = { ...pattern, anchorMonday: "2026-10-26", weeks: [{ workdays: [1, 2, 3, 4, 5] }], shiftStartHour: 7, shiftEndHour: 19 };
+    const w = deriveShiftWhatIf({ ...base, pattern: days, change: { date: "2026-10-31", to: "WORK" } })!;
+    expect(local(w.shift.start)).toBe(new Date(2026, 9, 31, 7).getTime());
+    expect(local(w.shift.end)).toBe(new Date(2026, 9, 31, 19).getTime());
+    expect(local(w.sleepWindow.after.from!)).toBe(new Date(2026, 9, 31, 19).getTime());
+    expect(local(w.sleepWindow.after.to!)).toBe(new Date(2026, 10, 2, 7).getTime());
+    // And a scheduled weekday's shift is the one the Engine gives that lived day.
+    const fri = deriveShiftWhatIf({ ...base, pattern: days, change: { date: "2026-10-30", to: "OFF" } })!;
+    expect(local(fri.shift.start)).toBe(new Date(2026, 9, 30, 7).getTime());
+  });
+
   it("answers only real changes to the next seven days", () => {
     expect(deriveShiftWhatIf({ ...base, change: { date: "2026-10-26", to: "WORK" } })).toBeNull();
     expect(deriveShiftWhatIf({ ...base, change: { date: "2026-11-02", to: "WORK" } })).toBeNull();

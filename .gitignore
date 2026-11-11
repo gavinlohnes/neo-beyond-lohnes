@@ -15,3 +15,4 @@ playwright-report
 
 # Local screenshots and acceptance output (rehearsals, verify scripts).
 .cache/
+.vitest/

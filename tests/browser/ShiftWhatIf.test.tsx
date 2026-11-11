@@ -27,6 +27,8 @@ it("shows a read-only what-if for an upcoming day, grounded in the saved schedul
   (row.querySelector("button") as HTMLButtonElement).click();
 
   const panel = screen.getByRole("region", { name: /were a shift\?$/ });
+  // Review of #474: focus follows the panel open and back to the day's button on close.
+  await expect.poll(() => document.activeElement?.textContent).toMatch(/were a shift\?$/);
   await expect.element(panel.getByText(/^Recovery window \(days off\):/)).toBeVisible();
   await expect.element(panel.getByText("Information only. Your schedule and plans haven't changed.")).toBeVisible();
   await expect.element(panel.getByText(/^Next sleep opportunity \(off-duty window\): \d+ h/)).toBeVisible();
@@ -38,5 +40,6 @@ it("shows a read-only what-if for an upcoming day, grounded in the saved schedul
 
   await panel.getByRole("button", { name: "CLOSE" }).click();
   await expect.element(screen.getByRole("region", { name: /were a shift\?$/ })).not.toBeInTheDocument();
+  await expect.poll(() => document.activeElement === row.querySelector("[data-what-if]")).toBe(true);
   expect({ events: await db.events.count(), obligations: JSON.stringify(await db.obligations.toArray()), schedule: JSON.stringify(await db.schedulePatterns.toArray()) }).toEqual(before);
 });

@@ -82,13 +82,18 @@ const dateAt = (now: Date, offset: number, hour = 12, minute = 0) => new Date(no
 // The lived day for a date runs 16:30 → 16:30, as Week Ahead reads it (scheduledContext's rollover boundary).
 const livedStart = (now: Date, offset: number) => dateAt(now, offset, 16, 30);
 
-/** The shift a picked-up day would hold: the pattern's usual shift that starts inside that lived day. */
+/**
+ * The shift a picked-up day would hold, by the Engine's own overlap rule (livedDayShiftWindow): the day's own
+ * usual shift if it overlaps the lived day (16:30 → next 16:30), otherwise the next date's.
+ */
 function usualShift(now: Date, offset: number, pattern: SchedulePattern): { start: Date; end: Date } {
-  const from = livedStart(now, offset);
-  let start = dateAt(now, offset, pattern.shiftStartHour);
-  if (start < from) start = dateAt(now, offset + 1, pattern.shiftStartHour);
-  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + (pattern.shiftEndHour <= pattern.shiftStartHour ? 1 : 0), pattern.shiftEndHour);
-  return { start, end };
+  const shiftOn = (k: number) => {
+    const start = dateAt(now, k, pattern.shiftStartHour);
+    const end = dateAt(now, k + (pattern.shiftEndHour <= pattern.shiftStartHour ? 1 : 0), pattern.shiftEndHour);
+    return { start, end };
+  };
+  const own = shiftOn(offset);
+  return own.start < livedStart(now, offset + 1) && own.end > livedStart(now, offset) ? own : shiftOn(offset + 1);
 }
 
 interface Day { offset: number; date: string; work: WorkOrOff; shift: { start: Date; end: Date } | null }
