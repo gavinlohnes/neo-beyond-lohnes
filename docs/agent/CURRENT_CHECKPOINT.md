@@ -1,10 +1,30 @@
+# Owner working rhythm (Gavin, 2026-11-11: "Yes, adopt that as the standing rule")
+
+Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none of its rules.
+
+1. **Gavin gives one objective at a time.** He can queue more; the Builder works them one at a time.
+2. **The Builder builds, opens the PR and starts the independent reviewer itself.** That's a separate, read-only
+   session: it can't push, approve or merge. The Builder fixes findings and asks for a re-review on the new exact head.
+3. **The Builder messages Gavin only when:**
+   - **ready:** "Ready to merge: review PASS and CI green at `<sha>`";
+   - **a decision is needed:** asked once, as one question with a recommended answer;
+   - **something is blocked:** what blocks it and what is needed.
+
+   CI runs, cancellations and routine review back-and-forth are not reported.
+4. **Gavin merges only on a READY message.** A merge before review PASS isn't done.
+5. **One session per item.** No parallel builders or researchers on the same objective.
+6. **"Status" gets a one-paragraph answer:** what's open, what's waiting on whom, the next step.
+7. **Fewer pushes:** doc and checkpoint updates ride with the next code push, not alone, so CI isn't cancelled for nothing.
+
+---
+
 # Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).
 - Item 2, WEEK ENERGY FORECAST: merged (#475). The run-length rule also went into Shift What-If (#476, merged).
 - Item 3, CIRCADIAN PLAN: merged (#478). "Sleep soon after" added, citing Kalkanis 2023 as search-confirmed (Gavin), in #481.
 - Item 5, WEEKLY INTERVIEW / TIMELINE: merged (#479).
-- REFLECT-001: merged (#480). Follow-ups in #481 (search-route test; the circadian source). Independent post-merge
+- REFLECT-001: merged (#480). Follow-ups in #481, which also carries CI-MIRROR-001 (Chromium download off the Ubuntu mirror) (search-route test; the circadian source). Independent post-merge
   reviews of #479/#480 and a review of #481 were requested from a separate session.
 - Build in order from [BIG-IDEAS-001.md](BIG-IDEAS-001.md), using Gavin's numbers: 1 shift what-if → 2 week energy
   forecast → 3 circadian plan (🔒 approved; research first) → 5 weekly interview / timeline → 6 recap → 7 on-device
