@@ -2,9 +2,10 @@
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).
 - Item 2, WEEK ENERGY FORECAST: merged (#475). The run-length rule also went into Shift What-If (#476, merged).
-- Item 3, CIRCADIAN PLAN: research spike approved (Gavin, 2026-11-11). See [CIRCADIAN-SPIKE-001.md](CIRCADIAN-SPIKE-001.md).
-  Next: build the first slice of four cited ROUTE cards, kept off TODAY, with SAVE creating a plan item. Quote the
-  full-text sources in that PR (this session's network blocked bmj.com).
+- Item 3, CIRCADIAN PLAN: spike approved (Gavin, 2026-11-11, [CIRCADIAN-SPIKE-001.md](CIRCADIAN-SPIKE-001.md)); the first
+  slice is built in #478 on `ccr-88f5c085-07op3k`: four cited cards below ROUTE, off TODAY, SAVE previews then adds a
+  planned-only item. Code: `application/shiftSleepPlan.ts`, `ui/screens/systems/ShiftSleepPlanCards.tsx`. Next:
+  independent exact-head review, then Gavin's merge. Open: a quotable source for "sleep soon after the run".
 - Build in order from [BIG-IDEAS-001.md](BIG-IDEAS-001.md), using Gavin's numbers: 1 shift what-if → 2 week energy
   forecast → 3 circadian plan (🔒 approved; research first) → 5 weekly interview / timeline → 6 recap → 7 on-device
   Alfred (🔒; spike first) → 8 shared view for his wife (🔒; privacy design and Gavin's re-confirm first). 4 (voice) is

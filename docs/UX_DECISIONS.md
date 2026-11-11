@@ -2868,3 +2868,26 @@ knows, what it is still learning (with counts) and a dated notebook of what it l
 with nothing new stored. The daily note carries one DELTA question a day. **TODAY amendment:** one quiet line, "DELTA
 learned something new about you", shows only when a new learning exists and hides on GOT IT. Patterns not causes; no
 advice change. [Brief](agent/DELTA-GROWS-001.md).
+
+## SHIFT-SLEEP-PLAN-001 — the circadian plan's first slice, in ROUTE (owner approval 2026-11-11, CIRCADIAN-SPIKE-001)
+
+Gavin, 2026-11-11: "Approved" ([CIRCADIAN-SPIKE-001](agent/CIRCADIAN-SPIKE-001.md)). Protected timing guidance. Below the
+cave's ROUTE, for the next shift transition (a shift under way, or one starting within 24 h): four cards, each with
+its rule, its inputs and a source quoted from the full text. **Not on TODAY**: they are not waypoints, so TODAY's next
+three points are unchanged.
+- **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
+  Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
+- **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake
+  time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
+  parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
+  2019). No nap length is set.
+- **First sleep after the run** (last shift of a run): your own record from past runs (ROTATION-003), never a
+  prescribed length. The spike's "sleep soon after" sentence waits until its NIOSH source can be quoted.
+- **Light on the way home** (night shifts): keep light low on the commute if going straight to sleep (dark
+  sunglasses). Smith, Fogg & Eastman 2009. BEYOND records no light.
+
+The spike named McKenna & Wilkes (BMJ 2018) and Intensive Care Society guidance; their full texts block automated
+reading, so the build cites the primary studies above, whose full texts were read. Shift-work guidance, not a
+decision: never an Engine input. **SAVE** shows a preview, then adds one plan item through `createObligation` with
+`plannedAt` only, never `dueAt`, so it is at most PLANNED_TODAY and never reaches `evaluate`. **SKIP** hides the card
+for that shift on the device. No schema change, network, notification or AI.

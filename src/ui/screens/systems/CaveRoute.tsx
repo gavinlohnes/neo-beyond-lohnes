@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getCaveRoute, type CaveRoute } from "../../../application/caveRoute";
 import { describeError } from "../../errorMessage";
+import { ShiftSleepPlanCards } from "./ShiftSleepPlanCards";
 
 /**
  * SUIT-ALIVE S4 — the cave, Route. The whole lived day's points, 16:30 to 16:30: solid points are fixed
@@ -42,5 +43,7 @@ export function CaveRouteView() {
     ))}</ol>
     {route.notes.map((n) => <p key={n} className="meta">{n}</p>)}
     <p className="meta">Callouts come only while BEYOND is open, on the comms line, for half an hour after a point passes. Nothing is sent or scheduled.</p>
+    {/* CIRCADIAN-SPIKE-001: the next shift's cards sit below the route; they are not waypoints, so TODAY's next three points don't change. */}
+    <ShiftSleepPlanCards />
   </>;
 }

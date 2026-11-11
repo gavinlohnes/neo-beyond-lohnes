@@ -84,3 +84,10 @@ source, and draws only on the saved schedule and measured sleep.
   product claims only.
 - **Gap:** this session's network blocked bmj.com and AfterShift's methodology page. The points above come from
   search abstracts. As item 3 already requires, the build PR must confirm each rule against the full text.
+
+## Build (#478)
+Built as approved, in ROUTE and off TODAY. Sources whose full text was read and quoted in the PR: Drake et al. 2013
+(caffeine, 6 h), AASM practice parameters 2007 (planned pre-shift napping), Hilditch & McHill 2019 (an hour for sleep
+inertia to clear, so the nap ends 60 minutes before the shift), Smith, Fogg & Eastman 2009 (sunglasses on the way
+home). BMJ, NIOSH and ICS pages block automated reading, so they aren't cited; the first-sleep card shows your own
+record only until a source for "sleep soon after" can be quoted. Rules: [UX_DECISIONS SHIFT-SLEEP-PLAN-001](../UX_DECISIONS.md).
