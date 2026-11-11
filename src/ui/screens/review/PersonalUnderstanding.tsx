@@ -11,13 +11,15 @@ import { SleepRhythmLines } from "./SleepRhythmLines";
 import { DeltaPanel } from "../../components/DeltaViews";
 
 export type UnderstandingSource = { kind: "MISSION" | "JOURNAL"; id: string } | { kind: "TARGETS" | "SCHEDULE" };
-type Props = { active: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenSource?: ((source: UnderstandingSource) => void) | undefined };
+/** REFLECT-001: open straight at DELTA or Patterns (from search or the daily note). A new key opens it again. */
+export type UnderstandingFocus = { key: number; view: "DELTA" | "PATTERNS" };
+type Props = { active: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenSource?: ((source: UnderstandingSource) => void) | undefined; focus?: UnderstandingFocus | null | undefined };
 const date = (at: string | Date) => new Date(at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 const amount = (measure: string, value: number) => measure === "MAIN_SLEEP" ? `${Math.floor(value / 60)}h ${Math.round(value % 60)}m` : `${Math.round(value)} ${measure === "WATER" ? "oz" : "g"}`;
 const measureName = (measure: string) => measure === "MAIN_SLEEP" ? "Main sleep" : measure === "WATER" ? "Water" : "Protein";
 
 /** Optional Inspect depth. All knowledge is derived; nothing here records or infers a preference. */
-export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: Props) {
+export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource, focus }: Props) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"DELTA" | "Choices" | "Patterns" | "Lessons" | "My context">("DELTA");
   const [data, setData] = useState<Understanding | null>(null);
@@ -27,6 +29,13 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: P
   const [limit, setLimit] = useState(5);
   const [placeKey, setPlaceKey] = useState("");
   const sequence = useRef(0);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!focus || !active || !detailsRef.current) return;
+    setView(focus.view === "DELTA" ? "DELTA" : "Patterns"); setLimit(5);
+    detailsRef.current.open = true; setOpen(true);
+    detailsRef.current.scrollIntoView?.({ block: "start" });
+  }, [focus?.key, active]);
   useEffect(() => {
     if (!active || !open) return;
     let alive = true;
@@ -43,17 +52,17 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource }: P
     return onOpenSource && <button type="button" className="btn-secondary" onClick={() => onOpenSource(source)}>{label}</button>;
   }
   const place = data?.positions.find((position) => `${position.context}-${position.position}` === placeKey) ?? data?.positions[0];
-  return <section aria-label="Personal understanding"><details className="personal-understanding" onToggle={(event) => setOpen(event.currentTarget.open)}>
-    <summary><span>PERSONAL UNDERSTANDING</span><span className="meta">Your choices, patterns & lessons</span></summary>
+  return <section aria-label="Personal understanding"><details ref={detailsRef} className="personal-understanding" onToggle={(event) => setOpen(event.currentTarget.open)}>
+    <summary><span>PERSONAL UNDERSTANDING</span><span className="meta">DELTA, patterns and your lessons</span></summary>
     {open && <div className="understanding-body">
-      <p className="card-body">What you have chosen, what your records show, and what you have learned. This is a view of your records, not a judgment about who you are.</p>
+      <p className="card-body">What your records show and what you have learned. A view of your records, not a judgment.</p>
       <div className="understanding-navigation" role="group" aria-label="Personal understanding views">
         {(["DELTA", "Choices", "Patterns", "Lessons", "My context"] as const).map((name) => <button type="button" className="btn-secondary" key={name} aria-pressed={view === name} onClick={() => { setView(name); setLimit(5); }}>{name}</button>)}
       </div>
       {reading && <p role="status">Connecting your recorded context…</p>}
       {error && <div><p role="alert">{error} Your knowledge is unavailable, not empty. No records were changed.</p><button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY PERSONAL UNDERSTANDING</button></div>}
       {data && !reading && !error && <>
-        <p className="meta">Read on {date(data.readAt)} · on this device · nothing here changes your plan</p>
+        <p className="meta">Read {date(data.readAt)} · on this device</p>
         {view === "DELTA" && <DeltaPanel active={active && open} />}
         {view === "Choices" && <section aria-label="Your recorded choices">
           <h2 className="tool-label">WHAT MATTERS TO YOU</h2>

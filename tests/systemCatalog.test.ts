@@ -58,3 +58,19 @@ describe("FRICTION-001 — COMMAND descriptions in plain words", () => {
     }
   });
 });
+
+describe("REFLECT-001 — the reflective views are found by name", () => {
+  it.each([
+    ["delta", ["DELTA"], { kind: "more", view: "REVIEW", focus: "DELTA" }],
+    ["patterns", ["PATTERNS"], { kind: "more", view: "REVIEW", focus: "PATTERNS" }],
+    ["interview", ["WEEKLY INTERVIEW"], { kind: "more", view: "WEEKLY", focus: "INTERVIEW" }],
+  ])("%s opens its view at the right place", (query, names, destination) => {
+    const found = findCapabilities(query);
+    expect(found.map((entry) => entry.label)).toEqual(names);
+    expect(found[0]!.destination).toEqual(destination);
+  });
+  it("reflect finds the daily note and the weekly interview; the new entries stay out of the browse list", () => {
+    expect(findCapabilities("reflect").map((entry) => entry.label)).toEqual(["DAILY NOTE", "WEEKLY INTERVIEW"]);
+    for (const label of ["DELTA", "PATTERNS", "WEEKLY INTERVIEW"]) expect(SYSTEM_CAPABILITIES.find((entry) => entry.label === label)).toHaveProperty("browse", false);
+  });
+});

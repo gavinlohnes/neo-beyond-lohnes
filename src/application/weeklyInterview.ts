@@ -1,4 +1,5 @@
 import type { DailyNote } from "../domain/dailyNotes";
+import type { Learning } from "./delta";
 import type { Obligation } from "../domain/intent/types";
 import { formatLocalDate } from "../engine/scheduledContext";
 import { db } from "../persistence/db";
@@ -122,4 +123,18 @@ export function saveCarryForward(answer: string): Promise<Obligation> {
 export async function getTimelineEntries(): Promise<{ dayId: string; text: string; updatedAt: string }[]> {
   const notes = await db.dailyNotes.orderBy("updatedAt").reverse().toArray();
   return notes.filter((n) => noteTags(n.text).includes(TIMELINE_TAG)).map((n) => ({ dayId: n.dayId, text: n.text, updatedAt: n.updatedAt }));
+}
+
+/** REFLECT-001: DELTA's learnings dated inside the interview's week (by local date), newest first, at most `limit`. */
+export function learnedThisWeek(learnings: readonly Learning[], week: Pick<WeeklyInterview, "from" | "to">, limit = 3): Learning[] {
+  return learnings.filter((l) => { const d = formatLocalDate(new Date(l.learnedOn)); return d >= week.from && d <= week.to; })
+    .sort((a, b) => b.learnedOn.localeCompare(a.learnedOn)).slice(0, limit);
+}
+
+/** REFLECT-001: how many of the last 7 days (by when the lived day started) have a saved daily note. */
+export async function getWeekNoteCount(now: Date = new Date()): Promise<number> {
+  const since = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (WEEK_DAYS - 1)).toISOString();
+  const days = await db.beyondDays.where("startedAt").aboveOrEqual(since).toArray();
+  const notes = await db.dailyNotes.bulkGet(days.map((d) => d.id));
+  return notes.filter((n) => n?.text.trim()).length;
 }

@@ -7,6 +7,7 @@ import { TagPatternsSection } from "./TagPatternsSection";
 import { deltaQuestion } from "../../../application/delta";
 import { useDeltaKnowledge } from "../../components/DeltaViews";
 import { getTagChoices, noteTags, normalizeTag, toggleNoteTag } from "../../../application/noteTags";
+import { getWeekNoteCount } from "../../../application/weeklyInterview";
 
 type Workspace = NonNullable<Awaited<ReturnType<typeof getDailyNoteWorkspace>>>;
 
@@ -19,7 +20,8 @@ function matchingTemplate(workContext: string | undefined): keyof typeof NOTE_TE
   return workContext === "WORK" ? "WORK DAY PROMPTS" : workContext === "OFF" ? "DAY OFF PROMPTS" : null;
 }
 
-export function DailyNoteScreen({ active, dayId = null }: { active: boolean; dayId?: string | null }) {
+/** REFLECT-001: onOpenWeeklyInterview and onOpenPatterns link the day to the week; without them those links are left out. */
+export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, onOpenPatterns }: { active: boolean; dayId?: string | null; onOpenWeeklyInterview?: () => void; onOpenPatterns?: () => void }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [draft, setDraft] = useState("");
   const [savedText, setSavedText] = useState("");
@@ -28,6 +30,8 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
   const [tagChoices, setTagChoices] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const knowledge = useDeltaKnowledge(active);
+  const [weekNotes, setWeekNotes] = useState<number | null>(null);
+  useEffect(() => { if (active) void getWeekNoteCount().then(setWeekNotes).catch(() => setWeekNotes(null)); }, [active, savedText]);
   useEffect(() => { if (active) void getTagChoices().then(setTagChoices).catch(() => {}); }, [active]);
   useEffect(() => {
     if (!active) return;
@@ -48,9 +52,10 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
   const dirty = draft !== savedText;
   return <section className="daily-note-screen" aria-label="Daily note">
     <p className="tool-label">LIVED DAY · {workspace.day.startedAt.slice(0, 10)}</p><h2>Daily note</h2>
-    <section className="daily-note-log" aria-label="Recorded day"><p className="section-label">Recorded today</p>
+    {/* REFLECT-001: the day's recorded actions fold behind one line, so the note comes first. */}
+    <details className="daily-note-log more-inspection" aria-label="Recorded day"><summary>Recorded today ({workspace.logs.length})</summary>
       {workspace.logs.length ? <ol>{workspace.logs.map((log) => <li key={log.id}><span>{log.label}</span><time dateTime={log.at}>{new Date(log.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time></li>)}</ol> : <p className="meta">No recorded actions yet.</p>}
-    </section>
+    </details>
     {/* NOTE-TEMPLATES-001 (APPS-PICKS-003 pick 12, after Obsidian templates): prompts, only while the note is empty. */}
     {/* JOURNAL-LEARN-001: today's kind of day comes first, so the prompts that fit are one tap away. */}
     {!draft.trim() && <div className="button-row" role="group" aria-label="Start from prompts">
@@ -69,7 +74,7 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
     <WikiTextArea label="Your note" value={draft} onChange={(next) => { setDraft(next); setMessage(""); }} />
     {/* JOURNAL-LEARN-001: one-tap #tags, written into the note as words. BEYOND compares tagged days later. */}
     <div className="daily-note-tags" role="group" aria-label="Tags for today">
-      <p className="meta" style={{ margin: "8px 0 4px" }}>Tag today. After a few days, BEYOND shows what each tag lines up with.</p>
+      <p className="meta" style={{ margin: "8px 0 4px" }}>Tags, if you like. They show patterns after a few days.</p>
       <div className="button-row">
         {[...new Set([...noteTags(draft), ...tagChoices])].slice(0, 12).map((tag) => {
           const on = noteTags(draft).includes(tag);
@@ -87,6 +92,15 @@ export function DailyNoteScreen({ active, dayId = null }: { active: boolean; day
       }, (cause) => setError(describeError(cause, "Daily note could not be saved.")));
     }}>SAVE NOTE</button>{dirty && <span className="meta">Draft stays on this phone until SAVE.</span>}</div>
     {message && <p role="status">{message}</p>}{error && <p role="alert">{error}</p>}
-    <details className="more-inspection"><summary>What your tags line up with</summary><TagPatternsSection active={active} /></details>
+    {/* REFLECT-001: the day feeds the week. One quiet line, no count to keep up. */}
+    {(onOpenWeeklyInterview || onOpenPatterns) && <div className="daily-note-week">
+      {weekNotes !== null && <p className="meta" style={{ margin: "12px 0 4px" }}>{weekNotes === 1 ? "1 note" : `${weekNotes} notes`} this week. They come back in your weekly interview.</p>}
+      <div className="button-row">
+        {onOpenWeeklyInterview && <button type="button" className="btn-secondary" onClick={onOpenWeeklyInterview}>OPEN WEEKLY INTERVIEW</button>}
+        {onOpenPatterns && <button type="button" className="btn-secondary" onClick={onOpenPatterns}>SEE PATTERNS</button>}
+      </div>
+    </div>}
+    {/* Patterns live in one place (Personal Understanding); here only when there's no way to go there. */}
+    {!onOpenPatterns && <details className="more-inspection"><summary>What your tags line up with</summary><TagPatternsSection active={active} /></details>}
   </section>;
 }

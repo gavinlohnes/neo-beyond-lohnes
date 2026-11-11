@@ -55,7 +55,7 @@ import { RoutinesPanel } from "../../components/RoutinesPanel";
 import { LifeScreen } from "./LifeScreen";
 import { PeoplePanel } from "../../components/PeoplePanel";
 import { HomePanel } from "../../components/HomePanel";
-import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type SystemCapability, type SystemDestination } from "../../systemCatalog";
+import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type ReflectFocus, type SystemCapability, type SystemDestination } from "../../systemCatalog";
 import { PlanTodayScreen } from "./PlanTodayScreen";
 import { SystemsReadout } from "../systems/SystemsReadout";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
@@ -277,6 +277,9 @@ export function MoreScreen({
   }, [view, active]);
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
   const [journalFocus, setJournalFocus] = useState<string | undefined>(undefined);
+  // REFLECT-001: a reflective search entry (or a daily-note link) opens its view at the right place.
+  const [reflectFocus, setReflectFocus] = useState<{ key: number; focus: ReflectFocus } | null>(null);
+  const openReflect = (focus: ReflectFocus) => { setReflectFocus({ key: Date.now(), focus }); setView(focus === "INTERVIEW" ? "WEEKLY" : "REVIEW"); };
   const [historyFocusDayId, setHistoryFocusDayId] = useState<string | null>(historyDestination?.dayId ?? null);
   const [historyFocusEventId, setHistoryFocusEventId] = useState<string | null>(historyDestination?.eventId ?? null);
   // Search-to-navigate (2026-09-02): set only by handleSelectSearchResult below, and cleared by
@@ -556,6 +559,7 @@ export function MoreScreen({
     else if (destination.kind === "more") {
       if (destination.view === "INTENT") setIntentFocus(null);
       if (destination.view === "JOURNAL") setJournalFocus(undefined);
+      setReflectFocus(destination.focus ? { key: Date.now(), focus: destination.focus } : null);
       if (destination.view === "REPORT") void getReportTiming().then((timing) => { if (timing) markSeen(seenKey(timing, new Date())); setReportNew(false); }, () => {});
       setView(destination.view);
       recordRecent();
@@ -611,10 +615,10 @@ export function MoreScreen({
           <div hidden={view !== "AUTOMATIONS"}>{visited.has("AUTOMATIONS") && <><OperatorHeader destination="command">MORE // AUTOMATIONS</OperatorHeader><AutomationsScreen active={active && view === "AUTOMATIONS"} /></>}</div>
           <div hidden={view !== "PLAN"}>{visited.has("PLAN") && <PlanTodayScreen active={active && view === "PLAN"} onOpen={(focus) => { setIntentFocus(focus); setView("INTENT"); }} />}</div>
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<Opening><HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></Opening></>}
-          {view === "WEEKLY" && <WeeklyCheckInScreen />}
+          {view === "WEEKLY" && <WeeklyCheckInScreen openInterviewKey={reflectFocus?.focus === "INTERVIEW" ? reflectFocus.key : undefined} onOpenDelta={() => openReflect("DELTA")} />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
-          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: onReviewDestinationConsumed } : {})} onOpenUnderstandingSource={(source) => {
+          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} understandingFocus={reflectFocus && reflectFocus.focus !== "INTERVIEW" ? { key: reflectFocus.key, view: reflectFocus.focus } : null} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: onReviewDestinationConsumed } : {})} onOpenUnderstandingSource={(source) => {
             reviewOrigin.current = { trigger: document.querySelector<HTMLElement>('.personal-understanding [aria-pressed="true"]'), scrollY: window.scrollY };
             if (source.kind === "MISSION") { setIntentFocus({ kind: "MISSION", missionId: source.id }); setView("INTENT"); }
             else if (source.kind === "JOURNAL") { setJournalFocus(source.id); setView("JOURNAL"); }
@@ -635,7 +639,7 @@ export function MoreScreen({
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
           <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
           <div hidden={view !== "SAVED"}>{visited.has("SAVED") && <><OperatorHeader destination="command">MORE // SAVED</OperatorHeader><SavedInboxScreen active={active && view === "SAVED"} /></>}</div>
-          <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} dayId={dailyNoteDayId} /></>}</div>
+          <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} dayId={dailyNoteDayId} onOpenWeeklyInterview={() => openReflect("INTERVIEW")} onOpenPatterns={() => openReflect("PATTERNS")} /></>}</div>
           <div hidden={view !== "COLLECTIONS"}>{visited.has("COLLECTIONS") && <><OperatorHeader destination="command">MORE // COLLECTIONS</OperatorHeader><CollectionsScreen active={active && view === "COLLECTIONS"} /></>}</div>
           <div hidden={view !== "HIGHLIGHTS"}>{visited.has("HIGHLIGHTS") && <><OperatorHeader destination="command">MORE // HIGHLIGHTS</OperatorHeader><HighlightsScreen active={active && view === "HIGHLIGHTS"} /></>}</div>
           <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>

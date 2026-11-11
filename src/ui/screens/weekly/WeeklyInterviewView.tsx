@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-  getTimelineEntries, getWeeklyInterview, interviewNoteDay, interviewNoteText, saveCarryForward, saveInterviewNote,
+  getTimelineEntries, getWeeklyInterview, learnedThisWeek, interviewNoteDay, interviewNoteText, saveCarryForward, saveInterviewNote,
   TIMELINE_TAG, type InterviewQuestion, type TimelineDay, type WeeklyInterview,
 } from "../../../application/weeklyInterview";
+import { describeLearning, useDeltaKnowledge } from "../../components/DeltaViews";
 
 /**
  * BIG-IDEAS-001 item 5: the week as recorded, then a short interview. Nothing is written until CONFIRM: the answers
@@ -21,7 +22,7 @@ function dayFacts(d: TimelineDay): string {
   return parts.join(" · ");
 }
 
-export function WeeklyInterviewView({ now }: { now?: Date | undefined }) {
+export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefined; onOpenDelta?: () => void }) {
   const [interview, setInterview] = useState<WeeklyInterview | null | undefined>(undefined);
   const [entries, setEntries] = useState<{ dayId: string; text: string; updatedAt: string }[]>([]);
   const [answers, setAnswers] = useState<Answers>({});
@@ -29,6 +30,7 @@ export function WeeklyInterviewView({ now }: { now?: Date | undefined }) {
   const [done, setDone] = useState<{ note?: string; plan?: string }>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const knowledge = useDeltaKnowledge(true);
 
   const loadEntries = () => void getTimelineEntries().then(setEntries).catch(() => {});
   useEffect(() => {
@@ -67,6 +69,23 @@ export function WeeklyInterviewView({ now }: { now?: Date | undefined }) {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* REFLECT-001: what the week's notes and records already taught DELTA, read only, before the questions. */}
+      <section aria-labelledby="week-noticed-heading" style={{ marginBottom: 12 }}>
+        <p id="week-noticed-heading" className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>WHAT THIS WEEK SHOWED</p>
+        {(() => {
+          const tags = new Map<string, number>();
+          for (const d of interview.days) for (const t of d.tags) tags.set(t, (tags.get(t) ?? 0) + 1);
+          const noted = interview.days.filter((d) => d.note).length;
+          const learned = knowledge && knowledge !== "ERROR" ? learnedThisWeek(knowledge.learnings, interview) : [];
+          return <>
+            <p className="meta" style={{ margin: "2px 0 0" }}>{noted} of {interview.days.length} days have a note{tags.size ? ` · tags: ${[...tags].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t, n]) => `#${t} ${n} ${n === 1 ? "day" : "days"}`).join(", ")}` : ""}.</p>
+            {learned.map((l) => <p key={l.id} className="meta" style={{ margin: "2px 0 0" }}>DELTA learned: {describeLearning(l)}</p>)}
+            {knowledge && knowledge !== "ERROR" && !learned.length && <p className="meta" style={{ margin: "2px 0 0" }}>DELTA learned nothing new this week.</p>}
+            {onOpenDelta && <button type="button" className="btn-secondary" style={{ marginTop: 6 }} onClick={onOpenDelta}>SEE ALL OF DELTA</button>}
+          </>;
+        })()}
       </section>
 
       <section aria-labelledby="week-interview-heading">
