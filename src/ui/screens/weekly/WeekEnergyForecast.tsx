@@ -1,5 +1,6 @@
 import type { ForecastDay, WeekEnergyForecast } from "../../../application/weekEnergyForecast";
 import { RUN_MEAN_FLOOR } from "../../../application/rotationProjection";
+import { SLEEP_NEED_MINUTES } from "../../../application/monthQueries";
 
 /**
  * WEEK ENERGY FORECAST: the week's summary and each day's line. Information only; it shows recorded history
@@ -7,7 +8,9 @@ import { RUN_MEAN_FLOOR } from "../../../application/rotationProjection";
  */
 const weekday = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" });
 const energy = (n: number) => `${n.toFixed(1)} of 5`;
-const owed = (minutes: number) => `${Math.floor(minutes / 60)} h ${String(Math.round(minutes % 60)).padStart(2, "0")} m`;
+const hoursMinutes = (minutes: number) => { const m = Math.round(minutes); return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} m`; };
+// The sleep need is the same constant getSleepDebt measures against, so the wording follows the maths.
+const need = `${SLEEP_NEED_MINUTES / 60} h`;
 
 function place(day: ForecastDay): string {
   if (day.position === undefined) return day.work === "WORK" ? "A run of shifts over 3 weeks long" : "Over 3 weeks off";
@@ -38,8 +41,8 @@ export function WeekEnergyForecastSummary({ forecast }: { forecast: WeekEnergyFo
       </p>
       {sleepOwed.days > 0 && <p className="meta" style={{ margin: "2px 0 0" }}>
         {sleepOwed.owedMinutes > 0
-          ? `Sleep owed: ${owed(sleepOwed.owedMinutes)} against 7 h a night over your last ${sleepOwed.days} logged days.`
-          : `No sleep owed against 7 h a night over your last ${sleepOwed.days} logged days.`}
+          ? `Sleep owed: ${hoursMinutes(sleepOwed.owedMinutes)} against ${need} a night over your last ${sleepOwed.days} logged days.`
+          : `No sleep owed against ${need} a night over your last ${sleepOwed.days} logged days.`}
       </p>}
       <p className="meta" style={{ margin: "2px 0 0" }}>A forecast from your history: the check-in energy and main sleep you recorded at the same place in past runs of the same length, or of any length when those are too few. Not a promise, and nothing changes.</p>
     </section>

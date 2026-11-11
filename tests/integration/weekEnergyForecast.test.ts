@@ -45,6 +45,16 @@ describe("WEEK ENERGY FORECAST", () => {
     expect(f.days[4]).toMatchObject({ energy: { mean: 4, days: 6 }, basis: "ANY_LENGTH" });
   });
 
+  it("never takes a run's length from one an unrecorded day cuts short", () => {
+    // Review of #475: only 3-shift runs were worked; each has its third day unrecorded (UNKNOWN).
+    const cut = () => [row("WORK", 3, 6), row("WORK", 1, 5), { ...row("OFF"), context: "UNKNOWN" } as unknown as PictureRow, row("OFF", 4, 9), row("OFF", 5, 8)];
+    const f = deriveWeekEnergyForecast({ now, pattern, rows: [row("OFF", 4, 8), ...cut(), ...cut(), ...cut()], sleepOwed: owed });
+    // Tue is shift 2 of 2. No recorded run is known to be 2 shifts long, so it is any length, and labelled so.
+    expect(f.days[1]).toMatchObject({ position: 2, length: 2, basis: "ANY_LENGTH", energy: { mean: 1, days: 3 } });
+    // A day-off run after an unknown day still counts by position, as in ROTATION-002, but not as "2 days off".
+    expect(f.days[2]).toMatchObject({ position: 1, length: 2, basis: "ANY_LENGTH", energy: { mean: 4, days: 3 } });
+  });
+
   it("says nothing it can't support: under 3 days at a place, no spread, or no saved schedule", () => {
     const thin = deriveWeekEnergyForecast({ now, pattern, rows: [row("OFF"), ...block(), ...block()], sleepOwed: owed });
     // Two 3-shift runs: too few for the same length, and only those reached shift 3, so nothing to say.

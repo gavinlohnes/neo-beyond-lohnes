@@ -47,12 +47,18 @@ export function deriveWeekEnergyForecast(input: { now: Date; pattern: SchedulePa
   if (!isOperatorSavedSchedule(pattern)) return { scheduled: false, days: [], lowest: null, best: null, sleepOwed };
   const kinds = new Map<number, "WORK" | "OFF">();
   const kind = (k: number) => { if (!kinds.has(k)) kinds.set(k, kindAt(now, k, pattern)); return kinds.get(k)!; };
-  // As in runPositions: the oldest run may be clipped by the window, so it is left out unless it is UNKNOWN.
-  const runs = groupRuns(rows).filter((run, index) => index > 0 || run.context === "UNKNOWN");
-  const last = runs.at(-1);
+  const all = groupRuns(rows);
+  // Position (any length), as in runPositions: the oldest run may be clipped by the window, so it is left out
+  // unless it is UNKNOWN; a run after an unknown stretch counts as whole.
+  const runs = all.filter((run, index) => index > 0 || run.context === "UNKNOWN");
+  // Length is stricter (review of #475): it is known only with a recorded run of the other kind on both sides.
+  // An unrecorded day or the window's edge could hide more of the run, and the newest run may still be going.
+  const sized = new Set(all.filter((run, i) => {
+    const before = all[i - 1], after = all[i + 1];
+    return !!before && !!after && before.context !== "UNKNOWN" && after.context !== "UNKNOWN";
+  }));
   const at = (work: "WORK" | "OFF", position: number, length: number | undefined) => {
-    // The newest run may still be going today, so its length is not known: it never counts as "the same length".
-    const days = runs.filter((run) => run.context === work && run.rows.length >= position && (length === undefined || (run !== last && run.rows.length === length))).map((run) => run.rows[position - 1]!);
+    const days = runs.filter((run) => run.context === work && run.rows.length >= position && (length === undefined || (sized.has(run) && run.rows.length === length))).map((run) => run.rows[position - 1]!);
     const energy = pictureValues(days, "energy"), sleep = pictureValues(days, "sleepHours");
     return { energy: { mean: pictureMean(energy), days: energy.length }, sleep: { mean: pictureMean(sleep), days: sleep.length } };
   };
