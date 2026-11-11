@@ -25,6 +25,15 @@ describe("shift what-if", () => {
     expect(shiftWhatIf([...cycle(2, 9, 7)], 4).runs).toBe(0);
     expect(shiftWhatIf([row("WORK", 3), row("WORK", 3), row("WORK", 3), row("WORK", 3)], 4).runs).toBe(0);
   });
+
+  it("never takes a run's length from one an unrecorded day cuts short", () => {
+    const unknown = { ...row("OFF"), context: "UNKNOWN" } as unknown as PictureRow;
+    // Only 5-shift runs were worked; in each, the first day was never opened, leaving 4 recorded shifts.
+    const cut = () => [unknown, row("WORK", 4), row("WORK", 3), row("WORK", 3), row("WORK", 2), row("OFF", 3, 9), row("OFF", 4, 8)];
+    expect(shiftWhatIf([row("OFF"), ...cut(), ...cut(), ...cut()], 4).runs).toBe(0);
+    // The same runs with every day recorded still count.
+    expect(shiftWhatIf([row("OFF"), ...cycle(2, 9, 7), ...cycle(2, 10, 8), ...cycle(1, 11, 7)], 4).runs).toBe(3);
+  });
 });
 
 describe("SHIFT-WHAT-IF: flipping one Week Ahead day", () => {
