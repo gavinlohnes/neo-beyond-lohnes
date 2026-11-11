@@ -19,6 +19,9 @@
 2. **Week energy forecast** (routine reading). For the next 7 days (`getWeekAhead`): the expected place in the run,
    plus sleep owed (`getSleepDebt`), mapped to that position's past energy and sleep means (`runPositions`). Label
    each day "forecast from your history", and name the lowest and best days. Never an Engine input.
+   **Gavin's objective (2026-11-11, "Implement Week Energy Forecast"):** in Week Ahead, each day's place in the
+   scheduled run with the energy and main sleep recorded there in past runs of the same length (any length when
+   those give under 3 days, labelled), lowest and best days, and sleep owed. Read only; no schema; no new AI.
 3. **Circadian plan** (🔒 approved). Cards for light, caffeine cutoff and nap windows, from SLEEP-RHYTHM-001's
    measured windows and the shift times. Rules must cite standard shift-work sleep guidance (for example a caffeine
    cutoff about 6 h before the usual sleep start; a pre-shift nap window). Save/skip cards only. Advice stays
