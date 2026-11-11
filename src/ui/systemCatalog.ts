@@ -10,6 +10,9 @@ import type { MoreView } from "./screens/more/MoreScreen";
  */
 export type CommandSection = "NUTRITION_TARGETS" | "QUIT_TRACKER" | "TIME_CAPSULE" | "REMINDERS" | "BACKUP" | "DIAGNOSTICS" | "GUIDE" | "HIDDEN_FEATURES";
 
+/** REFLECT-001: where a reflective search entry lands inside its MORE view. */
+export type ReflectFocus = "DELTA" | "PATTERNS" | "INTERVIEW";
+
 export type SystemDestination =
   | { kind: "daily"; tool: ToolsItem | "SHIFT_HANDOFF" | "SMALL_STEPS" }
   | { kind: "record"; target: "protein" | "myMeals" | "meal"; mealId?: string }
@@ -20,7 +23,8 @@ export type SystemDestination =
   | { kind: "capture" }
   | { kind: "stealth" }
   | { kind: "drive" }
-  | { kind: "more"; view: MoreView }
+  /** REFLECT-001: `focus` opens a reflective view straight at the right place (a Personal Understanding view, or the interview). */
+  | { kind: "more"; view: MoreView; focus?: ReflectFocus }
   | { kind: "section"; section: CommandSection };
 
 // FIELD-AUTHORITY-001: COMMAND browses by job. The last two rows also hold their tool panels.
@@ -77,7 +81,11 @@ export const SYSTEM_CAPABILITIES = [
   { label: "REVIEW", description: "Weekly review, free debrief and recorded evidence", aliases: ["review", "weekly review", "weekly debrief", "free review", "recommendation", "rating", "decision", "evidence"], group: "Review", destination: { kind: "more", view: "REVIEW" } },
   { label: "HISTORY", description: "Every record, in order", aliases: ["timeline", "past"], group: "Review", destination: { kind: "more", view: "HISTORY" } },
   { label: "DECISION JOURNAL", description: "Decisions, outcomes and lessons", aliases: ["journal", "decision"], group: "Review", destination: { kind: "more", view: "JOURNAL" } },
-  { label: "DAILY NOTE", description: "Your lived day, recorded actions and linked note", aliases: ["note", "today note", "daily notes"], group: "Notes", destination: { kind: "more", view: "DAILY_NOTE" } },
+  { label: "DAILY NOTE", description: "Write about today, tag it, answer DELTA's question", aliases: ["note", "today note", "daily notes", "write", "reflect"], group: "Notes", destination: { kind: "more", view: "DAILY_NOTE" } },
+  // REFLECT-001: the reflective views, found by name. Search-only, so MORE's browse list is unchanged.
+  { label: "DELTA", description: "What BEYOND has learned about you, and its notebook", aliases: ["learned", "notebook", "personal understanding", "what beyond knows"], group: "Review", destination: { kind: "more", view: "REVIEW", focus: "DELTA" }, browse: false },
+  { label: "PATTERNS", description: "Your usual, your place in a run, sleep timing and tags", aliases: ["usual", "tags", "tag patterns", "what lines up"], group: "Review", destination: { kind: "more", view: "REVIEW", focus: "PATTERNS" }, browse: false },
+  { label: "WEEKLY INTERVIEW", description: "Look back at the week and answer a few questions", aliases: ["interview", "look back", "reflection", "weekly reflection", "reflect"], group: "Review", destination: { kind: "more", view: "WEEKLY", focus: "INTERVIEW" }, browse: false },
   { label: "SEARCH RECORDS", description: "Find your personal records", aliases: ["search", "find records"], group: "Review", destination: { kind: "more", view: "SEARCH" } },
   { label: "BACKUP & RECOVERY", description: "Export, share, automatic backup and restore", aliases: ["backup", "restore", "export", "share", "data safety", "automatic backup"], group: "Backup & recovery", destination: { kind: "section", section: "BACKUP" }, browse: false },
   { label: "TARGETS", description: "Nutrition and personal Review targets", aliases: ["nutrition targets", "review targets", "training target", "weight rate", "settings", "calories"], group: "Settings", destination: { kind: "section", section: "NUTRITION_TARGETS" }, browse: false },

@@ -25,7 +25,8 @@ import { FieldDisclosure } from "../../components/FieldDisclosure";
 /** Keeps a big week calm: the best PR per exercise, at most this many lines. */
 const MAX_RECORD_LINES = 5;
 
-export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
+/** REFLECT-001: openInterviewKey opens the interview straight away (a new key opens it again); onOpenDelta shows all of DELTA. */
+export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta }: { now?: Date; openInterviewKey?: number | undefined; onOpenDelta?: () => void } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
   const [readKey, setReadKey] = useState(0);
@@ -33,7 +34,8 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [weekAheadOpen, setWeekAheadOpen] = useState(false);
-  const [interviewOpen, setInterviewOpen] = useState(false);
+  const [interviewOpen, setInterviewOpen] = useState(openInterviewKey !== undefined);
+  useEffect(() => { if (openInterviewKey !== undefined) setInterviewOpen(true); }, [openInterviewKey]);
 
   useEffect(() => {
     let current = true;
@@ -64,7 +66,7 @@ export function WeeklyCheckInScreen({ now }: { now?: Date } = {}) {
           {/* BIG-IDEAS-001 item 5: the week as recorded and a short interview; saves only on CONFIRM. */}
           <Section label="WEEKLY INTERVIEW">
             <FieldDisclosure summary={interviewOpen ? "HIDE INTERVIEW" : "OPEN WEEKLY INTERVIEW"} open={interviewOpen} onToggle={setInterviewOpen}>
-              {interviewOpen && <WeeklyInterviewView now={now} />}
+              {interviewOpen && <WeeklyInterviewView now={now} {...(onOpenDelta ? { onOpenDelta } : {})} />}
             </FieldDisclosure>
           </Section>
 
