@@ -2865,3 +2865,20 @@ knows, what it is still learning (with counts) and a dated notebook of what it l
 with nothing new stored. The daily note carries one DELTA question a day. **TODAY amendment:** one quiet line, "DELTA
 learned something new about you", shows only when a new learning exists and hides on GOT IT. Patterns not causes; no
 advice change. [Brief](agent/DELTA-GROWS-001.md).
+
+
+## SHIFT-SLEEP-PLAN-001 — the next shift's sleep plan (owner approval 2026-11-09, BIG-IDEAS-001 item 3)
+
+Gavin picked item 3 in "Everything but 4", approving Protected timing guidance. Week Ahead shows **NEXT SHIFT SLEEP
+PLAN** for the next shift that hasn't started: a pre-shift nap window (overnight shifts), a caffeine cutoff, and a
+light plan (overnight shifts). Each card names its source and what its times come from:
+- **Nap:** 1½–3 h, per NIOSH's nurse training on prophylactic naps, which cites the AASM. It ends 60 minutes before
+  the shift; that margin is BEYOND's own and is labelled as such.
+- **Caffeine:** 6 h before sleep (Drake et al. 2013). The sleep time is your usual post-shift main sleep from
+  SLEEP-RHYTHM-001 when there are 3 Garmin-timed work days; otherwise the shift's end, and the card says so.
+- **Light:** bright light early in the shift, dark sunglasses on the way home and a dark bedroom (Smith, Fogg &
+  Eastman 2009).
+
+General guidance, not medical advice. **SAVE** adds an ordinary reminder through the existing obligation command;
+**SKIP** hides that card for that shift on the device. Nothing else is stored, and the plan is never an Engine input.
+TODAY is unchanged. [Brief](agent/BIG-IDEAS-001.md).

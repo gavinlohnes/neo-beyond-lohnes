@@ -1,10 +1,11 @@
 # Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).
-- Item 2, WEEK ENERGY FORECAST (Gavin, 2026-11-11): built on `ccr-88f5c085-07op3k`, PR #475. Week Ahead shows
-  ENERGY FORECAST (lowest/best day, sleep owed) and a line per day: place in run, recorded energy and main sleep
-  from past same-length runs (else any length, labelled). Code: `application/weekEnergyForecast.ts`,
-  `ui/screens/weekly/WeekEnergyForecast.tsx`. Next: independent exact-head review, then Gavin's merge.
+- Item 2, WEEK ENERGY FORECAST: merged (#475). The Shift What-If length tightening merged as #476.
+- Item 3, NEXT SHIFT SLEEP PLAN (Protected, approved 2026-11-09): built on `ccr-88f5c085-07op3k`, PR pending.
+  Week Ahead cards for the next shift: nap, caffeine cutoff, light, each sourced (NIOSH/AASM, Drake 2013,
+  Smith/Fogg/Eastman 2009). SAVE adds a reminder; SKIP hides it. Code: `application/shiftSleepPlan.ts`,
+  `ui/screens/weekly/ShiftSleepPlanCards.tsx`. Next: independent exact-head review, then Gavin's merge.
 - Build in order from [BIG-IDEAS-001.md](BIG-IDEAS-001.md), using Gavin's numbers: 1 shift what-if → 2 week energy
   forecast → 3 circadian plan (🔒 approved; research first) → 5 weekly interview / timeline → 6 recap → 7 on-device
   Alfred (🔒; spike first) → 8 shared view for his wife (🔒; privacy design and Gavin's re-confirm first). 4 (voice) is
