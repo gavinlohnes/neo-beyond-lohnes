@@ -1,7 +1,7 @@
 # CIRCADIAN-SPIKE-001: Circadian Plan (BIG-IDEAS-001 item 3), research spike
 
-Status: recommendation for Gavin's review (2026-11-11). Research only. It authorizes no code, and the first slice
-below still needs Gavin's go.
+Status: **approved by Gavin, 2026-11-11 ("Approved")**, with the recommended answers to the three questions below.
+This approves the first slice's scope and rules; the build is a separate PR.
 
 ## What others do that BEYOND still lacks
 - **Timeshifter** builds a plan from your schedule and sleep preferences. It times when to seek or avoid light, use
@@ -64,10 +64,14 @@ source, and draws only on the saved schedule and measured sleep.
   - ROUTE's existing ruling skipped "Last coffee" because BEYOND records no caffeine.
   - A cutoff *time* needs no caffeine record, but it does revisit that line. Gavin should confirm.
 
-## Questions for Gavin
-1. Where should the cards appear: ROUTE (recommended), the sleep page, or Week Ahead?
-2. What should SAVE create: a plan item (recommended), a daily-note line, or should slice 1 be skip-only?
-3. Is it acceptable that the nap window's exact numbers are settled from the full-text sources in the build PR?
+## Decisions (Gavin, 2026-11-11: "Approved", taking the recommended answers)
+1. **Surface: ROUTE, in the cave.** Revisiting ROUTE's "Last coffee" exclusion is approved for a cutoff *time*.
+   Caffeine is still never recorded. ROUTE's next three points also appear on TODAY. The build keeps the cards
+   **out of TODAY's next three points** by default, because adding them there would change TODAY's primary reading.
+   That needs Gavin's separate OK.
+2. **SAVE creates a plan item** through the existing `createObligation`, after a tap and a preview. SKIP stays on
+   the device.
+3. **The nap window's numbers** are settled from the full-text sources in the build PR, which quotes them.
 
 ## Sources and gaps
 - McKenna H, Wilkes M. "Optimising sleep for night shifts." *BMJ* 2018;360:j5637.
