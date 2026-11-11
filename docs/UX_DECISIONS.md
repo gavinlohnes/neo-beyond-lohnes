@@ -2322,6 +2322,9 @@ in-app only." Protected: it changes TODAY's primary layout. Brief:
   - **A break time.** It needs a new schedule field, which is a schema change, so it waits for its
     own ruling.
   - **"Last coffee."** BEYOND records no caffeine.
+    **Amended (Gavin, 2026-11-11, CIRCADIAN-SPIKE-001 "Approved"):** ROUTE may show a cited caffeine *cutoff
+    time*, derived from the saved schedule and your usual sleep start. Caffeine is still never recorded. The cutoff
+    stays out of TODAY's next three points unless Gavin separately approves.
 - **Unchanged:** the Engine, recommendations, TODAY's rows and their order, and every stored record.
 
 ## SUIT-ALIVE-004 — pace and the dark cockpit (owner approval, 2026-10-28)
@@ -2866,19 +2869,25 @@ with nothing new stored. The daily note carries one DELTA question a day. **TODA
 learned something new about you", shows only when a new learning exists and hides on GOT IT. Patterns not causes; no
 advice change. [Brief](agent/DELTA-GROWS-001.md).
 
+## SHIFT-SLEEP-PLAN-001 — the circadian plan's first slice, in ROUTE (owner approval 2026-11-11, CIRCADIAN-SPIKE-001)
 
-## SHIFT-SLEEP-PLAN-001 — the next shift's sleep plan (owner approval 2026-11-09, BIG-IDEAS-001 item 3)
+Gavin, 2026-11-11: "Approved" ([CIRCADIAN-SPIKE-001](agent/CIRCADIAN-SPIKE-001.md)). Protected timing guidance. Below the
+cave's ROUTE, for the next shift transition (a shift under way, or one starting within 24 h): four cards, each with
+its rule, its inputs and a source quoted from the full text. **Not on TODAY**: they are not waypoints, so TODAY's next
+three points are unchanged.
+- **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
+  Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
+- **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake
+  time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
+  parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
+  2019). No nap length is set.
+- **First sleep after the run** (last shift of a run): your own record from past runs (ROTATION-003), never a
+  prescribed length. The spike's "sleep soon after" sentence waits until its NIOSH source can be quoted.
+- **Light on the way home** (night shifts): keep light low on the commute if going straight to sleep (dark
+  sunglasses). Smith, Fogg & Eastman 2009. BEYOND records no light.
 
-Gavin picked item 3 in "Everything but 4", approving Protected timing guidance. Week Ahead shows **NEXT SHIFT SLEEP
-PLAN** for the next shift that hasn't started: a pre-shift nap window (overnight shifts), a caffeine cutoff, and a
-light plan (overnight shifts). Each card names its source and what its times come from:
-- **Nap:** 1½–3 h, per NIOSH's nurse training on prophylactic naps, which cites the AASM. It ends 60 minutes before
-  the shift; that margin is BEYOND's own and is labelled as such.
-- **Caffeine:** 6 h before sleep (Drake et al. 2013). The sleep time is your usual post-shift main sleep from
-  SLEEP-RHYTHM-001 when there are 3 Garmin-timed work days; otherwise the shift's end, and the card says so.
-- **Light:** bright light early in the shift, dark sunglasses on the way home and a dark bedroom (Smith, Fogg &
-  Eastman 2009).
-
-General guidance, not medical advice. **SAVE** adds an ordinary reminder through the existing obligation command;
-**SKIP** hides that card for that shift on the device. Nothing else is stored, and the plan is never an Engine input.
-TODAY is unchanged. [Brief](agent/BIG-IDEAS-001.md).
+The spike named McKenna & Wilkes (BMJ 2018) and Intensive Care Society guidance; their full texts block automated
+reading, so the build cites the primary studies above, whose full texts were read. Shift-work guidance, not a
+decision: never an Engine input. **SAVE** shows a preview, then adds one plan item through `createObligation` with
+`plannedAt` only, never `dueAt`, so it is at most PLANNED_TODAY and never reaches `evaluate`. **SKIP** hides the card
+for that shift on the device. No schema change, network, notification or AI.

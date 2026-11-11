@@ -8,7 +8,6 @@ import { ShiftWhatIfPanel } from "./ShiftWhatIfPanel";
 import type { WhatIfChange } from "../../../application/shiftWhatIf";
 import { getWeekEnergyForecast, type WeekEnergyForecast } from "../../../application/weekEnergyForecast";
 import { forecastLine, WeekEnergyForecastSummary } from "./WeekEnergyForecast";
-import { ShiftSleepPlanCards } from "./ShiftSleepPlanCards";
 
 
 function dayLabel(date: string): string {
@@ -62,7 +61,6 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
     <div data-week-ahead ref={rootRef}>
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
       {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
-      <ShiftSleepPlanCards now={now} onSaved={() => { void getWeekTasks(now).then(setTasks).catch(() => {}); }} />
       {week.days.map((day) => (
         <div
           key={day.date}

@@ -26,8 +26,9 @@
    measured windows and the shift times. Rules must cite standard shift-work sleep guidance (for example a caffeine
    cutoff about 6 h before the usual sleep start; a pre-shift nap window). Save/skip cards only. Advice stays
    separate from the Engine. **Research first:** confirm the sources in the PR.
-   **Built (Gavin, 2026-11-11: "Let's get moving"):** NEXT SHIFT SLEEP PLAN in Week Ahead; sources and rules in
-   [UX_DECISIONS SHIFT-SLEEP-PLAN-001](../UX_DECISIONS.md). SAVE adds a reminder; SKIP hides the card.
+   **Research done and approved (Gavin, 2026-11-11, "Approved"):** [CIRCADIAN-SPIKE-001.md](CIRCADIAN-SPIKE-001.md).
+   The first slice is four cited cards in ROUTE (caffeine cutoff, pre-shift nap window, first sleep after the run,
+   light on the way home). SAVE creates a plan item, and the cards are not on TODAY. No schema change.
 5. **Weekly interview → life timeline** (routine). Sunday: 3 questions chosen from that week's DELTA learnings and
    gaps. Answers save into the daily note through `saveDailyNote` with a `#timeline` tag, so there's no new data
    type. A Timeline view lists #timeline entries newest first, searchable via the existing search.

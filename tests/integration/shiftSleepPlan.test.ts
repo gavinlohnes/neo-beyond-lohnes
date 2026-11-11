@@ -1,54 +1,83 @@
 import { describe, expect, it } from "vitest";
-import { deriveShiftSleepPlan, SOURCES } from "../../src/application/shiftSleepPlan";
+import { deriveShiftSleepPlan, saveShiftPlanCard, SOURCES, CAFFEINE_CUTOFF_HOURS, WAKE_MARGIN_MINUTES } from "../../src/application/shiftSleepPlan";
+import { getCurrentlyEligibleUnresolvedObligations } from "../../src/application/intentQueries";
+import { classifyObligation, hasObligationRequiringArbitration } from "../../src/engine/obligationRelevance";
 import type { SleepRhythm } from "../../src/engine/sleepRhythm";
+import type { PictureRow } from "../../src/application/wholePictureProjection";
 import type { SchedulePattern } from "../../src/domain/common/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 
-/** BIG-IDEAS-001 item 3: the next shift's nap, caffeine and light cards. Invented rhythms only. */
+/** CIRCADIAN-SPIKE-001's first slice. Invented rhythms and runs only. */
+// Gavin's rotation from Mon Oct 26 (Week A): Mon, Tue work; Wed, Thu off; Fri–Sun work. Sun Oct 25 is off.
 const nights: SchedulePattern = { id: "current", anchorMonday: "2026-08-17", weeks: [{ workdays: [1, 2, 5, 6, 0] }, { workdays: [3, 4] }], shiftStartHour: 18, shiftEndHour: 6, postWorkTailHours: 6, createdAt: "2026-08-17T00:00:00.000Z", updatedAt: "2026-10-05T00:00:00.000Z" };
-const rhythm = (start: number, end: number, count = 5): SleepRhythm => ({ nights: [], groups: [{ kind: "WORK", nights: count, start, end, midpoint: 0, spread: 0 }], offMinusWork: null, axisStart: 0 });
-const at = (iso: string) => new Date(iso).getTime();
-const local = (...p: [number, number, number, number, number?]) => new Date(p[0], p[1], p[2], p[3], p[4] ?? 0).getTime();
+const group = (kind: "WORK" | "OFF", start: number, end: number) => ({ kind, nights: 5, start, end, midpoint: 0, spread: 0 });
+const rhythm: SleepRhythm = { nights: [], groups: [group("WORK", 7 * 60 + 30, 14 * 60 + 15), group("OFF", 23 * 60, 8 * 60)], offMinusWork: null, axisStart: 0 };
+const row = (context: "WORK" | "OFF", sleepWindow?: { start: number; end: number }) => ({ context, sleepWindow, start: "x", dayIds: ["d"], sessions: 0 }) as unknown as PictureRow;
+// Three past runs whose last shift was followed by a 07:30–14:15 main sleep (minutes after the 16:30 lived-day start).
+const run = () => [row("WORK"), row("WORK", { start: 900, end: 1305 }), row("OFF"), row("OFF")];
+const rows = [row("OFF"), ...run(), ...run(), ...run()];
+const plan = (now: Date, extra: Partial<Parameters<typeof deriveShiftSleepPlan>[0]> = {}) => deriveShiftSleepPlan({ now, pattern: nights, rhythm, rows, ...extra });
 
-describe("SHIFT SLEEP PLAN", () => {
-  it("times a night shift's nap, caffeine and light from the shift and your usual work-day sleep, with sources", () => {
-    const plan = deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: nights, rhythm: rhythm(7 * 60 + 30, 14 * 60 + 15) })!;
-    expect(plan.shift).toMatchObject({ date: "2026-10-26", overnight: true });
-    expect(at(plan.shift.start)).toBe(local(2026, 9, 26, 18));
-    expect(plan.cards.map((c) => c.kind)).toEqual(["NAP", "CAFFEINE", "LIGHT"]);
-    const [nap, caffeine, light] = plan.cards;
-    expect(nap!.detail).toBe("A 1½–3 h nap between 14:00 and 17:00, before your 18:00 shift.");
-    expect(nap!.reminder).toEqual({ title: "Pre-shift nap, 14:00–17:00", plannedAt: "2026-10-26" });
-    expect(caffeine!.detail).toBe("Last caffeine by Tue 01:30.");
+describe("CIRCADIAN PLAN: the next shift transition's cards", () => {
+  it("first night of a run: caffeine, a nap in the gap after your day-off wake, light; each with its rule and source", () => {
+    const p = plan(new Date(2026, 9, 26, 9))!;
+    expect(p.shift).toMatchObject({ date: "2026-10-26", overnight: true, firstOfRun: true, lastOfRun: false });
+    expect(p.cards.map((c) => c.kind)).toEqual(["CAFFEINE", "NAP", "LIGHT"]);
+    const [caffeine, nap, light] = p.cards;
+    expect(caffeine!.detail).toBe("No substantial caffeine after Tue 01:30.");
     expect(caffeine!.basis).toBe("6 h before your usual post-shift sleep at 07:30 (Garmin, 5 work days).");
-    expect(caffeine!.reminder).toEqual({ title: "Last caffeine by 01:30", plannedAt: "2026-10-27" });
-    expect(light!.detail).toBe("Bright light in the first part of the shift. Dark sunglasses on the way home after 06:00 and a dark bedroom for your usual 07:30–14:15 sleep.");
-    expect(light!.reminder.plannedAt).toBe("2026-10-27");
-    expect(plan.cards.map((c) => c.source)).toEqual([SOURCES.NAP, SOURCES.CAFFEINE, SOURCES.LIGHT]);
+    expect(caffeine!.plan).toEqual({ title: "No caffeine after 01:30", plannedAt: "2026-10-27" });
+    expect(nap!.title).toBe("Pre-shift nap · first night of the run");
+    expect(nap!.detail).toBe("A planned nap between 08:00 and 17:00, before your 18:00 shift.");
+    expect(nap!.basis).toMatch(/^From your usual wake time on days off \(Garmin, 5 days\) to 60 minutes before the shift, because grogginess/);
+    expect(light!.detail).toBe("After the shift ends at 06:00, if you're going straight to sleep, keep light low on the way home (dark sunglasses).");
+    expect(p.cards.map((c) => c.source)).toEqual([SOURCES.CAFFEINE, SOURCES.NAP, SOURCES.LIGHT]);
+    // Cited constants, each with its quoted source sentence.
+    expect([CAFFEINE_CUTOFF_HOURS, WAKE_MARGIN_MINUTES]).toEqual([6, 60]);
+    expect(SOURCES.CAFFEINE.quote).toContain("for a minimum of 6 hours prior to bedtime");
+    expect(SOURCES.WAKE_MARGIN.quote).toContain("at least an hour after awakening");
   });
 
-  it("without enough measured nights, counts the caffeine cutoff from the shift's end and says so", () => {
-    const plan = deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: nights, rhythm: null })!;
-    const caffeine = plan.cards.find((c) => c.kind === "CAFFEINE")!;
-    expect(caffeine.detail).toBe("Last caffeine by Tue 00:00.");
-    expect(caffeine.basis).toMatch(/^6 h before the shift ends at 06:00, the earliest you'd sleep\. BEYOND needs 3 Garmin-timed/);
-    expect(plan.cards.find((c) => c.kind === "LIGHT")!.detail).toMatch(/a dark bedroom for the sleep after\.$/);
-    // A usual sleep that starts more than 12 h after the shift isn't this shift's sleep.
-    const far = deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: nights, rhythm: rhythm(20 * 60, 4 * 60) })!;
-    expect(far.cards.find((c) => c.kind === "CAFFEINE")!.detail).toBe("Last caffeine by Tue 00:00.");
+  it("last shift of a run adds your own first sleep from past runs, and the nap follows your work-day wake", () => {
+    const p = plan(new Date(2026, 9, 27, 9))!;
+    expect(p.shift).toMatchObject({ firstOfRun: false, lastOfRun: true });
+    expect(p.cards.map((c) => c.kind)).toEqual(["CAFFEINE", "NAP", "FIRST_SLEEP", "LIGHT"]);
+    expect(p.cards[1]!.detail).toBe("A planned nap between 14:15 and 17:00, before your 18:00 shift.");
+    const first = p.cards[2]!;
+    expect(first.detail).toBe("After your last shift in past runs, your main sleep usually ran 07:30–14:15.");
+    expect(first.basis).toMatch(/^Your records: 3 past runs/);
+    expect(first.source).toBeNull();
+    // Too few runs on file: it says so, and still prescribes nothing.
+    expect(plan(new Date(2026, 9, 27, 9), { rows: [row("OFF"), ...run()] })!.cards[2]!.detail).toMatch(/once 3 runs have Garmin-timed sleep \(1 runs on file\)/);
   });
 
-  it("plans the next shift that hasn't started, follows the saved schedule, and gives a day shift only the caffeine card", () => {
-    const during = deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 20), pattern: nights, rhythm: null })!;
-    expect(at(during.shift.start)).toBe(local(2026, 9, 27, 18));
+  it("with too little sleep history, counts from the shift's end and says so; a shift under way gets no nap", () => {
+    const thin = plan(new Date(2026, 9, 26, 9), { rhythm: null })!;
+    expect(thin.cards[0]!.detail).toBe("No substantial caffeine after Tue 00:00.");
+    expect(thin.cards[0]!.basis).toMatch(/^6 h before the shift ends at 06:00, the earliest you'd sleep\. Your own sleep time is used after 3/);
+    expect(thin.cards[1]!.detail).toBe("A planned nap that ends by 17:00, before your 18:00 shift.");
+    const during = plan(new Date(2026, 9, 26, 23))!;
+    expect(during.shift.date).toBe("2026-10-26");
+    expect(during.cards.map((c) => c.kind)).toEqual(["CAFFEINE", "LIGHT"]);
+  });
+
+  it("covers only the next 24 h, follows the saved schedule, and gives a day shift only the caffeine card", () => {
+    expect(plan(new Date(2026, 9, 28, 9))).toBeNull(); // Wed off; the next shift is Fri 18:00, over 24 h away
+    expect(plan(new Date(2026, 9, 29, 19))!.shift.date).toBe("2026-10-30");
     const days: SchedulePattern = { ...nights, anchorMonday: "2026-10-26", weeks: [{ workdays: [1, 2, 3, 4, 5] }], shiftStartHour: 7, shiftEndHour: 19 };
-    const day = deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 5), pattern: days, rhythm: rhythm(22 * 60 + 30, 6 * 60) })!;
-    expect(day.shift.overnight).toBe(false);
-    expect(day.cards.map((c) => [c.kind, c.detail])).toEqual([["CAFFEINE", "Last caffeine by Mon 16:30."]]);
+    const d = deriveShiftSleepPlan({ now: new Date(2026, 9, 25, 8), pattern: days, rhythm: null, rows: [] })!;
+    expect(d.shift.overnight).toBe(false);
+    expect(d.cards.map((c) => c.kind)).toEqual(["CAFFEINE"]);
+    expect(deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: DEFAULT_SCHEDULE_PATTERN, rhythm, rows })).toBeNull();
   });
 
-  it("says nothing without a saved schedule or a shift this week", () => {
-    expect(deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: DEFAULT_SCHEDULE_PATTERN, rhythm: null })).toBeNull();
-    expect(deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: { ...nights, weeks: [{ workdays: [] }] }, rhythm: null })).toBeNull();
+  it("SAVE adds a plan item with plannedAt only, so it is PLANNED_TODAY at most and never reaches the Engine's arbitration", async () => {
+    for (const card of plan(new Date(2026, 9, 27, 9))!.cards) {
+      const saved = await saveShiftPlanCard(card);
+      expect(saved.dueAt).toBeUndefined();
+      expect(saved.plannedAt).toBe(card.plan.plannedAt);
+      expect(classifyObligation(saved, card.plan.plannedAt)).toBe("PLANNED_TODAY");
+      expect(hasObligationRequiringArbitration(await getCurrentlyEligibleUnresolvedObligations(), card.plan.plannedAt)).toBe(false);
+    }
   });
 });
