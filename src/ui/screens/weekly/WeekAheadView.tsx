@@ -4,6 +4,8 @@ import { getWeekAhead, getWeekTasks, type WeekAhead, type WeekTasksDay } from ".
 import { askAlfred, PLAN_MY_WEEK_ASK } from "../../components/AlfredSheet";
 import { readCachedGoogleEvents, type GoogleCalendarEvent } from "../../../application/googleCalendar";
 import { GoogleCalendarPanel } from "./GoogleCalendarPanel";
+import { ShiftWhatIfPanel } from "./ShiftWhatIfPanel";
+import type { WhatIfChange } from "../../../application/shiftWhatIf";
 
 
 function dayLabel(date: string): string {
@@ -23,6 +25,7 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
   const [tasks, setTasks] = useState<WeekTasksDay[] | null>(null);
   const [tasksFailed, setTasksFailed] = useState(false);
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(() => readCachedGoogleEvents());
+  const [whatIf, setWhatIf] = useState<WhatIfChange | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -67,6 +70,10 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
           {calendarEvents.filter((event) => event.start.slice(0, 10) === day.date).map((event) => (
             <p className="meta" style={{ margin: "4px 0 0" }} key={event.id}>Google · {event.title}{event.allDay ? " · all day" : ` · ${new Date(event.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}</p>
           ))}
+          {whatIf?.date === day.date
+            ? <ShiftWhatIfPanel change={whatIf} events={calendarEvents} now={now} onClose={() => setWhatIf(null)} />
+            : <button type="button" className="btn-secondary" style={{ marginTop: 6 }} aria-label={`What if ${dayLabel(day.date)} were ${day.work === "WORK" ? "a day off" : "a shift"}?`}
+                onClick={() => setWhatIf({ date: day.date, to: day.work === "WORK" ? "OFF" : "WORK" })}>{day.work === "WORK" ? "WHAT IF I'M OFF?" : "WHAT IF I WORK?"}</button>}
         </div>
       ))}
       {tasksFailed && <p role="alert" className="meta">Commitments couldn't be read, so days may show fewer than you have. Nothing changed.</p>}

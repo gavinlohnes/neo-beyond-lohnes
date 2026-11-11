@@ -11,6 +11,11 @@
    adding the shift; next days off) using ROTATION-001 `groupRuns` / `runPositions`. Report what followed at each
    position: sleep, energy, training, and days until sleep was back in the usual range (personal baselines).
    Counts; "N similar runs"; silent under 3. Entry points: DELTA's view, plus the free helper ("what if I work…").
+   **Superseded by Gavin's objective (2026-11-11, "Implement Shift What-If"):** on a Week Ahead day, ask "what if
+   this day were a shift / a day off?" and see the change to the recovery window (days off), the next sleep
+   opportunity (off-duty window), Week Ahead's workout suggestions and that day's commitments, plus past runs of
+   the new length (`shiftWhatIf`). Read only; no schedule change; no new AI behavior, so no free-helper entry.
+   Excludes circadian/light advice, schema changes and other items.
 2. **Week energy forecast** (routine reading). For the next 7 days (`getWeekAhead`): the expected place in the run,
    plus sleep owed (`getSleepDebt`), mapped to that position's past energy and sleep means (`runPositions`). Label
    each day "forecast from your history", and name the lowest and best days. Never an Engine input.
