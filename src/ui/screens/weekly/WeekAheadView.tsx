@@ -1,9 +1,11 @@
 import { CalendarExportPanel } from "./CalendarExportPanel";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getWeekAhead, getWeekTasks, type WeekAhead, type WeekTasksDay } from "../../../application/weekAheadQueries";
 import { askAlfred, PLAN_MY_WEEK_ASK } from "../../components/AlfredSheet";
 import { readCachedGoogleEvents, type GoogleCalendarEvent } from "../../../application/googleCalendar";
 import { GoogleCalendarPanel } from "./GoogleCalendarPanel";
+import { ShiftWhatIfPanel } from "./ShiftWhatIfPanel";
+import type { WhatIfChange } from "../../../application/shiftWhatIf";
 
 
 function dayLabel(date: string): string {
@@ -23,6 +25,15 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
   const [tasks, setTasks] = useState<WeekTasksDay[] | null>(null);
   const [tasksFailed, setTasksFailed] = useState(false);
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(() => readCachedGoogleEvents());
+  const [whatIf, setWhatIf] = useState<WhatIfChange | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Review of #474: after CLOSE, focus returns to that day's WHAT IF button.
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+  useEffect(() => {
+    if (whatIf || !returnTo) return;
+    rootRef.current?.querySelector<HTMLButtonElement>(`[data-week-ahead-day="${returnTo}"] [data-what-if]`)?.focus();
+    setReturnTo(null);
+  }, [whatIf, returnTo]);
 
   useEffect(() => {
     let current = true;
@@ -42,7 +53,7 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
   if (!week) return <p className="meta">Loading…</p>;
 
   return (
-    <div data-week-ahead>
+    <div data-week-ahead ref={rootRef}>
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
       {week.days.map((day) => (
         <div
@@ -67,6 +78,10 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
           {calendarEvents.filter((event) => event.start.slice(0, 10) === day.date).map((event) => (
             <p className="meta" style={{ margin: "4px 0 0" }} key={event.id}>Google · {event.title}{event.allDay ? " · all day" : ` · ${new Date(event.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}</p>
           ))}
+          {whatIf?.date === day.date
+            ? <ShiftWhatIfPanel change={whatIf} events={calendarEvents} now={now} onClose={() => { setReturnTo(whatIf.date); setWhatIf(null); }} />
+            : <button type="button" data-what-if className="btn-secondary" style={{ marginTop: 6 }} aria-label={`What if ${dayLabel(day.date)} were ${day.work === "WORK" ? "a day off" : "a shift"}?`}
+                onClick={() => setWhatIf({ date: day.date, to: day.work === "WORK" ? "OFF" : "WORK" })}>{day.work === "WORK" ? "WHAT IF I'M OFF?" : "WHAT IF I WORK?"}</button>}
         </div>
       ))}
       {tasksFailed && <p role="alert" className="meta">Commitments couldn't be read, so days may show fewer than you have. Nothing changed.</p>}

@@ -41,6 +41,8 @@ export function deriveWeekAhead(
   now: Date,
   pattern: SchedulePattern,
   firstTemplate: WorkoutTemplateId,
+  /** SHIFT-WHAT-IF: hypothetical WORK/OFF for some dates (yyyy-mm-dd). Read only; never saved or sent to the Engine. */
+  overrides: Readonly<Record<string, "WORK" | "OFF">> = {},
 ): WeekAhead {
   const days: WeekAheadDay[] = [];
   let consecutiveSuggestions = 0;
@@ -48,6 +50,8 @@ export function deriveWeekAhead(
 
   const workFor = (offset: number) => {
     const date = localNoon(now, offset);
+    const override = overrides[formatLocalDate(date)];
+    if (override) return override;
     return scheduledWorkContextForLivedDay(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 17), pattern);
   };
 
