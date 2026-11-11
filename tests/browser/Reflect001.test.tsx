@@ -54,3 +54,12 @@ it("the daily note leads into the weekly interview, which shows what the week ta
   expect([await db.dailyNotes.count(), await db.obligations.count()]).toEqual([notes, obligations]);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
 });
+
+it("Search all records opens WEEKLY INTERVIEW in place too", async () => {
+  await startDay();
+  const screen = await render(<MoreScreen />);
+  await openByName(screen, "search records", "SEARCH RECORDS", "Find your personal records");
+  await userEvent.fill(screen.getByRole("textbox", { name: "Search everything" }), "interview");
+  await screen.getByRole("button", { name: "Go: WEEKLY INTERVIEW Look back at the week and answer a few questions" }).click();
+  await expect.element(screen.getByText("WHAT THIS WEEK SHOWED")).toBeVisible();
+});
