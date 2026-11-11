@@ -41,6 +41,9 @@ export function bandAccent(s: { briefLate: boolean; callout: boolean; commsOff: 
 
 export function SuitLines({ refreshKey, now, onOpen, onShift = false }: { refreshKey: string; now: Date; onOpen: (tab: "tonight" | "route" | "brief") => void; onShift?: boolean }) {
   const [comms, setComms] = useState<{ text: string; off: boolean } | null>(null);
+  // FLAKE-CHECKIN-001: until the first COMMS read settles, its band holds its place. Without it the band
+  // arrived ~60 ms after TODAY's first paint and pushed NEXT's CHECK IN down mid-tap, so a first tap was lost.
+  const [commsSettled, setCommsSettled] = useState(false);
   const [route, setRoute] = useState<CaveRoute | null>(null);
   const [brief, setBrief] = useState<{ text: string; late: boolean } | null>(null);
   const sequence = useRef(0);
@@ -48,7 +51,8 @@ export function SuitLines({ refreshKey, now, onOpen, onShift = false }: { refres
     const request = ++sequence.current;
     getCaveTonight()
       .then((t) => { if (request === sequence.current) setComms({ text: describeComms(t), off: commsOff(t).length > 0 }); })
-      .catch(() => { if (request === sequence.current) setComms(null); });
+      .catch(() => { if (request === sequence.current) setComms(null); })
+      .finally(() => { if (request === sequence.current) setCommsSettled(true); });
     getCaveRoute()
       .then((r) => { if (request === sequence.current) setRoute(r); })
       .catch(() => { if (request === sequence.current) setRoute(null); });
@@ -92,5 +96,9 @@ export function SuitLines({ refreshKey, now, onOpen, onShift = false }: { refres
       <span className="comms-line__head" aria-hidden="true"><span className="comms-line__key">COMMS</span><span className="comms-line__go">TONIGHT ›</span></span>
       <span className="comms-line__text" aria-hidden="true">{text}</span>
     </button>}
+    {!text && !commsSettled && <div className="comms-pending" aria-hidden="true">
+      <span className="comms-line__head"><span className="comms-line__key">COMMS</span></span>
+      <span className="comms-line__text">{"\u00a0"}</span>
+    </div>}
   </>;
 }

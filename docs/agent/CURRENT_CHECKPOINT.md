@@ -1,3 +1,13 @@
+# FLAKE-CHECKIN-001 — OwnerGo001 CI flake fixed at the source, PR pending (2026-11-11)
+
+- Root cause: TODAY's COMMS band rendered only after its read, about 60 ms after first paint, and pushed
+  NEXT's CHECK IN down 57 px. A tap aimed at CHECK IN in that window hit whatever slid under it (CI run
+  43046612492, shard 1, on #481). The band now holds its place until its first read settles (`SuitLines.tsx`).
+- Tests: new `tests/browser/CheckInFirstTap.test.tsx` (fails without the fix); OwnerGo001 waits for COMMS before
+  tapping. ROUTINE lane. Branch `claude/ecstatic-bell-nskrqo`. Next: independent review, then Gavin's merge.
+
+---
+
 # Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).

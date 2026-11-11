@@ -38,6 +38,8 @@ describe("check-in: SAME AS LAST, and what it changed", () => {
     vi.setSystemTime(new Date(2026, 9, 15, 16, 35)); await endDay(first.id);
     vi.setSystemTime(new Date(2026, 9, 15, 16, 40)); await startDay();
     const screen = await render(<App />);
+    // TODAY settled: COMMS is the last band above NEXT to load (its first-load shift is CheckInFirstTap's job).
+    await expect.element(screen.getByRole("button", { name: /^Comms: / })).toBeVisible();
     await screen.getByRole("button", { name: "CHECK IN", exact: true }).click();
     const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
     await expect.element(sheet.getByText(/^Energy 2/)).toBeVisible();
