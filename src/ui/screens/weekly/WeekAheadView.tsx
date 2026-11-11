@@ -6,6 +6,8 @@ import { readCachedGoogleEvents, type GoogleCalendarEvent } from "../../../appli
 import { GoogleCalendarPanel } from "./GoogleCalendarPanel";
 import { ShiftWhatIfPanel } from "./ShiftWhatIfPanel";
 import type { WhatIfChange } from "../../../application/shiftWhatIf";
+import { getWeekEnergyForecast, type WeekEnergyForecast } from "../../../application/weekEnergyForecast";
+import { forecastLine, WeekEnergyForecastSummary } from "./WeekEnergyForecast";
 
 
 function dayLabel(date: string): string {
@@ -26,6 +28,7 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
   const [tasksFailed, setTasksFailed] = useState(false);
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(() => readCachedGoogleEvents());
   const [whatIf, setWhatIf] = useState<WhatIfChange | null>(null);
+  const [forecast, setForecast] = useState<WeekEnergyForecast | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   // Review of #474: after CLOSE, focus returns to that day's WHAT IF button.
   const [returnTo, setReturnTo] = useState<string | null>(null);
@@ -42,6 +45,8 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
         if (current) setWeek(next);
       })
       .catch(() => {});
+    // A forecast that can't be read simply isn't shown; Week Ahead still works.
+    void getWeekEnergyForecast(now).then((next) => { if (current) setForecast(next); }).catch(() => {});
     void getWeekTasks(now)
       .then((next) => { if (current) { setTasks(next); setTasksFailed(false); } })
       .catch(() => { if (current) setTasksFailed(true); });
@@ -55,6 +60,7 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
   return (
     <div data-week-ahead ref={rootRef}>
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
+      {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
       {week.days.map((day) => (
         <div
           key={day.date}
@@ -67,6 +73,10 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
             {day.work === "WORK" ? shiftLabel(day.shiftStartHour!) : "OFF"}
             {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}` : " · Rest"}
           </p>
+          {(() => {
+            const f = forecast?.days.find((d) => d.date === day.date);
+            return f ? <p className="meta" data-energy-forecast-day style={{ margin: "2px 0 0" }}>{forecastLine(f)}</p> : null;
+          })()}
           {(() => {
             const t = tasks?.find((d) => d.date === day.date);
             if (!t || (t.planned.length === 0 && t.due.length === 0)) return null;
