@@ -1,7 +1,7 @@
 # Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).
-- Item 2, WEEK ENERGY FORECAST (Gavin, 2026-11-11): built on `ccr-88f5c085-07op3k`, PR pending. Week Ahead shows
+- Item 2, WEEK ENERGY FORECAST (Gavin, 2026-11-11): built on `ccr-88f5c085-07op3k`, PR #475. Week Ahead shows
   ENERGY FORECAST (lowest/best day, sleep owed) and a line per day: place in run, recorded energy and main sleep
   from past same-length runs (else any length, labelled). Code: `application/weekEnergyForecast.ts`,
   `ui/screens/weekly/WeekEnergyForecast.tsx`. Next: independent exact-head review, then Gavin's merge.
