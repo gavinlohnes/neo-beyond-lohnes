@@ -2250,8 +2250,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const mealSheetContent = (<div hidden={!mealsVisible || progressOpen} className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
         {mealsVisible && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
           <p className="card-title">{nutritionTargets?.calorieTargetKcal
-            ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal)
-            : totalMealCalories === 0 ? "No meals logged yet" : `${totalMealCalories} kcal logged today`}</p>
+            ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0)
+            : mealEntries.length === 0 ? "No meals logged yet" : `${totalMealCalories} kcal logged today`}</p>
           <p className="meta">{effectiveProteinTargetG !== undefined
             ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
             : dayProteinG === 0 ? "No protein logged yet" : `${dayProteinG} g protein today (meals + protein logs)`}</p>
@@ -2479,7 +2479,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       onInspectDay={(id) => { setHealthDay(id); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }}
       lead={{ label: "NUMBERS", content: <>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
-        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
+        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       {/* LIFE-PATTERN-001: weight first with one way in, then the other progress views; DATA keeps its three sections. */}
@@ -2534,7 +2534,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
         onExplore={exploreOverview} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep}
         weight={weightHistory} mealEntries={mealEntries}
-        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
+        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0) : "Logged from meals · no calorie target"}
         proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}
       <div className="meal-navigation">
         <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}

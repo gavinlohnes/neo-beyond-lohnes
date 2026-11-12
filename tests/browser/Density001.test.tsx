@@ -16,3 +16,16 @@ it("shows an unlogged protein tile in words, like water, weight and sleep", asyn
   await expect.element(tile).toBeVisible();
   await expect.element(tile).toHaveTextContent("PROTEIN—NOT LOGGED");
 });
+
+it("review of #487: a logged 0-kcal meal is a meal, so DATA never says no meals were logged", async () => {
+  const { BodyScreen } = await import("../../src/ui/screens/body/BodyScreen");
+  const { updateNutritionTargets } = await import("../../src/application/nutritionTargetCommands");
+  const { createSavedMeal, logMeal } = await import("../../src/application/nutritionCommands");
+  await updateNutritionTargets({ calorieTargetKcal: 2200 });
+  const day = await startDay();
+  const meal = await createSavedMeal({ name: "Black coffee", calories: 0, proteinG: 0, carbsG: 0, fatG: 0 });
+  await logMeal(day.id, meal.id);
+  const screen = await render(<BodyScreen />);
+  await expect.element(screen.getByText("0 / 2200 kcal · 2200 remaining", { exact: true }).first()).toBeVisible();
+  expect(screen.getByText(/No meals logged yet/).elements()).toHaveLength(0);
+});
