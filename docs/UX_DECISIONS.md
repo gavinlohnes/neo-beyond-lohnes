@@ -2893,3 +2893,22 @@ reading, so the build cites the primary studies above, whose full texts were rea
 decision: never an Engine input. **SAVE** shows a preview, then adds one plan item through `createObligation` with
 `plannedAt` only, never `dueAt`, so it is at most PLANNED_TODAY and never reaches `evaluate`. **SKIP** hides the card
 for that shift on the device. No schema change, network, notification or AI.
+
+
+## FAMILY-CALENDAR-001 — a calendar for family with three kinds of event (owner approval 2026-11-12, BIG-IDEAS-001 item 8)
+
+Gavin, 2026-11-12, approving the privacy design "as described". Protected: outward sharing. In Week Ahead, SHARE WITH
+FAMILY makes the next 4 weeks of exactly three kinds of event, with fixed titles and nothing else:
+- **"Working"**: the saved schedule's shift times.
+- **"Asleep — please don't call (usual time)"**: the usual post-shift main sleep from SLEEP-RHYTHM-001, only with 3
+  or more Garmin-timed work days. It is never guessed, and the panel says when it isn't shared yet.
+- **"Day off"**: all day.
+
+No health numbers, sleep amounts, notes, tags, plans, places or people are ever written, and no description,
+location or attendee is set. The panel previews exactly what she sees. **SYNC TO GOOGLE** writes, after CONFIRM, to a
+separate calendar "BEYOND — family" in Gavin's own Google account, using the existing Google Calendar connection
+(no new provider and no Drive change). Only events this feature wrote are changed. Future events that leave the
+schedule are removed, and past ones stay. Gavin shares it view-only in Google Calendar's own settings and stops
+sharing there. **SEND AS A FILE (.ICS)** gives the same events through his share sheet; a sent file can't be recalled,
+and the panel says so. Never an Engine input; nothing is stored in BEYOND's records.
+[Brief](agent/BIG-IDEAS-001.md).
