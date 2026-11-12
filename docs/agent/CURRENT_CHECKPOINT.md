@@ -26,9 +26,9 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 - Item 2, WEEK ENERGY FORECAST: merged (#475). The run-length rule also went into Shift What-If (#476, merged).
 - Item 3, CIRCADIAN PLAN: merged (#478). "Sleep soon after" added, citing Kalkanis 2023 as search-confirmed (Gavin), in #481.
 - Item 6, RECAP: merged (#481).
-- Item 8, FAMILY CALENDAR (Protected; design approved 2026-11-12): built on `ccr-88f5c085-07op3k`, PR pending.
-  Week Ahead → SHARE WITH FAMILY (`application/familyCalendar.ts`, `ui/screens/weekly/FamilyCalendarPanel.tsx`).
-  Needs an independent exact-head review (Protected), then Gavin's merge. Item 7 (on-device Alfred, Protected) is next.
+- Item 8, FAMILY CALENDAR: merged (#483) before its review; the post-merge BLOCK (main sync could target the family
+  calendar; evening sync deleted today's finished events) and its non-blocking findings are fixed in the follow-up PR on
+  `ccr-88f5c085-07op3k`, which needs re-review (Protected). Item 7 (on-device Alfred, Protected, spike first) is next.
 - Item 5, WEEKLY INTERVIEW / TIMELINE: merged (#479).
 - REFLECT-001: merged (#480). Follow-ups in #481, which also carries CI-MIRROR-001 (Chromium download off the Ubuntu mirror) (search-route test; the circadian source). Independent post-merge
   reviews of #479/#480 and a review of #481 were requested from a separate session.

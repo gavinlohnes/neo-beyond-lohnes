@@ -39,7 +39,9 @@ export function FamilyCalendarPanel({ now }: { now?: Date | undefined }) {
     setBusy(true); setError(null);
     try {
       const r = await syncFamilyCalendar(events, now ?? new Date());
-      setStatus(`Synced ${r.written} events to “${FAMILY_CALENDAR_NAME}”${r.removed ? `; removed ${r.removed} that left the schedule` : ""}.`);
+      // Review of #484: a recreated calendar starts unshared, so say so plainly.
+      const share = r.created === "RECREATED" ? ` The old one was gone, so this is a new calendar: share it with her again in Google Calendar.` : r.created === "NEW" ? " Share it with her in Google Calendar (below)." : "";
+      setStatus(`Synced ${r.written} events to “${FAMILY_CALENDAR_NAME}”${r.removed ? `; removed ${r.removed} that left the schedule` : ""}.${share}`);
       setConfirming(false);
     } catch (e) { setError(e instanceof Error ? e.message : "The family calendar could not sync."); } finally { setBusy(false); }
   };
