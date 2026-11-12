@@ -89,6 +89,8 @@ describe("accessibility (real browser, axe-core)", () => {
     const screen = await render(<TodayScreen />);
     // FIELD-AUTHORITY-001: TODAY's one "not checked in" surface is the check-in line.
     await expect.element(screen.getByText("Not checked in.", { exact: true })).toBeVisible();
+    // GUIDANCE-001: the line says what checking in gives you.
+    await expect.element(screen.getByText("Check in for today's recommendation.", { exact: true })).toBeVisible();
 
     const results = await axe.run(screen.container, KNOWN_COLOR_CONTRAST_EXCEPTION);
     expect(results.violations).toEqual([]);

@@ -65,6 +65,7 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta }: { no
         <>
           {/* BIG-IDEAS-001 item 5: the week as recorded and a short interview; saves only on CONFIRM. */}
           <Section label="WEEKLY INTERVIEW">
+            <p className="meta" style={{ margin: "0 0 8px" }}>Your week as recorded, then a few short questions. Nothing saves until you confirm.</p>
             <FieldDisclosure summary={interviewOpen ? "HIDE INTERVIEW" : "OPEN WEEKLY INTERVIEW"} open={interviewOpen} onToggle={setInterviewOpen}>
               {interviewOpen && <WeeklyInterviewView now={now} {...(onOpenDelta ? { onOpenDelta } : {})} />}
             </FieldDisclosure>

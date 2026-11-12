@@ -3,6 +3,7 @@ import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
 import { CaveMonthView } from "../../src/ui/screens/systems/CaveMonth";
+import { startDay } from "../../src/application/commands";
 import { saveDailyNote } from "../../src/application/dailyNoteCommands";
 import { db } from "../../src/persistence/db";
 import { seedRotation } from "./helpers/rotation";
@@ -40,4 +41,13 @@ it("plays the month from records, one card at a time, and writes nothing", async
   await recap.getByRole("button", { name: "DONE" }).click();
   await expect.element(screen.getByRole("button", { name: "PLAY YOUR MONTH IN BEYOND" })).toBeVisible();
   expect({ events: await db.events.count(), notes: JSON.stringify(await db.dailyNotes.toArray()) }).toEqual(before);
+});
+
+it("GUIDANCE-001: a thin month says what fills the recap in", async () => {
+  vi.setSystemTime(new Date(2026, 9, 27, 12));
+  await startDay();
+  const screen = await render(<CaveMonthView />);
+  await screen.getByRole("button", { name: "PLAY YOUR MONTH IN BEYOND" }).click();
+  await expect.element(screen.getByText(/^Your month in BEYOND · 1 of 1$/)).toBeVisible();
+  await expect.element(screen.getByText("More cards appear as you log days: check-ins, sleep, workouts and notes.", { exact: true })).toBeVisible();
 });

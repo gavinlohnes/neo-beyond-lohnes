@@ -51,3 +51,8 @@ it("shows the recorded week, previews before saving, then adds a #timeline note 
   expect(plans).toHaveLength(1);
   expect(plans[0]!.dueAt).toBeUndefined();
 });
+
+it("GUIDANCE-001: a week with nothing on record says how it fills in", async () => {
+  const screen = await render(<WeeklyInterviewView now={new Date(2026, 9, 27, 12)} />);
+  await expect.element(screen.getByText("Nothing on record this week yet. Start a day on TODAY and log as you go; this fills in.", { exact: true })).toBeVisible();
+});
