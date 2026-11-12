@@ -22,7 +22,7 @@ function dayFacts(d: TimelineDay): string {
   return parts.join(" · ");
 }
 
-export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefined; onOpenDelta?: () => void }) {
+export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns }: { now?: Date | undefined; onOpenDelta?: () => void; onOpenPatterns?: () => void }) {
   const [interview, setInterview] = useState<WeeklyInterview | null | undefined>(undefined);
   const [entries, setEntries] = useState<{ dayId: string; text: string; updatedAt: string }[]>([]);
   const [answers, setAnswers] = useState<Answers>({});
@@ -84,7 +84,10 @@ export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefin
             <p className="meta" style={{ margin: "2px 0 0" }}>{noted} of {interview.days.length} days have a note{tags.size ? ` · tags: ${[...tags].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t, n]) => `#${t} ${n} ${n === 1 ? "day" : "days"}`).join(", ")}` : ""}.</p>
             {learned.map((l) => <p key={l.id} className="meta" style={{ margin: "2px 0 0" }}>DELTA learned: {describeLearning(l)}</p>)}
             {knowledge && knowledge !== "ERROR" && !learned.length && <p className="meta" style={{ margin: "2px 0 0" }}>DELTA learned nothing new this week.</p>}
-            {onOpenDelta && <button type="button" className="btn-secondary" style={{ marginTop: 6 }} onClick={onOpenDelta}>SEE ALL OF DELTA</button>}
+            {(onOpenDelta || onOpenPatterns) && <div className="button-row" style={{ marginTop: 6 }}>
+              {onOpenDelta && <button type="button" className="btn-secondary" onClick={onOpenDelta}>SEE ALL OF DELTA</button>}
+              {onOpenPatterns && <button type="button" className="btn-secondary" onClick={onOpenPatterns}>SEE PATTERNS</button>}
+            </div>}
           </>;
         })()}
       </section>

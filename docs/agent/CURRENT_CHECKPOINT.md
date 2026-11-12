@@ -21,16 +21,15 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: DENSITY-001, density, language and visual consistency (Gavin, 2026-11-12)
+# Current objective: NAV-REACH-001, navigation and reachability (Gavin, 2026-11-12)
 
-Brief: quieter, more consistent primary surfaces (TODAY, Week Ahead / weekly, DATA, reflective entry points). No new
-features, screens, schema or Engine change; navigation, the active workout, circadian cards and the family calendar are
-excluded. **Protected** only for TODAY's protein tile (FIELD-AUTHORITY-001 "Numbers"), so it gets an independent
-exact-head review. Changes: bare zeros read in words (TODAY protein "—" / NOT LOGGED; DATA "No meals/protein logged
-yet"; weekly "No workouts this week." and "no corrections this week"; calendar export drops "0 events" and says
-"1 event"); DATA no longer lists its five progress views twice (the shortcuts at the top stay); the weekly check-in's
-intro is shorter. Also carries #486's review notes (Garmin-timed sleep in the recap line; FIELD-AUTHORITY-001
-amendment). GUIDANCE-001 merged in #486 (review PASS at `bb0cd1c9`).
+Brief: make the reflective surfaces (daily note, DELTA, patterns, weekly interview) easier to reach and move between,
+with predictable back paths. No new screens, destinations or tabs; MORE's browse list (MORE-TRIM-001) is unchanged;
+TODAY, the active workout, circadian cards and the family calendar are untouched. Feature lane (no Protected boundary).
+Changes: DELTA and Patterns offer OPEN DAILY NOTE and OPEN WEEKLY INTERVIEW; the daily note adds SEE DELTA; the
+weekly interview adds SEE PATTERNS; a jump between these views makes BACK return to where it came from (BACK TO DAILY
+NOTE / WEEKLY CHECK-IN / REVIEW) instead of the MORE menu; MORE's Review rows name the interview, DELTA and patterns.
+DENSITY-001 merged in #487 (review PASS at `513c5ead`).
 
 ---
 

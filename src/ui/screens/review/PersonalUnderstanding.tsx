@@ -13,13 +13,15 @@ import { DeltaPanel } from "../../components/DeltaViews";
 export type UnderstandingSource = { kind: "MISSION" | "JOURNAL"; id: string } | { kind: "TARGETS" | "SCHEDULE" };
 /** REFLECT-001: open straight at DELTA or Patterns (from search or the daily note). A new key opens it again. */
 export type UnderstandingFocus = { key: number; view: "DELTA" | "PATTERNS" };
-type Props = { active: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenSource?: ((source: UnderstandingSource) => void) | undefined; focus?: UnderstandingFocus | null | undefined };
+type Props = { active: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenSource?: ((source: UnderstandingSource) => void) | undefined; focus?: UnderstandingFocus | null | undefined;
+  /** NAV-REACH-001: DELTA and Patterns link on to the daily note and the weekly interview; left out without them. */
+  onOpenDailyNote?: (() => void) | undefined; onOpenWeeklyInterview?: (() => void) | undefined };
 const date = (at: string | Date) => new Date(at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 const amount = (measure: string, value: number) => measure === "MAIN_SLEEP" ? `${Math.floor(value / 60)}h ${Math.round(value % 60)}m` : `${Math.round(value)} ${measure === "WATER" ? "oz" : "g"}`;
 const measureName = (measure: string) => measure === "MAIN_SLEEP" ? "Main sleep" : measure === "WATER" ? "Water" : "Protein";
 
 /** Optional Inspect depth. All knowledge is derived; nothing here records or infers a preference. */
-export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource, focus }: Props) {
+export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource, focus, onOpenDailyNote, onOpenWeeklyInterview }: Props) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<"DELTA" | "Choices" | "Patterns" | "Lessons" | "My context">("DELTA");
   const [data, setData] = useState<Understanding | null>(null);
@@ -67,6 +69,10 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource, foc
       {data && !reading && !error && <>
         <p className="meta">Read {date(data.readAt)} · on this device</p>
         {view === "DELTA" && <DeltaPanel active={active && open} />}
+        {(view === "DELTA" || view === "Patterns") && (onOpenDailyNote || onOpenWeeklyInterview) && <div className="button-row" role="group" aria-label="Write or look back">
+          {onOpenDailyNote && <button type="button" className="btn-secondary" onClick={onOpenDailyNote}>OPEN DAILY NOTE</button>}
+          {onOpenWeeklyInterview && <button type="button" className="btn-secondary" onClick={onOpenWeeklyInterview}>OPEN WEEKLY INTERVIEW</button>}
+        </div>}
         {view === "Choices" && <section aria-label="Your recorded choices">
           <h2 className="tool-label">WHAT MATTERS TO YOU</h2>
           <p className="meta">Active Missions you recorded. Their order is not a priority ranking.</p>

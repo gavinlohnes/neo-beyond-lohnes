@@ -8,7 +8,7 @@ import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating
 import { PersonalUnderstanding, type UnderstandingFocus, type UnderstandingSource } from "./PersonalUnderstanding";
 
 /** REVIEW-001: read-only question hub; the Recommendations section keeps the original ledger contract. */
-export function ReviewScreen({ active = true, onOpenHistory, onOpenUnderstandingSource, destination, onDestinationConsumed, understandingFocus = null }: { active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenUnderstandingSource?: ((source: UnderstandingSource) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void; understandingFocus?: UnderstandingFocus | null } = {}) {
+export function ReviewScreen({ active = true, onOpenHistory, onOpenUnderstandingSource, destination, onDestinationConsumed, understandingFocus = null, onOpenDailyNote, onOpenWeeklyInterview }: { onOpenDailyNote?: (() => void) | undefined; onOpenWeeklyInterview?: (() => void) | undefined; active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenUnderstandingSource?: ((source: UnderstandingSource) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void; understandingFocus?: UnderstandingFocus | null } = {}) {
   const [days, setDays] = useState<LedgerDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function ReviewScreen({ active = true, onOpenHistory, onOpenUnderstanding
   return (
     <div className="screen picture-review">
       <h1 className="eyebrow">MORE // REVIEW</h1>
-      <PersonalUnderstanding active={active} onOpenHistory={onOpenHistory} onOpenSource={onOpenUnderstandingSource} focus={understandingFocus} />
+      <PersonalUnderstanding active={active} onOpenHistory={onOpenHistory} onOpenSource={onOpenUnderstandingSource} focus={understandingFocus} onOpenDailyNote={onOpenDailyNote} onOpenWeeklyInterview={onOpenWeeklyInterview} />
       <WholePicture active={active} onOpenHistory={onOpenHistory} {...(destination === undefined ? {} : { destination })} {...(onDestinationConsumed ? { onDestinationConsumed } : {})} />
       <details className="picture-legacy"><summary>Weekly, monthly & detailed reviews</summary>
       <WeeklyDashboard active={active} onOpenHistory={onOpenHistory} />

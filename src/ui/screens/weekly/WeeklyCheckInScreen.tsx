@@ -26,7 +26,7 @@ import { FieldDisclosure } from "../../components/FieldDisclosure";
 const MAX_RECORD_LINES = 5;
 
 /** REFLECT-001: openInterviewKey opens the interview straight away (a new key opens it again); onOpenDelta shows all of DELTA. */
-export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta }: { now?: Date; openInterviewKey?: number | undefined; onOpenDelta?: () => void } = {}) {
+export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpenPatterns }: { now?: Date; openInterviewKey?: number | undefined; onOpenDelta?: () => void; onOpenPatterns?: () => void } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
   const [readKey, setReadKey] = useState(0);
@@ -67,7 +67,7 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta }: { no
           <Section label="WEEKLY INTERVIEW">
             <p className="meta" style={{ margin: "0 0 8px" }}>Your week as recorded, then a few short questions. Nothing saves until you confirm.</p>
             <FieldDisclosure summary={interviewOpen ? "HIDE INTERVIEW" : "OPEN WEEKLY INTERVIEW"} open={interviewOpen} onToggle={setInterviewOpen}>
-              {interviewOpen && <WeeklyInterviewView now={now} {...(onOpenDelta ? { onOpenDelta } : {})} />}
+              {interviewOpen && <WeeklyInterviewView now={now} {...(onOpenDelta ? { onOpenDelta } : {})} {...(onOpenPatterns ? { onOpenPatterns } : {})} />}
             </FieldDisclosure>
           </Section>
 
