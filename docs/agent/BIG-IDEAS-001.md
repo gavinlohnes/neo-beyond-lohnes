@@ -40,6 +40,10 @@
 6. **Year/Month in BEYOND recap** (routine). A story-style sequence of cards from records: best run, sleep rhythm
    change, top tags, finished experiments, most-mentioned [[people]], workouts. Built on MONTH-LETTER-001 and
    DELTA. Reachable from DATA → MONTH.
+   **Built (Gavin, 2026-11-12, "Build the recap"):** PLAY YOUR MONTH IN BEYOND under the month letter in DATA →
+   MONTH: the month in a line, best run (highest check-in energy, 2+ check-ins), work-day sleep timing against the month
+   before, training, top tags, [[people]] you keep in People, and experiments closed that month. Days counted, empty
+   cards left out, read only.
 7. **On-device Alfred** (🔒 approved: new dependency). **Spike first:** measure a WebGPU small model (for example
    WebLLM) for download size, phone support and quality on the free helper's question set. Decide in the PR. It
    loads only on opt-in, stays outside the 2 MiB precache, and keeps the free helper's rules: never write without

@@ -96,7 +96,7 @@ export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefin
             <label className="meta-strong" htmlFor={`interview-${q.id}`} style={{ display: "block", color: "var(--text-1)" }}>{q.text}</label>
             <p className="meta" style={{ margin: "2px 0 4px" }}>{q.why}</p>
             <textarea id={`interview-${q.id}`} rows={2} style={{ width: "100%", boxSizing: "border-box" }} value={answers[q.id] ?? ""}
-              onChange={(e) => { const v = e.target.value; setAnswers((a) => ({ ...a, [q.id]: v })); setPreview(null); }} />
+              onChange={(e) => { const v = e.target.value; setAnswers((a) => ({ ...a, [q.id]: v })); setPreview(null); setDone(({ note: _saved, ...rest }) => rest); }} />
           </div>
         ))}
 
@@ -111,7 +111,8 @@ export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefin
           </div>
         ) : (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button type="button" className="btn-secondary" disabled={!noteText || busy}
+            {/* Review of #479: once saved, SAVE TO NOTE waits for a changed answer, so a block isn't added twice by accident. */}
+            <button type="button" className="btn-secondary" disabled={!noteText || busy || !!done.note}
               onClick={() => void interviewNoteDay(interview).then((target) => { if (target && noteText) setPreview({ kind: "NOTE", text: noteText, ...target }); else setError("There's no lived day to add the note to."); })}>
               SAVE TO NOTE
             </button>
@@ -128,7 +129,7 @@ export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefin
         {entries.length === 0
           ? <p className="meta">None yet. Saved interviews appear here, newest first, and search finds them.</p>
           : entries.map((e) => (
-              <pre key={e.dayId} data-timeline-entry className="meta" style={{ whiteSpace: "pre-wrap", margin: "6px 0" }}>{e.text.slice(e.text.indexOf(`#${TIMELINE_TAG}`))}</pre>
+              <pre key={e.dayId} data-timeline-entry className="meta" style={{ whiteSpace: "pre-wrap", margin: "6px 0" }}>{e.text.slice(Math.max(0, e.text.search(new RegExp(`#${TIMELINE_TAG}\\b`, "i"))))}</pre>
             ))}
       </section>
     </div>

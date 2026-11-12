@@ -44,9 +44,12 @@ describe("CIRCADIAN PLAN: the next shift transition's cards", () => {
     expect(p.cards.map((c) => c.kind)).toEqual(["CAFFEINE", "NAP", "FIRST_SLEEP", "LIGHT"]);
     expect(p.cards[1]!.detail).toBe("A planned nap between 14:15 and 17:00, before your 18:00 shift.");
     const first = p.cards[2]!;
-    expect(first.detail).toBe("After your last shift in past runs, your main sleep usually ran 07:30–14:15.");
-    expect(first.basis).toMatch(/^Your records: 3 past runs/);
-    expect(first.source).toBeNull();
+    expect(first.detail).toBe("Sleep soon after this shift. After your last shift in past runs, your main sleep usually ran 07:30–14:15.");
+    expect(first.basis).toMatch(/^Your shift's end, and your records: 3 past runs/);
+    // Gavin, 2026-11-11: cite Kalkanis 2023 as search-confirmed, and say so on the card.
+    expect(first.source).toEqual(SOURCES.FIRST_SLEEP);
+    expect(SOURCES.FIRST_SLEEP.quote).toContain("as early as possible after the shift");
+    expect(SOURCES.FIRST_SLEEP.checked).toMatch(/search results/);
     // Too few runs on file: it says so, and still prescribes nothing.
     expect(plan(new Date(2026, 9, 27, 9), { rows: [row("OFF"), ...run()] })!.cards[2]!.detail).toMatch(/once 3 runs have Garmin-timed sleep \(1 runs on file\)/);
   });
@@ -68,6 +71,13 @@ describe("CIRCADIAN PLAN: the next shift transition's cards", () => {
     const d = deriveShiftSleepPlan({ now: new Date(2026, 9, 25, 8), pattern: days, rhythm: null, rows: [] })!;
     expect(d.shift.overnight).toBe(false);
     expect(d.cards.map((c) => c.kind)).toEqual(["CAFFEINE"]);
+    // Review of #481: a day shift that ends a run gets your own record only, never the night-shift guidance.
+    const lastDay = deriveShiftSleepPlan({ now: new Date(2026, 9, 30, 8), pattern: days, rhythm: null, rows: [] })!;
+    expect(lastDay.shift).toMatchObject({ overnight: false, lastOfRun: true });
+    const first = lastDay.cards.find((c) => c.kind === "FIRST_SLEEP")!;
+    expect(first.detail).not.toMatch(/Sleep soon/);
+    expect(first.detail).toMatch(/^BEYOND shows your own first sleep after a run once 3 runs/);
+    expect(first.source).toBeNull();
     expect(deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 9), pattern: DEFAULT_SCHEDULE_PATTERN, rhythm, rows })).toBeNull();
   });
 

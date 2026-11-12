@@ -30,8 +30,11 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource, foc
   const [placeKey, setPlaceKey] = useState("");
   const sequence = useRef(0);
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  // Review of #480: each focus applies once, so coming back to Review keeps the view you chose.
+  const appliedFocus = useRef<number | null>(null);
   useEffect(() => {
-    if (!focus || !active || !detailsRef.current) return;
+    if (!focus || !active || !detailsRef.current || appliedFocus.current === focus.key) return;
+    appliedFocus.current = focus.key;
     setView(focus.view === "DELTA" ? "DELTA" : "Patterns"); setLimit(5);
     detailsRef.current.open = true; setOpen(true);
     detailsRef.current.scrollIntoView?.({ block: "start" });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { saveDailyNote } from "../../../application/dailyNoteCommands";
+import { saveDailyNote, saveDailyNoteDraft } from "../../../application/dailyNoteCommands";
 import { getDailyNoteWorkspace } from "../../../application/dailyNoteQueries";
 import { WikiTextArea } from "../../components/WikiTextArea";
 import { describeError } from "../../errorMessage";
@@ -8,6 +8,7 @@ import { deltaQuestion } from "../../../application/delta";
 import { useDeltaKnowledge } from "../../components/DeltaViews";
 import { getTagChoices, noteTags, normalizeTag, toggleNoteTag } from "../../../application/noteTags";
 import { getWeekNoteCount } from "../../../application/weeklyInterview";
+import { clearNoteDraft, readNoteDraft, writeNoteDraft } from "../../dailyNoteDraft";
 
 type Workspace = NonNullable<Awaited<ReturnType<typeof getDailyNoteWorkspace>>>;
 
@@ -25,6 +26,9 @@ export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, o
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [draft, setDraft] = useState("");
   const [savedText, setSavedText] = useState("");
+  // Review of #479/#480: the stored text the draft was written from, so a save never drops what was added since.
+  const [base, setBase] = useState("");
+  const [conflict, setConflict] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [tagChoices, setTagChoices] = useState<string[]>([]);
@@ -39,17 +43,24 @@ export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, o
       setWorkspace(next);
       if (!next) return;
       const stored = next.note?.text ?? "";
-      setSavedText(stored); setDraft(sessionStorage.getItem(`beyond.daily-note.draft.${next.day.id}`) ?? stored);
+      const kept = readNoteDraft(next.day.id);
+      setSavedText(stored); setDraft(kept?.draft ?? stored); setBase(kept?.base ?? stored); setConflict(null);
     });
   }, [active, dayId]);
   useEffect(() => {
     if (!workspace) return;
-    const key = `beyond.daily-note.draft.${workspace.day.id}`;
-    if (draft !== savedText) sessionStorage.setItem(key, draft);
-    else sessionStorage.removeItem(key);
-  }, [draft, savedText, workspace]);
+    if (draft !== savedText) writeNoteDraft(workspace.day.id, draft, base);
+    else clearNoteDraft(workspace.day.id);
+  }, [draft, savedText, base, workspace]);
   if (!workspace) return <section className="daily-note-screen"><p className="meta">Start a lived day to open its daily note.</p></section>;
   const dirty = draft !== savedText;
+  // The note was saved somewhere else (for example a weekly interview) after this draft began.
+  const changedUnder = dirty && base !== savedText;
+  const done = (text: string, words: string) => {
+    setDraft(text); setSavedText(text); setBase(text); setConflict(null);
+    clearNoteDraft(workspace.day.id);
+    setMessage(words);
+  };
   return <section className="daily-note-screen" aria-label="Daily note">
     <p className="tool-label">LIVED DAY · {workspace.day.startedAt.slice(0, 10)}</p><h2>Daily note</h2>
     {/* REFLECT-001: the day's recorded actions fold behind one line, so the note comes first. */}
@@ -86,15 +97,24 @@ export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, o
         <button type="submit" className="btn-secondary" disabled={!normalizeTag(newTag)}>ADD TAG</button>
       </form>
     </div>
+    {changedUnder && !conflict && <p className="meta">This note was saved somewhere else since you started this draft. SAVE NOTE keeps what was added there.</p>}
+    {conflict !== null && <div role="alert" className="equipment-row" style={{ padding: "10px 12px" }}>
+      <p className="meta" style={{ margin: 0 }}>This note was changed somewhere else since you started this draft, so nothing was saved. Choose which to keep.</p>
+      <div className="button-row" style={{ marginTop: 6 }}>
+        <button type="button" className="btn-secondary" onClick={() => { setDraft(conflict); setBase(conflict); setSavedText(conflict); setConflict(null); setMessage(""); }}>USE THE SAVED NOTE</button>
+        <button type="button" className="btn-secondary" onClick={() => { setError(""); void saveDailyNote(workspace.day.id, draft).then((note) => done(note.text, "Daily note saved."), (cause) => setError(describeError(cause, "Daily note could not be saved."))); }}>SAVE MY DRAFT OVER IT</button>
+      </div>
+    </div>}
     <div className="button-row"><button type="button" className="btn-primary" disabled={!dirty || !draft.trim()} onClick={() => {
-      setError(""); setMessage(""); void saveDailyNote(workspace.day.id, draft).then((note) => {
-        setDraft(note.text); setSavedText(note.text); sessionStorage.removeItem(`beyond.daily-note.draft.${workspace.day.id}`); setMessage("Daily note saved.");
+      setError(""); setMessage(""); void saveDailyNoteDraft(workspace.day.id, draft, base).then((result) => {
+        if (result.status === "CONFLICT") { setConflict(result.stored); return; }
+        done(result.note.text, result.status === "MERGED" ? "Daily note saved. What was added elsewhere is kept at the end." : "Daily note saved.");
       }, (cause) => setError(describeError(cause, "Daily note could not be saved.")));
     }}>SAVE NOTE</button>{dirty && <span className="meta">Draft stays on this phone until SAVE.</span>}</div>
     {message && <p role="status">{message}</p>}{error && <p role="alert">{error}</p>}
     {/* REFLECT-001: the day feeds the week. One quiet line, no count to keep up. */}
     {(onOpenWeeklyInterview || onOpenPatterns) && <div className="daily-note-week">
-      {weekNotes !== null && <p className="meta" style={{ margin: "12px 0 4px" }}>{weekNotes === 1 ? "1 note" : `${weekNotes} notes`} this week. They come back in your weekly interview.</p>}
+      {weekNotes !== null && <p className="meta" style={{ margin: "12px 0 4px" }}>{weekNotes === 1 ? "1 note" : `${weekNotes} notes`} in the last 7 days. Each comes back in a weekly interview once its day is done.</p>}
       <div className="button-row">
         {onOpenWeeklyInterview && <button type="button" className="btn-secondary" onClick={onOpenWeeklyInterview}>OPEN WEEKLY INTERVIEW</button>}
         {onOpenPatterns && <button type="button" className="btn-secondary" onClick={onOpenPatterns}>SEE PATTERNS</button>}

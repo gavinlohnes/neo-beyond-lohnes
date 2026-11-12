@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { addTagToActiveDay, getActiveDayTags, noteTags, toggleNoteTag } from "../../application/noteTags";
 import { describeError } from "../errorMessage";
+import { readNoteDraft, writeNoteDraft } from "../dailyNoteDraft";
 
 /**
  * DELTA-NEXT 4: one-tap tags outside the daily note (after a workout). Each tap adds the tag to today's
@@ -8,10 +9,9 @@ import { describeError } from "../errorMessage";
  */
 /** An unsaved daily-note draft on this phone gets the tag too, so saving that draft later can't drop it. */
 function keepInDraft(dayId: string, tag: string) {
-  try {
-    const key = `beyond.daily-note.draft.${dayId}`, draft = sessionStorage.getItem(key);
-    if (draft !== null && !noteTags(draft).includes(tag)) sessionStorage.setItem(key, toggleNoteTag(draft, tag));
-  } catch { /* storage blocked: the saved note already has the tag */ }
+  const kept = readNoteDraft(dayId);
+  // The draft keeps its own base, so SAVE NOTE still sees the saved tag as added under it.
+  if (kept && !noteTags(kept.draft).includes(tag)) writeNoteDraft(dayId, toggleNoteTag(kept.draft, tag), kept.base);
 }
 
 export function QuickTags({ label, tags }: { label: string; tags: readonly string[] }) {

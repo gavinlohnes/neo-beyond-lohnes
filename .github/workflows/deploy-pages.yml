@@ -33,16 +33,23 @@ jobs:
       - run: npm ci
       # Harvest Checkpoint 4: the "browser" Vitest project needs Chromium and its OS libraries.
       # CI-HANG-001: a stalled Ubuntu mirror once hung this step for 10+ minutes. apt now gives up on a
-      # dead connection after 20 s and retries; the whole install retries up to three times, 5 min each.
+      # dead connection after 20 s and retries. CI-MIRROR-001 (2026-11-11): the browser download no longer
+      # depends on the mirror at all; OS packages are best-effort, then a launch check proves Chromium runs.
       - name: Install Chromium and its OS libraries
         timeout-minutes: 16
         run: |
           printf 'Acquire::http::Timeout "20";\nAcquire::https::Timeout "20";\nAcquire::Retries "3";\n' | sudo tee /etc/apt/apt.conf.d/99beyond-timeouts >/dev/null
+          # CI-MIRROR-001: the browser comes from Playwright's own download host, never Ubuntu's mirror.
           for attempt in 1 2 3; do
-            timeout 300 npx playwright install --with-deps chromium && exit 0
-            echo "Chromium install attempt $attempt failed or timed out; retrying."
+            timeout 300 npx playwright install chromium && break
+            echo "Chromium download attempt $attempt failed or timed out; retrying."
+            [ "$attempt" = 3 ] && exit 1
           done
-          exit 1
+          # The runner image already has Chromium's libraries; what --with-deps added from the mirror was
+          # optional fonts, and a stalled mirror there failed every shard. Try them briefly, then go on.
+          timeout 240 npx playwright install-deps chromium || echo "::warning::OS packages for Chromium could not be installed (Ubuntu mirror); continuing with the runner's own."
+          # A library that is truly missing still fails here, loudly, before any test runs.
+          node -e "require('playwright').chromium.launch().then((b) => b.close()).catch((e) => { console.error(e.message); process.exit(1); })"
       - run: npx vitest run --shard=${{ matrix.shard }}/4
 
   build:

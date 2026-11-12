@@ -24,3 +24,21 @@ export async function linkMentionInDailyNote(dayId: string, label: string) {
   if (!next) throw new Error("NOTHING_TO_LINK");
   return saveDailyNote(dayId, next);
 }
+
+/**
+ * Review of #479/#480 (data loss): save a draft only against the note it was written from. `base` is the stored text
+ * when the draft began. If the stored note is unchanged, the draft is saved. If something was only appended since
+ * (a weekly interview's #timeline block), that part is kept at the end of the draft. Any other change is a conflict:
+ * nothing is written, and the operator chooses.
+ */
+export type GuardedSave = { status: "SAVED" | "MERGED"; note: DailyNote } | { status: "CONFLICT"; stored: string };
+export async function saveDailyNoteDraft(dayId: string, draft: string, base: string): Promise<GuardedSave> {
+  const stored = (await db.dailyNotes.get(dayId))?.text ?? "";
+  if (stored === base) return { status: "SAVED", note: await saveDailyNote(dayId, draft) };
+  if (stored.startsWith(base)) {
+    const added = stored.slice(base.length).trim();
+    const text = draft.includes(added) ? draft : `${draft.trimEnd()}\n\n${added}`;
+    return { status: "MERGED", note: await saveDailyNote(dayId, text) };
+  }
+  return { status: "CONFLICT", stored };
+}

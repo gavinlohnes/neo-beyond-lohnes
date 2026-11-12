@@ -45,7 +45,7 @@ export function ShiftSleepPlanCards({ now }: { now?: Date | undefined }) {
           <p className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>{card.title}</p>
           <p className="meta" style={{ margin: "2px 0 0" }}>{card.detail}</p>
           <p className="meta" style={{ margin: "2px 0 0" }}>{card.basis}</p>
-          {card.source && <p className="meta" style={{ margin: "2px 0 0" }}>Source: <a href={card.source.url} target="_blank" rel="noreferrer">{card.source.label}</a></p>}
+          {card.source && <p className="meta" style={{ margin: "2px 0 0" }}>Source: <a href={card.source.url} target="_blank" rel="noreferrer">{card.source.label}</a>{card.source.checked ? ` · ${card.source.checked}` : ""}</p>}
           {saved[card.kind]
             ? <p className="meta" role="status" style={{ margin: "6px 0 0" }}>Saved as a plan item: {card.plan.title}.</p>
             : preview === card.kind

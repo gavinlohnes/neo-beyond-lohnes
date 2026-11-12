@@ -2881,8 +2881,10 @@ three points are unchanged.
   time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
   parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
   2019). No nap length is set.
-- **First sleep after the run** (last shift of a run): your own record from past runs (ROTATION-003), never a
-  prescribed length. The spike's "sleep soon after" sentence waits until its NIOSH source can be quoted.
+- **First sleep after the run** (last shift of a run): on a night shift, "Sleep soon after this shift"; always your own record from past
+  runs (ROTATION-003), never a prescribed length. Source: Kalkanis et al. 2023, Recovery from shift work (Front
+  Neurol). **Amended (Gavin, 2026-11-11, "Use it, cite as search-confirmed"):** its full text couldn't be read
+  automatically, so the quote is from search results, and the card says so.
 - **Light on the way home** (night shifts): keep light low on the commute if going straight to sleep (dark
   sunglasses). Smith, Fogg & Eastman 2009. BEYOND records no light.
 

@@ -57,3 +57,19 @@ describe("WEEKLY INTERVIEW", () => {
     expect(hasObligationRequiringArbitration(await getCurrentlyEligibleUnresolvedObligations(), "2026-11-11")).toBe(false);
   });
 });
+
+describe("Review of #479/#480: a draft never drops what was saved under it", () => {
+  it("saves when unchanged, keeps an appended interview block, and refuses any other change", async () => {
+    const { saveDailyNoteDraft } = await import("../../src/application/dailyNoteCommands");
+    const day = await startDay();
+    await saveDailyNote(day.id, "Morning.");
+    expect(await saveDailyNoteDraft(day.id, "Morning. Long shift.", "Morning.")).toMatchObject({ status: "SAVED" });
+    await saveInterviewNote(day.id, "#timeline Week x\nQ: q\nA: a");
+    const merged = await saveDailyNoteDraft(day.id, "Morning. Long shift. Tired.", "Morning. Long shift.");
+    expect(merged).toMatchObject({ status: "MERGED" });
+    expect((await db.dailyNotes.get(day.id))!.text).toBe("Morning. Long shift. Tired.\n\n#timeline Week x\nQ: q\nA: a");
+    await saveDailyNote(day.id, "Rewritten elsewhere.");
+    expect(await saveDailyNoteDraft(day.id, "My draft", "Morning.")).toEqual({ status: "CONFLICT", stored: "Rewritten elsewhere." });
+    expect((await db.dailyNotes.get(day.id))!.text).toBe("Rewritten elsewhere.");
+  });
+});
