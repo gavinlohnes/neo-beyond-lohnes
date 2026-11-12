@@ -51,7 +51,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
           setSnapshot(next); setDays(choices); ready.push(`${next.records.length} Garmin sleep records`);
         }
       }
-      if (request === selection.current) setMessage(`Preview ready: ${ready.join(" and ")}. Nothing has been imported.`);
+      if (request === selection.current) setMessage(`Preview ready: ${ready.join(" and ")}. Nothing has been imported. Check ${ready.length > 1 ? "each preview" : "it"} below, then confirm.`);
     } catch (e) { if (request === selection.current) setError(e instanceof Error ? e.message : "This file could not be read. Nothing was imported."); }
     finally { if (request === selection.current) setBusy(false); }
   }
@@ -61,7 +61,8 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
     try {
       const counts = await importActivitySnapshot(activity);
       setActivity(null);
-      setMessage(`Imported ${counts.inserted} new, ${counts.revised} updated; ${counts.skipped} unchanged or older. Manual logs and guidance are unchanged.`);
+      // GUIDED-001: when the same files also held sleep, say that preview is still waiting.
+      setMessage(`Imported ${counts.inserted} new, ${counts.revised} updated; ${counts.skipped} unchanged or older. Manual logs and guidance are unchanged.${snapshot ? " The sleep preview is still waiting below." : ""}`);
       requestAnimationFrame(() => result.current?.focus());
     } catch (e) { setError(e instanceof Error ? e.message : "Import failed. Nothing was changed."); }
     finally { locked.current = false; setBusy(false); }
@@ -76,7 +77,7 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
       const filled = counts.logged || counts.corrected
         ? ` Sleep filled in from Garmin: ${counts.logged} new, ${counts.corrected} updated. Your own sleep entries always win.`
         : " Your own sleep entries are unchanged.";
-      setMessage(`Imported ${counts.inserted} new, ${counts.revised} revised; ${counts.skipped} unchanged or older.${filled}`);
+      setMessage(`Imported ${counts.inserted} new, ${counts.revised} revised; ${counts.skipped} unchanged or older.${filled}${activity ? " The steps and heart rate preview is still waiting below." : ""}`);
       requestAnimationFrame(() => result.current?.focus());
     } catch (e) { setError(e instanceof Error ? e.message : "Import failed. Nothing was changed."); }
     finally { locked.current = false; setBusy(false); }

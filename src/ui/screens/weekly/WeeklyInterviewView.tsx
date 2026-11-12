@@ -123,6 +123,14 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns }: { now?
             <button type="button" className="btn-secondary" disabled={!carry || busy} onClick={() => carry && setPreview({ kind: "PLAN", text: carry })}>ADD CARRY-FORWARD AS A PLAN ITEM</button>
           </div>
         )}
+        {/* GUIDED-001: one quiet line naming the next step, so a disabled button never leaves you guessing. */}
+        {!preview && (() => {
+          const next = !noteText ? "Answer any question to save it to your note."
+            : !done.note ? "Next: SAVE TO NOTE shows exactly what will be added before anything saves."
+            : carry && !done.plan ? "Saved. Your carry-forward can also become a plan item, if you want one."
+            : null;
+          return next ? <p className="meta" data-interview-next style={{ margin: "6px 0 0" }}>{next}</p> : null;
+        })()}
         {done.note && <p className="meta" role="status">Saved to the note for {done.note}, tagged #{TIMELINE_TAG}.</p>}
         {done.plan && <p className="meta" role="status">Added plan item: {done.plan}.</p>}
         {error && <p className="meta" role="alert">{error}</p>}
