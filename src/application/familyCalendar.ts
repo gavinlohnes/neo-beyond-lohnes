@@ -118,7 +118,15 @@ export async function syncFamilyCalendar(events: readonly FamilyEvent[], now: Da
     saveFamilyCalendarId(created.id); return created.id;
   };
   let created: "NEW" | "RECREATED" | null = null;
-  let calendarId = readFamilyCalendarId() ?? (created = "NEW", await create());
+  // Review of #484: after a reinstall the stored id is gone, but the calendar she already sees may still exist. Find it
+  // by name (one he owns) before making another.
+  const existing = async () => {
+    const list = await google<{ items?: Array<{ id: string; summary?: string; accessRole?: string }> }>("/users/me/calendarList?minAccessRole=owner", connection);
+    const found = (list.items ?? []).find((c) => c.summary === FAMILY_CALENDAR_NAME);
+    if (found) saveFamilyCalendarId(found.id);
+    return found?.id ?? null;
+  };
+  let calendarId = readFamilyCalendarId() ?? await existing() ?? (created = "NEW", await create());
   // Google's timeMin keeps events that end after it: exactly the ones that haven't happened yet.
   const list = (id: string) => google<{ items?: Array<{ id: string; extendedProperties?: { private?: { beyondId?: string } } }> }>(
     `/calendars/${encodeURIComponent(id)}/events?privateExtendedProperty=beyondOwner%3D${OWNER}&timeMin=${encodeURIComponent(now.toISOString())}&maxResults=2500`, connection);

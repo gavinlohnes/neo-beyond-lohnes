@@ -2922,3 +2922,5 @@ and the panel says so. Never an Engine input; nothing is stored in BEYOND's reco
 - **Deleted calendar:** a family calendar deleted in Google is recreated on the next sync instead of failing.
 - **Description:** the calendar itself carries one fixed description ("Shifts, usual sleep and days off, shared from
   BEYOND. Nothing else."); events carry none.
+- **After a reinstall (review of #484):** sync finds an existing "BEYOND — family" he owns by name and reuses it,
+  instead of making a second, unshared one.

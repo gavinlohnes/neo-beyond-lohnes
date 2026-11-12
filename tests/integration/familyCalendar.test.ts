@@ -92,11 +92,13 @@ describe("FAMILY CALENDAR: Google sync", () => {
     const result = await syncFamilyCalendar(events, now);
     expect(result).toEqual({ written: events.length, removed: 1, calendarId: "fam1", created: "NEW" });
     expect(readFamilyCalendarId()).toBe("fam1");
-    expect(calls[0]).toMatchObject({ method: "POST", body: { summary: FAMILY_CALENDAR_NAME } });
+    // It looks for an existing family calendar first, then creates one.
+    expect(calls[0]!.url).toContain("/users/me/calendarList?minAccessRole=owner");
+    expect(calls[1]).toMatchObject({ method: "POST", body: { summary: FAMILY_CALENDAR_NAME } });
     // Review of #483: only events that haven't ended yet are read, so a finished event (today's shift, last week's
     // sleep) is never deleted. Google's timeMin filters by end time.
-    expect(calls[1]!.url).toContain("privateExtendedProperty=beyondOwner%3DBEYOND-FAMILY");
-    expect(calls[1]!.url).toContain(`timeMin=${encodeURIComponent(now.toISOString())}`);
+    expect(calls[2]!.url).toContain("privateExtendedProperty=beyondOwner%3DBEYOND-FAMILY");
+    expect(calls[2]!.url).toContain(`timeMin=${encodeURIComponent(now.toISOString())}`);
     expect(calls.filter((c) => c.method === "DELETE").map((c) => c.url)).toEqual([expect.stringMatching(/\/events\/g-gone$/)]);
     expect(calls.find((c) => c.method === "PUT")!.url).toMatch(/\/events\/g-keep$/);
     for (const c of calls.filter((c) => c.method === "PUT" || (c.method === "POST" && c.url.includes("/events")))) {
@@ -105,6 +107,19 @@ describe("FAMILY CALENDAR: Google sync", () => {
     }
     calls.length = 0;
     await syncFamilyCalendar(events, now);
+    expect(calls.some((c) => c.method === "POST" && c.url.endsWith("/calendars"))).toBe(false);
+  });
+
+  it("review of #484: after a reinstall, it reuses the family calendar she already sees", async () => {
+    connect();
+    const calls = stubGoogle((method, url) => {
+      if (url.includes("/users/me/calendarList")) return new Response(JSON.stringify({ items: [{ id: "main1", summary: "BEYOND" }, { id: "famOld", summary: FAMILY_CALENDAR_NAME, accessRole: "owner" }] }), { status: 200 });
+      if (method === "GET") return new Response(JSON.stringify({ items: [] }), { status: 200 });
+      return undefined;
+    });
+    // No stored id, as after a reinstall.
+    expect(await syncFamilyCalendar([], now)).toMatchObject({ calendarId: "famOld", created: null });
+    expect(readFamilyCalendarId()).toBe("famOld");
     expect(calls.some((c) => c.method === "POST" && c.url.endsWith("/calendars"))).toBe(false);
   });
 

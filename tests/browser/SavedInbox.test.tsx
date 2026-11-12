@@ -19,7 +19,8 @@ it("manages a shared item at 360px without creating a task until the operator as
   await screen.getByRole("button", { name: "SAVE CHANGES", exact: true }).click();
   await expect.element(screen.getByRole("status")).toHaveTextContent("Saved item updated.");
   await screen.getByRole("button", { name: "MAKE TASK", exact: true }).click();
-  expect(await db.obligations.count()).toBe(1);
+  // The click returns before the write lands; wait for it rather than racing it.
+  await expect.poll(() => db.obligations.count()).toBe(1);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   for (const control of document.querySelectorAll<HTMLElement>(".saved-inbox button, .saved-inbox input, .saved-inbox textarea")) {
     expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
