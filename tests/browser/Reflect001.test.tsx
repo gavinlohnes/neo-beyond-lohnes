@@ -82,8 +82,8 @@ it("review of #479/#480: an unsaved draft and a confirmed interview both survive
   // No second block by accident: SAVE TO NOTE waits for a changed answer.
   await expect.element(screen.getByRole("button", { name: "SAVE TO NOTE" })).toBeDisabled();
 
-  await screen.getByRole("button", { name: "BACK TO MORE" }).click();
-  await openByName(screen, "daily note", "DAILY NOTE", "Write about today, tag it, answer DELTA's question");
+  // NAV-REACH-001: BACK returns to the note the interview was opened from.
+  await screen.getByRole("button", { name: "BACK TO DAILY NOTE" }).click();
   await expect.element(editor()).toHaveValue("Morning. Then a long shift.");
   await expect.element(screen.getByText(/^This note was saved somewhere else since you started this draft/)).toBeVisible();
   await screen.getByRole("button", { name: "SAVE NOTE", exact: true }).click();

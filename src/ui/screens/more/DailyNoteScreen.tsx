@@ -22,7 +22,7 @@ function matchingTemplate(workContext: string | undefined): keyof typeof NOTE_TE
 }
 
 /** REFLECT-001: onOpenWeeklyInterview and onOpenPatterns link the day to the week; without them those links are left out. */
-export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, onOpenPatterns }: { active: boolean; dayId?: string | null; onOpenWeeklyInterview?: () => void; onOpenPatterns?: () => void }) {
+export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, onOpenPatterns, onOpenDelta }: { active: boolean; dayId?: string | null; onOpenWeeklyInterview?: () => void; onOpenPatterns?: () => void; onOpenDelta?: () => void }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [draft, setDraft] = useState("");
   const [savedText, setSavedText] = useState("");
@@ -118,6 +118,7 @@ export function DailyNoteScreen({ active, dayId = null, onOpenWeeklyInterview, o
       <div className="button-row">
         {onOpenWeeklyInterview && <button type="button" className="btn-secondary" onClick={onOpenWeeklyInterview}>OPEN WEEKLY INTERVIEW</button>}
         {onOpenPatterns && <button type="button" className="btn-secondary" onClick={onOpenPatterns}>SEE PATTERNS</button>}
+        {onOpenDelta && <button type="button" className="btn-secondary" onClick={onOpenDelta}>SEE DELTA</button>}
       </div>
     </div>}
     {/* Patterns live in one place (Personal Understanding); here only when there's no way to go there. */}
