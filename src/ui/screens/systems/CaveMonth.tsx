@@ -5,6 +5,7 @@ import { listReviews, weekLabel } from "../../../application/alfred/alfredReview
 import type { AlfredReview } from "../../../domain/alfred/types";
 import { describeError } from "../../errorMessage";
 import { monthLetterAsk, writeMonthLetter } from "../../../application/monthLetter";
+import { MonthRecapView } from "./MonthRecapView";
 
 /**
  * MONTH-001 (owner go 2026-10-31, ideas 9–11): the month on one page — each lived day's shift, sleep,
@@ -78,6 +79,8 @@ export function CaveMonthView() {
       {letter.lines.map((line) => <p key={line} className="card-body" style={{ margin: "0 0 6px" }}>{line}</p>)}
       {letter.daysLogged > 0 && <button type="button" className="btn-secondary" onClick={() => askAlfred(monthLetterAsk(letter))}>ASK ALFRED TO WRITE IT</button>}
     </section>; })()}
+    {/* BIG-IDEAS-001 item 6: the same month as a short story of cards, on a tap. */}
+    {days && days.some((d) => d.dayId) && <MonthRecapView year={cursor.y} month={cursor.m} />}
     {/* ALFRED-006: every weekly review Alfred has written, newest first. */}
     {reviews.length > 0 && <section className="cave__block month__reviews" aria-label="Weekly reviews">
       <h3 className="cave__cap">Weekly reviews</h3>
