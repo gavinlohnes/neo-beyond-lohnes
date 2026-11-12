@@ -2107,9 +2107,10 @@ export function TodayScreen({
           </span>
         </div>
         <div className={`cc-fuel${garminTiles ? " cc-fuel--six" : ""}${calorieTile ? " cc-fuel--calories" : ""}`} role="group" aria-label={fuelLine}>
-          {tile("protein", "PROTEIN", <><b>{minimumDayProteinG === 0 ? "—" : <DecryptNumber value={Math.round(minimumDayProteinG)} dayId={day?.id ?? "unstarted"} reading="protein" />}</b><small>{proteinTargetG !== undefined ? `/${proteinTargetG}g` : minimumDayProteinG === 0 ? "" : "g"}</small></>,
+          {tile("protein", "PROTEIN", <><b>{minimumDayProteinG === 0 ? "—" : <DecryptNumber value={Math.round(minimumDayProteinG)} dayId={day?.id ?? "unstarted"} reading="protein" />}</b><small>{minimumDayProteinG === 0 ? "" : proteinTargetG !== undefined ? `/${proteinTargetG}g` : "g"}</small></>,
             // FIELD-AUTHORITY-001: a tile states facts; how the target is set lives in its history.
-            behind(proteinPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
+            // DENSITY-001: nothing logged reads "—" / NOT LOGGED like WATER, WEIGHT and SLEEP, never "—/182g".
+            behind(proteinPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : minimumDayProteinG === 0 ? <span className="cc-flab">NOT LOGGED</span> : pct === null ? <span className="cc-flab">NO TARGET</span> : <span className="cc-bar"><i style={{ width: `${pct}%` }} /></span>,
             `Protein ${minimumDayProteinG}${proteinTargetG !== undefined ? ` / ${proteinTargetG}` : ""} g${paceWords(proteinPace)}`, steady(proteinPace))}
           {calorieTile && <button type="button" className="cc-fuel-wide" disabled={busy}
             aria-label={`Calories eaten ${eatenToday === null ? "not logged" : eatenToday.toLocaleString("en-US")}, burned ${burnedToday === null ? "not measured" : `${burnedToday.toLocaleString("en-US")} so far`}, open calories`} onClick={openMeasured("calories")}>

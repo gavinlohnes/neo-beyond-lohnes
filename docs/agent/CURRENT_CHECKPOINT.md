@@ -21,15 +21,16 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: GUIDANCE-001, next-action clarity on TODAY and the weekly surfaces (Gavin, 2026-11-12)
+# Current objective: DENSITY-001, density, language and visual consistency (Gavin, 2026-11-12)
 
-Brief: make the next step plain on TODAY, Week Ahead/energy forecast, the weekly interview and the recap. Copy only:
-no new features, screens, schema or Engine change. Excludes navigation, TRAIN's active workout, circadian cards and
-the family calendar. **Protected** (TODAY's check-in line, under FIELD-AUTHORITY-001), so it needs an independent
-exact-head review. Changes: the check-in line says what checking in gives ("Check in for today's recommendation."; the
-calm "Log when you want." stays); the forecast's no-schedule and thin-history lines say where to go and what fills
-them; the weekly interview says what it is before you open it and, for an empty week, how it fills in; a one-card
-recap says what adds cards. Rides after #485.
+Brief: quieter, more consistent primary surfaces (TODAY, Week Ahead / weekly, DATA, reflective entry points). No new
+features, screens, schema or Engine change; navigation, the active workout, circadian cards and the family calendar are
+excluded. **Protected** only for TODAY's protein tile (FIELD-AUTHORITY-001 "Numbers"), so it gets an independent
+exact-head review. Changes: bare zeros read in words (TODAY protein "—" / NOT LOGGED; DATA "No meals/protein logged
+yet"; weekly "No workouts this week." and "no corrections this week"; calendar export drops "0 events" and says
+"1 event"); DATA no longer lists its five progress views twice (the shortcuts at the top stay); the weekly check-in's
+intro is shorter. Also carries #486's review notes (Garmin-timed sleep in the recap line; FIELD-AUTHORITY-001
+amendment). GUIDANCE-001 merged in #486 (review PASS at `bb0cd1c9`).
 
 ---
 

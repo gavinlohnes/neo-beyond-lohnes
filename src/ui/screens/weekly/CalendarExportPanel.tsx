@@ -14,6 +14,8 @@ export async function deliverCalendar(file: File): Promise<"Shared" | "Downloade
   return "Downloaded";
 }
 
+const events = (n: number) => `${n} ${n === 1 ? "event" : "events"}`;
+
 export function CalendarExportPanel({ now }: { now?: Date | undefined }) {
   const [weeks, setWeeks] = useState<4 | 8>(4);
   const [includePlans, setIncludePlans] = useState(false);
@@ -33,7 +35,7 @@ export function CalendarExportPanel({ now }: { now?: Date | undefined }) {
     setBusy(true); setError(null);
     try {
       const outcome = await deliverCalendar(new File([preview.contents], `beyond-calendar-${preview.from}.ics`, { type: "text/calendar;charset=utf-8" }));
-      setReceipt(outcome === "Cancelled" ? "Export cancelled." : `${outcome} ${preview.count} events · ${preview.from} to ${preview.through}.`);
+      setReceipt(outcome === "Cancelled" ? "Export cancelled." : `${outcome} ${events(preview.count)} · ${preview.from} to ${preview.through}.`);
     } catch { setError("The calendar file couldn't be delivered. Try again."); }
     finally { setBusy(false); }
   }
@@ -47,7 +49,9 @@ export function CalendarExportPanel({ now }: { now?: Date | undefined }) {
     </select></label>
     <p className="meta">Scheduled shifts, not worked records. Shift times use the importing calendar's local time zone. Plans include titles and planned/due dates only. No notes are included.</p>
     {preview?.message && <p className="meta">{preview.message}</p>}
-    {preview && <p className="meta">{preview.count} events · {preview.from} to {preview.through}</p>}
+    {/* DENSITY-001: no "0 events" line; with nothing to export the message above already says why. */}
+    {preview && !preview.count && !preview.message && <p className="meta">Nothing to export in this range.</p>}
+    {!!preview?.count && <p className="meta">{events(preview.count)} · {preview.from} to {preview.through}</p>}
     <button type="button" className="btn-secondary" disabled={!preview?.count || busy} onClick={() => void exportFile()}>{busy ? "EXPORTING…" : "EXPORT TO CALENDAR"}</button>
     {error && <p role="alert">{error}</p>}
     {receipt && <p role="status" className="meta">{receipt}</p>}

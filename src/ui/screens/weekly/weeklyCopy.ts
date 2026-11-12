@@ -17,7 +17,8 @@ import { unlockGoal } from "../../unlockGoal";
 export function describeBurdenLine(burden: BurdenSummary): string {
   if (burden.entriesPerDay === undefined) return "Not enough data yet — no days this week.";
   const entries = Math.round(burden.entriesPerDay);
-  return `Entries per day: ${entries} · corrections this week: ${burden.corrections}`;
+  // DENSITY-001: no bare zero; a week without corrections says so in words.
+  return `Entries per day: ${entries} · ${burden.corrections === 0 ? "no corrections this week" : `corrections this week: ${burden.corrections}`}`;
 }
 
 // ---- THE RIBBON (2026-10-03) ----

@@ -2251,10 +2251,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         {mealsVisible && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
           <p className="card-title">{nutritionTargets?.calorieTargetKcal
             ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal)
-            : `${totalMealCalories} kcal logged today`}</p>
+            : totalMealCalories === 0 ? "No meals logged yet" : `${totalMealCalories} kcal logged today`}</p>
           <p className="meta">{effectiveProteinTargetG !== undefined
             ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
-            : `${dayProteinG} g protein today (meals + protein logs)`}</p>
+            : dayProteinG === 0 ? "No protein logged yet" : `${dayProteinG} g protein today (meals + protein logs)`}</p>
         </div>}
         {onReturnToToday && mealDirty && <p className="meta" style={{ marginBottom: 12 }}>
           Unsaved details stay here while you return to TODAY.
@@ -2488,15 +2488,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           <WayIn label="Weight history" ariaLabel="WEIGHT HISTORY" onClick={() => showProgress("weight")} /></header>
         <div className="body-progress-card data-weight-instrument"><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${weighInDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
           {onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}</div>
-        <div role="group" aria-labelledby="data-more-progress" className="data-more-progress">
-        <header className="bx-head"><div><p className="bx-eyebrow">MORE PROGRESS</p><h3 id="data-more-progress" className="bx-title">Records, photos and patterns</h3></div></header>
-          <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
-          <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => openComposition(view)}>{label}</button>)}</div>
-          <div className="body-progress-pair" aria-label="Patterns">
-            <button type="button" className="btn-secondary body-progress-card" onClick={openPicture}>WHOLE PICTURE</button>
-            <button type="button" className="btn-secondary body-progress-card" onClick={openRotation}>YOUR ROTATION</button>
-          </div>
-        </div>
+        {/* DENSITY-001: photos, measurements, records, whole picture and rotation are DATA's shortcuts above; not listed twice. */}
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}

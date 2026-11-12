@@ -317,7 +317,7 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await screen.getByRole("button", { name: "SHOW OTHER DATA TOOLS" }).click();
     await expect.element(screen.getByText("Nutrition targets are editable in MORE → Targets.", { exact: true })).toBeVisible();
 
-    await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
+    await expect.element(screen.getByText("No meals logged yet · target 2200 kcal", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("No target yet · a weigh-in sets it.", { exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "Open BODYWEIGHT" }).click();
@@ -325,13 +325,13 @@ describe("BodyScreen (real browser) — NUTRITION TARGETS", () => {
     await screen.getByRole("button", { name: "LOG BODYWEIGHT" }).click();
     await expect.element(screen.getByText("180 lbs logged.", { exact: true })).toBeVisible();
 
-    await expect.element(screen.getByText(/0 \/ 162g protein · 162g to go/)).toBeVisible();
+    await expect.element(screen.getByText("No protein logged yet · target 162g", { exact: true })).toBeVisible();
   });
 
   it("logging a meal counts toward calorie progress against the set target", async () => {
     await updateNutritionTargets({ calorieTargetKcal: 2200 });
     const screen = await render(<BodyScreen />);
-    await expect.element(screen.getByText(/0 \/ 2200 kcal/)).toBeVisible();
+    await expect.element(screen.getByText("No meals logged yet · target 2200 kcal", { exact: true })).toBeVisible();
     await screen.getByRole("button", { name: "OPEN MEALS" }).click();
 
     await screen.getByRole("button", { name: "SHOW ADD MEAL" }).click();
@@ -524,7 +524,7 @@ describe("BodyScreen (real browser) — MY MEALS", () => {
     await holdToConfirm(screen.getByRole("button", { name: "DELETE" }));
 
     await expect.element(screen.getByText("0 meals logged today", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText(/0 \/ 2200 kcal · 2200 remaining/)).toBeVisible();
+    await expect.element(screen.getByText("No meals logged yet · target 2200 kcal", { exact: true })).toBeVisible();
     expect(await db.events.where("type").equals("MEAL_LOGGED").count()).toBe(1);
     expect(await db.events.where("type").equals("MEAL_LOG_VOIDED").count()).toBe(1);
   });

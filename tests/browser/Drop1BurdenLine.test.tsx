@@ -20,7 +20,7 @@ describe("Weekly check-in — burden line (real browser)", () => {
 
     const section = screen.getByRole("region", { name: "BURDEN" });
     await expect.element(section).toBeVisible();
-    const line = section.getByText("Entries per day: 2 · corrections this week: 0", { exact: true });
+    const line = section.getByText("Entries per day: 2 · no corrections this week", { exact: true });
     await expect.element(line).toBeVisible();
     // Neutral: the quiet metadata style, never a red accent, and nothing else in the section to act on.
     expect(line.element().className).toBe("meta");
