@@ -14,7 +14,7 @@ import { wasSeen, seenKey, markSeen } from "../../components/ReportReadyLine";
 import { DailyControls } from "../today/TodayScreen";
 // Kept in the main bundle: Health Bridge files shared to the app arrive through this screen.
 import { HealthImportScreen } from "../health/HealthImportScreen";
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { db } from "../../../persistence/db";
 import { exportBackup, getDaysSinceLastBackup, shareBackup } from "../../../persistence/backup";
 import { previewAnyRestore, applyAnyRestore, type RestorePreview } from "../../../persistence/restore";
@@ -25,6 +25,7 @@ import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
 import { ReviewScreen } from "../review/ReviewScreen";
+import type { UnderstandingSource } from "../review/PersonalUnderstanding";
 import { SearchScreen } from "../search/SearchScreen";
 import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
@@ -107,6 +108,20 @@ const GROUP_ICONS: Record<SystemCapability["group"], IconName> = {
   Log: "body", "On shift": "shiftDown", Review: "review", Plan: "schedule", Notes: "decisionJournal",
   Systems: "command", "Backup & recovery": "backup", Settings: "more",
 };
+
+const CapabilityRow = memo(function CapabilityRow({ entry, allowFavorite, favorite, isNew, disabled, onRun, onToggle }: {
+  entry: SystemCapability; allowFavorite: boolean; favorite: boolean; isNew: boolean; disabled: boolean;
+  onRun: (entry: SystemCapability) => void; onToggle: (entry: SystemCapability) => void;
+}) {
+  return <div className="more-library-row">
+    <button type="button" className="command-result" aria-label={`${entry.label} ${entry.description}`} disabled={disabled} onClick={() => onRun(entry)}>
+      <Icon name={capabilityIcon(entry)} size={22} />
+      <span><strong>{entry.label}{isNew && <small className="pr-tag"> NEW</small>}</strong><span>{entry.description}</span></span>
+      <span aria-hidden="true" className="command-result__go">›</span>
+    </button>
+    {allowFavorite && <button type="button" className="more-library-row__favorite" aria-pressed={favorite} aria-label={`${favorite ? "Remove" : "Add"} ${entry.label} ${favorite ? "from" : "to"} favorites`} onClick={() => onToggle(entry)}>{favorite ? "PINNED" : "PIN"}</button>}
+  </div>;
+});
 
 function capabilityIcon(entry: SystemCapability): IconName {
   if (entry.label === "HISTORY") return "history";
@@ -584,17 +599,18 @@ export function MoreScreen({
     setFavoriteLabels(next); writeMoreLabels(MORE_FAVORITES_KEY, next);
   }
 
+  // PERF-001: rows keep one onRun/onToggle identity (calling the latest code), so a memoized row re-renders only
+  // when its own label, PIN state or NEW tag changes, not on every MORE state change.
+  const capabilityLatest = useRef({ run: runCapability, toggle: toggleFavorite });
+  capabilityLatest.current = { run: runCapability, toggle: toggleFavorite };
+  const capabilityActions = useMemo(() => ({
+    run: (entry: SystemCapability) => capabilityLatest.current.run(entry),
+    toggle: (entry: SystemCapability) => capabilityLatest.current.toggle(entry),
+  }), []);
   function renderCapability(entry: SystemCapability, allowFavorite = false) {
     const external = entry.destination.kind !== "more" && entry.destination.kind !== "section";
-    const favorite = favoriteLabels.includes(entry.label);
-    return <div key={entry.label} className="more-library-row">
-      <button type="button" className="command-result" aria-label={`${entry.label} ${entry.description}`} disabled={external && !onOpenDestination} onClick={() => runCapability(entry)}>
-        <Icon name={capabilityIcon(entry)} size={22} />
-        <span><strong>{entry.label}{entry.label === "AFTER ACTION REPORT" && reportNew && <small className="pr-tag"> NEW</small>}</strong><span>{entry.description}</span></span>
-        <span aria-hidden="true" className="command-result__go">›</span>
-      </button>
-      {allowFavorite && <button type="button" className="more-library-row__favorite" aria-pressed={favorite} aria-label={`${favorite ? "Remove" : "Add"} ${entry.label} ${favorite ? "from" : "to"} favorites`} onClick={() => toggleFavorite(entry)}>{favorite ? "PINNED" : "PIN"}</button>}
-    </div>;
+    return <CapabilityRow key={entry.label} entry={entry} allowFavorite={allowFavorite} favorite={favoriteLabels.includes(entry.label)}
+      isNew={entry.label === "AFTER ACTION REPORT" && reportNew} disabled={external && !onOpenDestination} onRun={capabilityActions.run} onToggle={capabilityActions.toggle} />;
   }
 
   function renderQuickCapability(entry: SystemCapability, source: "favorite" | "recent") {
@@ -614,6 +630,37 @@ export function MoreScreen({
     panel.querySelector<HTMLElement>("summary")?.focus({ preventScroll: true });
   }
 
+  // PERF-001: REVIEW stays mounted (hidden) while MORE shows other views, and it is heavy. Its callbacks keep one
+  // identity and call the latest code through a ref, and its focus object changes only with the focus, so
+  // ReviewScreen (memo) re-renders only when what it shows changes, not on every MORE state change.
+  const latestReview = {
+    openSource: (source: UnderstandingSource) => {
+      reviewOrigin.current = { trigger: document.querySelector<HTMLElement>('.personal-understanding [aria-pressed="true"]'), scrollY: window.scrollY };
+      if (source.kind === "MISSION") { setIntentFocus({ kind: "MISSION", missionId: source.id }); setView("INTENT"); }
+      else if (source.kind === "JOURNAL") { setJournalFocus(source.id); setView("JOURNAL"); }
+      else if (source.kind === "SCHEDULE") setView("WORK_SCHEDULE");
+      else { setView("MENU"); revealSection("NUTRITION_TARGETS"); }
+      setReturnToUnderstanding(true);
+    },
+    openHistory: (id: string) => {
+      reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
+      setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
+    },
+    openDailyNote: () => openDailyNoteFromReflect(),
+    openWeeklyInterview: () => openReflect("INTERVIEW"),
+    destinationConsumed: (key: number) => onReviewDestinationConsumed?.(key),
+  };
+  const reviewLatest = useRef(latestReview);
+  reviewLatest.current = latestReview;
+  const reviewHandlers = useMemo(() => ({
+    openSource: (source: UnderstandingSource) => reviewLatest.current.openSource(source),
+    openHistory: (id: string) => reviewLatest.current.openHistory(id),
+    openDailyNote: () => reviewLatest.current.openDailyNote(),
+    openWeeklyInterview: () => reviewLatest.current.openWeeklyInterview(),
+    destinationConsumed: (key: number) => reviewLatest.current.destinationConsumed(key),
+  }), []);
+  const understandingFocus = useMemo(() => reflectFocus && reflectFocus.focus !== "INTERVIEW" ? { key: reflectFocus.key, view: reflectFocus.focus } : null, [reflectFocus]);
+
   return (
     <div className={`screen more-operator${view === "REVIEW" ? " more-whole-picture" : ""}${view === "BATCOMPUTER" ? " more-batcomputer" : ""}${view === "LIFE" ? " more-whole-life" : ""}`}>
         <div hidden={view === "MENU"} className={view === "WEEKLY" ? "more-destination hud-legacy" : "more-destination"}>
@@ -628,17 +675,7 @@ export function MoreScreen({
           {view === "WEEKLY" && <WeeklyCheckInScreen openInterviewKey={reflectFocus?.focus === "INTERVIEW" ? reflectFocus.key : undefined} onOpenDelta={() => openReflect("DELTA")} onOpenPatterns={() => openReflect("PATTERNS")} />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
-          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenDailyNote={openDailyNoteFromReflect} onOpenWeeklyInterview={() => openReflect("INTERVIEW")} understandingFocus={reflectFocus && reflectFocus.focus !== "INTERVIEW" ? { key: reflectFocus.key, view: reflectFocus.focus } : null} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: onReviewDestinationConsumed } : {})} onOpenUnderstandingSource={(source) => {
-            reviewOrigin.current = { trigger: document.querySelector<HTMLElement>('.personal-understanding [aria-pressed="true"]'), scrollY: window.scrollY };
-            if (source.kind === "MISSION") { setIntentFocus({ kind: "MISSION", missionId: source.id }); setView("INTENT"); }
-            else if (source.kind === "JOURNAL") { setJournalFocus(source.id); setView("JOURNAL"); }
-            else if (source.kind === "SCHEDULE") setView("WORK_SCHEDULE");
-            else { setView("MENU"); revealSection("NUTRITION_TARGETS"); }
-            setReturnToUnderstanding(true);
-          }} onOpenHistory={(id) => {
-            reviewOrigin.current = { trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null, scrollY: window.scrollY };
-            setHistoryFocusDayId(id); setHistoryFocusEventId(null); setReviewHistory(true); setView("HISTORY");
-          }} />}</div>
+          <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenDailyNote={reviewHandlers.openDailyNote} onOpenWeeklyInterview={reviewHandlers.openWeeklyInterview} understandingFocus={understandingFocus} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: reviewHandlers.destinationConsumed } : {})} onOpenUnderstandingSource={reviewHandlers.openSource} onOpenHistory={reviewHandlers.openHistory} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} onRunCapability={runCapability} hiddenCapability={(entry) => "hiddenFeature" in entry && !hiddenFeatures[entry.hiddenFeature]} />}
           <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} startAtOverview onTask={(id) => { setIntentFocus({ kind: "OBLIGATION", obligationId: id }); setView("INTENT"); }} onNavigate={(destination) => {
             if (destination.kind === "more") setView(destination.view);

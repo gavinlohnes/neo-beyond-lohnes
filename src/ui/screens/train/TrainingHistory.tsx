@@ -9,6 +9,7 @@ import {
 import { describePersonalRecord } from "../../../application/personalRecordQueries";
 import { describeError } from "../../errorMessage";
 import { describeHistoryFacts, describeHistoryTitle, describeRecordedSet, TRAINING_HISTORY_EMPTY } from "./trainCopy";
+import { formatDate } from "../../formatDate";
 
 /**
  * ULTIMATE-FOUNDATION-002 (Training Record, owner-approved 2026-10-17):
@@ -193,5 +194,5 @@ function historyRowId(sessionId: string): string {
 }
 
 function formatSessionDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  return formatDate(iso, "en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }

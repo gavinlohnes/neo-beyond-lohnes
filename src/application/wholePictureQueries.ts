@@ -51,9 +51,13 @@ export async function getWholePicture(now = new Date()) {
     const periods: Period[] = rows.map((row) => ({ from: Date.parse(row.start), to: livedDayBoundary(new Date(row.start), -1).getTime(), dayId: row.dayIds[0] ?? null }));
     const stepValues = stepsByPeriod(periods, hours, now.getTime());
     const restingValues = restingByPeriod(periods, resting, now.getTime());
+    // PERF-001: each Garmin hour and resting reading is parsed once and placed in its day, instead of every day
+    // re-reading all of them (56 days × thousands of hours). Same half-open [from, to) test, same order.
+    const hourBuckets = byPeriod(periods, hours, (hour) => Date.parse(hour.startTime));
+    const restingBuckets = byPeriod(periods, resting, (reading) => Date.parse(reading.time));
     rows.forEach((row, index) => {
       row.steps = stepValues[index]!.value ?? undefined; row.resting = restingValues[index]!.value ?? undefined;
-      row.measuredHours = hours.filter((hour) => Date.parse(hour.startTime) >= periods[index]!.from && Date.parse(hour.startTime) < periods[index]!.to && hour.steps !== null).length;
+      row.measuredHours = hourBuckets[index]!.filter((hour) => hour.steps !== null).length;
     });
     // ROTATION-002: times only where they are known — Garmin's record behind the day's one main sleep,
     // uncorrected by the owner — and the scheduled shift on a recorded work day.
@@ -98,13 +102,25 @@ export async function getWholePicture(now = new Date()) {
       lift.sets.push({ id: set.id, sessionId: set.sessionId, dayId, at, weight: set.weight, reps: set.reps }); liftsById.set(set.exerciseId, lift);
     }
     const lifts = [...liftsById.values()].map((lift) => ({ ...lift, sets: lift.sets.sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id)) })).sort((a, b) => b.sets.length - a.sets.length || a.name.localeCompare(b.name));
-    const measurements = Object.fromEntries(periods.map((period, index) => [rows[index]!.start, {
-      hours: hours.filter((hour) => Date.parse(hour.startTime) >= period.from && Date.parse(hour.startTime) < period.to),
-      resting: resting.filter((reading) => Date.parse(reading.time) >= period.from && Date.parse(reading.time) < period.to),
+    const measurements = Object.fromEntries(periods.map((_period, index) => [rows[index]!.start, {
+      hours: hourBuckets[index]!,
+      resting: restingBuckets[index]!,
     }]));
     const week = latestReviewWeek(now);
     return { readAt: now.toISOString(), rows, measurements, stories, lifts, weekAhead, week, savedReview: findWeekReview(reviews, week), canSave: Boolean(activeDay), eligibleCommitments: eligible };
   });
+}
+/**
+ * PERF-001: items into every period whose half-open [from, to) holds their time, in input order: exactly what
+ * filtering each period gives, but each item's time is parsed once rather than once per period.
+ */
+function byPeriod<T>(periods: readonly Period[], items: readonly T[], at: (item: T) => number): T[][] {
+  const buckets = periods.map(() => [] as T[]);
+  for (const item of items) {
+    const t = at(item);
+    for (let i = 0; i < periods.length; i++) if (t >= periods[i]!.from && t < periods[i]!.to) buckets[i]!.push(item);
+  }
+  return buckets;
 }
 /** ROTATION-004: per BEYOND day, when each live (not voided or undone) meal and water log happened. */
 function dayMarks(events: readonly DomainEvent[]): Map<string, { meals: number[]; water: number[] }> {

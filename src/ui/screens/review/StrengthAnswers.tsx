@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { getStrengthReview, type StrengthReviewData } from "../../../application/strengthReviewQueries";
 import { describeError } from "../../errorMessage";
+import { formatDate } from "../../formatDate";
 
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
 const state = (value: number | undefined, count: number) => value === undefined ? `Building up · needs 2 comparable lifts (${count} ready)` : `${pct(value)} strength index across ${count} comparable lifts`;
-const date = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+const date = (iso: string) => formatDate(iso, undefined, { month: "short", day: "numeric", year: "numeric" });
 
 export function StrengthAnswers({ active }: { active: boolean }) {
   const [data, setData] = useState<StrengthReviewData | null>(null);

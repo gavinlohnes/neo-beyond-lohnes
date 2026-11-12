@@ -21,15 +21,16 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: NAV-REACH-001, navigation and reachability (Gavin, 2026-11-12)
+# Current objective: PERF-001, performance and responsiveness on the daily paths (Gavin, 2026-11-12)
 
-Brief: make the reflective surfaces (daily note, DELTA, patterns, weekly interview) easier to reach and move between,
-with predictable back paths. No new screens, destinations or tabs; MORE's browse list (MORE-TRIM-001) is unchanged;
-TODAY, the active workout, circadian cards and the family calendar are untouched. Feature lane (no Protected boundary).
-Changes: DELTA and Patterns offer OPEN DAILY NOTE and OPEN WEEKLY INTERVIEW; the daily note adds SEE DELTA; the
-weekly interview adds SEE PATTERNS; a jump between these views makes BACK return to where it came from (BACK TO DAILY
-NOTE / WEEKLY CHECK-IN / REVIEW) instead of the MORE menu; MORE's Review rows name the interview, DELTA and patterns.
-DENSITY-001 merged in #487 (review PASS at `513c5ead`).
+Brief: faster daily paths with the same behavior and layout. No features, screens, schema or Engine change; circadian
+cards and the family calendar untouched. Feature lane. Measured in real Chromium at 4× CPU throttle with 120 seeded
+days (2,042 events, 2,995 Garmin hours): long-task time across the measured paths 13.4 s → 6.5 s (DATA 1.8 → 0.5 s,
+personal understanding 2.7 → 0.7 s, daily note 2.5 → 0.9 s, week ahead 0.6 → 0.15 s). Fixes: Whole Picture parses
+each Garmin hour once instead of once per day; dates on the Review, strength, training-history and weekly lists use
+cached Intl formatters; progression suggestions read an exercise's sets once; concurrent getDaySummaries calls share
+one read (dropped on any committed write, never shared inside a transaction); REVIEW (hidden, heavy) and MORE's rows
+are memoized with stable callbacks. NAV-REACH-001 merged in #488.
 
 ---
 
