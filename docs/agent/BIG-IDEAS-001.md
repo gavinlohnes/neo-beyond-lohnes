@@ -53,6 +53,9 @@
    file he controls and can revoke. No health numbers, notes or tags. **Privacy design in the PR first**, and Gavin
    re-confirms exactly what is shared before it ships. An .ics file needs no provider. Sharing through Drive extends
    the backup-only Drive ruling (DRIVE-BACKUP-001), so the design must name that amendment.
+   **Design approved (Gavin, 2026-11-12, "Approve as described"):** a separate Google calendar "BEYOND — family" via
+   the existing Google Calendar connection, not Drive, so no Drive amendment is needed. Plus an .ics fallback, with
+   three fixed event types only. Rules: [UX_DECISIONS FAMILY-CALENDAR-001](../UX_DECISIONS.md).
 
 ## Not now
 - **4 (voice capture)** was not picked; phone speech recognition usually sends audio to Google, a new provider.
