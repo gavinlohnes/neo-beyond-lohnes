@@ -21,16 +21,14 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: PERF-001, performance and responsiveness on the daily paths (Gavin, 2026-11-12)
+# Current objective: GUIDED-001, small guided flows where multi-step actions were unclear (Gavin, 2026-11-12)
 
-Brief: faster daily paths with the same behavior and layout. No features, screens, schema or Engine change; circadian
-cards and the family calendar untouched. Feature lane. Measured in real Chromium at 4× CPU throttle with 120 seeded
-days (2,042 events, 2,995 Garmin hours): long-task time across the measured paths 13.4 s → 6.5 s (DATA 1.8 → 0.5 s,
-personal understanding 2.7 → 0.7 s, daily note 2.5 → 0.9 s, week ahead 0.6 → 0.15 s). Fixes: Whole Picture parses
-each Garmin hour once instead of once per day; dates on the Review, strength, training-history and weekly lists use
-cached Intl formatters; progression suggestions read an exercise's sets once; concurrent getDaySummaries calls share
-one read (dropped on any committed write, never shared inside a transaction); REVIEW (hidden, heavy) and MORE's rows
-are memoized with stable callbacks. NAV-REACH-001 merged in #488.
+Brief: light inline guidance on 1–3 existing multi-step paths; no new features, screens, tours or chrome; every save
+stays confirm-first. Feature lane. Chosen: (1) the weekly interview, whose SAVE TO NOTE and carry-forward buttons sat
+disabled with no reason and never said the plan item is a separate, optional step: one quiet line now names the next
+step (answer → SAVE TO NOTE previews first → optional plan item); (2) health import, where "Preview ready" didn't
+point to confirming and, with two files, confirming one didn't say the other preview was still waiting. PERF-001
+merged in #489.
 
 ---
 

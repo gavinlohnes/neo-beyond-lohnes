@@ -167,11 +167,12 @@ describe("Health Connect sleep import", () => {
     const screen = await render(<HealthImportScreen />);
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "REVIEW STEPS AND HEART RATE" })).toBeVisible();
-    await expect.element(screen.getByText(/^Preview ready: 1 Garmin sleep records and 3 hours of Garmin steps/)).toBeVisible();
+    await expect.element(screen.getByText(/^Preview ready: 1 Garmin sleep records and 3 hours of Garmin steps.* Check each preview below, then confirm\.$/)).toBeVisible();
     expect(await caches.has("beyond-shared-health")).toBe(false);
     expect(await db.externalSleepRecords.count()).toBe(0); expect(await db.externalActivityHours.count()).toBe(0);
     await screen.getByRole("button", { name: "CONFIRM STEPS AND HEART RATE IMPORT" }).click();
-    await expect.element(screen.getByText(/^Imported 4 new, 0 updated/)).toBeVisible();
+    // GUIDED-001: the receipt says the other preview is still waiting.
+    await expect.element(screen.getByText(/^Imported 4 new, 0 updated.* The sleep preview is still waiting below\.$/)).toBeVisible();
     await expect.element(screen.getByRole("heading", { name: "REVIEW SLEEP IMPORT" })).toBeVisible();
     expect(await db.externalSleepRecords.count()).toBe(0);
   });
