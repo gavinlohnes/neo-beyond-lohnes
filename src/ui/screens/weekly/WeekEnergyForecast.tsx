@@ -29,7 +29,7 @@ export function forecastLine(day: ForecastDay): string {
 }
 
 export function WeekEnergyForecastSummary({ forecast }: { forecast: WeekEnergyForecast }) {
-  if (!forecast.scheduled) return <p className="meta" data-energy-forecast>Energy forecast: save your work schedule to see one.</p>;
+  if (!forecast.scheduled) return <p className="meta" data-energy-forecast>Energy forecast: save your work schedule in MORE → WORK SCHEDULE to see one.</p>;
   const { lowest, best, sleepOwed } = forecast;
   return (
     <section data-energy-forecast aria-labelledby="energy-forecast-heading" style={{ margin: "0 0 10px" }}>
@@ -37,7 +37,7 @@ export function WeekEnergyForecastSummary({ forecast }: { forecast: WeekEnergyFo
       <p className="meta" style={{ margin: "2px 0 0" }}>
         {lowest && best
           ? `Lowest ${weekday(lowest.date)} (${energy(lowest.energy.mean!)}), best ${weekday(best.date)} (${energy(best.energy.mean!)}).`
-          : "Not enough history yet to name a low or a high day."}
+          : "Not enough history yet to name a low or a high day. Each day you check in adds to it."}
       </p>
       {sleepOwed.days > 0 && <p className="meta" style={{ margin: "2px 0 0" }}>
         {sleepOwed.owedMinutes > 0

@@ -21,14 +21,26 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
+# Current objective: GUIDANCE-001, next-action clarity on TODAY and the weekly surfaces (Gavin, 2026-11-12)
+
+Brief: make the next step plain on TODAY, Week Ahead/energy forecast, the weekly interview and the recap. Copy only:
+no new features, screens, schema or Engine change. Excludes navigation, TRAIN's active workout, circadian cards and
+the family calendar. **Protected** (TODAY's check-in line, under FIELD-AUTHORITY-001), so it needs an independent
+exact-head review. Changes: the check-in line says what checking in gives ("Check in for today's recommendation."; the
+calm "Log when you want." stays); the forecast's no-schedule and thin-history lines say where to go and what fills
+them; the weekly interview says what it is before you open it and, for an empty week, how it fills in; a one-card
+recap says what adds cards. Rides after #485.
+
+---
+
 # Next session: BIG-IDEAS-001 (approved 2026-11-09, "Everything but 4")
 
 - Item 1, SHIFT WHAT-IF: merged (#474, includes #473's comparison; #473 can be closed).
 - Item 2, WEEK ENERGY FORECAST: merged (#475). The run-length rule also went into Shift What-If (#476, merged).
 - Item 3, CIRCADIAN PLAN: merged (#478). "Sleep soon after" added, citing Kalkanis 2023 as search-confirmed (Gavin), in #481.
 - Item 6, RECAP: merged (#481).
-- Item 8, FAMILY CALENDAR: merged (#483, review fixes #484). The follow-up PR reuses an existing "BEYOND — family"
-  after a reinstall (Protected, needs review).
+- Item 8, FAMILY CALENDAR: merged (#483, review fixes #484). #485 reuses an existing "BEYOND — family" after a
+  reinstall (review PASS at `fa6d93f1`).
 - Item 7, ON-DEVICE ALFRED: spike measured; **deferred** (Gavin, 2026-11-12: "Defer for now."). See
   [ONDEVICE-ALFRED-SPIKE-001.md](ONDEVICE-ALFRED-SPIKE-001.md). BIG-IDEAS-001's picked items are now all built or decided.
   Still open with Gavin: the rotation field test (#402).

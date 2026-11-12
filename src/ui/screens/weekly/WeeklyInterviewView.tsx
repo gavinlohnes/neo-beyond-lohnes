@@ -41,7 +41,7 @@ export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefin
   }, [now]);
 
   if (interview === undefined) return <p className="meta" role="status">Loading…</p>;
-  if (interview === null) return <p className="meta">No finished lived days yet, so there's no week to look back on.</p>;
+  if (interview === null) return <p className="meta">No finished days yet, so there's no week to look back on. Come back after your first day ends.</p>;
 
   const noteText = interviewNoteText(interview, answers);
   const carry = answers.CARRY?.trim();
@@ -59,6 +59,7 @@ export function WeeklyInterviewView({ now, onOpenDelta }: { now?: Date | undefin
     <div data-weekly-interview>
       <section aria-labelledby="week-timeline-heading">
         <p id="week-timeline-heading" className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>THE WEEK AS RECORDED · {day(interview.from)} – {day(interview.to)}</p>
+        {interview.days.every((d) => !d.dayId) && <p className="meta" style={{ margin: "2px 0 0" }}>Nothing on record this week yet. Start a day on TODAY and log as you go; this fills in.</p>}
         <ol style={{ listStyle: "none", padding: 0, margin: "6px 0 12px" }}>
           {interview.days.map((d) => (
             <li key={d.date} data-timeline-day={d.date} className="equipment-row" style={{ marginBottom: 6, padding: "8px 12px" }}>

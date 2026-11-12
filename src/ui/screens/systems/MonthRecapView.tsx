@@ -36,6 +36,7 @@ export function MonthRecapView({ year, month }: { year: number; month: number })
       {last ? <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>DONE</button>
         : <button type="button" className="btn-primary" onClick={() => setIndex((i) => i + 1)}>NEXT</button>}
     </div>
+    {recap.cards.length === 1 && <p className="meta">More cards appear as you log days: check-ins, sleep, workouts and notes.</p>}
     <p className="meta">From your records only. Nothing here is saved or sent.</p>
   </section>;
 }
