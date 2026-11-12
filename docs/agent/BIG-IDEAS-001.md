@@ -48,6 +48,8 @@
    WebLLM) for download size, phone support and quality on the free helper's question set. Decide in the PR. It
    loads only on opt-in, stays outside the 2 MiB precache, and keeps the free helper's rules: never write without
    SAVE, never guess. Model weights come from a CDN (a new host), so the spike checks licences and the host.
+   **Deferred (Gavin, 2026-11-12, "Defer for now."):** the spike measured two phone-sized models; neither meets
+   "never guess" while staying useful. [ONDEVICE-ALFRED-SPIKE-001.md](ONDEVICE-ALFRED-SPIKE-001.md).
 8. **Shared view for his wife** (🔒 approved: outward sharing). The narrowest version: a read-only calendar of
    shifts, sleep windows ("asleep, don't call") and the next day off, exported as an .ics feed or a Drive-shared
    file he controls and can revoke. No health numbers, notes or tags. **Privacy design in the PR first**, and Gavin

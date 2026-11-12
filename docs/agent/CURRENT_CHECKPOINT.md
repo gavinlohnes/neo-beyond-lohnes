@@ -7,6 +7,7 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
    2026-11-12: "Stop needing reviews… we will just merge"), as DEV-FLOW-002 already allows: the Builder runs the full
    suite, checks the riskiest path itself and says so. **Protected** work still needs the independent exact-head
    review DEV-FLOW-002 requires; the Builder says up front when an objective is Protected.
+   Reviewer sessions the Builder starts post their PASS/BLOCK verdict on the PR (Gavin, 2026-11-12: "Let reviewer post").
 3. **The Builder messages Gavin only when:**
    - **ready:** "Ready to merge: CI green at `<sha>`" (plus "review PASS" for Protected work);
    - **a decision is needed:** asked once, as one question with a recommended answer;
@@ -26,9 +27,11 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 - Item 2, WEEK ENERGY FORECAST: merged (#475). The run-length rule also went into Shift What-If (#476, merged).
 - Item 3, CIRCADIAN PLAN: merged (#478). "Sleep soon after" added, citing Kalkanis 2023 as search-confirmed (Gavin), in #481.
 - Item 6, RECAP: merged (#481).
-- Item 8, FAMILY CALENDAR: merged (#483) before its review; the post-merge BLOCK (main sync could target the family
-  calendar; evening sync deleted today's finished events) and its non-blocking findings are fixed in the follow-up PR on
-  `ccr-88f5c085-07op3k`, which needs re-review (Protected). Item 7 (on-device Alfred, Protected, spike first) is next.
+- Item 8, FAMILY CALENDAR: merged (#483, review fixes #484). The follow-up PR reuses an existing "BEYOND — family"
+  after a reinstall (Protected, needs review).
+- Item 7, ON-DEVICE ALFRED: spike measured; **deferred** (Gavin, 2026-11-12: "Defer for now."). See
+  [ONDEVICE-ALFRED-SPIKE-001.md](ONDEVICE-ALFRED-SPIKE-001.md). BIG-IDEAS-001's picked items are now all built or decided.
+  Still open with Gavin: the rotation field test (#402).
 - Item 5, WEEKLY INTERVIEW / TIMELINE: merged (#479).
 - REFLECT-001: merged (#480). Follow-ups in #481, which also carries CI-MIRROR-001 (Chromium download off the Ubuntu mirror) (search-route test; the circadian source). Independent post-merge
   reviews of #479/#480 and a review of #481 were requested from a separate session.
