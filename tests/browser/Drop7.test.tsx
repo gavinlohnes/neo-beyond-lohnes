@@ -29,7 +29,7 @@ describe("Weekly check-in (real browser)", () => {
     await (await commandResult(screen, "WEEKLY CHECK-IN")).click();
     await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not enough data yet — no weigh-ins this week.", { exact: true })).toBeVisible();
-    await expect.element(screen.getByText("0 workouts", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("No workouts this week.", { exact: true })).toBeVisible();
     await expect.element(screen.getByText("Not enough data yet — no protein logged this week.", { exact: true })).toBeVisible();
     expect(screen.getByText(/missed|behind|failed|off track/i).elements()).toHaveLength(0);
   });

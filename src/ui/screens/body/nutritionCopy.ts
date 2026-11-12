@@ -45,8 +45,10 @@ export const MEALS_TODAY_EMPTY = "No meals logged today yet.";
  * reads as a bug rather than a real, honest state a deficit can actually
  * be in on a given day.
  */
-export function describeCalorieProgress(loggedKcal: number, targetKcal: number | undefined): string {
-  if (targetKcal === undefined) return `${loggedKcal} kcal logged today — no target set.`;
+export function describeCalorieProgress(loggedKcal: number, targetKcal: number | undefined, hasMeals = loggedKcal > 0): string {
+  // DENSITY-001: no meals reads in words, never "0 / 2200". A logged 0-kcal meal still counts as a meal (review of #487).
+  if (targetKcal === undefined) return hasMeals ? `${loggedKcal} kcal logged today — no target set.` : "No meals logged yet — no target set.";
+  if (!hasMeals) return `No meals logged yet · target ${targetKcal} kcal`;
   const remaining = targetKcal - loggedKcal;
   return remaining >= 0
     ? `${loggedKcal} / ${targetKcal} kcal · ${remaining} remaining`
@@ -55,6 +57,7 @@ export function describeCalorieProgress(loggedKcal: number, targetKcal: number |
 
 export function describeProteinProgress(loggedG: number, targetG: number | undefined): string {
   if (targetG === undefined) return "No target yet · a weigh-in sets it.";
+  if (loggedG === 0) return `No protein logged yet · target ${targetG}g`;
   const remaining = targetG - loggedG;
   return remaining >= 0
     ? `${loggedG} / ${targetG}g protein · ${remaining}g to go`

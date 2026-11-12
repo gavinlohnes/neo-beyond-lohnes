@@ -49,5 +49,5 @@ it("GUIDANCE-001: a thin month says what fills the recap in", async () => {
   const screen = await render(<CaveMonthView />);
   await screen.getByRole("button", { name: "PLAY YOUR MONTH IN BEYOND" }).click();
   await expect.element(screen.getByText(/^Your month in BEYOND · 1 of 1$/)).toBeVisible();
-  await expect.element(screen.getByText("More cards appear as you log days: check-ins, sleep, workouts and notes.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("More cards appear as you log days: check-ins, workouts, notes and Garmin-timed sleep.", { exact: true })).toBeVisible();
 });

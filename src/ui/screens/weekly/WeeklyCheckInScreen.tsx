@@ -57,7 +57,7 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta }: { no
   return (
     <div className="screen">
       <h1 className="eyebrow">MORE // WEEKLY CHECK-IN</h1>
-      <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. LAST 28 DAYS, MIRROR, FINDINGS and YOUR USUAL look further back.</p>
+      <p className="meta" style={{ marginBottom: 16 }}>The last 7 days. Some sections, like LAST 28 DAYS, look further back.</p>
       {readError && <div><p role="alert">{readError} Weekly information is unavailable.</p><button type="button" className="btn-secondary" onClick={() => { setReadError(null); setReadKey((key) => key + 1); }}>RETRY WEEKLY</button></div>}
       {!summary ? (
         !readError && <p className="empty-state" role="status">Loading…</p>
@@ -152,12 +152,14 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta }: { no
           </Section>
 
           <Section label="TRAINING">
+            {/* DENSITY-001: an empty week reads in words, like WEIGHT and PROTEIN, not as "0 workouts". */}
+            {summary.training.workouts === 0 && summary.training.records.length === 0 ? <p className="meta">No workouts this week.</p> :
             <p className="recommendation-title" style={{ marginBottom: 2 }}>
               {summary.training.workouts} {summary.training.workouts === 1 ? "workout" : "workouts"}
               {summary.training.records.length > 0
                 ? ` · ${summary.training.records.length} ${summary.training.records.length === 1 ? "PR" : "PRs"}`
                 : ""}
-            </p>
+            </p>}
             {summary.training.records.slice(0, MAX_RECORD_LINES).map((r) => (
               <p key={r.exerciseName} className="meta" style={{ margin: 0 }}>
                 {r.exerciseName}: {describePersonalRecord(r.record).replace("NEW PR — ", "")}

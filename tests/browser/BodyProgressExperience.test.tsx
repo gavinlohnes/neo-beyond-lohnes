@@ -54,13 +54,13 @@ for (const width of [320, 360, 412]) it(`records, corrects and retains measureme
   const root = await logMeasurement({ site: "WAIST", inches: 38, measuredOn: "2026-09-01" }, NOW);
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "DATA", exact: true }).click();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
+  await screen.getByRole("button", { name: /^measurements$/i }).click();
   await expect.element(screen.getByRole("region", { name: "Latest measurements", exact: true })).toHaveTextContent("38 in");
   const inches = screen.getByRole("spinbutton", { name: "Inches", exact: true });
   await inches.fill("37.5"); await screen.getByLabelText("Measured on", { exact: true }).fill("2026-10-17");
   await screen.getByRole("button", { name: "TODAY", exact: true }).click();
   await screen.getByRole("button", { name: "DATA", exact: true }).click();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
+  await screen.getByRole("button", { name: /^measurements$/i }).click();
   await expect.element(inches).toHaveValue(37.5);
   expect(await db.events.where("type").equals("MEASUREMENT_LOGGED").count()).toBe(1);
   await screen.getByRole("button", { name: "SAVE MEASUREMENT", exact: true }).click();
@@ -76,7 +76,7 @@ for (const width of [320, 360, 412]) it(`records, corrects and retains measureme
   await expect.element(screen.getByText("-0.75 in since Sep 1, 2026", { exact: true })).toBeVisible();
   await inches.fill("37.25");
   await screen.getByRole("button", { name: "TRENDS", exact: true }).click();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
+  await screen.getByRole("button", { name: /^measurements$/i }).click();
   await expect.element(inches).toHaveValue(37.25);
   expect(document.querySelectorAll("main")).toHaveLength(1);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
@@ -85,7 +85,7 @@ for (const width of [320, 360, 412]) it(`records, corrects and retains measureme
 
 it("keeps failed-save input, blocks duplicate taps, and retries a read without replaying the save", async () => {
   clock(); const screen = await mountComposition();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
+  await screen.getByRole("button", { name: /^measurements$/i }).click();
   await screen.getByRole("spinbutton", { name: "Inches", exact: true }).fill("36");
   await expect.element(screen.getByRole("status", { name: "Unsaved input", exact: true })).toHaveTextContent("yes");
   vi.mocked(logMeasurement).mockRejectedValueOnce(new Error("WRITE_FAILED: Save failed. Try again."));
@@ -107,7 +107,7 @@ it("keeps failed-save input, blocks duplicate taps, and retries a read without r
 
 it("reports a stale correction without overwriting a newer canonical correction", async () => {
   clock(); const root = await logMeasurement({ site: "WAIST", inches: 38, measuredOn: "2026-10-17" });
-  const screen = await mountComposition(); await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click();
+  const screen = await mountComposition(); await screen.getByRole("button", { name: /^measurements$/i }).click();
   await screen.getByRole("button", { name: "Correct Waist 38 inches measured 2026-10-17", exact: true }).click();
   await correctMeasurement(root, { inches: 37 });
   await screen.getByRole("spinbutton", { name: "Corrected inches", exact: true }).fill("35");
@@ -122,26 +122,26 @@ it("preserves workout set input and measurement draft through progress and the 1
   const screen = await render(<App />);
   const reps = screen.getByRole("spinbutton", { name: "Set 1 repetitions", exact: true }); await reps.fill("9");
   await screen.getByRole("button", { name: "DATA", exact: true }).click();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click(); await screen.getByRole("spinbutton", { name: "Inches", exact: true }).fill("37");
+  await screen.getByRole("button", { name: /^measurements$/i }).click(); await screen.getByRole("spinbutton", { name: "Inches", exact: true }).fill("37");
   const before = await db.events.toArray();
   vi.setSystemTime(new Date(2026, 9, 18, 16, 31));
   await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
   await expect.element(reps).toHaveAttribute("placeholder", "9");
   (reps.element() as HTMLInputElement).blur(); await expect.element(reps).toHaveValue(9);
-  await screen.getByRole("button", { name: "DATA", exact: true }).click(); await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click(); await expect.element(screen.getByRole("spinbutton", { name: "Inches", exact: true })).toHaveValue(37);
+  await screen.getByRole("button", { name: "DATA", exact: true }).click(); await screen.getByRole("button", { name: /^measurements$/i }).click(); await expect.element(screen.getByRole("spinbutton", { name: "Inches", exact: true })).toHaveValue(37);
   expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE"); expect(await db.events.toArray()).toEqual(before);
 });
 
 it("keeps a selected photo across views and tab navigation, requires an explicit save, compares same-pose records and confirms hide/delete", async () => {
   clock(); await addProgressPhoto(await photoBlob(), { pose: "FRONT", takenOn: "2026-09-01" }, "IMPORT");
   const screen = await render(<App />); await screen.getByRole("button", { name: "DATA", exact: true }).click();
-  await screen.getByRole("button", { name: "PHOTOS", exact: true }).click(); await pickPhoto(await photoBlob());
+  await screen.getByRole("button", { name: /^photos$/i }).click(); await pickPhoto(await photoBlob());
   await expect.element(screen.getByRole("img", { name: "Selected photo, not yet saved", exact: true })).toBeVisible();
   await screen.getByLabelText("Taken on", { exact: true }).fill("2026-10-17");
   await screen.getByRole("button", { name: "TODAY", exact: true }).click(); await screen.getByRole("button", { name: "DATA", exact: true }).click();
-  await screen.getByRole("button", { name: "PHOTOS", exact: true }).click();
+  await screen.getByRole("button", { name: /^photos$/i }).click();
   await expect.element(screen.getByRole("img", { name: "Selected photo, not yet saved", exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click(); await screen.getByRole("button", { name: "PHOTOS", exact: true }).click();
+  await screen.getByRole("button", { name: /^measurements$/i }).click(); await screen.getByRole("button", { name: /^photos$/i }).click();
   expect(await db.progressPhotos.count()).toBe(1);
   await screen.getByRole("button", { name: "SAVE PHOTO", exact: true }).click();
   await expect.element(screen.getByRole("status").filter({ hasText: "Front photo saved" })).toBeVisible();
@@ -167,7 +167,7 @@ it("keeps a selected photo across views and tab navigation, requires an explicit
 
 it("does not call a failed photo read an empty timeline and can retry without writes", async () => {
   clock(); vi.mocked(getProgressPhotos).mockRejectedValueOnce(new Error("interrupted read"));
-  const screen = await mountComposition(); await screen.getByRole("button", { name: "PHOTOS", exact: true }).click();
+  const screen = await mountComposition(); await screen.getByRole("button", { name: /^photos$/i }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Could not read photos");
   expect(screen.getByText("No front photos here yet.", { exact: false }).elements()).toHaveLength(0);
   await screen.getByRole("button", { name: "RETRY PHOTOS", exact: true }).click();
@@ -177,16 +177,16 @@ it("does not call a failed photo read an empty timeline and can retry without wr
 
 it("reveals an explicit metric request after measurements while retaining its unsaved input", async () => {
   clock(); const screen = await render(<BodyScreen />); await screen.getByRole("button", { name: "YOUR PROGRESS", exact: true }).click();
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click(); await screen.getByRole("spinbutton", { name: "Inches", exact: true }).fill("36");
+  await screen.getByRole("button", { name: /^measurements$/i }).click(); await screen.getByRole("spinbutton", { name: "Inches", exact: true }).fill("36");
   await screen.getByRole("button", { name: "TODAY", exact: true }).click(); await screen.getByRole("button", { name: "water history", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   await screen.getByRole("button", { name: "Open weight trends", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("weight");
-  await screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).click(); await expect.element(screen.getByRole("spinbutton", { name: "Inches", exact: true })).toHaveValue(36);
+  await screen.getByRole("button", { name: /^measurements$/i }).click(); await expect.element(screen.getByRole("spinbutton", { name: "Inches", exact: true })).toHaveValue(36);
 });
 
 it("preserves a photo after a failed save and separates saved-but-read-failed from write failure", async () => {
-  clock(); const screen = await mountComposition(); await screen.getByRole("button", { name: "PHOTOS", exact: true }).click();
+  clock(); const screen = await mountComposition(); await screen.getByRole("button", { name: /^photos$/i }).click();
   await pickPhoto(await photoBlob());
   vi.mocked(addProgressPhoto).mockRejectedValueOnce(new Error("WRITE_FAILED: Storage unavailable. Try again."));
   await screen.getByRole("button", { name: "SAVE PHOTO", exact: true }).click();
@@ -209,7 +209,7 @@ it("corrects photo metadata without changing pixels, then hides without deleting
   clock(); const blob = await photoBlob();
   const original = await addProgressPhoto(blob, { pose: "FRONT", takenOn: "2026-09-01" }, "IMPORT");
   await addProgressPhoto(blob, { pose: "SIDE", takenOn: "2026-10-01" }, "IMPORT");
-  const screen = await mountComposition(); await screen.getByRole("button", { name: "PHOTOS", exact: true }).click();
+  const screen = await mountComposition(); await screen.getByRole("button", { name: /^photos$/i }).click();
   await screen.getByRole("button", { name: "Manage front photo 2026-09-01 · 1 of 1", exact: true }).click();
   await screen.getByRole("combobox", { name: "Corrected photo pose", exact: true }).selectOptions("SIDE");
   await screen.getByLabelText("Corrected photo date", { exact: true }).fill("2026-09-02");
@@ -233,14 +233,14 @@ it("corrects photo metadata without changing pixels, then hides without deleting
 
 it("supports keyboard view switching and explicit form submission with focus returned to the next entry", async () => {
   clock(); const screen = await mountComposition();
-  screen.getByRole("button", { name: "MEASUREMENTS", exact: true }).element().focus();
+  screen.getByRole("button", { name: /^measurements$/i }).element().focus();
   await userEvent.keyboard("{Enter}");
-  await expect.element(screen.getByRole("button", { name: "MEASUREMENTS", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect.element(screen.getByRole("button", { name: /^measurements$/i })).toHaveAttribute("aria-pressed", "true");
   const input = screen.getByRole("spinbutton", { name: "Inches", exact: true }); await input.fill("35.5"); input.element().focus();
   await userEvent.keyboard("{Enter}");
   await expect.element(screen.getByRole("status").filter({ hasText: "Waist saved" })).toBeVisible();
   await expect.poll(() => document.activeElement?.id).toBe("measurement-inches");
   expect(await db.events.where("type").equals("MEASUREMENT_LOGGED").count()).toBe(1);
-  screen.getByRole("button", { name: "PHOTOS", exact: true }).element().focus(); await userEvent.keyboard(" ");
+  screen.getByRole("button", { name: /^photos$/i }).element().focus(); await userEvent.keyboard(" ");
   await expect.element(screen.getByRole("heading", { name: "Progress photos", exact: true })).toBeVisible();
 });

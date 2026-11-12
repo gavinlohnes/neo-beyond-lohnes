@@ -44,12 +44,12 @@ it('opens the canonical current-day correction sheet after one tap, preserving o
 });
 it('keeps a measurement draft when returning to the BODY overview',async()=>{
   const screen=await render(<App />);await screen.getByRole('button',{name:'DATA',exact:true}).click();
-  await screen.getByRole('button',{name:'MEASUREMENTS',exact:true}).click();
+  await screen.getByRole('button',{name:/^measurements$/i}).click();
   const inputs=[...document.querySelectorAll<HTMLInputElement>('#progress-measurements input')];
   await expect.poll(()=>document.querySelector('#progress-measurements')?.getClientRects().length).toBeGreaterThan(0);
   const field=screen.getByRole('spinbutton',{name:/inches/i});await field.fill('36.5');
   await screen.getByRole('button',{name:'BACK TO DATA',exact:true}).click();
-  await screen.getByRole('button',{name:'MEASUREMENTS',exact:true}).click();
+  await screen.getByRole('button',{name:/^measurements$/i}).click();
   await expect.element(field).toHaveValue(36.5);
   expect(inputs.length).toBeGreaterThan(0);
   expect(await db.events.where('type').equals('BODY_MEASUREMENT_LOGGED').count()).toBe(0);

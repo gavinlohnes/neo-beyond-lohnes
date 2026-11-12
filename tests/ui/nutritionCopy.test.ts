@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  describeCalorieProgress,
   describeMacros,
   describeMealLogged,
   describeMealsRelogged,
@@ -33,5 +34,14 @@ describe("NUTRITION-001 — nutritionCopy", () => {
       expect(text.toLowerCase()).not.toMatch(/error|missing|fail|warning/);
     }
     expect(SAVED_MEALS_EMPTY).not.toBe(MEALS_TODAY_EMPTY);
+  });
+});
+
+describe("DENSITY-001 calorie progress", () => {
+  it("reads no meals in words, but a logged 0-kcal meal still counts", () => {
+    expect(describeCalorieProgress(0, 2200, false)).toBe("No meals logged yet · target 2200 kcal");
+    expect(describeCalorieProgress(0, 2200, true)).toBe("0 / 2200 kcal · 2200 remaining");
+    expect(describeCalorieProgress(0, undefined, false)).toBe("No meals logged yet — no target set.");
+    expect(describeCalorieProgress(0, undefined, true)).toBe("0 kcal logged today — no target set.");
   });
 });

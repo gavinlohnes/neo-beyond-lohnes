@@ -417,6 +417,10 @@ recommendation selection, schema, events and Garmin semantics are unchanged.
 - **Honest headline:** the redesigned TODAY never says "One question below"; it renders no question.
 - **Numbers:** tiles show value, unit and a factual meta (NO TARGET, NOT LOGGED, counts). "A weigh-in
   sets the protein target." moves to one line under the grid (supersedes TONIGHT-001's ADD WEIGHT).
+- **Amendments (Gavin's objectives, 2026-11-12):** GUIDANCE-001 adds one sentence to the check-in
+  surface, "Not checked in. Check in for today's recommendation."; it stays the single, neutral path.
+  DENSITY-001: a tile with nothing logged reads "—" / NOT LOGGED, protein included (never "—/182g");
+  BEHIND PACE still comes first.
 - **Mode band:** when the schedule says nothing (or no day is set) the scene compacts; Gotham and the
   timeline stay.
 - **COMMAND:** search, then eight job rows — Log, On shift, Review, Plan, Notes, Systems, Backup &

@@ -2250,11 +2250,11 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const mealSheetContent = (<div hidden={!mealsVisible || progressOpen} className="equipment-row" id={SHORTCUT_ANCHOR_IDS.meal}>
         {mealsVisible && <div className="meal-summary" role="group" aria-label="Nutrition recorded today">
           <p className="card-title">{nutritionTargets?.calorieTargetKcal
-            ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal)
-            : `${totalMealCalories} kcal logged today`}</p>
+            ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0)
+            : mealEntries.length === 0 ? "No meals logged yet" : `${totalMealCalories} kcal logged today`}</p>
           <p className="meta">{effectiveProteinTargetG !== undefined
             ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
-            : `${dayProteinG} g protein today (meals + protein logs)`}</p>
+            : dayProteinG === 0 ? "No protein logged yet" : `${dayProteinG} g protein today (meals + protein logs)`}</p>
         </div>}
         {onReturnToToday && mealDirty && <p className="meta" style={{ marginBottom: 12 }}>
           Unsaved details stay here while you return to TODAY.
@@ -2479,7 +2479,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       onInspectDay={(id) => { setHealthDay(id); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }}
       lead={{ label: "NUMBERS", content: <>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
-        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
+        {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       {/* LIFE-PATTERN-001: weight first with one way in, then the other progress views; DATA keeps its three sections. */}
@@ -2488,15 +2488,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           <WayIn label="Weight history" ariaLabel="WEIGHT HISTORY" onClick={() => showProgress("weight")} /></header>
         <div className="body-progress-card data-weight-instrument"><p>{weightHistory.at(-1) ? `${weightHistory.at(-1)!.weightLbs} lb${weightHistory.length < 2 ? ` · ${weighInDate(weightHistory.at(-1)!.recordedAt)}` : ""}` : "No weight recorded yet."}</p><WeightTrend history={weightHistory} goalWeightLbs={nutritionTargets?.goalWeightLbs} />
           {onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}</div>
-        <div role="group" aria-labelledby="data-more-progress" className="data-more-progress">
-        <header className="bx-head"><div><p className="bx-eyebrow">MORE PROGRESS</p><h3 id="data-more-progress" className="bx-title">Records, photos and patterns</h3></div></header>
-          <button type="button" className="btn-secondary body-progress-card" onClick={onOpenTrainingRecords}>TRAINING · RECORDS</button>
-          <div className="body-progress-pair">{([['photos', 'PHOTOS'], ['measurements', 'MEASUREMENTS']] as const).map(([view, label]) => <button type="button" className="btn-secondary" key={view} onClick={() => openComposition(view)}>{label}</button>)}</div>
-          <div className="body-progress-pair" aria-label="Patterns">
-            <button type="button" className="btn-secondary body-progress-card" onClick={openPicture}>WHOLE PICTURE</button>
-            <button type="button" className="btn-secondary body-progress-card" onClick={openRotation}>YOUR ROTATION</button>
-          </div>
-        </div>
+        {/* DENSITY-001: photos, measurements, records, whole picture and rotation are DATA's shortcuts above; not listed twice. */}
       </section>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}
@@ -2542,7 +2534,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       {!waterFocused && !mealsVisible && !progressOpen && !healthDay && (readingsReady ? <HealthOverview day={day}
         onExplore={exploreOverview} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep}
         weight={weightHistory} mealEntries={mealEntries}
-        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal) : "Logged from meals · no calorie target"}
+        calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0) : "Logged from meals · no calorie target"}
         proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} /> : <p className="meta" role="status">Loading recorded information…</p>)}
       <div className="meal-navigation">
         <button id="body-meals-entry" className="btn-secondary" disabled={busy || foodSearchBusy}

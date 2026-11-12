@@ -7,7 +7,7 @@ describe("describeBurdenLine (Drop 1, Burden Meter)", () => {
       "Entries per day: 6 · corrections this week: 1",
     );
     expect(describeBurdenLine({ days: 3, entriesPerDay: 6.5, corrections: 0 })).toBe(
-      "Entries per day: 7 · corrections this week: 0",
+      "Entries per day: 7 · no corrections this week",
     );
   });
 

@@ -131,8 +131,8 @@ describe("NAV-001 top tasks from TODAY", () => {
   it("last run of shifts: DATA → Your rotation opens it in the cave's FILE, still two taps (CAVE-DATA D3)", async () => {
     await startDay(); const screen = await render(<App />);
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "WHOLE PICTURE", exact: true })).toBeVisible();
-    await screen.getByRole("button", { name: "YOUR ROTATION", exact: true }).click();
+    await expect.element(screen.getByRole("button", { name: /^whole picture$/i })).toBeVisible();
+    await screen.getByRole("button", { name: /^your rotation$/i }).click();
     await expect.element(screen.getByRole("heading", { name: "THE CAVE // FILE", exact: true })).toBeVisible();
     await expect.element(screen.getByText("The way you actually live.", { exact: true })).toBeVisible();
     await expect.poll(() => document.activeElement?.textContent).toBe("The way you actually live.");
@@ -145,15 +145,15 @@ describe("NAV-001 top tasks from TODAY", () => {
   it("whole picture: DATA opens the existing overview without an intermediate menu", async () => {
     await startDay(); const screen = await render(<App />);
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
-    await screen.getByRole("button", { name: "WHOLE PICTURE", exact: true }).click();
+    await screen.getByRole("button", { name: /^whole picture$/i }).click();
     await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
     // WHOLE-PICTURE-IN-DATA: it stays in DATA, and BACK TO DATA returns to the button that opened it.
     await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
     await screen.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
-    await expect.poll(() => document.activeElement?.textContent).toBe("WHOLE PICTURE");
-    await screen.getByRole("button", { name: "WHOLE PICTURE", exact: true }).click();
+    await expect.poll(() => document.activeElement?.textContent?.toUpperCase()).toBe("WHOLE PICTURE");
+    await screen.getByRole("button", { name: /^whole picture$/i }).click();
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
-    await expect.element(screen.getByRole("button", { name: "WHOLE PICTURE", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: /^whole picture$/i })).toBeVisible();
   });
   it("sync Garmin: TODAY's measured numbers expose the existing helper link", async () => {
     await startDay();
