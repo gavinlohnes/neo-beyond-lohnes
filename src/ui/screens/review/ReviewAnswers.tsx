@@ -6,11 +6,12 @@ import { describeError } from "../../errorMessage";
 import "./review.css";
 import { BodyAnswers } from "./BodyAnswers";
 import { StrengthAnswers } from "./StrengthAnswers";
+import { formatDate } from "../../formatDate";
 
 type ReviewOverviewData = Awaited<ReturnType<typeof getReviewOverview>>;
 
 type Measure = "weight" | "protein" | "calories" | "sleepHours" | "sessions";
-const date = (at: string) => new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const date = (at: string) => formatDate(at, undefined, { month: "short", day: "numeric" });
 const value = (n: number | undefined, unit: string) => n === undefined ? "Not recorded" : `${n.toFixed(unit === "kcal" || unit === "g" || unit === "sessions" ? 0 : 1)} ${unit}`;
 
 function Evidence({ data, metric, unit, method, onOpenHistory }: { data: ReviewOverview; metric: Measure; unit: string; method: string; onOpenHistory?: ((id: string) => void) | undefined }) {
@@ -51,7 +52,7 @@ function Evidence({ data, metric, unit, method, onOpenHistory }: { data: ReviewO
           <thead><tr><th scope="col">Day starts</th><th scope="col">Recorded value</th><th scope="col">Sources</th></tr></thead>
           <tbody>{data.rows.filter((row) => row.dayIds.length).map((row) => <tr key={row.start}>
             <th scope="row">{date(row.start)}</th><td>{value(row[metric], unit)}{metric === "sleepHours" && row.ambiguousSleep ? " · Multiple main sleeps; excluded" : ""}
-              {metric === "weight" && row.weights.map((weight) => <div className="meta" key={weight.rootId}>{value(weight.lbs, "lb")} · {new Date(weight.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</div>)}</td>
+              {metric === "weight" && row.weights.map((weight) => <div className="meta" key={weight.rootId}>{value(weight.lbs, "lb")} · {formatDate(weight.at, "en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</div>)}</td>
             <td>{row.dayIds.map((id, index) => onOpenHistory ? <button key={id} type="button" className="btn-secondary" aria-label={`Open source day ${date(row.start)}, segment ${index + 1}`} onClick={() => onOpenHistory(id)}>DAY {index + 1}</button> : <span key={id}>Segment {index + 1}</span>)}</td>
           </tr>)}</tbody></table></div>}
     </details>

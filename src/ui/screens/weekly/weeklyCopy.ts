@@ -7,6 +7,7 @@ import type { PersonalBaseline } from "../../../engine/personalBaselines";
 import type { DayKind, MeasureId } from "../../../engine/livedDaySeries";
 import { formatDuration } from "../body/bodyScreenCopy";
 import { unlockGoal } from "../../unlockGoal";
+import { formatDate } from "../../formatDate";
 
 /**
  * Burden Meter (Drop 1, owner brief 2026-10-03): one neutral, read-only line
@@ -25,7 +26,7 @@ export function describeBurdenLine(burden: BurdenSummary): string {
 
 /** "Thu Oct 1" — the calendar date a lived day starts on (its 16:30). */
 export function describeRibbonDate(livedDayStart: string): string {
-  return new Date(livedDayStart).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  return formatDate(livedDayStart, "en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
 function hoursAndMinutes(totalMinutes: number): string {

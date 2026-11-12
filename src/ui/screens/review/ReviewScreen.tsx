@@ -1,5 +1,5 @@
 import { WholePicture, type WholePictureDestination } from "./WholePicture";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { WeeklyDashboard } from "./WeeklyDashboard";
 import { ReviewAnswers } from "./ReviewAnswers";
 import { describeError } from "../../errorMessage";
@@ -8,7 +8,8 @@ import { describeLedgerDecision, describeLedgerDisposition, describeLedgerRating
 import { PersonalUnderstanding, type UnderstandingFocus, type UnderstandingSource } from "./PersonalUnderstanding";
 
 /** REVIEW-001: read-only question hub; the Recommendations section keeps the original ledger contract. */
-export function ReviewScreen({ active = true, onOpenHistory, onOpenUnderstandingSource, destination, onDestinationConsumed, understandingFocus = null, onOpenDailyNote, onOpenWeeklyInterview }: { onOpenDailyNote?: (() => void) | undefined; onOpenWeeklyInterview?: (() => void) | undefined; active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenUnderstandingSource?: ((source: UnderstandingSource) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void; understandingFocus?: UnderstandingFocus | null } = {}) {
+/** PERF-001: memo, so MORE's other views don't re-render this hidden, heavy screen (see MoreScreen's reviewHandlers). */
+export const ReviewScreen = memo(function ReviewScreen({ active = true, onOpenHistory, onOpenUnderstandingSource, destination, onDestinationConsumed, understandingFocus = null, onOpenDailyNote, onOpenWeeklyInterview }: { onOpenDailyNote?: (() => void) | undefined; onOpenWeeklyInterview?: (() => void) | undefined; active?: boolean; onOpenHistory?: ((id: string) => void) | undefined; onOpenUnderstandingSource?: ((source: UnderstandingSource) => void) | undefined; destination?: { key: number; view: WholePictureDestination } | null; onDestinationConsumed?: (key: number) => void; understandingFocus?: UnderstandingFocus | null } = {}) {
   const [days, setDays] = useState<LedgerDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
@@ -115,4 +116,4 @@ export function ReviewScreen({ active = true, onOpenHistory, onOpenUnderstanding
       </details>
     </div>
   );
-}
+});

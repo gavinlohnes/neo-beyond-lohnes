@@ -161,9 +161,17 @@ export async function getProgressionSuggestion(
   const sessions = (await db.workoutSessions.toArray())
     .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE")
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
+  // PERF-001: this exercise's live sets, read once and grouped by session, instead of two reads per past session.
+  // The newest session that has any still wins, with its sets in the same index order getPerformedSets returns.
+  const [exerciseSets, undoneIds] = await Promise.all([
+    db.performedSets.where("exerciseId").equals(exerciseId).toArray() as unknown as Promise<PerformedSet[]>,
+    getUndoneSetIds(),
+  ]);
+  const bySession = new Map<string, PerformedSet[]>();
+  for (const set of exerciseSets) if (!undoneIds.has(set.id)) bySession.set(set.sessionId, [...(bySession.get(set.sessionId) ?? []), set]);
 
   for (let i = sessions.length - 1; i >= 0; i--) {
-    const sets = (await getPerformedSets(sessions[i]!.id)).filter((s) => s.exerciseId === exerciseId);
+    const sets = bySession.get(sessions[i]!.id) ?? [];
     if (sets.length > 0) {
       return evaluateProgression(prescription, sets, {
         daysSinceLastPerformed: await getDaysSinceExerciseLastPerformed(exerciseId, now),

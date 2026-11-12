@@ -11,6 +11,7 @@ import { describeError } from "../../errorMessage";
 import { WeeklyReviewPanel } from "./WeeklyReviewPanel";
 import { MonthlyBodyReview } from "./MonthlyBodyReview";
 import { getMonthlyReview, type MonthlyReview } from "../../../application/monthlyReviewQueries";
+import { formatDate } from "../../formatDate";
 
 /**
  * REVIEW-001 Weekly Review dashboard (owner-approved 2026-10-18; Claude Code),
@@ -29,8 +30,8 @@ const METRICS: { key: Metric; label: string; unit: string; digits: number }[] = 
   { key: "weight", label: "WEIGHT", unit: "lb", digits: 1 },
 ];
 
-const longDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const weekday = (iso: string) => new Date(iso).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+const longDate = (iso: string) => formatDate(iso, "en-US", { month: "short", day: "numeric" });
+const weekday = (iso: string) => formatDate(iso, "en-US", { weekday: "short" }).toUpperCase();
 const lastDayOf = (week: { end: string }) => new Date(Date.parse(week.end) - 86_400_000).toISOString();
 function fixed(n: number | undefined, digits: number, unit: string): string {
   return n === undefined ? "Not recorded" : `${n.toFixed(digits)} ${unit}`;
@@ -270,7 +271,7 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
           <div>
             <p className="card-title">{data.saved.focus?.text ?? "No focus chosen"}</p>
             <p className="card-body">{data.saved.note || "No note recorded."}</p>
-            <p className="meta">Saved {new Date(data.saved.recordedAt).toLocaleString("en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Earlier versions remain in History.</p>
+            <p className="meta">Saved {formatDate(data.saved.recordedAt, "en-GB", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}. Earlier versions remain in History.</p>
           </div>
         ) : (
           <p className="card-body">No review was saved for this week. Reviews are saved for the latest completed week.</p>
