@@ -3,6 +3,15 @@ import { getCalendarExport } from "./calendarExportQueries";
 const STORE = "beyond.googleCalendar";
 const CACHE = "beyond.googleCalendar.events";
 const API = "https://www.googleapis.com/calendar/v3";
+/** FAMILY-CALENDAR-001: the separate calendar shared with family. The main sync must never write to it. */
+const FAMILY_STORE = "beyond.googleCalendar.family";
+
+export function readFamilyCalendarId(): string | null {
+  try { return (JSON.parse(localStorage.getItem(FAMILY_STORE) ?? "null") as { calendarId?: string } | null)?.calendarId ?? null; } catch { return null; }
+}
+export function saveFamilyCalendarId(calendarId: string | null): void {
+  try { if (calendarId) localStorage.setItem(FAMILY_STORE, JSON.stringify({ calendarId })); else localStorage.removeItem(FAMILY_STORE); } catch { /* storage blocked */ }
+}
 
 export const GOOGLE_CALENDAR_SCOPES = "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.calendars https://www.googleapis.com/auth/calendar.readonly";
 
@@ -61,7 +70,9 @@ async function google<T>(path: string, connection: GoogleCalendarConnection, ini
 
 export async function listGoogleCalendars(connection = readGoogleCalendarConnection()): Promise<GoogleCalendarChoice[]> {
   const result = await google<{ items?: GoogleCalendarChoice[] }>("/users/me/calendarList?minAccessRole=writer", connection);
-  return (result.items ?? []).filter((item) => item.id && item.summary);
+  // Review of #483: the family calendar is never offered here, so the main export can't be written to it.
+  const family = readFamilyCalendarId();
+  return (result.items ?? []).filter((item) => item.id && item.summary && item.id !== family);
 }
 
 export async function createBeyondCalendar(connection = readGoogleCalendarConnection()): Promise<GoogleCalendarChoice> {
@@ -94,6 +105,7 @@ export function calendarExportToGoogleEvents(ics: string): Outbound[] {
 
 async function syncOutbound(connection: GoogleCalendarConnection, now: Date): Promise<number> {
   if (!connection.calendarId) throw new Error("Choose or create a BEYOND calendar first.");
+  if (connection.calendarId === readFamilyCalendarId()) throw new Error("That's the family calendar. Choose another calendar for BEYOND's own sync.");
   const projection = await getCalendarExport({ weeks: 8, includePlans: connection.includePlans }, now);
   const events = calendarExportToGoogleEvents(projection.contents);
   const calendar = encodeURIComponent(connection.calendarId);

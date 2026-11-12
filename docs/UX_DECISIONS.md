@@ -2912,3 +2912,13 @@ schedule are removed, and past ones stay. Gavin shares it view-only in Google Ca
 sharing there. **SEND AS A FILE (.ICS)** gives the same events through his share sheet; a sent file can't be recalled,
 and the panel says so. Never an Engine input; nothing is stored in BEYOND's records.
 [Brief](agent/BIG-IDEAS-001.md).
+
+**Review of #483 (post-merge BLOCK), fixed:**
+- **Separation:** the main "BEYOND writes to" picker never lists the family calendar, and BEYOND's own sync refuses
+  it, so task or plan titles can't reach her.
+- **Upcoming events only:** sync reads and edits only the family events that haven't ended yet, so today's finished
+  shift and past sleep stay as history.
+- **Day off:** a day off is a calendar date on which no shift starts, which is also right for day-shift rotations.
+- **Deleted calendar:** a family calendar deleted in Google is recreated on the next sync instead of failing.
+- **Description:** the calendar itself carries one fixed description ("Shifts, usual sleep and days off, shared from
+  BEYOND. Nothing else."); events carry none.
