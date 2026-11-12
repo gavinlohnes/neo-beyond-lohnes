@@ -52,7 +52,7 @@ it("previews only the three kinds of event, sends a file, and syncs to Google on
   await expect.element(confirm.getByText(/^Writes \d+ events to your Google calendar “BEYOND — family” \(created now\)\./)).toBeVisible();
   expect(fetches).toEqual([]);
   await confirm.getByRole("button", { name: "CONFIRM" }).click();
-  await expect.element(again.getByText(/^Synced \d+ events to “BEYOND — family”\.$/)).toBeVisible();
+  await expect.element(again.getByText(/^Synced \d+ events to “BEYOND — family”\. Share it with her in Google Calendar \(below\)\.$/)).toBeVisible();
   expect(fetches[0]).toMatch(/^POST .*\/calendars$/);
   // Sharing writes nothing to BEYOND's own records.
   expect(await db.events.count()).toBe(events);

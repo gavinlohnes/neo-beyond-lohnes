@@ -4,7 +4,7 @@ import { deriveSleepRhythm, type SleepRhythm } from "../engine/sleepRhythm";
 import { escapeCalendarText, foldCalendarLine } from "./calendarExport";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getImportedSleep } from "./externalSleepQueries";
-import { readFamilyCalendarId, readGoogleCalendarConnection, saveFamilyCalendarId, type GoogleCalendarConnection } from "./googleCalendar";
+import { FAMILY_CALENDAR_NAME, readFamilyCalendarId, readGoogleCalendarConnection, saveFamilyCalendarId, type GoogleCalendarConnection } from "./googleCalendar";
 import { getSchedulePattern } from "./queries";
 
 /**
@@ -24,7 +24,7 @@ export const FAMILY_TITLES: Record<FamilyEventKind, string> = {
   SLEEP: "Asleep — please don't call (usual time)",
   DAY_OFF: "Day off",
 };
-export const FAMILY_CALENDAR_NAME = "BEYOND — family";
+export { FAMILY_CALENDAR_NAME };
 export const FAMILY_WEEKS = 4;
 
 /** Times are local wall-clock ("YYYY-MM-DDTHH:MM:SS"), like the existing calendar export; all-day events are dates. */
@@ -112,12 +112,13 @@ async function google<T>(path: string, connection: GoogleCalendarConnection, ini
  * ones stay as history, and anything else in that calendar is left alone. Upcoming events that left the schedule are
  * deleted, so she never sees a stale shift.
  */
-export async function syncFamilyCalendar(events: readonly FamilyEvent[], now: Date = new Date(), connection: GoogleCalendarConnection = readGoogleCalendarConnection()): Promise<{ written: number; removed: number; calendarId: string }> {
+export async function syncFamilyCalendar(events: readonly FamilyEvent[], now: Date = new Date(), connection: GoogleCalendarConnection = readGoogleCalendarConnection()): Promise<{ written: number; removed: number; calendarId: string; created: "NEW" | "RECREATED" | null }> {
   const create = async () => {
     const created = await google<{ id: string }>("/calendars", connection, { method: "POST", body: JSON.stringify({ summary: FAMILY_CALENDAR_NAME, description: "Shifts, usual sleep and days off, shared from BEYOND. Nothing else." }) });
     saveFamilyCalendarId(created.id); return created.id;
   };
-  let calendarId = readFamilyCalendarId() ?? await create();
+  let created: "NEW" | "RECREATED" | null = null;
+  let calendarId = readFamilyCalendarId() ?? (created = "NEW", await create());
   // Google's timeMin keeps events that end after it: exactly the ones that haven't happened yet.
   const list = (id: string) => google<{ items?: Array<{ id: string; extendedProperties?: { private?: { beyondId?: string } } }> }>(
     `/calendars/${encodeURIComponent(id)}/events?privateExtendedProperty=beyondOwner%3D${OWNER}&timeMin=${encodeURIComponent(now.toISOString())}&maxResults=2500`, connection);
@@ -126,7 +127,7 @@ export async function syncFamilyCalendar(events: readonly FamilyEvent[], now: Da
   catch (e) {
     // Deleted in Google: start a fresh family calendar rather than failing every sync.
     if ((e as { status?: number }).status !== 404) throw e;
-    saveFamilyCalendarId(null); calendarId = await create(); prior = await list(calendarId);
+    saveFamilyCalendarId(null); calendarId = await create(); created = "RECREATED"; prior = await list(calendarId);
   }
   const calendar = encodeURIComponent(calendarId);
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -144,7 +145,7 @@ export async function syncFamilyCalendar(events: readonly FamilyEvent[], now: Da
     await google(`/calendars/${calendar}/events/${encodeURIComponent(googleId)}`, connection, { method: "DELETE" });
     removed++;
   }
-  return { written: events.length, removed, calendarId };
+  return { written: events.length, removed, calendarId, created };
 }
 
 /** Forget the family calendar on this phone. Stopping sharing, or deleting the calendar, happens in Google Calendar. */

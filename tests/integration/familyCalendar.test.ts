@@ -90,7 +90,7 @@ describe("FAMILY CALENDAR: Google sync", () => {
     });
     const events = deriveFamilyCalendar({ now, pattern, rhythm }).filter((e) => e.id !== "work-20261030");
     const result = await syncFamilyCalendar(events, now);
-    expect(result).toEqual({ written: events.length, removed: 1, calendarId: "fam1" });
+    expect(result).toEqual({ written: events.length, removed: 1, calendarId: "fam1", created: "NEW" });
     expect(readFamilyCalendarId()).toBe("fam1");
     expect(calls[0]).toMatchObject({ method: "POST", body: { summary: FAMILY_CALENDAR_NAME } });
     // Review of #483: only events that haven't ended yet are read, so a finished event (today's shift, last week's
@@ -120,7 +120,7 @@ describe("FAMILY CALENDAR: Google sync", () => {
     await syncFamilyCalendar([], now);
     expect(readFamilyCalendarId()).toBe("fam1");
     deleted = true; // Gavin deletes "BEYOND — family" in Google Calendar.
-    expect(await syncFamilyCalendar([], now)).toMatchObject({ calendarId: "fam2" });
+    expect(await syncFamilyCalendar([], now)).toMatchObject({ calendarId: "fam2", created: "RECREATED" });
     expect(readFamilyCalendarId()).toBe("fam2");
     expect(calls.filter((c) => c.method === "POST" && c.url.endsWith("/calendars"))).toHaveLength(2);
   });
@@ -136,6 +136,11 @@ describe("FAMILY CALENDAR: Google sync", () => {
     await syncFamilyCalendar([], now);
     expect((await listGoogleCalendars()).map((c) => c.id)).toEqual(["main1"]);
     saveGoogleCalendarConnection({ ...readGoogleCalendarConnection(), calendarId: "fam1" });
+    await expect(syncGoogleCalendar(now)).rejects.toThrow("That's the family calendar");
+    // Review of #484: after a reinstall the stored id is gone; the name still keeps it out.
+    localStorage.removeItem("beyond.googleCalendar.family");
+    expect((await listGoogleCalendars()).map((c) => c.id)).toEqual(["main1"]);
+    saveGoogleCalendarConnection({ ...readGoogleCalendarConnection(), calendarId: "fam1", calendarName: FAMILY_CALENDAR_NAME });
     await expect(syncGoogleCalendar(now)).rejects.toThrow("That's the family calendar");
   });
 });

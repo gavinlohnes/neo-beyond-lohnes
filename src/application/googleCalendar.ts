@@ -5,6 +5,8 @@ const CACHE = "beyond.googleCalendar.events";
 const API = "https://www.googleapis.com/calendar/v3";
 /** FAMILY-CALENDAR-001: the separate calendar shared with family. The main sync must never write to it. */
 const FAMILY_STORE = "beyond.googleCalendar.family";
+/** Also matched by name, so the guard holds after a reinstall or on a new phone, when the stored id is gone. */
+export const FAMILY_CALENDAR_NAME = "BEYOND — family";
 
 export function readFamilyCalendarId(): string | null {
   try { return (JSON.parse(localStorage.getItem(FAMILY_STORE) ?? "null") as { calendarId?: string } | null)?.calendarId ?? null; } catch { return null; }
@@ -72,7 +74,7 @@ export async function listGoogleCalendars(connection = readGoogleCalendarConnect
   const result = await google<{ items?: GoogleCalendarChoice[] }>("/users/me/calendarList?minAccessRole=writer", connection);
   // Review of #483: the family calendar is never offered here, so the main export can't be written to it.
   const family = readFamilyCalendarId();
-  return (result.items ?? []).filter((item) => item.id && item.summary && item.id !== family);
+  return (result.items ?? []).filter((item) => item.id && item.summary && item.id !== family && item.summary !== FAMILY_CALENDAR_NAME);
 }
 
 export async function createBeyondCalendar(connection = readGoogleCalendarConnection()): Promise<GoogleCalendarChoice> {
@@ -105,7 +107,7 @@ export function calendarExportToGoogleEvents(ics: string): Outbound[] {
 
 async function syncOutbound(connection: GoogleCalendarConnection, now: Date): Promise<number> {
   if (!connection.calendarId) throw new Error("Choose or create a BEYOND calendar first.");
-  if (connection.calendarId === readFamilyCalendarId()) throw new Error("That's the family calendar. Choose another calendar for BEYOND's own sync.");
+  if (connection.calendarId === readFamilyCalendarId() || connection.calendarName === FAMILY_CALENDAR_NAME) throw new Error("That's the family calendar. Choose another calendar for BEYOND's own sync.");
   const projection = await getCalendarExport({ weeks: 8, includePlans: connection.includePlans }, now);
   const events = calendarExportToGoogleEvents(projection.contents);
   const calendar = encodeURIComponent(connection.calendarId);
