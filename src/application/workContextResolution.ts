@@ -11,8 +11,8 @@ import { getWorkContextSource } from "./queries";
  *   RECORDED   a lived-day record says WORK or OFF. `by` says who set it: the operator (MANUAL, or a schedule
  *              suggestion they accepted) or the saved schedule at day start (SCHEDULE_STANDING, the owner-approved
  *              DROP 0 exception). Recorded reality wins when describing a day that has a record.
- *   CONFIRMED  an operator-approved future exception. BEYOND has no store for these yet, so nothing produces it
- *              (gap reported in docs/agent/CONTEXT-INTEGRATION-001.md); the type is here so consumers handle it.
+ *   CONFIRMED  an operator-confirmed future exception (SCHEDULE-EXCEPTIONS-001, `scheduleExceptions`). Beats the
+ *              rotation for planning; never says the day was worked. Once the day starts it is recorded (by EXCEPTION).
  *   PREDICTED  the saved standing rotation's forecast. Never becomes a record by itself.
  *   UNKNOWN    no record and no saved schedule. Never silently treated as work or off.
  *
@@ -23,10 +23,10 @@ export type ContextBasis = "RECORDED" | "CONFIRMED" | "PREDICTED" | "UNKNOWN";
 export interface ResolvedContext {
   kind: "WORK" | "OFF" | null;
   basis: ContextBasis;
-  /** For RECORDED: who set it. */
-  by?: "OPERATOR" | "SCHEDULE";
+  /** For RECORDED: who set it (the operator, the rotation at day start, or a confirmed exception at day start). */
+  by?: "OPERATOR" | "SCHEDULE" | "EXCEPTION";
 }
-export interface RecordedContext { kind: "WORK" | "OFF"; by: "OPERATOR" | "SCHEDULE" }
+export interface RecordedContext { kind: "WORK" | "OFF"; by: "OPERATOR" | "SCHEDULE" | "EXCEPTION" }
 
 /** The lived day that starts on this local date (yyyy-mm-dd), at 16:30. */
 export function livedDayOn(date: string): Date {
@@ -34,13 +34,14 @@ export function livedDayOn(date: string): Date {
   return new Date(y!, m! - 1, d!, 16, 30, 0, 0);
 }
 
-export function recordedBy(source: WorkContextSource | undefined): "OPERATOR" | "SCHEDULE" {
-  return source === "SCHEDULE_STANDING" ? "SCHEDULE" : "OPERATOR";
+export function recordedBy(source: WorkContextSource | undefined): "OPERATOR" | "SCHEDULE" | "EXCEPTION" {
+  return source === "SCHEDULE_STANDING" ? "SCHEDULE" : source === "SCHEDULE_EXCEPTION" ? "EXCEPTION" : "OPERATOR";
 }
 
-/** Recorded first, then the saved schedule's prediction, else unknown. */
-export function resolveWorkContext(livedDayStart: Date, pattern: SchedulePattern, recorded?: RecordedContext | null): ResolvedContext {
+/** Recorded first, then a confirmed exception, then the saved schedule's prediction, else unknown. */
+export function resolveWorkContext(livedDayStart: Date, pattern: SchedulePattern, recorded?: RecordedContext | null, confirmed?: "WORK" | "OFF" | null): ResolvedContext {
   if (recorded) return { kind: recorded.kind, basis: "RECORDED", by: recorded.by };
+  if (confirmed) return { kind: confirmed, basis: "CONFIRMED" };
   if (isOperatorSavedSchedule(pattern)) return { kind: scheduledWorkContextForLivedDay(livedDayStart, pattern), basis: "PREDICTED" };
   return { kind: null, basis: "UNKNOWN" };
 }
@@ -49,7 +50,8 @@ export function resolveWorkContext(livedDayStart: Date, pattern: SchedulePattern
 export function describeBasis(resolved: ResolvedContext): string {
   const what = resolved.kind === "WORK" ? "a work day" : resolved.kind === "OFF" ? "a day off" : "work or off not known";
   switch (resolved.basis) {
-    case "RECORDED": return resolved.by === "SCHEDULE" ? `${what}, set from your saved schedule when the day started` : `recorded by you as ${what}`;
+    case "RECORDED": return resolved.by === "SCHEDULE" ? `${what}, set from your saved schedule when the day started`
+      : resolved.by === "EXCEPTION" ? `${what}, set from a schedule change you confirmed, when the day started` : `recorded by you as ${what}`;
     case "CONFIRMED": return `${what}, a schedule change you confirmed`;
     case "PREDICTED": return `${what} on your saved schedule (a forecast)`;
     default: return "work or off not known: nothing recorded and no saved schedule";

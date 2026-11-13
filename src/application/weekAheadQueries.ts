@@ -1,5 +1,6 @@
 import type { SchedulePattern } from "../domain/common/types";
 import { getRecordedContexts, livedDayOn, resolveWorkContext, type RecordedContext } from "./workContextResolution";
+import { getConfirmedExceptions } from "./scheduleExceptions";
 import { WORKOUT_TEMPLATE_ORDER, type WorkoutTemplateId } from "../domain/workout/types";
 import { formatLocalDate, isOperatorSavedSchedule } from "../engine/scheduledContext";
 import { getSchedulePattern } from "./queries";
@@ -13,10 +14,11 @@ export interface WeekAheadDay {
   /** When `basis` is UNKNOWN this is "OFF" only as a placeholder: read `basis` before `work`. */
   work: "WORK" | "OFF";
   /**
-   * CONTEXT-INTEGRATION-001: where `work` comes from. RECORDED (this lived day has a record), PREDICTED (the saved
+   * CONTEXT-INTEGRATION-001: where `work` comes from. RECORDED (this lived day has a record), CONFIRMED (a schedule
+   * change the operator confirmed, SCHEDULE-EXCEPTIONS-001), PREDICTED (the saved
    * rotation), WHAT_IF (a hypothetical from Shift What-If, never saved) or UNKNOWN (no record and no saved schedule).
    */
-  basis: "RECORDED" | "PREDICTED" | "WHAT_IF" | "UNKNOWN";
+  basis: "RECORDED" | "CONFIRMED" | "PREDICTED" | "WHAT_IF" | "UNKNOWN";
   shiftStartHour: number | null;
   suggestedTemplate: WorkoutTemplateId | null;
   /** TONIGHT-001: the suggestion sits on this work day's post-shift morning, not on a day off. */
@@ -52,6 +54,8 @@ export function deriveWeekAhead(
   overrides: Readonly<Record<string, "WORK" | "OFF">> = {},
   /** CONTEXT-INTEGRATION-001: what was recorded for lived days that have started, by date. Recorded wins over the rotation. */
   recorded: ReadonlyMap<string, RecordedContext> = new Map(),
+  /** SCHEDULE-EXCEPTIONS-001: confirmed changes by date; they beat the rotation, never a record. */
+  confirmed: ReadonlyMap<string, "WORK" | "OFF"> = new Map(),
 ): WeekAhead {
   const days: WeekAheadDay[] = [];
   let consecutiveSuggestions = 0;
@@ -61,8 +65,8 @@ export function deriveWeekAhead(
     const date = formatLocalDate(localNoon(now, offset));
     const override = overrides[date];
     if (override) return { work: override, basis: "WHAT_IF" };
-    const resolved = resolveWorkContext(livedDayOn(date), pattern, recorded.get(date));
-    return { work: resolved.kind, basis: resolved.basis === "RECORDED" ? "RECORDED" : resolved.basis === "UNKNOWN" ? "UNKNOWN" : "PREDICTED" };
+    const resolved = resolveWorkContext(livedDayOn(date), pattern, recorded.get(date), confirmed.get(date));
+    return { work: resolved.kind, basis: resolved.basis };
   };
 
   for (let offset = 0; offset < 7; offset++) {
@@ -95,12 +99,13 @@ export function deriveWeekAhead(
 
 export async function getWeekAhead(now: Date = new Date()): Promise<WeekAhead> {
   const dates = Array.from({ length: 7 }, (_, k) => formatLocalDate(localNoon(now, k)));
-  const [pattern, firstTemplate, recorded] = await Promise.all([
+  const [pattern, firstTemplate, recorded, exceptions] = await Promise.all([
     getSchedulePattern(),
     suggestTemplateForNextWorkout(),
-    getRecordedContexts(dates),
+    getRecordedContexts([...dates, formatLocalDate(localNoon(now, 7))]),
+    getConfirmedExceptions([...dates, formatLocalDate(localNoon(now, 7))]),
   ]);
-  return deriveWeekAhead(now, pattern, firstTemplate, {}, recorded);
+  return deriveWeekAhead(now, pattern, firstTemplate, {}, recorded, new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)));
 }
 
 /**

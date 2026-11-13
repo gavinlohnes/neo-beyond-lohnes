@@ -237,7 +237,7 @@ export function isOperatorSavedSchedule(pattern: SchedulePattern): boolean {
 }
 
 export type StandingWorkContext =
-  | { readonly clear: true; readonly workContext: "WORK" | "OFF" }
+  | { readonly clear: true; readonly workContext: "WORK" | "OFF"; readonly source: "SCHEDULE_STANDING" | "SCHEDULE_EXCEPTION" }
   | { readonly clear: false; readonly reason: "SCHEDULE_NOT_SAVED" | "CORRECTED_THIS_LIVED_DAY" };
 
 /**
@@ -251,8 +251,15 @@ export function deriveStandingWorkContext(input: {
   dayStartedAt: Date;
   pattern: SchedulePattern;
   manualCorrectionEarlierThisLivedDay: boolean;
+  /**
+   * SCHEDULE-EXCEPTIONS-001: an operator-confirmed exception for this lived day. It beats the rotation (the operator
+   * confirmed it ahead of time), but not a manual correction made earlier in the same lived day.
+   */
+  confirmedException?: "WORK" | "OFF" | undefined;
 }): StandingWorkContext {
-  if (!isOperatorSavedSchedule(input.pattern)) return { clear: false, reason: "SCHEDULE_NOT_SAVED" };
+  // Unchanged order without an exception: no saved schedule, then an earlier manual correction, then the rotation.
+  if (!input.confirmedException && !isOperatorSavedSchedule(input.pattern)) return { clear: false, reason: "SCHEDULE_NOT_SAVED" };
   if (input.manualCorrectionEarlierThisLivedDay) return { clear: false, reason: "CORRECTED_THIS_LIVED_DAY" };
-  return { clear: true, workContext: scheduledWorkContextForLivedDay(input.dayStartedAt, input.pattern) };
+  if (input.confirmedException) return { clear: true, workContext: input.confirmedException, source: "SCHEDULE_EXCEPTION" };
+  return { clear: true, workContext: scheduledWorkContextForLivedDay(input.dayStartedAt, input.pattern), source: "SCHEDULE_STANDING" };
 }

@@ -102,16 +102,28 @@ export function livedDayDates(now: Date): string[] {
 }
 
 /** Slice 2's input from slice 1's, the saved schedule and the day before yesterday's record. */
-export function lifeMomentInput(now: Date, pattern: SchedulePattern, state: LifeStateInput, dayBeforeRecorded: DayKind | null): LifeMomentInput {
+export function lifeMomentInput(now: Date, pattern: SchedulePattern, state: LifeStateInput, dayBeforeRecorded: DayKind | null,
+  confirmed: ReadonlyMap<string, DayKind> = new Map()): LifeMomentInput {
   const saved = isOperatorSavedSchedule(pattern), start = livedDayStartOf(now);
   const twoBack = new Date(start.getFullYear(), start.getMonth(), start.getDate() - 2, 16, 30, 0, 0);
   const next = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 16, 30, 0, 0);
+  // SCHEDULE-EXCEPTIONS-001: a confirmed change decides the day; a confirmed work day takes the usual shift times.
+  const shiftOn = (day: Date) => {
+    const kind = confirmed.get(formatLocalDate(day));
+    if (kind === "OFF") return null;
+    if (kind === "WORK" && saved) {
+      const startAt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), pattern.shiftStartHour);
+      const endAt = new Date(day.getFullYear(), day.getMonth(), day.getDate() + (pattern.shiftEndHour <= pattern.shiftStartHour ? 1 : 0), pattern.shiftEndHour);
+      return livedDayShiftWindow(day, pattern) ?? { start: startAt, end: endAt };
+    }
+    return saved ? livedDayShiftWindow(day, pattern) : null;
+  };
   return {
     state,
-    dayBefore: { recorded: dayBeforeRecorded, scheduled: saved ? scheduledWorkContextForLivedDay(twoBack, pattern) : null },
+    dayBefore: { recorded: dayBeforeRecorded, scheduled: confirmed.get(formatLocalDate(twoBack)) ?? (saved ? scheduledWorkContextForLivedDay(twoBack, pattern) : null) },
     now,
-    todayShift: saved ? livedDayShiftWindow(start, pattern) : null,
-    nextShift: saved ? livedDayShiftWindow(next, pattern) : null,
+    todayShift: shiftOn(start),
+    nextShift: shiftOn(next),
   };
 }
 

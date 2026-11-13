@@ -6,6 +6,7 @@ import { getSchedulePattern } from "./queries";
 import { getSleepDebt } from "./monthQueries";
 import { getWholePicture } from "./wholePictureQueries";
 import { getRecordedContexts } from "./workContextResolution";
+import { getConfirmedExceptions } from "./scheduleExceptions";
 
 /**
  * BIG-IDEAS-001 item 2, WEEK ENERGY FORECAST (Gavin, 2026-11-11: "Implement Week Energy Forecast"). For each
@@ -47,12 +48,15 @@ export function deriveWeekEnergyForecast(input: {
   now: Date; pattern: SchedulePattern; rows: readonly PictureRow[]; sleepOwed: { owedMinutes: number; days: number };
   /** CONTEXT-INTEGRATION-001: recorded WORK/OFF by lived-day date; recorded days win over the rotation (history, and today). */
   recorded?: ReadonlyMap<string, "WORK" | "OFF">;
+  /** SCHEDULE-EXCEPTIONS-001: confirmed changes by date, after the record and before the rotation. */
+  confirmed?: ReadonlyMap<string, "WORK" | "OFF">;
 }): WeekEnergyForecast {
-  const { now, pattern, rows, sleepOwed, recorded = new Map() } = input;
+  const { now, pattern, rows, sleepOwed, recorded = new Map(), confirmed = new Map() } = input;
   if (!isOperatorSavedSchedule(pattern)) return { scheduled: false, days: [], lowest: null, best: null, sleepOwed };
   const kinds = new Map<number, "WORK" | "OFF">();
   const kind = (k: number) => {
-    if (!kinds.has(k)) kinds.set(k, recorded.get(formatLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + k, 12))) ?? kindAt(now, k, pattern));
+    const date = formatLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + k, 12));
+    if (!kinds.has(k)) kinds.set(k, recorded.get(date) ?? confirmed.get(date) ?? kindAt(now, k, pattern));
     return kinds.get(k)!;
   };
   const all = groupRuns(rows);
@@ -99,10 +103,10 @@ export function deriveWeekEnergyForecast(input: {
 
 export async function getWeekEnergyForecast(now: Date = new Date()): Promise<WeekEnergyForecast> {
   const today = formatLocalDate(now);
-  const [pattern, picture, sleepOwed, current] = await Promise.all([getSchedulePattern(), getWholePicture(now), getSleepDebt(now), getRecordedContexts([today])]);
+  const [pattern, picture, sleepOwed, current, exceptions] = await Promise.all([getSchedulePattern(), getWholePicture(now), getSleepDebt(now), getRecordedContexts([today]), getConfirmedExceptions()]);
   // Recorded lived days (finished rows, and today's if it has started) by the date each lived day starts on.
   const recorded = new Map<string, "WORK" | "OFF">();
   for (const row of picture.rows) if (row.context === "WORK" || row.context === "OFF") recorded.set(formatLocalDate(new Date(row.start)), row.context);
   const now0 = current.get(today); if (now0) recorded.set(today, now0.kind);
-  return deriveWeekEnergyForecast({ now, pattern, rows: picture.rows, sleepOwed, recorded });
+  return deriveWeekEnergyForecast({ now, pattern, rows: picture.rows, sleepOwed, recorded, confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) });
 }

@@ -2994,3 +2994,21 @@ Brief: [agent/CONTEXT-INTEGRATION-001.md](agent/CONTEXT-INTEGRATION-001.md).
   rotation is never shown as yours, and no shift time is made up.
 - **Provenance in words:** "set from your saved schedule when the day started", "recorded by you", "(a forecast)".
 - **Confirmed future exceptions** are not stored yet; they need an owner decision (new persistence, Protected).
+  Decided and built in SCHEDULE-EXCEPTIONS-001 (below).
+
+## SCHEDULE-EXCEPTIONS-001 — confirmed future schedule changes (owner objective, 2026-11-13; Protected, approved)
+
+Brief: [agent/SCHEDULE-EXCEPTIONS-001.md](agent/SCHEDULE-EXCEPTIONS-001.md).
+
+- **Four actions:** overtime (WORK on a scheduled day off), time off (OFF on a scheduled work day), a shift swap (two
+  dates, one operation), and change or cancel without rewriting history.
+- **Authority:** RECORDED > CONFIRMED > PREDICTED > UNKNOWN. A confirmed change is a plan, never "worked". When its day
+  starts, it is recorded as `SCHEDULE_EXCEPTION`, and a manual correction on TODAY still wins.
+- **Confirmation:** every write follows a preview and CONFIRM in Week Ahead. What-If, Alfred, calendars and
+  conversation never create one.
+- **Safety:**
+  - One active change per date; a second is refused, never overwritten.
+  - Only days that haven't started (16:30), and only with a saved rotation.
+  - A change that matches the rotation is refused.
+  - Cancellation keeps the row and its history.
+  - Editing the rotation later leaves confirmed changes as they are.

@@ -16,6 +16,7 @@ import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
 import { recordedBy } from "../../../application/workContextResolution";
+import { getConfirmedExceptions, livedDatesAround } from "../../../application/scheduleExceptions";
 import { contractDate, hasRecoveryContract } from "../../../application/recoveryContract";
 import { PostRunReportDisclosure, RecoveryContractOffer } from "./RecoveryContract";
 import { createObligation } from "../../../application/intentCommands";
@@ -411,7 +412,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
-  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean } | null>(null);
+  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF"> } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -895,8 +896,10 @@ export function TodayScreen({
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt)])
-        .then(([kind, dayBefore, contractPlanned]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned }), () => null),
+      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions(livedDatesAround(readAt))])
+        .then(([kind, dayBefore, contractPlanned, exceptions]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned,
+          // SCHEDULE-EXCEPTIONS-001: confirmed changes around today, for the state and its moments.
+          confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) }), () => null),
       getSchedulePattern().catch(() => null),
     ]) : [null, null];
 
@@ -1758,10 +1761,10 @@ export function TodayScreen({
   const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern) : null;
   // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
   const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(now).getTime() ? yesterdayRecorded : null;
-  const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined) : null;
+  const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
   // LIFE-STATE-002: the moment between states, if today is one, with the day before yesterday from record or schedule.
-  const lifeMoment = lifeInput && schedulePattern ? deriveLifeMoment(lifeMomentInput(now, schedulePattern, lifeInput, recordedNow?.dayBefore ?? null), lifeReading) : null;
+  const lifeMoment = lifeInput && schedulePattern ? deriveLifeMoment(lifeMomentInput(now, schedulePattern, lifeInput, recordedNow?.dayBefore ?? null, recordedNow?.confirmed), lifeReading) : null;
   const lifeState = lifeReading?.state ?? null;
   const todayRun = scheduledRun && day && (day.workContext === "UNKNOWN" || day.workContext === scheduledRun.kind) ? `scheduled: ${describeShiftRun(scheduledRun)}` : null;
   const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;

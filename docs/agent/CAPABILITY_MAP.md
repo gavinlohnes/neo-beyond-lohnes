@@ -275,8 +275,9 @@ fresh general review.
 
 - **Work-context resolution (CONTEXT-INTEGRATION-001):** `application/workContextResolution.ts` is the one read-only
   answer to "work or off, and how do we know" for a lived day: RECORDED (a lived-day record, `by` operator or
-  schedule-at-day-start) → PREDICTED (saved rotation) → UNKNOWN (nothing recorded, no saved schedule). CONFIRMED future
-  exceptions have no store yet (see `docs/agent/CONTEXT-INTEGRATION-001.md`). Week Ahead (`basis` per day), the energy
+  schedule-at-day-start, or a confirmed exception at day start) → CONFIRMED (an active row in `scheduleExceptions`,
+  SCHEDULE-EXCEPTIONS-001: `application/scheduleExceptions.ts`; read with `getConfirmedExceptions`) → PREDICTED (saved
+  rotation) → UNKNOWN (nothing recorded, no saved schedule). Week Ahead (`basis` per day), the energy
   forecast, Life State's WHY, Alfred's context, the free helper and the training programme read it. Reuse it rather
   than calling `scheduledWorkContextForLivedDay` directly in a new consumer. Shift What-If stays hypothetical.
 

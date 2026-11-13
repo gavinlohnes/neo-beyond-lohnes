@@ -205,7 +205,8 @@ function deriveBurden(dayEvents: readonly DomainEvent[]): LedgerBurden {
     if (e.source !== "USER" && e.type !== "WORK_CONTEXT_SET") continue;
     if (e.type === "WORK_CONTEXT_SET") {
       const source = (e.payload as WorkContextSetPayload).source;
-      if (source !== "SCHEDULE_STANDING") {
+      // Set by the system at day start (schedule or a confirmed exception): not a manual entry.
+      if (source !== "SCHEDULE_STANDING" && source !== "SCHEDULE_EXCEPTION") {
         if (workContextAlreadySet) corrections += 1;
         else {
           manualEntries += 1;

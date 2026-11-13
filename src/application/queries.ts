@@ -26,6 +26,7 @@ import {
   type StandingWorkContext,
 } from "../engine/scheduledContext";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
+import { formatLocalDate } from "../engine/scheduledContext";
 import { parseSchedulePattern } from "../persistence/schedulePatternValidation";
 import { isOutcomeDismissed } from "../persistence/outcomeDismissals";
 import { getTotalMealProteinGrams } from "./nutritionQueries";
@@ -842,7 +843,10 @@ export interface WorkPeriodEndedInfo {
  */
 export async function getStandingWorkContext(dayStartedAt: Date): Promise<StandingWorkContext> {
   const pattern = await getSchedulePattern();
-  if (!isOperatorSavedSchedule(pattern)) {
+  // SCHEDULE-EXCEPTIONS-001: a confirmed exception for the lived day this day starts in (by its 16:30 start date).
+  const livedDate = formatLocalDate(mostRecentBoundaryAtOrBefore(dayStartedAt));
+  const confirmedException = (await db.scheduleExceptions.where("date").equals(livedDate).filter((e) => e.status === "ACTIVE").first())?.kind;
+  if (!isOperatorSavedSchedule(pattern) && !confirmedException) {
     return deriveStandingWorkContext({ dayStartedAt, pattern, manualCorrectionEarlierThisLivedDay: false });
   }
   // Manual work-context declarations are rare, so start from those (indexed
@@ -861,7 +865,7 @@ export async function getStandingWorkContext(dayStartedAt: Date): Promise<Standi
       (d) => d !== undefined && d.startedAt >= windowStartIso && d.startedAt < dayStartedAtIso,
     );
   }
-  return deriveStandingWorkContext({ dayStartedAt, pattern, manualCorrectionEarlierThisLivedDay });
+  return deriveStandingWorkContext({ dayStartedAt, pattern, manualCorrectionEarlierThisLivedDay, confirmedException });
 }
 
 /**

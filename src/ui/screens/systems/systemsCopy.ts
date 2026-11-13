@@ -71,6 +71,8 @@ export function describeWorkContextSource(source: WorkContextSource | undefined)
       return "Schedule suggestion, accepted";
     case "SCHEDULE_STANDING":
       return "Per schedule";
+    case "SCHEDULE_EXCEPTION":
+      return "Per your confirmed change";
     default:
       return "";
   }
