@@ -12,9 +12,11 @@ import { Section, SectionEmpty, SectionUnavailable } from "../../components/Sect
 import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence } from "./IntentScreen";
 import type { IntentFocus } from "./IntentScreen";
 
-export function PlanTodayScreen({ active = true, onOpen }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void }) {
+/** FORECAST-DECIDE-001: listRequest opens a given list (a new key opens it again), e.g. No date from the forecast. */
+export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void; listRequest?: { key: number; list: "today" | "next7" | "noDate" } | null }) {
   const [plan, setPlan] = useState<TaskSmartLists | null>(null);
-  const [list, setList] = useState<"today" | "next7" | "noDate">("today");
+  const [list, setList] = useState<"today" | "next7" | "noDate">(listRequest?.list ?? "today");
+  useEffect(() => { if (listRequest) setList(listRequest.list); }, [listRequest?.key]);
   const [readError, setReadError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");

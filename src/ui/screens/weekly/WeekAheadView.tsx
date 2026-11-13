@@ -8,7 +8,8 @@ import { FamilyCalendarPanel } from "./FamilyCalendarPanel";
 import { ShiftWhatIfPanel } from "./ShiftWhatIfPanel";
 import type { WhatIfChange } from "../../../application/shiftWhatIf";
 import { getWeekEnergyForecast, type WeekEnergyForecast } from "../../../application/weekEnergyForecast";
-import { forecastLine, WeekEnergyForecastSummary } from "./WeekEnergyForecast";
+import { ForecastActions, forecastLine, WeekEnergyForecastSummary } from "./WeekEnergyForecast";
+import { createObligation } from "../../../application/intentCommands";
 
 
 function dayLabel(date: string): string {
@@ -23,7 +24,8 @@ function shiftLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}00 SHIFT`;
 }
 
-export function WeekAheadView({ now }: { now?: Date | undefined }) {
+/** FORECAST-DECIDE-001: onOpenPlanItem / onOpenPlans let the forecast's suggestions open your plans; left out without them. */
+export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date | undefined; onOpenPlanItem?: (id: string) => void; onOpenPlans?: () => void }) {
   const [week, setWeek] = useState<WeekAhead | null>(null);
   const [tasks, setTasks] = useState<WeekTasksDay[] | null>(null);
   const [tasksFailed, setTasksFailed] = useState(false);
@@ -62,6 +64,13 @@ export function WeekAheadView({ now }: { now?: Date | undefined }) {
     <div data-week-ahead ref={rootRef}>
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
       {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
+      {forecast?.scheduled && <ForecastActions forecast={forecast} onOpenPlanItem={onOpenPlanItem} onOpenPlans={onOpenPlans}
+        plannedOn={(date) => { const t = tasks?.find((d) => d.date === date); return t ? [...t.planned, ...t.due].map((o) => ({ id: o.id, title: o.title })) : []; }}
+        onCreate={async (draft) => {
+          await createObligation({ title: draft.title, plannedAt: draft.plannedAt, description: draft.description });
+          // The new item shows under its day straight away.
+          setTasks(await getWeekTasks(now));
+        }} />}
       {week.days.map((day) => (
         <div
           key={day.date}
