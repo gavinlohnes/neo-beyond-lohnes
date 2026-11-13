@@ -61,7 +61,7 @@ export function deriveLifeState(input: LifeStateInput): LifeStateReading | null 
     line = `${run ? `Shift ${run.position} of ${run.length}. ` : "A work day. "}Fuel, water and sleep between shifts carry the run.`;
   } else if (yesterday === "WORK") {
     state = "RECOVERY";
-    line = `The first day off after the run. Sleep usually comes first; plans can wait.${back}`;
+    line = `The first day off after the run. Sleep usually comes first.${back}`;
   } else if (tomorrow === "WORK") {
     state = "FLIP";
     line = "The last day off before the run. Today is the switch back to shift hours. Back on tomorrow.";

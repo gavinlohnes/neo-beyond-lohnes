@@ -16,7 +16,7 @@ import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
 import { SuitLines } from "./SuitLines";
@@ -2712,7 +2712,8 @@ export function TodayScreen({
     {nextSection}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
-    {lifeState === "WORK_RUN" || lifeState === "FLIP" ? <>{supportSection}{lifeLink}</> : <>{lifeLink}{supportSection}</>}
+    {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
+    {(lifeState === "WORK_RUN" || lifeState === "FLIP" ? ["support", "life"] : ["life", "support"]).map((part) => <Fragment key={part}>{part === "support" ? supportSection : lifeLink}</Fragment>)}
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"

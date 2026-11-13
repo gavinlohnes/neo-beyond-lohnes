@@ -29,7 +29,7 @@ const lifeFirst = () => {
 
 for (const [date, state, line, first] of [
   [new Date(2026, 10, 18, 18), "WORK RUN", /^WORK RUN Shift 1 of 2\. Fuel, water and sleep between shifts carry the run\.$/, false],
-  [new Date(2026, 10, 20, 18), "RECOVERY", /^RECOVERY The first day off after the run\. Sleep usually comes first; plans can wait\. Back on Mon\.$/, true],
+  [new Date(2026, 10, 20, 18), "RECOVERY", /^RECOVERY The first day off after the run\. Sleep usually comes first\. Back on Mon\.$/, true],
   [new Date(2026, 10, 21, 18), "FREE", /^FREE A day off with no shift on either side\. Your time for plans, people and training\. Back on Mon\.$/, true],
   [new Date(2026, 10, 22, 18), "FLIP", /^FLIP The last day off before the run\. Today is the switch back to shift hours\. Back on tomorrow\.$/, false],
 ] as const) {
@@ -84,4 +84,20 @@ it("lands in the same render as TODAY's numbers, so nothing jumps after load (CI
   // The next card appears only once the day has loaded; the band must already be there with it.
   await expect.element(screen.getByRole("heading", { name: "Log when you want." })).toBeVisible();
   expect(band()?.getAttribute("data-life-state")).toBe("WORK_RUN");
+});
+
+it("FIELD-AUTHORITY-001: when the state changes the sections move, they don't remount", async () => {
+  vi.setSystemTime(new Date(2026, 10, 19, 18)); // Thu, shift 2 of 2, after Wed's shift: WORK RUN
+  const day = await startDay();
+  const screen = await render(<TodayScreen onOpenLife={() => {}} />);
+  await expect.poll(() => band()?.getAttribute("data-life-state")).toBe("WORK_RUN");
+  expect(lifeFirst()).toBe(false);
+  const support = document.querySelector(".today-context-support");
+  // Recording today as a day off makes it RECOVERY, which puts YOUR LIFE first again.
+  await setWorkContext(day.id, "OFF", "MANUAL");
+  window.dispatchEvent(new Event("pageshow")); // TODAY re-reads when the app comes back
+  void screen;
+  await expect.poll(() => band()?.getAttribute("data-life-state")).toBe("RECOVERY");
+  expect(lifeFirst()).toBe(true);
+  expect(document.querySelector(".today-context-support")).toBe(support);
 });

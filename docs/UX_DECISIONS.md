@@ -2942,7 +2942,7 @@ Gavin: "Life-State Engine — Slice 1: detect operating state and make TODAY sta
   names each source and says BEYOND's advice still comes from the check-in. It describes the day and never prescribes;
   "Log when you want." still leads the next card (FIELD-AUTHORITY-001 unchanged).
 - **Order by state:** in a WORK RUN or on a FLIP, the day's preparation and routines come before YOUR LIFE; on
-  RECOVERY, FREE or unknown the usual order stays. Nothing is hidden.
+  RECOVERY, FREE or unknown the usual order stays. Nothing is hidden, and the two move without remounting.
 - **Not an Engine input** and never stored; no recommendation, priority, schema or command change. Overloaded, evidence,
   training coupling, capture and family sharing are later slices.
 - **Amends SHIFT-RECOVERY-001's** "no inferred recovery state" exclusion, on this objective.

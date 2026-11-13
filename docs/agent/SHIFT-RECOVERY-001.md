@@ -10,7 +10,7 @@
 - **Scope:** read-only projection from the saved schedule, recorded work/off context, canonical
   main sleep, check-ins and workouts; concise phone surface with source/limits disclosure.
 - **Exclusions:** no Engine or recommendation-priority change, diagnosis/circadian claim, inferred
-  recovery state, silent scheduling, commitment move, sleep/work record, schema/event, provider,
+  recovery state (amended 2026-11-13 by [LIFE-STATE-001](LIFE-STATE-001.md), on Gavin's objective), silent scheduling, commitment move, sleep/work record, schema/event, provider,
   dependency, notification or primary-navigation change.
 - **REUSE:** `shiftRun`, Whole Picture's canonical recorded rows, `flips`/`flipSummary`,
   `runPositions`, existing TODAY disclosure and phone visual grammar.
