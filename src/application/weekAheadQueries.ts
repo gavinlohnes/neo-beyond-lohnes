@@ -1,6 +1,7 @@
 import type { SchedulePattern } from "../domain/common/types";
+import { getRecordedContexts, livedDayOn, resolveWorkContext, type RecordedContext } from "./workContextResolution";
 import { WORKOUT_TEMPLATE_ORDER, type WorkoutTemplateId } from "../domain/workout/types";
-import { formatLocalDate, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
+import { formatLocalDate, isOperatorSavedSchedule } from "../engine/scheduledContext";
 import { getSchedulePattern } from "./queries";
 import { suggestTemplateForNextWorkout } from "./trainQueries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
@@ -9,7 +10,13 @@ import type { Obligation } from "../domain/intent/types";
 /** WEEKAHEAD-001: a read-only seven-day projection. It never feeds the Engine or stores a plan. */
 export interface WeekAheadDay {
   date: string;
+  /** When `basis` is UNKNOWN this is "OFF" only as a placeholder: read `basis` before `work`. */
   work: "WORK" | "OFF";
+  /**
+   * CONTEXT-INTEGRATION-001: where `work` comes from. RECORDED (this lived day has a record), PREDICTED (the saved
+   * rotation), WHAT_IF (a hypothetical from Shift What-If, never saved) or UNKNOWN (no record and no saved schedule).
+   */
+  basis: "RECORDED" | "PREDICTED" | "WHAT_IF" | "UNKNOWN";
   shiftStartHour: number | null;
   suggestedTemplate: WorkoutTemplateId | null;
   /** TONIGHT-001: the suggestion sits on this work day's post-shift morning, not on a day off. */
@@ -43,27 +50,34 @@ export function deriveWeekAhead(
   firstTemplate: WorkoutTemplateId,
   /** SHIFT-WHAT-IF: hypothetical WORK/OFF for some dates (yyyy-mm-dd). Read only; never saved or sent to the Engine. */
   overrides: Readonly<Record<string, "WORK" | "OFF">> = {},
+  /** CONTEXT-INTEGRATION-001: what was recorded for lived days that have started, by date. Recorded wins over the rotation. */
+  recorded: ReadonlyMap<string, RecordedContext> = new Map(),
 ): WeekAhead {
   const days: WeekAheadDay[] = [];
   let consecutiveSuggestions = 0;
   let template = WORKOUT_TEMPLATE_ORDER.includes(firstTemplate) ? firstTemplate : WORKOUT_TEMPLATE_ORDER[0]!;
 
-  const workFor = (offset: number) => {
-    const date = localNoon(now, offset);
-    const override = overrides[formatLocalDate(date)];
-    if (override) return override;
-    return scheduledWorkContextForLivedDay(new Date(date.getFullYear(), date.getMonth(), date.getDate(), 17), pattern);
+  const resolve = (offset: number): { work: "WORK" | "OFF" | null; basis: WeekAheadDay["basis"] } => {
+    const date = formatLocalDate(localNoon(now, offset));
+    const override = overrides[date];
+    if (override) return { work: override, basis: "WHAT_IF" };
+    const resolved = resolveWorkContext(livedDayOn(date), pattern, recorded.get(date));
+    return { work: resolved.kind, basis: resolved.basis === "RECORDED" ? "RECORDED" : resolved.basis === "UNKNOWN" ? "UNKNOWN" : "PREDICTED" };
   };
 
   for (let offset = 0; offset < 7; offset++) {
     const date = localNoon(now, offset);
-    const work = workFor(offset);
-    const afterLastShift = work === "WORK" && workFor(offset + 1) === "OFF";
-    const shouldSuggest = (work === "OFF" || afterLastShift) && consecutiveSuggestions < 2;
+    const { work: known, basis } = resolve(offset);
+    // An unknown day suggests nothing and breaks a run of suggestions.
+    const work = known ?? "OFF";
+    const afterLastShift = known === "WORK" && resolve(offset + 1).work === "OFF";
+    const shouldSuggest = known !== null && (known === "OFF" || afterLastShift) && consecutiveSuggestions < 2;
     days.push({
       date: formatLocalDate(date),
       work,
-      shiftStartHour: work === "WORK" ? pattern.shiftStartHour : null,
+      basis,
+      // The start time is the saved schedule's; with none saved, a recorded work day has no known start time.
+      shiftStartHour: known === "WORK" && isOperatorSavedSchedule(pattern) ? pattern.shiftStartHour : null,
       suggestedTemplate: shouldSuggest ? template : null,
       afterShift: shouldSuggest && work === "WORK",
     });
@@ -80,11 +94,13 @@ export function deriveWeekAhead(
 }
 
 export async function getWeekAhead(now: Date = new Date()): Promise<WeekAhead> {
-  const [pattern, firstTemplate] = await Promise.all([
+  const dates = Array.from({ length: 7 }, (_, k) => formatLocalDate(localNoon(now, k)));
+  const [pattern, firstTemplate, recorded] = await Promise.all([
     getSchedulePattern(),
     suggestTemplateForNextWorkout(),
+    getRecordedContexts(dates),
   ]);
-  return deriveWeekAhead(now, pattern, firstTemplate);
+  return deriveWeekAhead(now, pattern, firstTemplate, {}, recorded);
 }
 
 /**

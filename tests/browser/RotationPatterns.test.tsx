@@ -25,7 +25,7 @@ const rows: PictureRow[] = [
   work(9, 6.5, 4), work(10, 5, 3), work(11, 4, 2), row(12, "OFF", { sleepHours: 8.5 }), row(13, "OFF"),
   work(14, 6, 5), work(15, 5.5, 3), work(16, 5, 2),
 ];
-const ahead = (date: string, w: "WORK" | "OFF"): WeekAheadDay => ({ date, work: w, shiftStartHour: null, suggestedTemplate: null, afterShift: false });
+const ahead = (date: string, w: "WORK" | "OFF"): WeekAheadDay => ({ date, work: w, basis: "PREDICTED", shiftStartHour: null, suggestedTemplate: null, afterShift: false });
 const weekAhead = [ahead("2026-09-17", "WORK"), ahead("2026-09-18", "OFF"), ahead("2026-09-19", "OFF"), ahead("2026-09-20", "WORK")];
 
 for (const width of [320, 390, 1280]) it(`shows sleep against the shift, shift-by-shift patterns and the next window at ${width}px`, async () => {

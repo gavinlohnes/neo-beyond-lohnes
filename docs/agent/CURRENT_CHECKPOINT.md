@@ -24,12 +24,12 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: LIFE-STATE-003, Life-State Engine slice 3 (Gavin, 2026-11-13) — PROTECTED
+# Current objective: CONTEXT-INTEGRATION-001, unified schedule consistency (Gavin, 2026-11-13) — Feature lane
 
-Brief: [LIFE-STATE-003.md](LIFE-STATE-003.md); decision: UX_DECISIONS LIFE-STATE-003. On RUN OVER, below TODAY's next
-card: a POST-RUN REPORT from recorded days and an optional recovery contract (sleep first, easy training or rest, a
-light day) written as plan items for the first full day off only on CONFIRM. Needs an independent exact-head review.
-LIFE-STATE-002 merged in #495; #402 (rotation field test) is Gavin's next work day.
+Brief: [CONTEXT-INTEGRATION-001.md](CONTEXT-INTEGRATION-001.md). One read-only work-context resolver
+(`application/workContextResolution.ts`); Week Ahead, energy forecast, Life State WHY, Alfred, free helper and training
+programme agree and say where it came from; no invented schedule when none is saved. Open decision: confirmed future
+exceptions need new persistence (Protected). LIFE-STATE-003 merged in #496; #402 is Gavin's next work day.
 
 ---
 

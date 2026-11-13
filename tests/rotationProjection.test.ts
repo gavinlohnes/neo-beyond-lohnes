@@ -4,7 +4,7 @@ import type { PictureRow } from "../src/application/wholePictureProjection";
 import type { WeekAheadDay } from "../src/application/weekAheadQueries";
 
 const row = (start: string, context: PictureRow["context"]) => ({ start, context, dayIds: [start] } as unknown as PictureRow);
-const ahead = (date: string, work: "WORK" | "OFF"): WeekAheadDay => ({ date, work, shiftStartHour: null, suggestedTemplate: null, afterShift: false });
+const ahead = (date: string, work: "WORK" | "OFF"): WeekAheadDay => ({ date, work, basis: "PREDICTED", shiftStartHour: null, suggestedTemplate: null, afterShift: false });
 
 describe("ROTATION-001 — runs", () => {
   it("groups consecutive recorded contexts into runs, oldest first, with unknown days in their own run", () => {
