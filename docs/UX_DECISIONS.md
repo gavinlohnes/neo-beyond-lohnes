@@ -3032,3 +3032,8 @@ Brief: [agent/OPERATOR-EXPERIENCE-001.md](agent/OPERATOR-EXPERIENCE-001.md).
 - **WEEK AHEAD:** a quiet control beside WHY opens Week Ahead in place, including confirm, move and cancel. Every write
   stays confirm-first, and TODAY refreshes after a change.
 - **No change to:** primary IA, Engine authority or the recommendation order; no new card.
+- **Slice 3: "since you last looked"** (device-local, Gavin 2026-11-13).
+  - One quiet line leads TODAY's band when something changed since the last look on this device: new advice, a
+    state change, confirmed changes or NEXT, a Garmin sleep sync.
+  - Never from unloaded fields or the visit's own actions.
+  - Kept in `localStorage` only; not a record, and not in backups.

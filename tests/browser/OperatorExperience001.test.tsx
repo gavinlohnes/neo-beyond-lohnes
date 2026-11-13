@@ -71,3 +71,38 @@ it("before 16:30 tonight's shift is next; with no saved schedule NEXT says it is
   await render(<TodayScreen onOpenLife={() => {}} />);
   await expect.poll(next).toBe("NEXT Next days: work or off not known · no saved schedule");
 });
+
+it("slice 3: names what changed since the last look on this device, once, and not the visit's own changes", async () => {
+  try { localStorage.clear(); } catch { /* ignore */ }
+  vi.setSystemTime(new Date(2026, 10, 18, 20));
+  await startDay();
+  const since = () => document.querySelector("[data-life-since]")?.textContent ?? null;
+
+  // First look: nothing to compare with.
+  let screen = await render(<TodayScreen onOpenLife={() => {}} />);
+  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  expect(since()).toBeNull();
+  await cleanup();
+
+  // A change made elsewhere shows on the next visit.
+  vi.setSystemTime(new Date(2026, 10, 18, 21, 15));
+  await confirmScheduleException({ date: "2026-11-21", kind: "WORK" });
+  screen = await render(<TodayScreen onOpenLife={() => {}} />);
+  await expect.poll(since).toBe("SINCE 20:00 Confirmed changes: 0 → 1");
+  expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+
+  // Cancelling it during this visit isn't reported back as a change in this visit…
+  await screen.getByRole("button", { name: "WEEK AHEAD · 1 CONFIRMED" }).click();
+  const list = screen.getByRole("region", { name: "Confirmed schedule changes" });
+  await list.getByRole("button", { name: "CANCEL CHANGE" }).click();
+  await list.getByRole("button", { name: "CONFIRM" }).click();
+  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  expect(since()).toBe("SINCE 20:00 Confirmed changes: 0 → 1");
+  await cleanup();
+
+  // …nor on the next one: the last look already showed it.
+  screen = await render(<TodayScreen onOpenLife={() => {}} />);
+  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  expect(since()).toBeNull();
+});
