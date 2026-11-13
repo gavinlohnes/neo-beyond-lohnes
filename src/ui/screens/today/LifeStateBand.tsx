@@ -13,6 +13,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  * confirmed change) in one place, with WEEK AHEAD one tap away: the week, its confirmed changes (confirm, move,
  * cancel; each confirm-first) without leaving TODAY. `weekAhead` renders only while open.
  */
+const underNext = (line: string) => line.replace(/^Next (\w)/, (_, c: string) => c.toUpperCase());
+
 export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead, since = null }: {
   reading: LifeStateReading | null; moment?: LifeMomentReading | null; ahead?: AheadReading | null; weekAhead?: (() => ReactNode) | undefined;
   /** Slice 3: what changed since the last look on this device; shown only when something did. */
@@ -29,7 +31,8 @@ export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead,
       {since && since.items.length > 0 && <p className="today-life-state__since" data-life-since><strong>{since.label}</strong> <span>{since.items.join(" · ")}</span></p>}
       {moment && <p className="today-life-state__moment"><strong>{moment.label}</strong> <span>{moment.line}</span></p>}
       <p className="today-life-state__line"><strong>{reading.label}</strong> <span>{reading.line}</span></p>
-      {ahead && <p className="today-life-state__next" data-life-next><strong>NEXT</strong> <span>{ahead.line}</span></p>}
+      {/* TODAY-CLARITY-001: under the NEXT label the line drops its own leading "Next" ("NEXT Day off: Wed, …"). */}
+      {ahead && <p className="today-life-state__next" data-life-next><strong>NEXT</strong> <span>{underNext(ahead.line)}</span></p>}
       <div className="today-life-state__tools">
         <details className="today-life-state__why">
           <summary>WHY {reading.label}</summary>

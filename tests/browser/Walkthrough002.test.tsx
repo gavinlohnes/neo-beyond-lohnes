@@ -41,7 +41,7 @@ it("walks a night-shift stretch with a confirmed change through TODAY, Week Ahea
   vi.setSystemTime(t(27, 17, 10));
   await startDay();
   let screen = await render(<App />);
-  await expect.poll(() => text("[data-life-next]")).toBe("NEXT Next day off: Wed, Oct 28 · forecast · 1 confirmed change ahead");
+  await expect.poll(() => text("[data-life-next]")).toBe("NEXT Day off: Wed, Oct 28 · forecast · 1 confirmed change ahead");
   await stop("01-today-work-run-next");
   // 2. WEEK AHEAD in place.
   await screen.getByRole("button", { name: "WEEK AHEAD · 1 CONFIRMED" }).click();
@@ -75,6 +75,6 @@ it("walks a night-shift stretch with a confirmed change through TODAY, Week Ahea
   // 6. Thu 09:00, still Wednesday's lived day: tonight's confirmed shift is next.
   vi.setSystemTime(t(29, 9));
   screen = await render(<App />);
-  await expect.poll(() => text("[data-life-next]")).toBe("NEXT Next shift: Thu, Oct 29 · 18:00 · confirmed change");
+  await expect.poll(() => text("[data-life-next]")).toBe("NEXT Shift: Thu, Oct 29 · 18:00 · confirmed change");
   await stop("06-today-before-1630");
 });

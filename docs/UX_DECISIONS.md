@@ -3037,3 +3037,12 @@ Brief: [agent/OPERATOR-EXPERIENCE-001.md](agent/OPERATOR-EXPERIENCE-001.md).
     state change, confirmed changes or NEXT, a Garmin sleep sync.
   - Never from unloaded fields or the visit's own actions.
   - Kept in `localStorage` only; not a record, and not in backups.
+
+## TODAY-CLARITY-001 — say the run once (Gavin, 2026-11-13: "Let's work. Give me awesome stuff"; WALKTHROUGH-002 findings 3–4)
+
+- While TODAY's operating-state band shows NOW and NEXT, the hero drops its "scheduled: …" shift-run line. The band
+  already carries both facts with their source.
+- The hero keeps the line whenever the band steps aside (an operation, a workout, the late sleep prompt) or NEXT
+  couldn't be read. Nothing is lost.
+- Under the NEXT label, the line drops its own leading "Next": "NEXT Shift: Thu, Oct 29 · 18:00 · confirmed change".
+- Alfred and the helper keep the full sentence.
