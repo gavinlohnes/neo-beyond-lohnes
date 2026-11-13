@@ -3,6 +3,7 @@ import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
 import { TodayScreen } from "../../src/ui/screens/today/TodayScreen";
+import { RecoveryContractOffer } from "../../src/ui/screens/today/RecoveryContract";
 import { endDay, logSleep, startDay, submitCheckIn, updateSchedulePattern } from "../../src/application/commands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
@@ -78,4 +79,16 @@ it("isn't offered twice in the recovery lived day, even after midnight", async (
   await expect.element(page.getByText("Your recovery contract is in your plans for Sat. Change it in MORE → PLAN TODAY.")).toBeVisible();
   expect(page.getByRole("region", { name: "Recovery contract" }).elements()).toHaveLength(0);
   expect(await db.obligations.count()).toBe(3);
+});
+
+it("review of #496: after a partial failure it says what was saved, never 'Nothing changed'", async () => {
+  let calls = 0, saved = 0;
+  const screen = await render(<RecoveryContractOffer dayLabel="Sat" planned={false} busy={false}
+    onSave={async () => { calls++; if (calls === 2) throw new Error("disk"); }} onSaved={() => { saved++; }} />);
+  await screen.getByRole("button", { name: "REVIEW THE CONTRACT" }).click();
+  await screen.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
+  await expect.element(screen.getByText("Recovery contract added for Sat: Sleep first.")).toBeVisible();
+  await expect.element(screen.getByText("2 couldn't be saved. Try again later from MORE → PLAN TODAY.")).toBeVisible();
+  expect(screen.getByText("That couldn't be saved. Nothing changed.").elements()).toHaveLength(0);
+  expect(saved).toBe(1);
 });

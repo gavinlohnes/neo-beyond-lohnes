@@ -23,12 +23,14 @@ export function PostRunReportDisclosure({ read = getPostRunReport }: { read?: ty
   );
 }
 
-export function RecoveryContractOffer({ dayLabel, planned, busy, onConfirm }: {
+export function RecoveryContractOffer({ dayLabel, planned, busy, onSave, onSaved }: {
   /** The first full day off, e.g. "Sat". */
   dayLabel: string;
   planned: boolean;
   busy: boolean;
-  onConfirm: (items: ContractItem[]) => Promise<void>;
+  /** Writes one item (on CONFIRM only). Items are written one at a time, so a failure can say what was saved. */
+  onSave: (item: ContractItem) => Promise<void>;
+  onSaved: () => void;
 }) {
   const [chosen, setChosen] = useState<ContractItem["key"][]>(RECOVERY_CONTRACT.map((i) => i.key));
   const [preview, setPreview] = useState(false);
@@ -38,6 +40,7 @@ export function RecoveryContractOffer({ dayLabel, planned, busy, onConfirm }: {
   const items = RECOVERY_CONTRACT.filter((i) => chosen.includes(i.key));
   if (saved) return <div className="today-life-state__contract" role="status">
     <p className="meta">Recovery contract added for {dayLabel}: {saved.map((i) => i.title).join(", ")}.</p>
+    {error && <p className="meta" role="alert">{error}</p>}
     <p className="meta">Change or remove any of them in MORE → PLAN TODAY.</p>
   </div>;
   if (planned) return <p className="meta today-life-state__contract">Your recovery contract is in your plans for {dayLabel}. Change it in MORE → PLAN TODAY.</p>;
@@ -58,8 +61,17 @@ export function RecoveryContractOffer({ dayLabel, planned, busy, onConfirm }: {
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" className="btn-primary" disabled={saving || busy} onClick={() => {
               setSaving(true); setError(null);
-              void onConfirm(items).then(() => { setSaved(items); setPreview(false); }, () => setError("That couldn't be saved. Nothing changed."))
-                .finally(() => setSaving(false));
+              void (async () => {
+                const done: ContractItem[] = [];
+                try {
+                  for (const item of items) { await onSave(item); done.push(item); }
+                  setSaved(done); setPreview(false);
+                } catch {
+                  // Review of #496: after a partial failure, say exactly what was saved rather than "Nothing changed".
+                  if (done.length) { setSaved(done); setPreview(false); setError(`${items.length - done.length} couldn't be saved. Try again later from MORE → PLAN TODAY.`); }
+                  else setError("That couldn't be saved. Nothing changed.");
+                } finally { setSaving(false); if (done.length) onSaved(); }
+              })();
             }}>CONFIRM</button>
             <button type="button" className="btn-secondary" disabled={saving} onClick={() => setPreview(false)}>CANCEL</button>
           </div>

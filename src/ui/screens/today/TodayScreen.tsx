@@ -2731,11 +2731,8 @@ export function TodayScreen({
         {/* LIFE-STATE-003: the run that just ended, and an optional recovery contract for the first full day off. */}
         <PostRunReportDisclosure />
         <RecoveryContractOffer dayLabel={new Date(`${contractDate(now)}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" })} planned={!!recordedNow?.contractPlanned} busy={busy}
-          onConfirm={async (items) => {
-            const date = contractDate(new Date());
-            for (const item of items) await createObligation({ title: item.title, plannedAt: date, description: item.description });
-            await refresh();
-          }} />
+          onSave={async (item) => { await createObligation({ title: item.title, plannedAt: contractDate(new Date()), description: item.description }); }}
+          onSaved={() => void refresh()} />
       </section>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
