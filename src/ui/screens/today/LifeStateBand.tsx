@@ -13,13 +13,16 @@ import { useState, type ReactNode } from "react";
  * confirmed change) in one place, with WEEK AHEAD one tap away: the week, its confirmed changes (confirm, move,
  * cancel; each confirm-first) without leaving TODAY. `weekAhead` renders only while open.
  */
-export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead }: {
+export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead, since = null }: {
   reading: LifeStateReading | null; moment?: LifeMomentReading | null; ahead?: AheadReading | null; weekAhead?: (() => ReactNode) | undefined;
+  /** Slice 3: what changed since the last look on this device; shown only when something did. */
+  since?: { label: string; items: string[] } | null;
 }) {
   const [open, setOpen] = useState(false);
   if (!reading) return null;
   return (
     <section className="today-life-state" data-life-state={reading.state} data-life-moment={moment?.moment} aria-label="Operating state">
+      {since && since.items.length > 0 && <p className="today-life-state__since" data-life-since><strong>{since.label}</strong> <span>{since.items.join(" · ")}</span></p>}
       {moment && <p className="today-life-state__moment"><strong>{moment.label}</strong> <span>{moment.line}</span></p>}
       <p className="today-life-state__line"><strong>{reading.label}</strong> <span>{reading.line}</span></p>
       {ahead && <p className="today-life-state__next" data-life-next><strong>NEXT</strong> <span>{ahead.line}</span></p>}

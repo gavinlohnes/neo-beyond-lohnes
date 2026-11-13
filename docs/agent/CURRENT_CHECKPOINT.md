@@ -24,23 +24,18 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: OPERATOR-EXPERIENCE-001, unified daily operating system (Gavin, 2026-11-13) — Feature lane, slice 1
+# Current objective: OPERATOR-EXPERIENCE-001, unified daily operating system (Gavin, 2026-11-13) — Feature lane, slice 3
 
-Brief and roadmap: [OPERATOR-EXPERIENCE-001.md](OPERATOR-EXPERIENCE-001.md). Branch `ccr-88f5c085-operator-experience`.
+Brief and roadmap: [OPERATOR-EXPERIENCE-001.md](OPERATOR-EXPERIENCE-001.md).
 
-- **Slice 1:**
-  - TODAY's band says NOW and NEXT (forecast or confirmed change labelled; unknown never guessed; 16:30);
-  - WHY explains NEXT;
-  - WEEK AHEAD opens in place, with confirm, move and cancel, so it is one tap from TODAY instead of three screens.
+- **Slice 1** (NOW, NEXT, WEEK AHEAD) merged in #501.
+- **Slice 2** (Alfred explains TODAY) is in #502.
+- **Slice 3** ("since you last looked", device-local) is on branch `ccr-88f5c085-since-last-look`.
 - **Verification:** typecheck, the architecture check, the node and browser suites and the build.
-- **Next:**
-  - Gavin merges;
-  - then slice 2, Alfred explains TODAY (read-side).
-- **Field tests still needed:**
-  - #402;
-  - the 16:30 day start on the phone with a confirmed change;
-  - the presence line and the band at 360 px on the device.
-- **Earlier:** SCHEDULE-MOVE-001 in #500, FIELD-READINESS-001 in #499, SCHEDULE-EXCEPTIONS-001 in #498.
+- **Next:** Gavin merges.
+- **Remaining roadmap options:** contextual actions on NEXT; the training suggestion beside the next day off.
+- **Field tests still needed:** #402; the 16:30 day start on the phone with a confirmed change; the band at 360 px on
+  the device.
 
 ---
 

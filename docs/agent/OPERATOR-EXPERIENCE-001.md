@@ -65,3 +65,21 @@ Rules:
    existing entry point. Reuse only; no new recommendation authority.
 4. **Training on NEXT.** The suggested workout (Week Ahead's `suggestedTemplate`) beside the next day off. Labelled
    a suggestion; the Engine's priority unchanged.
+
+## Slice 3 — changed since you last looked (Gavin, 2026-11-13: "Agreed", device-local)
+
+Branch `ccr-88f5c085-since-last-look`.
+
+- **What it does:** TODAY keeps a small snapshot of what its band showed, on this device only
+  (`localStorage`, `beyond.today.lastLook.v1`). It isn't in the database, a backup or Alfred. On the next visit,
+  one quiet line leads the band, e.g. `SINCE 20:00 Confirmed changes: 0 → 1`, or
+  `SINCE WED 09:05 New advice: … · FLIP → WORK RUN · Garmin sleep synced: 6h 35m`.
+- **What counts as a change:** at most four items, most decision-relevant first:
+  - new Engine advice (named, not re-ranked);
+  - a state change;
+  - a confirmed-change count, or else a changed NEXT;
+  - a new Garmin sleep.
+- **What doesn't:** a field that hasn't loaded is never a change. The visit's own taps aren't reported back; the
+  baseline is the first value seen. With nothing changed, or no earlier look, there is no line.
+- **Code:** `application/sinceLastLook.ts` (pure) and `ui/screens/today/lastLookStore.ts`.
+- **Lane:** Feature. No schema, Engine or IA change.

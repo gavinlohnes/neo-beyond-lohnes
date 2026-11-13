@@ -16,6 +16,9 @@ import { LifeStateBand } from "./LifeStateBand";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
+import { diffLook, firstKnown, mergeLook, sinceLabel, type LookSnapshot } from "../../../application/sinceLastLook";
+import { readLastLook, writeLastLook } from "./lastLookStore";
+import { sleepMinutes as externalSleepMinutes } from "../../../domain/health/measuredSeries";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
 import { recordedBy } from "../../../application/workContextResolution";
@@ -668,6 +671,13 @@ export function TodayScreen({
       })
       .catch(() => {});
   }, [active]);
+  // OPERATOR-EXPERIENCE-001 slice 3: each visit to TODAY compares what it shows with the last look on this device.
+  // The visit's baseline is the first value of each field it saw, so the operator's own taps during the visit aren't
+  // reported back as changes; the stored look follows what was last on screen.
+  const [since, setSince] = useState<{ label: string; items: string[] } | null>(null);
+  const lookPrevRef = useRef<LookSnapshot | null | undefined>(undefined);
+  const lookBaseRef = useRef<LookSnapshot | null>(null);
+  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); } }, [active]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
@@ -1768,6 +1778,23 @@ export function TodayScreen({
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
   // OPERATOR-EXPERIENCE-001: NEXT, from Week Ahead's days and what today is (recorded, else planned).
   const ahead = lifeInput && recordedNow?.week ? deriveAhead(now, lifeInput.today.recorded ?? lifeInput.today.scheduled, recordedNow.week.days) : null;
+  // Slice 3: what TODAY shows now, for "since you last looked". A field is null until it has loaded.
+  const lookNow: Omit<LookSnapshot, "at"> | null = day && recordedNow ? {
+    state: lifeReading?.label ?? null, next: ahead?.line ?? null, confirmed: ahead ? ahead.confirmed : null,
+    advice: recommendation ? { id: recommendation.id, title: recommendation.title } : "none",
+    garmin: measured ? (measured.lastNight ? { end: measured.lastNight.endTime, minutes: externalSleepMinutes(measured.lastNight) } : "none") : null,
+  } : null;
+  const lookKey = lookNow ? JSON.stringify(lookNow) : null;
+  useEffect(() => {
+    if (!active || !lookNow) return;
+    const cur: LookSnapshot = { at: new Date().toISOString(), ...lookNow };
+    if (lookPrevRef.current === undefined) lookPrevRef.current = readLastLook();
+    lookBaseRef.current = firstKnown(lookBaseRef.current, cur);
+    const prev = lookPrevRef.current;
+    setSince(prev ? { label: sinceLabel(prev.at, new Date()), items: diffLook(prev, lookBaseRef.current) } : null);
+    writeLastLook(mergeLook(readLastLook(), cur));
+    // lookKey stands for lookNow's content.
+  }, [active, lookKey]);
   // LIFE-STATE-002: the moment between states, if today is one, with the day before yesterday from record or schedule.
   const lifeMoment = lifeInput && schedulePattern ? deriveLifeMoment(lifeMomentInput(now, schedulePattern, lifeInput, recordedNow?.dayBefore ?? null, recordedNow?.confirmed), lifeReading) : null;
   const lifeState = lifeReading?.state ?? null;
@@ -2733,7 +2760,7 @@ export function TodayScreen({
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep}>
-      <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead}
+      <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
