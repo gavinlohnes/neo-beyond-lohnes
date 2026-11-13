@@ -1,0 +1,7 @@
+/* LIFE-STATE-001: one quiet line naming the day's operating state; the label carries weight, the rest stays calm. */
+.redesign-today .today-life-state { margin: 12px 0 0; padding: 10px 0; border-block: 1px solid var(--border-subtle, var(--border-strong)); }
+.redesign-today .today-life-state__line { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.4; }
+.redesign-today .today-life-state__line strong { color: var(--text-1); font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; }
+.redesign-today .today-life-state__why { margin-top: 4px; }
+.redesign-today .today-life-state__why summary { cursor: pointer; color: var(--text-2); font-size: 12px; letter-spacing: .08em; min-height: 32px; display: flex; align-items: center; }
+.redesign-today .today-life-state__why ul { margin: 4px 0 0; padding-left: 18px; }

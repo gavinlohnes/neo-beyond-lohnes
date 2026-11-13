@@ -12,6 +12,8 @@ import { TodayReviewSupport } from "../../components/TodayReviewSupport";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
+import { LifeStateBand } from "./LifeStateBand";
+import type { LifeState } from "../../../application/lifeState";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -402,6 +404,8 @@ export function TodayScreen({
   const refreshRequestIdRef = useRef(0);
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
+  // LIFE-STATE-001: the day's operating state (read by LifeStateBand); orders TODAY's supporting sections.
+  const [lifeState, setLifeState] = useState<LifeState | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -2503,6 +2507,9 @@ export function TodayScreen({
       {/* ROUTINES-001 (owner ruling 2026-10-31): one quiet row, only the current moment's routines. */}
       <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: predictedWorkPhase(shiftClockInput), workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
   </div>;
+  const lifeLink = onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
+      <div><strong>YOUR LIFE</strong><span>Plans, projects, routines and people.</span></div><span aria-hidden="true">↗</span>
+    </button>;
   const nextSection = <>
       <section className="console-guidance" aria-label="Next action">
         {checkInOutcome && <p className="meta check-in-outcome" role="status">{checkInOutcome}</p>}
@@ -2688,11 +2695,14 @@ export function TodayScreen({
           </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
     {/* SYNC-002: the shell's one line here (what SYNC GARMIN brought back), right under the hero. */}
     {banners && <div className="today-banners">{banners}</div>}
+    {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
+        aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
+    {day && <div hidden={dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep}>
+      <LifeStateBand now={now} dayId={day.id} workContext={day.workContext} onState={setLifeState} /></div>}
     {nextSection}
-    {onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
-      <div><strong>YOUR LIFE</strong><span>Plans, projects, routines and people.</span></div><span aria-hidden="true">↗</span>
-    </button>}
-    {supportSection}
+    {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
+        wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
+    {lifeState === "WORK_RUN" || lifeState === "FLIP" ? <>{supportSection}{lifeLink}</> : <>{lifeLink}{supportSection}</>}
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"

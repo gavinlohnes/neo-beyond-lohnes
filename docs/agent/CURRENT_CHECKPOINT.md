@@ -24,15 +24,12 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: FORECAST-DECIDE-001, the energy forecast leads to a decision (Gavin, 2026-11-13)
+# Current objective: LIFE-STATE-001, Life-State Engine slice 1 (Gavin, 2026-11-13) — PROTECTED
 
-Brief: from the Week Energy Forecast's own lowest day, best day and sleep owed, offer a clear next step through existing
-paths only; confirm-first, no automatic writes or schedule changes; forecast logic unchanged; Weekly Interview/Recap,
-Patterns/DELTA, TODAY, active workout, circadian cards and family calendar untouched. Feature lane. WHAT YOU CAN DO
-under the forecast: PLAN A LIGHTER <low day> (a plan item planned that day, on CONFIRM), MOVE “…” for plans already on
-it (opens the item), PLAN RECOVERY SLEEP ON <next day off> when 1 h+ is owed, and CHOOSE A PLAN FOR <best day> (opens
-PLAN TODAY at No date). BACK returns to the weekly check-in. The plan items are ordinary planned tasks made through the
-existing createObligation. WEEKLY-CLOSE-001 merged in #492.
+Brief: [LIFE-STATE-001.md](LIFE-STATE-001.md); decision: UX_DECISIONS LIFE-STATE-001. TODAY names the day's state
+(WORK RUN, RECOVERY, FLIP, FREE) from the saved schedule and recorded lived days, with WHY, and in a work run or on a
+flip puts the day's preparation and routines before YOUR LIFE. Not an Engine input; nothing stored. Needs an
+independent exact-head review. FORECAST-DECIDE-001 merged in #493.
 
 ---
 
