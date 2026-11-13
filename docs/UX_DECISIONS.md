@@ -3020,3 +3020,15 @@ Brief: [agent/SCHEDULE-EXCEPTIONS-001.md](agent/SCHEDULE-EXCEPTIONS-001.md).
 - **Day choice:** the operator picks from the next 14 lived days that haven't started, where the rotation says the
   opposite and nothing else is confirmed (`getMoveTargets`). Then a preview, then CONFIRM. BACK writes nothing.
 - **Swaps don't move:** cancel the swap and confirm a new one.
+
+## OPERATOR-EXPERIENCE-001 — NOW · NEXT · WEEK AHEAD on TODAY (owner objective, 2026-11-13; slice 1)
+
+Brief: [agent/OPERATOR-EXPERIENCE-001.md](agent/OPERATOR-EXPERIENCE-001.md).
+
+- **NEXT:** TODAY's operating-state band adds one line under the state: the next switch between work and off in the
+  coming week, labelled "forecast" or "confirmed change", with a count of other confirmed changes. With no saved
+  schedule it says it isn't known. Lived days count from 16:30.
+- **WHY:** WHY also says where NEXT came from.
+- **WEEK AHEAD:** a quiet control beside WHY opens Week Ahead in place, including confirm, move and cancel. Every write
+  stays confirm-first, and TODAY refreshes after a change.
+- **No change to:** primary IA, Engine authority or the recommendation order; no new card.

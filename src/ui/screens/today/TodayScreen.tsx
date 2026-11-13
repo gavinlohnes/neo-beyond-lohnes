@@ -13,6 +13,9 @@ import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
+import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
+import { WeekAheadView } from "../weekly/WeekAheadView";
+import { deriveAhead } from "../../../application/ahead";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
 import { recordedBy } from "../../../application/workContextResolution";
@@ -412,7 +415,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
-  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF"> } | null>(null);
+  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF">; week: WeekAhead | null } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -896,8 +899,8 @@ export function TodayScreen({
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions()])
-        .then(([kind, dayBefore, contractPlanned, exceptions]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned,
+      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions(), getWeekAhead(readAt).catch(() => null)])
+        .then(([kind, dayBefore, contractPlanned, exceptions, week]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned, week,
           // SCHEDULE-EXCEPTIONS-001: confirmed changes, for the state, its moments and the shift run (FIELD-READINESS-001).
           confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) }), () => null),
       getSchedulePattern().catch(() => null),
@@ -1763,6 +1766,8 @@ export function TodayScreen({
   const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern, 21, recordedNow?.confirmed) : null;
   const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
+  // OPERATOR-EXPERIENCE-001: NEXT, from Week Ahead's days and what today is (recorded, else planned).
+  const ahead = lifeInput && recordedNow?.week ? deriveAhead(now, lifeInput.today.recorded ?? lifeInput.today.scheduled, recordedNow.week.days) : null;
   // LIFE-STATE-002: the moment between states, if today is one, with the day before yesterday from record or schedule.
   const lifeMoment = lifeInput && schedulePattern ? deriveLifeMoment(lifeMomentInput(now, schedulePattern, lifeInput, recordedNow?.dayBefore ?? null, recordedNow?.confirmed), lifeReading) : null;
   const lifeState = lifeReading?.state ?? null;
@@ -2728,7 +2733,8 @@ export function TodayScreen({
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep}>
-      <LifeStateBand reading={lifeReading} moment={lifeMoment} /></div>}
+      <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead}
+        weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
     {day && lifeMoment?.moment === "RUN_OVER" && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId || lateRecoverWithoutSleep) && <section className="today-run-over" aria-label="After the run">

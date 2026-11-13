@@ -3,6 +3,13 @@
 .redesign-today .today-life-state__line { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.4; }
 .redesign-today .today-life-state__line strong { color: var(--text-1); font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; }
 .redesign-today .today-life-state__why { margin-top: 4px; }
+/* OPERATOR-EXPERIENCE-001: NEXT sits under NOW at the same calm weight; WEEK AHEAD is a quiet tool beside WHY. */
+.redesign-today .today-life-state__next { margin: 2px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.4; }
+.redesign-today .today-life-state__next strong { color: var(--text-1); font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; }
+.redesign-today .today-life-state__tools { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 16px; }
+.redesign-today .today-life-state__week { min-height: 32px; margin-top: 4px; padding: 0; background: none; border: 0; color: var(--text-2); font-size: 12px; letter-spacing: .08em; cursor: pointer; }
+.redesign-today .today-life-state__week[aria-expanded="true"] { color: var(--text-1); }
+.redesign-today .today-life-state__week-panel { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle, var(--border-strong)); }
 .redesign-today .today-life-state__why summary { cursor: pointer; color: var(--text-2); font-size: 12px; letter-spacing: .08em; min-height: 32px; display: flex; align-items: center; }
 .redesign-today .today-life-state__why ul { margin: 4px 0 0; padding-left: 18px; }
 /* LIFE-STATE-002: the moment leads on the day a state changes; same calm weight, one step up. */
