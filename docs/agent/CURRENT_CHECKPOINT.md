@@ -24,16 +24,15 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: WEEKLY-CLOSE-001, the weekly close ends on a decision (Gavin, 2026-11-13)
+# Current objective: FORECAST-DECIDE-001, the energy forecast leads to a decision (Gavin, 2026-11-13)
 
-Brief: on the weekly interview and the month recap, make the next action obvious (carry forward, save, act); reuse the
-existing SAVE / carry-forward / plan-item paths; confirm-first, no automatic writes; no new systems or screens; TODAY,
-active workout, circadian cards, family calendar, Patterns and DELTA untouched. Feature lane. Interview: without a
-carry-forward, the next-step line says answering it turns the week into a plan; after saving, the receipt says the
-plan item has no day yet and OPEN THE PLAN ITEM opens it in your plans (BACK returns to the weekly check-in); once
-what you chose is saved, "Week closed." says where it went. Month recap: the last card asks for one thing to carry
-into next month, which becomes an undated plan item only on CONFIRM (same saveCarryForward path). PWA-001 merged in
-#491.
+Brief: from the Week Energy Forecast's own lowest day, best day and sleep owed, offer a clear next step through existing
+paths only; confirm-first, no automatic writes or schedule changes; forecast logic unchanged; Weekly Interview/Recap,
+Patterns/DELTA, TODAY, active workout, circadian cards and family calendar untouched. Feature lane. WHAT YOU CAN DO
+under the forecast: PLAN A LIGHTER <low day> (a plan item planned that day, on CONFIRM), MOVE “…” for plans already on
+it (opens the item), PLAN RECOVERY SLEEP ON <next day off> when 1 h+ is owed, and CHOOSE A PLAN FOR <best day> (opens
+PLAN TODAY at No date). BACK returns to the weekly check-in. The plan items are ordinary planned tasks made through the
+existing createObligation. WEEKLY-CLOSE-001 merged in #492.
 
 ---
 
