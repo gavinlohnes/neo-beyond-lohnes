@@ -46,7 +46,7 @@ it("shows the recorded week, previews before saving, then adds a #timeline note 
 
   await screen.getByRole("button", { name: "ADD CARRY-FORWARD AS A PLAN ITEM" }).click();
   await screen.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
-  await expect.element(screen.getByText("Added plan item: Nap before the first night.")).toBeVisible();
+  await expect.element(screen.getByText("Added plan item: Nap before the first night. It has no day yet; give it one in your plans, or leave it.")).toBeVisible();
   const plans = (await db.obligations.toArray()).filter((o) => o.title === "Nap before the first night");
   expect(plans).toHaveLength(1);
   expect(plans[0]!.dueAt).toBeUndefined();

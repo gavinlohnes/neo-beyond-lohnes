@@ -22,12 +22,13 @@ function dayFacts(d: TimelineDay): string {
   return parts.join(" · ");
 }
 
-export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns }: { now?: Date | undefined; onOpenDelta?: () => void; onOpenPatterns?: () => void }) {
+/** WEEKLY-CLOSE-001: onOpenPlanItem opens the saved carry-forward in your plans, to give it a day; left out without it. */
+export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns, onOpenPlanItem }: { now?: Date | undefined; onOpenDelta?: () => void; onOpenPatterns?: () => void; onOpenPlanItem?: (obligationId: string) => void }) {
   const [interview, setInterview] = useState<WeeklyInterview | null | undefined>(undefined);
   const [entries, setEntries] = useState<{ dayId: string; text: string; updatedAt: string }[]>([]);
   const [answers, setAnswers] = useState<Answers>({});
   const [preview, setPreview] = useState<{ kind: "NOTE"; text: string; dayId: string; date: string } | { kind: "PLAN"; text: string } | null>(null);
-  const [done, setDone] = useState<{ note?: string; plan?: string }>({});
+  const [done, setDone] = useState<{ note?: string; plan?: string; planId?: string }>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const knowledge = useDeltaKnowledge(true);
@@ -50,7 +51,7 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns }: { now?
     setBusy(true); setError(null);
     try {
       if (preview.kind === "NOTE") { await saveInterviewNote(preview.dayId, preview.text); setDone((d) => ({ ...d, note: day(preview.date) })); loadEntries(); }
-      else { await saveCarryForward(preview.text); setDone((d) => ({ ...d, plan: preview.text })); }
+      else { const item = await saveCarryForward(preview.text); setDone((d) => ({ ...d, plan: preview.text, planId: item.id })); }
       setPreview(null);
     } catch { setError("That couldn't be saved. Nothing changed."); } finally { setBusy(false); }
   };
@@ -126,13 +127,18 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns }: { now?
         {/* GUIDED-001: one quiet line naming the next step, so a disabled button never leaves you guessing. */}
         {!preview && (() => {
           const next = !noteText ? "Answer any question to save it to your note."
-            : !done.note ? "Next: SAVE TO NOTE shows exactly what will be added before anything saves."
+            : !done.note ? `Next: SAVE TO NOTE shows exactly what will be added before anything saves.${carry ? "" : " To carry something into next week as a plan, answer the last question too."}`
             : carry && !done.plan ? "Saved. Your carry-forward can also become a plan item, if you want one."
             : null;
           return next ? <p className="meta" data-interview-next style={{ margin: "6px 0 0" }}>{next}</p> : null;
         })()}
         {done.note && <p className="meta" role="status">Saved to the note for {done.note}, tagged #{TIMELINE_TAG}.</p>}
-        {done.plan && <p className="meta" role="status">Added plan item: {done.plan}.</p>}
+        {done.plan && <p className="meta" role="status">Added plan item: {done.plan}. It has no day yet; give it one in your plans, or leave it.</p>}
+        {done.planId && onOpenPlanItem && <button type="button" className="btn-secondary" onClick={() => onOpenPlanItem(done.planId!)}>OPEN THE PLAN ITEM</button>}
+        {/* WEEKLY-CLOSE-001: once what you chose is saved, say the week is closed and where it went. */}
+        {done.note && (done.plan || !carry) && <p className="meta-strong" data-week-closed style={{ margin: "8px 0 0", color: "var(--text-1)" }}>
+          Week closed. Your answers are in the note for {done.note}{done.plan ? `, and “${done.plan}” is in your plans` : ""}.
+        </p>}
         {error && <p className="meta" role="alert">{error}</p>}
       </section>
 
