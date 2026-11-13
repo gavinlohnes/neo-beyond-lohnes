@@ -14,7 +14,7 @@ import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
-import { deriveLifeMoment, followUpDate, hasPlanItem, LIGHT_DAY_TITLE, lifeMomentInput } from "../../../application/lifeTransition";
+import { deriveLifeMoment, followUpDate, hasPlanItem, LIGHT_DAY_TITLE, lifeMomentInput, livedDayDates } from "../../../application/lifeTransition";
 import { createObligation } from "../../../application/intentCommands";
 import { livedDayStartOf } from "../../../application/reflect";
 import { CheckInSheet } from "./CheckInSheet";
@@ -892,7 +892,7 @@ export function TodayScreen({
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasPlanItem(LIGHT_DAY_TITLE, followUpDate(readAt))])
+      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasPlanItem(LIGHT_DAY_TITLE, livedDayDates(readAt))])
         .then(([kind, dayBefore, lightPlanned]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, lightPlanned }), () => null),
       getSchedulePattern().catch(() => null),
     ]) : [null, null];
