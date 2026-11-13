@@ -35,8 +35,9 @@ for (const [day, text] of [
     const events = await db.events.count();
     const screen = await render(<TodayScreen onOpenLife={() => {}} />);
     await expect.poll(momentLine).toBe(text);
-    // Only the run-over moment offers a follow-up.
-    expect(screen.getByRole("button", { name: "PLAN A LIGHT DAY" }).elements()).toHaveLength(day === 20 ? 1 : 0);
+    // LIFE-STATE-003: only the run-over moment offers the post-run report and the recovery contract.
+    expect(screen.getByRole("region", { name: "Recovery contract" }).elements()).toHaveLength(day === 20 ? 1 : 0);
+    expect(screen.getByText("POST-RUN REPORT").elements()).toHaveLength(day === 20 ? 1 : 0);
     expect(await db.events.count()).toBe(events);
     expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
   });
@@ -54,39 +55,4 @@ it("the last shift is named, and mid-run there is no moment, only the state", as
   await render(<TodayScreen onOpenLife={() => {}} />);
   await expect.poll(() => document.querySelector("[aria-label='Operating state'] .today-life-state__line")?.textContent ?? "").toMatch(/^WORK RUN Shift 2 of 3\./);
   expect(momentLine()).toBeNull();
-});
-
-it("PLAN A LIGHT DAY previews, writes only on CONFIRM, and isn't offered twice", async () => {
-  vi.setSystemTime(new Date(2026, 10, 20, 18));
-  await startDay();
-  const screen = await render(<TodayScreen onOpenLife={() => {}} />);
-  await screen.getByRole("button", { name: "PLAN A LIGHT DAY" }).click();
-  const preview = screen.getByRole("group", { name: "Preview" });
-  await expect.element(preview.getByText("Adds this plan item for today. Nothing else changes.")).toBeVisible();
-  await preview.getByRole("button", { name: "CANCEL" }).click();
-  expect(await db.obligations.count()).toBe(0);
-  await screen.getByRole("button", { name: "PLAN A LIGHT DAY" }).click();
-  await screen.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
-  await expect.element(screen.getByText("Added plan item for today: Keep today light.")).toBeVisible();
-  const [item] = await db.obligations.toArray();
-  expect([item!.title, item!.plannedAt, item!.description]).toEqual(["Keep today light", "2026-11-20", "From the end of your run: the first day off after it."]);
-  await cleanup();
-  await render(<TodayScreen onOpenLife={() => {}} />);
-  await expect.element(page.getByText("“Keep today light” is already in today's plans.")).toBeVisible();
-  expect(page.getByRole("button", { name: "PLAN A LIGHT DAY" }).elements()).toHaveLength(0);
-});
-
-it("review of #495: confirmed on Friday evening, it isn't offered again on Saturday morning of the same lived day", async () => {
-  vi.setSystemTime(new Date(2026, 10, 20, 20));
-  await startDay();
-  const screen = await render(<TodayScreen onOpenLife={() => {}} />);
-  await screen.getByRole("button", { name: "PLAN A LIGHT DAY" }).click();
-  await screen.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
-  await expect.element(screen.getByText("Added plan item for today: Keep today light.")).toBeVisible();
-  await cleanup();
-  vi.setSystemTime(new Date(2026, 10, 21, 9)); // still Friday's lived day
-  await render(<TodayScreen onOpenLife={() => {}} />);
-  await expect.element(page.getByText("“Keep today light” is already in today's plans.")).toBeVisible();
-  expect(page.getByRole("button", { name: "PLAN A LIGHT DAY" }).elements()).toHaveLength(0);
-  expect(await db.obligations.count()).toBe(1);
 });

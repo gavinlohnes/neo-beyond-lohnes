@@ -2965,3 +2965,21 @@ Gavin: "Life-State Engine — Slice 2: make state transitions explicit, calm, an
   planned for the calendar day you're in, only on CONFIRM, and not offered again in that lived day once it exists (on
   either calendar date it covers, in any status). Nothing else writes.
 - **Not an Engine input;** no schema, command or recommendation change. Recovery contracts are slice 3.
+
+## LIFE-STATE-003 — post-run report and recovery contract (owner objective, 2026-11-13; slice 3)
+
+Gavin: "Life-State Engine — Slice 3: recovery contract and post-run report." Brief:
+[agent/LIFE-STATE-003.md](agent/LIFE-STATE-003.md). Builds on LIFE-STATE-001/002.
+
+- **Trigger:** slice 2's RUN OVER moment. The section sits just below TODAY's next card (the real next thing still
+  leads, FIELD-AUTHORITY-001) and steps aside while an operation owns the card.
+- **Post-run report:** a quiet POST-RUN REPORT disclosure, read when opened: the run's shifts and dates, main sleep and
+  check-in energy averages with how many shifts each rests on, workouts, and a plain line when little was recorded.
+  Records only: nothing estimated, compared or scored. The run's length and dates come from the saved schedule, so an
+  unrecorded shift doesn't split it ("3 shifts, … (2 recorded)"); with no saved schedule it says "N recorded work days".
+- **Recovery contract (optional):** "Sleep first", "Easy training or rest" (the programme is unchanged) and "Keep the
+  day light", for the first full day off (the recovery lived day's second calendar date). Pick any or none, preview,
+  then CONFIRM writes them as plan items through `createObligation`; change or remove them in MORE → PLAN TODAY. Not
+  offered again in that lived day once any is planned. Items are written one at a time, so a partial failure says what
+  was saved. It replaces slice 2's single light-day follow-up.
+- **Not an Engine input;** no schedule, training-plan, schema or command change.

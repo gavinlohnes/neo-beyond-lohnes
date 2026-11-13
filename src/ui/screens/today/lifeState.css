@@ -10,3 +10,11 @@
 .redesign-today .today-life-state__moment strong { font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; }
 .redesign-today .today-life-state__follow { width: auto; margin-top: 6px; }
 .redesign-today .today-life-state__preview { padding: 10px 12px; margin-top: 6px; }
+/* LIFE-STATE-003: the post-run report (a quiet disclosure) and the optional recovery contract. */
+.redesign-today .today-run-over { margin: 12px 0 0; padding: 10px 0; border-block: 1px solid var(--border-subtle, var(--border-strong)); }
+.redesign-today .today-life-state__report { margin-top: 6px; }
+.redesign-today .today-life-state__report summary { cursor: pointer; color: var(--text-1); font-size: 12px; letter-spacing: .08em; min-height: 36px; display: flex; align-items: center; }
+.redesign-today .today-life-state__report ul, .redesign-today .today-life-state__preview ul { margin: 4px 0 6px; padding-left: 18px; }
+.redesign-today .today-life-state__contract { margin-top: 8px; }
+.redesign-today .today-life-state__choice { display: flex; align-items: center; gap: 10px; min-height: 40px; color: var(--text-1); font-size: 15px; }
+.redesign-today .today-life-state__choice input { width: 20px; height: 20px; }

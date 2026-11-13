@@ -35,10 +35,6 @@ describe("deriveLifeMoment", () => {
   it("a one-shift run starts and ends the same day", () => {
     expect(moment("OFF", "OFF", "WORK", "OFF")).toMatchObject({ moment: "RUN_STARTS", line: "A one-shift run. The run starts tonight at 18:00. Recovery starts after it ends at 06:00." });
   });
-  it("only run-over offers a follow-up, a light day; the rest are words only", () => {
-    expect(moment("WORK", "WORK", "OFF", "OFF")?.followUp).toEqual({ title: "Keep today light", description: "From the end of your run: the first day off after it." });
-    for (const m of [moment("OFF", "OFF", "WORK", "WORK"), moment("OFF", "WORK", "WORK", "OFF"), moment("OFF", "OFF", "OFF", "WORK"), moment("WORK", "OFF", "OFF", "OFF")]) expect(m?.followUp).toBeNull();
-  });
   it("with yesterday unknown, it won't claim a run started", () => {
     expect(moment(null, null, "WORK", "WORK")).toBeNull();
   });

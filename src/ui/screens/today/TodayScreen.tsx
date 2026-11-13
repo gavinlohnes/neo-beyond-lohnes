@@ -14,7 +14,9 @@ import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
-import { deriveLifeMoment, followUpDate, hasPlanItem, LIGHT_DAY_TITLE, lifeMomentInput, livedDayDates } from "../../../application/lifeTransition";
+import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
+import { contractDate, hasRecoveryContract } from "../../../application/recoveryContract";
+import { PostRunReportDisclosure, RecoveryContractOffer } from "./RecoveryContract";
 import { createObligation } from "../../../application/intentCommands";
 import { livedDayStartOf } from "../../../application/reflect";
 import { CheckInSheet } from "./CheckInSheet";
@@ -408,7 +410,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
-  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; lightPlanned: boolean } | null>(null);
+  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -892,8 +894,8 @@ export function TodayScreen({
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasPlanItem(LIGHT_DAY_TITLE, livedDayDates(readAt))])
-        .then(([kind, dayBefore, lightPlanned]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, lightPlanned }), () => null),
+      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt)])
+        .then(([kind, dayBefore, contractPlanned]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned }), () => null),
       getSchedulePattern().catch(() => null),
     ]) : [null, null];
 
@@ -2722,12 +2724,16 @@ export function TodayScreen({
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep}>
-      <LifeStateBand reading={lifeReading} moment={lifeMoment} followUpPlanned={!!recordedNow?.lightPlanned} busy={busy}
-        onAddFollowUp={async (followUp) => {
-          await createObligation({ title: followUp.title, plannedAt: followUpDate(new Date()), description: followUp.description });
-          await refresh();
-        }} /></div>}
+      <LifeStateBand reading={lifeReading} moment={lifeMoment} /></div>}
     {nextSection}
+    {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
+    {day && lifeMoment?.moment === "RUN_OVER" && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId || lateRecoverWithoutSleep) && <section className="today-run-over" aria-label="After the run">
+        {/* LIFE-STATE-003: the run that just ended, and an optional recovery contract for the first full day off. */}
+        <PostRunReportDisclosure />
+        <RecoveryContractOffer dayLabel={new Date(`${contractDate(now)}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" })} planned={!!recordedNow?.contractPlanned} busy={busy}
+          onSave={async (item) => { await createObligation({ title: item.title, plannedAt: contractDate(new Date()), description: item.description }); }}
+          onSaved={() => void refresh()} />
+      </section>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
     {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
