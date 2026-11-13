@@ -282,7 +282,8 @@ fresh general review.
   than calling `scheduledWorkContextForLivedDay` directly in a new consumer. Shift What-If stays hypothetical.
   `shiftRun(now, pattern, 21, confirmed)` takes `getConfirmedKinds()` so run positions agree (FIELD-READINESS-001).
   `application/ahead.ts` `deriveAhead` names the next work/off switch from Week Ahead's days (OPERATOR-EXPERIENCE-001);
-  reuse it for any "what's next" surface (Alfred, header) rather than re-deriving.
+  reuse it for any "what's next" surface (Alfred, header) rather than re-deriving. `application/todayPicture.ts`
+  bundles TODAY's NOW (Life State) and NEXT for Alfred's context and the free helper (slice 2).
   `application/sinceLastLook.ts` diffs TODAY's band between visits (device-local snapshot, slice 3).
   `application/livedDayMap.ts` places a lived day's recorded marks on the 16:30 → 16:30 bar (DAY-MAP-001); reuse it for
   any day timeline rather than re-querying.

@@ -57,8 +57,13 @@ Rules:
 
 ## Roadmap (later slices, each its own PR)
 
-1. **Alfred explains TODAY.** Give Alfred's Operator Context the same NOW/NEXT readings and their WHY, so "why is
-   TODAY showing this?" gets the deterministic answer. Read-side.
+1. **Alfred explains TODAY: built in slice 2.** Branch `ccr-88f5c085-alfred-explains`. `application/todayPicture.ts`
+   reads NOW and NEXT the same way TODAY's band does. Two places now use it:
+   - Alfred's context gets a "What TODAY shows" record: the state, its WHY and NEXT with its source. The record says
+     it is not a recommendation, names the actions TODAY offers (WHY, and WEEK AHEAD, which is confirm-first), and
+     says Alfred cannot change any of it.
+   - The free helper (no key needed) answers "why does today say work run?" and "what's next?" with the same words.
+   With no started day it says so; it never guesses. It is read-side, Feature lane, and writes nothing.
 2. **Changed since you last looked.** A per-device note of new records since the last open of TODAY (Garmin sync, a
    confirmed change, a check-in). Needs a decision on where "last looked" lives; local only.
 3. **Contextual actions on NEXT.** For example, on a FLIP day, "plan sleep before the shift" via the circadian plan's

@@ -16,6 +16,7 @@ import { ROUTINE_MOMENT_LABELS } from "../domain/routines";
 import { MEMORY_LABELS } from "../domain/memory";
 import { getSleepDebt, SLEEP_NEED_MINUTES } from "./monthQueries";
 import { getWeekAhead } from "./weekAheadQueries";
+import { describeTodayPicture, getTodayPicture } from "./todayPicture";
 import { getMeasuredSnapshot } from "./measuredQueries";
 import { getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitSummary } from "./quitQueries";
@@ -93,6 +94,10 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
         await read("Today's shift forecast", async () => shift, (w) => w ? [s("FORECAST", active.id, JSON.stringify(w), "Scheduled shift",
           `Scheduled shift ${date(w.start.toISOString())} → ${date(w.end.toISOString())}. Forecast, not a recorded work interval or proof of free time.`, "Configured forecast")] : []);
       }
+      // OPERATOR-EXPERIENCE-001 slice 2: what TODAY's band shows (NOW, NEXT) and why, so Alfred explains it from the
+      // same reading instead of re-deriving it.
+      await read("What TODAY shows", () => getTodayPicture(now), (p) => p ? [s("CURRENT_DAY", `${active.id}:picture`, JSON.stringify(p), "What TODAY shows",
+        `TODAY SHOWS: ${describeTodayPicture(p)} This describes the day from records and the schedule; it is not a recommendation (BEYOND's advice is the current recommendation below). On TODAY the operator can open WHY (these sources) and WEEK AHEAD (see, confirm, move or cancel schedule changes; each needs the operator's CONFIRM). Alfred cannot change any of it.`)] : []);
       await read("Work marks", async () => ({ started: await getWorkPeriodStarted(active.id), ended: await getWorkPeriodEnded(active.id) }), (w) => [s("WORK", active.id, JSON.stringify(w), "Recorded work marks",
         `WORK TODAY: started ${w.started ? date(w.started.occurredAt) : "not recorded"}; ended ${w.ended ? date(w.ended.occurredAt) : "not recorded"}.`, "Recorded event")]);
       await read("Check-in", () => getLatestCheckIn(active.id), (c) => c ? [s("CHECK_IN", c.id, JSON.stringify(c), "Latest check-in",
