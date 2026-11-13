@@ -86,7 +86,7 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `${p.loggedType === "WATER_LOGGED" ? "Water" : p.loggedType === "MEAL_LOGGED" ? "Meal" : "Protein"} log moved to ${new Date(String(p.occurredAt)).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`;
     case "WORK_CONTEXT_SET":
       return `Work context set to ${p.workContext} (${
-        p.source === "MANUAL" ? "manual" : p.source === "SCHEDULE_STANDING" ? "per your saved schedule" : "accepted schedule suggestion"
+        p.source === "MANUAL" ? "manual" : p.source === "SCHEDULE_STANDING" ? "per your saved schedule" : p.source === "SCHEDULE_EXCEPTION" ? "per your confirmed schedule change" : "accepted schedule suggestion"
       }).`;
     case "MINIMUM_DAY_ENABLED":
       return "Minimum Day enabled.";

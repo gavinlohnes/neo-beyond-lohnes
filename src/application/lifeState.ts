@@ -1,5 +1,5 @@
 import type { SchedulePattern } from "../domain/common/types";
-import { isOperatorSavedSchedule, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
+import { formatLocalDate, isOperatorSavedSchedule, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
 import { db } from "../persistence/db";
 import { livedDayStartOf } from "./reflect";
 import { shiftRun, type ShiftRun } from "./shiftRun";
@@ -24,9 +24,10 @@ export type LifeState = "WORK_RUN" | "RECOVERY" | "FLIP" | "FREE";
 export type DayKind = "WORK" | "OFF";
 export interface LifeStateInput {
   /** `by`: who set today's record (CONTEXT-INTEGRATION-001), so WHY never calls a schedule default "recorded by you". */
-  today: { recorded: DayKind | null; scheduled: DayKind | null; by?: "OPERATOR" | "SCHEDULE" };
-  yesterday: { recorded: DayKind | null; scheduled: DayKind | null };
-  tomorrow: { scheduled: DayKind | null; date: Date };
+  today: { recorded: DayKind | null; scheduled: DayKind | null; by?: "OPERATOR" | "SCHEDULE" | "EXCEPTION"; confirmed?: boolean };
+  yesterday: { recorded: DayKind | null; scheduled: DayKind | null; confirmed?: boolean };
+  /** SCHEDULE-EXCEPTIONS-001: `scheduled` is the planning answer, a confirmed change when `confirmed`, else the rotation. */
+  tomorrow: { scheduled: DayKind | null; date: Date; confirmed?: boolean };
   run: ShiftRun | null;
 }
 export interface LifeStateReading {
@@ -41,11 +42,13 @@ export interface LifeStateReading {
 export const LIFE_STATE_LABELS: Record<LifeState, string> = { WORK_RUN: "WORK RUN", RECOVERY: "RECOVERY", FLIP: "FLIP", FREE: "FREE" };
 const weekday = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short" });
 const said = (side: { recorded: DayKind | null; scheduled: DayKind | null }) => side.recorded ?? side.scheduled;
-const source = (name: string, side: { recorded: DayKind | null; scheduled: DayKind | null; by?: "OPERATOR" | "SCHEDULE" }) => {
+const source = (name: string, side: { recorded: DayKind | null; scheduled: DayKind | null; by?: "OPERATOR" | "SCHEDULE" | "EXCEPTION"; confirmed?: boolean }) => {
   const kind = said(side);
   if (!kind) return `${name}: not recorded and no saved schedule.`;
   const what = kind === "WORK" ? "a work day" : "a day off";
   if (side.recorded && side.by === "SCHEDULE") return `${name}: ${what}, set from your saved schedule when the day started.`;
+  if (side.recorded && side.by === "EXCEPTION") return `${name}: ${what}, set from a schedule change you confirmed.`;
+  if (!side.recorded && side.confirmed) return `${name}: ${what}, a schedule change you confirmed.`;
   return side.recorded ? `${name}: recorded as ${what}.` : `${name}: ${what} on your saved schedule.`;
 };
 
@@ -53,7 +56,7 @@ export function deriveLifeState(input: LifeStateInput): LifeStateReading | null 
   const today = said(input.today), yesterday = said(input.yesterday), tomorrow = input.tomorrow.scheduled;
   if (!today) return null;
   const why = [source("Today", input.today), source("Yesterday", input.yesterday),
-    tomorrow ? `Tomorrow: ${tomorrow === "WORK" ? "a work day" : "a day off"} on your saved schedule.` : "Tomorrow: no saved schedule."];
+    tomorrow ? `Tomorrow: ${tomorrow === "WORK" ? "a work day" : "a day off"}${input.tomorrow.confirmed ? ", a schedule change you confirmed" : " on your saved schedule"}.` : "Tomorrow: no saved schedule."];
   // The run counts only when the schedule agrees with what today actually is.
   const run = input.run && input.run.kind === today ? input.run : null;
   const back = run && run.kind === "OFF" ? ` Back on ${weekday(run.next)}.` : tomorrow === "WORK" ? " Back on tomorrow." : "";
@@ -87,14 +90,18 @@ export async function getRecordedDayBefore(now: Date, k: number): Promise<DayKin
 /** Read only: the work context recorded for the previous lived day, or null when none was recorded. */
 export const getRecordedYesterday = (now: Date) => getRecordedDayBefore(now, 1);
 
-export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorded: DayKind | null, yesterdayRecorded: DayKind | null, todayBy?: "OPERATOR" | "SCHEDULE"): LifeStateInput {
+export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorded: DayKind | null, yesterdayRecorded: DayKind | null,
+  todayBy?: "OPERATOR" | "SCHEDULE" | "EXCEPTION", confirmed: ReadonlyMap<string, DayKind> = new Map()): LifeStateInput {
   const start = livedDayStartOf(now);
   const saved = isOperatorSavedSchedule(pattern);
-  const scheduled = (k: number): DayKind | null => (saved ? scheduledWorkContextForLivedDay(livedStart(start, k), pattern) : null);
+  // SCHEDULE-EXCEPTIONS-001: a confirmed change for that lived day beats the rotation for planning.
+  const dateOf = (k: number) => formatLocalDate(livedStart(start, k));
+  const scheduled = (k: number): DayKind | null => confirmed.get(dateOf(k)) ?? (saved ? scheduledWorkContextForLivedDay(livedStart(start, k), pattern) : null);
+  const isConfirmed = (k: number) => (confirmed.has(dateOf(k)) ? { confirmed: true } : {});
   return {
-    today: { recorded: todayRecorded, scheduled: scheduled(0), ...(todayRecorded && todayBy ? { by: todayBy } : {}) },
-    yesterday: { recorded: yesterdayRecorded, scheduled: scheduled(-1) },
-    tomorrow: { scheduled: scheduled(1), date: livedStart(start, 1) },
+    today: { recorded: todayRecorded, scheduled: scheduled(0), ...(todayRecorded && todayBy ? { by: todayBy } : {}), ...isConfirmed(0) },
+    yesterday: { recorded: yesterdayRecorded, scheduled: scheduled(-1), ...isConfirmed(-1) },
+    tomorrow: { scheduled: scheduled(1), date: livedStart(start, 1), ...isConfirmed(1) },
     run: shiftRun(now, pattern),
   };
 }

@@ -31,6 +31,7 @@ import type { Habit } from "../domain/habits";
 import type { DailyNote } from "../domain/dailyNotes";
 import type { Collection, CollectionItem } from "../domain/collections";
 import type { Highlight } from "../domain/highlights";
+import type { ScheduleException } from "../domain/scheduleExceptions";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -68,6 +69,7 @@ export class BeyondDB extends Dexie {
   collections!: Table<Collection, string>;
   collectionItems!: Table<CollectionItem, string>;
   highlights!: Table<Highlight, string>;
+  scheduleExceptions!: Table<ScheduleException, string>;
 
   constructor() {
     super("beyond");
@@ -405,6 +407,10 @@ export class BeyondDB extends Dexie {
     });
     // HIGHLIGHTS-001: selected passages with preserved source provenance.
     this.version(25).stores({ highlights: "id, createdAt, sourceSavedItemId, *tags" });
+    // SCHEDULE-EXCEPTIONS-001 (owner-approved Protected persistence, 2026-11-13): confirmed future changes to the
+    // standing rotation. Additive only; nothing prior to migrate. Native Dexie backups include it; older backups
+    // simply restore with none.
+    this.version(26).stores({ scheduleExceptions: "id, date, status, swapId, createdAt" });
   }
 }
 

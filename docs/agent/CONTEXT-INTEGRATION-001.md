@@ -29,8 +29,9 @@ The energy forecast uses recorded days for history and today. Alfred and the fre
 from. What-If stays hypothetical; schedule changes never rewrite a recorded day; overnight shifts belong to the lived
 day they start in.
 
-## Gap: CONFIRMED future exceptions (decision needed)
+## Gap: CONFIRMED future exceptions (decided: SCHEDULE-EXCEPTIONS-001)
 
 BEYOND has no record of an operator-approved future change (overtime next Tuesday, a swap, a day off booked ahead).
 Today such a day can only become known once its lived day starts and is recorded. Adding it needs new persistence and
 event semantics (Protected), so it was not built. The resolver's `CONFIRMED` basis is reserved for it.
+Gavin approved it as SCHEDULE-EXCEPTIONS-001, which fills the basis; see [SCHEDULE-EXCEPTIONS-001.md](SCHEDULE-EXCEPTIONS-001.md).

@@ -34,6 +34,8 @@ export const DAY_WRITE_TABLES = [
   "beyondDays",
   "workoutSessions",
   "schedulePatterns",
+  // SCHEDULE-EXCEPTIONS-001: startDay reads a confirmed exception for the lived day it starts (read only here).
+  "scheduleExceptions",
   "outcomes",
   // submitCheckIn reads unresolved obligations and their missions for arbitration.
   "missions",

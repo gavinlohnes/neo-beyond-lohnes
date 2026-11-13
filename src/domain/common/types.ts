@@ -568,7 +568,8 @@ export interface OutcomeRatedPayload {
  * (engine/scheduledContext.ts's deriveStandingWorkContext), so startDay may
  * write this one source itself. A later MANUAL declaration always wins.
  */
-export type WorkContextSource = "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED" | "SCHEDULE_STANDING";
+/** SCHEDULE_EXCEPTION (SCHEDULE-EXCEPTIONS-001): set at day start from an operator-confirmed exception. */
+export type WorkContextSource = "MANUAL" | "SCHEDULE_SUGGESTION_ACCEPTED" | "SCHEDULE_STANDING" | "SCHEDULE_EXCEPTION";
 
 export interface WorkContextSetPayload {
   commandId: string;

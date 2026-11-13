@@ -15,7 +15,7 @@ import { DEFAULT_NUTRITION_TARGETS } from "../../src/engine/nutritionTargets";
  */
 
 const DB_NAME = "beyond";
-const CURRENT_SCHEMA_VERSION = 25;
+const CURRENT_SCHEMA_VERSION = 26;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -80,6 +80,7 @@ describe("Dexie v1 -> current schema migration", () => {
     expect(await upgraded.collections.count()).toBe(0);
     expect(await upgraded.collectionItems.count()).toBe(0);
     expect(await upgraded.highlights.count()).toBe(0);
+    expect(await upgraded.scheduleExceptions.count()).toBe(0);
 
     upgraded.close();
   });

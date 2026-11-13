@@ -147,7 +147,7 @@ export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
       const payload: WorkContextSetPayload = {
         commandId: correlationId,
         workContext: standing.workContext,
-        source: "SCHEDULE_STANDING",
+        source: standing.source,
       };
       await logEvent(day.id, "WORK_CONTEXT_SET", payload, "SYSTEM", correlationId);
     }
@@ -770,7 +770,7 @@ export async function setWorkContext(
   workContext: "WORK" | "OFF",
   // SCHEDULE_STANDING is written only by startDay (DROP 0); an operator's
   // own change is always MANUAL or an accepted suggestion.
-  source: Exclude<WorkContextSource, "SCHEDULE_STANDING">,
+  source: Exclude<WorkContextSource, "SCHEDULE_STANDING" | "SCHEDULE_EXCEPTION">,
 ): Promise<void> {
   return writeAtomically(DAY_WRITE_TABLES, async () => {
     await db.beyondDays.update(beyondDayId, {

@@ -58,10 +58,10 @@ describe("deriveStandingWorkContext", () => {
   it("is CLEAR from a saved schedule with no correction this lived day", () => {
     expect(
       deriveStandingWorkContext({ dayStartedAt: at(2026, 10, 12, 16, 30), pattern: SAVED, manualCorrectionEarlierThisLivedDay: false }),
-    ).toEqual({ clear: true, workContext: "WORK" });
+    ).toEqual({ clear: true, workContext: "WORK", source: "SCHEDULE_STANDING" });
     expect(
       deriveStandingWorkContext({ dayStartedAt: at(2026, 10, 14, 16, 30), pattern: SAVED, manualCorrectionEarlierThisLivedDay: false }),
-    ).toEqual({ clear: true, workContext: "OFF" });
+    ).toEqual({ clear: true, workContext: "OFF", source: "SCHEDULE_STANDING" });
   });
 
   it("is UNCLEAR when only the seeded default exists", () => {
@@ -92,5 +92,20 @@ describe("nextRolloverBoundaryAfter", () => {
     // US DST ends Sun Nov 1 2026; the boundary is built from calendar parts, never a fixed offset.
     const next = nextRolloverBoundaryAfter(at(2026, 10, 31, 17, 0));
     expect([next.getDate(), next.getHours(), next.getMinutes()]).toEqual([1, 16, 30]);
+  });
+});
+
+describe("SCHEDULE-EXCEPTIONS-001: a confirmed exception at day start", () => {
+  const saved = { ...DEFAULT_SCHEDULE_PATTERN, updatedAt: "2026-10-05T00:00:00.000Z" };
+  const wed = new Date(2026, 10, 18, 16, 35); // a scheduled work day
+  it("beats the rotation, and says it came from the exception", () => {
+    expect(deriveStandingWorkContext({ dayStartedAt: wed, pattern: saved, manualCorrectionEarlierThisLivedDay: false, confirmedException: "OFF" }))
+      .toEqual({ clear: true, workContext: "OFF", source: "SCHEDULE_EXCEPTION" });
+  });
+  it("still applies with no saved schedule (the operator confirmed it), but never over a manual correction this lived day", () => {
+    expect(deriveStandingWorkContext({ dayStartedAt: wed, pattern: DEFAULT_SCHEDULE_PATTERN, manualCorrectionEarlierThisLivedDay: false, confirmedException: "WORK" }))
+      .toEqual({ clear: true, workContext: "WORK", source: "SCHEDULE_EXCEPTION" });
+    expect(deriveStandingWorkContext({ dayStartedAt: wed, pattern: saved, manualCorrectionEarlierThisLivedDay: true, confirmedException: "WORK" }))
+      .toEqual({ clear: false, reason: "CORRECTED_THIS_LIVED_DAY" });
   });
 });

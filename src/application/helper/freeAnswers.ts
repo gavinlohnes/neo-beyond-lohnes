@@ -124,7 +124,7 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
     if (w.days.every((d) => d.basis === "UNKNOWN")) return "There's no saved schedule to read that from. Set it in MORE → WORK SCHEDULE.";
     const next = w.days.find((d) => d.basis !== "UNKNOWN" && d.work === "WORK" && (d.date > formatLocalDate(now) || now.getHours() < (d.shiftStartHour ?? 24)));
     const at = next?.shiftStartHour === null || next?.shiftStartHour === undefined ? " (start time not saved)" : `, ${String(next.shiftStartHour).padStart(2, "0")}:00`;
-    return next ? `Next shift: ${day(next.date)}${at}. ${next.basis === "RECORDED" ? "Recorded for that day." : "From your saved schedule (a forecast)."}` : "No shift on your schedule in the next 7 days.";
+    return next ? `Next shift: ${day(next.date)}${at}. ${next.basis === "RECORDED" ? "Recorded for that day." : next.basis === "CONFIRMED" ? "A schedule change you confirmed." : "From your saved schedule (a forecast)."}` : "No shift on your schedule in the next 7 days.";
   }
   if (/\b(due|planned|on for)\b/.test(q)) {
     const week = await getWeekTasks(now);

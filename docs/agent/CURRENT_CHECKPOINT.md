@@ -24,12 +24,18 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: CONTEXT-INTEGRATION-001, unified schedule consistency (Gavin, 2026-11-13) — Feature lane
+# Current objective: SCHEDULE-EXCEPTIONS-001, confirmed future schedule changes (Gavin, 2026-11-13) — Protected (approved)
 
-Brief: [CONTEXT-INTEGRATION-001.md](CONTEXT-INTEGRATION-001.md). One read-only work-context resolver
-(`application/workContextResolution.ts`); Week Ahead, energy forecast, Life State WHY, Alfred, free helper and training
-programme agree and say where it came from; no invented schedule when none is saved. Open decision: confirmed future
-exceptions need new persistence (Protected). LIFE-STATE-003 merged in #496; #402 is Gavin's next work day.
+Brief: [SCHEDULE-EXCEPTIONS-001.md](SCHEDULE-EXCEPTIONS-001.md). Branch `ccr-88f5c085-schedule-exceptions`.
+
+- **What it adds:**
+  - schema v26 `scheduleExceptions` (overtime, time off, swap; append-only history; non-destructive cancel);
+  - day start records a confirmed change as `SCHEDULE_EXCEPTION`;
+  - Week Ahead: confirm/cancel with a preview, and a CONFIRMED basis everywhere the resolver is read.
+- **Verification:** typecheck, architecture, the node and browser suites and the build.
+- **Next:** independent exact-head review, then Gavin merges.
+- **Residual risks:** see the brief.
+- **Earlier:** CONTEXT-INTEGRATION-001 merged in #497. #402 is Gavin's next work day.
 
 ---
 

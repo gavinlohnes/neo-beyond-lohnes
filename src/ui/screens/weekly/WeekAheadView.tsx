@@ -6,6 +6,7 @@ import { readCachedGoogleEvents, type GoogleCalendarEvent } from "../../../appli
 import { GoogleCalendarPanel } from "./GoogleCalendarPanel";
 import { FamilyCalendarPanel } from "./FamilyCalendarPanel";
 import { ShiftWhatIfPanel } from "./ShiftWhatIfPanel";
+import { ConfirmChangeOffer, ConfirmedChangesList } from "./ScheduleExceptionControls";
 import type { WhatIfChange } from "../../../application/shiftWhatIf";
 import { getWeekEnergyForecast, type WeekEnergyForecast } from "../../../application/weekEnergyForecast";
 import { ForecastActions, forecastLine, WeekEnergyForecastSummary } from "./WeekEnergyForecast";
@@ -32,6 +33,8 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(() => readCachedGoogleEvents());
   const [whatIf, setWhatIf] = useState<WhatIfChange | null>(null);
   const [forecast, setForecast] = useState<WeekEnergyForecast | null>(null);
+  // SCHEDULE-EXCEPTIONS-001: bumped after a confirmed change, so the week, forecast and list re-read.
+  const [changes, setChanges] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   // Review of #474: after CLOSE, focus returns to that day's WHAT IF button.
   const [returnTo, setReturnTo] = useState<string | null>(null);
@@ -56,13 +59,14 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
     return () => {
       current = false;
     };
-  }, [now]);
+  }, [now, changes]);
 
   if (!week) return <p className="meta">Loading…</p>;
 
   return (
     <div data-week-ahead ref={rootRef}>
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
+      <ConfirmedChangesList now={now} refreshKey={changes} onChanged={() => setChanges((n) => n + 1)} />
       {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
       {forecast?.scheduled && <ForecastActions forecast={forecast} onOpenPlanItem={onOpenPlanItem} onOpenPlans={onOpenPlans}
         plannedOn={(date) => { const t = tasks?.find((d) => d.date === date); return t ? [...t.planned, ...t.due].map((o) => ({ id: o.id, title: o.title })) : []; }}
@@ -82,7 +86,7 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
           <p className="meta" style={{ margin: "2px 0 0" }}>
             {/* CONTEXT-INTEGRATION-001: an unknown day says so; a recorded day says it was recorded, not forecast. */}
             {day.basis === "UNKNOWN" ? "Work or off not known · no saved schedule"
-              : <>{day.work === "WORK" ? (day.shiftStartHour === null ? "SHIFT" : shiftLabel(day.shiftStartHour)) : "OFF"}{day.basis === "RECORDED" ? " · recorded" : ""}
+              : <>{day.work === "WORK" ? (day.shiftStartHour === null ? "SHIFT" : shiftLabel(day.shiftStartHour)) : "OFF"}{day.basis === "RECORDED" ? " · recorded" : day.basis === "CONFIRMED" ? " · confirmed change" : ""}
                 {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}` : " · Rest"}</>}
           </p>
           {(() => {
@@ -101,8 +105,12 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
             <p className="meta" style={{ margin: "4px 0 0" }} key={event.id}>Google · {event.title}{event.allDay ? " · all day" : ` · ${new Date(event.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}</p>
           ))}
           {/* What-If is about the plan: not for an unknown day, nor for a day already recorded. */}
-          {day.basis === "UNKNOWN" || day.basis === "RECORDED" ? null : whatIf?.date === day.date
-            ? <ShiftWhatIfPanel change={whatIf} events={calendarEvents} now={now} onClose={() => { setReturnTo(whatIf.date); setWhatIf(null); }} />
+          {/* A confirmed day is changed or cancelled in CONFIRMED CHANGES above, not through What-If. */}
+          {day.basis === "UNKNOWN" || day.basis === "RECORDED" || day.basis === "CONFIRMED" ? null : whatIf?.date === day.date
+            ? <><ShiftWhatIfPanel change={whatIf} events={calendarEvents} now={now} onClose={() => { setReturnTo(whatIf.date); setWhatIf(null); }} />
+              <ConfirmChangeOffer date={whatIf.date} to={whatIf.to}
+                swapWith={week.days.filter((d) => d.basis === "PREDICTED" && d.date !== whatIf.date && d.work === whatIf.to && new Date(`${d.date}T16:30:00`) > (now ?? new Date())).map((d) => d.date)}
+                onConfirmed={() => { setWhatIf(null); setChanges((n) => n + 1); }} /></>
             : <button type="button" data-what-if className="btn-secondary" style={{ marginTop: 6 }} aria-label={`What if ${dayLabel(day.date)} were ${day.work === "WORK" ? "a day off" : "a shift"}?`}
                 onClick={() => setWhatIf({ date: day.date, to: day.work === "WORK" ? "OFF" : "WORK" })}>{day.work === "WORK" ? "WHAT IF I'M OFF?" : "WHAT IF I WORK?"}</button>}
         </div>
