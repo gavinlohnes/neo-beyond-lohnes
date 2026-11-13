@@ -18,17 +18,24 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 5. **One session per item.** No parallel builders or researchers on the same objective.
 6. **"Status" gets a one-paragraph answer:** what's open, what's waiting on whom, the next step.
 7. **Fewer pushes:** doc and checkpoint updates ride with the next code push, not alone, so CI isn't cancelled for nothing.
+8. **A fresh branch per PR** (Gavin, 2026-11-12: "use a fresh branch per PR"): each PR gets its own branch cut from the
+   latest `origin/master` (e.g. `ccr-88f5c085-pwa-001`), so it carries only its own commits and the squash-merge
+   message stays short. The old long-lived branch is no longer pushed.
 
 ---
 
-# Current objective: GUIDED-001, small guided flows where multi-step actions were unclear (Gavin, 2026-11-12)
+# Current objective: PWA-001, the installed app on a real phone (Gavin, 2026-11-13)
 
-Brief: light inline guidance on 1–3 existing multi-step paths; no new features, screens, tours or chrome; every save
-stays confirm-first. Feature lane. Chosen: (1) the weekly interview, whose SAVE TO NOTE and carry-forward buttons sat
-disabled with no reason and never said the plan item is a separate, optional step: one quiet line now names the next
-step (answer → SAVE TO NOTE previews first → optional plan item); (2) health import, where "Preview ready" didn't
-point to confirming and, with two files, confirming one didn't say the other preview was still waiting. PERF-001
-merged in #489.
+Brief: audit the install / home-screen / launch / offline experience and fix only real gaps; packaging and feel, no
+features, no native shell. Feature lane. Audit (production build, Chromium as a Pixel 7): installable with no
+manifest or installability errors; icons 192/512 any + maskable (inside the safe zone) + monochrome + apple 180;
+black splash and first paint; offline relaunch ~0.25 s; TODAY, TRAIN, DATA, MORE, check-in, weekly check-in,
+history, review, daily note, backup and a cold +WATER shortcut all work offline, a water log saved offline survives a
+relaunch, Alfred shows the calm offline line; no console errors or failed requests. Gaps fixed: (1) a resumed app never
+checked for a new version (the browser checks only on navigation) — it now checks on returning to the foreground or
+reconnecting, at most every 10 minutes, and still waits for SYSTEM UPDATE READY; (2) the manifest gains an `id`
+equal to the identity Chrome already derives. Not needed: screenshots (richer install sheet; BEYOND is already
+installed), iOS-only tags. GUIDED-001 merged in #490.
 
 ---
 

@@ -40,6 +40,9 @@ export default defineConfig({
         importScripts: ["share-target-sw.js"],
       },
       manifest: {
+        // PWA-001: the installed app's identity, pinned to what Chrome already derives from start_url, so a future
+        // start_url change can't turn BEYOND into a second, separate app on the phone.
+        id: "/neo-beyond-lohnes/",
         name: "BEYOND",
         short_name: "BEYOND",
         description: "Personal operating system",
