@@ -44,3 +44,19 @@ Screenshot: `docs/agent/screenshots/WALKTHROUGH-002/07-day-map.png`. This is not
    stay confirm-first.
 3. **Since-you-last-looked outline:** new marks get a brief outline.
 4. **Alfred:** the map sentence joins "What TODAY shows" (after #502).
+
+## Slice 2 — the sleep plan's windows ahead (Gavin, 2026-11-13: "A"; amends SHIFT-SLEEP-PLAN-001 for the bar only)
+
+Branch `ccr-88f5c085-day-map-plan`.
+
+- **The plan exposes `windows`:** the nap window, when your wake time gives one, and your usual post-shift sleep from
+  the Garmin rhythm. These are the cards' own numbers; there is no new rule.
+- **TODAY draws them** as dashed or dotted outlines while they are still ahead, and the key names them.
+- **The hidden sentence** adds "Planned: …".
+- **"SLEEP PLAN ›"** opens ROUTE.
+- **During an operation** the map steps aside, and so does the link.
+- **Not drawn:**
+  - the shift block, because the bar's ON SHIFT segment already shows it;
+  - the suggested lift, because it has no time, only "post-shift morning", and BEYOND won't make up a time.
+
+Screenshot: `docs/agent/screenshots/WALKTHROUGH-002/08-day-map-sleep-plan.png`.

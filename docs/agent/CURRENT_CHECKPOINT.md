@@ -3512,3 +3512,7 @@ Brief: [DAY-MAP-001.md](DAY-MAP-001.md). Branch `ccr-88f5c085-day-map`.
   3. outline new marks;
   4. Alfred.
 - **Also open:** #502.
+- **DAY-MAP-001 slice 1** merged in #506.
+- **Slice 2** (branch `ccr-88f5c085-day-map-plan`): the sleep plan's windows are outlined on the bar, and SLEEP PLAN ›
+  opens ROUTE. This amends SHIFT-SLEEP-PLAN-001, per Gavin's "A".
+- **Next:** tap to act; outline new marks; Alfred.
