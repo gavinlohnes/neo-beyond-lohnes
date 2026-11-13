@@ -24,19 +24,23 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: SCHEDULE-MOVE-001, move a confirmed change (Gavin, 2026-11-13) — Feature lane
+# Current objective: OPERATOR-EXPERIENCE-001, unified daily operating system (Gavin, 2026-11-13) — Feature lane, slice 1
 
-Branch `ccr-88f5c085-schedule-move`.
+Brief and roadmap: [OPERATOR-EXPERIENCE-001.md](OPERATOR-EXPERIENCE-001.md). Branch `ccr-88f5c085-operator-experience`.
 
-- **What it adds:** a MOVE action in Week Ahead's CONFIRMED CHANGES list for single-day changes. It reuses
-  `moveScheduleException`; eligible days come from `getMoveTargets`. Preview, then CONFIRM; BACK writes nothing.
-  Swaps can't move.
-- **No change to:** the schema, the commands or the authority model.
+- **Slice 1:**
+  - TODAY's band says NOW and NEXT (forecast or confirmed change labelled; unknown never guessed; 16:30);
+  - WHY explains NEXT;
+  - WEEK AHEAD opens in place, with confirm, move and cancel, so it is one tap from TODAY instead of three screens.
 - **Verification:** typecheck, the architecture check, the node and browser suites and the build.
-- **Next:** Gavin merges.
-- **Field tests still needed:** #402; the 16:30 day start on the phone with a confirmed change; the presence line at
-  360 px.
-- **Earlier:** FIELD-READINESS-001 merged in #499; SCHEDULE-EXCEPTIONS-001 in #498.
+- **Next:**
+  - Gavin merges;
+  - then slice 2, Alfred explains TODAY (read-side).
+- **Field tests still needed:**
+  - #402;
+  - the 16:30 day start on the phone with a confirmed change;
+  - the presence line and the band at 360 px on the device.
+- **Earlier:** SCHEDULE-MOVE-001 in #500, FIELD-READINESS-001 in #499, SCHEDULE-EXCEPTIONS-001 in #498.
 
 ---
 

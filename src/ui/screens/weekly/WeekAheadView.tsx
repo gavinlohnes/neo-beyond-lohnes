@@ -26,7 +26,8 @@ function shiftLabel(hour: number): string {
 }
 
 /** FORECAST-DECIDE-001: onOpenPlanItem / onOpenPlans let the forecast's suggestions open your plans; left out without them. */
-export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date | undefined; onOpenPlanItem?: (id: string) => void; onOpenPlans?: () => void }) {
+/** OPERATOR-EXPERIENCE-001: onScheduleChanged tells a host (TODAY) that a confirmed change was saved, moved or cancelled. */
+export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChanged }: { now?: Date | undefined; onOpenPlanItem?: (id: string) => void; onOpenPlans?: () => void; onScheduleChanged?: () => void }) {
   const [week, setWeek] = useState<WeekAhead | null>(null);
   const [tasks, setTasks] = useState<WeekTasksDay[] | null>(null);
   const [tasksFailed, setTasksFailed] = useState(false);
@@ -66,7 +67,7 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
   return (
     <div data-week-ahead ref={rootRef}>
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
-      <ConfirmedChangesList now={now} refreshKey={changes} onChanged={() => setChanges((n) => n + 1)} />
+      <ConfirmedChangesList now={now} refreshKey={changes} onChanged={() => { setChanges((n) => n + 1); onScheduleChanged?.(); }} />
       {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
       {forecast?.scheduled && <ForecastActions forecast={forecast} onOpenPlanItem={onOpenPlanItem} onOpenPlans={onOpenPlans}
         plannedOn={(date) => { const t = tasks?.find((d) => d.date === date); return t ? [...t.planned, ...t.due].map((o) => ({ id: o.id, title: o.title })) : []; }}
@@ -110,7 +111,7 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
             ? <><ShiftWhatIfPanel change={whatIf} events={calendarEvents} now={now} onClose={() => { setReturnTo(whatIf.date); setWhatIf(null); }} />
               <ConfirmChangeOffer date={whatIf.date} to={whatIf.to}
                 swapWith={week.days.filter((d) => d.basis === "PREDICTED" && d.date !== whatIf.date && d.work === whatIf.to && new Date(`${d.date}T16:30:00`) > (now ?? new Date())).map((d) => d.date)}
-                onConfirmed={() => { setWhatIf(null); setChanges((n) => n + 1); }} /></>
+                onConfirmed={() => { setWhatIf(null); setChanges((n) => n + 1); onScheduleChanged?.(); }} /></>
             : <button type="button" data-what-if className="btn-secondary" style={{ marginTop: 6 }} aria-label={`What if ${dayLabel(day.date)} were ${day.work === "WORK" ? "a day off" : "a shift"}?`}
                 onClick={() => setWhatIf({ date: day.date, to: day.work === "WORK" ? "OFF" : "WORK" })}>{day.work === "WORK" ? "WHAT IF I'M OFF?" : "WHAT IF I WORK?"}</button>}
         </div>
