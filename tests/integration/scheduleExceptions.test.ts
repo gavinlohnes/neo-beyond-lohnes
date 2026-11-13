@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "dexie-export-import";
 import { setWorkContext, startDay, updateSchedulePattern } from "../../src/application/commands";
 import {
-  cancelScheduleException, changeScheduleException, confirmScheduleException, confirmShiftSwap, getConfirmedExceptions, moveScheduleException,
+  cancelScheduleException, changeScheduleException, confirmScheduleException, confirmShiftSwap, getConfirmedExceptions, getMoveTargets, moveScheduleException,
 } from "../../src/application/scheduleExceptions";
 import { getWeekAhead } from "../../src/application/weekAheadQueries";
 import { getWeekEnergyForecast } from "../../src/application/weekEnergyForecast";
@@ -181,5 +181,49 @@ describe("backup and restore", () => {
     await applyAnyRestore(file(older));
     expect(await db.scheduleExceptions.count()).toBe(0);
     expect((await getSchedulePattern()).weeks).toEqual(ROTATION.weeks);
+  });
+});
+
+describe("SCHEDULE-MOVE-001: moving a confirmed change", () => {
+  it("offers only future days where the rotation says the opposite and nothing else is confirmed", async () => {
+    const overtime = await confirmScheduleException({ date: "2026-11-21", kind: "WORK" });
+    await confirmScheduleException({ date: "2026-11-23", kind: "OFF" });
+    const targets = await getMoveTargets(overtime.id, MON);
+    // From Mon 16 (before 16:30, so Mon 16 itself counts): days off on the rotation, minus Sat 21 (itself).
+    expect(targets.slice(0, 5)).toEqual(["2026-11-16", "2026-11-17", "2026-11-20", "2026-11-22", "2026-11-25"]);
+    expect(targets).not.toContain("2026-11-21");
+    // After 16:30 that day has started, so it isn't offered.
+    expect((await getMoveTargets(overtime.id, at(16, 16, 31)))[0]).toBe("2026-11-17");
+    // A swap can't move; nor can a cancelled change.
+    const [half] = await confirmShiftSwap({ workDate: "2026-11-22", offDate: "2026-11-19" });
+    expect(await getMoveTargets(half!.id, MON)).toEqual([]);
+    const timeOff = (await getConfirmedExceptions()).get("2026-11-23")!;
+    expect(await getMoveTargets(timeOff.id, MON)).not.toContain("2026-11-19"); // taken by the swap
+    await cancelScheduleException(overtime.id);
+    expect(await getMoveTargets(overtime.id, MON)).toEqual([]);
+  });
+
+  it("moves overtime and time off, keeping history, and the week follows", async () => {
+    const overtime = await confirmScheduleException({ date: "2026-11-21", kind: "WORK", note: "Cover" });
+    const moved = await moveScheduleException(overtime.id, "2026-11-20", MON);
+    expect(await weekDay("2026-11-21")).toMatchObject({ work: "OFF", basis: "PREDICTED" });
+    expect(await weekDay("2026-11-20")).toMatchObject({ work: "WORK", basis: "CONFIRMED" });
+    expect((await db.scheduleExceptions.get(overtime.id))!.history.map((h) => [h.action, h.note])).toEqual([["CONFIRMED", "Cover"], ["CANCELLED", "Moved to 2026-11-20"]]);
+    expect(moved).toMatchObject({ reason: "OVERTIME", note: "Cover", history: [{ action: "CONFIRMED", note: "Moved from 2026-11-21" }] });
+    const timeOff = await confirmScheduleException({ date: "2026-11-18", kind: "OFF" });
+    await moveScheduleException(timeOff.id, "2026-11-19", MON);
+    expect([(await weekDay("2026-11-18")).basis, (await weekDay("2026-11-19")).work]).toEqual(["PREDICTED", "OFF"]);
+  });
+
+  it("refuses a conflict, a day that matches the rotation, and a started or invalid day, changing nothing", async () => {
+    const overtime = await confirmScheduleException({ date: "2026-11-21", kind: "WORK" });
+    await confirmScheduleException({ date: "2026-11-22", kind: "WORK" });
+    const before = JSON.stringify(await db.scheduleExceptions.toArray());
+    await expect(moveScheduleException(overtime.id, "2026-11-22", MON)).rejects.toThrow(/EXCEPTION_CONFLICT/);
+    await expect(moveScheduleException(overtime.id, "2026-11-18", MON)).rejects.toThrow(/EXCEPTION_MATCHES_ROTATION/);
+    await expect(moveScheduleException(overtime.id, "2026-11-15", MON)).rejects.toThrow(/EXCEPTION_DAY_STARTED/);
+    await expect(moveScheduleException(overtime.id, "2026-11-16", at(16, 16, 30))).rejects.toThrow(/EXCEPTION_DAY_STARTED/);
+    await expect(moveScheduleException(overtime.id, "next friday", MON)).rejects.toThrow(/EXCEPTION_DATE_INVALID/);
+    expect(JSON.stringify(await db.scheduleExceptions.toArray())).toBe(before);
   });
 });

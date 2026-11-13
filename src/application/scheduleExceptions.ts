@@ -162,6 +162,27 @@ export async function getUpcomingExceptions(now: Date = new Date()): Promise<Sch
     .filter((e) => e.status === "ACTIVE").sort((a, b) => a.date.localeCompare(b.date) || a.kind.localeCompare(b.kind));
 }
 
+/**
+ * SCHEDULE-MOVE-001: the future lived days a single-day exception could move to, soonest first (read only). These are
+ * days that haven't started, where the rotation says the opposite of the change and no other change is confirmed.
+ * moveScheduleException still checks all of this when it writes. Swaps can't move (cancel and confirm a new one).
+ */
+export async function getMoveTargets(id: string, now: Date = new Date(), days = 14): Promise<string[]> {
+  const exception = await db.scheduleExceptions.get(id);
+  if (!exception || exception.status !== "ACTIVE" || exception.swapId) return [];
+  const pattern = await getSchedulePattern();
+  if (!isOperatorSavedSchedule(pattern)) return [];
+  const taken = new Set((await getConfirmedExceptions()).keys());
+  const first = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 30, 0, 0);
+  if (first.getTime() <= now.getTime()) first.setDate(first.getDate() + 1);
+  const targets: string[] = [];
+  for (let k = 0; k < days; k++) {
+    const start = new Date(first.getFullYear(), first.getMonth(), first.getDate() + k, 16, 30, 0, 0), date = formatLocalDate(start);
+    if (!taken.has(date) && scheduledWorkContextForLivedDay(start, pattern) !== exception.kind) targets.push(date);
+  }
+  return targets;
+}
+
 /** What confirming would change, for the preview (read only). */
 export async function previewScheduleException(date: string, kind: "WORK" | "OFF"): Promise<{ rotation: "WORK" | "OFF"; reason: ScheduleExceptionReason } | null> {
   try { const rotation = await rotationKind(date); return rotation === kind ? null : { rotation, reason: reasonFor(kind) }; } catch { return null; }

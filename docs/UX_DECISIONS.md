@@ -3012,3 +3012,11 @@ Brief: [agent/SCHEDULE-EXCEPTIONS-001.md](agent/SCHEDULE-EXCEPTIONS-001.md).
   - A change that matches the rotation is refused.
   - Cancellation keeps the row and its history.
   - Editing the rotation later leaves confirmed changes as they are.
+
+## SCHEDULE-MOVE-001 — move a confirmed change (owner objective, 2026-11-13)
+
+- **MOVE** on a single-day confirmed change in Week Ahead's CONFIRMED CHANGES list. It reuses
+  `moveScheduleException`, which cancels the old day and confirms the new one, keeping both histories.
+- **Day choice:** the operator picks from the next 14 lived days that haven't started, where the rotation says the
+  opposite and nothing else is confirmed (`getMoveTargets`). Then a preview, then CONFIRM. BACK writes nothing.
+- **Swaps don't move:** cancel the swap and confirm a new one.

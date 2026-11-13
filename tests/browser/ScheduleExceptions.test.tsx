@@ -47,3 +47,39 @@ it("confirms overtime from a What-If, labels the day, and cancels it from the li
   // The rotation and the event log are untouched.
   expect({ events: await db.events.count(), schedule: JSON.stringify(await db.schedulePatterns.toArray()) }).toEqual(before);
 });
+
+it("SCHEDULE-MOVE-001: moves a confirmed change only after preview and CONFIRM; BACK changes nothing", async () => {
+  await seedRotation();
+  const now = new Date(2026, 9, 27, 12);
+  vi.setSystemTime(now);
+  const { confirmScheduleException, getMoveTargets } = await import("../../src/application/scheduleExceptions");
+  const { deriveWeekAhead } = await import("../../src/application/weekAheadQueries");
+  const { getSchedulePattern } = await import("../../src/application/queries");
+  const offDays = deriveWeekAhead(now, await getSchedulePattern(), "A").days.filter((d, i) => i > 0 && d.work === "OFF");
+  const original = await confirmScheduleException({ date: offDays[0]!.date, kind: "WORK", note: "Cover" });
+  const target = (await getMoveTargets(original.id, now)).find((d) => offDays.some((o) => o.date === d) && d !== original.date)!;
+  const label = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+  const screen = await render(<WeekAheadView now={now} />);
+  const list = screen.getByRole("region", { name: "Confirmed schedule changes" });
+  await list.getByRole("button", { name: "MOVE" }).click();
+  const preview = list.getByRole("group", { name: "Preview" });
+  await preview.getByRole("combobox", { name: "Move to" }).selectOptions(target);
+  await expect.element(preview.getByText(`Moves this change: ${label(original.date)} goes back to your rotation and ${label(target)} becomes a work day. The history is kept.`)).toBeVisible();
+  expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  const before = JSON.stringify(await db.scheduleExceptions.toArray());
+  await preview.getByRole("button", { name: "BACK" }).click();
+  expect(JSON.stringify(await db.scheduleExceptions.toArray())).toBe(before);
+
+  await list.getByRole("button", { name: "MOVE" }).click();
+  await list.getByRole("combobox", { name: "Move to" }).selectOptions(target);
+  await list.getByRole("button", { name: "CONFIRM" }).click();
+  await expect.element(list.getByText(`${label(target)}: overtime (work)`)).toBeVisible();
+  const row = (d: string) => screen.container.querySelector(`[data-week-ahead-day="${d}"]`)!;
+  await expect.poll(() => row(target).textContent).toContain("confirmed change");
+  expect(row(original.date).textContent).not.toContain("confirmed change");
+  const rows = (await db.scheduleExceptions.toArray()).sort((x, y) => x.date.localeCompare(y.date)); // offDays[0] is the earliest
+  expect(rows.map((e) => [e.date, e.status])).toEqual([[original.date, "CANCELLED"], [target, "ACTIVE"]]);
+  expect(rows[0]!.history.map((h) => h.action)).toEqual(["CONFIRMED", "CANCELLED"]);
+});

@@ -64,7 +64,7 @@ Refusals:
 
 - **Week Ahead:** a CONFIRMED basis, " · confirmed change", and no What-If on that row. Under a What-If there is an
   optional "MAKE IT A CONFIRMED CHANGE" step (just this day, or a swap), with REVIEW and then CONFIRM. A "CONFIRMED
-  CHANGES" list offers EDIT NOTE and CANCEL CHANGE, each confirmed first.
+  CHANGES" list offers EDIT NOTE, MOVE (single days; SCHEDULE-MOVE-001) and CANCEL CHANGE, each confirmed first.
 - **Also reads exceptions:** the energy forecast, the training programme slot, Life State and life-transition
   (today, yesterday and tomorrow), Alfred's next-7-days line ("(confirmed change)", "Alfred cannot change the
   schedule"), and the free helper ("A schedule change you confirmed.").
@@ -79,5 +79,5 @@ Refusals:
 ## Residual risks
 
 - ~~`shiftRun` counted the rotation alone.~~ Fixed in FIELD-READINESS-001.
-- Moving an exception is a command only. There is no UI for it; the UI path is cancel and confirm again.
+- ~~Moving an exception had no UI.~~ Week Ahead has MOVE since SCHEDULE-MOVE-001.
 - Exceptions need a saved rotation.
