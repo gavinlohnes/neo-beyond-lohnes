@@ -14,6 +14,7 @@ import { RecordSheets } from "../ui/components/RecordSheets";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../ui/recordSheets";
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { watchForUpdates } from "./swUpdateCheck";
 import { importBridgeFiles, type HealthSyncResult } from "../application/healthSync";
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
 import { GarminSyncLine } from "../ui/components/GarminSyncLine";
@@ -106,7 +107,10 @@ function AppUpdateBanner() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
-  } = useRegisterSW({});
+  } = useRegisterSW({
+    // PWA-001: a resumed app checks for a new version too (see swUpdateCheck.ts). Registered once per page load.
+    onRegisteredSW(_url, registration) { if (registration) watchForUpdates(registration); },
+  });
 
   if (!needRefresh) return null;
 
