@@ -3032,3 +3032,9 @@ Brief: [agent/OPERATOR-EXPERIENCE-001.md](agent/OPERATOR-EXPERIENCE-001.md).
 - **WEEK AHEAD:** a quiet control beside WHY opens Week Ahead in place, including confirm, move and cancel. Every write
   stays confirm-first, and TODAY refreshes after a change.
 - **No change to:** primary IA, Engine authority or the recommendation order; no new card.
+- **Slice 2: Alfred explains TODAY.** Alfred's context and the free helper read the same NOW and NEXT through
+  `todayPicture`.
+  - The words are the same as TODAY's, with sources.
+  - The answer is labelled "not a recommendation", and the Engine's recommendation stays its own record.
+  - TODAY's actions are named, each confirm-first; Alfred cannot change anything.
+  - The free helper answers "why does today say …" and "what's next".

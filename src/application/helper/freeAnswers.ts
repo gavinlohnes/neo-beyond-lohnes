@@ -8,6 +8,7 @@ import { formatLocalDate } from "../../engine/scheduledContext";
 import { livedDayStartOf } from "../reflect";
 import { describeShiftRun, shiftRun } from "../shiftRun";
 import { getConfirmedKinds } from "../scheduleExceptions";
+import { describeTodayPicture, getTodayPicture } from "../todayPicture";
 import { getSchedulePattern } from "../queries";
 import { getEffectiveProteinTargetG } from "../nutritionTargetQueries";
 import * as chrono from "chrono-node";
@@ -35,6 +36,11 @@ export async function answerQuestion(text: string, now = new Date()): Promise<st
   // Review of #366 (B2): only questions about his own logged totals. Advice ("should I…", "enough?"),
   // facts about a food ("calories in a banana"), rates and other days go to Alfred, not today's total.
   // FREE-HELPER-002: how far today's protein is from his own target. Facts only; a missing target is said.
+  // OPERATOR-EXPERIENCE-001 slice 2: why TODAY shows its state and NEXT, from the same reading as TODAY's band.
+  if (/\bwhy (does|is) today\b|\bwhy\b.*\b(work run|recovery|flip|operating state|says? next)\b|\bwhat('?s| is) next\b|\bwhat state am i\b/.test(q)) {
+    const picture = await getTodayPicture(now);
+    return picture ? describeTodayPicture(picture) : "No day is started yet.";
+  }
   if (/\bprotein\b/.test(q) && /\b(left|remaining|to go|more|short)\b/.test(q) && !/\byesterday\b/.test(q)) {
     const [t, target] = await Promise.all([today(), getEffectiveProteinTargetG()]);
     if (!t) return "No day is started yet.";

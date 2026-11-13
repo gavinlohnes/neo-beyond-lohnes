@@ -282,7 +282,8 @@ fresh general review.
   than calling `scheduledWorkContextForLivedDay` directly in a new consumer. Shift What-If stays hypothetical.
   `shiftRun(now, pattern, 21, confirmed)` takes `getConfirmedKinds()` so run positions agree (FIELD-READINESS-001).
   `application/ahead.ts` `deriveAhead` names the next work/off switch from Week Ahead's days (OPERATOR-EXPERIENCE-001);
-  reuse it for any "what's next" surface (Alfred, header) rather than re-deriving.
+  reuse it for any "what's next" surface (Alfred, header) rather than re-deriving. `application/todayPicture.ts`
+  bundles TODAY's NOW (Life State) and NEXT for Alfred's context and the free helper (slice 2).
 
 - ROTATION-002 extends Whole Picture's Rotation tab: `PictureRow.sleepWindow`/`shiftWindow`
   (Garmin times behind a day's single uncorrected main sleep; scheduled shift on recorded work
