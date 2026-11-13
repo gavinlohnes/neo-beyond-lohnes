@@ -5,7 +5,7 @@
 .redesign-today .today-life-state__why { margin-top: 4px; }
 /* OPERATOR-EXPERIENCE-001 slice 3: what changed since the last look leads, quietly, in the band's own weight. */
 .redesign-today .today-life-state__since { margin: 0 0 4px; color: var(--text-2); font-size: 13px; line-height: 1.4; }
-.redesign-today .today-life-state__since strong { color: var(--accent, var(--text-1)); font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; font-weight: 600; }
+.redesign-today .today-life-state__since strong { color: var(--red-text, var(--text-1)); font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; font-weight: 600; }
 /* OPERATOR-EXPERIENCE-001: NEXT sits under NOW at the same calm weight; WEEK AHEAD is a quiet tool beside WHY. */
 .redesign-today .today-life-state__next { margin: 2px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.4; }
 .redesign-today .today-life-state__next strong { color: var(--text-1); font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; }

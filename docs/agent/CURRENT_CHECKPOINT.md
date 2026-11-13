@@ -3473,3 +3473,20 @@ by its shortcut finding; the new head requires a renewed verdict recorded on PR 
   food lookup's initial focus and TODAY's fixed-time mode read before acting; TodayRun's rotation
   locator is exact after the free brief began repeating that text. All original assertions remain.
   Ready PR creation/push is attempted next; GitHub API and Git write access remain unverified.
+
+---
+
+# WALKTHROUGH-002 — phone-size check of #499–#503 (Gavin, 2026-11-13: "Walkthrough") — Routine
+
+Report: [WALKTHROUGH-002.md](WALKTHROUGH-002.md). Branch `ccr-88f5c085-walkthrough-002`.
+
+- **Fixed:**
+  - the SINCE label's WCAG AA contrast failure (from #503);
+  - WEEK AHEAD opening below the fold on a work day.
+- **Findings awaiting Gavin:**
+  - the run fact appears three times on TODAY (recommendation: drop the hero's "scheduled:" line while the band
+    shows);
+  - "NEXT Next …" wording (after #502);
+  - the state stack at the fold;
+  - the length of WEEK AHEAD in place.
+- **Still a field test:** #402.
