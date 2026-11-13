@@ -15,6 +15,7 @@ import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
+import { recordedBy } from "../../../application/workContextResolution";
 import { contractDate, hasRecoveryContract } from "../../../application/recoveryContract";
 import { PostRunReportDisclosure, RecoveryContractOffer } from "./RecoveryContract";
 import { createObligation } from "../../../application/intentCommands";
@@ -1757,7 +1758,7 @@ export function TodayScreen({
   const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern) : null;
   // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
   const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(now).getTime() ? yesterdayRecorded : null;
-  const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null) : null;
+  const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined) : null;
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
   // LIFE-STATE-002: the moment between states, if today is one, with the day before yesterday from record or schedule.
   const lifeMoment = lifeInput && schedulePattern ? deriveLifeMoment(lifeMomentInput(now, schedulePattern, lifeInput, recordedNow?.dayBefore ?? null), lifeReading) : null;

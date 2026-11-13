@@ -273,6 +273,13 @@ fresh general review.
 
 ## ROTATION / PERSONAL RANGES
 
+- **Work-context resolution (CONTEXT-INTEGRATION-001):** `application/workContextResolution.ts` is the one read-only
+  answer to "work or off, and how do we know" for a lived day: RECORDED (a lived-day record, `by` operator or
+  schedule-at-day-start) → PREDICTED (saved rotation) → UNKNOWN (nothing recorded, no saved schedule). CONFIRMED future
+  exceptions have no store yet (see `docs/agent/CONTEXT-INTEGRATION-001.md`). Week Ahead (`basis` per day), the energy
+  forecast, Life State's WHY, Alfred's context, the free helper and the training programme read it. Reuse it rather
+  than calling `scheduledWorkContextForLivedDay` directly in a new consumer. Shift What-If stays hypothetical.
+
 - ROTATION-002 extends Whole Picture's Rotation tab: `PictureRow.sleepWindow`/`shiftWindow`
   (Garmin times behind a day's single uncorrected main sleep; scheduled shift on recorded work
   days) in `application/wholePictureQueries.ts`; `runPositions`/`nextDaysOff` in

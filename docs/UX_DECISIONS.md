@@ -2983,3 +2983,14 @@ Gavin: "Life-State Engine — Slice 3: recovery contract and post-run report." B
   offered again in that lived day once any is planned. Items are written one at a time, so a partial failure says what
   was saved. It replaces slice 2's single light-day follow-up.
 - **Not an Engine input;** no schedule, training-plan, schema or command change.
+
+## CONTEXT-INTEGRATION-001 — one answer for work or off (owner objective, 2026-11-13)
+
+Brief: [agent/CONTEXT-INTEGRATION-001.md](agent/CONTEXT-INTEGRATION-001.md).
+
+- **One rule** for a lived day's work context, read by Week Ahead, the energy forecast, Life State, Alfred, the free
+  helper and the training programme: RECORDED (and who set it) → PREDICTED (saved rotation) → UNKNOWN.
+- **No invented schedule:** with no saved schedule, future days are unknown everywhere; BEYOND's built-in default
+  rotation is never shown as yours, and no shift time is made up.
+- **Provenance in words:** "set from your saved schedule when the day started", "recorded by you", "(a forecast)".
+- **Confirmed future exceptions** are not stored yet; they need an owner decision (new persistence, Protected).

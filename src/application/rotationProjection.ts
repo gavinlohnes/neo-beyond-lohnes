@@ -24,7 +24,14 @@ export function groupRuns(rows: readonly PictureRow[]): RotationRun[] {
 }
 
 /** The next predicted run in the Week Ahead forecast: its kind, first date and length. A prediction, not a calendar. */
-export function nextForecastRun(days: readonly WeekAheadDay[]): { work: "WORK" | "OFF"; from: string; days: number } | null {
+/** CONTEXT-INTEGRATION-001: only days whose work context is known; an UNKNOWN day ends the forecast there. */
+function knownDays(days: readonly WeekAheadDay[]): readonly WeekAheadDay[] {
+  const unknown = days.findIndex((day) => day.basis === "UNKNOWN");
+  return unknown === -1 ? days : days.slice(0, unknown);
+}
+
+export function nextForecastRun(all: readonly WeekAheadDay[]): { work: "WORK" | "OFF"; from: string; days: number } | null {
+  const days = knownDays(all);
   const first = days[0];
   if (!first) return null;
   // Today's run is already being lived; the next run is the first change of kind after it.
@@ -89,7 +96,8 @@ export function runPositions(rows: readonly PictureRow[]): RunPosition[] {
 }
 
 /** The next predicted stretch of days off, including one already being lived today. A forecast. */
-export function nextDaysOff(days: readonly WeekAheadDay[]): { from: string; days: number; now: boolean } | null {
+export function nextDaysOff(all: readonly WeekAheadDay[]): { from: string; days: number; now: boolean } | null {
+  const days = knownDays(all);
   const start = days.findIndex((day) => day.work === "OFF");
   if (start === -1) return null;
   const end = days.findIndex((day, index) => index > start && day.work !== "OFF");

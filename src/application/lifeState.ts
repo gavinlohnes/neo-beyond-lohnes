@@ -23,7 +23,8 @@ import { shiftRun, type ShiftRun } from "./shiftRun";
 export type LifeState = "WORK_RUN" | "RECOVERY" | "FLIP" | "FREE";
 export type DayKind = "WORK" | "OFF";
 export interface LifeStateInput {
-  today: { recorded: DayKind | null; scheduled: DayKind | null };
+  /** `by`: who set today's record (CONTEXT-INTEGRATION-001), so WHY never calls a schedule default "recorded by you". */
+  today: { recorded: DayKind | null; scheduled: DayKind | null; by?: "OPERATOR" | "SCHEDULE" };
   yesterday: { recorded: DayKind | null; scheduled: DayKind | null };
   tomorrow: { scheduled: DayKind | null; date: Date };
   run: ShiftRun | null;
@@ -40,10 +41,11 @@ export interface LifeStateReading {
 export const LIFE_STATE_LABELS: Record<LifeState, string> = { WORK_RUN: "WORK RUN", RECOVERY: "RECOVERY", FLIP: "FLIP", FREE: "FREE" };
 const weekday = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short" });
 const said = (side: { recorded: DayKind | null; scheduled: DayKind | null }) => side.recorded ?? side.scheduled;
-const source = (name: string, side: { recorded: DayKind | null; scheduled: DayKind | null }) => {
+const source = (name: string, side: { recorded: DayKind | null; scheduled: DayKind | null; by?: "OPERATOR" | "SCHEDULE" }) => {
   const kind = said(side);
   if (!kind) return `${name}: not recorded and no saved schedule.`;
   const what = kind === "WORK" ? "a work day" : "a day off";
+  if (side.recorded && side.by === "SCHEDULE") return `${name}: ${what}, set from your saved schedule when the day started.`;
   return side.recorded ? `${name}: recorded as ${what}.` : `${name}: ${what} on your saved schedule.`;
 };
 
@@ -85,12 +87,12 @@ export async function getRecordedDayBefore(now: Date, k: number): Promise<DayKin
 /** Read only: the work context recorded for the previous lived day, or null when none was recorded. */
 export const getRecordedYesterday = (now: Date) => getRecordedDayBefore(now, 1);
 
-export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorded: DayKind | null, yesterdayRecorded: DayKind | null): LifeStateInput {
+export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorded: DayKind | null, yesterdayRecorded: DayKind | null, todayBy?: "OPERATOR" | "SCHEDULE"): LifeStateInput {
   const start = livedDayStartOf(now);
   const saved = isOperatorSavedSchedule(pattern);
   const scheduled = (k: number): DayKind | null => (saved ? scheduledWorkContextForLivedDay(livedStart(start, k), pattern) : null);
   return {
-    today: { recorded: todayRecorded, scheduled: scheduled(0) },
+    today: { recorded: todayRecorded, scheduled: scheduled(0), ...(todayRecorded && todayBy ? { by: todayBy } : {}) },
     yesterday: { recorded: yesterdayRecorded, scheduled: scheduled(-1) },
     tomorrow: { scheduled: scheduled(1), date: livedStart(start, 1) },
     run: shiftRun(now, pattern),

@@ -8,7 +8,8 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { dayLine } from "./alfred/dayLine";
 import { getFoodDiary } from "./foodDiaryQueries";
 import { getSavedMeals } from "./nutritionQueries";
-import { getAllCaptureItems, getActiveDay, getLatestCheckIn, getLatestRecommendation, getMostRecentBodyweight, getRecommendationDecision, getSchedulePattern, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
+import { getAllCaptureItems, getActiveDay, getLatestCheckIn, getLatestRecommendation, getMostRecentBodyweight, getRecommendationDecision, getSchedulePattern, getWorkContextSource, getWorkPeriodEnded, getWorkPeriodStarted } from "./queries";
+import { describeBasis, recordedBy } from "./workContextResolution";
 import { getProjectViews } from "./projectQueries";
 import { getRoutines } from "./routineCommands";
 import { ROUTINE_MOMENT_LABELS } from "../domain/routines";
@@ -18,7 +19,7 @@ import { getWeekAhead } from "./weekAheadQueries";
 import { getMeasuredSnapshot } from "./measuredQueries";
 import { getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitSummary } from "./quitQueries";
-import { livedDayShiftWindow } from "../engine/scheduledContext";
+import { isOperatorSavedSchedule, livedDayShiftWindow } from "../engine/scheduledContext";
 import { sleepMinutes } from "../domain/health/measuredSeries";
 import { getDeltaKnowledge } from "./delta";
 import { deltaFacts } from "./deltaFacts";
@@ -77,12 +78,17 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
       }
     }
     const s = contextSource;
-    const active = await read("Current day", getActiveDay, (d) => d ? [s("CURRENT_DAY", d.id, JSON.stringify(d), "Current lived day",
-      `TODAY (lived day from ${date(d.startedAt)}): work context ${d.workContext ?? "not set"}.`, "Recorded event", { at: d.startedAt })] : []);
-    const pattern = await read("Schedule", getSchedulePattern, (p) => [s("SCHEDULE", "schedule", JSON.stringify(p), "Configured work schedule",
+    // CONTEXT-INTEGRATION-001: say who set today's work context, so Alfred never presents a schedule default as the
+    // operator's own record.
+    const active = await read("Current day", async () => { const d = await getActiveDay(); return d ? { d, source: await getWorkContextSource(d.id) } : null; },
+      (v) => v ? [s("CURRENT_DAY", v.d.id, JSON.stringify(v.d), "Current lived day",
+        `TODAY (lived day from ${date(v.d.startedAt)}): ${v.d.workContext === "WORK" || v.d.workContext === "OFF" ? describeBasis({ kind: v.d.workContext, basis: "RECORDED", by: recordedBy(v.source) }) : "work context not recorded"}.`,
+        "Recorded event", { at: v.d.startedAt })] : []).then((v) => v?.d ?? null);
+    const pattern = await read("Schedule", getSchedulePattern, (p) => !isOperatorSavedSchedule(p) ? [s("SCHEDULE", "schedule", JSON.stringify({ saved: false }), "No saved work schedule",
+      "SCHEDULE: no work schedule has been saved. Future work days are unknown; do not assume a rotation.", "Configured forecast")] : [s("SCHEDULE", "schedule", JSON.stringify(p), "Configured work schedule",
       `${p.weeks.length}-week configured rotation; shift ${String(p.shiftStartHour).padStart(2, "0")}:00–${String(p.shiftEndHour).padStart(2, "0")}:00. Weeks: ${JSON.stringify(p.weeks)}. Forecast, not proof of availability.`, "Configured forecast", { at: p.updatedAt })]);
     if (active) {
-      if (pattern) {
+      if (pattern && isOperatorSavedSchedule(pattern)) {
         const shift = livedDayShiftWindow(new Date(active.startedAt), pattern);
         await read("Today's shift forecast", async () => shift, (w) => w ? [s("FORECAST", active.id, JSON.stringify(w), "Scheduled shift",
           `Scheduled shift ${date(w.start.toISOString())} → ${date(w.end.toISOString())}. Forecast, not a recorded work interval or proof of free time.`, "Configured forecast")] : []);
@@ -128,7 +134,7 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
     await read("Targets and weight", async () => ({ targets: await getNutritionTargets(), weight: await getMostRecentBodyweight() }), ({ targets: t, weight: w }) => [s("TARGETS", "nutrition", JSON.stringify([t, w]), "Nutrition targets and latest weight",
       `TARGETS: calories ${t.calorieTargetKcal ?? "not set"} kcal; protein ${t.proteinMultiplierGPerLb} g per lb${t.goalWeightLbs ? `; goal weight ${t.goalWeightLbs} lb` : ""}. Latest weight: ${w ?? "none logged"} lb.`)]);
     await read("Next seven days", () => getWeekAhead(now), (v) => [s("FORECAST", "week", JSON.stringify(v), "Next seven scheduled days",
-      `SCHEDULE NEXT 7 DAYS: ${v.days.map((d) => `${d.date} ${d.work}${d.shiftStartHour !== null ? ` ${d.shiftStartHour}:00` : ""}`).join(" · ")}. Forecast, not availability.`, "Configured forecast")]);
+      `SCHEDULE NEXT 7 DAYS: ${v.days.map((d) => d.basis === "UNKNOWN" ? `${d.date} unknown` : `${d.date} ${d.work}${d.shiftStartHour !== null ? ` ${d.shiftStartHour}:00` : ""} (${d.basis === "RECORDED" ? "recorded" : "forecast"})`).join(" · ")}. Forecast days are predictions, not availability; recorded days are what was set for that lived day.`, "Configured forecast")]);
     await read("Garmin measurements", () => getMeasuredSnapshot(now.getTime()), (v) => [s("MEASURED", "garmin", JSON.stringify([v.lastNight, v.stepsToday.length > 1 ? v.stepsToday.at(-1)?.total : null, v.resting.at(-1), v.resting.at(-2), v.garminAsOf]), "Applicable Garmin measurements",
       `GARMIN: ${v.lastNight ? `last main sleep ${hm(sleepMinutes(v.lastNight))}, ${date(v.lastNight.startTime)} → ${date(v.lastNight.endTime)}` : "no Garmin sleep in the last 36 hours"}; steps so far today ${v.stepsToday.length > 1 ? v.stepsToday.at(-1)!.total : "not measured"}; latest resting HR ${v.resting.at(-1)?.value ?? v.resting.at(-2)?.value ?? "not measured"}.`, "Measurement", { freshness: "Last main sleep uses the existing 36-hour wake-time window; other readings retain their source dates" })]);
     await read("Sleep comparison", () => getSleepDebt(now), (d) => d.days ? [s("SLEEP_SUMMARY", "sleep", JSON.stringify(d), "Recorded sleep comparison",

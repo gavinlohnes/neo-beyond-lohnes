@@ -80,8 +80,10 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
         >
           <p className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>{dayLabel(day.date)}</p>
           <p className="meta" style={{ margin: "2px 0 0" }}>
-            {day.work === "WORK" ? shiftLabel(day.shiftStartHour!) : "OFF"}
-            {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}` : " · Rest"}
+            {/* CONTEXT-INTEGRATION-001: an unknown day says so; a recorded day says it was recorded, not forecast. */}
+            {day.basis === "UNKNOWN" ? "Work or off not known · no saved schedule"
+              : <>{day.work === "WORK" ? (day.shiftStartHour === null ? "SHIFT" : shiftLabel(day.shiftStartHour)) : "OFF"}{day.basis === "RECORDED" ? " · recorded" : ""}
+                {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}` : " · Rest"}</>}
           </p>
           {(() => {
             const f = forecast?.days.find((d) => d.date === day.date);
@@ -98,7 +100,8 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans }: { now?: Date
           {calendarEvents.filter((event) => event.start.slice(0, 10) === day.date).map((event) => (
             <p className="meta" style={{ margin: "4px 0 0" }} key={event.id}>Google · {event.title}{event.allDay ? " · all day" : ` · ${new Date(event.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}</p>
           ))}
-          {whatIf?.date === day.date
+          {/* What-If is about the plan: not for an unknown day, nor for a day already recorded. */}
+          {day.basis === "UNKNOWN" || day.basis === "RECORDED" ? null : whatIf?.date === day.date
             ? <ShiftWhatIfPanel change={whatIf} events={calendarEvents} now={now} onClose={() => { setReturnTo(whatIf.date); setWhatIf(null); }} />
             : <button type="button" data-what-if className="btn-secondary" style={{ marginTop: 6 }} aria-label={`What if ${dayLabel(day.date)} were ${day.work === "WORK" ? "a day off" : "a shift"}?`}
                 onClick={() => setWhatIf({ date: day.date, to: day.work === "WORK" ? "OFF" : "WORK" })}>{day.work === "WORK" ? "WHAT IF I'M OFF?" : "WHAT IF I WORK?"}</button>}
