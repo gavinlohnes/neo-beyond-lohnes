@@ -280,6 +280,7 @@ fresh general review.
   rotation) → UNKNOWN (nothing recorded, no saved schedule). Week Ahead (`basis` per day), the energy
   forecast, Life State's WHY, Alfred's context, the free helper and the training programme read it. Reuse it rather
   than calling `scheduledWorkContextForLivedDay` directly in a new consumer. Shift What-If stays hypothetical.
+  `shiftRun(now, pattern, 21, confirmed)` takes `getConfirmedKinds()` so run positions agree (FIELD-READINESS-001).
 
 - ROTATION-002 extends Whole Picture's Rotation tab: `PictureRow.sleepWindow`/`shiftWindow`
   (Garmin times behind a day's single uncorrected main sleep; scheduled shift on recorded work

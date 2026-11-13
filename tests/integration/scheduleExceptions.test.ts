@@ -14,6 +14,7 @@ import { getSchedulePattern, getWorkContextSource } from "../../src/application/
 import { applyAnyRestore } from "../../src/persistence/restore";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
+import { readPresence } from "../../src/ui/presence";
 import { saveTrainingProgramme } from "../../src/application/trainingProgramme";
 import { getProgrammeView } from "../../src/application/trainingProgrammeQueries";
 
@@ -61,6 +62,9 @@ describe("the four actions", () => {
     const sunday = deriveLifeState(lifeStateInput(at(22, 18), pattern, "OFF", "OFF", "SCHEDULE", new Map([["2026-11-23", "OFF"]])))!;
     expect(sunday.state).toBe("FREE");
     expect(sunday.why[2]).toBe("Tomorrow: a day off, a schedule change you confirmed.");
+    // FIELD-READINESS-001: the line no longer says "Back on Mon" when Monday is confirmed off.
+    expect(sunday.line).toMatch(/Back on Tue\.$/);
+    expect(await answerQuestion("when am i back on", at(22, 18))).toBe("From your saved schedule and confirmed changes: day off 3 of 4 · back on Tue · with a confirmed change.");
   });
 
   it("a shift swap changes both dates in one go, and cancels as one", async () => {
@@ -137,6 +141,13 @@ describe("becoming a recorded day", () => {
     expect(today).toContain("a work day, set from a schedule change you confirmed, when the day started");
     // Still Sat's lived day at Sun 09:00.
     expect((await getWeekAhead(at(22, 9))).days[0]).toMatchObject({ date: "2026-11-22", basis: "PREDICTED" });
+  });
+
+  it("FIELD-READINESS-001: the presence line's shift run counts a confirmed day off", async () => {
+    await confirmScheduleException({ date: "2026-11-23", kind: "OFF" });
+    vi.setSystemTime(at(22, 16, 35));
+    await startDay();
+    expect((await readPresence(at(22, 18)))?.run).toBe("scheduled: day off 3 of 4 · back on Tue · with a confirmed change");
   });
 
   it("what you record on the day still wins over the confirmed change", async () => {

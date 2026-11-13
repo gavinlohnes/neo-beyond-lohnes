@@ -150,10 +150,9 @@ export async function getConfirmedExceptions(dates?: readonly string[]): Promise
   return new Map(rows.filter((e) => e.status === "ACTIVE").map((e) => [e.date, e]));
 }
 
-/** The lived-day dates from the day before yesterday to tomorrow, around `now` (16:30 lived days). */
-export function livedDatesAround(now: Date): string[] {
-  const at = new Date(now); if (at.getHours() * 60 + at.getMinutes() < 16 * 60 + 30) at.setDate(at.getDate() - 1);
-  return [-2, -1, 0, 1].map((k) => formatLocalDate(new Date(at.getFullYear(), at.getMonth(), at.getDate() + k, 12)));
+/** Active exceptions as date → WORK/OFF, for read-side planning (shift runs, Life State). */
+export async function getConfirmedKinds(): Promise<Map<string, "WORK" | "OFF">> {
+  return new Map([...(await getConfirmedExceptions())].map(([date, e]) => [date, e.kind] as const));
 }
 
 /** Upcoming active exceptions (lived day not yet over), soonest first, for the list in Week Ahead. */

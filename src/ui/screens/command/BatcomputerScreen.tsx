@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { describeTonightReading, getCaveTonight, type CaveTonight } from "../../../application/caveTonight";
 import { getSchedulePattern } from "../../../application/queries";
 import { shiftRun, type ShiftRun } from "../../../application/shiftRun";
+import { getConfirmedKinds } from "../../../application/scheduleExceptions";
 import { getWholePicture, type WholePictureData } from "../../../application/wholePictureQueries";
 import { askAlfred, PLAN_MY_WEEK_ASK } from "../../components/AlfredSheet";
 import { describePlainRecommendationTitle } from "../today/recommendationCopy";
@@ -18,8 +19,8 @@ export function BatcomputerScreen({ active, onInspectSources, onReturnToField }:
   useEffect(() => {
     if (!active) return;
     let current = true; const now = new Date(); setFailed(false);
-    void Promise.all([getWholePicture(now), getCaveTonight(now), getSchedulePattern()]).then(([picture, tonight, schedule]) => {
-      if (current) setRead({ picture, tonight, run: shiftRun(now, schedule) });
+    void Promise.all([getWholePicture(now), getCaveTonight(now), getSchedulePattern(), getConfirmedKinds()]).then(([picture, tonight, schedule, confirmed]) => {
+      if (current) setRead({ picture, tonight, run: shiftRun(now, schedule, 21, confirmed) });
     }, () => { if (current) setFailed(true); });
     return () => { current = false; };
   }, [active, retry]);

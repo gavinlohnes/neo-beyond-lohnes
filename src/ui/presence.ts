@@ -5,6 +5,7 @@ import { readBootPhase } from "./screens/today/bootMode";
 import { MODE_NAMES, predictedWorkPhase } from "./screens/today/shiftClock";
 import { describeShiftRun, shiftRun } from "../application/shiftRun";
 import { nextGoogleCalendarEvent } from "../application/googleCalendar";
+import { getConfirmedKinds } from "../application/scheduleExceptions";
 
 /**
  * PRESENCE-001 (#373 item 2): one shift-aware line under every screen's title (IDENTIFY → ORIENT →
@@ -24,7 +25,7 @@ function until(ms: number) {
 export async function readPresence(now = new Date()): Promise<Presence | null> {
   const day = await getActiveDay();
   if (!day) return { mode: "NO DAY STARTED", when: null, next: null };
-  const [phase, schedule, rec] = await Promise.all([readBootPhase(now), getSchedulePattern(), getLatestRecommendation(day.id)]);
+  const [phase, schedule, rec, confirmed] = await Promise.all([readBootPhase(now), getSchedulePattern(), getLatestRecommendation(day.id), getConfirmedKinds()]);
   const window = day.workContext === "OFF" ? null : livedDayShiftWindow(new Date(day.startedAt), schedule);
   let when: string | null = null;
   // NIGHT-POLISH-001: while the work question is unanswered, say what the schedule predicts, labelled as such.
@@ -38,7 +39,7 @@ export async function readPresence(now = new Date()): Promise<Presence | null> {
   const decided = rec && rec.statusAtIssue === "ACTION" ? await getRecommendationDecision(day.id, rec.id) : undefined;
   const next = rec && rec.statusAtIssue === "ACTION" && !decided ? rec.title : null;
   // His own declaration wins: a day he set OFF on a scheduled night (or the reverse) shows no run.
-  const scheduled = shiftRun(now, schedule);
+  const scheduled = shiftRun(now, schedule, 21, confirmed);
   const run = scheduled && (day.workContext === "UNKNOWN" || day.workContext === scheduled.kind) ? scheduled : null;
   const calendarEvent = nextGoogleCalendarEvent(now);
   const calendar = calendarEvent ? `calendar: ${calendarEvent.title}${calendarEvent.allDay ? " · all day" : ` · ${new Date(calendarEvent.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}` : null;
