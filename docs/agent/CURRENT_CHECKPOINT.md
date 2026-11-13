@@ -24,12 +24,12 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: LIFE-STATE-001, Life-State Engine slice 1 (Gavin, 2026-11-13) — PROTECTED
+# Current objective: LIFE-STATE-002, Life-State Engine slice 2 (Gavin, 2026-11-13) — PROTECTED
 
-Brief: [LIFE-STATE-001.md](LIFE-STATE-001.md); decision: UX_DECISIONS LIFE-STATE-001. TODAY names the day's state
-(WORK RUN, RECOVERY, FLIP, FREE) from the saved schedule and recorded lived days, with WHY, and in a work run or on a
-flip puts the day's preparation and routines before YOUR LIFE. Not an Engine input; nothing stored. Needs an
-independent exact-head review. FORECAST-DECIDE-001 merged in #493.
+Brief: [LIFE-STATE-002.md](LIFE-STATE-002.md); decision: UX_DECISIONS LIFE-STATE-002. On the day a state changes,
+TODAY's state band leads with the moment (RUN STARTS, LAST SHIFT, RUN OVER, FLIP DAY, FREE DAYS); RUN OVER offers
+an optional, confirm-first "Keep today light" plan item. Needs an independent exact-head review. LIFE-STATE-001
+merged in #494; #402 (rotation field test) is Gavin's next work day.
 
 ---
 
