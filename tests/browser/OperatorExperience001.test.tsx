@@ -32,7 +32,7 @@ it("names NOW and NEXT, opens the week in place, and NEXT follows a change cance
   const before = { events: await db.events.count(), exceptions: JSON.stringify(await db.scheduleExceptions.toArray()) };
   const screen = await render(<TodayScreen onOpenLife={() => {}} />);
 
-  await expect.poll(next).toBe("NEXT Next day off: Sat, Nov 21 · forecast · 1 confirmed change ahead");
+  await expect.poll(next).toBe("NEXT Day off: Sat, Nov 21 · forecast · 1 confirmed change ahead");
   await screen.getByText("WHY WORK RUN").click();
   await expect.element(screen.getByText("Next: a day off on Sat, Nov 21, from your saved schedule (a forecast, not a record).")).toBeVisible();
 
@@ -50,7 +50,7 @@ it("names NOW and NEXT, opens the week in place, and NEXT follows a change cance
   await list.getByRole("button", { name: "CANCEL CHANGE" }).click();
   expect((await db.scheduleExceptions.toArray())[0]!.status).toBe("ACTIVE");
   await list.getByRole("button", { name: "CONFIRM" }).click();
-  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  await expect.poll(next).toBe("NEXT Day off: Fri, Nov 20 · forecast");
   await expect.element(screen.getByRole("button", { name: "HIDE WEEK AHEAD" })).toBeVisible();
   await screen.getByRole("button", { name: "HIDE WEEK AHEAD" }).click();
   expect(document.getElementById("today-week-ahead")).toBeNull();
@@ -61,7 +61,7 @@ it("before 16:30 tonight's shift is next; with no saved schedule NEXT says it is
   await startDay();
   vi.setSystemTime(new Date(2026, 10, 18, 9)); // still Tuesday's lived day
   await render(<TodayScreen onOpenLife={() => {}} />);
-  await expect.poll(next).toBe("NEXT Next shift: Wed, Nov 18 · 18:00 · forecast");
+  await expect.poll(next).toBe("NEXT Shift: Wed, Nov 18 · 18:00 · forecast");
   await cleanup();
   // No saved schedule: today is what he recorded; the days ahead are unknown, never guessed.
   await db.schedulePatterns.clear();
@@ -69,7 +69,7 @@ it("before 16:30 tonight's shift is next; with no saved schedule NEXT says it is
   const day = await startDay();
   await setWorkContext(day.id, "WORK", "MANUAL");
   await render(<TodayScreen onOpenLife={() => {}} />);
-  await expect.poll(next).toBe("NEXT Next days: work or off not known · no saved schedule");
+  await expect.poll(next).toBe("NEXT Days: work or off not known · no saved schedule");
 });
 
 it("slice 3: names what changed since the last look on this device, once, and not the visit's own changes", async () => {
@@ -80,7 +80,7 @@ it("slice 3: names what changed since the last look on this device, once, and no
 
   // First look: nothing to compare with.
   let screen = await render(<TodayScreen onOpenLife={() => {}} />);
-  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  await expect.poll(next).toBe("NEXT Day off: Fri, Nov 20 · forecast");
   expect(since()).toBeNull();
   await cleanup();
 
@@ -97,12 +97,12 @@ it("slice 3: names what changed since the last look on this device, once, and no
   const list = screen.getByRole("region", { name: "Confirmed schedule changes" });
   await list.getByRole("button", { name: "CANCEL CHANGE" }).click();
   await list.getByRole("button", { name: "CONFIRM" }).click();
-  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  await expect.poll(next).toBe("NEXT Day off: Fri, Nov 20 · forecast");
   expect(since()).toBe("SINCE 20:00 Confirmed changes: 0 → 1");
   await cleanup();
 
   // …nor on the next one: the last look already showed it.
   screen = await render(<TodayScreen onOpenLife={() => {}} />);
-  await expect.poll(next).toBe("NEXT Next day off: Fri, Nov 20 · forecast");
+  await expect.poll(next).toBe("NEXT Day off: Fri, Nov 20 · forecast");
   expect(since()).toBeNull();
 });

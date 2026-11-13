@@ -35,7 +35,7 @@ There is no horizontal overflow at any stop.
 
 ### For Gavin (not changed; most useful first)
 
-3. **The same fact appears three times on TODAY.**
+3. **Fixed in TODAY-CLARITY-001: the same fact appeared three times on TODAY.**
    - On a day off (04, 06):
      - the hero says "scheduled: day off 1 of 1 · back on Thu · with a confirmed change";
      - the band says "Back on Thu.";
@@ -47,7 +47,7 @@ There is no horizontal overflow at any stop.
 
    **Recommendation:** drop the hero's "scheduled: …" run line while the band is showing. The band carries both
    facts and says where they came from. This changes TODAY's composition, so it is your call.
-4. **"NEXT Next shift:" repeats a word.** Recommendation: "NEXT Shift Thu, Oct 29 · 18:00 · confirmed change". I'd
+4. **Fixed in TODAY-CLARITY-001 (display only): "NEXT Next shift:" repeated a word.** Recommendation: "NEXT Shift Thu, Oct 29 · 18:00 · confirmed change". I'd
    do this after #502 merges, because #502's tests and Alfred's wording use the current line.
 5. **Up to five lines of state at the fold.** On a transition day a moment line stacks above the state:
    "LAST SHIFT …" over "WORK RUN …", or "RUN OVER …" over "RECOVERY …". With SINCE and NEXT that makes up to five

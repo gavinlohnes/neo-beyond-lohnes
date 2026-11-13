@@ -2707,11 +2707,16 @@ export function TodayScreen({
     </section>
   </>;
 
+  // TODAY-CLARITY-001 (WALKTHROUGH-002 finding 3): while the band shows NOW and NEXT, the hero's "scheduled: …" run
+  // line said the same thing a third time; the band carries it (with its source), so the hero drops it. When the band
+  // steps aside (an operation, the late sleep prompt) or NEXT couldn't be read, the hero keeps it.
+  const bandHidden = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep;
+  const bandCarriesRun = !!day && !!lifeReading && !!ahead && !bandHidden;
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
-            run={todayRun}
+            run={bandCarriesRun ? null : todayRun}
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}
@@ -2759,7 +2764,7 @@ export function TodayScreen({
     {banners && <div className="today-banners">{banners}</div>}
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
-    {day && <div hidden={dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep}>
+    {day && <div hidden={bandHidden}>
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}

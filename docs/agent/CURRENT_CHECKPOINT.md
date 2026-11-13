@@ -3490,3 +3490,10 @@ Report: [WALKTHROUGH-002.md](WALKTHROUGH-002.md). Branch `ccr-88f5c085-walkthrou
   - the state stack at the fold;
   - the length of WEEK AHEAD in place.
 - **Still a field test:** #402.
+- **TODAY-CLARITY-001** (branch `ccr-88f5c085-today-clarity`) does findings 3–4:
+  - the hero no longer repeats the run while the band shows;
+  - "NEXT Next" is now "NEXT Shift: …";
+  - the screenshots were refreshed.
+- **Still open from the walkthrough:**
+  - the state stack (moment + state) at the fold;
+  - a compact WEEK AHEAD on TODAY.
