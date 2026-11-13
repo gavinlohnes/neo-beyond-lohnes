@@ -74,13 +74,16 @@ export function deriveLifeState(input: LifeStateInput): LifeStateReading | null 
 
 const livedStart = (start: Date, k: number) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + k, 16, 30, 0, 0);
 
-/** Read only: the work context recorded for the previous lived day, or null when none was recorded. */
-export async function getRecordedYesterday(now: Date): Promise<DayKind | null> {
-  const start = livedDayStartOf(now), before = livedStart(start, -1);
-  const yesterdayDays = await db.beyondDays.where("startedAt").between(before.toISOString(), start.toISOString(), true, false).toArray();
+/** Read only: the work context recorded for the lived day `k` days before now's (1 = yesterday), or null. */
+export async function getRecordedDayBefore(now: Date, k: number): Promise<DayKind | null> {
+  const start = livedDayStartOf(now), from = livedStart(start, -k), to = livedStart(start, -k + 1);
+  const days = await db.beyondDays.where("startedAt").between(from.toISOString(), to.toISOString(), true, false).toArray();
   // A restarted lived day can hold more than one record; any recorded work makes it a work day.
-  return yesterdayDays.some((d) => d.workContext === "WORK") ? "WORK" : yesterdayDays.some((d) => d.workContext === "OFF") ? "OFF" : null;
+  return days.some((d) => d.workContext === "WORK") ? "WORK" : days.some((d) => d.workContext === "OFF") ? "OFF" : null;
 }
+
+/** Read only: the work context recorded for the previous lived day, or null when none was recorded. */
+export const getRecordedYesterday = (now: Date) => getRecordedDayBefore(now, 1);
 
 export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorded: DayKind | null, yesterdayRecorded: DayKind | null): LifeStateInput {
   const start = livedDayStartOf(now);

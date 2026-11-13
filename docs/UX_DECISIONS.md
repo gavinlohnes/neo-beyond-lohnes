@@ -2946,3 +2946,18 @@ Gavin: "Life-State Engine — Slice 1: detect operating state and make TODAY sta
 - **Not an Engine input** and never stored; no recommendation, priority, schema or command change. Overloaded, evidence,
   training coupling, capture and family sharing are later slices.
 - **Amends SHIFT-RECOVERY-001's** "no inferred recovery state" exclusion, on this objective.
+
+## LIFE-STATE-002 — the moments between states (owner objective, 2026-11-13; slice 2)
+
+Gavin: "Life-State Engine — Slice 2: make state transitions explicit, calm, and useful." Brief:
+[agent/LIFE-STATE-002.md](agent/LIFE-STATE-002.md). Builds on LIFE-STATE-001.
+
+- **Moments, on the day they happen:** RUN STARTS (first shift; a one-shift run says it starts and ends today), LAST
+  SHIFT (recovery starts tomorrow), RUN OVER (recovery begins today), FLIP DAY (back on shift tomorrow at the saved
+  start time) and FREE DAYS (free days follow recovery). Yesterday's state uses slice 1's own rule, so a moment is
+  named only when both sides are known; mid-state days name none.
+- **Shown in the state band:** the moment line leads the state line, in the same calm weight. It steps aside with the
+  band while an operation owns the card.
+- **One follow-up, confirm-first:** RUN OVER offers PLAN A LIGHT DAY, a preview, then a plan item "Keep today light"
+  planned for the calendar day you're in, only on CONFIRM, and not offered again once it exists. Nothing else writes.
+- **Not an Engine input;** no schema, command or recommendation change. Recovery contracts are slice 3.

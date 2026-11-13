@@ -5,3 +5,8 @@
 .redesign-today .today-life-state__why { margin-top: 4px; }
 .redesign-today .today-life-state__why summary { cursor: pointer; color: var(--text-2); font-size: 12px; letter-spacing: .08em; min-height: 32px; display: flex; align-items: center; }
 .redesign-today .today-life-state__why ul { margin: 4px 0 0; padding-left: 18px; }
+/* LIFE-STATE-002: the moment leads on the day a state changes; same calm weight, one step up. */
+.redesign-today .today-life-state__moment { margin: 0 0 4px; color: var(--text-1); font-size: 15px; line-height: 1.4; }
+.redesign-today .today-life-state__moment strong { font-family: var(--font-mono, monospace); letter-spacing: .08em; margin-right: 6px; }
+.redesign-today .today-life-state__follow { width: auto; margin-top: 6px; }
+.redesign-today .today-life-state__preview { padding: 10px 12px; margin-top: 6px; }
