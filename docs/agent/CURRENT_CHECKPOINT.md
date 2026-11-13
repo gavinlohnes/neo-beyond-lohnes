@@ -3497,3 +3497,18 @@ Report: [WALKTHROUGH-002.md](WALKTHROUGH-002.md). Branch `ccr-88f5c085-walkthrou
 - **Still open from the walkthrough:**
   - the state stack (moment + state) at the fold;
   - a compact WEEK AHEAD on TODAY.
+
+---
+
+# DAY-MAP-001 — the lived-day map (Gavin, 2026-11-13: "top tier improvements") — Feature, slice 1
+
+Brief: [DAY-MAP-001.md](DAY-MAP-001.md). Branch `ccr-88f5c085-day-map`.
+
+- **Slice 1:** TODAY's hero bar draws what was recorded on the lived day: Garmin sleep, work, a lift, meals, water and
+  the check-in. Read only; it steps aside during operations.
+- **Next slices:**
+  1. planned blocks ahead;
+  2. tap to act;
+  3. outline new marks;
+  4. Alfred.
+- **Also open:** #502.
