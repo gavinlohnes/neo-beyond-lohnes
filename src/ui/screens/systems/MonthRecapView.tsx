@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getMonthRecap, type MonthRecap } from "../../../application/monthRecap";
+import { saveCarryForward } from "../../../application/weeklyInterview";
 import { describeError } from "../../errorMessage";
 
 /**
@@ -11,9 +12,15 @@ export function MonthRecapView({ year, month }: { year: number; month: number })
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // WEEKLY-CLOSE-001: the last card ends on a choice: carry one thing into next month as a plan item, on CONFIRM.
+  const [carry, setCarry] = useState("");
+  const [previewCarry, setPreviewCarry] = useState(false);
+  const [carried, setCarried] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [carryError, setCarryError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   // A different month closes the recap; it reads that month's records when opened again.
-  useEffect(() => { setOpen(false); setRecap(null); setIndex(0); setError(null); }, [year, month]);
+  useEffect(() => { setOpen(false); setRecap(null); setIndex(0); setError(null); setCarry(""); setPreviewCarry(false); setCarried(null); setCarryError(null); }, [year, month]);
   useEffect(() => { if (open && recap) cardRef.current?.focus(); }, [open, recap, index]);
 
   const start = () => {
@@ -31,6 +38,26 @@ export function MonthRecapView({ year, month }: { year: number; month: number })
       <h3 className="cave__cap">{card.title}</h3>
       {card.lines.map((line) => <p key={line} className="card-body" style={{ margin: "0 0 6px" }}>{line}</p>)}
     </div>
+    {last && <div data-recap-carry style={{ margin: "4px 0 8px" }}>
+      <label className="meta-strong" htmlFor="recap-carry" style={{ display: "block", color: "var(--text-1)" }}>What's one thing to carry into next month?</label>
+      <p className="meta" style={{ margin: "2px 0 4px" }}>Optional. It becomes a plan item with no day, only when you confirm.</p>
+      <textarea id="recap-carry" rows={2} style={{ width: "100%", boxSizing: "border-box" }} value={carry} disabled={saving}
+        onChange={(e) => { setCarry(e.target.value); setPreviewCarry(false); setCarried(null); setCarryError(null); }} />
+      {previewCarry ? <div role="group" aria-label="Preview" className="equipment-row" style={{ padding: "10px 12px" }}>
+        <p className="meta" style={{ margin: 0 }}>Adds this plan item, with no date:</p>
+        <p className="meta" style={{ margin: "6px 0" }}>{carry.trim()}</p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" className="btn-primary" disabled={saving} onClick={() => {
+            setSaving(true); setCarryError(null);
+            void saveCarryForward(carry, "From your month recap.").then(() => { setCarried(carry.trim()); setPreviewCarry(false); },
+              () => setCarryError("That couldn't be saved. Nothing changed.")).finally(() => setSaving(false));
+          }}>CONFIRM</button>
+          <button type="button" className="btn-secondary" disabled={saving} onClick={() => setPreviewCarry(false)}>CANCEL</button>
+        </div>
+      </div> : <button type="button" className="btn-secondary" disabled={!carry.trim() || saving || carried !== null} onClick={() => setPreviewCarry(true)}>ADD AS A PLAN ITEM</button>}
+      {carried && <p className="meta" role="status">Added plan item: {carried}. It has no day yet; find it in MORE → PLAN TODAY, under No date.</p>}
+      {carryError && <p className="meta" role="alert">{carryError}</p>}
+    </div>}
     <div className="button-row">
       <button type="button" className="btn-secondary" disabled={index === 0} onClick={() => setIndex((i) => i - 1)}>BACK</button>
       {last ? <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>DONE</button>

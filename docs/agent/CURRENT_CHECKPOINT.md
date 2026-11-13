@@ -24,18 +24,16 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: PWA-001, the installed app on a real phone (Gavin, 2026-11-13)
+# Current objective: WEEKLY-CLOSE-001, the weekly close ends on a decision (Gavin, 2026-11-13)
 
-Brief: audit the install / home-screen / launch / offline experience and fix only real gaps; packaging and feel, no
-features, no native shell. Feature lane. Audit (production build, Chromium as a Pixel 7): installable with no
-manifest or installability errors; icons 192/512 any + maskable (inside the safe zone) + monochrome + apple 180;
-black splash and first paint; offline relaunch ~0.25 s; TODAY, TRAIN, DATA, MORE, check-in, weekly check-in,
-history, review, daily note, backup and a cold +WATER shortcut all work offline, a water log saved offline survives a
-relaunch, Alfred shows the calm offline line; no console errors or failed requests. Gaps fixed: (1) a resumed app never
-checked for a new version (the browser checks only on navigation) — it now checks on returning to the foreground or
-reconnecting, at most every 10 minutes, and still waits for SYSTEM UPDATE READY; (2) the manifest gains an `id`
-equal to the identity Chrome already derives. Not needed: screenshots (richer install sheet; BEYOND is already
-installed), iOS-only tags. GUIDED-001 merged in #490.
+Brief: on the weekly interview and the month recap, make the next action obvious (carry forward, save, act); reuse the
+existing SAVE / carry-forward / plan-item paths; confirm-first, no automatic writes; no new systems or screens; TODAY,
+active workout, circadian cards, family calendar, Patterns and DELTA untouched. Feature lane. Interview: without a
+carry-forward, the next-step line says answering it turns the week into a plan; after saving, the receipt says the
+plan item has no day yet and OPEN THE PLAN ITEM opens it in your plans (BACK returns to the weekly check-in); once
+what you chose is saved, "Week closed." says where it went. Month recap: the last card asks for one thing to carry
+into next month, which becomes an undated plan item only on CONFIRM (same saveCarryForward path). PWA-001 merged in
+#491.
 
 ---
 

@@ -113,10 +113,13 @@ export async function saveInterviewNote(dayId: string, block: string): Promise<D
   return saveDailyNote(dayId, existing ? `${existing}\n\n${block}` : block);
 }
 
-/** The carry-forward answer as a plan item, only on its own confirmation. Undated, so it never reaches arbitration. */
-export function saveCarryForward(answer: string): Promise<Obligation> {
+/**
+ * The carry-forward answer as a plan item, only on its own confirmation. Undated, so it never reaches arbitration.
+ * WEEKLY-CLOSE-001: the month recap's carry-forward uses the same path, with its own description.
+ */
+export function saveCarryForward(answer: string, description = "From your weekly interview."): Promise<Obligation> {
   const title = answer.trim().length > 120 ? `${answer.trim().slice(0, 119)}…` : answer.trim();
-  return createObligation({ title, description: "From your weekly interview." });
+  return createObligation({ title, description });
 }
 
 /** Past interviews: notes carrying #timeline, newest first. The existing search already finds them by their words. */

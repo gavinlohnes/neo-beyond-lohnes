@@ -54,3 +54,16 @@ it("the weekly interview links to patterns, and back returns to the weekly check
   await screen.getByRole("button", { name: "BACK TO WEEKLY CHECK-IN", exact: true }).click();
   await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
 });
+
+it("WEEKLY-CLOSE-001: OPEN THE PLAN ITEM shows the carry-forward in your plans, and back returns to the weekly check-in", async () => {
+  await startDay();
+  const screen = await render(<MoreScreen />);
+  await openByName(screen, "interview", "WEEKLY INTERVIEW", "Look back at the week and answer a few questions");
+  await screen.getByLabelText("What's one thing to carry into next week?").fill("Rest first");
+  await screen.getByRole("button", { name: "ADD CARRY-FORWARD AS A PLAN ITEM" }).click();
+  await screen.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
+  await screen.getByRole("button", { name: "OPEN THE PLAN ITEM", exact: true }).click();
+  await expect.element(screen.getByText("Rest first").first()).toBeVisible();
+  await screen.getByRole("button", { name: "BACK TO WEEKLY CHECK-IN", exact: true }).click();
+  await expect.element(screen.getByText("MORE // WEEKLY CHECK-IN", { exact: true })).toBeVisible();
+});
