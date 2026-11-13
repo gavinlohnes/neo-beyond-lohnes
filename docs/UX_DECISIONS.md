@@ -2879,6 +2879,13 @@ Gavin, 2026-11-11: "Approved" ([CIRCADIAN-SPIKE-001](agent/CIRCADIAN-SPIKE-001.m
 cave's ROUTE, for the next shift transition (a shift under way, or one starting within 24 h): four cards, each with
 its rule, its inputs and a source quoted from the full text. **Not on TODAY**: they are not waypoints, so TODAY's next
 three points are unchanged.
+**Amended (Gavin, 2026-11-13, "A", DAY-MAP-001 slice 2):** the nap window and your usual post-shift sleep may appear
+on TODAY's lived-day bar, under these conditions:
+- they are outlined, planned blocks only, shown while still ahead;
+- they carry no advice text on TODAY, and their times are the cards' own;
+- "SLEEP PLAN ›" opens ROUTE, where the cards, their sources and SAVE/SKIP stay.
+
+Everything else in this entry is unchanged.
 - **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
   Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
 - **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake

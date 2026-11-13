@@ -10,8 +10,9 @@ import { getHydrationEntries, getLatestCheckIn, getWorkPeriodEnded, getWorkPerio
  * schedule's phases already are, so the night reads as one picture. Recorded only: Garmin's main sleep, meals, water,
  * the check-in, the work marks and workouts. Read only, never an Engine input, no advice and nothing inferred.
  */
-export type MapMarkKind = "SLEEP" | "WORK" | "WORKOUT" | "MEAL" | "WATER" | "CHECK_IN";
-export interface MapMark { kind: MapMarkKind; at: string; until?: string; label: string }
+export type MapMarkKind = "SLEEP" | "WORK" | "WORKOUT" | "MEAL" | "WATER" | "CHECK_IN" | "NAP_PLAN" | "SLEEP_PLAN";
+/** `planned`: slice 2's outlined blocks ahead of NOW, from ROUTE's shift sleep plan; never a record. */
+export interface MapMark { kind: MapMarkKind; at: string; until?: string; label: string; planned?: true }
 export interface MapInput {
   sleep: { start: string; end: string } | null;
   meals: { at: string; name: string }[];
@@ -38,6 +39,18 @@ export function deriveMapMarks(input: MapInput, now: Date): MapMark[] {
   return marks.sort((a, b) => a.at.localeCompare(b.at));
 }
 
+/**
+ * DAY-MAP-001 slice 2 (Gavin, 2026-11-13, "A", amending SHIFT-SLEEP-PLAN-001's "Not on TODAY" for the bar only): the
+ * shift sleep plan's nap and sleep windows, as outlined blocks, while they are still ahead (end after now). No advice
+ * text: the cards, their sources and SAVE/SKIP stay in ROUTE, one tap away.
+ */
+export function plannedMarks(windows: readonly { kind: "NAP" | "SLEEP"; start: string; end: string }[], now: Date): MapMark[] {
+  return windows.filter((w) => Date.parse(w.end) > now.getTime()).map((w) => ({
+    kind: w.kind === "NAP" ? "NAP_PLAN" : "SLEEP_PLAN", at: w.start, until: w.end, planned: true,
+    label: w.kind === "NAP" ? `Nap window ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan)` : `Usual sleep ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan, your Garmin rhythm)`,
+  }));
+}
+
 /** Where each mark sits on the lived day's bar (0 = 16:30, 1 = 16:30 next day); marks outside it are left out. */
 export function placeMarks(marks: readonly MapMark[], dayStart: Date): PlacedMark[] {
   const start = dayStart.getTime();
@@ -51,8 +64,9 @@ export function placeMarks(marks: readonly MapMark[], dayStart: Date): PlacedMar
 
 /** One plain sentence of what's on the map, for screen readers and Alfred. */
 export function describeMap(marks: readonly MapMark[]): string {
-  if (!marks.length) return "Nothing recorded on this lived day yet.";
-  return `Recorded since the day started: ${marks.map((m) => m.label).join("; ")}.`;
+  const recorded = marks.filter((m) => !m.planned), planned = marks.filter((m) => m.planned);
+  const done = recorded.length ? `Recorded since the day started: ${recorded.map((m) => m.label).join("; ")}.` : "Nothing recorded on this lived day yet.";
+  return planned.length ? `${done} Planned: ${planned.map((m) => m.label).join("; ")}.` : done;
 }
 
 /** Read only: the recorded inputs of a lived day, from the existing queries. */

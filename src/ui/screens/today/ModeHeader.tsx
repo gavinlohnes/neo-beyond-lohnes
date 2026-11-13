@@ -7,6 +7,7 @@ import { describeMap, type PlacedMark } from "../../../application/livedDayMap";
 const KEY: { kind: PlacedMark["kind"]; label: string }[] = [
   { kind: "SLEEP", label: "Sleep" }, { kind: "WORK", label: "Work" }, { kind: "WORKOUT", label: "Lift" },
   { kind: "MEAL", label: "Meal" }, { kind: "WATER", label: "Water" }, { kind: "CHECK_IN", label: "Check-in" },
+  { kind: "NAP_PLAN", label: "Nap window" }, { kind: "SLEEP_PLAN", label: "Sleep window" },
 ];
 
 function clock(at: Date): string {
@@ -36,7 +37,10 @@ export function ModeHeader({
   onRecordWorkDay,
   run,
   marks,
+  onOpenSleepPlan,
 }: {
+  /** DAY-MAP-001 slice 2: opens ROUTE's shift sleep plan (the cards, sources, SAVE/SKIP). */
+  onOpenSleepPlan?: (() => void) | undefined;
   /** DAY-MAP-001: what has been recorded on this lived day, placed on the bar. */
   marks?: PlacedMark[] | undefined;
   /** SHIFT-RUN-001: "scheduled: night 2 of 3 · next day off Thu", from the saved schedule only. */
@@ -148,6 +152,7 @@ export function ModeHeader({
         </div>
       </div>
       {marks && <p className="visually-hidden" data-day-map-summary>{describeMap(marks)}</p>}
+      {marks?.some((m) => m.planned) && onOpenSleepPlan && <button type="button" className="cc-tl-plan-link" onClick={onOpenSleepPlan}>SLEEP PLAN ›</button>}
       <ModeScene now={now} workDay={!dayOff} hasAction={hasAction} onShift={mode === "SCHEDULED_SHIFT"} />
       {systems}
       <ModeCity now={now} workDay={!dayOff} />

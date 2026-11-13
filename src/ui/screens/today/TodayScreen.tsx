@@ -16,7 +16,8 @@ import { LifeStateBand } from "./LifeStateBand";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
-import { getLivedDayMap, placeMarks, type MapMark } from "../../../application/livedDayMap";
+import { getLivedDayMap, placeMarks, plannedMarks, type MapMark } from "../../../application/livedDayMap";
+import { getShiftSleepPlan, type ShiftSleepPlan } from "../../../application/shiftSleepPlan";
 import { diffLook, firstKnown, mergeLook, sinceLabel, type LookSnapshot } from "../../../application/sinceLastLook";
 import { readLastLook, writeLastLook } from "./lastLookStore";
 import { sleepMinutes as externalSleepMinutes } from "../../../domain/health/measuredSeries";
@@ -419,7 +420,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
-  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF">; week: WeekAhead | null; map: MapMark[] } | null>(null);
+  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF">; week: WeekAhead | null; map: MapMark[]; sleepPlan: ShiftSleepPlan | null } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -910,8 +911,8 @@ export function TodayScreen({
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions(), getWeekAhead(readAt).catch(() => null), getLivedDayMap(activeDay, readAt).catch(() => [] as MapMark[])])
-        .then(([kind, dayBefore, contractPlanned, exceptions, week, map]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned, week, map,
+      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions(), getWeekAhead(readAt).catch(() => null), getLivedDayMap(activeDay, readAt).catch(() => [] as MapMark[]), getShiftSleepPlan(readAt).catch(() => null)])
+        .then(([kind, dayBefore, contractPlanned, exceptions, week, map, sleepPlan]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned, week, map, sleepPlan,
           // SCHEDULE-EXCEPTIONS-001: confirmed changes, for the state, its moments and the shift run (FIELD-READINESS-001).
           confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) }), () => null),
       getSchedulePattern().catch(() => null),
@@ -2719,7 +2720,8 @@ export function TodayScreen({
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
             run={bandCarriesRun ? null : todayRun}
             // DAY-MAP-001: like the band, the map steps aside while an operation owns the screen, so RESUME stays above the fold.
-            marks={recordedNow && !bandHidden ? placeMarks(recordedNow.map, livedDayStart) : undefined}
+            marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart) : undefined}
+            onOpenSleepPlan={onOpenCave ? () => { if (!busyRef.current) onOpenCave("route"); } : undefined}
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}

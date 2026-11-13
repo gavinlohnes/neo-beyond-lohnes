@@ -33,3 +33,16 @@ it("places marks on the lived day and leaves out what falls outside it", () => {
   const clipped = placeMarks(deriveMapMarks({ ...input, sleep: { start: at(18, 14), end: at(18, 17) } }, new Date(2026, 10, 19, 1)), dayStart).find((m) => m.kind === "SLEEP")!;
   expect([clipped.from, clipped.to]).toEqual([0, expect.closeTo(0.5 / 24, 4)]);
 });
+
+it("slice 2: the sleep plan's windows are outlined while still ahead, and named as planned", async () => {
+  const { plannedMarks } = await import("../src/application/livedDayMap");
+  const windows = [{ kind: "NAP" as const, start: at(18, 8), end: at(18, 17) }, { kind: "SLEEP" as const, start: at(19, 7, 30), end: at(19, 14, 15) }];
+  const now = new Date(2026, 10, 18, 20);
+  const planned = plannedMarks(windows, now);
+  expect(planned.map((m) => [m.kind, m.planned])).toEqual([["SLEEP_PLAN", true]]); // the nap is over
+  const marks = [...deriveMapMarks({ ...input, sleep: null, water: [] }, now), ...planned];
+  expect(describeMap(marks)).toBe("Recorded since the day started: Checked in at 17:05; Chicken and rice at 17:15; At work since 18:02. Planned: Usual sleep 07:30–14:15 (sleep plan, your Garmin rhythm).");
+  expect(describeMap(planned)).toBe("Nothing recorded on this lived day yet. Planned: Usual sleep 07:30–14:15 (sleep plan, your Garmin rhythm).");
+  const placed = placeMarks(marks, dayStart).find((m) => m.kind === "SLEEP_PLAN")!;
+  expect([placed.from, placed.to]).toEqual([expect.closeTo(15 / 24, 4), expect.closeTo(21.75 / 24, 4)]);
+});

@@ -91,3 +91,14 @@ describe("CIRCADIAN PLAN: the next shift transition's cards", () => {
     }
   });
 });
+
+describe("DAY-MAP-001 slice 2: the plan's windows as times, for TODAY's bar", () => {
+  it("gives the nap window and your usual post-shift sleep as the cards' own times; none without a rhythm", () => {
+    const p = plan(new Date(2026, 9, 26, 9))!;
+    expect(p.windows).toEqual([
+      { kind: "SLEEP", start: new Date(2026, 9, 27, 7, 30).toISOString(), end: new Date(2026, 9, 27, 14, 15).toISOString() },
+      { kind: "NAP", start: new Date(2026, 9, 26, 8).toISOString(), end: new Date(2026, 9, 26, 17).toISOString() },
+    ]);
+    expect(plan(new Date(2026, 9, 26, 9), { rhythm: null })!.windows).toEqual([]);
+  });
+});

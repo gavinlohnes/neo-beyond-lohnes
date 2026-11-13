@@ -130,3 +130,9 @@
 .cc-mode .cc-tl-key__swatch--meal { width: 2px; height: 9px; background: var(--p-t1); }
 .cc-mode .cc-tl-key__swatch--water { width: 5px; height: 5px; border-radius: 50%; background: var(--p-t2); }
 .cc-mode .cc-tl-key__swatch--check_in { width: 6px; height: 6px; border: 1.5px solid var(--p-red); transform: rotate(45deg); }
+/* DAY-MAP-001 slice 2: the sleep plan's windows ahead of NOW, outlined (planned, never a record). */
+.cc-mode .cc-tl-span--nap_plan, .cc-mode .cc-tl-span--sleep_plan { height: 8px; top: 1px; background: transparent; border: 1px dashed var(--p-t2); }
+.cc-mode .cc-tl-span--nap_plan { border-style: dotted; }
+.cc-mode .cc-tl-key__swatch--nap_plan, .cc-mode .cc-tl-key__swatch--sleep_plan { width: 10px; height: 6px; border: 1px dashed var(--p-t2); }
+.cc-mode .cc-tl-key__swatch--nap_plan { border-style: dotted; }
+.cc-mode .cc-tl-plan-link { display: inline-flex; align-items: center; min-height: 32px; margin-top: 2px; padding: 0; background: none; border: 0; color: var(--p-t1); font-size: 11px; letter-spacing: .08em; cursor: pointer; }
