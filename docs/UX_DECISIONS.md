@@ -2928,3 +2928,21 @@ and the panel says so. Never an Engine input; nothing is stored in BEYOND's reco
   BEYOND. Nothing else."); events carry none.
 - **After a reinstall (review of #484):** sync finds an existing "BEYOND — family" he owns by name and reuses it,
   instead of making a second, unshared one.
+
+## LIFE-STATE-001 — the day's operating state on TODAY (owner objective, 2026-11-13; slice 1)
+
+Gavin: "Life-State Engine — Slice 1: detect operating state and make TODAY state-aware." Brief:
+[agent/LIFE-STATE-001.md](agent/LIFE-STATE-001.md).
+
+- **Four states, derived only:** WORK RUN (today is a work day), RECOVERY (today off, yesterday a work day — a single
+  day off between runs is recovery), FLIP (today off, tomorrow a work day), FREE (off with no work day either side).
+  Today's recorded work context wins over the schedule; yesterday uses its recorded lived day, else the schedule;
+  tomorrow comes from the saved schedule. No record and no schedule: no state, and TODAY says nothing.
+- **Shown once, calmly:** one line above the next card ("RECOVERY The first day off after the run…") with WHY, which
+  names each source and says BEYOND's advice still comes from the check-in. It describes the day and never prescribes;
+  "Log when you want." still leads the next card (FIELD-AUTHORITY-001 unchanged).
+- **Order by state:** in a WORK RUN or on a FLIP, the day's preparation and routines come before YOUR LIFE; on
+  RECOVERY, FREE or unknown the usual order stays. Nothing is hidden, and the two move without remounting.
+- **Not an Engine input** and never stored; no recommendation, priority, schema or command change. Overloaded, evidence,
+  training coupling, capture and family sharing are later slices.
+- **Amends SHIFT-RECOVERY-001's** "no inferred recovery state" exclusion, on this objective.
