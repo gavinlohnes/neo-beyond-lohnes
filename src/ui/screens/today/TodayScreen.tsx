@@ -13,7 +13,7 @@ import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
-import type { LifeState } from "../../../application/lifeState";
+import { deriveLifeState, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -404,8 +404,8 @@ export function TodayScreen({
   const refreshRequestIdRef = useRef(0);
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
-  // LIFE-STATE-001: the day's operating state (read by LifeStateBand); orders TODAY's supporting sections.
-  const [lifeState, setLifeState] = useState<LifeState | null>(null);
+  // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
+  const [yesterdayRecorded, setYesterdayRecorded] = useState<"WORK" | "OFF" | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -881,6 +881,11 @@ export function TodayScreen({
     const effectiveProteinTarget = await getEffectiveProteinTargetG();
     // TONIGHT-001: the morning call, wake card and night summary read one small fact set.
     const tonightState = activeDay ? await getTonightState(activeDay.id).catch(() => null) : null;
+    // LIFE-STATE-001: yesterday's recorded work context, read with everything else so the state band lands in the
+    // same render as the rest of TODAY (no layout jump after load).
+    const nextYesterday = activeDay ? await getRecordedYesterday(new Date()).catch(() => null) : null;
+    // The schedule too (loadShiftClockSetup also reads it), so the band never appears after the tiles.
+    const nextSchedule = activeDay ? await getSchedulePattern().catch(() => null) : null;
 
     // Everything on the active-day/context path is gated on this single
     // ownership check: a refresh superseded by the time its getActiveDay()
@@ -906,6 +911,8 @@ export function TodayScreen({
       currentContextDayIdRef.current = newDayId;
       setDay(activeDay);
       setActiveWorkout(activeWorkoutSession);
+      setYesterdayRecorded(nextYesterday);
+      if (nextSchedule) setSchedulePattern(nextSchedule);
     }
     setOpenCaptureItems(openCaptureItems);
     setUnresolvedObligations(obligations);
@@ -1736,6 +1743,9 @@ export function TodayScreen({
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
   // SHIFT-RUN-001 on TODAY: where today sits in the saved rotation, unless he declared the day otherwise.
   const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern) : null;
+  // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
+  const lifeReading = day && schedulePattern ? deriveLifeState(lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, yesterdayRecorded)) : null;
+  const lifeState = lifeReading?.state ?? null;
   const todayRun = scheduledRun && day && (day.workContext === "UNKNOWN" || day.workContext === scheduledRun.kind) ? `scheduled: ${describeShiftRun(scheduledRun)}` : null;
   const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;
   const livedDayStart = mostRecentBoundaryAtOrBefore(new Date(day?.startedAt ?? now));
@@ -2698,7 +2708,7 @@ export function TodayScreen({
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep}>
-      <LifeStateBand now={now} dayId={day.id} workContext={day.workContext} onState={setLifeState} /></div>}
+      <LifeStateBand reading={lifeReading} /></div>}
     {nextSection}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}

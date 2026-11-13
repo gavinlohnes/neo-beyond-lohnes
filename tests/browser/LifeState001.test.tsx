@@ -76,3 +76,12 @@ it("steps aside while a workout owns the card, so RESUME stays first", async () 
   await expect.element(screen.getByRole("button", { name: /RESUME WORKOUT/ }).first()).toBeVisible();
   expect(band()?.closest("[hidden]")).not.toBeNull();
 });
+
+it("lands in the same render as TODAY's numbers, so nothing jumps after load (CI: Garmin005 tapped a moved tile)", async () => {
+  vi.setSystemTime(new Date(2026, 10, 18, 18));
+  await startDay();
+  const screen = await render(<TodayScreen onOpenLife={() => {}} />);
+  // The next card appears only once the day has loaded; the band must already be there with it.
+  await expect.element(screen.getByRole("heading", { name: "Log when you want." })).toBeVisible();
+  expect(band()?.getAttribute("data-life-state")).toBe("WORK_RUN");
+});

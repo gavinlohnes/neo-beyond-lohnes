@@ -1,7 +1,6 @@
 import type { SchedulePattern } from "../domain/common/types";
 import { isOperatorSavedSchedule, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
 import { db } from "../persistence/db";
-import { getSchedulePattern } from "./queries";
 import { livedDayStartOf } from "./reflect";
 import { shiftRun, type ShiftRun } from "./shiftRun";
 
@@ -74,16 +73,13 @@ export function deriveLifeState(input: LifeStateInput): LifeStateReading | null 
 }
 
 const livedStart = (start: Date, k: number) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + k, 16, 30, 0, 0);
-const known = (kind: "WORK" | "OFF" | "UNKNOWN" | undefined): DayKind | null => (kind === "WORK" || kind === "OFF" ? kind : null);
 
-/** Read only: the saved schedule and yesterday's recorded lived day. Today's recorded context comes from the caller's day. */
-export async function getLifeState(now: Date, todayRecorded: "WORK" | "OFF" | "UNKNOWN" | undefined): Promise<LifeStateReading | null> {
-  const pattern = await getSchedulePattern();
+/** Read only: the work context recorded for the previous lived day, or null when none was recorded. */
+export async function getRecordedYesterday(now: Date): Promise<DayKind | null> {
   const start = livedDayStartOf(now), before = livedStart(start, -1);
   const yesterdayDays = await db.beyondDays.where("startedAt").between(before.toISOString(), start.toISOString(), true, false).toArray();
   // A restarted lived day can hold more than one record; any recorded work makes it a work day.
-  const recordedYesterday = yesterdayDays.some((d) => d.workContext === "WORK") ? "WORK" : yesterdayDays.some((d) => d.workContext === "OFF") ? "OFF" : null;
-  return deriveLifeState(lifeStateInput(now, pattern, known(todayRecorded), recordedYesterday));
+  return yesterdayDays.some((d) => d.workContext === "WORK") ? "WORK" : yesterdayDays.some((d) => d.workContext === "OFF") ? "OFF" : null;
 }
 
 export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorded: DayKind | null, yesterdayRecorded: DayKind | null): LifeStateInput {
