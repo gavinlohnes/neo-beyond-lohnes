@@ -3038,3 +3038,8 @@ Brief: [agent/OPERATOR-EXPERIENCE-001.md](agent/OPERATOR-EXPERIENCE-001.md).
   - The answer is labelled "not a recommendation", and the Engine's recommendation stays its own record.
   - TODAY's actions are named, each confirm-first; Alfred cannot change anything.
   - The free helper answers "why does today say …" and "what's next".
+- **Slice 3: "since you last looked"** (device-local, Gavin 2026-11-13).
+  - One quiet line leads TODAY's band when something changed since the last look on this device: new advice, a
+    state change, confirmed changes or NEXT, a Garmin sleep sync.
+  - Never from unloaded fields or the visit's own actions.
+  - Kept in `localStorage` only; not a record, and not in backups.

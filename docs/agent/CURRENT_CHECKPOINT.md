@@ -28,15 +28,14 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 Brief and roadmap: [OPERATOR-EXPERIENCE-001.md](OPERATOR-EXPERIENCE-001.md).
 
-- **Slice 1** (NOW, NEXT and WEEK AHEAD on TODAY) merged in #501.
-- **Slice 2** is on branch `ccr-88f5c085-alfred-explains`. Alfred's context and the free helper explain what TODAY
-  shows, from the shared `todayPicture` reading. It is read-side, writes nothing, and isn't a recommendation.
+- **Slice 1** (NOW, NEXT, WEEK AHEAD) merged in #501.
+- **Slice 3** ("since you last looked", device-local) merged in #503.
+- **Slice 2** (Alfred explains TODAY) is in #502, on branch `ccr-88f5c085-alfred-explains`. Alfred's context and the
+  free helper explain what TODAY shows, from the shared `todayPicture` reading. It is read-side, writes nothing, and
+  isn't a recommendation.
 - **Verification:** typecheck, the architecture check, the node and browser suites and the build.
-- **Next:** Gavin merges.
-- **Further slices need Gavin's pick:**
-  - "changed since you last looked" (local; where "last looked" lives needs a decision);
-  - contextual actions on NEXT;
-  - the training suggestion beside the next day off.
+- **Next:** Gavin merges #502.
+- **Remaining roadmap options:** contextual actions on NEXT; the training suggestion beside the next day off.
 - **Field tests still needed:** #402; the 16:30 day start on the phone with a confirmed change; the band at 360 px on
   the device.
 
