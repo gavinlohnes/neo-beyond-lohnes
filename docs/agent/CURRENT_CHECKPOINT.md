@@ -24,12 +24,12 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: LIFE-STATE-002, Life-State Engine slice 2 (Gavin, 2026-11-13) — PROTECTED
+# Current objective: LIFE-STATE-003, Life-State Engine slice 3 (Gavin, 2026-11-13) — PROTECTED
 
-Brief: [LIFE-STATE-002.md](LIFE-STATE-002.md); decision: UX_DECISIONS LIFE-STATE-002. On the day a state changes,
-TODAY's state band leads with the moment (RUN STARTS, LAST SHIFT, RUN OVER, FLIP DAY, FREE DAYS); RUN OVER offers
-an optional, confirm-first "Keep today light" plan item. Needs an independent exact-head review. LIFE-STATE-001
-merged in #494; #402 (rotation field test) is Gavin's next work day.
+Brief: [LIFE-STATE-003.md](LIFE-STATE-003.md); decision: UX_DECISIONS LIFE-STATE-003. On RUN OVER, below TODAY's next
+card: a POST-RUN REPORT from recorded days and an optional recovery contract (sleep first, easy training or rest, a
+light day) written as plan items for the first full day off only on CONFIRM. Needs an independent exact-head review.
+LIFE-STATE-002 merged in #495; #402 (rotation field test) is Gavin's next work day.
 
 ---
 

@@ -11,16 +11,15 @@ import { deriveLifeState, type DayKind, type LifeState, type LifeStateInput, typ
  *
  *   RUN_STARTS   today is a work run and yesterday wasn't: the first shift.
  *   LAST_SHIFT   today is a work run and tomorrow is off: the run ends after this shift.
- *   RUN_OVER     today is recovery: the run is over, the first day off. One optional follow-up, a light-day plan item.
+ *   RUN_OVER     today is recovery: the run is over, the first day off. Slice 3 adds the post-run report and the
+ *                optional recovery contract here (recoveryContract.ts, postRunReport.ts).
  *   FLIP_BEGINS  today is a flip: back on shift at the next scheduled start.
  *   FREE_AGAIN   today is free and yesterday was recovery.
  *
- * Read only. The follow-up is written only through the caller's confirmed plan-item path; never an Engine input.
+ * Read only; never an Engine input.
  */
-export const LIGHT_DAY_TITLE = "Keep today light";
 export type LifeMoment = "RUN_STARTS" | "LAST_SHIFT" | "RUN_OVER" | "FLIP_BEGINS" | "FREE_AGAIN";
-export interface LifeFollowUp { title: string; description: string }
-export interface LifeMomentReading { moment: LifeMoment; label: string; line: string; followUp: LifeFollowUp | null }
+export interface LifeMomentReading { moment: LifeMoment; label: string; line: string }
 
 export interface LifeMomentInput {
   state: LifeStateInput;
@@ -67,24 +66,23 @@ export function deriveLifeMoment(input: LifeMomentInput, today: LifeStateReading
         : phase === "DURING" ? `${one}This is the first shift of the run.${last ? ` ${after(todayShift!.end)}` : ""}`
         : phase === "AFTER" ? `${one}The first shift of the run is done.${last ? " Recovery starts this evening." : ""}`
         : `${one}The first shift of the run.`;
-      return { moment: "RUN_STARTS", label: "RUN STARTS", followUp: null, line };
+      return { moment: "RUN_STARTS", label: "RUN STARTS", line };
     }
     if (before === "WORK_RUN" && last) {
       const line = phase === "AFTER" ? "The run's last shift is done. Recovery starts this evening."
         : todayShift ? `The last shift of the run. ${after(todayShift.end)}` : "The last shift of the run.";
-      return { moment: "LAST_SHIFT", label: "LAST SHIFT", line, followUp: null };
+      return { moment: "LAST_SHIFT", label: "LAST SHIFT", line };
     }
     return null;
   }
   if (today.state === "RECOVERY") {
-    return { moment: "RUN_OVER", label: "RUN OVER", line: "The run is over. This is the first day off.",
-      followUp: { title: LIGHT_DAY_TITLE, description: "From the end of your run: the first day off after it." } };
+    return { moment: "RUN_OVER", label: "RUN OVER", line: "The run is over. This is the first day off." };
   }
   if (today.state === "FLIP" && before !== null && before !== "FLIP") {
-    return { moment: "FLIP_BEGINS", label: "FLIP DAY", followUp: null,
+    return { moment: "FLIP_BEGINS", label: "FLIP DAY",
       line: input.nextShift ? `Back on shift ${whenFrom(now, input.nextShift.start)}.` : "Back on shift when this day off ends." };
   }
-  if (today.state === "FREE" && before === "RECOVERY") return { moment: "FREE_AGAIN", label: "FREE DAYS", line: "The first day off is done. The rest of these days off are free.", followUp: null };
+  if (today.state === "FREE" && before === "RECOVERY") return { moment: "FREE_AGAIN", label: "FREE DAYS", line: "The first day off is done. The rest of these days off are free." };
   return null;
 }
 
@@ -117,5 +115,3 @@ export function lifeMomentInput(now: Date, pattern: SchedulePattern, state: Life
   };
 }
 
-/** The date a "today" follow-up is planned for: the calendar day you're in. */
-export const followUpDate = (now: Date) => formatLocalDate(now);
