@@ -3046,3 +3046,13 @@ Brief: [agent/OPERATOR-EXPERIENCE-001.md](agent/OPERATOR-EXPERIENCE-001.md).
   couldn't be read. Nothing is lost.
 - Under the NEXT label, the line drops its own leading "Next": "NEXT Shift: Thu, Oct 29 · 18:00 · confirmed change".
 - Alfred and the helper keep the full sentence.
+
+## DAY-MAP-001 — the lived-day map on TODAY's bar (Gavin, 2026-11-13: "top tier improvements"; slice 1)
+
+Brief: [agent/DAY-MAP-001.md](agent/DAY-MAP-001.md).
+
+- **What it draws:** what has been recorded on the lived day, on the hero's 16:30 → 16:30 bar. Spans for Garmin
+  sleep, work (the one red) and a lift; ticks, dots and a diamond for meals, water and the check-in.
+- **What it says:** a key with only the kinds present, and one hidden sentence with the same facts. Read only; no
+  advice.
+- **When it's hidden:** while an operation owns the screen, so RESUME stays above the fold.

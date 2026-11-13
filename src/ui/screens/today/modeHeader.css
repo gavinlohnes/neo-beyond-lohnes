@@ -108,3 +108,25 @@
 .cc-mode .brief-line { grid-template-columns: auto 1fr; }
 .brief-line .route-line__way { grid-template-columns: auto 1fr; }
 .brief-line .route-line__way time { min-width: 58px; }
+
+/* DAY-MAP-001: the lived day's recorded marks on a thin track under the bar. Spans (sleep, work, a lift) and pins
+   (meals, water, the check-in); quiet greys, the one red for work. Decorative: the same facts are in a hidden sentence. */
+.cc-mode .cc-tl-marks { position: relative; height: 10px; margin-top: 3px; }
+.cc-mode .cc-tl-span, .cc-mode .cc-tl-pin { position: absolute; top: 0; }
+.cc-mode .cc-tl-span { height: 4px; top: 3px; }
+.cc-mode .cc-tl-span--sleep { background: var(--p-t3); }
+.cc-mode .cc-tl-span--work { background: var(--p-red); }
+.cc-mode .cc-tl-span--workout { background: var(--p-t1); height: 6px; top: 2px; }
+.cc-mode .cc-tl-pin { transform: translateX(-50%); }
+.cc-mode .cc-tl-pin--meal { width: 2px; height: 10px; background: var(--p-t1); }
+.cc-mode .cc-tl-pin--water { width: 5px; height: 5px; top: 2.5px; border-radius: 50%; background: var(--p-t2); }
+.cc-mode .cc-tl-pin--check_in { width: 6px; height: 6px; top: 2px; border: 1.5px solid var(--p-red); transform: translateX(-50%) rotate(45deg); }
+.cc-mode .cc-tl-key { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; color: var(--p-t2); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.cc-mode .cc-tl-key span { display: inline-flex; align-items: center; gap: 4px; }
+.cc-mode .cc-tl-key__swatch { display: inline-block; width: 8px; height: 4px; }
+.cc-mode .cc-tl-key__swatch--sleep { background: var(--p-t3); }
+.cc-mode .cc-tl-key__swatch--work { background: var(--p-red); }
+.cc-mode .cc-tl-key__swatch--workout { background: var(--p-t1); height: 6px; }
+.cc-mode .cc-tl-key__swatch--meal { width: 2px; height: 9px; background: var(--p-t1); }
+.cc-mode .cc-tl-key__swatch--water { width: 5px; height: 5px; border-radius: 50%; background: var(--p-t2); }
+.cc-mode .cc-tl-key__swatch--check_in { width: 6px; height: 6px; border: 1.5px solid var(--p-red); transform: rotate(45deg); }

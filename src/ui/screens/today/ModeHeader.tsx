@@ -2,6 +2,12 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { MODE_DESCRIPTIONS, MODE_NAMES, MODE_ORDER, type LivedDayStrip, type ShiftClockPhase } from "./shiftClock";
 import "./modeHeader.css";
 import { ModeCity, ModeScene } from "./ModeIdentity";
+import { describeMap, type PlacedMark } from "../../../application/livedDayMap";
+
+const KEY: { kind: PlacedMark["kind"]; label: string }[] = [
+  { kind: "SLEEP", label: "Sleep" }, { kind: "WORK", label: "Work" }, { kind: "WORKOUT", label: "Lift" },
+  { kind: "MEAL", label: "Meal" }, { kind: "WATER", label: "Water" }, { kind: "CHECK_IN", label: "Check-in" },
+];
 
 function clock(at: Date): string {
   return `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
@@ -29,7 +35,10 @@ export function ModeHeader({
   onPin,
   onRecordWorkDay,
   run,
+  marks,
 }: {
+  /** DAY-MAP-001: what has been recorded on this lived day, placed on the bar. */
+  marks?: PlacedMark[] | undefined;
   /** SHIFT-RUN-001: "scheduled: night 2 of 3 · next day off Thu", from the saved schedule only. */
   run?: string | null;
   now: Date;
@@ -114,6 +123,11 @@ export function ModeHeader({
           ))}
           <div className="cc-tl-now mode-strip__now" style={{ left: `${(strip.now * 100).toFixed(1)}%` }} />
         </div>
+        {marks && marks.length > 0 && <div className="cc-tl-marks" data-day-map>
+          {marks.map((m, i) => m.to !== null
+            ? <span key={i} className={`cc-tl-span cc-tl-span--${m.kind.toLowerCase()}`} style={{ left: `${(m.from * 100).toFixed(2)}%`, width: `${Math.max((m.to - m.from) * 100, 0.8).toFixed(2)}%` }} />
+            : <span key={i} className={`cc-tl-pin cc-tl-pin--${m.kind.toLowerCase()}`} style={{ left: `${(m.from * 100).toFixed(2)}%` }} />)}
+        </div>}
         <div className="cc-tl-ruler">
           {Array.from({ length: 24 }, (_, i) => <i key={i} className={i === 1 || i === 13 ? "cc-maj" : undefined} style={{ left: `${(((i + .5) / 24) * 100).toFixed(2)}%` }} />)}
         </div>
@@ -124,12 +138,16 @@ export function ModeHeader({
             </span>
           ))}
         </div>
+        {marks && marks.length > 0 && <div className="cc-tl-key">
+          {KEY.filter((k) => marks.some((m) => m.kind === k.kind)).map((k) => <span key={k.kind}><i className={`cc-tl-key__swatch cc-tl-key__swatch--${k.kind.toLowerCase()}`} />{k.label}</span>)}
+        </div>}
         <div className="cc-tl-legend">
           <span style={{ left: 0 }}>{clock(dayStart)}</span>
           {!dayOff && <span style={{ left: "56.25%" }}>06:00</span>}
           <span style={{ left: "100%" }}>{clock(dayStart)}</span>
         </div>
       </div>
+      {marks && <p className="visually-hidden" data-day-map-summary>{describeMap(marks)}</p>}
       <ModeScene now={now} workDay={!dayOff} hasAction={hasAction} onShift={mode === "SCHEDULED_SHIFT"} />
       {systems}
       <ModeCity now={now} workDay={!dayOff} />
