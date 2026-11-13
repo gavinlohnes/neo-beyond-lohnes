@@ -14,6 +14,7 @@ import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
+import { livedDayStartOf } from "../../../application/reflect";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
@@ -405,7 +406,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
-  const [yesterdayRecorded, setYesterdayRecorded] = useState<"WORK" | "OFF" | null>(null);
+  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -883,9 +884,13 @@ export function TodayScreen({
     const tonightState = activeDay ? await getTonightState(activeDay.id).catch(() => null) : null;
     // LIFE-STATE-001: yesterday's recorded work context, read with everything else so the state band lands in the
     // same render as the rest of TODAY (no layout jump after load).
-    const nextYesterday = activeDay ? await getRecordedYesterday(new Date()).catch(() => null) : null;
-    // The schedule too (loadShiftClockSetup also reads it), so the band never appears after the tiles.
-    const nextSchedule = activeDay ? await getSchedulePattern().catch(() => null) : null;
+    // The schedule too (loadShiftClockSetup also reads it), so the band never appears after the tiles. Yesterday is
+    // kept with the lived day it was read for (review of #494), so after 16:30 a stale read is ignored, not used.
+    const readAt = new Date();
+    const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
+      getRecordedYesterday(readAt).then((kind) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind }), () => null),
+      getSchedulePattern().catch(() => null),
+    ]) : [null, null];
 
     // Everything on the active-day/context path is gated on this single
     // ownership check: a refresh superseded by the time its getActiveDay()
@@ -1744,7 +1749,8 @@ export function TodayScreen({
   // SHIFT-RUN-001 on TODAY: where today sits in the saved rotation, unless he declared the day otherwise.
   const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern) : null;
   // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
-  const lifeReading = day && schedulePattern ? deriveLifeState(lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, yesterdayRecorded)) : null;
+  const yesterday = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(now).getTime() ? yesterdayRecorded.kind : null;
+  const lifeReading = day && schedulePattern ? deriveLifeState(lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, yesterday)) : null;
   const lifeState = lifeReading?.state ?? null;
   const todayRun = scheduledRun && day && (day.workContext === "UNKNOWN" || day.workContext === scheduledRun.kind) ? `scheduled: ${describeShiftRun(scheduledRun)}` : null;
   const shiftWindow = day && schedulePattern ? livedDayShiftWindow(new Date(day.startedAt), schedulePattern) : null;
