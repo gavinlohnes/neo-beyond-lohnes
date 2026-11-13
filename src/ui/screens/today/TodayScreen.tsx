@@ -16,7 +16,7 @@ import { LifeStateBand } from "./LifeStateBand";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
 import { recordedBy } from "../../../application/workContextResolution";
-import { getConfirmedExceptions, livedDatesAround } from "../../../application/scheduleExceptions";
+import { getConfirmedExceptions } from "../../../application/scheduleExceptions";
 import { contractDate, hasRecoveryContract } from "../../../application/recoveryContract";
 import { PostRunReportDisclosure, RecoveryContractOffer } from "./RecoveryContract";
 import { createObligation } from "../../../application/intentCommands";
@@ -896,9 +896,9 @@ export function TodayScreen({
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions(livedDatesAround(readAt))])
+      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions()])
         .then(([kind, dayBefore, contractPlanned, exceptions]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned,
-          // SCHEDULE-EXCEPTIONS-001: confirmed changes around today, for the state and its moments.
+          // SCHEDULE-EXCEPTIONS-001: confirmed changes, for the state, its moments and the shift run (FIELD-READINESS-001).
           confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) }), () => null),
       getSchedulePattern().catch(() => null),
     ]) : [null, null];
@@ -1758,9 +1758,9 @@ export function TodayScreen({
   const workContextPerSchedule = !!day && day.workContext !== "UNKNOWN" && workContextSource === "SCHEDULE_STANDING";
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
   // SHIFT-RUN-001 on TODAY: where today sits in the saved rotation, unless he declared the day otherwise.
-  const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern) : null;
   // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
   const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(now).getTime() ? yesterdayRecorded : null;
+  const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern, 21, recordedNow?.confirmed) : null;
   const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
   // LIFE-STATE-002: the moment between states, if today is one, with the day before yesterday from record or schedule.

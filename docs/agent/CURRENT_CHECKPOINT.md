@@ -24,18 +24,17 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: SCHEDULE-EXCEPTIONS-001, confirmed future schedule changes (Gavin, 2026-11-13) — Protected (approved)
+# Current objective: FIELD-READINESS-001, real-world operational validation (Gavin, 2026-11-13) — Feature lane
 
-Brief: [SCHEDULE-EXCEPTIONS-001.md](SCHEDULE-EXCEPTIONS-001.md). Branch `ccr-88f5c085-schedule-exceptions`.
+Brief: [FIELD-READINESS-001.md](FIELD-READINESS-001.md). Branch `ccr-88f5c085-field-readiness`.
 
-- **What it adds:**
-  - schema v26 `scheduleExceptions` (overtime, time off, swap; append-only history; non-destructive cancel);
-  - day start records a confirmed change as `SCHEDULE_EXCEPTION`;
-  - Week Ahead: confirm/cancel with a preview, and a CONFIRMED basis everywhere the resolver is read.
-- **Verification:** typecheck, architecture, the node and browser suites and the build.
-- **Next:** independent exact-head review, then Gavin merges.
-- **Residual risks:** see the brief.
-- **Earlier:** CONTEXT-INTEGRATION-001 merged in #497. #402 is Gavin's next work day.
+- **Fix (verified defect):** shift runs now count confirmed schedule changes. Before this, TODAY, Life State, the
+  header, COMMAND, the recovery brief and the free helper said "back on Mon" when Monday was confirmed off.
+- **Verification:** typecheck, the architecture check, the node and browser suites and the build.
+- **Next:** Gavin merges.
+- **Next recommended improvement:** a MOVE action for a confirmed change in Week Ahead.
+- **Field test still needed:** #402.
+- **Earlier:** SCHEDULE-EXCEPTIONS-001 merged in #498; CONTEXT-INTEGRATION-001 in #497.
 
 ---
 

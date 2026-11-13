@@ -78,7 +78,6 @@ Refusals:
 
 ## Residual risks
 
-- `shiftRun` ("Shift N of M") still counts the rotation alone, so a confirmed overtime day does not lengthen the run
-  count shown in Life State.
+- ~~`shiftRun` counted the rotation alone.~~ Fixed in FIELD-READINESS-001.
 - Moving an exception is a command only. There is no UI for it; the UI path is cancel and confirm again.
 - Exceptions need a saved rotation.

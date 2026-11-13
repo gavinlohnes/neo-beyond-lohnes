@@ -3,6 +3,7 @@ import { getActiveDay, getSchedulePattern } from "../queries";
 import { getEffectiveProteinTargetG } from "../nutritionTargetQueries";
 import { getWeekTasks } from "../weekAheadQueries";
 import { describeShiftRun, shiftRun } from "../shiftRun";
+import { getConfirmedKinds } from "../scheduleExceptions";
 import { formatLocalDate } from "../../engine/scheduledContext";
 
 /**
@@ -16,7 +17,7 @@ export async function freeBrief(now = new Date()): Promise<string[]> {
   const [summaries, schedule, target, week] = await Promise.all([getDaySummaries(), getSchedulePattern(), getEffectiveProteinTargetG(), getWeekTasks(now)]);
   const today = summaries.find((s) => s.beyondDayId === day.id);
   const lines: string[] = [];
-  const run = shiftRun(now, schedule);
+  const run = shiftRun(now, schedule, 21, await getConfirmedKinds());
   if (run && (day.workContext === "UNKNOWN" || day.workContext === run.kind)) lines.push(`Scheduled: ${describeShiftRun(run)}.`);
   const protein = today?.proteinG, water = today?.waterOz;
   const food = protein !== undefined ? `${Math.round(protein)} g protein${target ? ` of ${Math.round(target)}` : ""}` : "no food logged";

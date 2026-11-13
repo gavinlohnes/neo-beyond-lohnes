@@ -41,3 +41,16 @@ it("steps by calendar day at 16:30, so a clock change never moves the window (re
   expect(shiftRun(at(2026, 9, 30), saved)).toMatchObject({ kind: "WORK", position: 1, length: 3 });
   expect(shiftRun(at(2026, 9, 30), saved)!.next.getHours()).toBe(16);
 });
+
+it("FIELD-READINESS-001: counts confirmed schedule changes, and says so", () => {
+  // Week B from Mon Nov 16 2026: Wed 18/Thu 19 work, Fri 20–Sun 22 off, Mon 23/Tue 24 work.
+  const sunday = new Date(2026, 10, 22, 18);
+  expect(describeShiftRun(shiftRun(sunday, saved)!)).toBe("day off 3 of 3 · back on Mon");
+  const timeOff = new Map([["2026-11-23", "OFF" as const]]);
+  expect(describeShiftRun(shiftRun(sunday, saved, 21, timeOff)!)).toBe("day off 3 of 4 · back on Tue · with a confirmed change");
+  const overtime = new Map([["2026-11-21", "WORK" as const]]);
+  expect(describeShiftRun(shiftRun(new Date(2026, 10, 20, 18), saved, 21, overtime)!)).toBe("day off 1 of 1 · back on Sat · with a confirmed change");
+  expect(describeShiftRun(shiftRun(new Date(2026, 10, 21, 18), saved, 21, overtime)!)).toBe("night 1 of 1 · next day off Sun · with a confirmed change");
+  // A change outside the run and its end leaves the reading as it was.
+  expect(shiftRun(sunday, saved, 21, new Map([["2026-12-05", "OFF" as const]]))!.confirmed).toBeUndefined();
+});

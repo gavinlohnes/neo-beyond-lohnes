@@ -102,6 +102,6 @@ export function lifeStateInput(now: Date, pattern: SchedulePattern, todayRecorde
     today: { recorded: todayRecorded, scheduled: scheduled(0), ...(todayRecorded && todayBy ? { by: todayBy } : {}), ...isConfirmed(0) },
     yesterday: { recorded: yesterdayRecorded, scheduled: scheduled(-1), ...isConfirmed(-1) },
     tomorrow: { scheduled: scheduled(1), date: livedStart(start, 1), ...isConfirmed(1) },
-    run: shiftRun(now, pattern),
+    run: shiftRun(now, pattern, 21, confirmed),
   };
 }
