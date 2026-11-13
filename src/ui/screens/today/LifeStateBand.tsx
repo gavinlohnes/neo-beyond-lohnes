@@ -2,7 +2,7 @@ import "./lifeState.css";
 import type { LifeStateReading } from "../../../application/lifeState";
 import type { LifeMomentReading } from "../../../application/lifeTransition";
 import type { AheadReading } from "../../../application/ahead";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
  * LIFE-STATE-001: what state BEYOND believes today is in (WORK RUN, RECOVERY, FLIP, FREE), in one calm line, with
@@ -19,6 +19,10 @@ export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead,
   since?: { label: string; items: string[] } | null;
 }) {
   const [open, setOpen] = useState(false);
+  // WALKTHROUGH-002: on a work day the band sits at the bottom of the first screen, so the week opened below the fold;
+  // bring it into view when it opens.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (open) panelRef.current?.scrollIntoView({ block: "start" }); }, [open]);
   if (!reading) return null;
   return (
     <section className="today-life-state" data-life-state={reading.state} data-life-moment={moment?.moment} aria-label="Operating state">
@@ -34,7 +38,7 @@ export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead,
         {weekAhead && <button type="button" className="today-life-state__week" aria-expanded={open} aria-controls="today-week-ahead" onClick={() => setOpen((o) => !o)}>
           {open ? "HIDE WEEK AHEAD" : `WEEK AHEAD${ahead?.confirmed ? ` · ${ahead.confirmed} CONFIRMED` : ""}`}</button>}
       </div>
-      {weekAhead && open && <div id="today-week-ahead" className="today-life-state__week-panel" role="region" aria-label="Week ahead">{weekAhead()}</div>}
+      {weekAhead && open && <div ref={panelRef} id="today-week-ahead" className="today-life-state__week-panel" role="region" aria-label="Week ahead">{weekAhead()}</div>}
     </section>
   );
 }
