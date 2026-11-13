@@ -17,7 +17,7 @@
 | # | Rank | Finding | Status |
 |---|---|---|---|
 | 1 | Misleading information | `shiftRun` read the rotation only. With Mon 23 confirmed off, Sunday's TODAY said "day off 3 of 3 · back on Mon"; so did Life State's line, the header presence line, COMMAND's rail, the shift recovery brief and the free helper. Week Ahead and Alfred correctly said Monday was off, so the screens contradicted each other. | **Verified; fixed here.** `shiftRun` takes the confirmed changes, and the wording adds "· with a confirmed change". |
-| 2 | Operator effort | Moving a confirmed change to another day has no UI. The UI path is cancel, then confirm again. | Verified. A small follow-up, not done. |
+| 2 | Operator effort | Moving a confirmed change to another day has no UI. The UI path is cancel, then confirm again. | Verified. Built in SCHEDULE-MOVE-001. |
 | 3 | — | Week Ahead, energy forecast, training slot, Alfred and the free helper "when do I work" already agree on RECORDED > CONFIRMED > PREDICTED. 16:30 and overnight ownership are covered by tests. | Verified, no defect. |
 
 ## Remaining field-test needs

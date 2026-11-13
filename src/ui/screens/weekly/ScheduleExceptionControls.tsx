@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ScheduleException } from "../../../domain/scheduleExceptions";
 import {
-  cancelScheduleException, changeScheduleException, confirmScheduleException, confirmShiftSwap, getUpcomingExceptions,
+  cancelScheduleException, changeScheduleException, confirmScheduleException, confirmShiftSwap, getMoveTargets, getUpcomingExceptions,
+  moveScheduleException,
 } from "../../../application/scheduleExceptions";
 
 /**
@@ -64,10 +65,13 @@ export function ConfirmChangeOffer({ date, to, swapWith, onConfirmed }: {
   );
 }
 
-/** The upcoming confirmed changes, each with EDIT NOTE and CANCEL CHANGE (both confirm-first). Hidden when none. */
+/**
+ * The upcoming confirmed changes, each with EDIT NOTE, MOVE (single days only; SCHEDULE-MOVE-001) and CANCEL CHANGE,
+ * all confirm-first. Hidden when none.
+ */
 export function ConfirmedChangesList({ now, refreshKey, onChanged }: { now?: Date | undefined; refreshKey: number; onChanged: () => void }) {
   const [items, setItems] = useState<ScheduleException[] | null>(null);
-  const [action, setAction] = useState<{ id: string; kind: "NOTE" | "CANCEL"; note: string } | null>(null);
+  const [action, setAction] = useState<{ id: string; kind: "NOTE" | "CANCEL" | "MOVE"; note: string; to?: string; targets?: string[] } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { void getUpcomingExceptions(now).then(setItems, () => setItems([])); }, [now, refreshKey]);
@@ -90,16 +94,31 @@ export function ConfirmedChangesList({ now, refreshKey, onChanged }: { now?: Dat
           {first.note && <p className="meta" style={{ margin: "2px 0 0" }}>{first.note}</p>}
           {!open ? <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
               <button type="button" className="btn-secondary" disabled={saving} onClick={() => setAction({ id: first.id, kind: "NOTE", note: first.note ?? "" })}>EDIT NOTE</button>
+              {!first.swapId && <button type="button" className="btn-secondary" disabled={saving} onClick={() => {
+                setError(null);
+                void getMoveTargets(first.id, now).then((targets) => setAction({ id: first.id, kind: "MOVE", note: "", targets, ...(targets[0] ? { to: targets[0] } : {}) }),
+                  (e: unknown) => setError(plain(e)));
+              }}>MOVE</button>}
               <button type="button" className="btn-secondary" disabled={saving} onClick={() => setAction({ id: first.id, kind: "CANCEL", note: "" })}>CANCEL CHANGE</button>
             </div>
             : <div role="group" aria-label="Preview" style={{ marginTop: 4 }}>
               {action.kind === "NOTE"
                 ? <label className="meta" style={{ display: "grid", gap: 4 }}>Note
                     <input className="input" value={action.note} maxLength={200} aria-label="Note" onChange={(e) => setAction({ ...action, note: e.target.value })} /></label>
+                : action.kind === "MOVE"
+                ? !action.to ? <p className="meta" style={{ margin: 0 }}>No day in the next two weeks can take this change. Nothing was changed.</p>
+                  : <>
+                    <label className="meta" style={{ display: "grid", gap: 4 }}>Move to
+                      <select className="input" value={action.to} aria-label="Move to" onChange={(e) => setAction({ ...action, to: e.target.value })}>
+                        {action.targets!.map((d) => <option key={d} value={d}>{day(d)}</option>)}
+                      </select></label>
+                    <p className="meta" style={{ margin: "4px 0 0" }}>Moves this change: {day(first.date)} goes back to your rotation and {day(action.to)} becomes {first.kind === "WORK" ? "a work day" : "a day off"}. The history is kept.</p>
+                  </>
                 : <p className="meta" style={{ margin: 0 }}>Cancels this change. {group.map((e) => `${day(e.date)} goes back to your rotation`).join("; ")}. The history is kept.</p>}
               <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                <button type="button" className="btn-primary" disabled={saving}
-                  onClick={() => run(action.kind === "NOTE" ? changeScheduleException(first.id, { note: action.note }) : cancelScheduleException(first.id))}>CONFIRM</button>
+                {(action.kind !== "MOVE" || action.to) && <button type="button" className="btn-primary" disabled={saving}
+                  onClick={() => run(action.kind === "NOTE" ? changeScheduleException(first.id, { note: action.note })
+                    : action.kind === "MOVE" ? moveScheduleException(first.id, action.to!) : cancelScheduleException(first.id))}>CONFIRM</button>}
                 <button type="button" className="btn-secondary" disabled={saving} onClick={() => setAction(null)}>BACK</button>
               </div>
             </div>}

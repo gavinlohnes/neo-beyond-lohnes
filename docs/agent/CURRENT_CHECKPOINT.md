@@ -24,17 +24,19 @@ Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none o
 
 ---
 
-# Current objective: FIELD-READINESS-001, real-world operational validation (Gavin, 2026-11-13) — Feature lane
+# Current objective: SCHEDULE-MOVE-001, move a confirmed change (Gavin, 2026-11-13) — Feature lane
 
-Brief: [FIELD-READINESS-001.md](FIELD-READINESS-001.md). Branch `ccr-88f5c085-field-readiness`.
+Branch `ccr-88f5c085-schedule-move`.
 
-- **Fix (verified defect):** shift runs now count confirmed schedule changes. Before this, TODAY, Life State, the
-  header, COMMAND, the recovery brief and the free helper said "back on Mon" when Monday was confirmed off.
+- **What it adds:** a MOVE action in Week Ahead's CONFIRMED CHANGES list for single-day changes. It reuses
+  `moveScheduleException`; eligible days come from `getMoveTargets`. Preview, then CONFIRM; BACK writes nothing.
+  Swaps can't move.
+- **No change to:** the schema, the commands or the authority model.
 - **Verification:** typecheck, the architecture check, the node and browser suites and the build.
 - **Next:** Gavin merges.
-- **Next recommended improvement:** a MOVE action for a confirmed change in Week Ahead.
-- **Field test still needed:** #402.
-- **Earlier:** SCHEDULE-EXCEPTIONS-001 merged in #498; CONTEXT-INTEGRATION-001 in #497.
+- **Field tests still needed:** #402; the 16:30 day start on the phone with a confirmed change; the presence line at
+  360 px.
+- **Earlier:** FIELD-READINESS-001 merged in #499; SCHEDULE-EXCEPTIONS-001 in #498.
 
 ---
 
