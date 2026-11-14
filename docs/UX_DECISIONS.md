@@ -3123,3 +3123,17 @@ Gavin approved it as the first follow-up to BODY-DASH-001. **This amends CAVE-DA
 - **Nothing removed:** every tile, way in ("water history", "WEIGHT HISTORY") and LOG WEIGHT is unchanged inside it,
   one tap away. History, correction and logging paths are untouched.
 - **The dashboard is unchanged.**
+
+## SHORTCUT-GRID-001 — shortcut grids follow their own width (owner approval 2026-11-14)
+
+Gavin approved it as the second post-BODY follow-up.
+
+- **What changed:** DATA's and MORE's shortcut grid (`.sys-area-nav`) and YOUR LIFE's (`.wl-area-nav`) now choose
+  their columns from the area's own width (container queries), not the window's. A wide window can no longer squeeze
+  four columns into the phone-width app ("Measur ements").
+- **Columns:**
+  - **DATA and MORE:** two columns at phone width; four only if the area itself is 760 px or more.
+  - **YOUR LIFE:** its six one-word areas stay three across on a phone, as before, which keeps its first task on the
+    first screen. Two when the area is under 300 px; six from 1000 px of its own width.
+- **Labels:** they break between words only; a single word breaks only if it can't fit at all.
+- **Accessibility:** buttons, touch size and keyboard order are unchanged.

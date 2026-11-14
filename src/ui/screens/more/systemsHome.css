@@ -25,8 +25,12 @@
 .sys-home .sys-card button { padding: 6px 0 0; min-height: 44px; text-decoration: underline; text-underline-offset: 5px; }
 .sys-area-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; border-bottom: 1px solid var(--border-strong); }
 .sys-home .sys-area-nav button { justify-content: space-between; width: 100%; border-bottom: 1px solid var(--border-subtle); padding: 10px 0; }
-.sys-area-nav span { min-width: 0; overflow-wrap: anywhere; }
-@media (min-width: 760px) { .sys-area-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* SHORTCUT-GRID-001 (Gavin, 2026-11-14): labels break between words only; a single word breaks only if it can't fit at
+   all. Columns follow the shortcut area's own width (the app shell keeps it phone-width), never the window's, so a wide
+   window can't squeeze four columns into it ("Measur ements"). */
+.sys-area-nav span { min-width: 0; overflow-wrap: break-word; hyphens: manual; }
+.sys-home { container-type: inline-size; }
+@container (min-width: 760px) { .sys-area-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 760px) { .sys-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; } }
 /* TRAIN-HOME-001: the compact version, so START WORKOUT stays on the first phone screen. */
 .train-home { margin-bottom: 12px; }

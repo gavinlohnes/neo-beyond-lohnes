@@ -3554,3 +3554,7 @@ Brief: [BODY-DASH-001.md](BODY-DASH-001.md). Branch `ccr-88f5c085-body-dash`.
 - **Objective 2, the shared shortcut grid:** starts from fresh master only after Objective 1 merges with Gavin's
   approval.
 - **Not started:** BODY-DASH-002 and the visual-foundation mission wait for authorization.
+- **Objective 1 (NUMBERS-CLEANUP-001)** merged in #513.
+- **Objective 2 (SHORTCUT-GRID-001,** branch `ccr-88f5c085-shortcut-grid`): shortcut grids follow their own width;
+  verified at 320, 360, 412, 768 and 1024 px.
+- **Then:** stop and report. The visual-foundation mission waits for authorization.
