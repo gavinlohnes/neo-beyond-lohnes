@@ -21,8 +21,14 @@
 .whole-life .wl-hero-actions button:first-child { background:var(--text-1); color:var(--bg); padding:12px 18px; }
 .whole-life .wl-caption { font-size:14px; color:var(--text-2); margin:16px 0; line-height:1.65; }
 .wl-layout { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:0 42px; }
-.wl-area-nav { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); border-bottom:1px solid var(--border-strong); gap:12px; }
-.wl-area-nav button { justify-content:space-between; font-size:14px; }
+/* SHORTCUT-GRID-001 (Gavin, 2026-11-14): columns follow the area's own width, not the window's. YOUR LIFE's six
+   one-word areas read well three across on a phone (and keep its first task on the first screen); two when the area
+   is very narrow; six only when the area itself is wide. Labels break between words only. */
+.whole-life { container-type: inline-size; }
+.wl-area-nav { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-bottom:1px solid var(--border-strong); gap:0 20px; }
+.wl-area-nav button { justify-content:space-between; font-size:14px; min-width:0; overflow-wrap:break-word; hyphens:manual; }
+@container (max-width: 299px) { .wl-area-nav { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@container (min-width: 1000px) { .wl-area-nav { grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; } }
 .wl-main,.wl-side { min-width:0; }
 .wl-section { padding:34px 0; border-bottom:1px solid var(--border-strong); }
 .wl-section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:20px; }
@@ -64,7 +70,7 @@
 .today-life-link { display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px; padding:18px 0; margin:12px 0; border:0; border-block:1px solid var(--border-strong); background:transparent; color:var(--text-1); font:16px var(--font-body); text-align:left; }
 .today-life-link strong { display:block; font:24px var(--font-display); }
 .today-life-link span { display:block; font-size:14px; color:var(--text-2); margin-top:4px; }
-@media(max-width:700px) { .wl-area-nav { grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 20px; } .wl-layout { grid-template-columns:minmax(0,1fr); } .wl-side { border:0; padding:0; } .wl-side { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; } .wl-note,.wl-body { grid-column:1/-1; } .wl-projects { grid-template-columns:minmax(0,1fr); } .whole-life .wl-hero h2 { font-size:clamp(46px,12vw,76px); } }
+@media(max-width:700px) { .wl-layout { grid-template-columns:minmax(0,1fr); } .wl-side { border:0; padding:0; } .wl-side { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; } .wl-note,.wl-body { grid-column:1/-1; } .wl-projects { grid-template-columns:minmax(0,1fr); } .whole-life .wl-hero h2 { font-size:clamp(46px,12vw,76px); } }
 @media(max-width:380px) { .wl-side { grid-template-columns:minmax(0,1fr); } .wl-section-head { align-items:start; } .wl-section-head > button { font-size:14px; } .whole-life .wl-hero h2 { font-size:43px; } }
 @media(max-width:700px) {
   .wl-masthead { position:absolute; right:0; top:10px; border:0; z-index:1; }
