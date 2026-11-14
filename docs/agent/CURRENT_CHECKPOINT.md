@@ -1,7 +1,7 @@
 # Current objective — METRIC-PAGE-001 hydration/steps pilot (2026-11-14)
 
 - **Owner authorization:** “Go ahead” after confirming the approved pilot scope. Continue existing branch
-  `ccr-88f5c085-metric-pilot`; Claude's preserved WIP is `e63a6659a3b3097b39482f9cfa4d38db15371eff`.
+  `ccr-88f5c085-metric-pilot`; active [PR #519](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/519). Claude's preserved WIP is `e63a6659a3b3097b39482f9cfa4d38db15371eff`.
 - **Prerequisites settled:** TODAY merged as #517 (`ebfc9881`), MORE/cave as #518 (`8e04e2eb`). Fresh master
   `8e04e2eb5f486c83489777446370860e3ac57595` is incorporated into the pilot. No competing PR/branch.
 - **Brief:** [METRIC-PAGE-001.md](METRIC-PAGE-001.md). Builder Codex completing Claude's approved implementation.

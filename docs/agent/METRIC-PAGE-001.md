@@ -2,7 +2,7 @@
 
 - **Authorization:** Gavin, 2026-11-14: “Build and validate a reusable metric-detail foundation using Hydration and Steps” (preserved in the recovered implementation and accepted HARVEST-001). Owner explicitly authorized Codex takeover, then confirmed continuing this pilot after merging foundation PRs #517 and #518: “Go ahead.”
 - **Lane:** Feature, with independent review of provenance, ranges and preserved routes. This is read-side inspection, not a recommendation or primary-tab IA change.
-- **Builder:** Claude Code (recovered implementation), Codex (completion). Existing branch `ccr-88f5c085-metric-pilot`; one pilot PR, pending creation.
+- **Builder:** Claude Code (recovered implementation), Codex (completion). Existing branch `ccr-88f5c085-metric-pilot`; active [PR #519](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/519).
 - **Baseline:** recovered committed pilot `e63a6659a3b3097b39482f9cfa4d38db15371eff`, based on `e12092871d0cee4a1b551f428a013de1332ae833`. Completion integrates freshly fetched master `8e04e2eb5f486c83489777446370860e3ac57595`, with both foundation prerequisites merged.
 
 ## Bounded experience
