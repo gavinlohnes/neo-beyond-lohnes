@@ -1,3 +1,39 @@
+# Builder takeover — current truth (2026-11-14)
+
+Owner explicitly handed implementation from usage-limited Claude Code to Codex. No competing branch or PR;
+no merge authorized. This entry supersedes stale status below; older entries remain historical evidence.
+
+- **Fetched master:** `e12092871d0cee4a1b551f428a013de1332ae833` (VISUAL-FOUNDATION-002, #516).
+  Foundation slice 1 (#515) and TRAIN slice 2 (#516) are merged.
+- **TODAY foundation:** [PR #517](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/517), branch
+  `ccr-88f5c085-today-deck`, head `87d501013e6773698fa4348761064edded5b5cf3`.
+  Remote CI green and independent exact-head PASS recorded. Awaiting Gavin's merge, never this Builder's.
+  Non-blocking missing-Garmin-caption colour finding remains; do not mix TODAY into the MORE/cave branch.
+- **Current objective:** finish verification/handoff for VISUAL-FOUNDATION-004 on its existing branch
+  `ccr-88f5c085-more-cave`, [PR #518](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/518).
+  Recovered implementation head `98904aefb08dc3501039f0273128561d3bd4f593`.
+  All planned implementation is already pushed. Independent review is absent; do not claim ready to merge.
+  Codex owns the takeover verification and handoff; Claude authored the recovered implementation.
+- **Preserved research and next pilot:** existing branch `ccr-88f5c085-metric-pilot`, committed head
+  `e63a6659a3b3097b39482f9cfa4d38db15371eff`, no open PR. Contains CHP-001, HARVEST-001 and
+  hydration/steps pilot code and tests. CHP-001 preserves all three approved refinements: inspect locked
+  decisions, record reuse licences, save/index harvests. The harvest records pilot approval and lifestyle-logging
+  parity gaps. No uncommitted Claude workspace is available here, so additional unpushed work cannot be recovered.
+  The capability-map index and durable pilot brief/checkpoint still need completing on that branch.
+- **Sequence:** independent review of MORE/cave; Gavin integrates TODAY then MORE/cave; fetch master and
+  resume the existing pilot branch, reconcile its shared seed and approved foundation styling, verify and open
+  its one PR. Do not expand the pilot beyond hydration and steps.
+- **Other open PRs:** #473 comparison is described as included in merged #474; #482 is an old check-in fix.
+  Neither is the current visual-foundation objective; left untouched rather than closing or merging.
+- **Takeover verification:** architecture PASS; TypeScript and production/PWA build PASS. Remote PR #517
+  and #518 CI both completed successfully at their recovered heads. Full local Node/Chromium verification
+  is running; its final result will be posted on PR #518. This takeover changes handoff documentation only;
+  the recovered product implementation is unchanged. Final-head CI and independent review remain required.
+- **Review blocker:** this session exposes no independent worker/thread reviewer capability. DEV-FLOW-002
+  requires the existing independent review handoff; the Builder cannot substitute its own verification.
+
+---
+
 # Owner working rhythm (Gavin, 2026-11-11: "Yes, adopt that as the standing rule")
 
 Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none of its rules.

@@ -4,7 +4,7 @@
   into framed panels, so BEYOND reads as one instrument across all five tabs": "Let's get to work. Amaze me."
 - **Lane:** Feature, with an independent review. It amends MORE-HOME-001's look; MORE's primary information
   architecture (content and order) is unchanged. No Engine, schema, dependency or command change.
-- **Builder:** Claude Code. **Starting commit:** `e1209287`. **Branch:** `ccr-88f5c085-more-cave`.
+- **Builder:** Claude Code (implementation); Codex (owner-authorized takeover verification and handoff, 2026-11-14). **Starting commit:** `e1209287`. **Branch:** `ccr-88f5c085-more-cave`.
 
 ## Scope
 
