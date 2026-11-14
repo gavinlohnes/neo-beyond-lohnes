@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { ChevronRight, Droplet, Footprints, HeartPulse, ListChecks, Moon, Plus, Scale, Utensils } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, Droplet, Footprints, HeartPulse, ListChecks, Moon, Scale, Utensils } from "lucide-react";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
 import type { WeighIn } from "../../../application/bodyTrendQueries";
 import { clockOf, garminFreshness, stepsSoFar, waterByHour, weightChange } from "../../../application/bodyDashboard";
@@ -10,6 +10,7 @@ import { hypnogram, sleepMinutes, stageMinutes, STAGE_ORDER, type StageName } fr
 import { livedDayShiftWindow, isOperatorSavedSchedule } from "../../../engine/scheduledContext";
 import { MeasuredSheet, STAGE_COLORS } from "../today/MeasuredSheet";
 import { WATER_QUICK_ADD_OZ } from "./bodyScreenCopy";
+import { CommandBar, Meter, Panel, SourceTag as Source, Sparkline as Spark, SPARK_H, SPARK_W } from "../../foundation/primitives";
 import "./bodyDashboard.css";
 
 /**
@@ -42,52 +43,13 @@ export interface BodyDashboardProps {
   onOpenHabits?: (() => void) | undefined;
 }
 
-const W = 240, H = 44;
+const W = SPARK_W, H = SPARK_H;
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 const hm = (minutes: number) => `${Math.floor(minutes / 60)}h ${String(Math.round(minutes % 60)).padStart(2, "0")}m`;
 
-function Card({ id, icon, label, source, wide, primary, children, onOpen, openLabel, action }: {
-  id: string; icon: ReactNode; label: string; source?: ReactNode; wide?: boolean; primary?: boolean; children: ReactNode;
-  onOpen?: (() => void) | undefined; openLabel?: string;
-  /** A quick log in the card's own header, e.g. "+" for LOG WEIGHT (the existing LOG sheet). */
-  action?: { label: string; onClick: () => void; disabled?: boolean } | undefined;
-}) {
-  return (
-    <article className={`bd-card${wide ? " bd-card--wide" : ""}${primary ? " bd-card--primary" : ""}`} aria-labelledby={`bd-${id}`} data-dash={id}>
-      <header className="bd-card__head">
-        <span className="bd-card__icon" aria-hidden="true">{icon}</span>
-        <h3 id={`bd-${id}`} className="bd-card__label">{label}</h3>
-        {wide && source}
-        {wide && action && <button type="button" className="bd-card__act" aria-label={action.label} disabled={action.disabled} onClick={action.onClick}><Plus size={18} aria-hidden="true" /></button>}
-        {onOpen && <button type="button" className="bd-card__open" aria-label={openLabel ?? `Open ${label.toLowerCase()} history`} onClick={onOpen}><ChevronRight size={18} aria-hidden="true" /></button>}
-      </header>
-      {/* Narrow cards give their source its own line, so it never crowds the title. */}
-      {!wide && (source || action) && <div className="bd-card__srcline">{source ?? <span />}{action && <button type="button" className="bd-card__act" aria-label={action.label} disabled={action.disabled} onClick={action.onClick}><Plus size={18} aria-hidden="true" /></button>}</div>}
-      {children}
-    </article>
-  );
-}
-
-const Source = ({ garmin, children }: { garmin?: boolean; children: ReactNode }) => <span className={`bd-src${garmin ? " bd-src--garmin" : ""}`}>{children}</span>;
-
-/** A line over values (null breaks the line). Pure SVG, decorative: the card's text carries the same facts. */
-function Spark({ values, tone, area }: { values: readonly (number | null)[]; tone: "own" | "garmin"; area?: boolean }) {
-  const known = values.filter((v): v is number => v !== null);
-  if (known.length < 2) return null;
-  const lo = Math.min(...known), hi = Math.max(...known), span = hi - lo || 1;
-  const x = (i: number) => (values.length === 1 ? W : (i / (values.length - 1)) * W);
-  const y = (v: number) => H - 4 - ((v - lo) / span) * (H - 10);
-  const pts = values.map((v, i) => (v === null ? null : `${x(i).toFixed(1)},${y(v).toFixed(1)}`));
-  const runs: string[][] = [[]];
-  for (const p of pts) { if (p) runs.at(-1)!.push(p); else if (runs.at(-1)!.length) runs.push([]); }
-  const lastI = values.map((v, i) => (v === null ? -1 : i)).filter((i) => i >= 0).at(-1)!;
-  return (
-    <svg className={`bd-spark bd-spark--${tone}`} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
-      {area && runs.map((r, i) => r.length > 1 && <polygon key={`a${i}`} className="bd-spark__area" points={`${r[0]!.split(",")[0]},${H} ${r.join(" ")} ${r.at(-1)!.split(",")[0]},${H}`} />)}
-      {runs.map((r, i) => r.length > 1 && <polyline key={i} className="bd-spark__line" points={r.join(" ")} />)}
-      <circle className="bd-spark__dot" cx={x(lastI)} cy={y(values[lastI]!)} r={3} />
-    </svg>
-  );
+/** BODY's panel: the foundation's framed panel with BODY's heading ids and test hooks. */
+function Card({ id, ...rest }: Omit<Parameters<typeof Panel>[0], "headingId" | "data"> & { id: string }) {
+  return <Panel headingId={`bd-${id}`} data={{ "data-dash": id }} {...rest} />;
 }
 
 function WaterBars({ slots, nowSlot }: { slots: readonly number[]; nowSlot: number }) {
@@ -108,15 +70,6 @@ function StageBar({ intervals, from, to }: { intervals: readonly { from: number;
   return (
     <div className="bd-stages" aria-hidden="true">
       {intervals.map((s) => <i key={`${s.from}-${s.stage}`} style={{ left: `${((s.from - from) / span) * 100}%`, width: `${Math.max(0.6, ((s.to - s.from) / span) * 100)}%`, background: STAGE_COLORS[s.stage] }} />)}
-    </div>
-  );
-}
-
-function Meter({ label, value, of, unit }: { label: string; value: number; of?: number | undefined; unit: string }) {
-  return (
-    <div className="bd-meter">
-      <div className="bd-meter__row"><span>{label}</span><span><b>{fmt(value)}</b>{of ? ` / ${fmt(of)}` : ""} {unit}</span></div>
-      {of ? <div className="bd-meter__track" aria-hidden="true"><i style={{ width: `${Math.min(100, (value / of) * 100)}%` }} /></div> : null}
     </div>
   );
 }
@@ -172,23 +125,19 @@ export function BodyDashboard(p: BodyDashboardProps) {
   const dateLabel = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
 
   return (
-    <section className="bd" aria-labelledby="bd-title">
+    <section className="bf bd" aria-labelledby="bd-title">
       <h2 id="bd-title" className="visually-hidden">Your numbers</h2>
       {/* The app header already says DATA; this command bar carries what it doesn't: BODY, the lived day, LOG. */}
-      <header className="bd-bar">
-        <div className="bd-bar__id">
-          <p className="bd-bar__eyebrow"><span className="bd-slashes" aria-hidden="true">///</span> BODY // HEALTH</p>
-          <p className="bd-bar__day" data-dash-day><span className="bd-bar__date">{dateLabel}</span><span className="bd-bar__ctx"><Moon size={14} aria-hidden="true" />{context}{contextBasis === "schedule" ? <em> · schedule</em> : null}</span></p>
-        </div>
-        {p.onLog && <button type="button" className="bd-bar__log" aria-label="Log a record" disabled={p.busy} onClick={() => p.onLog!("log")}>LOG <Plus size={18} aria-hidden="true" /></button>}
-      </header>
+      <CommandBar eyebrow="BODY // HEALTH"
+        context={<p className="bf-bar__day" data-dash-day><span className="bf-bar__date">{dateLabel}</span><span className="bf-bar__ctx"><Moon size={14} aria-hidden="true" />{context}{contextBasis === "schedule" ? <em> · schedule</em> : null}</span></p>}
+        action={p.onLog ? { text: "LOG", label: "Log a record", disabled: p.busy, onClick: () => p.onLog!("log") } : undefined} />
 
       <div className="bd-grid">
         <Card id="water" primary icon={<Droplet size={18} />} label="HYDRATION" wide source={<Source>LOGGED</Source>} onOpen={() => p.onOpen("water")} openLabel="Open water history">
           <div className="bd-split">
             <div className="bd-split__num">
-              <p className="bd-value bd-value--xl">{p.water.totalOz > 0 ? <>{fmt(p.water.totalOz)}<small> oz</small></> : <span className="bd-none">Not logged</span>}</p>
-              <p className="bd-meta" data-dash-water-pace>{pace?.usual.kind === "RANGE" ? <>Usual by now <b>{fmt(pace.usual.low)}–{fmt(pace.usual.high)} oz</b></> : pace ? `Learning your usual · ${pace.usual.days}/${pace.usual.need} days` : "Usual after 10 logged days"}</p>
+              <p className="bf-value bf-value--xl">{p.water.totalOz > 0 ? <>{fmt(p.water.totalOz)}<small> oz</small></> : <span className="bf-none">Not logged</span>}</p>
+              <p className="bf-meta" data-dash-water-pace>{pace?.usual.kind === "RANGE" ? <>Usual by now <b>{fmt(pace.usual.low)}–{fmt(pace.usual.high)} oz</b></> : pace ? `Learning your usual · ${pace.usual.days}/${pace.usual.need} days` : "Usual after 10 logged days"}</p>
             </div>
             <div className="bd-viz">{p.day && <><WaterBars slots={slots} nowSlot={nowSlot} /><div className="bd-axis" aria-hidden="true"><span>{clockOf(livedStart!)}</span><span>NOW</span><span>{clockOf(Date.parse(livedStart!) + 86_400_000)}</span></div></>}</div>
           </div>
@@ -196,55 +145,55 @@ export function BodyDashboard(p: BodyDashboardProps) {
             {WATER_QUICK_ADD_OZ.map((oz) => <button key={oz} type="button" disabled={p.busy} onClick={() => p.onAddWater(oz)}>+{oz} oz</button>)}
           </div>
           {p.waterConfirmation ? <p className="bd-confirm" role="status">{p.waterConfirmation}{p.onUndoWater && <button type="button" disabled={p.busy} onClick={p.onUndoWater}>UNDO</button>}</p>
-            : lastWater && <p className="bd-meta">Last {clockOf(lastWater.at)} · +{fmt(lastWater.effectiveAmountOz)} oz</p>}
+            : lastWater && <p className="bf-meta">Last {clockOf(lastWater.at)} · +{fmt(lastWater.effectiveAmountOz)} oz</p>}
         </Card>
 
         <Card id="sleep" primary icon={<Moon size={18} />} label="SLEEP" wide source={sleepFromGarmin ? garminSource : p.sleep ? <Source>LOGGED</Source> : null}
           action={log("sleep", "Log sleep")} onOpen={() => p.onOpen("sleep")} openLabel="Open sleep history">
           {sleepFromGarmin && night ? <>
             <div className="bd-split bd-split--sleep">
-              <p className="bd-value bd-value--xl">{hm(sleepMinutes(night))}</p>
+              <p className="bf-value bf-value--xl">{hm(sleepMinutes(night))}</p>
               <p className="bd-span"><span>{clockOf(night.startTime)}</span><span aria-hidden="true">→</span><span>{clockOf(night.endTime)}</span></p>
             </div>
-            {stages.length > 0 ? <StageBar intervals={stages} from={Date.parse(night.startTime)} to={Date.parse(night.endTime)} /> : <p className="bd-meta">No stages in this record.</p>}
+            {stages.length > 0 ? <StageBar intervals={stages} from={Date.parse(night.startTime)} to={Date.parse(night.endTime)} /> : <p className="bf-meta">No stages in this record.</p>}
             {stageMins && <ul className="bd-stage-key" aria-label="Sleep stages">{STAGE_ORDER.slice().reverse().map((st) => <li key={st}><i style={{ background: STAGE_COLORS[st] }} aria-hidden="true" />{st === "REM" ? "REM" : st[0] + st.slice(1).toLowerCase()} <b>{stageMins[st] === null ? "—" : hm(stageMins[st]!)}</b></li>)}</ul>}
-            <p className="bd-meta">{fresh ? fresh.label : "Garmin"}{usualSleep(m)}</p>
+            <p className="bf-meta">{fresh ? fresh.label : "Garmin"}{usualSleep(m)}</p>
           </> : p.sleep ? <>
-            <p className="bd-value bd-value--xl">{hm(p.sleep.minutes)}</p>
+            <p className="bf-value bf-value--xl">{hm(p.sleep.minutes)}</p>
             <div className="bd-stages bd-stages--own" aria-hidden="true"><i style={{ left: 0, width: "100%" }} /></div>
-            <p className="bd-meta">Main sleep, logged{p.sleep.occurredAt ? ` · ${new Date(p.sleep.occurredAt).toLocaleDateString("en-US", { weekday: "short" })} ${clockOf(p.sleep.occurredAt)}` : ""}</p>
+            <p className="bf-meta">Main sleep, logged{p.sleep.occurredAt ? ` · ${new Date(p.sleep.occurredAt).toLocaleDateString("en-US", { weekday: "short" })} ${clockOf(p.sleep.occurredAt)}` : ""}</p>
           </> : <>
-            <p className="bd-value"><span className="bd-none">Not logged</span></p>
-            <p className="bd-meta">No main sleep in the last 36 hours.</p>
+            <p className="bf-value"><span className="bf-none">Not logged</span></p>
+            <p className="bf-meta">No main sleep in the last 36 hours.</p>
           </>}
         </Card>
 
         <Card id="weight" icon={<Scale size={18} />} label="WEIGHT" source={latestWeight ? <Source>LOGGED</Source> : null} action={log("weight", "Log weight")} onOpen={() => p.onOpen("weight")} openLabel="Open weight history">
-          <p className="bd-value">{latestWeight ? <>{latestWeight.weightLbs}<small> lb</small></> : <span className="bd-none">Not logged</span>}</p>
-          {change && <p className="bd-delta">{change.lbs > 0 ? "▲ +" : change.lbs < 0 ? "▼ " : ""}{change.lbs} lb · {change.days}d</p>}
+          <p className="bf-value">{latestWeight ? <>{latestWeight.weightLbs}<small> lb</small></> : <span className="bf-none">Not logged</span>}</p>
+          {change && <p className="bf-delta">{change.lbs > 0 ? "▲ +" : change.lbs < 0 ? "▼ " : ""}{change.lbs} lb · {change.days}d</p>}
           <Spark values={weightSeries} tone="own" />
-          <p className="bd-meta">{latestWeight ? new Date(latestWeight.recordedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Weigh in to start a trend"}{p.weight.goalLbs ? ` · goal ${p.weight.goalLbs} lb` : ""}</p>
+          <p className="bf-meta">{latestWeight ? new Date(latestWeight.recordedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Weigh in to start a trend"}{p.weight.goalLbs ? ` · goal ${p.weight.goalLbs} lb` : ""}</p>
         </Card>
 
         <Card id="nutrition" icon={<Utensils size={18} />} label="NUTRITION" source={p.nutrition.mealsLogged || p.nutrition.proteinG ? <Source>LOGGED</Source> : null} action={log("meal", "Log food")} onOpen={() => p.onOpen("nutrition")} openLabel="Open nutrition history">
           {/* Review of #512: no bare zero (DENSITY-001). Calories need a logged meal; protein needs a protein record. */}
           {p.nutrition.mealsLogged > 0 || p.nutrition.proteinG > 0 ? <>
-            {p.nutrition.mealsLogged > 0 ? <Meter label="Eaten" value={p.nutrition.calories} of={p.nutrition.calorieTargetKcal} unit="kcal" /> : <p className="bd-meta">No meals logged</p>}
+            {p.nutrition.mealsLogged > 0 ? <Meter label="Eaten" value={p.nutrition.calories} of={p.nutrition.calorieTargetKcal} unit="kcal" /> : <p className="bf-meta">No meals logged</p>}
             {p.nutrition.proteinG > 0 && <Meter label="Protein" value={p.nutrition.proteinG} of={p.nutrition.proteinTargetG} unit="g" />}
-          </> : <p className="bd-value"><span className="bd-none">No food logged</span></p>}
-          {burned !== null && <p className="bd-meta bd-meta--garmin" data-dash-burned>Burned (Garmin estimate) {fmt(burned)} kcal</p>}
+          </> : <p className="bf-value"><span className="bf-none">No food logged</span></p>}
+          {burned !== null && <p className="bf-meta bf-meta--garmin" data-dash-burned>Burned (Garmin estimate) {fmt(burned)} kcal</p>}
         </Card>
 
         <Card id="steps" icon={<Footprints size={18} />} label="STEPS" source={steps !== null ? garminSource : null} onOpen={m?.any ? () => setMeasuredOpen("steps") : undefined} openLabel="Open steps history">
-          <p className="bd-value">{steps !== null ? fmt(steps) : <span className="bd-none">Not measured</span>}</p>
+          <p className="bf-value">{steps !== null ? fmt(steps) : <span className="bf-none">Not measured</span>}</p>
           {steps !== null && m!.stepsToday.length > 1 && <Spark values={m!.stepsToday.map((s) => s.total)} tone="garmin" area />}
-          <p className="bd-meta">{usualSteps !== null ? `Usual ${m!.usual.steps.dayKind === "WORK" ? "work day" : "day off"} ${fmt(usualSteps)}` : steps !== null ? "So far this lived day" : "From your watch, when synced"}</p>
+          <p className="bf-meta">{usualSteps !== null ? `Usual ${m!.usual.steps.dayKind === "WORK" ? "work day" : "day off"} ${fmt(usualSteps)}` : steps !== null ? "So far this lived day" : "From your watch, when synced"}</p>
         </Card>
 
         <Card id="resting" icon={<HeartPulse size={18} />} label="RESTING HR" source={restingLatest ? garminSource : null} onOpen={m?.any ? () => setMeasuredOpen("resting") : undefined} openLabel="Open resting heart rate history">
-          <p className="bd-value">{restingLatest ? <>{Math.round(restingLatest.value!)}<small> bpm</small></> : <span className="bd-none">Not measured</span>}</p>
+          <p className="bf-value">{restingLatest ? <>{Math.round(restingLatest.value!)}<small> bpm</small></> : <span className="bf-none">Not measured</span>}</p>
           {restingSeries.some((v) => v !== null) && <Spark values={restingSeries} tone="garmin" />}
-          <p className="bd-meta">{usualResting !== null ? `Usual ${Math.round(usualResting)} bpm` : restingLatest ? "Usual after 14 days" : "From your watch, when synced"}</p>
+          <p className="bf-meta">{usualResting !== null ? `Usual ${Math.round(usualResting)} bpm` : restingLatest ? "Usual after 14 days" : "From your watch, when synced"}</p>
         </Card>
 
         <Card id="lifestyle" icon={<ListChecks size={18} />} label="LIFESTYLE" wide>

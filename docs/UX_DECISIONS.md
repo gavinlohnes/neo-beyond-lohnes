@@ -3137,3 +3137,25 @@ Gavin approved it as the second post-BODY follow-up.
     first screen. Two when the area is under 300 px; six from 1000 px of its own width.
 - **Labels:** they break between words only; a single word breaks only if it can't fit at all.
 - **Accessibility:** buttons, touch size and keyboard order are unchanged.
+
+## VISUAL-FOUNDATION-001 — BEYOND's visual foundation (owner approval 2026-11-14; slice 1)
+
+Gavin approved a reusable BEYOND visual foundation based on the approved BODY direction. Brief and design language:
+[agent/VISUAL-FOUNDATION-001.md](agent/VISUAL-FOUNDATION-001.md).
+
+- **What it is:** BODY-DASH-001's language, extracted unchanged into `src/ui/foundation/`: tokens, the command bar,
+  framed panels, source tags, numerals, sparklines and meters.
+- **What changed:** BODY uses it, with no visual change; the dashboard's screenshots match master byte for byte. No
+  other screen changes in this slice.
+- **Colour roles:**
+  - red is structure and the one action;
+  - your own logs are white;
+  - Garmin's watch data is Garmin blue (GARMIN-004);
+  - sleep stages keep their stage blues.
+  - New colours are tokens first (BRAND-MARK-003).
+- **Emblem and skyline:**
+  - **Unchanged:** their locked places (BRAND-MARK-003, SUIT-ALIVE-001, COMMAND-CENTER-001's red sky). The guide
+    records how they are to be used deliberately later.
+  - **New places:** each one needs Gavin's approval in the slice that proposes it. This slice adds none.
+- **Later slices:** TRAIN, TODAY, MORE and the cave adopt the foundation one slice at a time, each with Gavin's go.
+

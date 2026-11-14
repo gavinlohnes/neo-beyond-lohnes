@@ -25,16 +25,16 @@ const now = new Date(2026, 9, 21, 22, 10).getTime(); // day 29 of 30 is in progr
 /** No two visible parts of a card header overlap, and nothing spills out of its card. */
 function assertNoCollisions(label: string) {
   const overlaps: string[] = [];
-  for (const head of document.querySelectorAll<HTMLElement>(".bd-card__head, .bd-bar")) {
+  for (const head of document.querySelectorAll<HTMLElement>(".bf-panel__head, .bf-bar")) {
     const parts = [...head.children].filter((c) => (c as HTMLElement).offsetParent !== null && !c.classList.contains("visually-hidden")).map((c) => [c, c.getBoundingClientRect()] as const);
     for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
       const [a, ra] = parts[i]!, [b, rb] = parts[j]!;
       if (ra.left < rb.right - 0.5 && rb.left < ra.right - 0.5 && ra.top < rb.bottom - 0.5 && rb.top < ra.bottom - 0.5) overlaps.push(`${a.className}×${b.className}`);
     }
   }
-  const spill = [...document.querySelectorAll<HTMLElement>(".bd-card")].filter((c) => c.scrollWidth > c.clientWidth + 1).map((c) => c.dataset.dash);
+  const spill = [...document.querySelectorAll<HTMLElement>(".bf-panel")].filter((c) => c.scrollWidth > c.clientWidth + 1).map((c) => c.dataset.dash);
   // Titles: never wider than their cell (a word that can't fit would overflow it), and one-word titles on one line.
-  const cramped = [...document.querySelectorAll<HTMLElement>(".bd-card__label")].filter((l) => l.scrollWidth > l.clientWidth + 1
+  const cramped = [...document.querySelectorAll<HTMLElement>(".bf-panel__label")].filter((l) => l.scrollWidth > l.clientWidth + 1
     || (!l.textContent!.includes(" ") && l.getClientRects().length && l.getBoundingClientRect().height > parseFloat(getComputedStyle(l).lineHeight) * 1.5)).map((l) => l.textContent);
   // Stage key items never overlap one another.
   const keys = [...document.querySelectorAll<HTMLElement>(".bd-stage-key li")].map((li) => li.getBoundingClientRect());
@@ -42,6 +42,7 @@ function assertNoCollisions(label: string) {
   expect({ overlaps, spill, cramped, keyOverlap }, label).toEqual({ overlaps: [], spill: [], cramped: [], keyOverlap: false });
 }
 const card = (id: string) => document.querySelector<HTMLElement>(`[data-dash="${id}"]`);
+const dashboard = () => document.querySelector<HTMLElement>('[aria-labelledby="bd-title"]')!;
 const text = (id: string) => card(id)?.textContent ?? "";
 const settle = async () => {
   for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish();
@@ -111,6 +112,8 @@ describe("BODY-DASH-001", () => {
       // What opening DATA shows on a phone, then the whole dashboard on a tall screen.
       await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-360-open.png` });
       await page.viewport(360, 1900); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-360-full.png` });
+      // The dashboard alone, without the app's header and nav (whose own transitions vary run to run).
+      await page.screenshot({ path: `${SHOTS}/body-dash-360-panels.png`, element: dashboard() });
       await page.viewport(360, 800);
     }
 
@@ -151,7 +154,7 @@ describe("BODY-DASH-001", () => {
       await page.viewport(width, 900); await settle();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       assertNoCollisions(`${width}`);
-      if (SHOTS) { await page.viewport(width, width > 700 ? 1300 : 1900); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-${width}.png` }); }
+      if (SHOTS) { await page.viewport(width, width > 700 ? 1300 : 1900); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-${width}.png` }); await page.screenshot({ path: `${SHOTS}/body-dash-${width}-panels.png`, element: dashboard() }); }
     }
   }, 60_000);
 
@@ -167,7 +170,7 @@ describe("BODY-DASH-001", () => {
     expect(text("weight")).toContain("Not logged");
     expect(text("nutrition")).toContain("No food logged");
     expect(text("resting")).toContain("Not measured");
-    expect(document.querySelectorAll(".bd-src--garmin").length).toBe(0);
+    expect(document.querySelectorAll(".bf-src--garmin").length).toBe(0);
     expect(screen.getByRole("button", { name: "Open steps history" }).elements()).toHaveLength(0);
     expect(document.querySelector(".bd")!.textContent).not.toMatch(/Goal|% of|of 80/);
     await aa("dashboard empty");
@@ -179,7 +182,7 @@ describe("BODY-DASH-001", () => {
     vi.setSystemTime(now + 14 * 3_600_000);
     const screen = await render(<App />);
     await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
-    await expect.poll(() => [...document.querySelectorAll(".bd-src--garmin")].map((e) => e.textContent)).toContain("GARMIN · OLD");
+    await expect.poll(() => [...document.querySelectorAll(".bf-src--garmin")].map((e) => e.textContent)).toContain("GARMIN · OLD");
     expect(text("sleep")).toMatch(/Garmin as of .* · \d+ h old/);
   });
 
@@ -212,6 +215,6 @@ describe("BODY-DASH-001", () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
     assertNoCollisions("320 long");
     await aa("dashboard 320 long");
-    if (SHOTS) { await page.viewport(320, 1700); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-320-long.png` }); }
+    if (SHOTS) { await page.viewport(320, 1700); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-320-long.png` }); await page.screenshot({ path: `${SHOTS}/body-dash-320-panels.png`, element: dashboard() }); }
   });
 });

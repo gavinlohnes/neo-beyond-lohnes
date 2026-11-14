@@ -3558,3 +3558,23 @@ Brief: [BODY-DASH-001.md](BODY-DASH-001.md). Branch `ccr-88f5c085-body-dash`.
 - **Objective 2 (SHORTCUT-GRID-001,** branch `ccr-88f5c085-shortcut-grid`): shortcut grids follow their own width;
   verified at 320, 360, 412, 768 and 1024 px.
 - **Then:** stop and report. The visual-foundation mission waits for authorization.
+- **Objective 2 (SHORTCUT-GRID-001)** merged in #514.
+
+---
+
+# VISUAL-FOUNDATION-001 — BEYOND's visual foundation, slice 1 (Gavin, 2026-11-14)
+
+Brief and design language: [VISUAL-FOUNDATION-001.md](VISUAL-FOUNDATION-001.md). Branch
+`ccr-88f5c085-visual-foundation`.
+
+- **What it does:** BODY-DASH-001's language is extracted into `src/ui/foundation/` (tokens, command bar, panels,
+  source tags, sparklines, meters). BODY uses it with no visual change. The guide covers colour roles, cut corners,
+  numerals, and the emblem and skyline rules.
+- **Verification:** typecheck, the architecture check, the node and browser suites and the build. BODY's element-only
+  dashboard screenshots match master byte for byte at 320, 360, 412, 768 and 1024 px.
+- **Next:**
+  1. independent exact-head review;
+  2. Gavin merges.
+- **Later slices, each needing Gavin's go:** TRAIN, then TODAY, then MORE and the cave.
+- **Noted, outside scope:** two habits created in the same millisecond can swap order between runs.
+
