@@ -432,3 +432,16 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
   shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other
   metrics before owner assessment. Integration status and verification live in the checkpoint/PR.
+
+
+### HABIT-RHYTHM-001 — explicit answers and lived-day history (2026-11-14)
+
+- Approved scope: [brief](HABIT-RHYTHM-001.md), accepted harvest's lifestyle-logging parity follow-up.
+- Reuse `domain/habits.ts`'s answer projection: legacy false is an undo/unrecorded, not an explicit No.
+  `application/habitCommands.ts` appends additive explicit HABIT_SET answers atomically; existing
+  setHabitDone/getHabitDone callers keep their compatibility meaning. No table/migration introduced.
+- `getHabitWorkspace` composes a read-only 28-day calendar from existing day records, local 16:30
+  boundaries and labelled recorded/planned work context. Corrections target original records; gaps
+  do not create history. `HabitsPanel` reuses foundation panels and native LogSheet focus handling.
+- Quit tracker, reminders, new schedule semantics and health correlations remain excluded.
+  Integration/review status belongs in the checkpoint and PR, not this capability index.

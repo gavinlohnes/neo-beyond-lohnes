@@ -1,0 +1,19 @@
+/* HABIT-RHYTHM-001: existing habit records on the shared visual foundation. */
+.habits-panel { display: grid; gap: 12px; min-width: 0; }
+.habits-panel .habit-copy, .habit-history .habit-copy { margin: 0; font-size: 16px; line-height: 1.45; color: var(--bf-quiet); overflow-wrap: anywhere; }
+.habits-panel .habit-list { display: grid; gap: 12px; }
+.habits-panel .bf-panel__label { overflow-wrap: anywhere; font-size: 16px; letter-spacing: .04em; }
+.habit-answer { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.habit-answer button, .habit-calendar__day { min-width: 0; min-height: 44px; border: 1px solid var(--bf-line); background: var(--bf-s1); color: var(--p-t1, #f2f2f2); font-size: 16px; padding: 8px 4px; cursor: pointer; }
+.habit-answer button[aria-pressed="true"], .habit-calendar__day[aria-pressed="true"] { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: -2px; }
+.habit-answer button:disabled { opacity: .6; cursor: default; }
+.habit-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-block: 8px; }
+.habit-calendar__day { display: grid; justify-items: center; gap: 2px; font-family: var(--font-mono, monospace); font-variant-numeric: tabular-nums; }
+.habit-history { min-width: 0; display: grid; gap: 12px; }
+.habit-history h3 { margin: 0; font-size: 18px; }
+.habits-panel .habits-create { border-radius: 0; background: var(--bf-s1); border-color: var(--bf-line); }
+.habits-panel .habits-create h3 { margin: 0; font-size: 20px; }
+.habits-panel .habit-day-toggle { border-radius: 0; }
+.habits-panel .habit-day-toggle span, .habits-panel .habit-days-fieldset legend { font-size: 16px; }
+.habits-panel button, .habits-panel input, .habits-panel select, .habit-history button { font-size: 16px; min-height: 44px; }
+.habits-panel button:focus-visible, .habit-history button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
