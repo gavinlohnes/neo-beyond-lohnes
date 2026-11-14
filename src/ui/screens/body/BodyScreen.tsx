@@ -2496,10 +2496,11 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       lead={{ label: "NUMBERS", content: <>
       {/* NUMBERS-CLEANUP-001 (Gavin, 2026-11-14): the dashboard above now leads with today's numbers and weight, so the
           cave's own copies fold into one closed disclosure. Every tile, way in and LOG WEIGHT is still here, one tap away. */}
+      {/* Review of #513: the read-failure alert stays visible above the fold, open or closed. */}
+      {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       <div className="data-readings"><FieldDisclosure summary="Today's readings" open={readingsOpen} onToggle={setReadingsOpen}>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
-        {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
       </section>
       {/* LIFE-PATTERN-001: weight first with one way in, then the other progress views; DATA keeps its three sections. */}
       <section aria-label="Progress" className="bx-section data-progress">

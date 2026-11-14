@@ -13,4 +13,5 @@ export async function openReadings(): Promise<void> {
     }
     await new Promise((r) => setTimeout(r, 30));
   }
+  throw new Error("openReadings: the \"Today's readings\" disclosure never appeared");
 }

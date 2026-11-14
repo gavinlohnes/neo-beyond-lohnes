@@ -56,3 +56,19 @@ it("Lifestyle: HABITS opens YOUR LIFE and QUIT TRACKER opens the quit tracker in
   await expect.poll(() => document.querySelector("#workspace-COMMAND")?.textContent ?? "").toMatch(/LIFE/);
   expect(await db.events.count()).toBe(before);
 });
+
+it("review of #513: a failed read shows its alert and retry with Today's readings still closed", async () => {
+  await startDay();
+  const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
+  const screen = await render(<App />);
+  await openData(screen);
+  const summary = [...document.querySelectorAll("summary")].find((s) => s.textContent === "Today's readings")!;
+  expect((summary.parentElement as HTMLDetailsElement).open).toBe(false);
+  const alert = screen.getByRole("alert").filter({ hasText: "Could not refresh DATA." });
+  await expect.element(alert).toBeVisible();
+  await expect.element(alert.getByRole("button", { name: "RETRY READINGS" })).toBeVisible();
+  read.mockRestore();
+  await alert.getByRole("button", { name: "RETRY READINGS" }).click();
+  await expect.poll(() => screen.getByText("Could not refresh DATA.").elements().length).toBe(0);
+});
+
