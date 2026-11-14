@@ -1,3 +1,6 @@
+import { WorkoutRecap } from "./WorkoutRecap";
+import { SetDetails } from "./SetDetails";
+import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -140,6 +143,8 @@ function exercisesFor(
 interface SetInputState {
   weight: string;
   reps: string;
+  setKind?: "WORKING" | "WARMUP";
+  repsInReserve?: string;
 }
 
 /**
@@ -149,6 +154,7 @@ interface SetInputState {
  * reflects exactly what this session did, not whatever TRAIN shows next.
  */
 interface CompletionSummary {
+  sessionId: string;
   status: "COMPLETED" | "PARTIAL";
   sessionType: SessionType;
   bodyAreas: string;
@@ -201,6 +207,8 @@ export function TrainScreen({
   const [workoutFinishedToday, setWorkoutFinishedToday] = useState(false);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [sets, setSets] = useState<PerformedSet[]>([]);
+  const setWriteRef = useRef(false);
+  const draftSessionRef = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [reading, setReading] = useState(true);
   const [readError, setReadError] = useState<string | null>(null);
@@ -215,7 +223,7 @@ export function TrainScreen({
   const [recoveryMinutes, setRecoveryMinutes] = useState(10);
   const [subs, setSubs] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState<Record<string, SetInputState>>({});
-  useSessionDraft("workout-set", Object.entries(inputs).some(([key, input]) => Boolean(input.weight || input.reps) && !sets.some((set) => `${set.exerciseId}#${set.setNumber}` === key)));
+  useSessionDraft("workout-set", Object.entries(inputs).some(([key, input]) => Boolean(input.weight || input.reps) && !sets.some((set) => set.setKind !== "WARMUP" && `${set.exerciseId}#${set.setNumber}` === key)));
   const [progressionSuggestions, setProgressionSuggestions] = useState<Record<string, ProgressionSuggestion>>({});
   const [lastPerformedSets, setLastPerformedSets] = useState<Record<string, LastSetInfo>>({});
   const [recentSubstitutions, setRecentSubstitutions] = useState<Record<string, string[]>>({});
@@ -419,6 +427,22 @@ export function TrainScreen({
           : suggestion.variant,
     );
     if (active) {
+      if (draftSessionRef.current !== active.id) {
+        draftSessionRef.current = active.id;
+        try {
+          const raw = JSON.parse(localStorage.getItem(`beyond:gym-draft:${active.id}`) ?? "{}");
+          const restored: Record<string, SetInputState> = {};
+          if (raw && typeof raw === "object") for (const [key, value] of Object.entries(raw)) {
+            if (!value || typeof value !== "object") continue;
+            const v = value as Record<string, unknown>;
+            if (typeof v.weight !== "string" || typeof v.reps !== "string") continue;
+            restored[key] = { weight: v.weight, reps: v.reps,
+              setKind: v.setKind === "WARMUP" ? "WARMUP" : "WORKING",
+              repsInReserve: typeof v.repsInReserve === "string" && /^(?:[0-9]|10)?$/.test(v.repsInReserve) ? v.repsInReserve : "" };
+          }
+          setInputs(restored);
+        } catch { setInputs({}); }
+      }
       setSets(await getPerformedSets(active.id));
       await loadExerciseAdvisory(active, loadedCustomTemplates);
     } else {
@@ -426,6 +450,10 @@ export function TrainScreen({
       setProgressionSuggestions({});
       setLastPerformedSets({});
       setRecentSubstitutions({});
+      if (draftSessionRef.current) {
+        try { localStorage.removeItem(`beyond:gym-draft:${draftSessionRef.current}`); } catch { /* Storage may be unavailable. */ }
+        draftSessionRef.current = null;
+      }
       setInputs({});
       // TRAIN-003 (Performance Brief): loaded only pre-workout — read-only
       // derived intelligence, never consulted by any command path above.
@@ -565,7 +593,7 @@ export function TrainScreen({
    */
   function suggestedInputFor(exerciseId: string, setNumber: number): LastSetInfo | undefined {
     const prevInSession = sets.find(
-      (s) => s.exerciseId === exerciseId && s.setNumber === setNumber - 1 && !s.skipped,
+      (s) => s.exerciseId === exerciseId && s.setNumber === setNumber - 1 && isWorkingSet(s),
     );
     if (prevInSession) return { weight: prevInSession.weight, reps: prevInSession.reps };
     return lastPerformedSets[exerciseId];
@@ -585,7 +613,11 @@ export function TrainScreen({
   function patchInput(exerciseId: string, setNumber: number, patch: Partial<SetInputState>) {
     const key = inputKey(exerciseId, setNumber);
     const fallback = suggestedDisplay(exerciseId, setNumber);
-    setInputs((prev) => ({ ...prev, [key]: { ...(prev[key] ?? fallback), ...patch } }));
+    setInputs((prev) => {
+      const next = { ...prev, [key]: { ...(prev[key] ?? fallback), ...patch } };
+      if (session) try { localStorage.setItem(`beyond:gym-draft:${session.id}`, JSON.stringify(next)); } catch { /* Recording still works without draft storage. */ }
+      return next;
+    });
   }
 
   function adjustWeight(exerciseId: string, setNumber: number, deltaLbs: number) {
@@ -630,7 +662,7 @@ export function TrainScreen({
   }
 
   async function handleLogSet(exerciseId: string, setNumber: number) {
-    if (busy || !session) return;
+    if (busy || setWriteRef.current || !session) return;
     const display = getInputDisplay(exerciseId, setNumber);
     const weight = Number(display.weight) || 0;
     const reps = Number(display.reps) || 0;
@@ -640,19 +672,21 @@ export function TrainScreen({
       return;
     }
     setLogSetNotice(null);
+    setWriteRef.current = true;
     setBusy(true);
     let committed = false;
     try {
-      await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined);
+      await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined, { setKind: display.setKind ?? "WORKING", ...(display.setKind !== "WARMUP" && display.repsInReserve ? { repsInReserve: Number(display.repsInReserve) } : {}) });
       committed = true;
       haptic("SET_LOGGED");
       setSets(await getPerformedSets(session.id));
       setJustLoggedKey(inputKey(exerciseId, setNumber));
-      await startRestAfterCommit(exerciseId);
+      if (display.setKind !== "WARMUP") await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
       else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
     } finally {
+      setWriteRef.current = false;
       setBusy(false);
     }
   }
@@ -665,7 +699,8 @@ export function TrainScreen({
    * are already known to be exactly what was suggested.
    */
   async function handleLogExactRepeat(exerciseId: string, setNumber: number, suggestion: LastSetInfo) {
-    if (busy || !session) return;
+    if (busy || setWriteRef.current || !session) return;
+    setWriteRef.current = true;
     setBusy(true);
     let committed = false;
     try {
@@ -677,6 +712,7 @@ export function TrainScreen({
         suggestion.weight,
         suggestion.reps,
         subs[exerciseId] || undefined,
+        { setKind: "WORKING", ...(getInputDisplay(exerciseId, setNumber).repsInReserve ? { repsInReserve: Number(getInputDisplay(exerciseId, setNumber).repsInReserve) } : {}) },
       );
       committed = true;
       haptic("SET_LOGGED");
@@ -687,6 +723,7 @@ export function TrainScreen({
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
       else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
     } finally {
+      setWriteRef.current = false;
       setBusy(false);
     }
   }
@@ -704,7 +741,8 @@ export function TrainScreen({
    */
   async function handleUndoLastSet() {
     const acknowledge = captureCommitFeedback();
-    if (busy || !session) return;
+    if (busy || setWriteRef.current || !session) return;
+    setWriteRef.current = true;
     setBusy(true);
     try {
       if (await undoLastSet(session.beyondDayId, session.id)) acknowledge("HEAVY");
@@ -715,6 +753,7 @@ export function TrainScreen({
     } catch (error) {
       reportOperationFailure(error);
     } finally {
+      setWriteRef.current = false;
       setBusy(false);
     }
   }
@@ -746,7 +785,8 @@ export function TrainScreen({
   }
 
   async function handleSkipSet(exerciseId: string, setNumber: number) {
-    if (busy || !session) return;
+    if (busy || setWriteRef.current || !session) return;
+    setWriteRef.current = true;
     setBusy(true);
     try {
       await skipSet(session.beyondDayId, session.id, exerciseId, setNumber);
@@ -754,6 +794,7 @@ export function TrainScreen({
     } catch (error) {
       reportOperationFailure(error);
     } finally {
+      setWriteRef.current = false;
       setBusy(false);
     }
   }
@@ -783,8 +824,8 @@ export function TrainScreen({
       const durationMinutes = Number.isFinite(startedAtMs)
         ? Math.max(0, Math.round((Date.now() - startedAtMs) / 60000))
         : null;
-      const exercisesTouched = new Set(sets.filter((s) => !s.skipped).map((s) => s.exerciseId)).size;
-      const setsLogged = sets.filter((s) => !s.skipped).length;
+      const exercisesTouched = new Set(sets.filter(isWorkingSet).map((s) => s.exerciseId)).size;
+      const setsLogged = sets.filter(isWorkingSet).length;
       const setsSkipped = sets.filter((s) => s.skipped).length;
       const bodyAreas = describeTemplateSummary(activeExercises).bodyAreas;
       const beforeSuggestions = progressionSuggestions;
@@ -818,6 +859,7 @@ export function TrainScreen({
       }
 
       setCompletionSummary({
+        sessionId: session.id,
         status,
         sessionType,
         bodyAreas,
@@ -918,14 +960,10 @@ export function TrainScreen({
   // CLEANUP-002: gym mode's "Last set" line — the session's most recent set (the same one
   // undoLastSet would undo), with its PR wording when it was a record.
   function describeGymLastSet(): { label: string; record?: string } | undefined {
-    const last = sets.reduce<PerformedSet | null>((latest, s) => {
-      if (!latest) return s;
-      if (s.recordedAt !== latest.recordedAt) return s.recordedAt > latest.recordedAt ? s : latest;
-      return s.setNumber > latest.setNumber ? s : latest;
-    }, null);
+    const last = [...sets].sort(compareSetOrder).at(-1);
     if (!last) return undefined;
     const name = activeExercises.find((ex) => ex.exerciseId === last.exerciseId)?.name ?? last.exerciseId;
-    const label = `${name} #${last.setNumber} — ${last.skipped ? "skipped" : `${last.weight} × ${last.reps}`}`;
+    const label = `${name} ${last.setKind === "WARMUP" ? "warm-up" : `#${last.setNumber}`} — ${last.skipped ? "skipped" : `${last.weight} × ${last.reps}`}`;
     const record = sessionRecords.get(last.id);
     return record ? { label, record: describePersonalRecord(record).replace("NEW PR — ", "") } : { label };
   }
@@ -942,7 +980,7 @@ export function TrainScreen({
   // stays on the last one so Exercise X of Y still reads sensibly while
   // COMPLETE/PARTIAL is the obvious next tap.
   function loggedSetNumbers(exerciseId: string): Set<number> {
-    return new Set(sets.filter((s) => s.exerciseId === exerciseId).map((s) => s.setNumber));
+    return new Set(sets.filter((s) => s.exerciseId === exerciseId && s.setKind !== "WARMUP").map((s) => s.setNumber));
   }
   function isExerciseComplete(ex: { exerciseId: string; sets: number }): boolean {
     const logged = loggedSetNumbers(ex.exerciseId);
@@ -1100,6 +1138,7 @@ export function TrainScreen({
           {completionSummary.volumeLbs > 0 && (
             <p className="meta" style={{ marginBottom: 4 }}>Volume: {completionSummary.volumeLbs.toLocaleString("en-US")} lb</p>
           )}
+          <WorkoutRecap sessionId={completionSummary.sessionId} />
           {completionSummary.records.length > 0 && (
             <div style={{ marginTop: 8, marginBottom: 8 }}>
               <p className="meta" style={{ marginBottom: 4 }}>
@@ -1444,7 +1483,7 @@ export function TrainScreen({
                 </div>
                 <ReadoutGrid className="train-session-readout">
                   <Readout label="EXERCISES DONE" value={`${activeExercises.filter(isExerciseComplete).length} / ${activeExercises.length}`} />
-                  <Readout label="SETS LOGGED" value={sets.filter((set) => !set.skipped).length} />
+                  <Readout label="SETS LOGGED" value={sets.filter(isWorkingSet).length} />
                 </ReadoutGrid>
                 <p className="meta">{sets.filter((set) => set.skipped).length} skipped · {activeExercises.reduce((total, exercise) => total + exercise.sets, 0)} prescribed sets</p>
               </section>
@@ -1459,6 +1498,8 @@ export function TrainScreen({
               allComplete={allExercisesComplete}
               weight={currentSetNumber !== null ? getInputDisplay(currentExercise.exerciseId, currentSetNumber).weight : ""}
               reps={currentSetNumber !== null ? getInputDisplay(currentExercise.exerciseId, currentSetNumber).reps : ""}
+              setDetails={currentSetNumber !== null ? getInputDisplay(currentExercise.exerciseId, currentSetNumber) : {}}
+              onSetDetails={(patch) => currentSetNumber !== null && patchInput(currentExercise.exerciseId, currentSetNumber, patch)}
               ghost={lastPerformedSets[currentExercise.exerciseId]}
               exerciseUntouched={loggedSetNumbers(currentExercise.exerciseId).size === 0}
               sessionExerciseIds={activeExercises.map((ex) => ex.exerciseId)}
@@ -1547,9 +1588,11 @@ export function TrainScreen({
                   sets stay as one-line summaries; later sets are counted in a
                   single "N more sets" line instead of each showing its own
                   steppers and LOG button. */}
+              {sets.filter((s) => s.exerciseId === currentExercise.exerciseId && s.setKind === "WARMUP").sort(compareSetOrder).map((s) => <p key={s.id} className="meta">Warm-up · {s.weight} lb × {s.reps}</p>)}
+              {[...sets].sort(compareSetOrder).at(-1)?.setKind === "WARMUP" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleUndoLastSet()}>UNDO WARM-UP</button>}
               {Array.from({ length: currentExercise.sets }, (_, i) => i + 1).map((setNumber) => {
                 const ex = currentExercise;
-                const loggedSet = sets.find((s) => s.exerciseId === ex.exerciseId && s.setNumber === setNumber);
+                const loggedSet = sets.find((s) => s.exerciseId === ex.exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP");
                 const display = getInputDisplay(ex.exerciseId, setNumber);
                 const suggestion = suggestedInputFor(ex.exerciseId, setNumber);
                 if (loggedSet) {
@@ -1580,6 +1623,7 @@ export function TrainScreen({
                         >
                           {!loggedSet.skipped && <ConfirmIcon size={20} />}
                           #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
+                          {loggedSet.repsInReserve !== undefined && <span className="meta"> · {loggedSet.repsInReserve} reps left</span>}
                         </p>
                         {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
                             offered for the exact set this session just committed —
@@ -1625,7 +1669,7 @@ export function TrainScreen({
                 return (
                   <div key={setNumber} style={{ marginBottom: 14 }}>
                     {/* P4: exact repeat in one tap — the primary, fastest path. */}
-                    {suggestion && (
+                    {suggestion && display.setKind !== "WARMUP" && (
                       <button
                         className="btn-primary"
                         style={{ marginBottom: 8, fontSize: 18, padding: "18px var(--space-4)" }}
@@ -1720,6 +1764,7 @@ export function TrainScreen({
                         +
                       </button>
                     </div>
+                    <SetDetails value={display} disabled={busy} onChange={(patch) => patchInput(ex.exerciseId, setNumber, patch)} />
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         className="btn-primary"
@@ -1727,12 +1772,13 @@ export function TrainScreen({
                         disabled={busy}
                         onClick={() => void handleLogSet(ex.exerciseId, setNumber)}
                       >
-                        LOG
+                        {display.setKind === "WARMUP" ? "LOG WARM-UP" : "LOG"}
                       </button>
                       <button
                         className="btn-secondary"
                         style={{ flex: 1 }}
                         disabled={busy}
+                        hidden={display.setKind === "WARMUP"}
                         onClick={() => void handleSkipSet(ex.exerciseId, setNumber)}
                       >
                         SKIP
@@ -1925,7 +1971,7 @@ export function TrainScreen({
           <div className="equipment-row">
             {/* FRICTION-001 (owner approval 2026-10-22): the rotation note matters only once PARTIAL is a
                 real choice — a set logged and the workout not yet complete. */}
-            {sets.some((set) => !set.skipped) && !allExercisesComplete
+            {sets.some(isWorkingSet) && !allExercisesComplete
               && <p className="meta" style={{ marginBottom: 8 }}>{describePartialAdvancement(session.sessionType as SessionType)}</p>}
             {/* FIELD ALPHA Phase 2K (real-device density test, phone-width
                 fix): .btn-primary/.btn-secondary both set width:100% —

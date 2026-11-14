@@ -92,7 +92,7 @@ export async function getWholePicture(now = new Date()) {
     const best = new Map<string, { set: PerformedSet; at: string; dayId: string }>();
     for (const raw of sets) {
       const set = raw as unknown as PerformedSet, session = countedSessions.get(set.sessionId);
-      if (!session || !validDayIds.has(session.dayId) || undone.has(set.id) || set.skipped || set.substitutedName || !Number.isFinite(set.weight) || !Number.isFinite(set.reps) || set.reps <= 0) continue;
+      if (!session || !validDayIds.has(session.dayId) || undone.has(set.id) || set.skipped || set.setKind === "WARMUP" || set.substitutedName || !Number.isFinite(set.weight) || !Number.isFinite(set.reps) || set.reps <= 0) continue;
       const key = `${set.sessionId}:${set.exerciseId}`, previous = best.get(key);
       if (!previous || set.weight > previous.set.weight || (set.weight === previous.set.weight && set.reps > previous.set.reps)) best.set(key, { set, ...session });
     }

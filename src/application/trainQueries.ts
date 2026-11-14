@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 /**
  * Leverage Implementation 001 (deterministic ordering hardening,
  * 2026-08-22): every timestamp sort in this file was audited against
@@ -59,9 +60,9 @@ export async function suggestTemplateForNextWorkout(): Promise<WorkoutTemplateId
 
 /** Sessions that advanced the rotation, oldest first. OWNER-GO-001: an empty completion doesn't count. */
 async function advancingSessions(): Promise<WorkoutSession[]> {
-  const [sessions, sets] = await Promise.all([db.workoutSessions.toArray(), db.performedSets.toArray()]);
+  const [sessions, sets, undone] = await Promise.all([db.workoutSessions.toArray(), db.performedSets.toArray(), getUndoneSetIds()]);
   const working = new Map<string, number>();
-  for (const set of sets as unknown as PerformedSet[]) if (!set.skipped) working.set(set.sessionId, (working.get(set.sessionId) ?? 0) + 1);
+  for (const set of sets as unknown as PerformedSet[]) if (isWorkingSet(set) && !undone.has(set.id)) working.set(set.sessionId, (working.get(set.sessionId) ?? 0) + 1);
   return (sessions as WorkoutSession[])
     .filter((s) => doesSessionAdvanceRotation(s.sessionType as SessionType, s.status as WorkoutSessionStatus, working.get(s.id) ?? 0))
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
@@ -96,7 +97,7 @@ export async function getRecentSubstitutions(exerciseId: string, limit = 3): Pro
   // same session logged in quick succession) — a higher setNumber within
   // the same burst is still the more recent action.
   const withSubs = sets
-    .filter((s): s is PerformedSet & { substitutedName: string } => !!s.substitutedName)
+    .filter((s): s is PerformedSet & { substitutedName: string } => !!s.substitutedName && s.setKind !== "WARMUP")
     .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt) || b.setNumber - a.setNumber);
 
   const seen = new Set<string>();
@@ -134,7 +135,7 @@ export async function getPerformedSets(sessionId: string): Promise<PerformedSet[
 
 export async function hasLoggedAnySet(sessionId: string): Promise<boolean> {
   const sets = await getPerformedSets(sessionId);
-  return sets.length > 0;
+  return sets.some((s) => s.setKind !== "WARMUP");
 }
 
 /**
@@ -168,7 +169,7 @@ export async function getProgressionSuggestion(
     getUndoneSetIds(),
   ]);
   const bySession = new Map<string, PerformedSet[]>();
-  for (const set of exerciseSets) if (!undoneIds.has(set.id)) bySession.set(set.sessionId, [...(bySession.get(set.sessionId) ?? []), set]);
+  for (const set of exerciseSets) if (!undoneIds.has(set.id) && set.setKind !== "WARMUP") bySession.set(set.sessionId, [...(bySession.get(set.sessionId) ?? []), set]);
 
   for (let i = sessions.length - 1; i >= 0; i--) {
     const sets = bySession.get(sessions[i]!.id) ?? [];
@@ -198,7 +199,7 @@ export async function getDaysSinceExerciseLastPerformed(exerciseId: string, now:
       .then((ids) => new Set(ids as string[])),
   ]);
   const last = sets
-    .filter((s) => !s.skipped && !undoneIds.has(s.id) && !activeSessionIds.has(s.sessionId))
+    .filter((s) => isWorkingSet(s) && !undoneIds.has(s.id) && !activeSessionIds.has(s.sessionId))
     .reduce<string | undefined>((latest, s) => (latest === undefined || s.recordedAt > latest ? s.recordedAt : latest), undefined);
   if (last === undefined) return undefined;
   return Math.floor((now.getTime() - new Date(last).getTime()) / (24 * 60 * 60 * 1000));
@@ -300,11 +301,11 @@ export async function getLastStrengthSession(): Promise<LastStrengthSessionSumma
   let sets: Awaited<ReturnType<typeof getPerformedSets>> = [];
   for (const candidate of [...sessions].reverse()) {
     const candidateSets = await getPerformedSets(candidate.id);
-    if (candidateSets.some((s) => !s.skipped)) { last = candidate; sets = candidateSets; break; }
+    if (candidateSets.some((s) => isWorkingSet(s))) { last = candidate; sets = candidateSets; break; }
   }
   if (!last) return null;
 
-  const workingSetCount = sets.filter((s) => !s.skipped).length;
+  const workingSetCount = sets.filter((s) => isWorkingSet(s)).length;
   const durationMinutes = last.endedAt
     ? Math.max(0, Math.round((new Date(last.endedAt).getTime() - new Date(last.startedAt).getTime()) / 60000))
     : null;
@@ -379,7 +380,7 @@ export async function getLastPerformedSetForExercise(
 
   for (let i = sessions.length - 1; i >= 0; i--) {
     const sets = (await getPerformedSets(sessions[i]!.id))
-      .filter((s) => s.exerciseId === exerciseId && !s.skipped)
+      .filter((s) => s.exerciseId === exerciseId && isWorkingSet(s))
       .sort((a, b) => a.setNumber - b.setNumber);
     if (sets.length > 0) {
       const first = sets[0]!;

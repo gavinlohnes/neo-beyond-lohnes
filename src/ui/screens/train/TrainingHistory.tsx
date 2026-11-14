@@ -1,3 +1,4 @@
+import { WorkoutRecap } from "./WorkoutRecap";
 import { useEffect, useRef, useState } from "react";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import {
@@ -158,6 +159,7 @@ function SessionRecordView({
       ) : (
         <>
           <p className="card-body" style={{ marginBottom: 12 }}>{describeHistoryFacts(record.entry)}</p>
+          <WorkoutRecap sessionId={sessionId} />
           {record.exercises.length === 0 ? (
             <p className="empty-state">No sets were recorded in this session.</p>
           ) : (
@@ -167,7 +169,7 @@ function SessionRecordView({
                 <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
                   {exercise.sets.map((set) => (
                     <li key={set.id} className={set.skipped ? "meta" : "card-body"} style={{ marginBottom: 2 }}>
-                      <span>{describeRecordedSet(set)}</span>
+                      <span>{set.setKind === "WARMUP" ? "Warm-up · " : ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}</span>
                       {set.record && (
                         <span className="pr-line">
                           <span className="pr-tag">PR</span>

@@ -113,7 +113,7 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     .filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL")
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
   const undone = await getUndoneSetIds();
-  const allSets = ((await db.performedSets.toArray()) as unknown as PerformedSet[]).filter((s) => !undone.has(s.id));
+  const allSets = ((await db.performedSets.toArray()) as unknown as PerformedSet[]).filter((s) => !undone.has(s.id) && s.setKind !== "WARMUP");
   const setsBySession = new Map<string, PerformedSet[]>();
   for (const set of allSets) {
     const list = setsBySession.get(set.sessionId) ?? [];

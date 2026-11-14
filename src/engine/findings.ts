@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import type { SchedulePattern } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import type { DaySummary, LedgerWorkout } from "./dayLedger";
@@ -225,7 +226,7 @@ function exerciseHistories(input: FindingsInput): Map<string, ExerciseSession[]>
   for (const session of sessions) {
     const sets = setsBySession.get(session.sessionId) ?? [];
     const records = findSessionRecords(prior, sets);
-    const counted = sets.filter((s) => !s.skipped && !s.substitutedName && s.reps > 0);
+    const counted = sets.filter((s) => isWorkingSet(s) && !s.substitutedName && s.reps > 0);
     const byExercise = new Map<string, PerformedSet[]>();
     for (const set of counted) {
       const list = byExercise.get(set.exerciseId) ?? [];

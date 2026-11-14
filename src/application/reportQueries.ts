@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
 import { formatLocalDate, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
@@ -155,7 +156,7 @@ export async function getReport(now: Date = new Date()): Promise<Report> {
   const finished = sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL");
   const finishedById = new Map(finished.map((s) => [s.id, s] as const));
   const sets = ((await db.performedSets.toArray()) as unknown as PerformedSet[]).filter(
-    (s) => finishedById.has(s.sessionId) && !undone.has(s.id) && !s.skipped,
+    (s) => finishedById.has(s.sessionId) && !undone.has(s.id) && isWorkingSet(s),
   );
   const sleepByDay = new Map<string, number>();
   for (const day of days) {

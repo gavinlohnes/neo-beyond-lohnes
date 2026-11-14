@@ -313,7 +313,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
     const session = await getActiveWorkoutSession();
     if (!session || session.id !== p.session_id) throw new Error("WORKOUT_NOT_ACTIVE: that workout is no longer in progress.");
     // The next number after any logged or skipped set of this exercise, as TRAIN numbers them (review of #386).
-    const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((s) => s.exerciseId === p.exercise_id).map((s) => s.setNumber));
+    const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((s) => s.exerciseId === p.exercise_id && s.setKind !== "WARMUP").map((s) => s.setNumber));
     await logSet(session.beyondDayId, session.id, p.exercise_id, last + 1, p.weight, p.reps);
     return {};
   }

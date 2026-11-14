@@ -1,3 +1,4 @@
+import { SetDetails, type SetDetailsValue } from "./SetDetails";
 import { useEffect, useRef, useState } from "react";
 import type { ExercisePrescription } from "../../../domain/workout/types";
 import { describePlates, describeWarmUp, getBarbellExerciseIds, warmUpRamp } from "../../../application/gymModeQueries";
@@ -12,6 +13,8 @@ export interface GymModeProps {
   /** The set to log next, or null when this exercise's sets are all logged. */
   setNumber: number | null;
   allComplete: boolean;
+  setDetails?: SetDetailsValue;
+  onSetDetails?: (patch: SetDetailsValue) => void;
   weight: string;
   reps: string;
   /** Last time's numbers for this exercise (the ghost set). */
@@ -142,15 +145,16 @@ export function GymMode(props: GymModeProps) {
             onMinus={() => props.onAdjustReps(-1)}
             onPlus={() => props.onAdjustReps(1)}
           />
+          {props.onSetDetails && <SetDetails value={props.setDetails ?? {}} disabled={props.busy} onChange={props.onSetDetails} />}
           {props.notice && (
             <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
               {props.notice}
             </p>
           )}
           <button type="button" className="btn-primary gym-mode__log" disabled={props.busy} onClick={props.onLog}>
-            LOG SET {setNumber}
+            {props.setDetails?.setKind === "WARMUP" ? "LOG WARM-UP" : `LOG SET ${setNumber}`}
           </button>
-          <button type="button" className="btn-secondary gym-mode__skip" disabled={props.busy} onClick={props.onSkip}>
+          <button type="button" className="btn-secondary gym-mode__skip" hidden={props.setDetails?.setKind === "WARMUP"} disabled={props.busy} onClick={props.onSkip}>
             SKIP
           </button>
         </>

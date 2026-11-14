@@ -285,7 +285,7 @@ export function projectDaySummaries(input: DayLedgerInput): DaySummary[] {
   );
   const setsBySession = new Map<string, PerformedSet[]>();
   for (const set of input.performedSets) {
-    if (undoneSetIds.has(set.id)) continue;
+    if (undoneSetIds.has(set.id) || set.setKind === "WARMUP") continue;
     const list = setsBySession.get(set.sessionId) ?? [];
     list.push(set);
     setsBySession.set(set.sessionId, list);

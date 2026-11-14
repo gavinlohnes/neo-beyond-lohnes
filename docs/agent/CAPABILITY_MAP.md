@@ -229,6 +229,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## TRAIN experience
 
+- **In flight — GYM-UPGRADE-001 (owner approved):** reuse the existing TRAIN/Gym command path and HARVEST-001 effort/live-workout patterns. `PerformedSet` adds optional warm-up kind and reps-in-reserve; absent legacy kind remains working. Shared `isWorkingSet` bounds statistics; effort never enters recommendation rules. `SetDetails` shares normal/Gym controls; `getWorkoutRecap` compares actual matching lifts in the same template/variant, also available in training history. Native backup stays generic; no new table, provider or dependency. [Brief](GYM-UPGRADE-001.md). BUILD OWNED mapping, not a second workout store.
+
 - **Existing primitive**: `src/engine/progression.ts` (per-exercise INCREASE/HOLD/REDUCE,
   locked doctrine), `TrainScreen.tsx`.
 - **Approved donor direction (DONOR-001, exploratory close 2026-08-27)**: a specific Wave-A

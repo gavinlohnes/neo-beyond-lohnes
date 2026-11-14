@@ -34,9 +34,14 @@ describe("getStrengthReview", () => {
     expect(result.muscleSetsPerWeek.Chest).toBe(.5);
     expect(result.names["machine-chest-press"]).toBe("Machine Chest Press");
   });
-  it("excludes skipped, substituted and undone sets", async () => {
+  it("excludes skipped, substituted, warm-up and undone sets", async () => {
     await session("r", 2); await set("skip", "r", undefined, { skipped: true }); await set("sub", "r", undefined, { substitutedName: "Other" }); await set("undo", "r");
     await db.events.put({ id: "undo-event", schemaVersion: 1, type: "SET_UNDONE", beyondDayId: "day-r", occurredAt: at(1), recordedAt: at(1), seq: 1, payload: { performedSetId: "undo" } } as never);
+    await set("warmup", "r", undefined, { setKind: "WARMUP", weight: 999 });
     expect((await getStrengthReview(now)).lifts).toEqual([]);
+    await set("working", "r");
+    const baseline = await getStrengthReview(now);
+    await set("warmup-extra", "r", undefined, { setKind: "WARMUP", weight: 999 });
+    expect(await getStrengthReview(now)).toEqual(baseline);
   });
 });

@@ -3275,3 +3275,10 @@ Gavin approved the bounded recording/history/correction proposal ("Approved.").
 - Quit tracker unchanged. Reminders, new schedules, health correlations and recommendation changes
   are deferred and receive no implementation authority from this approval. No schema/backup/provider
   change or new dependency; foundation identity, emblem and primary tab composition remain.
+
+
+## GYM-UPGRADE-001 — live workout recording and honest recap (2026-11-14)
+
+**Owner authorization:** Gavin approved clearer normal/Gym workout execution, optional “how many reps left” recording, warm-up/working labels and a finish compared with the previous session. CSV remains deferred.
+
+Working sets are the default. Additional warm-ups leave the prescribed working slot open and remain visible/undoable history, excluded from working counts, volume, records, trends and rotation evidence. Historical sets without a kind remain working sets. Optional integer reps left is 0–10: blank is unknown and 0 means none left. Previous effort is never copied implicitly. Effort is recording only and must not change recommendations without a separate owner decision. The recap compares matching actual lifts in the same template and STANDARD/REDUCED variant, labels a prior partial, excludes changed lifts and presents weight × reps as volume rather than a strength score. Existing training workflows and visual identity remain authoritative. No schema, dependency or provider expansion.
