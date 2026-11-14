@@ -28,3 +28,16 @@
 .redesign-today .today-life-state__contract { margin-top: 8px; }
 .redesign-today .today-life-state__choice { display: flex; align-items: center; gap: 10px; min-height: 40px; color: var(--text-1); font-size: 15px; }
 .redesign-today .today-life-state__choice input { width: 20px; height: 20px; }
+/* WEEK-STRIP-001: seven quiet tiles under NEXT. WORK is a bar; a record is solid, a forecast outlined, a confirmed
+   change notched in red; today is ringed. Sharp corners, no glow. */
+.redesign-today .today-week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; list-style: none; margin: 8px 0 2px; padding: 0; }
+.redesign-today .today-week-strip__day { position: relative; display: grid; justify-items: center; gap: 3px; width: 100%; min-height: 48px; padding: 5px 0 4px; background: transparent; border: 1px solid var(--border-subtle, var(--border-strong)); color: var(--text-2); cursor: pointer; }
+.redesign-today .today-week-strip__day[aria-current="date"] { border-color: var(--text-1); color: var(--text-1); }
+.redesign-today .today-week-strip__wd { font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .08em; }
+.redesign-today .today-week-strip__num { font-size: 11px; }
+.redesign-today .today-week-strip__glyph { display: block; width: 70%; height: 7px; font-size: 10px; line-height: 7px; text-align: center; }
+.redesign-today .today-week-strip__day[data-work="WORK"] .today-week-strip__glyph { border: 1px solid var(--text-2); }
+.redesign-today .today-week-strip__day[data-work="WORK"][data-basis="RECORDED"] .today-week-strip__glyph { background: var(--text-1); border-color: var(--text-1); }
+.redesign-today .today-week-strip__day[data-work="WORK"][data-basis="CONFIRMED"] .today-week-strip__glyph { background: var(--text-2); border-color: var(--text-2); }
+.redesign-today .today-week-strip__day[data-basis="CONFIRMED"]::after { content: ""; position: absolute; top: -1px; right: -1px; border-top: 8px solid var(--accent, #c81e2c); border-left: 8px solid transparent; }
+.redesign-today .today-week-strip__day[data-work="OFF"] .today-week-strip__glyph { border-bottom: 1px solid var(--border-subtle, var(--border-strong)); height: 4px; }
