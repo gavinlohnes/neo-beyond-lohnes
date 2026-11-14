@@ -41,7 +41,7 @@ describe("MORE-HOME-001", () => {
       const el = node.parentElement!;
       if (!node.textContent?.trim() || el.closest(".visually-hidden")) continue;
       // Accessibility (amended 2026-11-14): short mono-capital labels may be smaller, never under 10 px.
-      const t = node.textContent.trim(), isLabel = (t === t.toUpperCase() || getComputedStyle(el).textTransform === "uppercase") && t.length <= 24;
+      const t = node.textContent.trim(), isLabel = !el.closest("button, input, select, textarea") && (t === t.toUpperCase() || getComputedStyle(el).textTransform === "uppercase") && t.length <= 24;
       if (parseFloat(getComputedStyle(el).fontSize) < (isLabel ? 10 : 16)) small.push(t);
     }
     expect(small).toEqual([]);
