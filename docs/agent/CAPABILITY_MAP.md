@@ -432,3 +432,5 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
   shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other
   metrics before owner assessment. Integration status and verification live in the checkpoint/PR.
+- [EXPORT-001](EXPORT-001.md) is the brief for HARVEST-001 backlog #5 (readable CSV export). Brief only: no code,
+  no builder assigned; the build waits for Gavin's go. Reuse `deliverCalendar` and the existing read queries.
