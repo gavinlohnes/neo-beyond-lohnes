@@ -39,7 +39,19 @@ function assertNoCollisions(label: string) {
   // Stage key items never overlap one another.
   const keys = [...document.querySelectorAll<HTMLElement>(".bd-stage-key li")].map((li) => li.getBoundingClientRect());
   const keyOverlap = keys.some((a, i) => keys.slice(i + 1).some((b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5));
-  expect({ overlaps, spill, cramped, keyOverlap }, label).toEqual({ overlaps: [], spill: [], cramped: [], keyOverlap: false });
+  // Accessibility (amended 2026-11-14): sentences, buttons and inputs are 16 px or larger; only short mono-capital labels,
+  // source tags and chart ticks may be smaller, never under 10 px.
+  const small: string[] = [];
+  for (const root of document.querySelectorAll(".bd")) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const t = n.textContent?.trim(), el = n.parentElement!;
+      if (!t || el.closest(".visually-hidden, dialog") || !el.getClientRects().length) continue;
+      const size = parseFloat(getComputedStyle(el).fontSize), isLabel = t === t.toUpperCase() && t.length <= 24;
+      if (size < (isLabel ? 10 : 16)) small.push(`${t} (${size}px)`);
+    }
+  }
+  expect({ overlaps, spill, cramped, keyOverlap, small }, label).toEqual({ overlaps: [], spill: [], cramped: [], keyOverlap: false, small: [] });
 }
 const card = (id: string) => document.querySelector<HTMLElement>(`[data-dash="${id}"]`);
 const dashboard = () => document.querySelector<HTMLElement>('[aria-labelledby="bd-title"]')!;
