@@ -3577,4 +3577,25 @@ Brief and design language: [VISUAL-FOUNDATION-001.md](VISUAL-FOUNDATION-001.md).
   2. Gavin merges.
 - **Later slices, each needing Gavin's go:** TRAIN, then TODAY, then MORE and the cave.
 - **Noted, outside scope:** two habits created in the same millisecond can swap order between runs.
+- **#515** merged at `5a7338bd`; independent review PASS at `2b8f0f60` and `008f440d`.
+
+---
+
+# VISUAL-FOUNDATION-002 — TRAIN's first view on the foundation (Gavin, 2026-11-14: "Start. Keep last session")
+
+Brief: [VISUAL-FOUNDATION-002.md](VISUAL-FOUNDATION-002.md). Branch `ccr-88f5c085-train-foundation`.
+
+- **What it does:**
+  - TRAIN opens on the command bar.
+  - The suggested workout is unchanged in substance, with numeral counts.
+  - LAST SESSION, THIS WEEK and NEWEST RECORD sit under the suggested workout.
+  - The Accessibility size rule is amended (Gavin).
+  - The habit-order tiebreak is fixed.
+- **Verification:** typecheck, the architecture check, the node and browser suites and the build; TRAIN screenshots
+  at 320 to 1024 px.
+- **Next:**
+  1. independent exact-head review;
+  2. Gavin merges.
+- **Waiting for Gavin's go:** TODAY on the foundation, then MORE and the cave, and BODY's sub-16 px captions and
+  buttons.
 

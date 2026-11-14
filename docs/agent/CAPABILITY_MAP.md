@@ -167,6 +167,7 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   `SourceTag`, `Sparkline`, `Meter`) and tokens (`.bf`). Use them for any new numbers-first panel instead of copying
   BODY's styles. The rules are in [VISUAL-FOUNDATION-001.md](VISUAL-FOUNDATION-001.md).
 - No design-system dependency: the language is a few owned classes on the HUD palette.
+- `application/dayContext.ts`'s `describeDayContext` is the command bar's day line (BODY, TRAIN); reuse it for any screen.
 
 ## NUTRITION
 
