@@ -18,7 +18,7 @@ import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
 import { getLivedDayMap, placeMarks, plannedMarks, type MapMark } from "../../../application/livedDayMap";
 import { getShiftSleepPlan, type ShiftSleepPlan } from "../../../application/shiftSleepPlan";
-import { diffLook, firstKnown, mergeLook, sinceLabel, type LookSnapshot } from "../../../application/sinceLastLook";
+import { diffLook, firstKnown, markKey, mergeLook, newMarkKeys, sinceLabel, type LookSnapshot } from "../../../application/sinceLastLook";
 import { readLastLook, writeLastLook } from "./lastLookStore";
 import { sleepMinutes as externalSleepMinutes } from "../../../domain/health/measuredSeries";
 import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
@@ -679,7 +679,9 @@ export function TodayScreen({
   const [since, setSince] = useState<{ label: string; items: string[] } | null>(null);
   const lookPrevRef = useRef<LookSnapshot | null | undefined>(undefined);
   const lookBaseRef = useRef<LookSnapshot | null>(null);
-  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); } }, [active]);
+  // DAY-MAP-001: map marks new since the last look on this device, outlined for this visit.
+  const [freshMarks, setFreshMarks] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
@@ -1785,6 +1787,7 @@ export function TodayScreen({
     state: lifeReading?.label ?? null, next: ahead?.line ?? null, confirmed: ahead ? ahead.confirmed : null,
     advice: recommendation ? { id: recommendation.id, title: recommendation.title } : "none",
     garmin: measured ? (measured.lastNight ? { end: measured.lastNight.endTime, minutes: externalSleepMinutes(measured.lastNight) } : "none") : null,
+    marks: recordedNow.map.map(markKey),
   } : null;
   const lookKey = lookNow ? JSON.stringify(lookNow) : null;
   useEffect(() => {
@@ -1794,6 +1797,7 @@ export function TodayScreen({
     lookBaseRef.current = firstKnown(lookBaseRef.current, cur);
     const prev = lookPrevRef.current;
     setSince(prev ? { label: sinceLabel(prev.at, new Date()), items: diffLook(prev, lookBaseRef.current) } : null);
+    setFreshMarks(newMarkKeys(prev, lookBaseRef.current));
     writeLastLook(mergeLook(readLastLook(), cur));
     // lookKey stands for lookNow's content.
   }, [active, lookKey]);
@@ -2720,7 +2724,7 @@ export function TodayScreen({
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
             run={bandCarriesRun ? null : todayRun}
             // DAY-MAP-001: like the band, the map steps aside while an operation owns the screen, so RESUME stays above the fold.
-            marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart) : undefined}
+            marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart).map((m) => (!m.planned && freshMarks.has(markKey(m)) ? { ...m, fresh: true as const } : m)) : undefined}
             onOpenSleepPlan={onOpenCave ? () => { if (!busyRef.current) onOpenCave("route"); } : undefined}
             markActions={{
               ...(onOpenHealthEvidence ? {

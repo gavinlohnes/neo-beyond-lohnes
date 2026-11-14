@@ -52,3 +52,10 @@ it("review of #507: a last-of-run window is named from your past runs, as ROUTE'
   const [mark] = plannedMarks([{ kind: "SLEEP", start: at(19, 7, 30), end: at(19, 14, 15), basis: "PAST_RUNS" }], new Date(2026, 10, 18, 20));
   expect(mark!.label).toBe("First sleep after the run, usually 07:30–14:15 (sleep plan, your past runs)");
 });
+
+it("the hidden sentence names marks new since the last look", () => {
+  const marks = deriveMapMarks({ ...input, sleep: null, meals: [], checkIn: null }, new Date(2026, 10, 19, 1));
+  const water = marks.find((m) => m.label.startsWith("Water 16"))!;
+  const withFresh = marks.map((m) => (m === water ? { ...m, fresh: true as const } : m));
+  expect(describeMap(withFresh)).toBe("Recorded since the day started: At work since 18:02; Water 20 oz at 19:00; Water 16 oz at 23:00. New since you last looked: Water 16 oz at 23:00.");
+});

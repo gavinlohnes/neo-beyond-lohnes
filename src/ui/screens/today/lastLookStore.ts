@@ -15,6 +15,7 @@ export function readLastLook(): LookSnapshot | null {
     return typeof v.at === "string" && !Number.isNaN(Date.parse(v.at)) ? {
       at: v.at, state: v.state ?? null, next: v.next ?? null, confirmed: typeof v.confirmed === "number" ? v.confirmed : null,
       advice: v.advice ?? null, garmin: v.garmin ?? null,
+      marks: Array.isArray(v.marks) && v.marks.every((k) => typeof k === "string") ? v.marks : null,
     } : null;
   } catch { return null; }
 }

@@ -3521,3 +3521,7 @@ Brief: [DAY-MAP-001.md](DAY-MAP-001.md). Branch `ccr-88f5c085-day-map`.
 - **Slice 2** merged in #507, with the post-merge review PASS. Its review notes are in #508 (review PASS, CI green).
 - **Slice 3** (branch `ccr-88f5c085-day-map-tap`): THE NIGHT SO FAR lists the map's marks, each opening its own screen.
 - **Next DAY-MAP step:** outline new marks since the last look.
+- **Slice 3** merged in #509, and #508 merged.
+- **New-mark outline** (branch `ccr-88f5c085-day-map-fresh`): marks new since the last look are outlined and named
+  NEW.
+- **Next:** WEEK STRIP.

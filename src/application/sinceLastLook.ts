@@ -13,6 +13,21 @@ export interface LookSnapshot {
   advice: { id: string; title: string } | "none" | null;
   /** Garmin's last main sleep: when it ended and how long, as last synced. */
   garmin: { end: string; minutes: number } | "none" | null;
+  /** DAY-MAP-001: the recorded marks on the lived-day map (`markKey`), so new ones can be outlined on the next visit. */
+  marks?: string[] | null;
+}
+
+/** One recorded map mark's identity: its kind and when it happened. */
+export const markKey = (m: { kind: string; at: string }) => `${m.kind}@${m.at}`;
+
+/**
+ * DAY-MAP-001: marks on the map now that weren't there at the last look. `base` is this visit's first view, so marks
+ * the visit itself added aren't "new". Nothing is new without an earlier look that recorded marks.
+ */
+export function newMarkKeys(prev: LookSnapshot | null, base: LookSnapshot | null): Set<string> {
+  if (!prev?.marks || !base?.marks) return new Set();
+  const seen = new Set(prev.marks);
+  return new Set(base.marks.filter((k) => !seen.has(k)));
 }
 
 const hm = (n: number) => `${Math.floor(n / 60)}h ${String(Math.round(n % 60)).padStart(2, "0")}m`;
@@ -36,7 +51,7 @@ export function mergeLook(prev: LookSnapshot | null, cur: LookSnapshot): LookSna
   return {
     at: cur.at,
     state: cur.state ?? prev.state, next: cur.next ?? prev.next, confirmed: cur.confirmed ?? prev.confirmed,
-    advice: cur.advice ?? prev.advice, garmin: cur.garmin ?? prev.garmin,
+    advice: cur.advice ?? prev.advice, garmin: cur.garmin ?? prev.garmin, marks: cur.marks ?? prev.marks ?? null,
   };
 }
 
@@ -46,7 +61,7 @@ export function firstKnown(base: LookSnapshot | null, cur: LookSnapshot): LookSn
   return {
     at: base.at,
     state: base.state ?? cur.state, next: base.next ?? cur.next, confirmed: base.confirmed ?? cur.confirmed,
-    advice: base.advice ?? cur.advice, garmin: base.garmin ?? cur.garmin,
+    advice: base.advice ?? cur.advice, garmin: base.garmin ?? cur.garmin, marks: base.marks ?? cur.marks ?? null,
   };
 }
 

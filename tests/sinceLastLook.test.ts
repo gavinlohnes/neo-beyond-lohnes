@@ -36,3 +36,16 @@ it("labels the last look by time, with the weekday when it wasn't today", () => 
   expect(sinceLabel(at, new Date(2026, 10, 18, 20))).toBe("SINCE 09:05");
   expect(sinceLabel(at, new Date(2026, 10, 19, 20))).toBe("SINCE WED 09:05");
 });
+
+it("DAY-MAP-001: map marks new since the last look; never without an earlier look's marks; not the visit's own", async () => {
+  const { newMarkKeys, markKey } = await import("../src/application/sinceLastLook");
+  expect(markKey({ kind: "WATER", at: "2026-11-18T19:00:00.000Z" })).toBe("WATER@2026-11-18T19:00:00.000Z");
+  expect([...newMarkKeys(look({ marks: ["A", "B"] }), look({ marks: ["A", "B", "C"] }))]).toEqual(["C"]);
+  expect(newMarkKeys(null, look({ marks: ["A"] })).size).toBe(0);
+  expect(newMarkKeys(look({ marks: null }), look({ marks: ["A"] })).size).toBe(0); // an older look without marks
+  // The visit's baseline keeps its first list, so a mark it adds later isn't new; the stored look takes the latest.
+  const base = firstKnown(look({ marks: ["A"] }), look({ marks: ["A", "D"] }));
+  expect(base.marks).toEqual(["A"]);
+  expect(mergeLook(look({ marks: ["A"] }), look({ marks: ["A", "D"] })).marks).toEqual(["A", "D"]);
+  expect(mergeLook(look({ marks: ["A"] }), look({ marks: null })).marks).toEqual(["A"]);
+});

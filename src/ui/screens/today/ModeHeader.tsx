@@ -133,8 +133,8 @@ export function ModeHeader({
         </div>
         {marks && marks.length > 0 && <div className="cc-tl-marks" data-day-map>
           {marks.map((m, i) => m.to !== null
-            ? <span key={i} className={`cc-tl-span cc-tl-span--${m.kind.toLowerCase()}`} style={{ left: `${(m.from * 100).toFixed(2)}%`, width: `${Math.max((m.to - m.from) * 100, 0.8).toFixed(2)}%` }} />
-            : <span key={i} className={`cc-tl-pin cc-tl-pin--${m.kind.toLowerCase()}`} style={{ left: `${(m.from * 100).toFixed(2)}%` }} />)}
+            ? <span key={i} className={`cc-tl-span cc-tl-span--${m.kind.toLowerCase()}${m.fresh ? " cc-tl-fresh" : ""}`} style={{ left: `${(m.from * 100).toFixed(2)}%`, width: `${Math.max((m.to - m.from) * 100, 0.8).toFixed(2)}%` }} />
+            : <span key={i} className={`cc-tl-pin cc-tl-pin--${m.kind.toLowerCase()}${m.fresh ? " cc-tl-fresh" : ""}`} style={{ left: `${(m.from * 100).toFixed(2)}%` }} />)}
         </div>}
         <div className="cc-tl-ruler">
           {Array.from({ length: 24 }, (_, i) => <i key={i} className={i === 1 || i === 13 ? "cc-maj" : undefined} style={{ left: `${(((i + .5) / 24) * 100).toFixed(2)}%` }} />)}
@@ -158,7 +158,7 @@ export function ModeHeader({
       {marks && <p className="visually-hidden" data-day-map-summary>{describeMap(marks)}</p>}
       <div className="cc-tl-links">
         {marks && marks.length > 0 && <button type="button" className="cc-tl-plan-link" aria-expanded={nightOpen} aria-controls="day-map-list" onClick={() => setNightOpen((o) => !o)}>
-          {nightOpen ? "HIDE THE NIGHT" : `THE NIGHT SO FAR · ${marks.length}`}</button>}
+          {nightOpen ? "HIDE THE NIGHT" : `THE NIGHT SO FAR · ${marks.length}${marks.some((m) => m.fresh) ? ` · ${marks.filter((m) => m.fresh).length} NEW` : ""}`}</button>}
         {marks?.some((m) => m.planned) && onOpenSleepPlan && <button type="button" className="cc-tl-plan-link" onClick={onOpenSleepPlan}>SLEEP PLAN ›</button>}
       </div>
       {/* DAY-MAP-001 slice 3: the map as a list, each item with its time and, where one exists, its own screen. Reads only. */}
@@ -166,7 +166,7 @@ export function ModeHeader({
         {marks.map((m, i) => {
           const action = markActions?.[m.kind];
           return <li key={i} className={m.planned ? "cc-tl-list__planned" : undefined}>
-            <span>{m.planned ? "PLANNED · " : ""}{m.label}</span>
+            <span>{m.planned ? "PLANNED · " : m.fresh ? <strong className="cc-tl-list__new">NEW · </strong> : ""}{m.label}</span>
             {action && <button type="button" className="cc-tl-list__open" onClick={action.open}>{action.label} ›</button>}
           </li>;
         })}
