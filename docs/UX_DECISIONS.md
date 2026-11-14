@@ -2024,8 +2024,8 @@ TODAY's separate ATTENTION budget.
   - **16 px or larger:** sentences, buttons and inputs, which covers the input-zoom reason above.
   - **May be smaller:** short mono-capital labels, source tags and chart ticks, never under 10 px. This is the BODY
     dashboard's look.
-  - **Still to bring up:** BODY's dashboard captions, quick adds, chips and LOG predate this amendment and are under
-    16 px. Bringing them up waits for Gavin's go.
+  - **BODY brought up (VISUAL-FOUNDATION-003, Gavin's go):** BODY's dashboard captions, units, quick adds, chips,
+    links, LOG, meters and stage key are now 16 px. BodyDash001 asserts the rule.
 
 ## Visual system — red budget
 
@@ -3189,4 +3189,27 @@ Gavin: "Start. Keep last session." Brief: [agent/VISUAL-FOUNDATION-002.md](agent
 - **Sizes:** the Accessibility rule is amended (see Accessibility); TRAIN follows it.
 - **Unchanged:** the live workout, suggestions and Engine, commands, data, the history and records pages, and every other
   screen.
+
+## VISUAL-FOUNDATION-003 — TODAY's first view on the foundation (owner approval 2026-11-14; Protected)
+
+Gavin: "Do all [but] 5. I don't need to be asked if I want to work out today. If I do want to work out I will just
+start a work out." Brief: [agent/VISUAL-FOUNDATION-003.md](agent/VISUAL-FOUNDATION-003.md). **Amends TODAY's primary
+composition** (FIELD-AUTHORITY-001, LIFE-STATE-001) as follows, and nothing else:
+
+- **Horizon:** the skyline mode header stays TODAY's top. It now carries the date as the foundation's eyebrow
+  ("/// WED, OCT 21") above the mode. The red sky keeps COMMAND-CENTER-001's bounded exception.
+- **Framed panels:** the operating-state band (with the week strip), the next step and each reading are framed panels:
+  cut corners, a 1 px line and the red bracket. The bracket is structure, not an action, so FIELD-AUTHORITY-001's one
+  filled red action, and none in calm states, still holds. A recommendation card is its own panel (no second frame).
+- **Numbers after the next step:** AT A GLANCE moves directly under the next step (and the after-the-run report).
+  - **Unchanged below:** LIFE-STATE-001's order of preparation, routines and YOUR LIFE.
+  - **Unchanged in the numbers:** the tiles, their values and wording, pace dimming, BEHIND PACE, Garmin's unusual
+    labels and every tap. They are laid out two across.
+  - **Garmin blue:** Garmin's readings (steps, resting HR, Garmin sleep) are captioned in Garmin blue (GARMIN-004).
+- **Week strip:** cut-corner day cells; today carries the red bracket.
+- **No training on TODAY:** there is no workout panel or prompt. TRAIN stays where a workout starts.
+- **Empty preparation:** on shift, with nothing to show, the preparation group no longer draws an empty frame.
+- **Sizes:** the restyled parts keep the amended 16 px rule, and so does BODY's dashboard now (see Accessibility).
+- **Unchanged:** recommendation selection and authority, wording, actions, the check-in path, the day map's marks, the
+  band's content, Engine, schema, commands and every other screen.
 

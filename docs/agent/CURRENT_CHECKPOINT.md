@@ -3598,4 +3598,25 @@ Brief: [VISUAL-FOUNDATION-002.md](VISUAL-FOUNDATION-002.md). Branch `ccr-88f5c08
   2. Gavin merges.
 - **Waiting for Gavin's go:** TODAY on the foundation, then MORE and the cave, and BODY's sub-16 px captions and
   buttons.
+- **#516** merged at `e1209287`; independent review PASS at `e8445e23`. Its two non-blocking notes ride in
+  VISUAL-FOUNDATION-003.
+
+---
+
+# VISUAL-FOUNDATION-003 — TODAY's first view on the foundation (Gavin, 2026-11-14; Protected, approved)
+
+Brief: [VISUAL-FOUNDATION-003.md](VISUAL-FOUNDATION-003.md). Branch `ccr-88f5c085-today-deck`.
+
+- **What it does:**
+  - the date sits on the skyline header;
+  - the band, the next step and the numbers are framed panels, with the numbers moved under the next step;
+  - Garmin captions are in Garmin blue;
+  - the empty preparation frame is fixed;
+  - BODY is brought up to 16 px;
+  - there is no training panel (Gavin).
+- **Also:** #516's notes (THIS WEEK's empty-week wording, the second habit list's tiebreak).
+- **Next:**
+  1. independent exact-head review;
+  2. Gavin merges.
+- **Later, each with Gavin's go:** MORE and the cave's headers on the command bar.
 
