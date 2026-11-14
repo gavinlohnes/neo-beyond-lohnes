@@ -21,7 +21,8 @@ export interface MapInput {
   work: { start: string | null; end: string | null };
   workouts: { start: string; end: string | null }[];
 }
-export interface PlacedMark extends MapMark { from: number; to: number | null }
+/** `fresh`: recorded since the last look on this device (DAY-MAP-001, outlined). */
+export interface PlacedMark extends MapMark { from: number; to: number | null; fresh?: true }
 
 const DAY = 24 * 3_600_000;
 const hhmm = (iso: string) => { const d = new Date(iso); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
@@ -65,10 +66,12 @@ export function placeMarks(marks: readonly MapMark[], dayStart: Date): PlacedMar
 }
 
 /** One plain sentence of what's on the map, for screen readers and Alfred. */
-export function describeMap(marks: readonly MapMark[]): string {
+export function describeMap(marks: readonly (MapMark & { fresh?: true })[]): string {
   const recorded = marks.filter((m) => !m.planned), planned = marks.filter((m) => m.planned);
   const done = recorded.length ? `Recorded since the day started: ${recorded.map((m) => m.label).join("; ")}.` : "Nothing recorded on this lived day yet.";
-  return planned.length ? `${done} Planned: ${planned.map((m) => m.label).join("; ")}.` : done;
+  const fresh = recorded.filter((m) => m.fresh);
+  const withFresh = fresh.length ? `${done} New since you last looked: ${fresh.map((m) => m.label).join("; ")}.` : done;
+  return planned.length ? `${withFresh} Planned: ${planned.map((m) => m.label).join("; ")}.` : withFresh;
 }
 
 /** Read only: the recorded inputs of a lived day, from the existing queries. */

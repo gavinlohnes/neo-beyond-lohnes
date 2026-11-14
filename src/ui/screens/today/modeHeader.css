@@ -143,3 +143,6 @@
 .cc-mode .cc-tl-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; border-bottom: 1px solid var(--p-line); color: var(--p-t1); font-size: 13px; line-height: 1.35; }
 .cc-mode .cc-tl-list__planned { color: var(--p-t2); }
 .cc-mode .cc-tl-list__open { flex: none; min-height: 32px; padding: 0 2px; background: none; border: 0; color: var(--p-t1); font-size: 11px; letter-spacing: .08em; cursor: pointer; }
+/* DAY-MAP-001: a mark recorded since the last look on this device gets a red outline for this visit. */
+.cc-mode .cc-tl-fresh { outline: 1.5px solid var(--p-red); outline-offset: 2px; }
+.cc-mode .cc-tl-list__new { color: var(--red-text, var(--p-t1)); font-weight: 600; letter-spacing: .06em; }

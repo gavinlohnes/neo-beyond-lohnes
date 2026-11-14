@@ -3079,3 +3079,9 @@ Brief: [agent/DAY-MAP-001.md](agent/DAY-MAP-001.md).
   - The list stays transparent so the red night sky above the cityscape shows through (Gavin: "a nice Gotham night
     sky").
   - It steps aside during operations, like the map.
+- **New since you last looked, on the map** (Gavin, 2026-11-14: "Let's work").
+  - A recorded mark that wasn't on the map at the last look on this device gets a red outline for that visit.
+  - THE NIGHT SO FAR counts it ("· 1 NEW"), its row says "NEW ·", and the hidden sentence names it.
+  - "New" means not seen before, not recently happened, so a Garmin sleep imported later still stands out.
+  - Never the visit's own additions, never planned blocks, and never without an earlier look.
+  - It uses the same device-only snapshot as SINCE.
