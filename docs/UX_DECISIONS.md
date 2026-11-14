@@ -2020,6 +2020,12 @@ TODAY's separate ATTENTION budget.
   both a legibility and an anti-jank decision. Audited via live
   `getComputedStyle` sweep, not just source inspection, since Vitest
   alone can't verify rendered pixel sizes. 2026-08-20.
+  **Amended 2026-11-14 (Gavin, VISUAL-FOUNDATION-002):**
+  - **16 px or larger:** sentences, buttons and inputs, which covers the input-zoom reason above.
+  - **May be smaller:** short mono-capital labels, source tags and chart ticks, never under 10 px. This is the BODY
+    dashboard's look.
+  - **Still to bring up:** BODY's dashboard captions, quick adds, chips and LOG predate this amendment and are under
+    16 px. Bringing them up waits for Gavin's go.
 
 ## Visual system — red budget
 
@@ -2862,6 +2868,8 @@ information architecture. [Brief](agent/DATA-HOME-001.md).
 Gavin picked "A". When no workout is running, TRAIN opens with a compact hero: the date, **YOUR TRAINING.** and its
 purpose line. It is compact so START WORKOUT stays on the first phone screen (DECLUTTER-001). The live workout view
 and everything else is unchanged. [Brief](agent/TRAIN-HOME-001.md).
+**Amended 2026-11-14 (VISUAL-FOUNDATION-002):** the hero is now the foundation's command bar (TRAIN // STRENGTH, the
+date and the day's context). The purpose line stays in it, and YOUR TRAINING. stays as the screen-reader heading.
 
 
 ## DELTA-GROWS-001 — DELTA grows and learns with you (owner approval 2026-11-09)
@@ -3145,7 +3153,9 @@ Gavin approved a reusable BEYOND visual foundation based on the approved BODY di
 
 - **What it is:** BODY-DASH-001's language, extracted unchanged into `src/ui/foundation/`: tokens, the command bar,
   framed panels, source tags, numerals, sparklines and meters.
-- **What changed:** BODY uses it, with no visual change; the dashboard's screenshots match master byte for byte. No
+- **What changed:** BODY uses it, with no visual change. The dashboard's screenshots match master byte for byte; the one
+  exception was the order of two habits created in the same millisecond, which varied on master too (fixed in
+  VISUAL-FOUNDATION-002). No
   other screen changes in this slice.
 - **Colour roles:**
   - red is structure and the one action;
@@ -3158,4 +3168,25 @@ Gavin approved a reusable BEYOND visual foundation based on the approved BODY di
     records how they are to be used deliberately later.
   - **New places:** each one needs Gavin's approval in the slice that proposes it. This slice adds none.
 - **Later slices:** TRAIN, TODAY, MORE and the cave adopt the foundation one slice at a time, each with Gavin's go.
+
+## VISUAL-FOUNDATION-002 — TRAIN's first view on the foundation (owner approval 2026-11-14)
+
+Gavin: "Start. Keep last session." Brief: [agent/VISUAL-FOUNDATION-002.md](agent/VISUAL-FOUNDATION-002.md).
+
+- **Command bar:** TRAIN opens on the foundation's command bar (TRAIN // STRENGTH, the date and the day's context, from
+  BODY's shared rule). The purpose line stays. The bar has no action: START WORKOUT lives on the suggested workout, so
+  there is one way to start.
+- **Suggested workout:** it keeps its primary-decision frame, suggestion, wording, CHANGE and WHY. Its exercise and set
+  counts are foundation numerals.
+- **Numbers under it:**
+  - **LAST SESSION** (kept, Gavin) shows working sets, template, status, duration and date. Its › opens TRAINING
+    SUMMARY's details.
+  - **THIS WEEK** shows sessions and working sets by lived-day week, with eight weeks as a white sparkline. Its › opens
+    HISTORY.
+  - **NEWEST RECORD** shows the latest personal record. Its › opens RECORDS.
+  - Only finished sessions with a working set count. With nothing recorded, each panel says so plainly.
+- **Switcher:** WORKOUT / HISTORY / RECORDS use mono capitals; the chosen view is underlined in red, as the active tab.
+- **Sizes:** the Accessibility rule is amended (see Accessibility); TRAIN follows it.
+- **Unchanged:** the live workout, suggestions and Engine, commands, data, the history and records pages, and every other
+  screen.
 

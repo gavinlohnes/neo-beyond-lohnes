@@ -7,7 +7,7 @@ import { mostRecentBoundaryAtOrBefore } from "../../../engine/dayRollover";
 import { getBodyDashboardExtras, type BodyDashboardExtras } from "../../../application/bodyDashboardQueries";
 import { minuteOfDay, paceReading } from "../../../application/pace";
 import { hypnogram, sleepMinutes, stageMinutes, STAGE_ORDER, type StageName } from "../../../domain/health/measuredSeries";
-import { livedDayShiftWindow, isOperatorSavedSchedule } from "../../../engine/scheduledContext";
+import { describeDayContext } from "../../../application/dayContext";
 import { MeasuredSheet, STAGE_COLORS } from "../today/MeasuredSheet";
 import { WATER_QUICK_ADD_OZ } from "./bodyScreenCopy";
 import { CommandBar, Meter, Panel, SourceTag as Source, Sparkline as Spark, SPARK_H, SPARK_W } from "../../foundation/primitives";
@@ -93,9 +93,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
   const garminSource = fresh ? <Source garmin>{fresh.stale ? "GARMIN · OLD" : "GARMIN"}</Source> : null;
 
   // Header: the lived day and, from the record or the saved schedule, its shift.
-  const shift = p.day && extras?.schedule && isOperatorSavedSchedule(extras.schedule) && p.day.workContext !== "OFF" ? livedDayShiftWindow(new Date(p.day.startedAt), extras.schedule) : null;
-  const context = !p.day ? "No day started" : p.day.workContext === "OFF" ? "Day off" : shift ? `${shift.end.toDateString() !== shift.start.toDateString() ? "Night shift" : "Shift"} ${clockOf(shift.start.getTime())}–${clockOf(shift.end.getTime())}` : p.day.workContext === "WORK" ? "Work day" : "Work or off not set";
-  const contextBasis = !p.day ? null : p.day.workContext === "UNKNOWN" ? (shift ? "schedule" : null) : "recorded";
+  const { text: context, basis: contextBasis } = describeDayContext(p.day, extras?.schedule ?? null);
 
   // Water: the lived day's hours from 16:30 (review of #512: not from when the day was started), and your own usual pace.
   const livedStart = p.day ? mostRecentBoundaryAtOrBefore(new Date(p.day.startedAt)).toISOString() : null;

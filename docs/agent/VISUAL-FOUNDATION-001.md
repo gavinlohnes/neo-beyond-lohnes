@@ -66,6 +66,10 @@ dependency, command or information-architecture change.
   drops its icon and tightens the tracking before a word would break.
 - **Missing values:** a missing value says so in plain words (`.bf-none`: "Not logged", "Not measured"). It never shows
   a bare zero (DENSITY-001).
+- **Sizes (Accessibility, amended 2026-11-14):** sentences, buttons and inputs are 16 px or larger. Only short
+  mono-capital labels, source tags and chart ticks may be smaller, and never under 10 px. TRAIN (VISUAL-FOUNDATION-002)
+  follows this. BODY's dashboard predates it: its captions (`.bf-meta`, 12 px), quick adds, chips and LOG are smaller,
+  and bringing them up needs Gavin's go.
 
 ### Provenance on every number
 
@@ -134,7 +138,8 @@ import { CommandBar, Panel, SourceTag, Sparkline, Meter } from "../../foundation
 - **Pixel proof:** `BodyDash001`'s element-only dashboard shots match master byte for byte.
 - **Not used as proof:** full-page shots that include the app header and nav. Their own entry transitions vary from
   run to run on master too.
-- **Pre-existing, outside this slice:** the order of two habits created in the same millisecond can vary between runs.
+- **One exception to byte for byte:** the order of two habits created in the same millisecond could vary between runs,
+  on master too. VISUAL-FOUNDATION-002 fixes it: habits with the same creation time now sort by name.
 
 ## Next slices (each needs Gavin's go)
 
