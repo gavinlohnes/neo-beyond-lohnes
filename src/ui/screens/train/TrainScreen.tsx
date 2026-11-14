@@ -13,6 +13,11 @@ import "../more/systemsHome.css";
 import { QuickTags } from "../../components/QuickTags";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
+import "./trainFoundation.css";
+import { CalendarDays, History as HistoryIcon, Trophy } from "lucide-react";
+import { CommandBar, Panel, SourceTag, Sparkline } from "../../foundation/primitives";
+import { getTrainHome, type TrainHome } from "../../../application/trainHomeQueries";
+import { describeDayContext } from "../../../application/dayContext";
 import { Section } from "../../components/Section";
 import { describePlates, describeWarmUpFor, usesBarbellPlates } from "./plates";
 import { RecordsList } from "./RecordsList";
@@ -71,6 +76,7 @@ import {
 } from "../../../application/trainCommands";
 import {
   describeLastStrengthSession,
+  describeLastSessionLine,
   describePartialAdvancement,
   describePartialAdvancementResult,
   describeProgressionAdvisory,
@@ -262,6 +268,8 @@ export function TrainScreen({
   // consulted by handleStart/actuallyStart or any other command path.
   const [lastStrengthSession, setLastStrengthSession] = useState<LastStrengthSessionSummary | null>(null);
   const [recentStrengthSessions, setRecentStrengthSessions] = useState<RecentStrengthSessionEntry[]>([]);
+  // VISUAL-FOUNDATION-002: the first view's command bar and numbers (read only, pre-workout).
+  const [trainHome, setTrainHome] = useState<TrainHome | null>(null);
   const [currentProgressionSuggestions, setCurrentProgressionSuggestions] = useState<
     { templateId: WorkoutTemplateId; prescription: ExercisePrescription; suggestion: ProgressionSuggestion }[]
   >([]);
@@ -423,6 +431,7 @@ export function TrainScreen({
       // derived intelligence, never consulted by any command path above.
       setLastStrengthSession(await getLastStrengthSession());
       setRecentStrengthSessions(await getRecentStrengthSessions());
+      setTrainHome(await getTrainHome().catch(() => null));
       setCurrentProgressionSuggestions(await getCurrentProgressionSuggestions());
     }
 
@@ -1019,12 +1028,16 @@ export function TrainScreen({
           screen (DECLUTTER-001). Hidden during a workout: the live session view is unchanged. */}
       {!session && trainView === "WORKOUT" && (completionSummary
         ? <p className="train-purpose">Review what you recorded.</p>
-        : <section className="sys-home train-home" aria-labelledby="train-home-title">
-            <div className="sys-hero">
-              <p className="sys-eyebrow">{new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
-              <h2 id="train-home-title">YOUR TRAINING.</h2>
-              <p className="sys-intro train-purpose">Prepare your workout. You choose the session.</p>
-            </div>
+        : <section className="bf train-home" aria-labelledby="train-home-title">
+            {/* VISUAL-FOUNDATION-002 (Gavin, 2026-11-14): the foundation's command bar replaces the hero. TRAIN-HOME-001's
+                heading stays for screen readers and its purpose line stays in the bar. No bar action: START WORKOUT lives
+                on the suggested workout, so there is only ever one way to start. */}
+            <h2 id="train-home-title" className="visually-hidden">YOUR TRAINING.</h2>
+            <CommandBar eyebrow="TRAIN // STRENGTH" context={<>
+              <p className="bf-bar__day" data-train-day><span className="bf-bar__date">{new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}</span>
+                {trainHome && (() => { const c = describeDayContext(trainHome.day, trainHome.schedule); return <span className="bf-bar__ctx">{c.text}{c.basis === "schedule" ? <em> · schedule</em> : null}</span>; })()}</p>
+              <p className="train-purpose">Prepare your workout. You choose the session.</p>
+            </>} />
           </section>)}
 
       <div className="train-switcher" role="group" aria-label="Training views">
@@ -1156,8 +1169,8 @@ export function TrainScreen({
             {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
           </h2>
           {chosenVariant !== "RECOVERY" && (
-            <p className="meta" style={{ marginBottom: 12 }}>
-              {suggestedExercises.length} exercises · {suggestedExercises.reduce((total, exercise) => total + exercise.sets, 0)} prescribed sets
+            <p className="meta train-suggest-count" style={{ marginBottom: 12 }}>
+              <b className="bf-value">{suggestedExercises.length}</b> exercises · <b className="bf-value">{suggestedExercises.reduce((total, exercise) => total + exercise.sets, 0)}</b> prescribed sets
             </p>
           )}
 
@@ -1255,6 +1268,42 @@ export function TrainScreen({
         </CommandSurface>
       )}
 
+      {!session && !completionSummary && (() => {
+        // VISUAL-FOUNDATION-002: TRAIN's numbers, from what it already records. LAST SESSION opens TRAINING SUMMARY's
+        // details (Gavin, 2026-11-14: "Keep last session"); THIS WEEK opens HISTORY; NEWEST RECORD opens RECORDS.
+        const thisWeek = trainHome?.weeks?.at(-1) ?? null;
+        const weekly = trainHome?.weeks?.map((w) => w.sets) ?? [];
+        const rec = trainHome?.newestRecord ?? null;
+        const last = lastStrengthSession;
+        return (
+          <div className="bf train-numbers">
+            <Panel headingId="train-last" wide icon={<HistoryIcon size={18} />} label="LAST SESSION" source={last ? <SourceTag>LOGGED</SourceTag> : null}
+              onOpen={() => setPerformanceBriefOpen(true)} openLabel="Open TRAINING SUMMARY" data={{ "data-train": "last" }}>
+              {last ? <>
+                <p className="bf-value">{last.workingSetCount}<small> working {last.workingSetCount === 1 ? "set" : "sets"}</small></p>
+                <p className="train-num-meta">{describeLastSessionLine(last, customTemplates)}</p>
+              </> : <p className="bf-value"><span className="bf-none">No sessions yet</span></p>}
+            </Panel>
+            <Panel headingId="train-week" icon={<CalendarDays size={18} />} label="THIS WEEK" source={trainHome?.anyTraining ? <SourceTag>LOGGED</SourceTag> : null}
+              onOpen={() => openTrainView("HISTORY")} openLabel="Open training history" data={{ "data-train": "week" }}>
+              {thisWeek && trainHome?.anyTraining ? <>
+                <p className="bf-value">{thisWeek.sessions}<small> {thisWeek.sessions === 1 ? "session" : "sessions"}</small></p>
+                <p className="train-num-meta">{thisWeek.sets} working {thisWeek.sets === 1 ? "set" : "sets"}</p>
+                <Sparkline values={weekly} tone="own" />
+                <p className="train-num-meta">Sets by week, last 8</p>
+              </> : <p className="bf-value"><span className="bf-none">No sessions yet</span></p>}
+            </Panel>
+            <Panel headingId="train-record" icon={<Trophy size={18} />} label="NEWEST RECORD" source={rec ? <SourceTag>LOGGED</SourceTag> : null}
+              onOpen={() => openTrainView("RECORDS")} openLabel="Open records" data={{ "data-train": "record" }}>
+              {rec ? <>
+                <p className="bf-value">{rec.record.weight}<small> lb × {rec.record.reps}</small></p>
+                <p className="train-num-meta">{rec.exerciseName} · {rec.record.kind === "HEAVIEST" ? "heaviest" : "most reps"} · {new Date(rec.recordedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+              </> : <p className="bf-value"><span className="bf-none">No records yet</span></p>}
+            </Panel>
+          </div>
+        );
+      })()}
+
       <TrainingProgrammePanel active={active && trainView === "WORKOUT"} disabled={busy} startDisabled={!!session} onStart={(templateId) => {
         const variant = chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant;
         templateChosenRef.current = true; variantChosenRef.current = true;
@@ -1275,12 +1324,6 @@ export function TrainScreen({
           their own non-prominent state — real Inspect-tier depth, not
           something that should consume full footprint before the one
           actual pre-workout decision is made. */}
-      {!session && !completionSummary && !performanceBriefOpen && (
-        <Section id="train-summary" eyebrow="TRAINING SUMMARY" title="Last session"
-          wayIn={{ label: "Details", ariaLabel: "Open TRAINING SUMMARY", onClick: () => setPerformanceBriefOpen(true) }}>
-          <p className="card-body">{describeLastStrengthSession(lastStrengthSession)}</p>
-        </Section>
-      )}
       {!session && !completionSummary && performanceBriefOpen && (
         <Section id="train-summary" eyebrow="TRAINING SUMMARY" title="Last session">
           <div className="equipment-row">

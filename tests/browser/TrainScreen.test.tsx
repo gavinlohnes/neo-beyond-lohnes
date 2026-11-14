@@ -206,6 +206,10 @@ describe("TrainScreen (real browser) — Performance Brief", () => {
     await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
 
     const screen = await render(<TrainScreen />);
+    // VISUAL-FOUNDATION-002: LAST SESSION leads with the count, then template, status and duration; the full sentence
+    // is in TRAINING SUMMARY's details.
+    await expect.element(screen.getByText(/^Template A · Completed · \d+ min · /)).toBeVisible();
+    await screen.getByRole("button", { name: "Open TRAINING SUMMARY" }).click();
     await expect.element(screen.getByText(/Template A — Completed · 2 working sets/)).toBeVisible();
   });
 

@@ -1,0 +1,20 @@
+/* VISUAL-FOUNDATION-002 (Gavin, 2026-11-14): TRAIN's first view on BEYOND's visual foundation
+   (src/ui/foundation/foundation.css). Sentences, buttons and inputs stay at 16 px or larger. Only short mono-capital
+   labels, source tags and chart ticks are smaller (the amended Accessibility rule). Only the first view changes; the
+   live workout is untouched. */
+.train-home { margin-bottom: 12px; }
+.train-home .bf-bar__ctx { font-size: 16px; }
+.train-home .train-purpose { margin: 0; font-size: 16px; color: var(--p-t2, #a8a8a8); }
+
+/* The suggested workout keeps its primary-decision frame (CommandSurface); its counts are foundation numerals. */
+.train-suggest-count .bf-value { display: inline; font-size: 30px; vertical-align: baseline; }
+
+/* TRAIN's numbers: LAST SESSION wide, then THIS WEEK and NEWEST RECORD side by side. Columns follow the area's width. */
+.train-numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; container-type: inline-size; }
+.train-numbers .bf-value small { font-size: 16px; }
+.train-num-meta { margin: 0; font-size: 16px; line-height: 1.35; color: var(--bf-quiet); overflow-wrap: anywhere; }
+@container (max-width: 279px) { .train-numbers { grid-template-columns: minmax(0, 1fr); } }
+
+/* WORKOUT / HISTORY / RECORDS in the foundation's mono capitals; the chosen view carries the red. */
+.train-operator .train-switcher .btn-secondary { font-family: var(--font-mono, monospace); letter-spacing: .14em; }
+.train-operator .train-switcher .btn-secondary[aria-pressed="true"] { border-bottom-color: var(--p-red, #D0141B); }

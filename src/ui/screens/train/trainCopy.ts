@@ -237,6 +237,18 @@ export function describeLastStrengthSession(summary: LastStrengthSessionSummary 
   return `Template ${summary.templateId}${variant} — ${statusWord} · ${sets}${duration}`;
 }
 
+/**
+ * VISUAL-FOUNDATION-002: LAST SESSION's line under its working-set numeral: the template (your name for a custom one),
+ * REDUCED when it was, the real status, the duration when known and the date. The count is the numeral, not repeated.
+ */
+export function describeLastSessionLine(summary: LastStrengthSessionSummary, customTemplates: readonly CustomWorkoutTemplate[]): string {
+  const name = WORKOUT_TEMPLATES[summary.templateId] ? `Template ${summary.templateId}` : templateLabel(summary.templateId, customTemplates);
+  const parts = [`${name}${summary.sessionType === "REDUCED" ? " · REDUCED" : ""}`, summary.status === "COMPLETED" ? "Completed" : "Partial"];
+  if (summary.durationMinutes !== null) parts.push(`${summary.durationMinutes} min`);
+  if (summary.startedAt) parts.push(new Date(summary.startedAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }));
+  return parts.join(" · ");
+}
+
 /** TRAIN-003: the real WorkoutSessionStatus word, never softened or reworded to look like a different outcome. */
 export function describeSessionStatusLabel(status: "COMPLETED" | "PARTIAL" | "ABANDONED"): string {
   switch (status) {

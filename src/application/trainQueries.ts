@@ -265,6 +265,8 @@ export interface LastStrengthSessionSummary {
   status: "COMPLETED" | "PARTIAL";
   workingSetCount: number;
   durationMinutes: number | null;
+  /** VISUAL-FOUNDATION-002: when it started, so TRAIN's LAST SESSION panel can date it. */
+  startedAt?: string;
 }
 
 /**
@@ -313,6 +315,7 @@ export async function getLastStrengthSession(): Promise<LastStrengthSessionSumma
     status: last.status,
     workingSetCount,
     durationMinutes,
+    startedAt: last.startedAt,
   };
 }
 
