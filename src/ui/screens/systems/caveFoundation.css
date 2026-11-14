@@ -1,0 +1,37 @@
+/* VISUAL-FOUNDATION-004 (Gavin, 2026-11-14): THE CAVE on BEYOND's visual foundation
+   (src/ui/foundation/foundation.css). Its head is a command bar, with the emblem in its locked cave-heading place
+   (SUIT-ALIVE-001). The views read as mono-capital tabs with the chosen one in red, and each block of a view is a
+   framed panel. What each view says, shows and does is unchanged. Sentences are 16 px or larger; only short
+   mono-capital labels and chart ticks are smaller, never under 10 px (Accessibility, amended 2026-11-14). */
+.cave { --cv-red: var(--p-red, #D0141B); --cv-line: var(--p-line-2, #292929); --cv-s1: var(--p-s1, #060606); --cv-cut: 12px;
+  --cv-quiet: color-mix(in srgb, var(--p-t1, #f2f2f2) 72%, var(--p-t2, #a8a8a8)); }
+
+/* The head: a command bar. */
+.cave .cave__head { padding: 8px 10px 8px 12px; background: var(--cv-s1); border: 1px solid var(--cv-line); border-left: 2px solid var(--cv-red); }
+.cave .cave__title { font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .16em; display: flex; align-items: center; flex-wrap: wrap; row-gap: 2px; }
+.cave .cave__title span { margin-left: 8px; color: var(--p-t2, #a8a8a8); }
+.cave .cave__back { font-family: var(--font-mono, monospace); font-size: 16px; }
+
+/* The views: mono capitals; the chosen view carries the red, as an active tab. */
+.cave .cave__tabs { margin-top: 8px; }
+.cave .cave__tab { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; }
+.cave .cave__tab[aria-pressed="true"] { border-bottom-color: var(--cv-red); }
+
+/* Each block of a view is a framed panel (nested blocks stay inside their parent's frame). */
+.cave .cave__block:not(.cave__block .cave__block) {
+  position: relative; margin-top: 8px; padding: 12px 12px 12px 14px; background: var(--cv-s1); border: 1px solid var(--cv-line);
+  clip-path: polygon(0 0, calc(100% - var(--cv-cut)) 0, 100% var(--cv-cut), 100% 100%, var(--cv-cut) 100%, 0 calc(100% - var(--cv-cut)));
+}
+.cave .cave__block:not(.cave__block .cave__block)::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--cv-red); border-top: 2px solid var(--cv-red); pointer-events: none;
+}
+.cave .cave__cap { font-size: 12px; font-weight: 600; color: var(--p-t1, #f2f2f2); }
+
+/* Numerals: the foundation's condensed figures. */
+.cave .cave__value { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 46px; letter-spacing: .01em; }
+.cave .cave__value small { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 16px; color: var(--cv-quiet); }
+
+/* Sentences at 16 px. */
+.cave .cave__sum, .cave .cave__facts, .cave .cave__feeds, .cave .cave__trace, .cave .cave__gm,
+.cave .cave__kv dt, .cave .cave__kv dd { font-size: 16px; }
+.cave .cave__axis { font-size: 10px; }

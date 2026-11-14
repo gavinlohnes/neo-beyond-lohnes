@@ -14,6 +14,7 @@ import { InsightsExplorer } from "../body/InsightsExplorer";
 import { getBodyInsights, type BodyInsights, type InsightMetric } from "../../../application/bodyInsightsQueries";
 import "./systems.css";
 import "../../charts/suitData.css";
+import "./caveFoundation.css";
 
 /**
  * SUIT-ALIVE S2 — the cave, Vitals. One reading in depth, read-only: value, last 14 finished lived days

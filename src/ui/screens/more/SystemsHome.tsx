@@ -3,6 +3,8 @@ import { ArrowUpRight, CalendarDays, ChevronRight, HardDriveDownload, MessageCir
 import { getSystemsOverview, type SystemsOverview } from "../../../application/systemsOverviewQueries";
 import { readAlfredKey } from "../../components/AlfredSheet";
 import "./systemsHome.css";
+import "./moreFoundation.css";
+import { CommandBar } from "../../foundation/primitives";
 
 /**
  * MORE-HOME-001 (Gavin, 2026-11-09: "Redo more", in the YOUR LIFE style): MORE opens like YOUR LIFE —
@@ -40,10 +42,14 @@ export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onB
 
   return (
     <div className="sys-home">
-      <section className="sys-hero" aria-labelledby="sys-home-title">
-        <p className="sys-eyebrow">{now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
-        <h2 id="sys-home-title">YOUR SYSTEMS.</h2>
-        <p className="sys-intro">Everything that keeps BEYOND running, in one place.</p>
+      {/* VISUAL-FOUNDATION-004 (Gavin, 2026-11-14): the hero is the foundation's command bar, as on BODY, TRAIN and TODAY.
+          YOUR SYSTEMS. stays the heading for screen readers; the purpose line, both actions and the status stay. */}
+      <section className="bf sys-hero sys-hero--bar" aria-labelledby="sys-home-title">
+        <h2 id="sys-home-title" className="visually-hidden">YOUR SYSTEMS.</h2>
+        <CommandBar eyebrow="MORE // SYSTEMS" context={<>
+          <p className="bf-bar__day" data-more-day><span className="bf-bar__date">{now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}</span></p>
+          <p className="sys-intro">Everything that keeps BEYOND running, in one place.</p>
+        </>} />
         <div className="sys-hero-actions">
           <button type="button" className="sys-primary" disabled={busy} onClick={onBackUp}><HardDriveDownload size={20} aria-hidden="true" />Back up my data</button>
           <button type="button" onClick={onSearch}><Search size={20} aria-hidden="true" />Find anything</button>
@@ -59,7 +65,7 @@ export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onB
         ))}
       </nav>
 
-      <section className="sys-section" aria-labelledby="sys-status-title">
+      <section className="bf sys-section sys-section--status" aria-labelledby="sys-status-title">
         <p className="sys-eyebrow">HOW THINGS ARE</p>
         <h3 id="sys-status-title">Status</h3>
         <ul className="sys-cards">
