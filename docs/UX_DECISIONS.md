@@ -2853,6 +2853,9 @@ Gavin approved rebuilding MORE's top in YOUR LIFE's guided style ("Redo more"). 
 status card per system (Backup, Garmin, Work schedule, Alfred, and Calendar when connected). Nothing is removed;
 every panel, command and route below is unchanged. Status shows only recorded facts. This amends MORE's primary
 information architecture. [Brief](agent/MORE-HOME-001.md).
+**Amended 2026-11-14 (VISUAL-FOUNDATION-004):** the hero is now the foundation's command bar (MORE // SYSTEMS, the
+date, the purpose line). YOUR SYSTEMS. stays the screen-reader heading; both actions, the areas and the status cards
+(now framed panels) are unchanged in content and order.
 
 
 ## DATA-HOME-001 — DATA opens like YOUR LIFE and MORE (owner approval 2026-11-09)
@@ -3212,4 +3215,25 @@ composition** (FIELD-AUTHORITY-001, LIFE-STATE-001) as follows, and nothing else
 - **Sizes:** the restyled parts keep the amended 16 px rule, and so does BODY's dashboard now (see Accessibility).
 - **Unchanged:** recommendation selection and authority, wording, actions, the check-in path, the day map's marks, the
   band's content, Engine, schema, commands and every other screen.
+
+## VISUAL-FOUNDATION-004 — MORE and THE CAVE on the foundation (owner approval 2026-11-14)
+
+Gavin, on "MORE and the cave … headers onto the same command bar, tiles into framed panels": "Let's get to work. Amaze
+me." Brief: [agent/VISUAL-FOUNDATION-004.md](agent/VISUAL-FOUNDATION-004.md).
+
+- **MORE:**
+  - the hero is the command bar, with no action of its own;
+  - Back up my data, Find anything, the areas grid and every panel below are unchanged;
+  - HOW THINGS ARE's status cards are framed panels (amends MORE-HOME-001's look, not its content).
+- **THE CAVE:**
+  - **Head:** a command bar. The emblem stays in its locked cave-heading place (SUIT-ALIVE-001).
+  - **Views:** mono-capital tabs, with the chosen view in red as the active tab.
+  - **Framed panels:** every view's blocks. ROUTE's stops, LOG's lines, and BRIEF's poll and after-action table are
+    one panel each.
+  - **Unchanged:** what every view says, shows and does.
+- **Sizes:** sentences in MORE and the cave are 16 px.
+  - **One wording split:** VITALS' trend caption becomes a short label ("Last 14 finished days") plus a 16 px legend
+    sentence.
+  - **Exception, recorded here:** FILE's run table, MONTH's day grid and REVIEW's embedded rotation map keep their
+    compact table and chart labels. They are dense data views; a later slice can revisit them.
 

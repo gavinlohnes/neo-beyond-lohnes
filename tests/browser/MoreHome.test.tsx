@@ -17,7 +17,9 @@ describe("MORE-HOME-001", () => {
     await page.viewport(360, 780);
     const before = await db.events.count();
     const screen = await render(<MoreScreen />);
-    await expect.element(screen.getByRole("heading", { name: "YOUR SYSTEMS.", exact: true })).toBeVisible();
+    // VISUAL-FOUNDATION-004: the hero is the command bar; YOUR SYSTEMS. stays the screen-reader heading.
+    await expect.element(screen.getByRole("heading", { name: "YOUR SYSTEMS.", exact: true })).toBeInTheDocument();
+    await expect.element(screen.getByText("MORE // SYSTEMS", { exact: false })).toBeVisible();
     await expect.element(screen.getByRole("button", { name: "Back up my data", exact: true })).toBeVisible();
     // Nothing recorded yet: status says so, never "fine".
     await expect.element(screen.getByRole("article", { name: "Backup" }).getByText("No backup on record yet.")).toBeVisible();
@@ -38,7 +40,9 @@ describe("MORE-HOME-001", () => {
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const el = node.parentElement!;
       if (!node.textContent?.trim() || el.closest(".visually-hidden")) continue;
-      if (parseFloat(getComputedStyle(el).fontSize) < 16) small.push(node.textContent.trim());
+      // Accessibility (amended 2026-11-14): short mono-capital labels may be smaller, never under 10 px.
+      const t = node.textContent.trim(), isLabel = (t === t.toUpperCase() || getComputedStyle(el).textTransform === "uppercase") && t.length <= 24;
+      if (parseFloat(getComputedStyle(el).fontSize) < (isLabel ? 10 : 16)) small.push(t);
     }
     expect(small).toEqual([]);
     expect(await db.events.count()).toBe(before);

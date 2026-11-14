@@ -14,6 +14,7 @@ import { InsightsExplorer } from "../body/InsightsExplorer";
 import { getBodyInsights, type BodyInsights, type InsightMetric } from "../../../application/bodyInsightsQueries";
 import "./systems.css";
 import "../../charts/suitData.css";
+import "./caveFoundation.css";
 
 /**
  * SUIT-ALIVE S2 — the cave, Vitals. One reading in depth, read-only: value, last 14 finished lived days
@@ -123,7 +124,9 @@ function CaveVitals({ id, onPick, onOpenMetric }: {
           <button type="button" className="btn-secondary" onClick={() => askAlfred(`About my ${TITLE[shown.id].toLowerCase()}: ${describeCaveVital(shown)} What's behind it, and what would help?`)}>ASK ALFRED</button>
         </div>
         <section className="cave__block" aria-labelledby="cave-trend">
-          <h3 id="cave-trend" className="cave__cap">Last {shown.trend.length} finished days · band is your usual {shown.usual.dayKind === "WORK" ? "on work days" : shown.usual.dayKind === "OFF" ? "on days off" : ""} · dashed is your median</h3>
+          <h3 id="cave-trend" className="cave__cap">Last {shown.trend.length} finished days</h3>
+          {/* VISUAL-FOUNDATION-004: the legend is a sentence (16 px), not part of the short label. */}
+          <p className="cave__legend">Band is your usual{shown.usual.dayKind === "WORK" ? " on work days" : shown.usual.dayKind === "OFF" ? " on days off" : ""} · dashed is your median.</p>
           <Trend vital={shown} />
         </section>
         <section className="cave__block" aria-labelledby="cave-pos">

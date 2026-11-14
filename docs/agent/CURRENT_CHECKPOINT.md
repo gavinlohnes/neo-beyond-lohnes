@@ -1,3 +1,50 @@
+# Builder takeover — current truth (2026-11-14)
+
+Owner explicitly handed implementation from usage-limited Claude Code to Codex. No competing branch or PR;
+no merge authorized. This entry supersedes stale status below; older entries remain historical evidence.
+
+- **Fetched master:** `e12092871d0cee4a1b551f428a013de1332ae833` (VISUAL-FOUNDATION-002, #516).
+  Foundation slice 1 (#515) and TRAIN slice 2 (#516) are merged.
+- **TODAY foundation (merged):** [PR #517](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/517), branch
+  `ccr-88f5c085-today-deck`, head `87d501013e6773698fa4348761064edded5b5cf3`.
+  Gavin merged TODAY into master at `ebfc9881`. Its approved decisions and foundation styles are now
+  integrated into this existing MORE/cave branch; both decision entries are preserved in the conflict resolution.
+  Non-blocking missing-Garmin-caption colour finding remains; do not mix TODAY into the MORE/cave branch.
+- **Current objective:** finish verification/handoff for VISUAL-FOUNDATION-004 on its existing branch
+  `ccr-88f5c085-more-cave`, [PR #518](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/518).
+  Recovered implementation head `98904aefb08dc3501039f0273128561d3bd4f593`.
+  All planned implementation is pushed. Independent review BLOCK found an inherited viewport rule forcing
+  two status columns below the approved 560 px container breakpoint. Codex is correcting that bounded finding
+  with computed-column regression coverage (fails before the fix at a 768 px viewport); renewed exact-head
+  review and final-head CI are required. TODAY integration required resolving only the appended UX decision
+  entries; both approved entries are retained in slice order. Combined TODAY/BODY/MORE/cave Chromium
+  verification: 40 PASS; architecture, TypeScript and production/PWA build PASS. New-head review/CI pending.
+  Codex owns the takeover verification and handoff; Claude authored the recovered implementation.
+- **Preserved research and next pilot:** existing branch `ccr-88f5c085-metric-pilot`, committed head
+  `e63a6659a3b3097b39482f9cfa4d38db15371eff`, no open PR. Contains CHP-001, HARVEST-001 and
+  hydration/steps pilot code and tests. CHP-001 preserves all three approved refinements: inspect locked
+  decisions, record reuse licences, save/index harvests. The harvest records pilot approval and lifestyle-logging
+  parity gaps. No uncommitted Claude workspace is available here, so additional unpushed work cannot be recovered.
+  The capability-map index and durable pilot brief/checkpoint still need completing on that branch.
+- **Sequence:** renewed review/CI of MORE/cave after integrating merged TODAY; Gavin merges MORE/cave; fetch master and
+  resume the existing pilot branch, reconcile its shared seed and approved foundation styling, verify and open
+  its one PR. Do not expand the pilot beyond hydration and steps.
+- **Other open PRs:** #473 comparison is described as included in merged #474; #482 is an old check-in fix.
+  Neither is the current visual-foundation objective; left untouched rather than closing or merging.
+- **Takeover verification:** architecture PASS; TypeScript and production/PWA build PASS. Remote PR #517
+  and #518 CI both completed successfully at their recovered heads. Full local Node/Chromium verification
+  was interrupted after browser progress stalled; separate full Node verification passed (2278 passed,
+  1 skipped), and 32 focused MORE/cave browser checks passed. Results are recorded on PR #518.
+  The follow-up corrects only the reviewer-found responsive grid and adds its regression assertion.
+  Final-head CI and renewed independent review remain required.
+- **Review:** independent reviewer Huygens posted BLOCK on the recovered head, with architecture/type/build
+  and 47 focused browser tests passing. Reviewer capability became available in the follow-up session.
+  Responsive-grid correction: 32 focused Chromium tests PASS, architecture and TypeScript/production/PWA
+  build PASS. Renewed independent exact-head review is requested after pushing the correction.
+  Review verdict and final verification are maintained on PR #518; Gavin remains the merger.
+
+---
+
 # Owner working rhythm (Gavin, 2026-11-11: "Yes, adopt that as the standing rule")
 
 Applies to every Builder session. It sits inside DEV-FLOW-002 and changes none of its rules.
@@ -3619,4 +3666,24 @@ Brief: [VISUAL-FOUNDATION-003.md](VISUAL-FOUNDATION-003.md). Branch `ccr-88f5c08
   1. independent exact-head review;
   2. Gavin merges.
 - **Later, each with Gavin's go:** MORE and the cave's headers on the command bar.
+
+---
+
+# VISUAL-FOUNDATION-004 — MORE and THE CAVE on the foundation (Gavin, 2026-11-14: "Amaze me")
+
+Brief: [VISUAL-FOUNDATION-004.md](VISUAL-FOUNDATION-004.md). Branch `ccr-88f5c085-more-cave`.
+
+- **What it does:**
+  - MORE opens on the command bar, and its status cards are framed panels;
+  - the cave's head is a command bar, its tabs are mono capitals with the chosen one in red, and its blocks are
+    framed panels;
+  - sentences are 16 px, except FILE's run table, MONTH's grid and the rotation map, which are recorded as an
+    exception.
+- **Next:**
+  1. independent review;
+  2. Gavin merges after VISUAL-FOUNDATION-003 (#517).
+- **CHP-001 (Capability Harvest Protocol, Gavin):**
+  - **First harvest:** the numbers subsystem.
+  - **Recommended mission:** METRIC-PAGE-001, one metric page used everywhere, with a 90-day direction line.
+  - **Status:** awaiting Gavin's go.
 
