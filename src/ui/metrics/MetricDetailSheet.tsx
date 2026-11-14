@@ -6,6 +6,7 @@ import { LogSheet } from "../components/LogSheet";
 import { SourceTag } from "../foundation/primitives";
 import { describeGarminAsOf, SyncGarminLink, UnusualNote } from "../screens/today/MeasuredSheet";
 import { askAlfred } from "../components/AlfredSheet";
+import { garminFreshness } from "../../application/bodyDashboard";
 import "../foundation/foundation.css";
 import "./metricDetail.css";
 
@@ -95,6 +96,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
   refreshKey?: number;
 }) {
   const [detail, setDetail] = useState<MetricDetail | null | "ERROR">(null);
+  const [attempt, setAttempt] = useState(0);
   const [range, setRange] = useState<DetailRange>("today");
   const [selected, setSelected] = useState<number | null>(null);
   useEffect(() => { if (open) { setRange("today"); setSelected(null); } }, [open, metric]);
@@ -104,26 +106,30 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
     setDetail(null);
     void getMetricDetail(metric).then((d) => { if (live) setDetail(d); }, () => { if (live) setDetail("ERROR"); });
     return () => { live = false; };
-  }, [open, metric, refreshKey]);
+  }, [open, metric, refreshKey, attempt]);
 
-  const d = detail && detail !== "ERROR" ? detail : null;
+  const d = detail && detail !== "ERROR" && detail.metric === metric ? detail : null;
   const garmin = d?.source === "GARMIN";
+  const fresh = garmin && d ? garminFreshness(d.asOf, d.readAt) : null;
   const values = d && range !== "today" ? rangeValues(d.series, range, WEEK_MODE[metric]) : [];
   const index = selected ?? values.length - 1;
   const byWeek = range === "1y";
   const label = (v: PeriodValue) => `${byWeek ? week(v.from) : day(v.from)} · ${v.value === null ? NOUN[metric].none : `${withUnit(metric, v.value)}${byWeek ? (WEEK_MODE[metric] === "sum" ? " that week" : " a logged day") : ""}`}${v.partial ? " so far" : ""}`;
-  const sum = summarise(values.filter((v) => !v.partial));
+  // Water's yearly headline weighs each logged day equally, even when weeks have different coverage.
+  const dailyYear = byWeek && metric === "water";
+  const summaryValues = dailyYear ? d?.series.slice(-52 * 7) ?? [] : values;
+  const sum = summarise(summaryValues.filter((v) => !v.partial));
   const todayValue = d?.series.at(-1)?.value ?? null;
   // Close first, then follow the route once focus is back on the tile that opened the page, so that route's BACK
   // returns there (the shell remembers the focused element as the origin).
   const go = (fn?: () => void) => (fn ? () => { onClose(); requestAnimationFrame(() => requestAnimationFrame(fn)); } : undefined);
 
   return <LogSheet open={open} title={TITLE[metric]} onClose={onClose}>
-    {!open ? null : detail === "ERROR" ? <p role="alert" className="md-meta">Couldn't read {TITLE[metric].toLowerCase()}. Your records are unchanged.</p>
+    {!open ? null : detail === "ERROR" ? <div><p role="alert" className="md-meta">Couldn't read {TITLE[metric].toLowerCase()}. Your records are unchanged.</p><button type="button" className="md-act" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></div>
       : !d ? <p role="status" className="md-meta">Reading…</p>
       : <div className="bf md" data-metric={metric}>
       <div className="md-source">
-        <SourceTag garmin={garmin}>{garmin ? "GARMIN" : "LOGGED"}</SourceTag>
+        <SourceTag garmin={garmin}>{garmin ? (fresh?.stale ? "GARMIN · OLD" : "GARMIN") : "LOGGED"}</SourceTag>
         <span className="md-meta">{garmin ? (d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin data yet.") : "Your logs. Garmin hydration isn't imported."}</span>
       </div>
 
@@ -140,7 +146,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
           : (d.today.points.length > 1 ? <StepsRunning today={d.today} usual={d.usual.value} /> : <p className="md-meta">No steps measured yet this lived day. Send from the helper to update.</p>)}
       </> : <>
         <p className="md-hero" data-md-hero><b>{sum.average === null ? "—" : fmt(sum.average)}</b> <span>{byWeek ? (WEEK_MODE[metric] === "sum" ? "steps a week, on average" : "oz a logged day, on average") : `${NOUN[metric].unit} a day, on average`}</span></p>
-        <p className="md-meta" data-md-coverage>{sum.recorded} of {sum.total} {byWeek ? "weeks" : "finished days"} {garmin ? "measured" : "logged"}{sum.total - sum.recorded ? ` · ${sum.total - sum.recorded} ${NOUN[metric].none}, left out` : ""} · this lived day not counted</p>
+        <p className="md-meta" data-md-coverage>{sum.recorded} of {sum.total} {byWeek && !dailyYear ? "finished weeks" : "finished days"} {garmin ? "measured" : "logged"}{sum.total - sum.recorded ? ` · ${sum.total - sum.recorded} ${NOUN[metric].none}, left out` : ""} · {byWeek && !dailyYear ? "week in progress" : "this lived day"} not counted</p>
         <Bars metric={metric} values={values} selected={index} onSelect={setSelected} label={label} usual={byWeek && WEEK_MODE[metric] === "sum" ? null : d.usual.value} />
         <p className="md-readout" aria-live="polite">{label(values[index]!)}</p>
         <details className="md-table"><summary>Show as table</summary>

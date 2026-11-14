@@ -39,7 +39,10 @@ export function ModeHeader({
   marks,
   onOpenSleepPlan,
   markActions,
+  eyebrow,
 }: {
+  /** VISUAL-FOUNDATION-003: the foundation's red slashes and the date, above the mode. */
+  eyebrow?: string | undefined;
   /** DAY-MAP-001 slice 3: where each kind of mark opens (its existing screen). Kinds left out are facts only. */
   markActions?: Partial<Record<PlacedMark["kind"], { label: string; open: () => void }>> | undefined;
   /** DAY-MAP-001 slice 2: opens ROUTE's shift sleep plan (the cards, sources, SAVE/SKIP). */
@@ -109,6 +112,7 @@ export function ModeHeader({
 
   return (
     <section className={`mode-header cc-mode${scheduledPhase ? "" : " cc-mode--thin"}`} data-mode={mode ?? "UNSET"} aria-label="Mode">
+      {eyebrow && <p className="mode-header__eyebrow" data-today-date><span className="bf-slashes" aria-hidden="true">///</span>{` ${eyebrow}`}</p>}
       <button
         ref={trigger}
         type="button"

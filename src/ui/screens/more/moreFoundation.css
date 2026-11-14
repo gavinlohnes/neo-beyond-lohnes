@@ -1,0 +1,25 @@
+/* VISUAL-FOUNDATION-004 (Gavin, 2026-11-14): MORE's first view on BEYOND's visual foundation
+   (src/ui/foundation/foundation.css). The hero becomes the command bar; each system's status is a framed panel. The
+   areas grid (SHORTCUT-GRID-001) and everything below are unchanged. Sentences, buttons and inputs stay 16 px or
+   larger (Accessibility, amended 2026-11-14). */
+.sys-hero.sys-hero--bar { padding: 0 0 16px; border-bottom: 0; display: grid; gap: 12px; }
+.sys-hero--bar .sys-intro { margin: 0; font-size: 16px; line-height: 1.35; color: var(--p-t2, #a8a8a8); }
+.sys-hero--bar .bf-bar__date { font-size: 12px; }
+
+/* HOW THINGS ARE: one framed panel per system, the foundation's eyebrow above them. */
+.sys-section--status { border-bottom: 0; container-type: inline-size; }
+.sys-section--status > .sys-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); margin-bottom: 4px; }
+.sys-section--status > .sys-eyebrow::before { content: "/// " / ""; color: var(--bf-red); letter-spacing: -.05em; }
+/* Override the legacy viewport rule: only the status container can opt into two columns. */
+.sys-section--status .sys-cards { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.sys-section--status .sys-cards li { border-top: 0; }
+.sys-section--status .sys-card {
+  position: relative; height: 100%; box-sizing: border-box; padding: 12px 12px 12px 14px; background: var(--bf-s1); border: 1px solid var(--bf-line);
+  clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut)));
+}
+.sys-section--status .sys-card::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+.sys-section--status .sys-card__icon { color: var(--p-t1, #f2f2f2); }
+.sys-section--status .sys-card h4 { font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; line-height: 1.6; color: var(--p-t1, #f2f2f2); }
+.sys-section--status .sys-card p { color: var(--bf-quiet); }
+.sys-section--status .sys-card button { font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .06em; }
+@container (min-width: 560px) { .sys-section--status .sys-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }

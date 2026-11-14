@@ -78,7 +78,7 @@ function StageBar({ intervals, from, to }: { intervals: readonly { from: number;
 
 export function BodyDashboard(p: BodyDashboardProps) {
   const [extras, setExtras] = useState<BodyDashboardExtras | null>(null);
-  // Steps and resting HR open GARMIN-004's own detail sheet (today, 7D, 4W, 1Y, table view).
+  // Resting HR keeps GARMIN-004's detail sheet; the pilot shares hydration/steps inspection.
   const [measuredOpen, setMeasuredOpen] = useState<"steps" | "resting" | null>(null);
   // METRIC-PAGE-001 (pilot): hydration and steps open their metric page; water history stays one tap further.
   const [detailOpen, setDetailOpen] = useState<DetailMetric | null>(null);

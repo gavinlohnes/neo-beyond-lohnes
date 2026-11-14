@@ -1,0 +1,73 @@
+/* VISUAL-FOUNDATION-003 (Gavin, 2026-11-14; Protected, approved): TODAY's first view in BEYOND's visual foundation
+   (src/ui/foundation/foundation.css, docs/agent/VISUAL-FOUNDATION-001.md). The skyline mode header stays the horizon,
+   with the date above the mode. The day's band, the next step and the numbers sit in framed panels: cut corners and
+   the red bracket for structure. Garmin's readings wear Garmin blue; your own logs are white. Sentences are 16 px or
+   larger; only short mono-capital labels are smaller (Accessibility, amended 2026-11-14). Presentation only: what
+   shows, its order within each part, its wording and every action are unchanged. */
+.today-field.redesign-today { --tf-red: var(--p-red, #D0141B); --tf-line: var(--p-line-2, #292929); --tf-s1: var(--p-s1, #060606); --tf-garmin: #3987e5; --tf-cut: 12px;
+  --tf-quiet: color-mix(in srgb, var(--p-t1, #f2f2f2) 72%, var(--p-t2, #a8a8a8)); }
+
+/* The date above the mode: the foundation's eyebrow. */
+.today-field.redesign-today .mode-header__eyebrow { margin: 0 0 2px; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); }
+
+/* A framed panel, as the foundation's: near-black, a 1 px line, two cut corners, the red bracket. */
+.today-field.redesign-today .today-life-state,
+.today-field.redesign-today .console-guidance {
+  position: relative; margin: 8px 0 0; padding: 12px 12px 12px 14px; background: var(--tf-s1); border: 1px solid var(--tf-line);
+  clip-path: polygon(0 0, calc(100% - var(--tf-cut)) 0, 100% var(--tf-cut), 100% 100%, var(--tf-cut) 100%, 0 calc(100% - var(--tf-cut)));
+}
+.today-field.redesign-today .today-life-state::before,
+.today-field.redesign-today .console-guidance::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--tf-red); border-top: 2px solid var(--tf-red); pointer-events: none;
+}
+.today-field.redesign-today .console-guidance:empty { display: none; }
+
+/* The band: its sentences at 16 px; its labels stay mono capitals. */
+.today-field.redesign-today .today-life-state__line,
+.today-field.redesign-today .today-life-state__moment,
+.today-field.redesign-today .today-life-state__next,
+.today-field.redesign-today .today-life-state__since { font-size: 16px; }
+
+/* The week strip: cut-corner day cells; today carries the red bracket. */
+.today-field.redesign-today .today-week-strip__day { background: var(--p-s2, #0a0a0a);
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px)); }
+.today-field.redesign-today .today-week-strip__day[aria-current="date"] { border-color: var(--tf-line); background: var(--tf-s1); color: var(--p-t1, #f2f2f2);
+  box-shadow: inset 2px 2px 0 var(--tf-red); }
+.today-field.redesign-today .today-week-strip__wd { font-size: 11px; letter-spacing: .12em; }
+.today-field.redesign-today .today-week-strip__num { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 16px; }
+
+/* The numbers: AT A GLANCE as an eyebrow with the red slashes, then one framed panel per reading, two across. */
+.today-field.redesign-today .today-numbers { margin-top: 16px; container-type: inline-size; }
+.today-field.redesign-today .cc-numbers-head h2 { font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); }
+.cc-numbers-head .cc-slashes { display: none; }
+.today-field.redesign-today .cc-numbers-head .cc-slashes { display: inline; color: var(--tf-red); letter-spacing: -.05em; }
+.today-field.redesign-today .today-numbers .cc-fuel { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; background: none; border: 0; margin-top: 8px; }
+.today-field.redesign-today .today-numbers .cc-fuel > button,
+.today-field.redesign-today .today-numbers .cc-fuel > .cc-fuel-wide {
+  position: relative; grid-column: auto; min-height: 92px; padding: 10px 10px 10px 12px; gap: 4px; background: var(--tf-s1); border: 1px solid var(--tf-line);
+  clip-path: polygon(0 0, calc(100% - var(--tf-cut)) 0, 100% var(--tf-cut), 100% 100%, var(--tf-cut) 100%, 0 calc(100% - var(--tf-cut)));
+}
+.today-field.redesign-today .today-numbers .cc-fuel > button::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 14px; height: 14px; border-left: 2px solid var(--tf-red); border-top: 2px solid var(--tf-red); pointer-events: none;
+}
+/* An odd last reading takes the whole row, so the grid never ends on a hole. */
+.today-field.redesign-today .today-numbers .cc-fuel > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* POLISH-002 (locked): readings keep the mono face and labels the display face; the foundation sets their size. */
+.today-field.redesign-today .today-numbers .cc-num { font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .01em; }
+.today-field.redesign-today .today-numbers .cc-num small { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 16px; letter-spacing: 0; color: var(--tf-quiet); }
+.today-field.redesign-today .today-numbers .cc-flab { font-size: 11px; letter-spacing: .12em; }
+.today-field.redesign-today .today-numbers .cc-fuel > button > .cc-flab:first-child { color: var(--p-t1, #f2f2f2); font-weight: 600; }
+/* Garmin's watch readings: their caption in Garmin blue (GARMIN-004). The dimmed "steady" state is kept as it was. */
+.today-field.redesign-today .today-numbers .cc-fuel > button[data-source="garmin"] > .cc-flab:last-child:not(.cc-flab--unusual) { color: var(--tf-garmin); }
+@container (max-width: 279px) { .today-field.redesign-today .today-numbers .cc-fuel { grid-template-columns: minmax(0, 1fr); } }
+/* When the next step is a recommendation card, the card is the panel: no second frame around it. It keeps its own
+   frame and gains the bracket. */
+.today-field.redesign-today .console-guidance:has(> .next-action-card) { padding: 0; background: none; border: 0; clip-path: none; }
+.today-field.redesign-today .console-guidance:has(> .next-action-card)::before { content: none; }
+.today-field.redesign-today .console-guidance > .next-action-card { position: relative; }
+.today-field.redesign-today .console-guidance > .next-action-card::after {
+  content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--tf-red); border-top: 2px solid var(--tf-red); pointer-events: none;
+}
+/* The one system signal line under the numbers is a button: 16 px at every width. */
+.today-field.redesign-today .today-numbers .today-system-signal,
+.today-field.redesign-today .today-numbers .today-system-signal * { font-size: 16px; }

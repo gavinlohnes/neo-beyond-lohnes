@@ -116,6 +116,8 @@ import { SmallSteps } from "./SmallSteps";
 import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
 import type { DetailMetric } from "../../../application/metricDetail";
 import "./smallSteps.css";
+import "../../foundation/foundation.css";
+import "./todayFoundation.css";
 import {
   startDay,
   ensureActiveDay,
@@ -2180,7 +2182,7 @@ export function TodayScreen({
     return (
       <>
         <div className="cc-lbl cc-numbers-head">
-          <h2>AT A GLANCE</h2>
+          <h2><span className="cc-slashes" aria-hidden="true">/// </span>AT A GLANCE</h2>
           <span className="cc-numbers-actions">
             {garminTiles && <SyncGarminLink />}
             {onOpenBody && <button type="button" className="cc-see-all" disabled={busy} onClick={() => onOpenBody()}>SEE ALL</button>}
@@ -2203,16 +2205,16 @@ export function TodayScreen({
             `Water ${minimumDayHydrateOz} oz${paceWords(waterPace)}`, steady(waterPace))}
           {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
             <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
-          {garminTiles ? <button type="button" className={measured!.usual.sleep.value !== null && !measured!.unusual.sleep && visibleSleep ? "cc-steady" : undefined} disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}${measured!.unusual.sleep ? unusualAria(measured!.unusual.sleep) : ""}, open sleep`} onClick={openMeasured("sleep")}>
+          {garminTiles ? <button type="button" data-source={sleepSource === "GARMIN" ? "garmin" : undefined} className={measured!.usual.sleep.value !== null && !measured!.unusual.sleep && visibleSleep ? "cc-steady" : undefined} disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}${measured!.unusual.sleep ? unusualAria(measured!.unusual.sleep) : ""}, open sleep`} onClick={openMeasured("sleep")}>
             <span className="cc-flab">SLEEP</span><span className="cc-num"><b>{visibleSleep ?? "—"}</b></span><span className={`cc-flab${measured!.unusual.sleep ? " cc-flab--unusual" : ""}`}>{measured!.unusual.sleep ? unusualTileLabel(measured!.unusual.sleep) : sleepSource}</span>
           </button> : tile("sleep", "SLEEP", <b>{sleep ?? "—"}</b>, <span className="cc-flab">{sleep ? "LAST MAIN" : "NOT LOGGED"}</span>,
             sleep ? `Main sleep ${sleep}` : "Main sleep not logged")}
           {garminTiles && <>
-            <button type="button" className={[calorieTile ? "cc-fuel-wide" : "", measured!.usual.steps.value !== null && !measured!.unusual.steps && stepsToday !== null ? "cc-steady" : ""].filter(Boolean).join(" ") || undefined} disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}${measured!.unusual.steps ? unusualAria(measured!.unusual.steps) : ""}, open steps`} onClick={openMeasured("steps")}>
+            <button type="button" data-source="garmin" className={[calorieTile ? "cc-fuel-wide" : "", measured!.usual.steps.value !== null && !measured!.unusual.steps && stepsToday !== null ? "cc-steady" : ""].filter(Boolean).join(" ") || undefined} disabled={busy} aria-label={`Steps ${stepsToday === null ? "not measured today" : stepsToday.toLocaleString("en-US")}${measured!.usual.steps.value !== null ? `, usual ${measured!.usual.steps.value.toLocaleString("en-US")}` : ""}${measured!.unusual.steps ? unusualAria(measured!.unusual.steps) : ""}, open steps`} onClick={openMeasured("steps")}>
               <span className="cc-flab">STEPS</span><span className="cc-num"><b>{stepsToday === null ? "—" : stepsToday.toLocaleString("en-US")}</b></span>
               <span className={`cc-flab${measured!.unusual.steps ? " cc-flab--unusual" : ""}`}>{measured!.unusual.steps ? unusualTileLabel(measured!.unusual.steps) : measured!.usual.steps.value !== null ? `USUAL ${measured!.usual.steps.value.toLocaleString("en-US")}` : stepsToday === null ? "NOT MEASURED" : "GARMIN"}</span>
             </button>
-            <button type="button" className={measured!.usual.resting.value !== null && !measured!.unusual.resting && restingToday !== null ? "cc-steady" : undefined} disabled={busy} aria-label={`Resting heart rate ${restingToday === null ? "not measured" : `${restingToday} bpm`}${measured!.usual.resting.value !== null ? `, usual ${measured!.usual.resting.value}` : ""}${measured!.unusual.resting ? unusualAria(measured!.unusual.resting) : ""}, open resting heart rate`} onClick={openMeasured("resting")}>
+            <button type="button" data-source="garmin" className={measured!.usual.resting.value !== null && !measured!.unusual.resting && restingToday !== null ? "cc-steady" : undefined} disabled={busy} aria-label={`Resting heart rate ${restingToday === null ? "not measured" : `${restingToday} bpm`}${measured!.usual.resting.value !== null ? `, usual ${measured!.usual.resting.value}` : ""}${measured!.unusual.resting ? unusualAria(measured!.unusual.resting) : ""}, open resting heart rate`} onClick={openMeasured("resting")}>
               <span className="cc-flab">RESTING HR</span><span className="cc-num"><b>{restingToday ?? "—"}</b>{restingToday !== null && <small>bpm</small>}</span>
               <span className={`cc-flab${measured!.unusual.resting ? " cc-flab--unusual" : ""}`}>{measured!.unusual.resting ? unusualTileLabel(measured!.unusual.resting) : measured!.usual.resting.value !== null ? `USUAL ${measured!.usual.resting.value}` : restingToday === null ? "NOT MEASURED" : "GARMIN"}</span>
             </button>
@@ -2730,6 +2732,7 @@ export function TodayScreen({
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
+            eyebrow={now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}
             run={bandCarriesRun ? null : todayRun}
             // DAY-MAP-001: like the band, the map steps aside while an operation owns the screen, so RESUME stays above the fold.
             marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart).map((m) => (!m.planned && freshMarks.has(markKey(m)) ? { ...m, fresh: true as const } : m)) : undefined}
@@ -2805,10 +2808,8 @@ export function TodayScreen({
           onSave={async (item) => { await createObligation({ title: item.title, plannedAt: contractDate(new Date()), description: item.description }); }}
           onSaved={() => void refresh()} />
       </section>}
-    {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
-        wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
-    {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
-    {(lifeState === "WORK_RUN" || lifeState === "FLIP" ? ["support", "life"] : ["life", "support"]).map((part) => <Fragment key={part}>{part === "support" ? supportSection : lifeLink}</Fragment>)}
+    {/* VISUAL-FOUNDATION-003 (Gavin, 2026-11-14, Protected, approved): the numbers come right after the day's next step
+        (and the after-the-run report); the preparation/life order below them is LIFE-STATE-001's, unchanged. */}
     <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"
@@ -2824,6 +2825,10 @@ export function TodayScreen({
       </button>}
 
     </section>
+    {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
+        wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
+    {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
+    {(lifeState === "WORK_RUN" || lifeState === "FLIP" ? ["support", "life"] : ["life", "support"]).map((part) => <Fragment key={part}>{part === "support" ? supportSection : lifeLink}</Fragment>)}
     {brief}
     <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} />
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>

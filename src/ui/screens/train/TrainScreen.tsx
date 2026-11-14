@@ -1287,8 +1287,11 @@ export function TrainScreen({
             <Panel headingId="train-week" icon={<CalendarDays size={18} />} label="THIS WEEK" source={trainHome?.anyTraining ? <SourceTag>LOGGED</SourceTag> : null}
               onOpen={() => openTrainView("HISTORY")} openLabel="Open training history" data={{ "data-train": "week" }}>
               {thisWeek && trainHome?.anyTraining ? <>
-                <p className="bf-value">{thisWeek.sessions}<small> {thisWeek.sessions === 1 ? "session" : "sessions"}</small></p>
-                <p className="train-num-meta">{thisWeek.sets} working {thisWeek.sets === 1 ? "set" : "sets"}</p>
+                {/* Review of #516 (DENSITY-001): an empty week says so in words, as the weekly check-in does. */}
+                {thisWeek.sessions > 0 ? <>
+                  <p className="bf-value">{thisWeek.sessions}<small> {thisWeek.sessions === 1 ? "session" : "sessions"}</small></p>
+                  <p className="train-num-meta">{thisWeek.sets} working {thisWeek.sets === 1 ? "set" : "sets"}</p>
+                </> : <p className="bf-value"><span className="bf-none">No workouts this week.</span></p>}
                 <Sparkline values={weekly} tone="own" />
                 <p className="train-num-meta">Sets by week, last 8</p>
               </> : <p className="bf-value"><span className="bf-none">No sessions yet</span></p>}

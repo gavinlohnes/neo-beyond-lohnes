@@ -1,4 +1,4 @@
-import type { PeriodValue } from "../domain/health/measuredSeries";
+import { weekly, type PeriodValue } from "../domain/health/measuredSeries";
 import { BASELINE_MIN_SAMPLES, median } from "../domain/health/baselines";
 
 /**
@@ -27,14 +27,7 @@ export function dailySeries(periods: readonly { dayId: string | null; from: numb
 export function rangeValues(series: readonly PeriodValue[], range: Exclude<DetailRange, "today">, mode: "mean" | "sum"): PeriodValue[] {
   if (range === "7d") return series.slice(-7);
   if (range === "30d") return series.slice(-30);
-  const year = series.slice(-52 * 7);
-  const groups: PeriodValue[][] = [];
-  for (let end = year.length; end > 0; end -= 7) groups.unshift(year.slice(Math.max(0, end - 7), end));
-  return groups.map((group) => {
-    const present = group.flatMap((v) => (v.value === null ? [] : [v.value]));
-    const value = !present.length ? null : mode === "sum" ? present.reduce((a, b) => a + b, 0) : Math.round(present.reduce((a, b) => a + b, 0) / present.length);
-    return { dayId: null, from: group[0]!.from, to: group.at(-1)!.to, value, partial: group.some((v) => v.partial) };
-  });
+  return weekly(series.slice(-52 * 7), mode);
 }
 
 /** Average of the recorded values (missing ones left out), and how many were recorded. */

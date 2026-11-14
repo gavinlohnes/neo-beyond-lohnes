@@ -217,7 +217,13 @@ describe("MORE-OPERATOR-001", () => {
     await expect.element(screen.getByRole("button", { name: "CHECK A BACKUP" })).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     const smallText = Array.from(screen.container.querySelectorAll<HTMLElement>("p, h1, h2, button, summary, a, select"))
-      .filter((element) => element.checkVisibility() && Number.parseFloat(getComputedStyle(element).fontSize) < 16)
+      // Accessibility (amended 2026-11-14): short mono-capital labels may be smaller, never under 10 px.
+      .filter((element) => {
+        if (!element.checkVisibility()) return false;
+        const t = element.textContent?.trim() ?? "", cs = getComputedStyle(element), size = Number.parseFloat(cs.fontSize);
+        const isLabel = (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
+        return size < (isLabel ? 10 : 16);
+      })
       .map((element) => element.textContent);
     expect(smallText).toEqual([]);
   });

@@ -3,10 +3,17 @@ import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
 import "../../src/ui/styles/fonts";
+import { getMetricDetail } from "../../src/application/metricDetailQueries";
+import { MetricDetailSheet } from "../../src/ui/metrics/MetricDetailSheet";
 import { App } from "../../src/app/App";
 import { logWater } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 import { seedLivedMonth, MONTH_FIRST_DAY, MONTH_NOW } from "./helpers/livedMonth";
+
+vi.mock("../../src/application/metricDetailQueries", async (original) => {
+  const actual = await original<typeof import("../../src/application/metricDetailQueries")>();
+  return { ...actual, getMetricDetail: vi.fn(actual.getMetricDetail) };
+});
 
 /**
  * METRIC-PAGE-001 (pilot, Gavin 2026-11-14): HYDRATION and STEPS open one metric page from TODAY and BODY. Each keeps
@@ -53,9 +60,9 @@ describe("METRIC-PAGE-001 pilot", () => {
     expect(document.querySelector('dialog[open] svg[aria-label^="Water by hour since 16:30: 32 oz in 3 logs"]')).not.toBeNull();
     if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-water-today.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
 
-    // 7D: two logged days, five missing ones shown as gaps, the average over logged days only.
+    // 7D: two logged finished days, four missing ones shown as gaps, the average over logged days only.
     await range("HYDRATION", "Last 7 lived days");
-    await expect.poll(() => text("[data-md-coverage]")).toContain("2 of 7 finished days logged · 5 not logged, left out");
+    await expect.poll(() => text("[data-md-coverage]")).toContain("2 of 6 finished days logged · 4 not logged, left out");
     expect(text("[data-md-hero]")).toContain("32"); // (40 + 24) / 2
     const bars = document.querySelectorAll("dialog[open] .md-bar");
     expect(bars).toHaveLength(7);
@@ -111,7 +118,7 @@ describe("METRIC-PAGE-001 pilot", () => {
     expect(document.querySelector('dialog[open] svg[aria-label^="Running step total"]')).not.toBeNull();
     if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-steps-today.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
     await range("STEPS", "Last 30 lived days");
-    await expect.poll(() => text("[data-md-coverage]")).toMatch(/of 30 finished days measured/);
+    await expect.poll(() => text("[data-md-coverage]")).toMatch(/of 29 finished days measured/);
     // Steps bars are Garmin blue; water's would be white.
     expect(getComputedStyle(document.querySelector("dialog[open] .md-chart--steps .md-fill")!).fill).toBe("rgb(57, 135, 229)");
     await range("STEPS", "Last year, by week");
@@ -131,6 +138,33 @@ describe("METRIC-PAGE-001 pilot", () => {
     await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
     await screen.getByRole("button", { name: "Open water history" }).click();
     await expect.element(sheet("HYDRATION")).toBeVisible();
+  });
+
+  it("averages yearly hydration per logged finished day, not equally per week", async () => {
+    await seedLivedMonth(); await seedPastWater();
+    const days = (await db.beyondDays.toArray()).sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+    vi.setSystemTime(MONTH_FIRST_DAY + 10 * DAY + 2 * H);
+    await logWater(days[10]!.id, 80);
+    vi.setSystemTime(MONTH_NOW);
+    await render(<MetricDetailSheet open metric="water" onClose={() => {}} />);
+    await expect.poll(() => text("[data-md-hero]")).toContain("32");
+    await range("HYDRATION", "Last year, by week");
+    await expect.poll(() => text("[data-md-hero]")).toBe("48 oz a logged day, on average");
+    expect(text("[data-md-coverage]")).toContain("3 of 363 finished days logged");
+  });
+
+  it("retries an interrupted read without writing, and labels missing steps honestly", async () => {
+    const before = await db.events.toArray();
+    vi.mocked(getMetricDetail).mockRejectedValueOnce(new Error("Interrupted read"));
+    await render(<MetricDetailSheet open metric="steps" onClose={() => {}} />);
+    await expect.element(sheet("STEPS").getByRole("alert")).toHaveTextContent("Your records are unchanged");
+    await sheet("STEPS").getByRole("button", { name: "RETRY" }).click();
+    await expect.poll(() => text("[data-md-hero]")).toContain("not measured yet");
+    await range("STEPS", "Last 7 lived days");
+    await sheet("STEPS").getByText("Show as table", { exact: true }).click();
+    await expect.element(sheet("STEPS").getByRole("table")).toBeVisible();
+    expect(text("[data-md-coverage]")).toContain("0 of 6 finished days measured");
+    expect(await db.events.toArray()).toEqual(before);
   });
 
   it("nothing spills, sentences keep 16 px, and both pages pass axe from 320 to 1024 px", async () => {

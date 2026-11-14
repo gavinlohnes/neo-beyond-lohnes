@@ -48,22 +48,22 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
     const before = await db.events.toArray();
     await steps.click();
     const sheet = screen.getByRole("dialog", { name: "STEPS", exact: true });
-    await expect.element(sheet.getByRole("button", { name: "TODAY", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect.element(sheet.getByText("steps so far today", { exact: true })).toBeVisible();
-    await expect.element(sheet.getByRole("img", { name: /^Running step total today/ })).toBeVisible();
-    await expect.element(sheet.getByText(/^Usual on (work days|days off): [\d,]+ · median of the last 28 days\.$/)).toBeVisible();
+    await expect.element(sheet.getByRole("button", { name: "Today, this lived day", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect.element(sheet.getByText(/steps so far · since/)).toBeVisible();
+    await expect.element(sheet.getByRole("img", { name: /^Running step total:/ })).toBeVisible();
+    await expect.element(sheet.getByText(/^Usual on (work days|days off): [\d,]+ steps · median of the last 28 finished days\.$/)).toBeVisible();
     if (width === 390) await shot("390-steps-today");
-    await sheet.getByRole("button", { name: "4W", exact: true }).click();
-    await expect.element(sheet.getByText("average a day", { exact: true })).toBeVisible();
-    await expect.poll(() => sheet.element().querySelector(".measured-readout")?.textContent).toMatch(/ so far$/); // the readout starts on today's bar
+    await sheet.getByRole("button", { name: "Last 30 lived days", exact: true }).click();
+    await expect.element(sheet.getByText("steps a day, on average", { exact: true })).toBeVisible();
+    await expect.poll(() => sheet.element().querySelector(".md-readout")?.textContent).toMatch(/ so far$/); // the readout starts on today's bar
     await sheet.getByText("Show as table", { exact: true }).click();
     await expect.element(sheet.getByRole("table")).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     await settle();
     expect((await axe.run(sheet.element())).violations).toEqual([]);
     if (width === 390) await shot("390-steps-4w");
-    await sheet.getByRole("button", { name: "1Y", exact: true }).click();
-    await expect.element(sheet.getByText("average a week", { exact: true })).toBeVisible();
+    await sheet.getByRole("button", { name: "Last year, by week", exact: true }).click();
+    await expect.element(sheet.getByText("steps a week, on average", { exact: true })).toBeVisible();
     await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.activeElement).toBe(steps.element());
     expect(await db.events.toArray()).toEqual(before);
@@ -124,7 +124,7 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
       await expect.element(sheet.getByRole("link", { name: "SYNC GARMIN", exact: true }))
         .toHaveAttribute("href", expect.stringMatching(/^intent:\/\/sync\?plan=%7B%22home%22.*#Intent;scheme=beyond-bridge;package=app\.beyond\.healthbridge;end$/));
       agent.mockReturnValue("Mozilla/5.0 (Macintosh) Safari/605");
-      await sheet.getByRole("button", { name: "4W", exact: true }).click(); // re-render
+      await sheet.getByRole("button", { name: "Last 30 lived days", exact: true }).click(); // re-render
       expect(sheet.getByRole("link", { name: "SYNC GARMIN" }).elements()).toHaveLength(0);
     } finally { agent.mockRestore(); }
   });

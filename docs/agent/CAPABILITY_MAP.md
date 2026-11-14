@@ -420,3 +420,15 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   empty state or per-source failure on any screen. Guide: [LIFE-PATTERN-001](LIFE-PATTERN-001.md).
 - CONNECT-001: `src/application/connectionQueries.ts` (`getConnections`) and `src/ui/components/Connections.tsx` list
   explicit `[[links]]` to a record. Reuse before building another backlink or "related" view.
+
+
+### CHP-001 / HARVEST-001 — accepted research baseline (2026-11-14)
+
+- [Capability Harvest Protocol](CHP-001.md) records the three approved refinements: inspect locked decisions,
+  record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
+- [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
+  Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
+- [METRIC-PAGE-001](METRIC-PAGE-001.md) is the approved hydration/steps pilot on the existing branch.
+  `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
+  shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other
+  metrics before owner assessment. Integration status and verification live in the checkpoint/PR.

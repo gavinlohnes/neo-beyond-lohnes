@@ -53,7 +53,7 @@ export async function getMetricDetail(metric: DetailMetric, now = Date.now()): P
   }
 
   const series = dailySeries(periods, now, (dayId) => byDay.get(dayId)?.waterOz);
-  const entries = current.dayId ? (await getHydrationEntries(current.dayId)).filter((e) => e.effectiveAmountOz > 0) : [];
+  const entries = current.dayId ? (await getHydrationEntries(current.dayId)) : [];
   const from = current.from;
   return {
     metric, source: "LOGGED", series,
