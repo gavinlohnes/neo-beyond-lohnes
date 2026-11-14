@@ -2174,7 +2174,7 @@ export function TodayScreen({
     return (
       <>
         <div className="cc-lbl cc-numbers-head">
-          <h2>AT A GLANCE</h2>
+          <h2><span className="cc-slashes" aria-hidden="true">/// </span>AT A GLANCE</h2>
           <span className="cc-numbers-actions">
             {garminTiles && <SyncGarminLink />}
             {onOpenBody && <button type="button" className="cc-see-all" disabled={busy} onClick={() => onOpenBody()}>SEE ALL</button>}

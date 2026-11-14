@@ -38,8 +38,9 @@
 
 /* The numbers: AT A GLANCE as an eyebrow with the red slashes, then one framed panel per reading, two across. */
 .today-field.redesign-today .today-numbers { margin-top: 16px; container-type: inline-size; }
-.today-field.redesign-today .cc-numbers-head h2 { font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); }
-.today-field.redesign-today .cc-numbers-head h2::before { content: "/// "; color: var(--tf-red); letter-spacing: -.05em; }
+.today-field.redesign-today .cc-numbers-head h2 { font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); }
+.cc-numbers-head .cc-slashes { display: none; }
+.today-field.redesign-today .cc-numbers-head .cc-slashes { display: inline; color: var(--tf-red); letter-spacing: -.05em; }
 .today-field.redesign-today .today-numbers .cc-fuel { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; background: none; border: 0; margin-top: 8px; }
 .today-field.redesign-today .today-numbers .cc-fuel > button,
 .today-field.redesign-today .today-numbers .cc-fuel > .cc-fuel-wide {
@@ -51,9 +52,10 @@
 }
 /* An odd last reading takes the whole row, so the grid never ends on a hole. */
 .today-field.redesign-today .today-numbers .cc-fuel > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
-.today-field.redesign-today .today-numbers .cc-num { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .01em; }
+/* POLISH-002 (locked): readings keep the mono face and labels the display face; the foundation sets their size. */
+.today-field.redesign-today .today-numbers .cc-num { font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .01em; }
 .today-field.redesign-today .today-numbers .cc-num small { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 16px; letter-spacing: 0; color: var(--tf-quiet); }
-.today-field.redesign-today .today-numbers .cc-flab { font-family: var(--font-mono, monospace); font-size: 11px; letter-spacing: .12em; }
+.today-field.redesign-today .today-numbers .cc-flab { font-size: 11px; letter-spacing: .12em; }
 .today-field.redesign-today .today-numbers .cc-fuel > button > .cc-flab:first-child { color: var(--p-t1, #f2f2f2); font-weight: 600; }
 /* Garmin's watch readings: their caption in Garmin blue (GARMIN-004). The dimmed "steady" state is kept as it was. */
 .today-field.redesign-today .today-numbers .cc-fuel > button[data-source="garmin"] > .cc-flab:last-child:not(.cc-flab--unusual) { color: var(--tf-garmin); }
