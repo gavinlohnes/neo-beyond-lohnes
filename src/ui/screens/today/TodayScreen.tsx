@@ -2782,7 +2782,7 @@ export function TodayScreen({
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={bandHidden}>
-      <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since}
+      <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
