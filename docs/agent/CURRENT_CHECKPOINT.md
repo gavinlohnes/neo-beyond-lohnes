@@ -1,3 +1,29 @@
+# Current objective — METRIC-PAGE-001 hydration/steps pilot (2026-11-14)
+
+- **Owner authorization:** “Go ahead” after confirming the approved pilot scope. Continue existing branch
+  `ccr-88f5c085-metric-pilot`; active [PR #519](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/519). Claude's preserved WIP is `e63a6659a3b3097b39482f9cfa4d38db15371eff`.
+- **Prerequisites settled:** TODAY merged as #517 (`ebfc9881`), MORE/cave as #518 (`8e04e2eb`). Fresh master
+  `8e04e2eb5f486c83489777446370860e3ac57595` is incorporated into the pilot. No competing PR/branch.
+- **Brief:** [METRIC-PAGE-001.md](METRIC-PAGE-001.md). Builder Codex completing Claude's approved implementation.
+  One shared hydration/steps detail from TODAY and DATA; other metrics and recommendation authority unchanged.
+- **Research preserved:** CHP-001 and HARVEST-001, including all owner-approved protocol refinements and
+  lifestyle-logging parity findings. Indexed in CAPABILITY_MAP; recommendations remain separate from approvals.
+- **Completion work:** honest finished-day coverage, yearly hydration weighting by logged day, canonical weekly
+  aggregation reuse, stale Garmin tag, error/retry, existing logging/correction/return routes and regression tests.
+  No Engine/schema/command/provider/dependency changes; identity and primary layouts preserved.
+- **Verification:** typecheck PASS; focused pilot/query/route checks pass after correcting the recovered
+  coverage mismatch. Broad Node/real-Chromium regression and production build are running; final results
+  and the exact-head independent review will be recorded on the pilot PR before handoff.
+- **Review correction:** range buttons now meet the locked 16 px minimum; the size sweep never exempts
+  controls as labels and explicitly measures every button. Read-error controls use foundation tokens/focus.
+  Closed metric sheets clear their retained title so focused meal workspaces stay unchanged. Fresh Chromium/
+  query regression: 18 PASS (MetricPage001, FocusedMeals, metricDetailQueries). Final CI/review pending.
+- **Next:** complete proportional/full verification, push this existing branch, open its one PR, obtain
+  independent review of data/provenance/route behavior and green final-head CI. Gavin alone decides merge.
+  Stop at pilot assessment; no expansion to other metrics without approval.
+
+---
+
 # Builder takeover — current truth (2026-11-14)
 
 Owner explicitly handed implementation from usage-limited Claude Code to Codex. No competing branch or PR;

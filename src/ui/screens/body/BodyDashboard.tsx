@@ -12,6 +12,8 @@ import { MeasuredSheet, STAGE_COLORS } from "../today/MeasuredSheet";
 import { WATER_QUICK_ADD_OZ } from "./bodyScreenCopy";
 import { CommandBar, Meter, Panel, SourceTag as Source, Sparkline as Spark, SPARK_H, SPARK_W } from "../../foundation/primitives";
 import "./bodyDashboard.css";
+import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
+import type { DetailMetric } from "../../../application/metricDetail";
 
 /**
  * BODY-DASH-001 (Gavin, 2026-11-14; approved Protected change to DATA's primary information architecture): DATA opens
@@ -22,7 +24,7 @@ import "./bodyDashboard.css";
  * missing reading says so, and no goal appears that you didn't set. The cave and every shortcut stay below.
  */
 export type DashMetric = "water" | "sleep" | "weight" | "nutrition";
-export type DashLog = "log" | "meal" | "weight" | "sleep" | "urge";
+export type DashLog = "log" | "meal" | "weight" | "sleep" | "urge" | "water";
 
 export interface BodyDashboardProps {
   day: BeyondDay | null;
@@ -76,8 +78,10 @@ function StageBar({ intervals, from, to }: { intervals: readonly { from: number;
 
 export function BodyDashboard(p: BodyDashboardProps) {
   const [extras, setExtras] = useState<BodyDashboardExtras | null>(null);
-  // Steps and resting HR open GARMIN-004's own detail sheet (today, 7D, 4W, 1Y, table view).
+  // Resting HR keeps GARMIN-004's detail sheet; the pilot shares hydration/steps inspection.
   const [measuredOpen, setMeasuredOpen] = useState<"steps" | "resting" | null>(null);
+  // METRIC-PAGE-001 (pilot): hydration and steps open their metric page; water history stays one tap further.
+  const [detailOpen, setDetailOpen] = useState<DetailMetric | null>(null);
   const dayId = p.day?.id ?? null;
   useEffect(() => {
     let live = true;
@@ -131,7 +135,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
         action={p.onLog ? { text: "LOG", label: "Log a record", disabled: p.busy, onClick: () => p.onLog!("log") } : undefined} />
 
       <div className="bd-grid">
-        <Card id="water" primary icon={<Droplet size={18} />} label="HYDRATION" wide source={<Source>LOGGED</Source>} onOpen={() => p.onOpen("water")} openLabel="Open water history">
+        <Card id="water" primary icon={<Droplet size={18} />} label="HYDRATION" wide source={<Source>LOGGED</Source>} onOpen={() => setDetailOpen("water")} openLabel="Open water history">
           <div className="bd-split">
             <div className="bd-split__num">
               <p className="bf-value bf-value--xl">{p.water.totalOz > 0 ? <>{fmt(p.water.totalOz)}<small> oz</small></> : <span className="bf-none">Not logged</span>}</p>
@@ -182,7 +186,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
           {burned !== null && <p className="bf-meta bf-meta--garmin" data-dash-burned>Burned (Garmin estimate) {fmt(burned)} kcal</p>}
         </Card>
 
-        <Card id="steps" icon={<Footprints size={18} />} label="STEPS" source={steps !== null ? garminSource : null} onOpen={m?.any ? () => setMeasuredOpen("steps") : undefined} openLabel="Open steps history">
+        <Card id="steps" icon={<Footprints size={18} />} label="STEPS" source={steps !== null ? garminSource : null} onOpen={m?.any ? () => setDetailOpen("steps") : undefined} openLabel="Open steps history">
           <p className="bf-value">{steps !== null ? fmt(steps) : <span className="bf-none">Not measured</span>}</p>
           {steps !== null && m!.stepsToday.length > 1 && <Spark values={m!.stepsToday.map((s) => s.total)} tone="garmin" area />}
           <p className="bf-meta">{usualSteps !== null ? `Usual ${m!.usual.steps.dayKind === "WORK" ? "work day" : "day off"} ${fmt(usualSteps)}` : steps !== null ? "So far this lived day" : "From your watch, when synced"}</p>
@@ -207,6 +211,9 @@ export function BodyDashboard(p: BodyDashboardProps) {
           </div>
         </Card>
       </div>
+      <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={p.refreshKey}
+        onRecords={detailOpen === "water" ? () => p.onOpen("water") : undefined}
+        onLog={detailOpen === "water" && p.onLog ? () => p.onLog!("water") : undefined} />
       <MeasuredSheet open={measuredOpen !== null} metric={measuredOpen ?? "steps"} snapshot={m} onClose={() => setMeasuredOpen(null)} />
     </section>
   );

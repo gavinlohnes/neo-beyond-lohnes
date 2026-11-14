@@ -113,6 +113,8 @@ import { MeasuredSheet, SyncGarminLink, describeGarminAsOf, measuredClock, type 
 import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
+import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
+import type { DetailMetric } from "../../../application/metricDetail";
 import "./smallSteps.css";
 import "../../foundation/foundation.css";
 import "./todayFoundation.css";
@@ -289,6 +291,7 @@ export function TodayScreen({
   onOpenTrain,
   onOpenBody,
   onOpenHealthEvidence,
+  onOpenRecord,
   onOpenWeeklyReview,
   onOpenSystems,
   onOpenCave,
@@ -317,6 +320,8 @@ export function TodayScreen({
   /** SUIT-ALIVE S3/S4: the route and comms lines open the cave on that view. Absent, neither line shows. */
   onOpenCave?: (tab: "tonight" | "route" | "brief") => void;
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
+  /** METRIC-PAGE-001: the shell's LOG sheet for one record kind (the metric page's LOG WATER). */
+  onOpenRecord?: ((target: "water") => void) | undefined;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   operationsOnly?: boolean;
@@ -527,6 +532,7 @@ export function TodayScreen({
   // GARMIN-004: measured Garmin values for TODAY's tiles and their sheets (display only).
   const [measured, setMeasured] = useState<MeasuredSnapshot | null>(null);
   const [measuredOpen, setMeasuredOpen] = useState<MeasuredMetric | null>(null);
+  const [detailOpen, setDetailOpen] = useState<DetailMetric | null>(null);
   const [waterLogCount, setWaterLogCount] = useState(0);
   // FIELD-REHEARSAL-002: bumped by every finished refresh, so the suit bands re-read after a save
   // (the comms line said "Water 0 oz" for five minutes after a drink was logged).
@@ -2144,7 +2150,8 @@ export function TodayScreen({
 
   /** POLISH-002: the prototype's four number tiles. Missing stays "—"; each opens its history. */
   function renderFuel() {
-    const open = (metric: "water" | "protein" | "weight" | "sleep") => () => { if (!busyRef.current) { if (metric === "sleep") setMeasuredOpen("sleep"); else onOpenHealthEvidence?.(metric); } };
+    // METRIC-PAGE-001 (pilot): WATER opens its metric page; its records stay one tap further (WATER RECORDS).
+    const open = (metric: "water" | "protein" | "weight" | "sleep") => () => { if (!busyRef.current) { if (metric === "sleep") setMeasuredOpen("sleep"); else if (metric === "water") setDetailOpen("water"); else onOpenHealthEvidence?.(metric); } };
     const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
     const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
     // GARMIN-004: with Garmin data, STEPS and RESTING HR join the numbers and SLEEP shows your usual.
@@ -2159,7 +2166,8 @@ export function TodayScreen({
     const garminSleepMinutes = measured?.lastNight ? measuredSleepMinutes(measured.lastNight) : null;
     const visibleSleep = sleep ?? (garminSleepMinutes === null ? null : measuredClock(garminSleepMinutes));
     const sleepSource = sleep ? (lastMainSleepFromGarmin ? "GARMIN" : "LOGGED") : garminSleepMinutes !== null ? "GARMIN" : "NOT LOGGED";
-    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
+    // METRIC-PAGE-001 (pilot): STEPS opens its metric page; the other Garmin readings keep their sheet for now.
+    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric === "steps") setDetailOpen("steps"); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
     // SUIT-ALIVE S5, dark cockpit: a reading inside your normal dims; one behind your usual pace stays lit, in amber words.
     const minute = paceHistories ? minuteOfDay(paceHistories.dayStart, now) : 0;
     const proteinPace = paceHistories ? paceReading("protein", minimumDayProteinG, paceHistories.protein, minute) : null;
@@ -2826,6 +2834,9 @@ export function TodayScreen({
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
     <SleepMetricSheet open={measuredOpen === "sleep"} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
+    <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={refreshVersion}
+      onRecords={detailOpen === "water" && onOpenHealthEvidence ? () => onOpenHealthEvidence("water") : undefined}
+      onLog={detailOpen === "water" && onOpenRecord ? () => onOpenRecord("water") : undefined} />
     <MeasuredSheet open={measuredOpen !== null && measuredOpen !== "sleep"} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />

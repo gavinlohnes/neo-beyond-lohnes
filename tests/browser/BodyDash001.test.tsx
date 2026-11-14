@@ -139,12 +139,13 @@ describe("BODY-DASH-001", () => {
     await expect.poll(() => text("water")).toContain("32 oz");
     expect(await db.events.where("type").equals("WATER_LOG_VOIDED").count()).toBe(1);
 
-    // History: steps open GARMIN-004's own sheet; water opens Progress; BACK TO DATA returns.
+    // Pilot: steps and water open their metric page; WATER RECORDS preserves the correction route and BACK TO DATA.
     await screen.getByRole("button", { name: "Open steps history" }).click();
     await expect.element(screen.getByRole("dialog")).toBeVisible();
     if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-360-steps-sheet.png` }); }
     await userEvent.keyboard("{Escape}");
     await screen.getByRole("button", { name: "Open water history" }).click();
+    await screen.getByRole("dialog", { name: "HYDRATION", exact: true }).getByRole("button", { name: "WATER RECORDS", exact: true }).click();
     await expect.poll(() => [...document.querySelectorAll<HTMLButtonElement>("button")].some((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null)).toBe(true);
     [...document.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null)!.click();
     await expect.element(screen.getByRole("region", { name: "Your numbers" })).toBeVisible();
