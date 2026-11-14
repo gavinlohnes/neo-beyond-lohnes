@@ -3518,3 +3518,6 @@ Brief: [DAY-MAP-001.md](DAY-MAP-001.md). Branch `ccr-88f5c085-day-map`.
 - **Slice 2** (branch `ccr-88f5c085-day-map-plan`): the sleep plan's windows are outlined on the bar, and SLEEP PLAN ›
   opens ROUTE. This amends SHIFT-SLEEP-PLAN-001, per Gavin's "A".
 - **Next:** tap to act; outline new marks; Alfred.
+- **Slice 2** merged in #507, with the post-merge review PASS. Its review notes are in #508 (review PASS, CI green).
+- **Slice 3** (branch `ccr-88f5c085-day-map-tap`): THE NIGHT SO FAR lists the map's marks, each opening its own screen.
+- **Next DAY-MAP step:** outline new marks since the last look.

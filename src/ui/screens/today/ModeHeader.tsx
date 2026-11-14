@@ -38,7 +38,10 @@ export function ModeHeader({
   run,
   marks,
   onOpenSleepPlan,
+  markActions,
 }: {
+  /** DAY-MAP-001 slice 3: where each kind of mark opens (its existing screen). Kinds left out are facts only. */
+  markActions?: Partial<Record<PlacedMark["kind"], { label: string; open: () => void }>> | undefined;
   /** DAY-MAP-001 slice 2: opens ROUTE's shift sleep plan (the cards, sources, SAVE/SKIP). */
   onOpenSleepPlan?: (() => void) | undefined;
   /** DAY-MAP-001: what has been recorded on this lived day, placed on the bar. */
@@ -65,6 +68,7 @@ export function ModeHeader({
   onRecordWorkDay?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
+  const [nightOpen, setNightOpen] = useState(false);
   const [step, setStep] = useState<"PICK" | "WORK_DAY">("PICK");
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -152,7 +156,21 @@ export function ModeHeader({
         </div>
       </div>
       {marks && <p className="visually-hidden" data-day-map-summary>{describeMap(marks)}</p>}
-      {marks?.some((m) => m.planned) && onOpenSleepPlan && <button type="button" className="cc-tl-plan-link" onClick={onOpenSleepPlan}>SLEEP PLAN ›</button>}
+      <div className="cc-tl-links">
+        {marks && marks.length > 0 && <button type="button" className="cc-tl-plan-link" aria-expanded={nightOpen} aria-controls="day-map-list" onClick={() => setNightOpen((o) => !o)}>
+          {nightOpen ? "HIDE THE NIGHT" : `THE NIGHT SO FAR · ${marks.length}`}</button>}
+        {marks?.some((m) => m.planned) && onOpenSleepPlan && <button type="button" className="cc-tl-plan-link" onClick={onOpenSleepPlan}>SLEEP PLAN ›</button>}
+      </div>
+      {/* DAY-MAP-001 slice 3: the map as a list, each item with its time and, where one exists, its own screen. Reads only. */}
+      {marks && nightOpen && <ol id="day-map-list" className="cc-tl-list" aria-label="The night so far">
+        {marks.map((m, i) => {
+          const action = markActions?.[m.kind];
+          return <li key={i} className={m.planned ? "cc-tl-list__planned" : undefined}>
+            <span>{m.planned ? "PLANNED · " : ""}{m.label}</span>
+            {action && <button type="button" className="cc-tl-list__open" onClick={action.open}>{action.label} ›</button>}
+          </li>;
+        })}
+      </ol>}
       <ModeScene now={now} workDay={!dayOff} hasAction={hasAction} onShift={mode === "SCHEDULED_SHIFT"} />
       {systems}
       <ModeCity now={now} workDay={!dayOff} />

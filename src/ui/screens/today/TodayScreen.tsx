@@ -2722,6 +2722,18 @@ export function TodayScreen({
             // DAY-MAP-001: like the band, the map steps aside while an operation owns the screen, so RESUME stays above the fold.
             marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart) : undefined}
             onOpenSleepPlan={onOpenCave ? () => { if (!busyRef.current) onOpenCave("route"); } : undefined}
+            markActions={{
+              ...(onOpenHealthEvidence ? {
+                WATER: { label: "WATER", open: () => { if (!busyRef.current) onOpenHealthEvidence("water"); } },
+                MEAL: { label: "FOOD", open: () => { if (!busyRef.current) onOpenHealthEvidence("protein"); } },
+                SLEEP: { label: "SLEEP", open: () => { if (!busyRef.current) onOpenHealthEvidence("sleep"); } },
+              } : {}),
+              ...(onOpenTrain ? { WORKOUT: { label: "TRAIN", open: () => { if (!busyRef.current) onOpenTrain("HISTORY"); } } } : {}),
+              ...(onOpenCave ? {
+                SLEEP_PLAN: { label: "ROUTE", open: () => { if (!busyRef.current) onOpenCave("route"); } },
+                NAP_PLAN: { label: "ROUTE", open: () => { if (!busyRef.current) onOpenCave("route"); } },
+              } : {}),
+            }}
             now={now}
             countdown={scheduledClock.countdown ? describeCountdown(scheduledClock.countdown, now) : undefined}
             hasAction={!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED" && !decision}

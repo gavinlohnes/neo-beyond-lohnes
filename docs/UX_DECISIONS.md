@@ -3069,3 +3069,11 @@ Brief: [agent/DAY-MAP-001.md](agent/DAY-MAP-001.md).
 - **What it says:** a key with only the kinds present, and one hidden sentence with the same facts. Read only; no
   advice.
 - **When it's hidden:** while an operation owns the screen, so RESUME stays above the fold.
+- **Slice 3: THE NIGHT SO FAR** (Gavin, 2026-11-14: "Let's work").
+  - A quiet toggle under the map lists its marks, each with its time.
+  - Where an item has its own screen, the row opens it: water, food and sleep evidence, TRAIN history, or ROUTE for a
+    planned window. Work and the check-in are facts only.
+  - It reads only: nothing is written, so no confirm step is needed.
+  - The list stays transparent so the red night sky above the cityscape shows through (Gavin: "a nice Gotham night
+    sky").
+  - It steps aside during operations, like the map.
