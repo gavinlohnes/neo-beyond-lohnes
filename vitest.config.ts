@@ -59,6 +59,12 @@ export default defineConfig({
           name: "browser",
           include: ["tests/browser/**/*.test.tsx"],
           setupFiles: ["./tests/browser/setup.ts"],
+          // POLL-WINDOW-001: expect.poll and expect.element wait up to 5 s for a condition to become true (Vitest's
+          // default is 1 s). Real-Chromium screens that read a seeded month (BODY's dashboard, TODAY's mode header, the
+          // week strip) can take longer than 1 s on shared CI runners; three different polls timed out that way on
+          // 2026-11-14 on PRs that didn't touch them. A passing poll still returns at once, and nothing is weakened:
+          // the same condition must still become true.
+          expect: { poll: { timeout: 5_000 } },
           browser: {
             enabled: true,
             provider: playwright(process.env.BEYOND_BROWSER_EXECUTABLE ? { launchOptions: { executablePath: process.env.BEYOND_BROWSER_EXECUTABLE } } : {}),
