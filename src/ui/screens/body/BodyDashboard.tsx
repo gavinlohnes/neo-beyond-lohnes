@@ -8,7 +8,7 @@ import { getBodyDashboardExtras, type BodyDashboardExtras } from "../../../appli
 import { minuteOfDay, paceReading } from "../../../application/pace";
 import { hypnogram, sleepMinutes, stageMinutes, STAGE_ORDER, type StageName } from "../../../domain/health/measuredSeries";
 import { describeDayContext } from "../../../application/dayContext";
-import { MeasuredSheet, STAGE_COLORS } from "../today/MeasuredSheet";
+import { STAGE_COLORS } from "../today/MeasuredSheet";
 import { WATER_QUICK_ADD_OZ } from "./bodyScreenCopy";
 import { CommandBar, Meter, Panel, SourceTag as Source, Sparkline as Spark, SPARK_H, SPARK_W } from "../../foundation/primitives";
 import "./bodyDashboard.css";
@@ -78,9 +78,7 @@ function StageBar({ intervals, from, to }: { intervals: readonly { from: number;
 
 export function BodyDashboard(p: BodyDashboardProps) {
   const [extras, setExtras] = useState<BodyDashboardExtras | null>(null);
-  // Resting HR keeps GARMIN-004's detail sheet; the pilot shares hydration/steps inspection.
-  const [measuredOpen, setMeasuredOpen] = useState<"steps" | "resting" | null>(null);
-  // METRIC-PAGE-001 (pilot): hydration and steps open their metric page; water history stays one tap further.
+  // METRIC-PAGE-001: hydration, steps and resting heart rate open their metric page; water history stays one tap further.
   const [detailOpen, setDetailOpen] = useState<DetailMetric | null>(null);
   const dayId = p.day?.id ?? null;
   useEffect(() => {
@@ -192,7 +190,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
           <p className="bf-meta">{usualSteps !== null ? `Usual ${m!.usual.steps.dayKind === "WORK" ? "work day" : "day off"} ${fmt(usualSteps)}` : steps !== null ? "So far this lived day" : "From your watch, when synced"}</p>
         </Card>
 
-        <Card id="resting" icon={<HeartPulse size={18} />} label="RESTING HR" source={restingLatest ? garminSource : null} onOpen={m?.any ? () => setMeasuredOpen("resting") : undefined} openLabel="Open resting heart rate history">
+        <Card id="resting" icon={<HeartPulse size={18} />} label="RESTING HR" source={restingLatest ? garminSource : null} onOpen={m?.any ? () => setDetailOpen("resting") : undefined} openLabel="Open resting heart rate history">
           <p className="bf-value">{restingLatest ? <>{Math.round(restingLatest.value!)}<small> bpm</small></> : <span className="bf-none">Not measured</span>}</p>
           {restingSeries.some((v) => v !== null) && <Spark values={restingSeries} tone="garmin" />}
           <p className="bf-meta">{usualResting !== null ? `Usual ${Math.round(usualResting)} bpm` : restingLatest ? "Usual after 14 days" : "From your watch, when synced"}</p>
@@ -214,7 +212,6 @@ export function BodyDashboard(p: BodyDashboardProps) {
       <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={p.refreshKey}
         onRecords={detailOpen === "water" ? () => p.onOpen("water") : undefined}
         onLog={detailOpen === "water" && p.onLog ? () => p.onLog!("water") : undefined} />
-      <MeasuredSheet open={measuredOpen !== null} metric={measuredOpen ?? "steps"} snapshot={m} onClose={() => setMeasuredOpen(null)} />
     </section>
   );
 }
