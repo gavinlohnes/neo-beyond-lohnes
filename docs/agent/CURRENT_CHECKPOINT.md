@@ -14,6 +14,8 @@
 - **Verification:** typecheck PASS; focused pilot/query/route checks pass after correcting the recovered
   coverage mismatch. Broad Node/real-Chromium regression and production build are running; final results
   and the exact-head independent review will be recorded on the pilot PR before handoff.
+- **Review correction:** range buttons now meet the locked 16 px minimum; the size sweep never exempts
+  controls as labels and explicitly measures every button. Read-error controls use foundation tokens/focus.
 - **Next:** complete proportional/full verification, push this existing branch, open its one PR, obtain
   independent review of data/provenance/route behavior and green final-head CI. Gavin alone decides merge.
   Stop at pilot assessment; no expansion to other metrics without approval.

@@ -125,7 +125,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
   const go = (fn?: () => void) => (fn ? () => { onClose(); requestAnimationFrame(() => requestAnimationFrame(fn)); } : undefined);
 
   return <LogSheet open={open} title={TITLE[metric]} onClose={onClose}>
-    {!open ? null : detail === "ERROR" ? <div><p role="alert" className="md-meta">Couldn't read {TITLE[metric].toLowerCase()}. Your records are unchanged.</p><button type="button" className="md-act" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></div>
+    {!open ? null : detail === "ERROR" ? <div className="bf md"><p role="alert" className="md-meta">Couldn't read {TITLE[metric].toLowerCase()}. Your records are unchanged.</p><button type="button" className="md-act" onClick={() => setAttempt((n) => n + 1)}>RETRY</button></div>
       : !d ? <p role="status" className="md-meta">Reading…</p>
       : <div className="bf md" data-metric={metric}>
       <div className="md-source">

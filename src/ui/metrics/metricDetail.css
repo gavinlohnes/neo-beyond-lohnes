@@ -6,7 +6,7 @@
 
 .md-ranges { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--bf-line); background: var(--bf-s1); }
 .md-ranges button { min-height: 44px; padding: 0 4px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--p-t2, #a8a8a8);
-  font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; cursor: pointer; }
+  font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .14em; cursor: pointer; }
 .md-ranges button + button { border-left: 1px solid var(--bf-line); }
 .md-ranges button[aria-pressed="true"] { color: var(--p-t1, #f2f2f2); border-bottom-color: var(--bf-red); background: var(--p-s3, #141414); }
 

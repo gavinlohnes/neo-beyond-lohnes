@@ -181,12 +181,15 @@ describe("METRIC-PAGE-001 pilot", () => {
           await page.viewport(width, 900); await settle();
           const box = document.querySelector<HTMLElement>("dialog[open] .md")!;
           expect(box.scrollWidth, `${name} ${r} ${width}`).toBeLessThanOrEqual(box.clientWidth + 1);
+          for (const button of box.querySelectorAll("button")) {
+            expect(parseFloat(getComputedStyle(button).fontSize), `${button.textContent} at ${width}`).toBeGreaterThanOrEqual(16);
+          }
           const small: string[] = [];
           const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
           for (let n = walker.nextNode(); n; n = walker.nextNode()) {
             const t = n.textContent?.trim(), el = n.parentElement!;
             if (!t || el.closest("svg, .visually-hidden, details:not([open]) table") || !el.getClientRects().length) continue;
-            const cs = getComputedStyle(el), isLabel = (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
+            const cs = getComputedStyle(el), isLabel = !el.closest("button, input, select, textarea") && (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
             if (parseFloat(cs.fontSize) < (isLabel ? 10 : 16)) small.push(`${t} (${cs.fontSize})`);
           }
           expect(small, `${name} ${r} ${width}`).toEqual([]);
