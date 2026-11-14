@@ -7,7 +7,7 @@ import { describeMap, type PlacedMark } from "../../../application/livedDayMap";
 const KEY: { kind: PlacedMark["kind"]; label: string }[] = [
   { kind: "SLEEP", label: "Sleep" }, { kind: "WORK", label: "Work" }, { kind: "WORKOUT", label: "Lift" },
   { kind: "MEAL", label: "Meal" }, { kind: "WATER", label: "Water" }, { kind: "CHECK_IN", label: "Check-in" },
-  { kind: "NAP_PLAN", label: "Nap window" }, { kind: "SLEEP_PLAN", label: "Sleep window" },
+  { kind: "NAP_PLAN", label: "Planned nap" }, { kind: "SLEEP_PLAN", label: "Planned sleep" },
 ];
 
 function clock(at: Date): string {

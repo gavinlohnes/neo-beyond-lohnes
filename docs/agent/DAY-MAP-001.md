@@ -60,3 +60,10 @@ Branch `ccr-88f5c085-day-map-plan`.
   - the suggested lift, because it has no time, only "post-shift morning", and BEYOND won't make up a time.
 
 Screenshot: `docs/agent/screenshots/WALKTHROUGH-002/08-day-map-sleep-plan.png`.
+
+### Review of #507, non-blocking notes (follow-up branch `ccr-88f5c085-day-map-plan-fixes`)
+
+- **Last shift of a run:** the bar's sleep window uses the FIRST SLEEP card's past-runs times, or none without enough
+  runs, never the work-day rhythm. TODAY and ROUTE agree.
+- **Key wording:** the key now says "Planned sleep" and "Planned nap".
+- **Test:** a regression test checks that the planned blocks and SLEEP PLAN step aside during a workout.

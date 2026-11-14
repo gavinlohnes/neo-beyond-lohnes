@@ -96,9 +96,19 @@ describe("DAY-MAP-001 slice 2: the plan's windows as times, for TODAY's bar", ()
   it("gives the nap window and your usual post-shift sleep as the cards' own times; none without a rhythm", () => {
     const p = plan(new Date(2026, 9, 26, 9))!;
     expect(p.windows).toEqual([
-      { kind: "SLEEP", start: new Date(2026, 9, 27, 7, 30).toISOString(), end: new Date(2026, 9, 27, 14, 15).toISOString() },
-      { kind: "NAP", start: new Date(2026, 9, 26, 8).toISOString(), end: new Date(2026, 9, 26, 17).toISOString() },
+      { kind: "SLEEP", start: new Date(2026, 9, 27, 7, 30).toISOString(), end: new Date(2026, 9, 27, 14, 15).toISOString(), basis: "RHYTHM" },
+      { kind: "NAP", start: new Date(2026, 9, 26, 8).toISOString(), end: new Date(2026, 9, 26, 17).toISOString(), basis: "RHYTHM" },
     ]);
     expect(plan(new Date(2026, 9, 26, 9), { rhythm: null })!.windows).toEqual([]);
+  });
+
+  it("review of #507: on the last shift of a run the sleep window is the FIRST SLEEP card's own past-runs times, or none", () => {
+    const p = plan(new Date(2026, 9, 27, 9))!;
+    const first = p.cards.find((c) => c.kind === "FIRST_SLEEP")!;
+    const sleep = p.windows.filter((w) => w.kind === "SLEEP");
+    expect(sleep).toEqual([{ kind: "SLEEP", start: new Date(2026, 9, 28, 7, 30).toISOString(), end: new Date(2026, 9, 28, 14, 15).toISOString(), basis: "PAST_RUNS" }]);
+    expect(first.detail).toContain("usually ran 07:30–14:15");
+    // Without enough past runs the card shows no times, and the bar shows no sleep window.
+    expect(plan(new Date(2026, 9, 27, 9), { rows: [] })!.windows.filter((w) => w.kind === "SLEEP")).toEqual([]);
   });
 });
