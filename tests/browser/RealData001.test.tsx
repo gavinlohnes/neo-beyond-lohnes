@@ -11,6 +11,7 @@ import { getLastStrengthSession } from "../../src/application/trainQueries";
 import { App } from "../../src/app/App";
 import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
 import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
+import { openReadings } from "./helpers/dataReadings";
 
 /** REAL-DATA-001: findings from the owner's real backup, each closed on the screen where it hurt. */
 const GREEN = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 } as const;
@@ -97,7 +98,7 @@ describe("DATA and TODAY read the same night", () => {
     // The owner's backup: Garmin nights that never became a sleep log (71 nights, 23 logs).
     await db.events.where("type").equals("SLEEP_LOGGED").delete();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     await expect.element(screen.getByText("Garmin · last main sleep", { exact: true })).toBeVisible();
   });
 });

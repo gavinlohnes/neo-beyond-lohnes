@@ -6,6 +6,7 @@ import { previewAnyRestore } from "../../src/persistence/restore";
 import { App } from "../../src/app/App";
 import { startDay, submitCheckIn, updateSchedulePattern } from "../../src/application/commands";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
+import { openReadings } from "./helpers/dataReadings";
 
 /**
  * NAV-001: Gavin's tree-test tasks, each walked from TODAY by visible labels only. A task that
@@ -114,7 +115,7 @@ describe("NAV-001 top tasks from TODAY", () => {
       expect((await previewAnyRestore(file!)).format).toBe("NATIVE");
       expect(await db.events.toArray()).toEqual(before);
     } finally { capture.mockRestore(); click.mockRestore(); }
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
   });
   it("review sleep: TODAY’s sleep tile or DATA → Sleep opens on this week", async () => {
@@ -123,14 +124,14 @@ describe("NAV-001 top tasks from TODAY", () => {
     let sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
     await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     await screen.getByRole("button", { name: "main sleep history", exact: true }).click();
     sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
   it("last run of shifts: DATA → Your rotation opens it in the cave's FILE, still two taps (CAVE-DATA D3)", async () => {
     await startDay(); const screen = await render(<App />);
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     await expect.element(screen.getByRole("button", { name: /^whole picture$/i })).toBeVisible();
     await screen.getByRole("button", { name: /^your rotation$/i }).click();
     await expect.element(screen.getByRole("heading", { name: "THE CAVE // FILE", exact: true })).toBeVisible();
@@ -144,7 +145,7 @@ describe("NAV-001 top tasks from TODAY", () => {
   });
   it("whole picture: DATA opens the existing overview without an intermediate menu", async () => {
     await startDay(); const screen = await render(<App />);
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     await screen.getByRole("button", { name: /^whole picture$/i }).click();
     await expect.element(screen.getByRole("tab", { name: "The picture", exact: true })).toHaveAttribute("aria-selected", "true");
     // WHOLE-PICTURE-IN-DATA: it stays in DATA, and BACK TO DATA returns to the button that opened it.
@@ -152,7 +153,7 @@ describe("NAV-001 top tasks from TODAY", () => {
     await screen.getByRole("button", { name: "BACK TO DATA", exact: true }).click();
     await expect.poll(() => document.activeElement?.textContent?.toUpperCase()).toBe("WHOLE PICTURE");
     await screen.getByRole("button", { name: /^whole picture$/i }).click();
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     await expect.element(screen.getByRole("button", { name: /^whole picture$/i })).toBeVisible();
   });
   it("sync Garmin: TODAY's measured numbers expose the existing helper link", async () => {

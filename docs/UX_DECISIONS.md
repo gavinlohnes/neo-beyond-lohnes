@@ -3113,3 +3113,13 @@ view.**
   - **Layout:** at most two columns; hydration and sleep are primary.
   - **Actions:** log actions are a + on each card; narrow cards put the source and + on their own row.
   - **Lifestyle:** it opens the existing Habits (YOUR LIFE) and quit tracker (LOG), not an inline form.
+
+## NUMBERS-CLEANUP-001 — the cave's NUMBERS no longer repeats the dashboard (owner approval 2026-11-14)
+
+Gavin approved it as the first follow-up to BODY-DASH-001. **This amends CAVE-DATA-001's NUMBERS view.**
+
+- **What changed:** the cave's own copy of today's tiles and the Weight card now sits in one closed **Today's
+  readings** disclosure, because the dashboard above leads with the same numbers. History stays open below it.
+- **Nothing removed:** every tile, way in ("water history", "WEIGHT HISTORY") and LOG WEIGHT is unchanged inside it,
+  one tap away. History, correction and logging paths are untouched.
+- **The dashboard is unchanged.**

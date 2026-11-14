@@ -8,6 +8,7 @@ import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
 import { openMealInBody } from "./helpers/mealSheet";
 import { openLogTarget } from "./helpers/logSheet";
+import { openReadings } from "./helpers/dataReadings";
 
 /**
  * DAILY-EXPERIENCE-001 review B1: a TODAY shortcut's focused BODY view and its
@@ -37,7 +38,7 @@ async function expectDailyRecord(screen: Screen) {
 }
 
 async function tapBody(screen: Screen) {
-  await screen.getByRole("button", { name: "DATA", exact: true }).click();
+  await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
   await expect.element(screen.getByRole("button", { name: "DATA", exact: true })).toHaveAttribute("aria-current", "page");
 }
 

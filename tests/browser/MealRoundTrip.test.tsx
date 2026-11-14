@@ -12,6 +12,7 @@ import { getHistoryDays } from "../../src/application/historyQueries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
 import { openMealInBody, openMealInBodyDom } from "./helpers/mealSheet";
+import { openReadings } from "./helpers/dataReadings";
 
 type Screen = Awaited<ReturnType<typeof render>>;
 let dayId: string;
@@ -97,7 +98,7 @@ describe("TODAY meal round trip", () => {
     await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
     await screen.getByRole("button", { name: "MORE", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     // Review B1: primary navigation ends the shortcut's focused view; the draft stays.
     await expect.element(screen.getByRole("heading", { name: "DATA", exact: true })).toBeVisible();
     expect(screen.getByRole("dialog").elements()).toHaveLength(0);
@@ -278,7 +279,7 @@ describe("TODAY meal round trip", () => {
   it("keeps ordinary direct BODY entry independent of the TODAY round trip", async () => {
     await seedMeal();
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     expect(screen.getByRole("dialog").elements()).toHaveLength(0);
     await screen.getByRole("button", { name: "TODAY", exact: true }).click();
     await openMealInBody(screen);
