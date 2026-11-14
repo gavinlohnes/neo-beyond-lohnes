@@ -166,6 +166,8 @@ it("opens the raw water evidence from existing TODAY FUEL and returns without ad
   const before = await db.events.toArray();
   const screen = await render(<App />);
   await screen.getByRole("button", { name: "Water 8 oz, explore records", exact: true }).click();
+  // METRIC-PAGE-001: the tile opens HYDRATION's metric page; the records are one tap further, unchanged.
+  await screen.getByRole("dialog", { name: "HYDRATION" }).getByRole("button", { name: "WATER RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("water");
   await screen.getByRole("button", { name: "VIEW RECORDS", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 8 oz", exact: true })).toBeVisible();

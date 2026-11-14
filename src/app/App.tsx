@@ -783,6 +783,7 @@ function AppWorkspaces() {
               openToolsOnMount={todayToolsOpen}
               onOpenBody={openBody}
               onOpenHealthEvidence={openBodyEvidence}
+              onOpenRecord={(target) => openRecordSheet(target)}
               onOpenWeeklyReview={() => openMore("REVIEW")}
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
