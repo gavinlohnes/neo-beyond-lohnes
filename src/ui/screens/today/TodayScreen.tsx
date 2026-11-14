@@ -2167,7 +2167,7 @@ export function TodayScreen({
     const visibleSleep = sleep ?? (garminSleepMinutes === null ? null : measuredClock(garminSleepMinutes));
     const sleepSource = sleep ? (lastMainSleepFromGarmin ? "GARMIN" : "LOGGED") : garminSleepMinutes !== null ? "GARMIN" : "NOT LOGGED";
     // METRIC-PAGE-001 (pilot): STEPS opens its metric page; the other Garmin readings keep their sheet for now.
-    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric === "steps") setDetailOpen("steps"); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
+    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric === "steps" || metric === "resting") setDetailOpen(metric); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
     // SUIT-ALIVE S5, dark cockpit: a reading inside your normal dims; one behind your usual pace stays lit, in amber words.
     const minute = paceHistories ? minuteOfDay(paceHistories.dayStart, now) : 0;
     const proteinPace = paceHistories ? paceReading("protein", minimumDayProteinG, paceHistories.protein, minute) : null;

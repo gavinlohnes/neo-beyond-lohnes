@@ -22,3 +22,42 @@ The pilot amends only hydration/steps inspection routes; other measurements keep
 ## Acceptance
 
 Meaningful tests of missing/zero distinctions, corrected/voided hydration, yearly weighting, current-period exclusion, work-context/sample floors and lived-day boundaries; real Chromium from 320 to 1024 px, accessible ranges/chart/table, sources/freshness, logging/correction/back routes, error/retry and no-write browsing. Run architecture, typecheck, production/PWA build, full Node suite and browser regression verification. Persist actual results and any limitations in the checkpoint/PR; never merge.
+
+## Slice 2 — resting heart rate (Gavin, 2026-11-14: "Approved and continue working")
+
+- **Authorization:** after #519 merged, Gavin approved extending the metric page to sleep and resting heart rate.
+- **Builder:** Claude Code. **Branch:** `ccr-88f5c085-metric-sleep-rhr`, from master `c9d6702d`.
+
+**Resting heart rate moves onto the shared page.** TODAY's RESTING HR tile and DATA's resting panel open it in place of
+GARMIN-004's `MeasuredSheet`, and the new page shows everything that sheet did:
+- **LATEST:** the newest reading, from this lived day or the one before. Garmin publishes resting heart rate once a
+  day, and the page says so. There's no hourly picture, because there are no hours to show.
+- **7D and 30D:** a bar per lived day, Garmin blue, with gaps shown as gaps.
+- **1Y:** weeks as the average of measured days. The headline weighs each measured day equally, as hydration's does.
+- **Unchanged from the old sheet:** the usual median (GARMIN-004's baseline), the unusual-run note (ROTATION-002),
+  Garmin freshness and sync, and Alfred.
+- **Added:** work days compared with days off.
+- **What happens to the old sheet:** DATA no longer opens `MeasuredSheet`. TODAY keeps it only for calories.
+
+**Sleep keeps its own page, deliberately.** `SleepPeriods` (shared by TODAY's sheet and the cave's VITALS) already does
+more than the shared page:
+- it moves between earlier and later D, W, M and Y periods;
+- it shows the evidence for each night;
+- it has the sleep-rhythm view;
+- it lets your logged main sleep win over Garmin's night by night.
+
+Replacing it would remove capability, and the directive says not to force different metrics into identical chart
+behaviour. **Next slice [R]:** give the sleep page the shell's source line and the work days compared with days off,
+inside `SleepPeriods`, without changing its chart.
+
+**Verification:**
+- **Unit and query tests:** resting's ranges and weekly meaning; the newest-reading rule; series equal to the Garmin
+  snapshot; no writes.
+- **Browser (MetricPage001):**
+  - resting opens from TODAY and from DATA;
+  - LATEST is first, with no chart, and 30D is in Garmin blue;
+  - 1Y reads "bpm a measured day";
+  - usual and Alfred are present;
+  - the layout and size sweep and axe pass for all three pages, from 320 to 1024 px.
+- **Updated:** Garmin004's resting test for the shared page. UnusualForYou passes unchanged.
+

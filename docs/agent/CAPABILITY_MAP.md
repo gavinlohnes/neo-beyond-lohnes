@@ -428,7 +428,7 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
 - [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
   Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
-- [METRIC-PAGE-001](METRIC-PAGE-001.md) is the approved hydration/steps pilot on the existing branch.
+- [METRIC-PAGE-001](METRIC-PAGE-001.md): `ui/metrics/MetricDetailSheet.tsx` with `application/metricDetail*.ts` is the shared metric page (hydration, steps, resting heart rate). Add a metric here, keeping its own week/source semantics, rather than another detail sheet. Sleep keeps `SleepPeriods` (richer).
   `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
   shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other
   metrics before owner assessment. Integration status and verification live in the checkpoint/PR.

@@ -1,3 +1,18 @@
+# Current objective — METRIC-PAGE-001 slice 2: resting heart rate (Gavin, 2026-11-14: "Approved and continue working")
+
+- **Branch:** `ccr-88f5c085-metric-sleep-rhr`, from master `c9d6702d`. **Builder:** Claude Code.
+- **What it does:** resting heart rate moves onto the shared metric page from TODAY and DATA, with LATEST, 7D, 30D and
+  1Y, its usual and unusual note, work days compared with days off, freshness and sync. Sleep keeps `SleepPeriods`,
+  which does more; the shell's source line and work-day comparison are the next slice.
+- **Pilot:** #519 merged at `c9d6702d` (the entry below is historical).
+- **Also open:**
+  - **#520 HABIT-RHYTHM-001** (Codex, Protected). Independent review was assigned to the reviewer session at Gavin's
+    approval.
+  - **#521 GARMIN-CAPTION-001** (Claude, Routine). Empty Garmin tiles keep a quiet caption.
+- **Next:** independent review of this slice, then Gavin merges.
+
+---
+
 # Current objective — METRIC-PAGE-001 hydration/steps pilot (2026-11-14)
 
 - **Owner authorization:** “Go ahead” after confirming the approved pilot scope. Continue existing branch
