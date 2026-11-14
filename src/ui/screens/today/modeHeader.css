@@ -136,3 +136,10 @@
 .cc-mode .cc-tl-key__swatch--nap_plan, .cc-mode .cc-tl-key__swatch--sleep_plan { width: 10px; height: 6px; border: 1px dashed var(--p-t2); }
 .cc-mode .cc-tl-key__swatch--nap_plan { border-style: dotted; }
 .cc-mode .cc-tl-plan-link { display: inline-flex; align-items: center; min-height: 32px; margin-top: 2px; padding: 0; background: none; border: 0; color: var(--p-t1); font-size: 11px; letter-spacing: .08em; cursor: pointer; }
+/* DAY-MAP-001 slice 3: the night as a list, one quiet row per mark, its screen one tap away. */
+.cc-mode .cc-tl-links { display: flex; flex-wrap: wrap; gap: 0 16px; }
+/* Transparent on purpose (Gavin, 2026-11-13: the red up from the cityscape "looks like a nice Gotham night sky"); the text just sits above the city. */
+.cc-mode .cc-tl-list { position: relative; z-index: 1; list-style: none; margin: 4px 0 0; padding: 0; border-top: 1px solid var(--p-line); }
+.cc-mode .cc-tl-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; border-bottom: 1px solid var(--p-line); color: var(--p-t1); font-size: 13px; line-height: 1.35; }
+.cc-mode .cc-tl-list__planned { color: var(--p-t2); }
+.cc-mode .cc-tl-list__open { flex: none; min-height: 32px; padding: 0 2px; background: none; border: 0; color: var(--p-t1); font-size: 11px; letter-spacing: .08em; cursor: pointer; }
