@@ -7,17 +7,20 @@ import { App } from "../../src/app/App";
 import { startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 
-/** DATA-HOME-001: DATA opens like YOUR LIFE and MORE; shortcuts open DATA's existing views; nothing written. */
+/**
+ * DATA-HOME-001: shortcuts open DATA's existing views; nothing written. BODY-DASH-001 (Gavin, 2026-11-14) replaced the
+ * YOUR NUMBERS. hero with the numbers-first dashboard; the shortcuts stay, below it.
+ */
 afterEach(async () => { await cleanup(); });
 
 describe("DATA-HOME-001", () => {
-  it("opens with YOUR NUMBERS., shortcuts open existing views, 16 px floor, fits 360 px, nothing written", async () => {
+  it("opens on the dashboard, shortcuts open existing views, 16 px floor, fits 360 px, nothing written", async () => {
     await page.viewport(360, 780);
     await startDay();
     const before = await db.events.count();
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "DATA", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "YOUR NUMBERS.", exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("region", { name: "Your numbers" })).toBeVisible();
     const nav = screen.getByRole("navigation", { name: "DATA shortcuts" });
     for (const label of ["Weight", "Photos", "Measurements", "Whole picture", "Your rotation", "History"]) {
       await expect.element(nav.getByRole("button", { name: label, exact: true })).toBeVisible();
@@ -33,7 +36,7 @@ describe("DATA-HOME-001", () => {
       const back = [...document.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null);
       await expect.poll(() => [...document.querySelectorAll<HTMLButtonElement>("button")].some((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null), { timeout: 5000 }).toBe(true);
       ([...document.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null) ?? back)!.click();
-      await expect.element(screen.getByRole("heading", { name: "YOUR NUMBERS.", exact: true })).toBeVisible();
+      await expect.element(screen.getByRole("region", { name: "Your numbers" })).toBeVisible();
     }
     expect(await db.events.count()).toBe(before);
   });

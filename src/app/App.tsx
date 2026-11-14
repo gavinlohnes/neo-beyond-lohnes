@@ -801,7 +801,7 @@ function AppWorkspaces() {
         </div>}
         {visited.has("BODY") && <div id="workspace-BODY" className={tab === "BODY" ? "tab-enter" : undefined} hidden={tab !== "BODY"}>
           <RootErrorBoundary active={tab === "BODY"}><BodyScreen overviewOnly onOpenTrainingRecords={() => openTrain("RECORDS")} onOpenReview={openDataReview} onEditRecord={(record, dayId) => { setRecordCorrection({ key: ++correctionKey.current, record, dayId }); openRecordSheet("record"); }} focus={bodyFocus} focusRequest={bodyRequest} overviewRequest={bodyOverviewRequest} caveRequest={caveRequest} visible={tab === "BODY"} refreshKey={stealthWrites}
-            evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory} onLogWeight={() => openRecordSheet("weight")}
+            evidenceRequest={healthEvidence} onHealthHistory={openHealthHistory} onLogWeight={() => openRecordSheet("weight")} onOpenRecord={(target) => openRecordSheet(target)}
             onReturnToToday={mealOrigin ? returnFromBody : undefined} returnLabel={mealOrigin ? `BACK TO ${TAB_LABEL[mealOrigin.tab]}` : "BACK TO TODAY"}
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}

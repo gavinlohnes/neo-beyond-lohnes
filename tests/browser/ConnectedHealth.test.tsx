@@ -41,7 +41,8 @@ for (const width of [320, 360, 412]) it(`selects an overnight health day and its
   const past = screen.getByRole("region", { name: "Selected health day" });
   await expect.element(past.getByRole("button", { name: "water history", exact: true })).toHaveTextContent("12 oz");
   await expect.element(past.getByRole("button", { name: "protein history", exact: true })).toHaveTextContent("25 g");
-  expect(screen.getByRole("button", { name: "+8 oz", exact: true }).elements()).toHaveLength(0);
+  // A past day takes no new water; BODY-DASH-001's quick-add belongs to the dashboard, never the selected past day.
+  expect(past.getByRole("button", { name: "+8 oz", exact: true }).elements()).toHaveLength(0);
   await past.getByText("Recorded entries · 2", { exact: true }).click();
   await past.getByRole("button", { name: "Source of Water · 12 oz", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Water · 12 oz", exact: true })).toBeVisible();

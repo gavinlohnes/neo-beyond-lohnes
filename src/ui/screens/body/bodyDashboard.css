@@ -1,0 +1,98 @@
+/* BODY-DASH-001: DATA's numbers-first dashboard. Black surfaces, sharp cut corners, thin red structure, big numerals.
+   Red is structure and action; your logs are white; Garmin's watch measurements wear Garmin blue (GARMIN-004).
+   No glow, no motion beyond the app's own. */
+.bd { --bd-red: var(--p-red, #D0141B); --bd-line: var(--p-line-2, #292929); --bd-s1: var(--p-s1, #060606); --bd-garmin: #3987e5;
+  --bd-cut: 14px; display: grid; gap: 10px; margin: 0 0 18px; container-type: inline-size; }
+
+.bd-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 4px 2px 0; }
+.bd-head__title { margin: 0; font-family: var(--font-display, sans-serif); font-size: 44px; font-weight: 800; line-height: .9; letter-spacing: .05em; color: var(--p-t1, #f2f2f2); }
+.bd-head__sub { margin: 4px 0 0; font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .18em; color: var(--p-t1, #f2f2f2); }
+.bd-head__log { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; background: transparent; color: var(--p-t1, #f2f2f2);
+  border: 1.5px solid var(--bd-red); font-family: var(--font-mono, monospace); font-size: 14px; letter-spacing: .14em; cursor: pointer;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.bd-head__log:disabled { opacity: .6; }
+
+.bd-day { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--bd-line); background: var(--bd-s1); }
+.bd-day__date { font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .12em; color: var(--p-t1, #f2f2f2); }
+.bd-day__ctx { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--p-t1, #f2f2f2); }
+.bd-day__ctx em { font-style: normal; color: var(--p-t2, #a8a8a8); }
+
+.bd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.bd-card--wide { grid-column: 1 / -1; }
+/* By the dashboard's own width (the app shell caps it on a desktop), not the window's. */
+@container (min-width: 720px) {
+  .bd-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .bd-card--wide { grid-column: span 2; }
+  .bd-card[data-dash="lifestyle"] { grid-column: 1 / -1; }
+}
+
+.bd-card { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 12px 12px 12px 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bd-red) 7%, transparent), transparent 46%), var(--bd-s1);
+  border: 1px solid var(--bd-line);
+  clip-path: polygon(0 0, calc(100% - var(--bd-cut)) 0, 100% var(--bd-cut), 100% 100%, var(--bd-cut) 100%, 0 calc(100% - var(--bd-cut))); }
+/* The structural red: a bracket at the top-left and a cut line across the top-right corner. */
+.bd-card::before { content: ""; position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-left: 2px solid var(--bd-red); border-top: 2px solid var(--bd-red); pointer-events: none; }
+.bd-card::after { content: ""; position: absolute; right: 0; top: 0; width: calc(var(--bd-cut) * 1.42); height: 1px; background: var(--bd-line);
+  transform-origin: right top; transform: rotate(45deg) translateX(1px); pointer-events: none; }
+
+.bd-card__head { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.bd-card__icon { display: inline-flex; color: var(--p-t1, #f2f2f2); }
+.bd-card__label { flex: 1; min-width: 0; margin: 0; font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 600; letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
+.bd-card__open { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin: -4px -6px -4px 0; padding: 0;
+  background: transparent; border: 0; color: var(--p-t2, #a8a8a8); cursor: pointer; }
+
+.bd-src { flex: none; font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); }
+.bd-src--garmin { color: var(--bd-garmin); }
+
+.bd-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 12px; }
+.bd-value { margin: 0; font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: .02em; color: var(--p-t1, #f2f2f2); font-variant-numeric: tabular-nums; }
+.bd-value small { font-family: var(--font-body, sans-serif); font-size: 15px; letter-spacing: 0; color: var(--p-t2, #a8a8a8); }
+.bd-value__aside { display: block; margin-top: 4px; font-size: 14px !important; }
+.bd-none { font-family: var(--font-body, sans-serif); font-size: 18px; letter-spacing: 0; color: var(--p-t2, #a8a8a8); }
+.bd-meta { margin: 0; font-size: 12px; line-height: 1.4; color: var(--p-t2, #a8a8a8); }
+.bd-meta--garmin { color: var(--bd-garmin); }
+.bd-delta { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; color: var(--p-t1, #f2f2f2); }
+
+.bd-viz { min-width: 0; }
+.bd-bars, .bd-spark { display: block; width: 100%; height: 44px; }
+.bd-bars__base { stroke: var(--bd-line); stroke-width: 1; }
+.bd-bars__bar { fill: var(--p-t1, #f2f2f2); }
+.bd-bars__now { stroke: var(--bd-red); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.bd-spark__line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.bd-spark__dot { stroke: var(--bd-s1); stroke-width: 2; }
+.bd-spark--own .bd-spark__line { stroke: var(--p-t1, #f2f2f2); }
+.bd-spark--own .bd-spark__dot { fill: var(--p-t1, #f2f2f2); }
+.bd-spark--garmin .bd-spark__line { stroke: var(--bd-garmin); }
+.bd-spark--garmin .bd-spark__dot { fill: var(--bd-garmin); }
+.bd-spark__area { fill: color-mix(in srgb, var(--bd-garmin) 18%, transparent); }
+
+.bd-stages { position: relative; height: 12px; margin: 4px 0 2px; background: var(--p-s3, #141414); }
+.bd-stages i { position: absolute; top: 0; bottom: 0; }
+.bd-stages--own i { background: var(--p-t2, #a8a8a8); }
+
+.bd-meter { display: grid; gap: 4px; }
+.bd-meter__row { display: flex; justify-content: space-between; gap: 6px; font-size: 13px; color: var(--p-t2, #a8a8a8); }
+.bd-meter__row b { font-family: var(--font-display, sans-serif); font-size: 20px; font-weight: 600; color: var(--p-t1, #f2f2f2); }
+.bd-meter__track { height: 4px; background: var(--p-s3, #141414); }
+.bd-meter__track i { display: block; height: 100%; background: var(--p-t1, #f2f2f2); }
+
+.bd-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 2px; }
+.bd-quick--one { grid-template-columns: 1fr; margin-top: auto; }
+.bd-quick button, .bd-confirm button, .bd-card__more { min-height: 40px; padding: 0 8px; background: transparent; color: var(--p-t1, #f2f2f2);
+  border: 1px solid var(--bd-line); font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .06em; cursor: pointer; }
+.bd-quick button:disabled { opacity: .6; }
+.bd-confirm { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; color: var(--p-t1, #f2f2f2); }
+.bd-card__more { align-self: flex-start; }
+
+.bd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bd-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--bd-line); font-size: 13px; color: var(--p-t2, #a8a8a8); }
+.bd-chip--done { color: var(--p-t1, #f2f2f2); border-color: var(--p-t3, #8c8c8c); }
+.bd-chip__mark { margin-left: 6px; }
+.bd-chip--empty { border-style: dashed; }
+.bd-lifestyle { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--bd-line); }
+
+.bd-card button:focus-visible, .bd-head__log:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .bd * { transition: none !important; } }
+.bd-card__srcline { margin: -4px 0 0; line-height: 1; }
+.bd-axis { display: flex; justify-content: space-between; margin-top: 2px; font-family: var(--font-mono, monospace); font-size: 10px; color: var(--p-t2, #a8a8a8); }

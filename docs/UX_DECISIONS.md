@@ -3085,3 +3085,26 @@ Brief: [agent/DAY-MAP-001.md](agent/DAY-MAP-001.md).
   - "New" means not seen before, not recently happened, so a Garmin sleep imported later still stands out.
   - Never the visit's own additions, never planned blocks, and never without an earlier look.
   - It uses the same device-only snapshot as SINCE.
+
+## BODY-DASH-001 — DATA opens on the numbers (owner approval 2026-11-14; Protected)
+
+Gavin approved a numbers-first dashboard above the cave, with his concept image as the visual direction.
+Brief: [agent/BODY-DASH-001.md](agent/BODY-DASH-001.md). **This amends DATA-HOME-001 and CAVE-DATA-001's DATA first
+view.**
+
+- **Order:** DATA opens on a compact header (DATA / BODY / HEALTH, LOG +, the lived day's context), then adaptive
+  cards: hydration, sleep, weight, nutrition, steps, resting HR and lifestyle.
+- **Kept below:** the YOUR NUMBERS hero is replaced, and its Log weight and Sleep actions move onto their cards. DATA's
+  shortcuts and the cave (all eight tabs) follow, unchanged.
+- **Provenance:**
+  - your logs are LOGGED, in white;
+  - Garmin's watch measurements are GARMIN, in Garmin blue, with freshness (OLD past 12 hours);
+  - missing reads "Not logged" or "Not measured".
+- **No invented targets:**
+  - no hydration or step goal, because water is shown against your own usual pace;
+  - meters only against targets you set; weight's goal only when set;
+  - calories burned beside eaten, never netted.
+- **Writes and history:** every write is an existing command (water quick-add with undo, the LOG sheets), and every ›
+  opens existing history.
+- **Garmin scope:** imports stay watch-only (steps, heart rate, resting HR, sleep, calories). No weight or hydration
+  import.
