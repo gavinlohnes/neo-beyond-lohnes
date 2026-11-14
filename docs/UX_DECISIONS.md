@@ -3255,3 +3255,23 @@ as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
   missed). Slice 3 adds the shell's source line and work days compared with days off, without changing its chart.
 - **Unchanged:** read only, no Engine input, no new data or schema.
 
+
+
+## HABIT-RHYTHM-001 — explicit habit answers and recent history (owner approved 2026-11-14)
+
+Gavin approved the bounded recording/history/correction proposal ("Approved.").
+[Brief](agent/HABIT-RHYTHM-001.md).
+
+- The existing habit system gains Done, Didn't do it and Not recorded, a seven-day row and 28-day
+  history with work context. No punitive streaks, guilt copy or inferred negative answers.
+- Preserve legacy HABIT_SET truth: true is Done; old false was an undo and stays Not recorded.
+  New explicit answers are additive, with the existing done boolean retained for compatibility.
+  Corrections append at the real recording time, to the selected original lived-day record.
+- Existing current-day logging, schedule, archive, Alfred-confirmed marks and DATA routes remain.
+  History aligns to local 16:30 days, with recorded work context taking precedence, then confirmed
+  exceptions, then labelled planned fallback. Missing day records stay visible and unrecorded: browsing fabricates no day or answer.
+- Existing past days can be corrected. Calendar gaps with no original BEYOND day have no correction
+  target and are read-only; creating historical day lifecycle records is outside this objective.
+- Quit tracker unchanged. Reminders, new schedules, health correlations and recommendation changes
+  are deferred and receive no implementation authority from this approval. No schema/backup/provider
+  change or new dependency; foundation identity, emblem and primary tab composition remain.

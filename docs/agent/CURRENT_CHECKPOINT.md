@@ -6,13 +6,46 @@
 - **What this slice does:** the sleep page keeps its own chart and navigation and gains the source line (GARMIN and
   LOGGED, freshness, the gap-fill rule) and work days compared with days off. Both show on TODAY and in the cave's
   VITALS. It also adds tests for LATEST's fallback (#522's review note).
-- **Elsewhere:** #520 HABIT-RHYTHM-001 (Codex) went back to draft after its review PASS. Codex owns it.
+- **Elsewhere:** #520 HABIT-RHYTHM-001 (Codex) merged after its renewed review PASS; its entry below is historical.
 - **Next:** independent review of this slice, then Gavin merges. After that, the metric page covers every number that
   has a detail view except calories, which stays on MeasuredSheet until a later decision.
 
 ---
 
-# Current objective — METRIC-PAGE-001 slice 2: resting heart rate (Gavin, 2026-11-14: "Approved and continue working")
+# Historical — HABIT-RHYTHM-001 (owner approved 2026-11-14; merged as #520)
+
+- **Authorization:** Gavin approved recording, seven/28-day history and past-day correction, with explicit
+  Done / Didn't do it / Not recorded. [Brief](HABIT-RHYTHM-001.md). Protected answer-history semantics;
+  independent exact-head review and green CI required, Gavin alone merges.
+- **Builder:** Codex. Fresh branch `codex/habit-rhythm-001`, baseline fetched master
+  `c9d6702d3f2459aae7840e6cf402e9d6f9628b47` (#519 metric pilot merged). Active
+  [PR #520](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/520); no overlapping habit PR.
+- **Implemented:** additive explicit HABIT_SET answers with legacy mark/undo compatibility; atomic append/
+  no-op guards; local 16:30 28-day calendar with labelled work context and honest gaps; seven-day rows,
+  shared history/correction sheet, read retry, write-error and same-tick submission guards. Existing
+  create/schedule/archive, Alfred confirmation and DATA route remain; DATA labels now distinguish No
+  from unrecorded. No quit-tracker, schema, Engine, provider, dependency or backup-format changes.
+- **History boundary:** only existing day records can be corrected. Gaps are visible but do not
+  fabricate historical day lifecycle records or negative answers. Multiple manual starts in one
+  lived day retain the actual answer's original correction target.
+- **Verification:** full Node 2300 PASS / 1 existing skip; 30 focused real-Chromium tests PASS across
+  new habits, original habits, DATA, whole-life and LIFE. DST-specific New York run 12 PASS; architecture,
+  TypeScript and production/PWA build PASS. Final required CI and independent exact-head review pending.
+  Initial checks fixed a hidden retained dialog's placement and chronological test event selection.
+- **Recovery:** previous exact-head independent PASS and full CI green at `d9c18924`. Master advanced
+  through #521/#522/#523/#524, causing documentation conflicts. Integrated freshly fetched master
+  `3f84bc2940b3e1a2665cb30e343cdfffab2d2eae`; preserved both habit and upstream decision/capability records.
+  Also addressed prior non-blocking review notes: clear rollover prompt and canonical RECORDED >
+  CONFIRMED > PREDICTED context resolution (with labelled W/C/P work markers). Renewed integration
+  verification: full Node 2303 PASS / 1 existing skip; 41 combined focused tests PASS; New York DST
+  13 PASS; architecture, typecheck and production/PWA build PASS. New-head required CI and renewed
+  independent exact-head review remain required.
+- **Next:** finish current-head verification and independent review on the existing PR.
+  No merge or expansion into reminders/health comparisons/new schedule rules.
+
+---
+
+# Historical upstream handoff — METRIC-PAGE-001 slice 2: resting heart rate (Gavin, 2026-11-14: "Approved and continue working")
 
 - **Branch:** `ccr-88f5c085-metric-sleep-rhr`, from master `c9d6702d`. **Builder:** Claude Code.
 - **What it does:** resting heart rate moves onto the shared metric page from TODAY and DATA, with LATEST, 7D, 30D and
