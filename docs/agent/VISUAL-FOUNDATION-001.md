@@ -68,8 +68,8 @@ dependency, command or information-architecture change.
   a bare zero (DENSITY-001).
 - **Sizes (Accessibility, amended 2026-11-14):** sentences, buttons and inputs are 16 px or larger. Only short
   mono-capital labels, source tags and chart ticks may be smaller, and never under 10 px. TRAIN (VISUAL-FOUNDATION-002)
-  follows this. BODY's dashboard predates it: its captions (`.bf-meta`, 12 px), quick adds, chips and LOG are smaller,
-  and bringing them up needs Gavin's go.
+  follows this, and so do BODY and TODAY since VISUAL-FOUNDATION-003: `.bf-meta`, units, quick adds, chips, links, LOG
+  and meters are 16 px.
 
 ### Provenance on every number
 

@@ -5,9 +5,10 @@ no merge authorized. This entry supersedes stale status below; older entries rem
 
 - **Fetched master:** `e12092871d0cee4a1b551f428a013de1332ae833` (VISUAL-FOUNDATION-002, #516).
   Foundation slice 1 (#515) and TRAIN slice 2 (#516) are merged.
-- **TODAY foundation:** [PR #517](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/517), branch
+- **TODAY foundation (merged):** [PR #517](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/517), branch
   `ccr-88f5c085-today-deck`, head `87d501013e6773698fa4348761064edded5b5cf3`.
-  Remote CI green and independent exact-head PASS recorded. Awaiting Gavin's merge, never this Builder's.
+  Gavin merged TODAY into master at `ebfc9881`. Its approved decisions and foundation styles are now
+  integrated into this existing MORE/cave branch; both decision entries are preserved in the conflict resolution.
   Non-blocking missing-Garmin-caption colour finding remains; do not mix TODAY into the MORE/cave branch.
 - **Current objective:** finish verification/handoff for VISUAL-FOUNDATION-004 on its existing branch
   `ccr-88f5c085-more-cave`, [PR #518](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/518).
@@ -15,7 +16,9 @@ no merge authorized. This entry supersedes stale status below; older entries rem
   All planned implementation is pushed. Independent review BLOCK found an inherited viewport rule forcing
   two status columns below the approved 560 px container breakpoint. Codex is correcting that bounded finding
   with computed-column regression coverage (fails before the fix at a 768 px viewport); renewed exact-head
-  review and final-head CI are required.
+  review and final-head CI are required. TODAY integration required resolving only the appended UX decision
+  entries; both approved entries are retained in slice order. Combined TODAY/BODY/MORE/cave Chromium
+  verification: 40 PASS; architecture, TypeScript and production/PWA build PASS. New-head review/CI pending.
   Codex owns the takeover verification and handoff; Claude authored the recovered implementation.
 - **Preserved research and next pilot:** existing branch `ccr-88f5c085-metric-pilot`, committed head
   `e63a6659a3b3097b39482f9cfa4d38db15371eff`, no open PR. Contains CHP-001, HARVEST-001 and
@@ -23,7 +26,7 @@ no merge authorized. This entry supersedes stale status below; older entries rem
   decisions, record reuse licences, save/index harvests. The harvest records pilot approval and lifestyle-logging
   parity gaps. No uncommitted Claude workspace is available here, so additional unpushed work cannot be recovered.
   The capability-map index and durable pilot brief/checkpoint still need completing on that branch.
-- **Sequence:** independent review of MORE/cave; Gavin integrates TODAY then MORE/cave; fetch master and
+- **Sequence:** renewed review/CI of MORE/cave after integrating merged TODAY; Gavin merges MORE/cave; fetch master and
   resume the existing pilot branch, reconcile its shared seed and approved foundation styling, verify and open
   its one PR. Do not expand the pilot beyond hydration and steps.
 - **Other open PRs:** #473 comparison is described as included in merged #474; #482 is an old check-in fix.
@@ -3642,6 +3645,27 @@ Brief: [VISUAL-FOUNDATION-002.md](VISUAL-FOUNDATION-002.md). Branch `ccr-88f5c08
   2. Gavin merges.
 - **Waiting for Gavin's go:** TODAY on the foundation, then MORE and the cave, and BODY's sub-16 px captions and
   buttons.
+- **#516** merged at `e1209287`; independent review PASS at `e8445e23`. Its two non-blocking notes ride in
+  VISUAL-FOUNDATION-003.
+
+---
+
+# VISUAL-FOUNDATION-003 — TODAY's first view on the foundation (Gavin, 2026-11-14; Protected, approved)
+
+Brief: [VISUAL-FOUNDATION-003.md](VISUAL-FOUNDATION-003.md). Branch `ccr-88f5c085-today-deck`.
+
+- **What it does:**
+  - the date sits on the skyline header;
+  - the band, the next step and the numbers are framed panels, with the numbers moved under the next step;
+  - Garmin captions are in Garmin blue;
+  - the empty preparation frame is fixed;
+  - BODY is brought up to 16 px;
+  - there is no training panel (Gavin).
+- **Also:** #516's notes (THIS WEEK's empty-week wording, the second habit list's tiebreak).
+- **Next:**
+  1. independent exact-head review;
+  2. Gavin merges.
+- **Later, each with Gavin's go:** MORE and the cave's headers on the command bar.
 
 ---
 
