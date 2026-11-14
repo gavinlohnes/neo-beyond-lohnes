@@ -87,3 +87,39 @@ it("review of #522: resting LATEST falls back to the previous lived day, and say
     expect((await getMetricDetail("resting", now)).today).toEqual({ kind: "latest", value: null, from: null });
   } finally { vi.useRealTimers(); }
 });
+
+it("slice 4: calories keep eaten (your logs) and burned (Garmin) as two series, a day without meals missing, read without writing", async () => {
+  const { syntheticGarminMonth } = await import("./helpers/syntheticGarminMonth");
+  const { importActivitySnapshot } = await import("../src/application/externalActivityCommands");
+  const { getMeasuredSnapshot } = await import("../src/application/measuredQueries");
+  const { createSavedMeal, logMeal } = await import("../src/application/nutritionCommands");
+  try {
+    const H = 3_600_000, DAY = 24 * H;
+    const firstDay = new Date(2026, 8, 22, 16, 30).getTime(), now = new Date(2026, 9, 21, 22, 10).getTime();
+    vi.setSystemTime(now);
+    const { days, activity } = syntheticGarminMonth(firstDay, 30, now, { calories: true });
+    await db.beyondDays.bulkAdd(days);
+    await importActivitySnapshot(activity);
+    const meal = await createSavedMeal({ name: "Rice bowl", calories: 650, proteinG: 40, carbsG: 70, fatG: 15 });
+    vi.setSystemTime(firstDay + 27 * DAY + 3 * H); await logMeal(days[27]!.id, meal.id);
+    vi.setSystemTime(firstDay + 29 * DAY + 2 * H); await logMeal(days[29]!.id, meal.id);
+    vi.setSystemTime(now);
+    const before = await db.events.toArray();
+    const d = await getMetricDetail("calories", now);
+    const snapshot = await getMeasuredSnapshot(now);
+    expect(d.source).toBe("GARMIN");
+    expect(d.series).toEqual(snapshot.burned);
+    expect(d.eaten!.series).toEqual(snapshot.eaten);
+    const eatenOf = (i: number) => d.eaten!.series.find((p) => p.dayId === days[i]!.id)!.value;
+    expect(eatenOf(27)).toBe(650);
+    // A lived day with no meals is missing, never 0 kcal.
+    expect(eatenOf(26)).toBeNull();
+    expect(d.today).toEqual({ kind: "pair", from: snapshot.current.from, eaten: snapshot.eatenToday, burned: snapshot.burnedToday });
+    expect(d.today.kind === "pair" && d.today.eaten.at(-1)!.total).toBe(650);
+    expect(d.usual.value).toBe(snapshot.usual.burned.value);
+    // One logged finished day is not enough for a usual: it says so instead of inventing one.
+    expect(d.eaten!.usual).toMatchObject({ value: null, samples: 1 });
+    expect(d.asOf).toBe(snapshot.caloriesAsOf);
+    expect(await db.events.toArray()).toEqual(before);
+  } finally { vi.useRealTimers(); }
+});

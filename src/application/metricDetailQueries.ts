@@ -14,6 +14,8 @@ import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual
  * - Water is what you logged (the day ledger's effective totals, corrections applied). Garmin hydration is not imported.
  * - Steps are Garmin's watch measurements (GARMIN-004's snapshot, owner entries winning where they overlap upstream).
  * - Resting heart rate is Garmin's lowest resting reading per lived day, published once a day (GARMIN-004).
+ * - Calories (slice 4) are two series side by side, never combined: burned is Garmin's total estimate (resting plus
+ *   active), eaten is your logged meals (the day ledger's effective totals). No net, remaining, deficit or surplus.
  */
 export interface MetricDetail {
   metric: DetailMetric;
@@ -25,7 +27,9 @@ export interface MetricDetail {
     | { kind: "hours"; from: number; slots: number[]; nowSlot: number; entries: number }
     | { kind: "running"; from: number; points: { t: number; total: number }[] }
     /** Resting heart rate: the newest reading, from this lived day or the one before (Garmin publishes it once a day). */
-    | { kind: "latest"; value: number | null; from: number | null };
+    | { kind: "latest"; value: number | null; from: number | null }
+    /** Calories: the two running totals through the lived day, eaten stepping up at each meal. */
+    | { kind: "pair"; from: number; eaten: { t: number; total: number }[]; burned: { t: number; total: number }[] };
   usual: DetailUsual & { dayKind?: "WORK" | "OFF" | null };
   split: { work: SplitSide; off: SplitSide };
   /** Garmin only: when the newest measurement was read on the phone. */
@@ -33,6 +37,8 @@ export interface MetricDetail {
   /** Garmin only: a run of finished days outside your own range (ROTATION-002), or null. */
   unusual: UnusualReading | null;
   readAt: number;
+  /** Calories only: the eaten series (your logs) beside `series`, which is burned (Garmin). */
+  eaten?: { series: PeriodValue[]; usual: DetailUsual; split: { work: SplitSide; off: SplitSide } };
 }
 
 export async function getMetricDetail(metric: DetailMetric, now = Date.now()): Promise<MetricDetail> {
@@ -52,6 +58,20 @@ export async function getMetricDetail(metric: DetailMetric, now = Date.now()): P
       usual: { value: snapshot.usual.resting.value, samples: snapshot.usual.resting.samples, need: BASELINE_MIN_SAMPLES },
       split: workOffSplit(series, contextOf),
       asOf: snapshot.garminAsOf, unusual: snapshot.unusual.resting, readAt: snapshot.readAt,
+    };
+  }
+
+  if (metric === "calories") {
+    const snapshot = await getMeasuredSnapshot(now);
+    // Both series on the snapshot's own lived periods, so they keep GARMIN-005's semantics exactly.
+    const series = snapshot.burned, eaten = snapshot.eaten;
+    return {
+      metric, source: "GARMIN", series,
+      today: { kind: "pair", from: snapshot.current.from, eaten: snapshot.eatenToday, burned: snapshot.burnedToday },
+      usual: { value: snapshot.usual.burned.value, samples: snapshot.usual.burned.samples, need: BASELINE_MIN_SAMPLES },
+      split: workOffSplit(series, contextOf),
+      asOf: snapshot.caloriesAsOf, unusual: null, readAt: snapshot.readAt,
+      eaten: { series: eaten, usual: usualOf(eaten), split: workOffSplit(eaten, contextOf) },
     };
   }
 

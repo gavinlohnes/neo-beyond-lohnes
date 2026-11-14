@@ -109,7 +109,7 @@ import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
 import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application/measuredQueries";
-import { MeasuredSheet, SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
+import { SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
 import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
@@ -2166,8 +2166,8 @@ export function TodayScreen({
     const garminSleepMinutes = measured?.lastNight ? measuredSleepMinutes(measured.lastNight) : null;
     const visibleSleep = sleep ?? (garminSleepMinutes === null ? null : measuredClock(garminSleepMinutes));
     const sleepSource = sleep ? (lastMainSleepFromGarmin ? "GARMIN" : "LOGGED") : garminSleepMinutes !== null ? "GARMIN" : "NOT LOGGED";
-    // METRIC-PAGE-001 (pilot): STEPS opens its metric page; the other Garmin readings keep their sheet for now.
-    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric === "steps" || metric === "resting") setDetailOpen(metric); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
+    // METRIC-PAGE-001: steps, resting heart rate and calories open the shared metric page; sleep keeps its own page.
+    const openMeasured = (metric: MeasuredMetric | null) => () => { if (busyRef.current) return; if (metric === "steps" || metric === "resting" || metric === "calories") setDetailOpen(metric); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); };
     // SUIT-ALIVE S5, dark cockpit: a reading inside your normal dims; one behind your usual pace stays lit, in amber words.
     const minute = paceHistories ? minuteOfDay(paceHistories.dayStart, now) : 0;
     const proteinPace = paceHistories ? paceReading("protein", minimumDayProteinG, paceHistories.protein, minute) : null;
@@ -2837,8 +2837,6 @@ export function TodayScreen({
     <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={refreshVersion}
       onRecords={detailOpen === "water" && onOpenHealthEvidence ? () => onOpenHealthEvidence("water") : undefined}
       onLog={detailOpen === "water" && onOpenRecord ? () => onOpenRecord("water") : undefined} />
-    <MeasuredSheet open={measuredOpen !== null && measuredOpen !== "sleep"} metric={measuredOpen ?? "steps"} snapshot={measured} onClose={() => setMeasuredOpen(null)}
-      onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
       {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}

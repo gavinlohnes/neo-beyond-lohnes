@@ -58,17 +58,20 @@ describe("GARMIN-005 — eaten vs burned", () => {
     const sheet = screen.getByRole("dialog", { name: "CALORIES", exact: true });
     await expect.element(sheet.getByRole("img", { name: /^Today so far: eaten 1,300 kcal, burned [\d,]+ kcal\.$/ })).toBeVisible();
     await expect.element(sheet.getByText("Eaten (logged)", { exact: true })).toBeVisible();
-    await expect.element(sheet.getByText(/^Garmin as of \d\d:\d\d\.$/)).toBeVisible();
-    expect(sheet.element().textContent).not.toMatch(/left|remaining|deficit|surplus|net/i);
+    // METRIC-PAGE-001 slice 4: the shared page's source line names both sources and Garmin's freshness.
+    expect(sheet.element().querySelector(".md-source")!.textContent).toMatch(/^LOGGEDGARMINEaten is what you logged\. Burned is Garmin's estimate, resting plus active; watch estimates can be off by 10–20%\. Garmin as of \d\d:\d\d\.$/);
+    const noNet = /remaining|deficit|surplus|\bnet\b|calories left/i;
+    expect(sheet.element().textContent).not.toMatch(noNet);
     if (width === 390) await shot("390-calories-today");
-    await sheet.getByRole("button", { name: "4W", exact: true }).click();
-    await expect.element(sheet.getByText(/^kcal a day on average · 8 logged days, 27 measured · today left out$/)).toBeVisible();
+    await sheet.getByRole("button", { name: "Last 30 lived days", exact: true }).click();
+    await expect.poll(() => sheet.element().querySelector("[data-md-coverage]")?.textContent).toBe("kcal a day, on average · of 29 finished days, 8 logged and 29 measured; days without a record left out · this lived day not counted");
+    expect(sheet.element().textContent).not.toMatch(noNet);
     await sheet.getByText("Show as table", { exact: true }).click();
     const unlogged = [...sheet.element().querySelectorAll("tbody tr")].find((row) => row.textContent?.includes("Not logged"));
     expect(unlogged).toBeTruthy();
     await settle();
     expect((await axe.run(sheet.element())).violations).toEqual([]);
-    if (width === 390) await shot("390-calories-4w");
+    if (width === 390) await shot("390-calories-30d");
     await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.activeElement).toBe(tile.element());
     expect(await db.events.toArray()).toEqual(before);
