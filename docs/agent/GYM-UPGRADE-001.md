@@ -1,7 +1,7 @@
 # GYM-UPGRADE-001 — complete live workout experience
 
 - **Owner approval:** Gavin deferred CSV and approved this proposed scope: clearer live workout with the visual foundation, optional “how many reps left” effort recording, warm-up/working-set labels with preparation excluded from working statistics, and a clearer finish compared with the previous session. “Approved.” Effort does not change training recommendations; that requires a separate decision.
-- **Lane:** Protected — additive set metadata and working-set statistics. Independent exact-head review, green CI and Gavin's merge required. Builder Codex. Fresh branch `codex/gym-upgrade-001` from fetched master `0ffc2a3f` (full baseline in Git parent); one PR, pending creation. No overlapping training PR found.
+- **Lane:** Protected — additive set metadata and working-set statistics. Independent exact-head review, green CI and Gavin's merge required. Builder Codex. Fresh branch `codex/gym-upgrade-001` from fetched master `0ffc2a3f3b2f76ec24493bfb8fc0b0bf47ab6a12`; one [active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/528). No overlapping training PR found.
 
 ## Experience and meaning
 
@@ -22,3 +22,10 @@ Visual work is confined to live TRAIN, Gym Mode, set-history labels and the fini
 ## Acceptance
 
 Test legacy classification, explicit 0 effort versus unknown, validation, metadata row/event/backup round-trip, warm-ups not advancing prescribed slots/rotation or inflating every statistic/record/advisory, atomic failure/duplicate/undo/reload behavior, comparable-versus-changed lifts and first-session recap. Real Chromium normal/Gym flow, rest/skip/substitution/superset/finish/partial/resume, keyboard/focus, reduced motion, 320–1024 widths, 16px controls, axe. Full Node, focused browser regressions, architecture, typecheck/build and full required CI. Exact-head independent review; never merge.
+
+
+## Builder verification and review handoff
+
+Full Node: 2315 passed, one existing skip (279 files); later concurrent undo/log regression included in the 12 passing gym-upgrade tests. Focused real Chromium: 118 unique tests passed across original TRAIN, Gym, history, atomicity, operator/recovery, redesign and upgrade files. New acceptance covers normal/Gym draft sharing and remount, optional zero effort, working-slot preservation, chronological undo despite inverse primary-key order, finish baseline, 320/375/768/1024 widths and axe. Contrast measurement finishes existing entry animations first, matching prior Gym tests. Architecture and TypeScript/production/PWA build pass. Existing failure-recovery test injects its failure after the actual commit so the new transactional duplicate check is not mistaken for the post-commit refresh.
+
+Independent early review found a missing strength-review filter, raw undone rotation evidence and non-transactional undo selection; all fixed with regressions and independently rechecked. Final exact-head review and required CI remain pending on the active PR. No merge.

@@ -272,7 +272,12 @@ describe("TRAIN-OPERATOR-001", () => {
     const screen = await render(<TrainScreen />);
     await screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }).fill("100");
     await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("10");
-    vi.mocked(getPerformedSets).mockRejectedValueOnce(new Error("Updated read unavailable"));
+    // Fail the UI refresh after commit, not the transactional duplicate-slot read.
+    const commands = await vi.importActual<typeof import("../../src/application/trainCommands")>("../../src/application/trainCommands");
+    vi.mocked(logSet).mockImplementationOnce(async (...args) => {
+      await commands.logSet(...args);
+      vi.mocked(getPerformedSets).mockRejectedValueOnce(new Error("Updated read unavailable"));
+    });
     await screen.getByRole("button", { name: "LOG", exact: true }).click();
     await expect.element(screen.getByText(/Your set was recorded/)).toBeVisible();
     expect(await getPerformedSets(session!.id)).toHaveLength(1);
