@@ -225,8 +225,10 @@ describe("Production Command Console", () => {
       for (const animation of document.getElementById("workspace-TODAY")!.getAnimations({ subtree: true })) {
         if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();
       }
-      const resume = screen.getByRole("button", { name: "RESUME WORKOUT" }).element().getBoundingClientRect();
-      expect(resume.bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
+      // TODAY's reads can still be filling in above the button right after a resize (seen once on CI: 16px low),
+      // so wait for the settled position rather than sampling one frame. A button that stays under the nav still fails.
+      await expect.poll(() => screen.getByRole("button", { name: "RESUME WORKOUT" }).element().getBoundingClientRect().bottom
+        - document.querySelector(".shell-nav")!.getBoundingClientRect().top).toBeLessThanOrEqual(0);
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     }
     await searchCommand(screen, "history");
