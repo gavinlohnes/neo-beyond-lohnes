@@ -1,11 +1,11 @@
 # Current objective — WEEK-PLANNER-002 (Gavin: “Week planner it is then”)
 
-- **Builder:** Codex; branch `codex/week-planner-001`, fresh master `77c8ab618e8bdd8eddba29d178ac476821eda806`. One PR pending; no overlapping week-planner branch found. Existing older shift what-if PR remains separate.
+- **Builder:** Codex; branch `codex/week-planner-001`, fresh master `77c8ab618e8bdd8eddba29d178ac476821eda806`. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529); no overlapping week-planner branch found. Existing older shift what-if PR remains separate.
 - **Authorization/scope:** [brief](WEEK-PLANNER-002.md). Make the existing read-only week actionable through Plan Today: work context, actual programme versus existing suggestions, canonical planned/due tasks, saved calendar freshness, explicit task placement/moves. No automatic scheduling, capacity score, deadline changes, per-date workout override, Engine/schema/provider/dependency expansion or primary navigation reorder.
 - **Recovered:** gym upgrade merged as #528. Its exact-head independent review PASS and full CI green are recorded on that PR; prior checkpoint review/CI pending text is historical.
 - **Implementation:** new compositional read model and native responsive date picker/agenda; moves reuse modifyObligation under the shared atomic gateway with current-date and stale-plan guards. Task details still complete/release. Normal task lists and Week Ahead remain; Week Ahead directly opens the planner. Draft intended dates, write/read errors and in-form retries preserve choices.
-- **Verification:** initial full Node 2323 PASS / one existing skip; latest targeted recovery/calendar/backup suite and focused Chromium are being finalized. Architecture/typecheck/production build pass before the final recovery changes; final build and required CI pending. Independent early findings fixed and rechecked; final exact-head review still required.
-- **Next:** complete final verification, publish the single PR, obtain independent exact-head review and green required CI. Gavin alone merges. No new owner decision needed within the selected objective.
+- **Verification:** full Node 2325 PASS / one existing skip (280 files); planner integration 9 PASS in UTC and New York including DST. Focused real Chromium 28 PASS in six files, including populated 320–1024px/axe, actual navigation, deadline-preserving moves, drafts/midnight, retry and post-commit recovery. Architecture, TypeScript and production/PWA build PASS. Independent early recovery findings fixed and rechecked. Final exact-head review/full required CI are the remaining PR gates; consult the PR handoff for current results after this committed checkpoint.
+- **Next:** obtain independent exact-head review and green required CI on the existing PR, then present Gavin’s merge decision. Gavin alone merges. No new owner decision needed within the selected objective.
 
 ---
 
