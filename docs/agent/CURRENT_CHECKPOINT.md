@@ -16,6 +16,8 @@
   and the exact-head independent review will be recorded on the pilot PR before handoff.
 - **Review correction:** range buttons now meet the locked 16 px minimum; the size sweep never exempts
   controls as labels and explicitly measures every button. Read-error controls use foundation tokens/focus.
+  Closed metric sheets clear their retained title so focused meal workspaces stay unchanged. Fresh Chromium/
+  query regression: 18 PASS (MetricPage001, FocusedMeals, metricDetailQueries). Final CI/review pending.
 - **Next:** complete proportional/full verification, push this existing branch, open its one PR, obtain
   independent review of data/provenance/route behavior and green final-head CI. Gavin alone decides merge.
   Stop at pilot assessment; no expansion to other metrics without approval.
