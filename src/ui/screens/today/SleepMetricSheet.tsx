@@ -11,10 +11,17 @@ import { getDaySummaries } from "../../../application/dayLedgerQueries";
 import { sleepRhythmFrom, type SleepRhythm } from "../../../application/sleepRhythmQueries";
 import { SleepRhythmSection } from "./SleepRhythm";
 import { moveSleepWindow, sleepWindow, sleepWindowValues, withLoggedSleep, type SleepZoom } from "./sleepPeriods";
+import { workOffSplit } from "../../../application/metricDetail";
+import { garminFreshness } from "../../../application/bodyDashboard";
+import { SourceTag } from "../../foundation/primitives";
+import "../../foundation/foundation.css";
+import "../../metrics/metricDetail.css";
 
 const date = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const month = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfiled: Map<string, GarminSleepUnfiled>; logged: Map<string, number>; rhythm: SleepRhythm };
+type Data = { snapshot: MeasuredSnapshot; records: ExternalSleepRevision[]; unfiled: Map<string, GarminSleepUnfiled>; logged: Map<string, number>; rhythm: SleepRhythm;
+  /** METRIC-PAGE-001 slice 3: each lived day's recorded work context, for work days against days off. */
+  contexts: Map<string, "WORK" | "OFF" | "UNKNOWN"> };
 
 /** NAV-001: navigation over existing measured evidence, never a new sleep ledger or guidance. */
 export function SleepMetricSheet({ open, onClose, onAllRecords }: {
@@ -41,12 +48,14 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
     void Promise.all([getMeasuredSnapshot(), getImportedSleep(), getUnfiledGarminSleep(), getDaySummaries()]).then(([snapshot, records, unfiled, summaries]) => {
       if (cancelled) return;
       const logged = new Map(summaries.flatMap((d) => d.sleep.primaryMinutes === undefined ? [] : [[d.beyondDayId, d.sleep.primaryMinutes] as const]));
-      setData({ snapshot, records, unfiled, logged, rhythm: sleepRhythmFrom(records, summaries) }); setAnchor(snapshot.current.from);
+      setData({ snapshot, records, unfiled, logged, rhythm: sleepRhythmFrom(records, summaries), contexts: new Map(summaries.map((d) => [d.beyondDayId, d.work.declared])) }); setAnchor(snapshot.current.from);
     }).catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [open, attempt]);
   const { series, loggedFrom } = withLoggedSleep(data?.snapshot.sleep ?? [], data?.logged ?? new Map());
   const { days, bars } = sleepWindowValues(series, anchor, zoom);
+  const split = workOffSplit(series, (dayId) => data?.contexts.get(dayId));
+  const fresh = data ? garminFreshness(data.snapshot.garminAsOf, data.snapshot.readAt) : null;
   const bounds = sleepWindow(anchor, zoom), latest = series.at(-1)?.from ?? 0, earliest = series[0]?.from ?? 0;
   const canEarlier = series.length > 0 && bounds.from > earliest;
   const canLater = series.length > 0 && bounds.to <= latest;
@@ -68,7 +77,14 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
     : zoom === "W" ? `Week of ${date(bounds.from)}` : date(anchor);
   return <>
     {!open ? null : error ? <div role="alert"><p>Sleep could not be read. Your records are unchanged.</p><button type="button" className="btn-secondary" onClick={() => setAttempt((n) => n + 1)}>RETRY SLEEP</button></div>
-      : !data ? <p role="status">Reading sleep…</p> : <div className="measured-sheet sleep-metric">
+      : !data ? <p role="status">Reading sleep…</p> : <div className="bf measured-sheet sleep-metric">
+      {/* METRIC-PAGE-001 slice 3: the shared metric page's source line. Garmin's night wins; a night it missed shows
+          the main sleep you logged, named as yours. */}
+      <div className="md-source" data-sleep-source>
+        <SourceTag garmin>{fresh?.stale ? "GARMIN · OLD" : "GARMIN"}</SourceTag>
+        {loggedFrom.size > 0 && <SourceTag>LOGGED</SourceTag>}
+        <span className="md-meta">{data.snapshot.garminAsOf !== null ? describeGarminAsOf(data.snapshot.garminAsOf, data.snapshot.readAt) : "No Garmin data yet."} A night Garmin missed shows the main sleep you logged.</span>
+      </div>
       <div className="measured-ranges" role="group" aria-label="SLEEP period">
         {(["D", "W", "M", "Y"] as const).map((id) => <button type="button" className="btn-secondary" key={id} aria-label={{ D: "Day", W: "Week", M: "Month", Y: "Year" }[id]} aria-pressed={zoom === id} onClick={() => { setZoom(id); setLimit(10); }}>{id}</button>)}
       </div>
@@ -97,6 +113,14 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
       {zoom === "D" && nights.slice(0, limit).map((r) => <SleepEvidence key={r.id} revision={r} unfiled={data.unfiled.get(r.recordKey)} />)}
       {zoom === "D" && nights.length > limit && <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 10)}>SHOW MORE</button>}
       {zoom !== "D" && <p className="meta">Tap a bar to inspect {zoom === "Y" ? "that month" : "that night"}. Swipe right for earlier, left for later.</p>}
+      {/* METRIC-PAGE-001 slice 3: work days against days off, as on the shared metric page. */}
+      <section className="md-split" aria-label="Work days and days off">
+        {(["work", "off"] as const).map((k) => <div key={k} className="md-split__side" data-md-split={k}>
+          <p className="md-split__label">{k === "work" ? "WORK DAYS" : "DAYS OFF"}</p>
+          <p className="md-split__value">{split[k].median === null ? <span className="md-none">Not enough yet</span> : hoursMinutes(split[k].median!)}</p>
+          <p className="md-meta">{split[k].days} recorded {split[k].days === 1 ? "night" : "nights"} · last 8 weeks</p>
+        </div>)}
+      </section>
       <SleepRhythmSection rhythm={data.rhythm} />
       <p className="meta">Chart: longest Garmin session per BEYOND day; a night Garmin missed shows the main sleep you logged. Corrections can differ; inspect all sleep records to review or correct it. Nothing here changes advice.</p>
       <p className="meta">Chart history starts {date(earliest)}. {bounds.from < earliest ? "This period has partial history." : ""}</p>

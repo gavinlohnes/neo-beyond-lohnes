@@ -1,3 +1,17 @@
+# Current objective — METRIC-PAGE-001 slice 3: sleep gains the shell (Gavin, 2026-11-14: "Approved and continue working")
+
+- **Branch:** `ccr-88f5c085-metric-sleep`, from master `3f84bc29`. **Builder:** Claude Code.
+- **Merged today:** #521 (quiet empty-tile caption), #522 (resting heart rate on the shared page), #523 (EXPORT-001
+  brief, another session), #524 (16 px cave tabs).
+- **What this slice does:** the sleep page keeps its own chart and navigation and gains the source line (GARMIN and
+  LOGGED, freshness, the gap-fill rule) and work days compared with days off. Both show on TODAY and in the cave's
+  VITALS. It also adds tests for LATEST's fallback (#522's review note).
+- **Elsewhere:** #520 HABIT-RHYTHM-001 (Codex) went back to draft after its review PASS. Codex owns it.
+- **Next:** independent review of this slice, then Gavin merges. After that, the metric page covers every number that
+  has a detail view except calories, which stays on MeasuredSheet until a later decision.
+
+---
+
 # Current objective — METRIC-PAGE-001 slice 2: resting heart rate (Gavin, 2026-11-14: "Approved and continue working")
 
 - **Branch:** `ccr-88f5c085-metric-sleep-rhr`, from master `c9d6702d`. **Builder:** Claude Code.

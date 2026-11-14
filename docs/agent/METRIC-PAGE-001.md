@@ -61,3 +61,16 @@ inside `SleepPeriods`, without changing its chart.
   - the layout and size sweep and axe pass for all three pages, from 320 to 1024 px.
 - **Updated:** Garmin004's resting test for the shared page. UnusualForYou passes unchanged.
 
+## Slice 3 — sleep keeps its page and gains the shell (Gavin, 2026-11-14: "Approved and continue working")
+
+- **Branch:** `ccr-88f5c085-metric-sleep`, from master `3f84bc29`. **Builder:** Claude Code.
+- **What changes, as planned in slice 2:** `SleepPeriods` keeps its own D/W/M/Y chart, period navigation, night
+  evidence and rhythm. It gains two pieces of the shared metric page:
+  - **The source line:** GARMIN (or GARMIN · OLD) with its freshness, LOGGED when a night uses your main sleep, and the
+    existing rule in plain words: "A night Garmin missed shows the main sleep you logged."
+  - **Work days compared with days off:** the shared `workOffSplit` over the chart's own series (Garmin nights, filled
+    with logged nights), from each lived day's recorded work context.
+- **Where it shows:** TODAY's sleep sheet and the cave's VITALS, because they share `SleepPeriods`.
+- **Also:** slice 2's review note is done. Tests now cover LATEST falling back to the previous lived day, and saying
+  nothing when neither day has a reading.
+

@@ -3251,7 +3251,7 @@ as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
   - **Water:** your logs, in white, by the hour. 1Y is the average of logged days.
   - **Steps:** Garmin, in blue, as a running total. 1Y is weekly totals.
   - **Resting heart rate:** Garmin, in blue, one reading a day. 1Y is the average of measured days.
-- **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged-wins). It gets the
-  shell's source line and work-day comparison next, without changing its chart.
+- **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged nights where Garmin
+  missed). Slice 3 adds the shell's source line and work days compared with days off, without changing its chart.
 - **Unchanged:** read only, no Engine input, no new data or schema.
 
