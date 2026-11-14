@@ -86,6 +86,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## INTELLIGENCE SPINE / DELTA
 
+- **Week planning (WEEK-PLANNER-002, owner selected):** `application/weekPlannerQueries.ts` composes existing Week Ahead work provenance, training-programme assignments or labelled existing workout suggestions, canonical eligible tasks and local cached calendar events. `ui/screens/more/WeekPlanner.tsx` lives inside Plan Today with a Week Ahead link. `moveWeekTask` wraps existing `modifyObligation` atomically with stale-plan and current-date guards; only planned attention moves, never deadlines/recurrence/status. No parallel plan store, auto allocation or invented free-time score. Native controls support touch/keyboard; draft intended dates survive midnight and open-sheet retry retains its choice. [Brief](WEEK-PLANNER-002.md). Reuse this rather than building a second week calendar.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,

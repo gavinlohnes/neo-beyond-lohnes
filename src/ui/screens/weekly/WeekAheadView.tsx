@@ -27,7 +27,7 @@ function shiftLabel(hour: number): string {
 
 /** FORECAST-DECIDE-001: onOpenPlanItem / onOpenPlans let the forecast's suggestions open your plans; left out without them. */
 /** OPERATOR-EXPERIENCE-001: onScheduleChanged tells a host (TODAY) that a confirmed change was saved, moved or cancelled. */
-export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChanged }: { now?: Date | undefined; onOpenPlanItem?: (id: string) => void; onOpenPlans?: () => void; onScheduleChanged?: () => void }) {
+export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChanged, onOpenWeekPlanner }: { now?: Date | undefined; onOpenPlanItem?: (id: string) => void; onOpenPlans?: () => void; onScheduleChanged?: () => void; onOpenWeekPlanner?: () => void }) {
   const [week, setWeek] = useState<WeekAhead | null>(null);
   const [tasks, setTasks] = useState<WeekTasksDay[] | null>(null);
   const [tasksFailed, setTasksFailed] = useState(false);
@@ -66,6 +66,7 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChan
 
   return (
     <div data-week-ahead ref={rootRef}>
+      {onOpenWeekPlanner && <button type="button" className="btn-secondary" onClick={onOpenWeekPlanner}>OPEN WEEK PLANNER</button>}
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
       <ConfirmedChangesList now={now} refreshKey={changes} onChanged={() => { setChanges((n) => n + 1); onScheduleChanged?.(); }} />
       {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
