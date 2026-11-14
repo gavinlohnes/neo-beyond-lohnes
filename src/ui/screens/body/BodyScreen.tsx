@@ -19,7 +19,6 @@ import { Cave, type CaveRequest } from "../systems/CaveVitals";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { DataHome } from "./DataHome";
 import { BodyDashboard, type DashLog } from "./BodyDashboard";
-import { HabitsPanel } from "../../components/HabitsPanel";
 import { Icon } from "../../icons/Icon";
 import type { BeyondDay, HydrationEntry, NutritionTargets, SavedMeal } from "../../../domain/common/types";
 import {
@@ -266,12 +265,14 @@ function MealSection({ direct, summary, open, onToggle, children }: {
   );
 }
 
-export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onOpenReview, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight, onOpenRecord, caveRequest }: {
+export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onOpenTrainingRecords, onOpenReview, onEditRecord, correctionRequest, sheetFocus, focus = null, focusRequest = 0, overviewRequest = { key: 0, retap: false }, visible = true, refreshKey = 0, returnLabel = "BACK TO TODAY", onReturnToToday, onMealJourneyStateChange, onMealJourneyInFlightChange, evidenceRequest = null, onHealthHistory, onLogWeight, onOpenRecord, onOpenLife, caveRequest }: {
   overviewOnly?: boolean;
   /** FRICTION-001: BODY home's WEIGHT card opens the weight log directly. */
   onLogWeight?: () => void;
   /** BODY-DASH-001: opens the app's existing LOG sheets from the dashboard. */
   onOpenRecord?: ((target: DashLog) => void) | undefined;
+  /** BODY-DASH-001: Lifestyle's HABITS opens YOUR LIFE, where Habits live. */
+  onOpenLife?: (() => void) | undefined;
   foodLookupEnabled?: boolean;
   onOpenTrainingRecords?: (() => void) | undefined;
   onOpenReview?: ((view: "overview" | "rotation") => void) | undefined;
@@ -2476,7 +2477,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       waterConfirmation={waterConfirmation?.message ?? null} onAddWater={(oz) => void handleLogWaterAmount(oz)} onUndoWater={() => void handleUndoLog("WATER")}
       onOpen={(metric) => metric === "sleep" ? setSleepMetricOpen(true) : showProgress(metric === "nutrition" ? "calories" : metric)}
       onLog={onOpenRecord ?? (onLogWeight ? (target) => { if (target === "weight") onLogWeight(); } : undefined)}
-      lifestyle={<><HabitsPanel active={visible} /><QuitTracker /></>} /></div>
+      onOpenHabits={onOpenLife} /></div>
     <div hidden={progressOpen || pictureOpen}><DataHome compact busy={busy || foodSearchBusy} onLogWeight={onLogWeight} onSleep={() => setSleepMetricOpen(true)} shortcuts={[
       { label: "Weight", onOpen: () => showProgress("weight") },
       ...(onOpenTrainingRecords ? [{ label: "Training records", onOpen: onOpenTrainingRecords }] : []),

@@ -77,3 +77,52 @@
 The cave's NUMBERS tab still shows its own TODAY numbers and Weight card, which repeat the dashboard. Removing them
 touches long-standing tested paths ("water history", "WEIGHT HISTORY", dated weigh-ins), so it was left out. The
 recommendation is to trim NUMBERS to History in a follow-up.
+
+## Visual acceptance pass (Gavin, 2026-11-14: "visual acceptance is not yet granted")
+
+This continues on the same branch, with the reviewer's two BLOCK fixes kept: steps never show a fake 0, and there is
+no "0 kcal" eaten.
+
+| Finding | Change |
+|---|---|
+| A. Header collisions | Narrow cards keep only the icon, the label (breaking between words only, e.g. "RESTING / HR") and ›. The source tag and + move to a second row. A collision check (no two header parts overlap, nothing spills out of a card) runs at 320–1024 px, and also with long values and names at 320 px, as a stand-in for zoom. |
+| B. Desktop | At most two columns. The four-column rule is gone. The app shell keeps DATA at phone width, so 768 and 1024 px show the same readable two columns, centred. |
+| C. Density | The full-width LOG buttons became a + in each card. Padding, gaps and chart heights are tighter. The second DATA title is gone. The first 360 × 800 screen now shows the command bar plus the whole of hydration and sleep (was: hydration only). The dashboard is about 130 px shorter. |
+| D. Identity | Primary cards (hydration, sleep) have a red frame, a faint red wash and 46 px numerals. Secondary cards use 30 px numerals and a grey frame, with the red bracket on every card. Hydration's number sits beside its chart (faint guides, ticks, a red NOW line). Sleep shows the times with a red →, a 14 px stage bar and a stage-minute key. The command bar opens with a red "///". |
+| E. Header | The global DATA header stays. The second "DATA" title is removed. One framed command bar carries "/// BODY // HEALTH", the date, the shift context and LOG +. A hidden "Your numbers" h2 keeps the heading order. |
+| F. Lifestyle | No inline form. HABITS › opens YOUR LIFE, where Habits live; QUIT TRACKER › opens the existing quit tracker in LOG. |
+| G. The cave's duplication | Documented below and not changed. |
+
+**Contrast:** secondary text now uses a contrast-safe quiet tone, because the no-day palette failed AA with plain
+`--p-t2`. Full axe AA, including contrast, passes in every rendered state.
+
+Screenshots (`screenshots/BODY-DASH-001/`):
+- `body-dash-360-open.png`, the first phone screen;
+- `body-dash-360-full.png`;
+- `body-dash-412.png`, `body-dash-768.png`, `body-dash-1024.png`;
+- `body-dash-320-long.png`, long values and names;
+- `body-dash-360-water-undo.png`, `body-dash-360-steps-sheet.png`, expanded states.
+
+### Remaining differences from the concept
+
+- **Intentional, for doctrine:**
+  - no hydration ring or "% of goal", and no step goal (no target exists);
+  - no distance (not imported);
+  - weight's line is white (your logs);
+  - no separate HR card beyond resting HR;
+  - the concept's top tab bar (TODAY / DATA / LIFE / FIELD) is not adopted, because the primary navigation is out of
+    scope.
+- **Intentional, for scope:** the cave's tabs keep their text design (out of scope), and BEYOND's emblem stays.
+- **Unresolved, for later:**
+  - one shared D/W/M/Y metric page for every card (BODY-DASH-002);
+  - richer chart axes on secondary cards.
+- **Pre-existing, not changed:** DATA's shortcut list below switches to four columns at a 760 px window inside the
+  phone-width shell ("Measur ements"). The rule is shared with MORE and YOUR LIFE (`systemsHome.css`), so its fix
+  belongs in a small shared-layout follow-up.
+
+### Smallest safe follow-up for the cave's NUMBERS duplication
+
+NUMBERS still shows TODAY's tiles and the Weight card above History. The smallest safe change is to collapse those
+two into one quiet "Today's readings" disclosure in NUMBERS (closed by default) and keep History as is. This keeps
+every control the history and correction tests use ("water history", "WEIGHT HISTORY", dated weigh-ins), so nothing
+is removed. It's a separate PR for Gavin's go.

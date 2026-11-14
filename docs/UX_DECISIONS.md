@@ -3108,3 +3108,8 @@ view.**
   opens existing history.
 - **Garmin scope:** imports stay watch-only (steps, heart rate, resting HR, sleep, calories). No weight or hydration
   import.
+- **Visual acceptance pass (Gavin, 2026-11-14):**
+  - **Header:** no second DATA title; one command bar carries BODY // HEALTH, the day and LOG.
+  - **Layout:** at most two columns; hydration and sleep are primary.
+  - **Actions:** log actions are a + on each card; narrow cards put the source and + on their own row.
+  - **Lifestyle:** it opens the existing Habits (YOUR LIFE) and quit tracker (LOG), not an inline form.

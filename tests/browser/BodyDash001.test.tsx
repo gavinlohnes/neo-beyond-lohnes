@@ -22,6 +22,19 @@ import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
 const SHOTS = import.meta.env.VITE_WALKTHROUGH_SHOTS as string | undefined;
 const firstDay = new Date(2026, 8, 22, 16, 30).getTime();
 const now = new Date(2026, 9, 21, 22, 10).getTime(); // day 29 of 30 is in progress (a work day)
+/** No two visible parts of a card header overlap, and nothing spills out of its card. */
+function assertNoCollisions(label: string) {
+  const overlaps: string[] = [];
+  for (const head of document.querySelectorAll<HTMLElement>(".bd-card__head, .bd-bar")) {
+    const parts = [...head.children].filter((c) => (c as HTMLElement).offsetParent !== null && !c.classList.contains("visually-hidden")).map((c) => [c, c.getBoundingClientRect()] as const);
+    for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+      const [a, ra] = parts[i]!, [b, rb] = parts[j]!;
+      if (ra.left < rb.right - 0.5 && rb.left < ra.right - 0.5 && ra.top < rb.bottom - 0.5 && rb.top < ra.bottom - 0.5) overlaps.push(`${a.className}×${b.className}`);
+    }
+  }
+  const spill = [...document.querySelectorAll<HTMLElement>(".bd-card")].filter((c) => c.scrollWidth > c.clientWidth + 1).map((c) => c.dataset.dash);
+  expect({ overlaps, spill }, label).toEqual({ overlaps: [], spill: [] });
+}
 const card = (id: string) => document.querySelector<HTMLElement>(`[data-dash="${id}"]`);
 const text = (id: string) => card(id)?.textContent ?? "";
 const settle = async () => {
@@ -72,20 +85,21 @@ describe("BODY-DASH-001", () => {
     // Your logs are LOGGED; the watch's are GARMIN, with freshness.
     expect(text("water")).toMatch(/^HYDRATIONLOGGED.*32 oz/);
     expect(text("weight")).toContain("205.2 lb");
-    expect(text("weight")).toMatch(/▼ -1\.4 lb \(8d\)/); // vs the weigh-in nearest a week before
+    expect(text("weight")).toMatch(/▼ -1\.4 lb · 8d/); // vs the weigh-in nearest a week before
     expect(text("weight")).not.toContain("Goal"); // no goal unless you set one
     expect(text("nutrition")).toMatch(/Eaten640 kcal/);
     expect(text("nutrition")).toMatch(/Protein48( \/ \d+)? g/);
-    expect(text("nutrition")).toMatch(/Burned \(Garmin estimate\): [\d,]+ kcal/);
+    expect(text("nutrition")).toMatch(/Burned \(Garmin estimate\) [\d,]+ kcal/);
     expect(text("nutrition")).not.toMatch(/net|remaining|deficit/i);
     expect(text("sleep")).toMatch(/SLEEPGARMIN.*\dh \d\dm/);
     expect(document.querySelectorAll("[data-dash='sleep'] .bd-stages i").length).toBeGreaterThan(0);
-    expect(text("steps")).toMatch(/STEPSGARMIN[\d,]+Usual work day: [\d,]+/);
+    expect(text("steps")).toMatch(/STEPSGARMIN[\d,]+Usual work day [\d,]+/);
     expect(text("resting")).toMatch(/RESTING HRGARMIN\d+ bpm/);
     expect(text("lifestyle")).toContain("Fasting, done today✓");
     expect(text("lifestyle")).toContain("Stretch, not done yet today○");
-    expect(text("lifestyle")).toContain("Alcohol:");
+    expect(text("lifestyle")).toContain("Alcohol ·");
     await aa("dashboard 360");
+    assertNoCollisions("360");
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
     if (SHOTS) {
       // What opening DATA shows on a phone, then the whole dashboard on a tall screen.
@@ -98,6 +112,7 @@ describe("BODY-DASH-001", () => {
     const before = await db.events.where("type").equals("WATER_LOGGED").count();
     await screen.getByRole("group", { name: "Add water" }).getByRole("button", { name: "+8 oz" }).click();
     await expect.poll(() => text("water")).toContain("40 oz");
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-360-water-undo.png`, element: card("water")! }); }
     expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(before + 1);
     await card("water")!.querySelector<HTMLButtonElement>(".bd-confirm button")!.click();
     await expect.poll(() => text("water")).toContain("32 oz");
@@ -106,15 +121,17 @@ describe("BODY-DASH-001", () => {
     // History: steps open GARMIN-004's own sheet; water opens Progress; BACK TO DATA returns.
     await screen.getByRole("button", { name: "Open steps history" }).click();
     await expect.element(screen.getByRole("dialog")).toBeVisible();
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-360-steps-sheet.png` }); }
     await userEvent.keyboard("{Escape}");
     await screen.getByRole("button", { name: "Open water history" }).click();
     await expect.poll(() => [...document.querySelectorAll<HTMLButtonElement>("button")].some((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null)).toBe(true);
     [...document.querySelectorAll<HTMLButtonElement>("button")].find((b) => b.textContent === "BACK TO DATA" && b.offsetParent !== null)!.click();
     await expect.element(screen.getByRole("region", { name: "Your numbers" })).toBeVisible();
 
-    // Lifestyle opens the existing habits and quit tools in place.
-    await screen.getByRole("button", { name: "HABITS AND QUIT" }).click();
-    await expect.poll(() => !!document.getElementById("bd-lifestyle-tools")).toBe(true);
+    // Lifestyle links out to the existing tools rather than expanding a form inline.
+    expect(card("lifestyle")!.querySelector("form, input")).toBeNull();
+    await expect.element(screen.getByRole("button", { name: "QUIT TRACKER" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "HABITS" })).toBeVisible();
 
     // The cave's eight tabs and DATA's shortcuts are still there, below the dashboard.
     expect(document.querySelectorAll("[data-cave-tab]").length).toBe(8);
@@ -124,9 +141,10 @@ describe("BODY-DASH-001", () => {
     expect(dash.compareDocumentPosition(shortcuts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(shortcuts.compareDocumentPosition(cave) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    for (const width of [412, 1024]) {
+    for (const width of [412, 768, 1024]) {
       await page.viewport(width, 900); await settle();
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+      assertNoCollisions(`${width}`);
       if (SHOTS) { await page.viewport(width, width > 700 ? 1300 : 1900); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-${width}.png` }); }
     }
   }, 60_000);
@@ -170,5 +188,24 @@ describe("BODY-DASH-001", () => {
     expect(text("nutrition")).toContain("No meals logged");
     expect(text("nutrition")).not.toMatch(/Eaten|0 kcal/);
     expect([...card("water")!.querySelectorAll(".bd-axis span")].map((s) => s.textContent)).toEqual(["16:30", "NOW", "16:30"]);
+  });
+
+  it("stays readable with long values and names at 320 px (a zoomed phone), with no collisions or spill", async () => {
+    await page.viewport(320, 800);
+    vi.setSystemTime(new Date(2026, 10, 18, 18, 2)); const day = await startDay();
+    vi.setSystemTime(new Date(2026, 10, 18, 19)); await logWater(day.id, 128); await logProtein(day.id, 312); await logBodyweight(day.id, 1234.5);
+    const meal = await createSavedMeal({ name: "A very long named post-shift recovery meal", calories: 12840, proteinG: 0, carbsG: 0, fatG: 0 });
+    await logMeal(day.id, meal.id);
+    await createHabit({ name: "Read twenty pages before the night shift starts", kind: "ANY_DAY" });
+    await saveQuitHabit({ name: "Late-night energy drinks" });
+    vi.setSystemTime(new Date(2026, 10, 18, 20));
+    const screen = await render(<App />);
+    await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
+    await expect.poll(() => text("weight")).toContain("1234.5");
+    await expect.poll(() => text("lifestyle")).toContain("Read twenty pages");
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    assertNoCollisions("320 long");
+    await aa("dashboard 320 long");
+    if (SHOTS) { await page.viewport(320, 1700); await settle(); await page.screenshot({ path: `${SHOTS}/body-dash-320-long.png` }); }
   });
 });
