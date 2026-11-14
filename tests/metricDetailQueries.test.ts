@@ -62,3 +62,28 @@ it("resting heart rate: Garmin's newest reading from this or the previous lived 
     expect(await db.events.toArray()).toEqual(before);
   } finally { vi.useRealTimers(); }
 });
+
+it("review of #522: resting LATEST falls back to the previous lived day, and says nothing when both are unmeasured", async () => {
+  const { syntheticGarminMonth } = await import("./helpers/syntheticGarminMonth");
+  const { importActivitySnapshot } = await import("../src/application/externalActivityCommands");
+  try {
+    const firstDay = new Date(2026, 8, 22, 16, 30).getTime(), now = new Date(2026, 9, 21, 22, 10).getTime();
+    vi.setSystemTime(now);
+    const { days, activity } = syntheticGarminMonth(firstDay, 30, now);
+    await db.beyondDays.bulkAdd(days);
+    await importActivitySnapshot(activity);
+    const all = await getMetricDetail("resting", now);
+    const [previous, current] = all.series.slice(-2);
+    const inPeriod = (p: { from: number; to: number }) => (r: { time: string }) => { const t = Date.parse(r.time); return t >= p.from && t < p.to; };
+    // The seed is like a real evening: this lived day has no resting reading yet, the previous one does.
+    expect(previous!.value).not.toBeNull();
+    // This lived day unmeasured: the newest reading is the previous lived day's.
+    await db.externalRestingHeartRates.bulkDelete((await db.externalRestingHeartRates.toArray()).filter(inPeriod(current!)).map((r) => r.key));
+    const fallback = await getMetricDetail("resting", now);
+    expect(fallback.today).toMatchObject({ kind: "latest", from: previous!.from });
+    expect(fallback.today.kind === "latest" && fallback.today.value).not.toBeNull();
+    // Both unmeasured: no reading, never an older one dressed up as recent.
+    await db.externalRestingHeartRates.bulkDelete((await db.externalRestingHeartRates.toArray()).filter(inPeriod(previous!)).map((r) => r.key));
+    expect((await getMetricDetail("resting", now)).today).toEqual({ kind: "latest", value: null, from: null });
+  } finally { vi.useRealTimers(); }
+});

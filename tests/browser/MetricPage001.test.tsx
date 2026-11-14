@@ -195,6 +195,41 @@ describe("METRIC-PAGE-001 pilot", () => {
     await expect.element(sheet("RESTING HEART RATE")).toBeVisible();
   });
 
+  it("slice 3: the sleep page keeps its own chart and gains the source line and work days against days off", async () => {
+    await seedLivedMonth();
+    await page.viewport(360, 900);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Sleep / }).click();
+    const sleep = page.getByRole("dialog", { name: "SLEEP", exact: true });
+    await expect.element(sleep).toBeVisible();
+    await expect.poll(() => text("[data-sleep-source]")).toContain("GARMIN");
+    expect(text("[data-sleep-source]")).toContain("A night Garmin missed shows the main sleep you logged.");
+    expect(document.querySelector("dialog[open] [data-sleep-source] .bf-src--garmin")).not.toBeNull();
+    // Its own D/W/M/Y navigation and chart are unchanged.
+    await expect.element(sleep.getByRole("button", { name: "Earlier sleep period" })).toBeVisible();
+    expect(text('[data-md-split="work"]')).toContain("WORK DAYS");
+    expect(text('[data-md-split="off"]')).toMatch(/DAYS OFF.*recorded nights? · last 8 weeks/);
+    expect(text('[data-md-split="work"]')).toMatch(/\dh \d\dm|Not enough yet/);
+    const box = document.querySelector<HTMLElement>("dialog[open] .sleep-metric")!;
+    expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth + 1);
+    const result = await axe.run(document.querySelector("dialog[open]")!, { runOnly: ["wcag2a", "wcag2aa"] });
+    expect(result.violations.map((v) => v.id)).toEqual([]);
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-sleep.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
+  });
+
+  it("review of #527: the sleep page shows no GARMIN tag when there is no Garmin data", async () => {
+    vi.setSystemTime(MONTH_NOW);
+    const { startDay, logSleep } = await import("../../src/application/commands");
+    const day = await startDay();
+    await logSleep(day.id, 420, "PRIMARY");
+    await page.viewport(360, 900);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Main sleep|^Sleep / }).click();
+    await expect.element(page.getByRole("dialog", { name: "SLEEP", exact: true })).toBeVisible();
+    await expect.poll(() => text("[data-sleep-source]")).toContain("No Garmin data yet.");
+    expect(document.querySelector("dialog[open] [data-sleep-source] .bf-src--garmin")).toBeNull();
+  });
+
   it("nothing spills, sentences keep 16 px, and every page passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 900);
