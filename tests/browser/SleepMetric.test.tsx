@@ -10,6 +10,7 @@ import { importSleepSnapshot } from "../../src/application/externalSleepCommands
 import { logSleep, startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
+import { openReadings } from "./helpers/dataReadings";
 
 const now = new Date(2026, 9, 21, 22, 10).getTime();
 async function seed() {
@@ -30,7 +31,7 @@ describe("NAV-001 sleep metric", () => {
     await expect.element(sheet.getByText("average a night", { exact: true })).toBeVisible();
     await sheet.getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.poll(() => document.activeElement === tile.element()).toBe(true);
-    await screen.getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "DATA", exact: true }).click(); await openReadings();
     const dataSleep = screen.getByRole("button", { name: "main sleep history", exact: true }); await dataSleep.click();
     sheet = sheetOf(screen);
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");

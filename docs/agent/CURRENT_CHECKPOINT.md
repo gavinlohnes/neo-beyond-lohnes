@@ -3542,3 +3542,15 @@ Brief: [BODY-DASH-001.md](BODY-DASH-001.md). Branch `ccr-88f5c085-body-dash`.
 - **Open decisions for Gavin:**
   - trim the cave's NUMBERS tab (it repeats the dashboard);
   - a shared D/W/M/Y metric page (BODY-DASH-002).
+
+---
+
+# Post-BODY cleanup (Gavin, 2026-11-14) — two sequential PRs
+
+- **#512 (BODY-DASH-001)** merged at `4403ca4e`; its last two CI jobs finished green.
+- **Objective 1, NUMBERS-CLEANUP-001** (branch `ccr-88f5c085-numbers-cleanup`):
+  - NUMBERS' copy of today's tiles and the Weight card folds into one closed "Today's readings" disclosure;
+  - click tests added for the Lifestyle links.
+- **Objective 2, the shared shortcut grid:** starts from fresh master only after Objective 1 merges with Gavin's
+  approval.
+- **Not started:** BODY-DASH-002 and the visual-foundation mission wait for authorization.

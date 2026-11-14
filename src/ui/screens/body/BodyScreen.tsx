@@ -336,6 +336,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const [readingsReady, setReadingsReady] = useState(false);
   const [readCorrectionKey, setReadCorrectionKey] = useState<number | null>(null);
   const [dataRevision, setDataRevision] = useState(0);
+  // NUMBERS-CLEANUP-001: the cave's copy of today's numbers starts folded; the dashboard above leads.
+  const [readingsOpen, setReadingsOpen] = useState(false);
   const localOrigin = useRef<{ trigger: HTMLElement | null; scrollY: number } | null>(null);
   const readRevision = useRef(0);
   const manualReadFocusPending = useRef(false);
@@ -2492,6 +2494,9 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       onOpenWholePicture={openPicture}
       onInspectDay={(id) => { setHealthDay(id); setCaveView({ key: ++caveViewKey.current, tab: "lead" }); }}
       lead={{ label: "NUMBERS", content: <>
+      {/* NUMBERS-CLEANUP-001 (Gavin, 2026-11-14): the dashboard above now leads with today's numbers and weight, so the
+          cave's own copies fold into one closed disclosure. Every tile, way in and LOG WEIGHT is still here, one tap away. */}
+      <div className="data-readings"><FieldDisclosure summary="Today's readings" open={readingsOpen} onToggle={setReadingsOpen}>
       <section aria-label="Today's numbers"><h2 className="section-label">TODAY</h2>
         {readingsReady ? <HealthOverview day={day} calories={totalMealCalories} protein={dayProteinG} water={total} sleep={sleepEntries} lastMainSleep={lastMainSleep} showWeight={false} weight={weightHistory} mealEntries={mealEntries} calorieCopy={nutritionTargets?.calorieTargetKcal ? describeCalorieProgress(totalMealCalories, nutritionTargets.calorieTargetKcal, mealEntries.length > 0) : "Logged meals"} proteinCopy={describeProteinProgress(dayProteinG, effectiveProteinTargetG)} onExplore={exploreOverview} /> : <p role="status">Reading recorded information…</p>}
         {mealReadFailed && <p role="alert">Could not refresh DATA.<button type="button" className="btn-secondary" onClick={() => void retryMealRead()}>RETRY READINGS</button></p>}
@@ -2504,6 +2509,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           {onLogWeight && <button type="button" className="btn-secondary" disabled={busy || foodSearchBusy} onClick={onLogWeight}>LOG WEIGHT</button>}</div>
         {/* DENSITY-001: photos, measurements, records, whole picture and rotation are DATA's shortcuts above; not listed twice. */}
       </section>
+      </FieldDisclosure></div>
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}
