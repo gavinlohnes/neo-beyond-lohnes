@@ -46,3 +46,9 @@ it("slice 2: the sleep plan's windows are outlined while still ahead, and named 
   const placed = placeMarks(marks, dayStart).find((m) => m.kind === "SLEEP_PLAN")!;
   expect([placed.from, placed.to]).toEqual([expect.closeTo(15 / 24, 4), expect.closeTo(21.75 / 24, 4)]);
 });
+
+it("review of #507: a last-of-run window is named from your past runs, as ROUTE's FIRST SLEEP card names it", async () => {
+  const { plannedMarks } = await import("../src/application/livedDayMap");
+  const [mark] = plannedMarks([{ kind: "SLEEP", start: at(19, 7, 30), end: at(19, 14, 15), basis: "PAST_RUNS" }], new Date(2026, 10, 18, 20));
+  expect(mark!.label).toBe("First sleep after the run, usually 07:30–14:15 (sleep plan, your past runs)");
+});

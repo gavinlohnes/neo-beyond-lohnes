@@ -44,10 +44,12 @@ export function deriveMapMarks(input: MapInput, now: Date): MapMark[] {
  * shift sleep plan's nap and sleep windows, as outlined blocks, while they are still ahead (end after now). No advice
  * text: the cards, their sources and SAVE/SKIP stay in ROUTE, one tap away.
  */
-export function plannedMarks(windows: readonly { kind: "NAP" | "SLEEP"; start: string; end: string }[], now: Date): MapMark[] {
+export function plannedMarks(windows: readonly { kind: "NAP" | "SLEEP"; start: string; end: string; basis?: "RHYTHM" | "PAST_RUNS" }[], now: Date): MapMark[] {
   return windows.filter((w) => Date.parse(w.end) > now.getTime()).map((w) => ({
     kind: w.kind === "NAP" ? "NAP_PLAN" : "SLEEP_PLAN", at: w.start, until: w.end, planned: true,
-    label: w.kind === "NAP" ? `Nap window ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan)` : `Usual sleep ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan, your Garmin rhythm)`,
+    label: w.kind === "NAP" ? `Nap window ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan)`
+      : w.basis === "PAST_RUNS" ? `First sleep after the run, usually ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan, your past runs)`
+      : `Usual sleep ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan, your Garmin rhythm)`,
   }));
 }
 

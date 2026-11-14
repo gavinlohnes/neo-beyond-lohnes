@@ -2884,6 +2884,8 @@ on TODAY's lived-day bar, under these conditions:
 - they are outlined, planned blocks only, shown while still ahead;
 - they carry no advice text on TODAY, and their times are the cards' own;
 - "SLEEP PLAN ›" opens ROUTE, where the cards, their sources and SAVE/SKIP stay.
+- On the last shift of a run, the sleep window is the FIRST SLEEP card's own past-runs times, or none, so the bar and
+  ROUTE never disagree (review of #507). The key says "Planned sleep" and "Planned nap".
 
 Everything else in this entry is unchanged.
 - **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+

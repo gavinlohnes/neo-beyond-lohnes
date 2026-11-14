@@ -44,7 +44,7 @@ export interface ShiftSleepPlan {
    * bar. The nap window (only when your own wake time gives one) and your usual post-shift sleep (Garmin rhythm). No
    * new rule: these are the cards' own numbers.
    */
-  windows: { kind: "NAP" | "SLEEP"; start: string; end: string }[];
+  windows: { kind: "NAP" | "SLEEP"; start: string; end: string; basis: "RHYTHM" | "PAST_RUNS" }[];
 }
 
 /** Cited constants: each rule number lives here with the source sentence it comes from (quoted from the full text). */
@@ -126,7 +126,9 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
     // Only a usual sleep that begins within 12 h of the shift's end is the sleep after this shift.
     if (s.getTime() - end.getTime() <= 12 * 60 * MIN) sleepStart = s;
   }
-  if (sleepStart && work) windows.push({ kind: "SLEEP", start: sleepStart.toISOString(), end: nextAtClock(sleepStart, work.end).toISOString() });
+  // Review of #507: on the last shift of a run the FIRST SLEEP card's own times (past runs) are the sleep window, so
+  // TODAY and ROUTE never disagree; the work-day rhythm is used otherwise.
+  if (sleepStart && work && !lastOfRun) windows.push({ kind: "SLEEP", start: sleepStart.toISOString(), end: nextAtClock(sleepStart, work.end).toISOString(), basis: "RHYTHM" });
   const cutoff = new Date((sleepStart ?? end).getTime() - CAFFEINE_CUTOFF_HOURS * 60 * MIN);
   cards.push({
     kind: "CAFFEINE", title: "Caffeine cutoff",
@@ -145,7 +147,7 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
     const before = rhythm?.groups.find((g) => g.kind === (firstOfRun ? "OFF" : "WORK"));
     const wake = before ? lastAtClock(latestEnd, before.end) : null;
     const gap = wake && wake < latestEnd && latestEnd.getTime() - wake.getTime() <= 16 * 60 * MIN ? wake : null;
-    if (gap) windows.push({ kind: "NAP", start: gap.toISOString(), end: latestEnd.toISOString() });
+    if (gap) windows.push({ kind: "NAP", start: gap.toISOString(), end: latestEnd.toISOString(), basis: "RHYTHM" });
     cards.push({
       kind: "NAP", title: firstOfRun ? "Pre-shift nap · first night of the run" : "Pre-shift nap",
       detail: gap
@@ -166,6 +168,7 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
     const at = (m: number) => new Date(anchor.getTime() + m * MIN);
     // Review of #481: the cited guidance is about night shifts, so a day shift gets your own record only.
     const soon = overnight ? "Sleep soon after this shift. " : "";
+    if (usual) windows.push({ kind: "SLEEP", start: at(usual.start).toISOString(), end: at(usual.end).toISOString(), basis: "PAST_RUNS" });
     cards.push({
       kind: "FIRST_SLEEP", title: "First sleep after the run",
       detail: usual
