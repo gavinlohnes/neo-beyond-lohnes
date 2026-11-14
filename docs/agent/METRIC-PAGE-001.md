@@ -60,4 +60,3 @@ inside `SleepPeriods`, without changing its chart.
   - usual and Alfred are present;
   - the layout and size sweep and axe pass for all three pages, from 320 to 1024 px.
 - **Updated:** Garmin004's resting test for the shared page. UnusualForYou passes unchanged.
-

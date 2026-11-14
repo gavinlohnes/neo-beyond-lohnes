@@ -7,7 +7,15 @@ resume authorized work when ownership permits, or recommend one next objective f
 New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
-## Current priority — complete the 3.0 field gate
+## Current approved build — HABIT-RHYTHM-001 (2026-11-14)
+
+Gavin approved explicit Done / Didn't do it / Not recorded, a seven-day overview, 28-day history
+and corrections to existing past-day records. [Bounded brief](agent/HABIT-RHYTHM-001.md). Quit
+tracker, reminders and health correlations stay out. METRIC-PAGE-001 merged as #519; this is the
+next single objective, not a standing approval for the harvest's other recommendations. Live
+verification/review and PR status are maintained in CURRENT_CHECKPOINT and GitHub.
+
+## Earlier field priority — complete the 3.0 field gate
 
 **Apps Checklist completed, 2026-11-04.** All ten deliverables across A1–A9 are merged through
 PRs #405, #406 and #410–#417. Master is at Dexie v25 and the integrated gate passes 432 test files

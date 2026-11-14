@@ -115,7 +115,7 @@ describe("BODY-DASH-001", () => {
     expect(text("steps")).toMatch(/STEPSGARMIN[\d,]+Usual work day [\d,]+/);
     expect(text("resting")).toMatch(/RESTING HRGARMIN\d+ bpm/);
     expect(text("lifestyle")).toContain("Fasting, done today✓");
-    expect(text("lifestyle")).toContain("Stretch, not done yet today○");
+    expect(text("lifestyle")).toContain("Stretch, not recorded today—");
     expect(text("lifestyle")).toContain("Alcohol ·");
     await aa("dashboard 360");
     assertNoCollisions("360");
