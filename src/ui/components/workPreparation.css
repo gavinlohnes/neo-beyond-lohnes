@@ -8,3 +8,5 @@
 /* Keep the two common confirmations beside each other at phone widths. */
 .preparation-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .preparation-actions button { width: 100%; min-width: 0; padding-inline: 6px; font-size: 12px; letter-spacing: .08em; }
+/* VISUAL-FOUNDATION-003: on shift the group shows nothing but its closed sheet; it draws no empty frame then. */
+.work-preparation:not(:has(> :not(dialog))) { margin-block: 0; padding-block: 0; border-block: 0; }

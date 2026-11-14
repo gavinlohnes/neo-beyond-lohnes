@@ -17,7 +17,7 @@ export function habitApplies(habit: Habit, date: Date, scheduledWork: boolean) {
 export async function getHabitWorkspace(now = new Date()) {
   const [habits, day, schedule, days, events] = await Promise.all([
     // Oldest first; two habits created in the same millisecond keep a fixed order (name, then id), not the store's.
-    db.habits.where("status").equals("ACTIVE").sortBy("createdAt").then((list) => list.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.name.localeCompare(b.name) || a.id.localeCompare(b.id))),
+    getActiveHabits(),
     getActiveDay(), getSchedulePattern(), db.beyondDays.toArray(),
     db.events.where("type").equals("HABIT_SET").toArray(),
   ]);
@@ -45,6 +45,8 @@ export async function getHabitWorkspace(now = new Date()) {
   };
 }
 
+/** Oldest first; habits created in the same millisecond keep a fixed order (name, then id), not the store's. */
 export async function getActiveHabits(): Promise<Habit[]> {
-  return db.habits.where("status").equals("ACTIVE").sortBy("createdAt");
+  const list = await db.habits.where("status").equals("ACTIVE").toArray();
+  return list.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }

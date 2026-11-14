@@ -6,10 +6,11 @@
 
 /* Never more than two columns: the app shell keeps DATA phone-width, and two readable columns beat four cramped ones. */
 .bd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.bd-split { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 12px; }
-.bd-split__num { display: grid; gap: 4px; }
+.bd-split { display: grid; grid-template-columns: minmax(0, max-content) minmax(96px, 1fr); align-items: end; gap: 12px; }
+/* 16 px captions wrap rather than squeeze the picture beside them (Accessibility, amended 2026-11-14). */
+.bd-split__num { display: grid; gap: 4px; min-width: 0; }
 .bd-split--sleep { align-items: center; }
-.bd-span { display: flex; justify-content: flex-end; gap: 8px; margin: 0; font-family: var(--font-mono, monospace); font-size: 14px; color: var(--p-t1, #f2f2f2); }
+.bd-span { display: flex; justify-content: flex-end; gap: 8px; margin: 0; font-family: var(--font-mono, monospace); font-size: 16px; color: var(--p-t1, #f2f2f2); }
 .bd-span span[aria-hidden] { color: var(--bf-red); }
 .bd-viz { min-width: 0; }
 .bd-bars { display: block; width: 100%; height: 40px; }
@@ -22,25 +23,25 @@
 .bd-stages { position: relative; height: 14px; margin: 2px 0; background: var(--p-s3, #141414); }
 .bd-stages i { position: absolute; top: 0; bottom: 0; }
 .bd-stages--own i { background: var(--p-t2, #a8a8a8); }
-.bd-stage-key { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 11px; color: var(--p-t2, #a8a8a8); }
+.bd-stage-key { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 16px; color: var(--p-t2, #a8a8a8); }
 .bd-stage-key li { display: grid; grid-template-columns: 8px minmax(0, 1fr); align-items: center; gap: 1px 5px; }
 .bd-stage-key b { grid-column: 2; }
 .bd-stage-key i { width: 8px; height: 8px; flex: none; }
 .bd-stage-key b { font-weight: 600; color: var(--p-t1, #f2f2f2); }
 .bd-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 2px; }
 .bd-quick button, .bd-confirm button { min-height: 40px; padding: 0 6px; background: transparent; color: var(--p-t1, #f2f2f2);
-  border: 1px solid var(--bf-line); font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .04em; cursor: pointer; }
+  border: 1px solid var(--bf-line); font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .02em; cursor: pointer; }
 .bd-quick button:disabled { opacity: .6; }
-.bd-confirm { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; color: var(--p-t1, #f2f2f2); }
+.bd-confirm { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: 16px; color: var(--p-t1, #f2f2f2); }
 .bd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.bd-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--bf-line); font-size: 13px; color: var(--bf-quiet); overflow-wrap: anywhere; }
+.bd-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--bf-line); font-size: 16px; color: var(--bf-quiet); overflow-wrap: anywhere; }
 .bd-chip--done { color: var(--p-t1, #f2f2f2); border-color: var(--p-t3, #8c8c8c); }
 .bd-chip--empty { border-style: dashed; }
 .bd-chip__mark { margin-left: 6px; }
 .bd-links { display: flex; flex-wrap: wrap; gap: 0 18px; }
 .bd-link { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; padding: 0; background: none; border: 0; color: var(--p-t1, #f2f2f2);
-  font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
+  font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .1em; cursor: pointer; }
 /* The stage key takes two rows when the sleep panel is narrow, so names and times never crowd. */
-@container (max-width: 330px) {
+@container (max-width: 400px) {
   .bd-stage-key { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 6px; }
 }

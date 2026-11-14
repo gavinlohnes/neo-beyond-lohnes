@@ -138,3 +138,18 @@ it("nothing collides, spills or shrinks below the size rule from 320 to 1024 px,
   const r = await axe.run(document.querySelector(".train-operator") ?? document.body, { runOnly: ["wcag2a", "wcag2aa"] });
   expect(r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
 });
+
+it("review of #516: a week with no workouts says so in words, never a bare 0 (DENSITY-001)", async () => {
+  vi.setSystemTime(NOW - 9 * 86_400_000);
+  const day = await startDay();
+  await submitCheckIn(day.id, GREEN);
+  await session(NOW - 8 * 86_400_000, day.id, [[135, 10]]); // last week only
+  vi.setSystemTime(NOW);
+  await page.viewport(360, 780);
+  const screen = await render(<App />);
+  await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+  await expect.element(screen.getByRole("article", { name: "THIS WEEK" })).toBeVisible();
+  await expect.poll(() => text("week")).toContain("No workouts this week.");
+  expect(text("week")).not.toMatch(/\b0 sessions?\b/);
+  expect(text("last")).toContain("1 working set");
+});
