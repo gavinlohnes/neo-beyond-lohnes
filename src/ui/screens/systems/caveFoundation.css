@@ -17,12 +17,13 @@
 .cave .cave__tab { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; }
 .cave .cave__tab[aria-pressed="true"] { border-bottom-color: var(--cv-red); }
 
-/* Each block of a view is a framed panel (nested blocks stay inside their parent's frame). */
-.cave .cave__block:not(.cave__block .cave__block) {
+/* Each block of a view is a framed panel (nested blocks stay inside their parent's frame); ROUTE's stops and LOG's
+   lines are one panel each. */
+.cave .cave__block:not(.cave__block .cave__block), .cave .cave__route, .cave .log__list, .cave .brief__poll, .cave .brief__aar {
   position: relative; margin-top: 8px; padding: 12px 12px 12px 14px; background: var(--cv-s1); border: 1px solid var(--cv-line);
   clip-path: polygon(0 0, calc(100% - var(--cv-cut)) 0, 100% var(--cv-cut), 100% 100%, var(--cv-cut) 100%, 0 calc(100% - var(--cv-cut)));
 }
-.cave .cave__block:not(.cave__block .cave__block)::before {
+.cave .cave__block:not(.cave__block .cave__block)::before, .cave .cave__route::after, .cave .log__list::after, .cave .brief__poll::after, .cave .brief__aar::after {
   content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--cv-red); border-top: 2px solid var(--cv-red); pointer-events: none;
 }
 .cave .cave__cap { font-size: 12px; font-weight: 600; color: var(--p-t1, #f2f2f2); }
@@ -33,5 +34,11 @@
 
 /* Sentences at 16 px. */
 .cave .cave__sum, .cave .cave__facts, .cave .cave__feeds, .cave .cave__trace, .cave .cave__gm,
-.cave .cave__kv dt, .cave .cave__kv dd { font-size: 16px; }
+.cave .cave__kv dt, .cave .cave__kv dd, .cave .cave__stop-why, .cave .cave__stop-name, .cave .log__text, .cave .brief__detail, .cave .brief__note { font-size: 16px; }
+.cave .file__text, .cave .file__cal-name, .cave .file__src, .cave .file__cal-days { font-size: 16px; }
+.cave .month__debt { font-size: 16px; }
+.cave .cave__legend { margin: 0; font-size: 16px; line-height: 1.4; color: var(--cv-quiet); }
+.cave .brief__aar > div:not(.brief__aar-head) { font-size: 16px; }
+/* ROUTE's timeline line is its own ::before; it keeps its place inside the panel's padding. */
+.cave .cave__route::before { left: calc(61px + 14px); }
 .cave .cave__axis { font-size: 10px; }

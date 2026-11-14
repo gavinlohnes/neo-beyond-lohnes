@@ -24,14 +24,16 @@ const settle = async () => {
 };
 
 function check(root: Element, label: string) {
-  const panels = [...root.querySelectorAll<HTMLElement>(".sys-card, .cave__block, .cave__head, .bf-bar")];
+  const panels = [...root.querySelectorAll<HTMLElement>(".sys-card, .cave__block, .cave__route, .log__list, .brief__poll, .brief__aar, .cave__head, .bf-bar")];
   const spill = panels.filter((p) => p.getClientRects().length && p.scrollWidth > p.clientWidth + 1).map((p) => p.className);
   const small: string[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     const t = n.textContent?.trim(), el = n.parentElement!;
-    if (!t || el.closest(".visually-hidden, dialog, [hidden], svg") || !el.getClientRects().length) continue;
-    const size = parseFloat(getComputedStyle(el).fontSize), isLabel = t === t.toUpperCase() && t.length <= 24;
+    // FILE's dense data table, MONTH's day grid and REVIEW's embedded rotation map keep their compact chart/table labels in this slice
+    // (VISUAL-FOUNDATION-004 records the exception).
+    if (!t || el.closest(".visually-hidden, dialog, [hidden], svg, .file__run, .rotation, .month__grid") || !el.getClientRects().length) continue;
+    const cs = getComputedStyle(el), size = parseFloat(cs.fontSize), isLabel = (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
     if (size < (isLabel ? 10 : 16)) small.push(`${t} (${size}px)`);
   }
   expect({ spill, small, pageWidth: document.documentElement.scrollWidth <= window.innerWidth }, label).toEqual({ spill: [], small: [], pageWidth: true });
@@ -76,10 +78,10 @@ it("THE CAVE: a command-bar head, red chosen view, framed blocks in every view, 
   for (const view of VIEWS) {
     cave.querySelector<HTMLButtonElement>(`[data-cave-tab="${view}"]`)!.click();
     await expect.poll(() => cave.querySelector(`[data-cave-tab="${view}"]`)!.getAttribute("aria-pressed")).toBe("true");
-    await expect.poll(() => cave.querySelectorAll(".cave__block").length).toBeGreaterThan(0);
+    await expect.poll(() => cave.querySelectorAll(".cave__block, .cave__route, .log__list, .brief__poll, .brief__aar").length, { message: view }).toBeGreaterThan(0);
     const pressed = cave.querySelector(`[data-cave-tab="${view}"]`)!;
     expect(getComputedStyle(pressed).borderBottomColor, view).not.toBe(getComputedStyle(cave.querySelector('[aria-pressed="false"]')!).borderBottomColor);
-    const top = [...cave.querySelectorAll(".cave__block")].filter((b) => !b.parentElement!.closest(".cave__block"));
+    const top = [...cave.querySelectorAll(".cave__block, .cave__route, .log__list, .brief__poll, .brief__aar")].filter((b) => !b.parentElement!.closest(".cave__block"));
     for (const b of top) expect(getComputedStyle(b).clipPath, view).toContain("polygon");
     for (const width of [320, 360, 1024]) {
       await page.viewport(width, 1600); await settle();

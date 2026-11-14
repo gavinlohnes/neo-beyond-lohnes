@@ -3599,3 +3599,23 @@ Brief: [VISUAL-FOUNDATION-002.md](VISUAL-FOUNDATION-002.md). Branch `ccr-88f5c08
 - **Waiting for Gavin's go:** TODAY on the foundation, then MORE and the cave, and BODY's sub-16 px captions and
   buttons.
 
+---
+
+# VISUAL-FOUNDATION-004 — MORE and THE CAVE on the foundation (Gavin, 2026-11-14: "Amaze me")
+
+Brief: [VISUAL-FOUNDATION-004.md](VISUAL-FOUNDATION-004.md). Branch `ccr-88f5c085-more-cave`.
+
+- **What it does:**
+  - MORE opens on the command bar, and its status cards are framed panels;
+  - the cave's head is a command bar, its tabs are mono capitals with the chosen one in red, and its blocks are
+    framed panels;
+  - sentences are 16 px, except FILE's run table, MONTH's grid and the rotation map, which are recorded as an
+    exception.
+- **Next:**
+  1. independent review;
+  2. Gavin merges after VISUAL-FOUNDATION-003 (#517).
+- **CHP-001 (Capability Harvest Protocol, Gavin):**
+  - **First harvest:** the numbers subsystem.
+  - **Recommended mission:** METRIC-PAGE-001, one metric page used everywhere, with a 90-day direction line.
+  - **Status:** awaiting Gavin's go.
+
