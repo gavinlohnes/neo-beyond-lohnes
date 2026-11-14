@@ -267,6 +267,32 @@ describe("METRIC-PAGE-001 pilot", () => {
     expect(await db.events.toArray()).toEqual(before);
   });
 
+  it("DIRECTION-90-001: with 200 days of water, one plain line compares the last 90 days with the year; a month stays quiet", async () => {
+    const { syntheticGarminMonth } = await import("../helpers/syntheticGarminMonth");
+    const first = MONTH_NOW - 199 * DAY - 5 * H - 40 * 60_000; // 200 lived days, the last in progress
+    const { days } = syntheticGarminMonth(first, 200, MONTH_NOW);
+    await db.beyondDays.bulkAdd(days);
+    for (let i = 0; i < 200; i++) { vi.setSystemTime(Date.parse(days[i]!.startedAt) + 2 * H); await logWater(days[i]!.id, i >= 110 ? 60 : 40); }
+    vi.setSystemTime(MONTH_NOW);
+    const before = await db.events.count();
+    await page.viewport(360, 900);
+    await render(<MetricDetailSheet open metric="water" onClose={() => {}} />);
+    await expect.poll(() => text("[data-md-direction]")).toBe("Last 90 days: 60 oz a day, higher than your year's 40. Medians of logged days.");
+    // The same line in every range; never a score or a verdict.
+    await range("HYDRATION", "Last year, by week");
+    expect(text("[data-md-direction]")).toBe("Last 90 days: 60 oz a day, higher than your year's 40. Medians of logged days.");
+    expect(text(".md")).not.toMatch(/better|worse|improv|score|great|well done/i);
+    expect(await db.events.count()).toBe(before);
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-direction.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
+  });
+
+  it("DIRECTION-90-001: a month of records says nothing about direction yet", async () => {
+    await seedLivedMonth(); await seedPastWater();
+    await render(<MetricDetailSheet open metric="steps" onClose={() => {}} />);
+    await expect.poll(() => text("[data-md-hero]")).not.toBe("");
+    expect(document.querySelector("dialog[open] [data-md-direction]")).toBeNull();
+  });
+
   it("nothing spills, sentences keep 16 px, and every page passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 900);

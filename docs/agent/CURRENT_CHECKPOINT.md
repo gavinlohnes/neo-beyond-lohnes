@@ -1,4 +1,15 @@
-# Current objective — METRIC-PAGE-001 slice 4: calories join the shared page (Gavin, 2026-11-14: "That's good for me")
+# Current objective — DIRECTION-90-001: the last 90 days against your year (Gavin, 2026-11-14: "Approved")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-metric-direction`, built on #530's branch (it needs the calories page).
+  Feature lane; Gavin merges. [Brief](DIRECTION-90-001.md).
+- **Scope:** one line on the shared metric page comparing the median of the last 90 finished lived days with the last
+  year's; quiet until 180 days of records. Read only.
+- **In review elsewhere:** TARGET-PROPOSAL-001 (Protected), on `ccr-88f5c085-target-proposal`.
+- **Next:** CI green, then Gavin merges, after #530.
+
+---
+
+# Ready to merge — METRIC-PAGE-001 slice 4 (#530): calories join the shared page (Gavin, 2026-11-14: "That's good for me")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-calories`, from master `77c8ab61`. Feature lane: no independent
   review required; Gavin merges. Codex's WEEK-PLANNER-002 (#529) is open and does not touch these files beyond docs.
