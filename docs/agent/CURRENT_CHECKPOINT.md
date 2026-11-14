@@ -12,7 +12,10 @@ no merge authorized. This entry supersedes stale status below; older entries rem
 - **Current objective:** finish verification/handoff for VISUAL-FOUNDATION-004 on its existing branch
   `ccr-88f5c085-more-cave`, [PR #518](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/518).
   Recovered implementation head `98904aefb08dc3501039f0273128561d3bd4f593`.
-  All planned implementation is already pushed. Independent review is absent; do not claim ready to merge.
+  All planned implementation is pushed. Independent review BLOCK found an inherited viewport rule forcing
+  two status columns below the approved 560 px container breakpoint. Codex is correcting that bounded finding
+  with computed-column regression coverage (fails before the fix at a 768 px viewport); renewed exact-head
+  review and final-head CI are required.
   Codex owns the takeover verification and handoff; Claude authored the recovered implementation.
 - **Preserved research and next pilot:** existing branch `ccr-88f5c085-metric-pilot`, committed head
   `e63a6659a3b3097b39482f9cfa4d38db15371eff`, no open PR. Contains CHP-001, HARVEST-001 and
@@ -27,10 +30,15 @@ no merge authorized. This entry supersedes stale status below; older entries rem
   Neither is the current visual-foundation objective; left untouched rather than closing or merging.
 - **Takeover verification:** architecture PASS; TypeScript and production/PWA build PASS. Remote PR #517
   and #518 CI both completed successfully at their recovered heads. Full local Node/Chromium verification
-  is running; its final result will be posted on PR #518. This takeover changes handoff documentation only;
-  the recovered product implementation is unchanged. Final-head CI and independent review remain required.
-- **Review blocker:** this session exposes no independent worker/thread reviewer capability. DEV-FLOW-002
-  requires the existing independent review handoff; the Builder cannot substitute its own verification.
+  was interrupted after browser progress stalled; separate full Node verification passed (2278 passed,
+  1 skipped), and 32 focused MORE/cave browser checks passed. Results are recorded on PR #518.
+  The follow-up corrects only the reviewer-found responsive grid and adds its regression assertion.
+  Final-head CI and renewed independent review remain required.
+- **Review:** independent reviewer Huygens posted BLOCK on the recovered head, with architecture/type/build
+  and 47 focused browser tests passing. Reviewer capability became available in the follow-up session.
+  Responsive-grid correction: 32 focused Chromium tests PASS, architecture and TypeScript/production/PWA
+  build PASS. Renewed independent exact-head review is requested after pushing the correction.
+  Review verdict and final verification are maintained on PR #518; Gavin remains the merger.
 
 ---
 

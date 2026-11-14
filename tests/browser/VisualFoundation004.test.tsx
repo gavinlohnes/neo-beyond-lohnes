@@ -60,6 +60,11 @@ it("MORE opens on the command bar with its actions, and each system's status is 
   for (const width of [320, 360, 412, 768, 1024]) {
     await page.viewport(width, 1400); await settle();
     check(home, `MORE ${width}`);
+    // Wide windows still contain MORE in the phone-width shell: columns follow the status container, not the viewport.
+    const status = home.querySelector<HTMLElement>(".sys-section--status")!;
+    const cards = status.querySelector<HTMLElement>(".sys-cards")!;
+    expect(getComputedStyle(cards).gridTemplateColumns.trim().split(/\s+/).length, `status columns at viewport ${width}`)
+      .toBe(status.clientWidth >= 560 ? 2 : 1);
     if (SHOTS && (width === 360 || width === 1024)) await page.screenshot({ path: `${SHOTS}/more-${width}.png` });
   }
   await aa(home, "MORE");

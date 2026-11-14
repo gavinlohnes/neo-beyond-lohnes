@@ -10,7 +10,8 @@
 .sys-section--status { border-bottom: 0; container-type: inline-size; }
 .sys-section--status > .sys-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); margin-bottom: 4px; }
 .sys-section--status > .sys-eyebrow::before { content: "/// " / ""; color: var(--bf-red); letter-spacing: -.05em; }
-.sys-section--status .sys-cards { gap: 8px; }
+/* Override the legacy viewport rule: only the status container can opt into two columns. */
+.sys-section--status .sys-cards { grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .sys-section--status .sys-cards li { border-top: 0; }
 .sys-section--status .sys-card {
   position: relative; height: 100%; box-sizing: border-box; padding: 12px 12px 12px 14px; background: var(--bf-s1); border: 1px solid var(--bf-line);
