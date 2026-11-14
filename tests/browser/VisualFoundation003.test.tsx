@@ -97,6 +97,22 @@ it("a recommendation card is the panel itself: one frame, with the bracket, and 
   if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/today-360-recommendation.png` }); }
 });
 
+it("review of #517: a Garmin tile with no reading today keeps its quiet caption, not Garmin blue", async () => {
+  await seedLivedMonth();
+  // Garmin data exists, but nothing measured yet in this lived day (it began at 16:30).
+  const todayStart = (await db.beyondDays.toArray()).map((d) => d.startedAt).sort().at(-1)!;
+  const today = (await db.externalActivityHours.toArray()).filter((h) => h.startTime >= todayStart);
+  await db.externalActivityHours.bulkDelete(today.map((h) => h.id));
+  await page.viewport(360, 1600);
+  await render(<App />);
+  await expect.element(page.getByRole("region", { name: "Day mode" })).toBeVisible();
+  await expect.poll(() => [...document.querySelectorAll(".today-numbers .cc-fuel > button")].some((b) => b.textContent!.startsWith("STEPS"))).toBe(true);
+  const steps = [...document.querySelectorAll(".today-numbers .cc-fuel > button")].find((b) => b.textContent!.startsWith("STEPS"))!;
+  expect(steps.querySelector(".cc-num")!.textContent).toContain("—");
+  expect(steps.getAttribute("data-source")).toBeNull();
+  expect(getComputedStyle(steps.querySelector(".cc-flab:last-child")!).color).not.toBe("rgb(57, 135, 229)");
+});
+
 it("nothing collides or spills, and the restyled parts keep the size rule, from 320 to 1024 px; it passes axe", async () => {
   await seedLivedMonth();
   await page.viewport(360, 1600);
