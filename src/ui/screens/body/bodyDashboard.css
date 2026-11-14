@@ -1,88 +1,24 @@
-/* BODY-DASH-001: DATA's numbers-first dashboard — tactical minimalism. Black surfaces, sharp cut corners, thin red
-   structure, big condensed numerals. Red is structure and action; your logs are white; Garmin's watch measurements
-   wear Garmin blue (GARMIN-004). No glow, no motion beyond the app's own. */
-.bd { --bd-quiet: color-mix(in srgb, var(--p-t1, #f2f2f2) 72%, var(--p-t2, #a8a8a8)); --bd-red: var(--p-red, #D0141B); --bd-line: var(--p-line-2, #292929); --bd-s1: var(--p-s1, #060606); --bd-garmin: #3987e5;
-  --bd-cut: 12px; display: grid; gap: 8px; margin: 0 0 16px; container-type: inline-size; }
-
-/* Command bar: BODY // HEALTH, the lived day, LOG. The app header above already names DATA. */
-.bd-bar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px 8px 12px;
-  border: 1px solid var(--bd-line); border-left: 2px solid var(--bd-red); background: var(--bd-s1); }
-.bd-bar__id { min-width: 0; display: grid; gap: 4px; }
-.bd-bar__eyebrow { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); }
-.bd-slashes { color: var(--bd-red); letter-spacing: -.05em; margin-right: 4px; }
-.bd-bar__day { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 0; font-size: 13px; color: var(--p-t1, #f2f2f2); }
-.bd-bar__date { font-family: var(--font-mono, monospace); letter-spacing: .1em; }
-.bd-bar__ctx { display: inline-flex; align-items: center; gap: 5px; }
-.bd-bar__ctx em { font-style: normal; color: var(--p-t2, #a8a8a8); }
-.bd-bar__log { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; background: transparent;
-  color: var(--p-t1, #f2f2f2); border: 1.5px solid var(--bd-red); font-family: var(--font-mono, monospace); font-size: 14px;
-  letter-spacing: .14em; cursor: pointer; clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); }
-.bd-bar__log:disabled { opacity: .6; }
+/* BODY-DASH-001: DATA's numbers-first dashboard. The shared language (tokens, command bar, framed panels, source
+   tags, numerals, sparklines, meters) is BEYOND's visual foundation, src/ui/foundation/foundation.css
+   (VISUAL-FOUNDATION-001). This file holds only what is BODY's own: its grid, the water bars, the sleep stages, the
+   quick adds and the lifestyle chips. */
+.bd { display: grid; gap: 8px; margin: 0 0 16px; container-type: inline-size; }
 
 /* Never more than two columns: the app shell keeps DATA phone-width, and two readable columns beat four cramped ones. */
 .bd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.bd-card--wide { grid-column: 1 / -1; }
-
-.bd-card { position: relative; display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 10px 10px 10px 12px;
-  background: var(--bd-s1); border: 1px solid var(--bd-line);
-  clip-path: polygon(0 0, calc(100% - var(--bd-cut)) 0, 100% var(--bd-cut), 100% 100%, var(--bd-cut) 100%, 0 calc(100% - var(--bd-cut))); }
-/* Primary cards (hydration, sleep): a red frame and a faint red wash from the top. */
-.bd-card--primary { border-color: color-mix(in srgb, var(--bd-red) 55%, var(--bd-line));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bd-red) 9%, transparent), transparent 60%), var(--bd-s1); }
-/* The structural red: a bracket at the top-left of every card. */
-.bd-card::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--bd-red); border-top: 2px solid var(--bd-red); pointer-events: none; }
-
-.bd-card__head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; min-height: 28px; }
-.bd-card__icon { display: inline-flex; color: var(--p-t1, #f2f2f2); }
-.bd-card__label { min-width: 0; margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em;
-  line-height: 1.2; color: var(--p-t1, #f2f2f2); overflow-wrap: normal; word-break: normal; }
-/* Narrow cards: a slightly tighter label, breaking only between words ("RESTING / HR"). */
-.bd-card:not(.bd-card--wide) .bd-card__label { letter-spacing: .09em; }
-.bd-card__act, .bd-card__open { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
-  background: transparent; border: 0; color: var(--p-t2, #a8a8a8); cursor: pointer; }
-.bd-card__act { color: var(--p-t1, #f2f2f2); border: 1px solid var(--bd-line); }
-.bd-card__act:disabled { opacity: .6; }
-.bd-card__open { margin-right: -6px; }
-.bd-card__srcline { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; margin: -4px 0 -2px; line-height: 1; }
-
-.bd-src { font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); white-space: nowrap; }
-.bd-src--garmin { color: var(--bd-garmin); }
-
-/* Numbers: primary cards lead with a large numeral, secondary cards with a medium one. */
-.bd-value { margin: 0; font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .01em;
-  color: var(--p-t1, #f2f2f2); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.bd-value--xl { font-size: 46px; }
-.bd-value small { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 15px; letter-spacing: 0; color: var(--bd-quiet); }
-.bd-none { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 17px; letter-spacing: 0; color: var(--bd-quiet); }
-.bd-meta { margin: 0; font-size: 12px; line-height: 1.35; color: var(--bd-quiet); }
-.bd-meta b { font-weight: 600; color: var(--p-t1, #f2f2f2); }
-.bd-meta--garmin { color: var(--bd-garmin); }
-.bd-delta { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; color: var(--p-t1, #f2f2f2); }
-
-/* Hydration and sleep: the number and its picture side by side. */
 .bd-split { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 12px; }
 .bd-split__num { display: grid; gap: 4px; }
 .bd-split--sleep { align-items: center; }
 .bd-span { display: flex; justify-content: flex-end; gap: 8px; margin: 0; font-family: var(--font-mono, monospace); font-size: 14px; color: var(--p-t1, #f2f2f2); }
-.bd-span span[aria-hidden] { color: var(--bd-red); }
-
+.bd-span span[aria-hidden] { color: var(--bf-red); }
 .bd-viz { min-width: 0; }
 .bd-bars { display: block; width: 100%; height: 40px; }
-.bd-spark { display: block; width: 100%; height: 34px; }
-.bd-bars__guide { stroke: var(--bd-line); stroke-width: 1; stroke-dasharray: 1 3; vector-effect: non-scaling-stroke; }
+.bd-bars__guide { stroke: var(--bf-line); stroke-width: 1; stroke-dasharray: 1 3; vector-effect: non-scaling-stroke; }
 .bd-bars__tick { stroke: var(--p-t3, #8c8c8c); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .bd-bars__base { stroke: var(--p-t3, #8c8c8c); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .bd-bars__bar { fill: var(--p-t1, #f2f2f2); }
-.bd-bars__now { stroke: var(--bd-red); stroke-width: 1.5; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.bd-bars__now { stroke: var(--bf-red); stroke-width: 1.5; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
 .bd-axis { display: flex; justify-content: space-between; margin-top: 2px; font-family: var(--font-mono, monospace); font-size: 10px; color: var(--p-t2, #a8a8a8); }
-.bd-spark__line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.bd-spark__dot { stroke: var(--bd-s1); stroke-width: 2; }
-.bd-spark--own .bd-spark__line { stroke: var(--p-t1, #f2f2f2); }
-.bd-spark--own .bd-spark__dot { fill: var(--p-t1, #f2f2f2); }
-.bd-spark--garmin .bd-spark__line { stroke: var(--bd-garmin); }
-.bd-spark--garmin .bd-spark__dot { fill: var(--bd-garmin); }
-.bd-spark__area { fill: color-mix(in srgb, var(--bd-garmin) 18%, transparent); }
-
 .bd-stages { position: relative; height: 14px; margin: 2px 0; background: var(--p-s3, #141414); }
 .bd-stages i { position: absolute; top: 0; bottom: 0; }
 .bd-stages--own i { background: var(--p-t2, #a8a8a8); }
@@ -91,45 +27,20 @@
 .bd-stage-key b { grid-column: 2; }
 .bd-stage-key i { width: 8px; height: 8px; flex: none; }
 .bd-stage-key b { font-weight: 600; color: var(--p-t1, #f2f2f2); }
-
-.bd-meter { display: grid; gap: 3px; }
-.bd-meter__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 6px; font-size: 12px; color: var(--p-t2, #a8a8a8); }
-.bd-meter__row b { font-family: var(--font-display, sans-serif); font-size: 22px; font-weight: 700; color: var(--p-t1, #f2f2f2); }
-.bd-meter__track { height: 3px; background: var(--p-s3, #141414); }
-.bd-meter__track i { display: block; height: 100%; background: var(--p-t1, #f2f2f2); }
-
 .bd-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 2px; }
 .bd-quick button, .bd-confirm button { min-height: 40px; padding: 0 6px; background: transparent; color: var(--p-t1, #f2f2f2);
-  border: 1px solid var(--bd-line); font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .04em; cursor: pointer; }
+  border: 1px solid var(--bf-line); font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .04em; cursor: pointer; }
 .bd-quick button:disabled { opacity: .6; }
 .bd-confirm { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; color: var(--p-t1, #f2f2f2); }
-
 .bd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.bd-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--bd-line); font-size: 13px; color: var(--bd-quiet); overflow-wrap: anywhere; }
+.bd-chip { display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px; border: 1px solid var(--bf-line); font-size: 13px; color: var(--bf-quiet); overflow-wrap: anywhere; }
 .bd-chip--done { color: var(--p-t1, #f2f2f2); border-color: var(--p-t3, #8c8c8c); }
 .bd-chip--empty { border-style: dashed; }
 .bd-chip__mark { margin-left: 6px; }
 .bd-links { display: flex; flex-wrap: wrap; gap: 0 18px; }
 .bd-link { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; padding: 0; background: none; border: 0; color: var(--p-t1, #f2f2f2);
   font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
-
-.bd button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .bd * { transition: none !important; } }
-
-/* Final visual acceptance (Gavin, 2026-11-14): compact titles never break mid-word or crowd their controls. Each card
-   measures itself; a narrow card drops its icon and tightens the title's tracking, so even "NUTRITION" or
-   "RESTING HR" fits beside › at 320 px. Words still wrap only between words. */
-.bd-card { container-type: inline-size; }
-.bd-card__label { hyphens: none; }
-@container (max-width: 150px) {
-  .bd-card__label { letter-spacing: .04em; }
-  .bd-card__head { gap: 4px; }
-}
-@container (max-width: 120px) {
-  .bd-card__icon { display: none; }
-  .bd-card__head { grid-template-columns: minmax(0, 1fr) auto auto auto; }
-}
-/* The stage key takes two rows when the sleep card is narrow, so names and times never crowd. */
+/* The stage key takes two rows when the sleep panel is narrow, so names and times never crowd. */
 @container (max-width: 330px) {
   .bd-stage-key { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 6px; }
 }

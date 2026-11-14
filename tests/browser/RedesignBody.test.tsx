@@ -19,7 +19,8 @@ for(const width of [320,360,390,412])it(`puts numbers, progress and history firs
   // CAVE-DATA D1: DATA's page is the cave's first view, NUMBERS. NUMBERS-CLEANUP-001 folds its copy of today's numbers
   // and weight into "Today's readings" (the dashboard above leads); the order inside is unchanged, then History.
   const lead=root.querySelector('.cave__lead-view:not([hidden])')!;
-  expect([...lead.querySelectorAll('.data-readings section')].map(el=>el.getAttribute('aria-label'))).toEqual(["Today's numbers",'Progress']);
+  // Top-level sections only: "Today's numbers" holds its own record section once readings load (CI timing, #515).
+  expect([...lead.querySelectorAll('.data-readings section')].filter(el=>!el.parentElement!.closest('.data-readings section')).map(el=>el.getAttribute('aria-label'))).toEqual(["Today's numbers",'Progress']);
   expect([...lead.querySelectorAll(':scope > section')].map(el=>el.getAttribute('aria-label'))).toEqual(['History']);
   expect(root.querySelector('input[type="number"]')).toBeNull();
   await document.fonts.ready;

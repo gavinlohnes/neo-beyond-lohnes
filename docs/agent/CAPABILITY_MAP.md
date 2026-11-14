@@ -161,6 +161,13 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   `application/bodyDashboard.ts`.
 - Add a card here rather than to `BodyScreen.tsx`. Reuse `MeasuredSheet` for any Garmin metric's history.
 
+## VISUAL FOUNDATION (VISUAL-FOUNDATION-001)
+
+- `ui/foundation/primitives.tsx` + `foundation.css`: BEYOND's shared visual primitives (`CommandBar`, `Panel`,
+  `SourceTag`, `Sparkline`, `Meter`) and tokens (`.bf`). Use them for any new numbers-first panel instead of copying
+  BODY's styles. The rules are in [VISUAL-FOUNDATION-001.md](VISUAL-FOUNDATION-001.md).
+- No design-system dependency: the language is a few owned classes on the HUD palette.
+
 ## NUTRITION
 
 - **Existing primitive**: `SavedMeal` (`src/domain/common/types.ts`) — fully manual, no food

@@ -1,0 +1,96 @@
+/* VISUAL-FOUNDATION-001: BEYOND's shared visual foundation, extracted unchanged from BODY-DASH-001 (Gavin,
+   2026-11-14). Tactical minimalism: black surfaces, sharp cut corners, thin red structure, big condensed numerals.
+   Red is structure and action; your own logs are white; Garmin's watch measurements wear Garmin blue (GARMIN-004).
+   No glow, no motion beyond the app's own. The rules for using it are docs/agent/VISUAL-FOUNDATION-001.md.
+
+   Put `.bf` on a screen's root to give it the tokens. The tokens resolve from the HUD palette (--p-*) where the
+   screen sits, so the night and day palettes carry through. */
+.bf { --bf-quiet: color-mix(in srgb, var(--p-t1, #f2f2f2) 72%, var(--p-t2, #a8a8a8)); --bf-red: var(--p-red, #D0141B); --bf-line: var(--p-line-2, #292929); --bf-s1: var(--p-s1, #060606); --bf-garmin: #3987e5;
+  --bf-cut: 12px; }
+
+/* Command bar: a screen's eyebrow, its context line and its one action. */
+.bf-bar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px 8px 12px;
+  border: 1px solid var(--bf-line); border-left: 2px solid var(--bf-red); background: var(--bf-s1); }
+.bf-bar__id { min-width: 0; display: grid; gap: 4px; }
+.bf-bar__eyebrow { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .16em; color: var(--p-t1, #f2f2f2); }
+.bf-slashes { color: var(--bf-red); letter-spacing: -.05em; margin-right: 4px; }
+.bf-bar__day { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin: 0; font-size: 13px; color: var(--p-t1, #f2f2f2); }
+.bf-bar__date { font-family: var(--font-mono, monospace); letter-spacing: .1em; }
+.bf-bar__ctx { display: inline-flex; align-items: center; gap: 5px; }
+.bf-bar__ctx em { font-style: normal; color: var(--p-t2, #a8a8a8); }
+.bf-bar__log { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; background: transparent;
+  color: var(--p-t1, #f2f2f2); border: 1.5px solid var(--bf-red); font-family: var(--font-mono, monospace); font-size: 14px;
+  letter-spacing: .14em; cursor: pointer; clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); }
+.bf-bar__log:disabled { opacity: .6; }
+
+/* Framed panel: cut corners, a red bracket, an optional red frame for the primary ones. Wide panels span their grid. */
+.bf-panel--wide { grid-column: 1 / -1; }
+.bf-panel { position: relative; display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 10px 10px 10px 12px;
+  background: var(--bf-s1); border: 1px solid var(--bf-line);
+  clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut))); }
+/* Primary panels: a red frame and a faint red wash from the top. */
+.bf-panel--primary { border-color: color-mix(in srgb, var(--bf-red) 55%, var(--bf-line));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bf-red) 9%, transparent), transparent 60%), var(--bf-s1); }
+/* The structural red: a bracket at the top-left of every panel. */
+.bf-panel::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+
+.bf-panel__head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; min-height: 28px; }
+.bf-panel__icon { display: inline-flex; color: var(--p-t1, #f2f2f2); }
+.bf-panel__label { min-width: 0; margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em;
+  line-height: 1.2; color: var(--p-t1, #f2f2f2); overflow-wrap: normal; word-break: normal; }
+/* Narrow panels: a slightly tighter label, breaking only between words ("RESTING / HR"). */
+.bf-panel:not(.bf-panel--wide) .bf-panel__label { letter-spacing: .09em; }
+.bf-panel__act, .bf-panel__open { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
+  background: transparent; border: 0; color: var(--p-t2, #a8a8a8); cursor: pointer; }
+.bf-panel__act { color: var(--p-t1, #f2f2f2); border: 1px solid var(--bf-line); }
+.bf-panel__act:disabled { opacity: .6; }
+.bf-panel__open { margin-right: -6px; }
+.bf-panel__srcline { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; margin: -4px 0 -2px; line-height: 1; }
+
+/* Source tag: where a number came from. Grey for your own logs, Garmin blue for the watch. */
+.bf-src { font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); white-space: nowrap; }
+.bf-src--garmin { color: var(--bf-garmin); }
+
+/* Numerals: primary panels lead with a large one, secondary panels with a medium one. */
+.bf-value { margin: 0; font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .01em;
+  color: var(--p-t1, #f2f2f2); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.bf-value--xl { font-size: 46px; }
+.bf-value small { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 15px; letter-spacing: 0; color: var(--bf-quiet); }
+.bf-none { font-family: var(--font-body, sans-serif); font-weight: 400; font-size: 17px; letter-spacing: 0; color: var(--bf-quiet); }
+.bf-meta { margin: 0; font-size: 12px; line-height: 1.35; color: var(--bf-quiet); }
+.bf-meta b { font-weight: 600; color: var(--p-t1, #f2f2f2); }
+.bf-meta--garmin { color: var(--bf-garmin); }
+.bf-delta { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; color: var(--p-t1, #f2f2f2); }
+
+/* Sparkline: white for your own logs, Garmin blue (optionally with an area) for the watch. */
+.bf-spark { display: block; width: 100%; height: 34px; }
+.bf-spark__line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.bf-spark__dot { stroke: var(--bf-s1); stroke-width: 2; }
+.bf-spark--own .bf-spark__line { stroke: var(--p-t1, #f2f2f2); }
+.bf-spark--own .bf-spark__dot { fill: var(--p-t1, #f2f2f2); }
+.bf-spark--garmin .bf-spark__line { stroke: var(--bf-garmin); }
+.bf-spark--garmin .bf-spark__dot { fill: var(--bf-garmin); }
+.bf-spark__area { fill: color-mix(in srgb, var(--bf-garmin) 18%, transparent); }
+
+/* Meter: a labelled number, optionally against a target you set. */
+.bf-meter { display: grid; gap: 3px; }
+.bf-meter__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 6px; font-size: 12px; color: var(--p-t2, #a8a8a8); }
+.bf-meter__row b { font-family: var(--font-display, sans-serif); font-size: 22px; font-weight: 700; color: var(--p-t1, #f2f2f2); }
+.bf-meter__track { height: 3px; background: var(--p-s3, #141414); }
+.bf-meter__track i { display: block; height: 100%; background: var(--p-t1, #f2f2f2); }
+
+.bf button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .bf * { transition: none !important; } }
+
+/* Compact titles never break mid-word or crowd their controls (BODY-DASH-001 final acceptance). Each panel measures
+   itself; a narrow panel drops its icon and tightens its title's tracking. Words wrap only between words. */
+.bf-panel { container-type: inline-size; }
+.bf-panel__label { hyphens: none; }
+@container (max-width: 150px) {
+  .bf-panel__label { letter-spacing: .04em; }
+  .bf-panel__head { gap: 4px; }
+}
+@container (max-width: 120px) {
+  .bf-panel__icon { display: none; }
+  .bf-panel__head { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+}
