@@ -1,4 +1,15 @@
-# Current objective — METRIC-PAGE-001 slice 3: sleep gains the shell (Gavin, 2026-11-14: "Approved and continue working")
+# Current objective — GYM-UPGRADE-001 (Gavin: “Approved”)
+
+- **Builder:** Codex; branch `codex/gym-upgrade-001`, fresh fetched master `0ffc2a3f3b2f76ec24493bfb8fc0b0bf47ab6a12`. One PR pending. No overlapping active training work found.
+- **Authorization:** [bounded brief](GYM-UPGRADE-001.md). Normal/Gym live workout, optional reps left, explicit warm-ups excluded from working statistics, honest previous-session finish. CSV deferred. No effort-driven recommendations.
+- **Recovered truth:** visual foundation, hydration/steps metric pilot, habits and sleep's shared-page slice are merged. Prior checkpoint's sleep-review next action is stale: sleep merged as #527; polling-window repair merged as #526.
+- **Implementation:** additive metadata on canonical set rows/events; legacy rows remain working sets. Working-slot duplicate guard, canonical event order for undo; normal/Gym shared controls, session-scoped input drafts, visible warm-ups/effort, matching-actual-lift recap available at finish and in history. Working counts/volume/records/trends/rotation exclude warm-ups; progression formulas unchanged.
+- **Verification:** initial existing workout/history/atomicity tests and typecheck pass; architecture pass. Full Node, focused Chromium, production build and independent early risk review running. Final exact-head review and green required CI remain mandatory.
+- **Next:** resolve verification/review findings, publish the single PR and obtain final independent review. Gavin alone merges; no expansion into coaching, schema, providers, dependencies or other deferred work.
+
+---
+
+# Historical — METRIC-PAGE-001 slice 3: sleep gains the shell (Gavin, 2026-11-14: "Approved and continue working")
 
 - **Branch:** `ccr-88f5c085-metric-sleep`, from master `3f84bc29`. **Builder:** Claude Code.
 - **Merged today:** #521 (quiet empty-tile caption), #522 (resting heart rate on the shared page), #523 (EXPORT-001

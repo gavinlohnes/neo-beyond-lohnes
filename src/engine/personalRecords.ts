@@ -1,3 +1,4 @@
+import { compareSetOrder, isWorkingSet } from "../domain/workout/types";
 /**
  * Moved here unchanged from application/personalRecordQueries.ts (Drop 1,
  * Day Ledger, 2026-10-03) so the pure Day Ledger can count each session's
@@ -35,15 +36,17 @@ export interface RecordCandidateSet {
   recordedAt: string;
   /** Tie-break for sets logged in the same millisecond. */
   setNumber?: number;
+  setKind?: "WORKING" | "WARMUP";
+  seq?: number;
 }
 
 /** Logged order: time, then set number when two sets share a timestamp. */
 export function byLoggedOrder(a: RecordCandidateSet, b: RecordCandidateSet): number {
-  return a.recordedAt.localeCompare(b.recordedAt) || (a.setNumber ?? 0) - (b.setNumber ?? 0);
+  return compareSetOrder(a, b);
 }
 
 function counts(set: RecordCandidateSet): boolean {
-  return !set.skipped && !set.substitutedName && set.reps > 0;
+  return isWorkingSet(set) && !set.substitutedName && set.reps > 0;
 }
 
 /**

@@ -7,6 +7,7 @@ import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
 import { logEvent } from "./commands";
 import { WORKOUT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { getLatestCheckIn } from "./queries";
+import { compareSetOrder } from "../domain/workout/types";
 import { getPerformedSets } from "./trainQueries";
 import type { Capacity, ExerciseCueSetPayload, PerformedSetRaw } from "../domain/common/types";
 import { EXERCISE_CUE_MAX_LENGTH } from "../domain/common/types";
@@ -140,11 +141,15 @@ export async function logSet(
   weight: number,
   reps: number,
   substitutedName?: string,
+  metadata: { setKind?: "WORKING" | "WARMUP"; repsInReserve?: number } = {},
 ): Promise<void> {
   // Drop 1.6a (field soak): an empty LOG tap used to save "0 lb x 0". A logged set has at least one rep
   // (a set not done is SKIP); weight may be 0 for bodyweight work.
   if (!Number.isInteger(reps) || reps < 1) throw new Error("SET_REPS_REQUIRED: enter at least 1 rep, or SKIP the set.");
   if (!Number.isFinite(weight) || weight < 0) throw new Error("SET_WEIGHT_INVALID: weight must be 0 or more.");
+  if (!Number.isInteger(setNumber) || setNumber < 1) throw new Error("SET_NUMBER_INVALID");
+  if (metadata.setKind !== undefined && metadata.setKind !== "WORKING" && metadata.setKind !== "WARMUP") throw new Error("SET_KIND_INVALID");
+  if (metadata.repsInReserve !== undefined && (!Number.isInteger(metadata.repsInReserve) || metadata.repsInReserve < 0 || metadata.repsInReserve > 10)) throw new Error("SET_EFFORT_INVALID: enter whole reps left from 0 to 10, or leave blank.");
   const set: PerformedSet = {
     id: newId(),
     beyondDayId,
@@ -156,18 +161,22 @@ export async function logSet(
     skipped: false,
     recordedAt: new Date().toISOString(),
     ...(substitutedName ? { substitutedName } : {}),
+    ...metadata,
   };
   await writeWorkoutAtomically(async () => {
-    await db.performedSets.add(set as unknown as PerformedSetRaw);
-
+    const session = await db.workoutSessions.get(sessionId);
+    if (!session || session.status !== "ACTIVE" || session.beyondDayId !== beyondDayId) throw new Error("WORKOUT_NOT_ACTIVE");
+    if (metadata.setKind !== "WARMUP") {
+      const live = await getPerformedSets(sessionId);
+      if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) throw new Error("SET_ALREADY_RECORDED");
+    }
     const correlationId = newId();
-    await logEvent(
-      beyondDayId,
-      "SET_LOGGED",
-      { commandId: correlationId, sessionId, exerciseId, setNumber, weight, reps, ...(substitutedName ? { substitutedName } : {}) },
-      "USER",
-      correlationId,
-    );
+    const eventId = await logEvent(beyondDayId, "SET_LOGGED", {
+      commandId: correlationId, performedSetId: set.id, sessionId, exerciseId, setNumber, weight, reps,
+      ...(substitutedName ? { substitutedName } : {}), ...metadata,
+    }, "USER", correlationId);
+    const event = await db.events.get(eventId);
+    await db.performedSets.add({ ...set, seq: event!.seq } as unknown as PerformedSetRaw);
   });
 }
 
@@ -194,16 +203,14 @@ export async function skipSet(
     recordedAt: new Date().toISOString(),
   };
   await writeWorkoutAtomically(async () => {
-    await db.performedSets.add(set as unknown as PerformedSetRaw);
-
+    const session = await db.workoutSessions.get(sessionId);
+    if (!session || session.status !== "ACTIVE" || session.beyondDayId !== beyondDayId) throw new Error("WORKOUT_NOT_ACTIVE");
+    const live = await getPerformedSets(sessionId);
+    if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) throw new Error("SET_ALREADY_RECORDED");
     const correlationId = newId();
-    await logEvent(
-      beyondDayId,
-      "SET_SKIPPED",
-      { commandId: correlationId, sessionId, exerciseId, setNumber },
-      "USER",
-      correlationId,
-    );
+    const eventId = await logEvent(beyondDayId, "SET_SKIPPED", { commandId: correlationId, performedSetId: set.id, sessionId, exerciseId, setNumber }, "USER", correlationId);
+    const event = await db.events.get(eventId);
+    await db.performedSets.add({ ...set, seq: event!.seq } as unknown as PerformedSetRaw);
   });
 }
 
@@ -219,23 +226,21 @@ export async function skipSet(
  * defensively "just in case."
  */
 export async function undoLastSet(beyondDayId: string, sessionId: string): Promise<boolean> {
-  const visible = await getPerformedSets(sessionId);
-  const last = visible.reduce<PerformedSet | null>((latest, s) => {
-    if (!latest) return s;
-    if (s.recordedAt !== latest.recordedAt) return s.recordedAt > latest.recordedAt ? s : latest;
-    return s.setNumber > latest.setNumber ? s : latest;
-  }, null);
-  if (!last) return false;
+  return writeWorkoutAtomically(async () => {
+    const visible = await getPerformedSets(sessionId);
+    const last = [...visible].sort(compareSetOrder).at(-1);
+    if (!last) return false;
 
-  const correlationId = newId();
-  await logEvent(
-    beyondDayId,
-    "SET_UNDONE",
-    { commandId: correlationId, sessionId, exerciseId: last.exerciseId, setNumber: last.setNumber, performedSetId: last.id },
-    "USER",
-    correlationId,
-  );
-  return true;
+    const correlationId = newId();
+    await logEvent(
+      beyondDayId,
+      "SET_UNDONE",
+      { commandId: correlationId, sessionId, exerciseId: last.exerciseId, setNumber: last.setNumber, performedSetId: last.id },
+      "USER",
+      correlationId,
+    );
+    return true;
+  });
 }
 
 /**

@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import type { WorkoutSession } from "../domain/common/types";
 import type { PerformedSet, WorkoutTemplateId } from "../domain/workout/types";
@@ -19,8 +20,8 @@ import { getExerciseNames } from "./exerciseLibraryQueries";
  * Substitutes count — they are work performed, even though RECORDS and the
  * strength curve treat them as a different lift.
  */
-export function workoutVolumeLbs(sets: readonly Pick<PerformedSet, "weight" | "reps" | "skipped">[]): number {
-  return sets.filter((s) => !s.skipped).reduce((sum, s) => sum + s.weight * s.reps, 0);
+export function workoutVolumeLbs(sets: readonly Pick<PerformedSet, "weight" | "reps" | "skipped" | "setKind">[]): number {
+  return sets.filter((s) => isWorkingSet(s)).reduce((sum, s) => sum + s.weight * s.reps, 0);
 }
 
 type StrengthSessionType = "STANDARD" | "REDUCED";
@@ -73,7 +74,7 @@ function toEntry(session: WorkoutSession & { sessionType: StrengthSessionType; s
     status: session.status,
     startedAt: session.startedAt,
     durationMinutes: durationOf(session),
-    workingSetCount: sets.filter((s) => !s.skipped).length,
+    workingSetCount: sets.filter((s) => isWorkingSet(s)).length,
     skippedSetCount: sets.filter((s) => s.skipped).length,
     volumeLbs: workoutVolumeLbs(sets),
     recordCount,
@@ -99,6 +100,8 @@ export interface SessionRecordSet {
   skipped: boolean;
   substitutedName?: string;
   record?: PersonalRecord;
+  setKind?: PerformedSet["setKind"];
+  repsInReserve?: number;
 }
 
 export interface SessionRecordExercise {
@@ -131,6 +134,8 @@ export async function getWorkoutSessionRecord(sessionId: string): Promise<Workou
       weight: set.weight,
       reps: set.reps,
       skipped: set.skipped,
+      ...(set.setKind ? { setKind: set.setKind } : {}),
+      ...(set.repsInReserve !== undefined ? { repsInReserve: set.repsInReserve } : {}),
       ...(set.substitutedName ? { substitutedName: set.substitutedName } : {}),
       ...(record ? { record } : {}),
     });
@@ -161,7 +166,7 @@ export async function getLiftRecentSessions(exerciseId: string, limit = 3): Prom
     getUndoneSetIds(),
     db.performedSets.where("exerciseId").equals(exerciseId).toArray(),
   ]);
-  const counted = (sets as unknown as PerformedSet[]).filter((s) => !undone.has(s.id) && !s.skipped && s.reps > 0 && !s.substitutedName);
+  const counted = (sets as unknown as PerformedSet[]).filter((s) => !undone.has(s.id) && isWorkingSet(s) && s.reps > 0 && !s.substitutedName);
   const result: LiftSession[] = [];
   const finished = sessions
     .filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL")
@@ -179,4 +184,42 @@ export async function getLiftRecentSessions(exerciseId: string, limit = 3): Prom
     if (result.length >= limit) break;
   }
   return result;
+}
+
+export interface WorkoutRecap {
+  warmups: number;
+  effortRecorded: number;
+  previousStartedAt: string | null;
+  previousStatus: string | null;
+  matchedLifts: number;
+  changedLifts: number;
+  currentSets: number;
+  previousSets: number;
+  currentVolume: number;
+  previousVolume: number;
+}
+
+/** Compare actual matching lifts in the same template and session variant. No coaching inference. */
+export async function getWorkoutRecap(sessionId: string): Promise<WorkoutRecap | null> {
+  const session = await db.workoutSessions.get(sessionId);
+  if (!session || (session.status !== "COMPLETED" && session.status !== "PARTIAL") || !["STANDARD", "REDUCED"].includes(session.sessionType)) return null;
+  const [sessions, current] = await Promise.all([db.workoutSessions.toArray(), getPerformedSets(sessionId)]);
+  const previous = sessions.filter((s) => s.id !== sessionId && s.templateId === session.templateId && s.sessionType === session.sessionType &&
+    (s.status === "COMPLETED" || s.status === "PARTIAL") && s.startedAt < session.startedAt)
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
+  const prior = previous ? await getPerformedSets(previous.id) : [];
+  const key = (s: PerformedSet) => JSON.stringify([s.exerciseId, s.substitutedName?.trim().toLocaleLowerCase() ?? ""]);
+  const currentKeys = new Set(current.filter(isWorkingSet).map(key));
+  const priorKeys = new Set(prior.filter(isWorkingSet).map(key));
+  const matching = new Set([...currentKeys].filter((k) => priorKeys.has(k)));
+  const currentMatched = current.filter((s) => isWorkingSet(s) && matching.has(key(s)));
+  const priorMatched = prior.filter((s) => isWorkingSet(s) && matching.has(key(s)));
+  return {
+    warmups: current.filter((s) => !s.skipped && s.setKind === "WARMUP").length,
+    effortRecorded: current.filter((s) => isWorkingSet(s) && s.repsInReserve !== undefined).length,
+    previousStartedAt: previous?.startedAt ?? null, previousStatus: previous?.status ?? null,
+    matchedLifts: matching.size, changedLifts: new Set([...currentKeys, ...priorKeys].filter((k) => !matching.has(k))).size,
+    currentSets: currentMatched.length, previousSets: priorMatched.length,
+    currentVolume: workoutVolumeLbs(currentMatched), previousVolume: workoutVolumeLbs(priorMatched),
+  };
 }

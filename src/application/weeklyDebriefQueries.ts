@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import { EXERCISE_LIBRARY, type MuscleGroup } from "../domain/workout/exerciseLibrary";
 import type { PerformedSet } from "../domain/workout/types";
 import { workoutVolumeLbs } from "./trainHistoryQueries";
@@ -29,7 +30,7 @@ export async function getWeekInNumbers(current: WeeklyDashboard) {
   const days = summaries.filter((d) => ids.has(d.beyondDayId));
   const sessions = days.flatMap((d) => d.workouts).filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL");
   const sessionIds = new Set(sessions.map((s) => s.sessionId));
-  const sets = (rawSets as unknown as PerformedSet[]).filter((s) => sessionIds.has(s.sessionId) && !s.skipped && !undone.has(s.id));
+  const sets = (rawSets as unknown as PerformedSet[]).filter((s) => sessionIds.has(s.sessionId) && isWorkingSet(s) && !undone.has(s.id));
   const inWeek = (iso: string) => Date.parse(iso) >= Date.parse(current.week.start) && Date.parse(iso) < Date.parse(current.week.end);
   const completions = done.filter((e) => inWeek(e.occurredAt));
   const completedIds = new Set(completions.flatMap((e) => e.obligationId ? [e.obligationId] : []));

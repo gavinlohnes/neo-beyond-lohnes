@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import { EXERCISE_LIBRARY, type MuscleGroup } from "../domain/workout/exerciseLibrary";
 import type { PerformedSet } from "../domain/workout/types";
@@ -29,7 +30,7 @@ export async function getStrengthReview(now = new Date()) {
     const muscle = (exerciseId: string): MuscleGroup | undefined => customMuscles.get(exerciseId) ?? libraryMuscles.get(exerciseId);
     const observations = (rawSets as unknown as PerformedSet[]).flatMap((set) => {
       const session = finished.get(set.sessionId);
-      if (!session || undone.has(set.id) || set.skipped || set.substitutedName || set.reps <= 0 || set.weight <= 0) return [];
+      if (!session || undone.has(set.id) || !isWorkingSet(set) || set.substitutedName || set.reps <= 0 || set.weight <= 0) return [];
       const muscleGroup = muscle(set.exerciseId);
       const at = session.endedAt ?? session.startedAt;
       const bodyweightLbs = bodyweights.filter((entry) => Date.parse(entry.recordedAt) <= Date.parse(at)).at(-1)?.weightLbs;

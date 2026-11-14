@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import type { ExercisePrescription, PerformedSet } from "../domain/workout/types";
 
 /**
@@ -58,14 +59,14 @@ export function evaluateProgression(
   lastSessionSets: PerformedSet[],
   context: ProgressionContext = {},
 ): ProgressionSuggestion {
-  const base = evaluateLastSession(prescription, lastSessionSets);
+  const base = evaluateLastSession(prescription, lastSessionSets.filter((s) => s.setKind !== "WARMUP"));
   const days = context.daysSinceLastPerformed;
   if (days === undefined || days < RE_ENTRY_DAYS) return base;
   if (base.recommendation !== "INCREASE" && base.recommendation !== "HOLD") return base;
 
   // The load to ease back from: the clean last weight when there is one,
   // otherwise (mixed/incomplete evidence) the heaviest set actually done.
-  const performedWeights = lastSessionSets.filter((s) => !s.skipped).map((s) => s.weight);
+  const performedWeights = lastSessionSets.filter((s) => isWorkingSet(s)).map((s) => s.weight);
   const fromWeight = base.lastWeight ?? (performedWeights.length > 0 ? Math.max(...performedWeights) : undefined);
   if (fromWeight === undefined || fromWeight <= 0) return base;
   const step = prescription.incrementLbs > 0 ? prescription.incrementLbs : 1;
@@ -94,7 +95,7 @@ function evaluateLastSession(prescription: ExercisePrescription, lastSessionSets
   // with any skip is automatically "incomplete evidence" for INCREASE/
   // REDUCE purposes, since fewer than the prescribed count were actually
   // performed.
-  const performed = lastSessionSets.filter((s) => !s.skipped);
+  const performed = lastSessionSets.filter((s) => isWorkingSet(s));
   if (performed.length < prescription.sets) {
     return {
       recommendation: "HOLD",

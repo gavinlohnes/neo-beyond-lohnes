@@ -207,4 +207,20 @@ export interface PerformedSet {
   reps: number;
   skipped: boolean;
   recordedAt: string;
+  /** Missing on legacy rows means a working set. */
+  setKind?: "WORKING" | "WARMUP";
+  /** Operator estimate, integer 0–10; absent means not recorded. Never recommendation input. */
+  repsInReserve?: number;
+  /** The canonical SET_LOGGED/SET_SKIPPED event sequence, for same-time undo order. */
+  seq?: number;
+}
+
+/** Shared statistics boundary; skipped sets and preparation are not working performance. */
+export function isWorkingSet(set: { skipped?: boolean; setKind?: string }): boolean {
+  return !set.skipped && set.setKind !== "WARMUP";
+}
+
+/** Preserve legacy time/ordinal ordering, using canonical event sequence for same-time new rows. */
+export function compareSetOrder(a: { recordedAt: string; seq?: number; setNumber?: number }, b: { recordedAt: string; seq?: number; setNumber?: number }): number {
+  return a.recordedAt.localeCompare(b.recordedAt) || (a.seq !== undefined && b.seq !== undefined ? a.seq - b.seq : (a.setNumber ?? 0) - (b.setNumber ?? 0));
 }

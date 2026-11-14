@@ -1,3 +1,4 @@
+import { isWorkingSet } from "../domain/workout/types";
 import MiniSearch from "minisearch";
 import { db } from "../persistence/db";
 import type { MealLoggedPayload, MealLogVoidedPayload, ShiftHandoffNotedPayload } from "../domain/common/types";
@@ -84,7 +85,7 @@ async function trainingAndLifeDocs(): Promise<IndexedDoc[]> {
     sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL").map((s) => [s.id, s] as const),
   );
   const sets = ((await db.performedSets.toArray()) as unknown as PerformedSet[]).filter(
-    (s) => finished.has(s.sessionId) && !undone.has(s.id) && !s.skipped,
+    (s) => finished.has(s.sessionId) && !undone.has(s.id) && isWorkingSet(s),
   );
   const liftName = (set: PerformedSet) => set.substitutedName ?? names[set.exerciseId] ?? set.exerciseId;
 
