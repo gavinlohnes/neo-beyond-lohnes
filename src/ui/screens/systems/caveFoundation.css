@@ -14,7 +14,11 @@
 
 /* The views: mono capitals; the chosen view carries the red, as an active tab. */
 .cave .cave__tabs { margin-top: 8px; }
-.cave .cave__tab { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; }
+/* Review of #518: the views are buttons, so 16 px (Accessibility, amended 2026-11-14). The tracking tightens when the
+   cave is narrow, so the longest names (NUMBERS, TONIGHT) still fit four across. */
+.cave { container-type: inline-size; }
+.cave .cave__tab { font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .08em; overflow-wrap: normal; }
+@container (max-width: 359px) { .cave .cave__tab { letter-spacing: 0; } }
 .cave .cave__tab[aria-pressed="true"] { border-bottom-color: var(--cv-red); }
 
 /* Each block of a view is a framed panel (nested blocks stay inside their parent's frame); ROUTE's stops and LOG's
