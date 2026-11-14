@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHabit, getHabitDone, setHabitAnswer, setHabitDone, setHabitArchived } from "../../src/application/habitCommands";
 import { getHabitWorkspace } from "../../src/application/habitQueries";
 import { logEvent, setWorkContext, startDay, updateSchedulePattern } from "../../src/application/commands";
-import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
+import { confirmScheduleException } from "../../src/application/scheduleExceptions";
+import { getSchedulePattern } from "../../src/application/queries";
+import { DEFAULT_SCHEDULE_PATTERN, scheduledWorkContextForLivedDay } from "../../src/engine/scheduledContext";
 import { projectHabitAnswers } from "../../src/domain/habits";
 import { applyRestore } from "../../src/persistence/backup";
 import { db } from "../../src/persistence/db";
@@ -82,6 +84,22 @@ describe("HABIT-RHYTHM-001", () => {
     const history = (await getHabitWorkspace()).habits[0]!.history;
     expect(history.at(-1)).toMatchObject({ work: recorded, workPlanned: false });
     expect(history.slice(0, -1).some((d) => d.dayId === null && d.workPlanned)).toBe(true);
+  });
+
+  it("honours a confirmed exception on a gap before falling back to the rotation", async () => {
+    const { id: _id, createdAt: _created, updatedAt: _updated, ...pattern } = DEFAULT_SCHEDULE_PATTERN;
+    await updateSchedulePattern(pattern);
+    const schedule = await getSchedulePattern();
+    const date = new Date(2026, 10, 13, 16, 30);
+    const kind = scheduledWorkContextForLivedDay(date, schedule) === "WORK" ? "OFF" : "WORK";
+    vi.setSystemTime(new Date(2026, 10, 12, 18));
+    await confirmScheduleException({ date: "2026-11-13", kind });
+    vi.setSystemTime(NOW);
+    await startDay(at(14)); await createHabit({ name: "On shift", kind: "WORK_DAYS" });
+    const before = await db.events.toArray(), days = await db.beyondDays.toArray();
+    const gap = (await getHabitWorkspace()).habits[0]!.history.at(-2)!;
+    expect(gap).toMatchObject({ dayId: null, work: kind, workBasis: "CONFIRMED", workPlanned: false, answer: "UNRECORDED", applies: kind === "WORK" });
+    expect(await db.events.toArray()).toEqual(before); expect(await db.beyondDays.toArray()).toEqual(days);
   });
 
   it("does not start a day for an invalid habit and rolls failed appends back", async () => {

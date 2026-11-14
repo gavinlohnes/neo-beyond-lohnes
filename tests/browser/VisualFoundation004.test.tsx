@@ -24,7 +24,7 @@ const settle = async () => {
 };
 
 function check(root: Element, label: string) {
-  const panels = [...root.querySelectorAll<HTMLElement>(".sys-card, .cave__block, .cave__route, .log__list, .brief__poll, .brief__aar, .cave__head, .bf-bar")];
+  const panels = [...root.querySelectorAll<HTMLElement>(".sys-card, .cave__block, .cave__route, .log__list, .brief__poll, .brief__aar, .cave__head, .bf-bar, .cave__tab")];
   const spill = panels.filter((p) => p.getClientRects().length && p.scrollWidth > p.clientWidth + 1).map((p) => p.className);
   const small: string[] = [];
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -33,7 +33,8 @@ function check(root: Element, label: string) {
     // FILE's dense data table, MONTH's day grid and REVIEW's embedded rotation map keep their compact chart/table labels in this slice
     // (VISUAL-FOUNDATION-004 records the exception).
     if (!t || el.closest(".visually-hidden, dialog, [hidden], svg, .file__run, .rotation, .month__grid") || !el.getClientRects().length) continue;
-    const cs = getComputedStyle(el), size = parseFloat(cs.fontSize), isLabel = (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
+    // Review of #518: buttons and inputs never count as labels; they are 16 px or larger.
+    const cs = getComputedStyle(el), size = parseFloat(cs.fontSize), isLabel = !el.closest("button, input, select, textarea") && (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
     if (size < (isLabel ? 10 : 16)) small.push(`${t} (${size}px)`);
   }
   expect({ spill, small, pageWidth: document.documentElement.scrollWidth <= window.innerWidth }, label).toEqual({ spill: [], small: [], pageWidth: true });

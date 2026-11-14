@@ -3237,6 +3237,24 @@ me." Brief: [agent/VISUAL-FOUNDATION-004.md](agent/VISUAL-FOUNDATION-004.md).
   - **Exception, recorded here:** FILE's run table, MONTH's day grid and REVIEW's embedded rotation map keep their
     compact table and chart labels. They are dense data views; a later slice can revisit them.
 
+## METRIC-PAGE-001 — one metric page for a number (Gavin, 2026-11-14)
+
+The pilot was approved for hydration and steps ("Build and validate a reusable metric-detail foundation") and merged
+as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
+[agent/METRIC-PAGE-001.md](agent/METRIC-PAGE-001.md).
+
+- **What opens it:** TODAY's tiles and DATA's panels for hydration, steps and resting heart rate.
+- **What it shows:** TODAY (or LATEST), 7D, 30D and 1Y on lived days, with gaps shown as gaps; your usual; work days
+  compared with days off; the source and its freshness; and each metric's existing routes (records and corrections,
+  logging, Garmin sync, Alfred).
+- **Each metric keeps its meaning:**
+  - **Water:** your logs, in white, by the hour. 1Y is the average of logged days.
+  - **Steps:** Garmin, in blue, as a running total. 1Y is weekly totals.
+  - **Resting heart rate:** Garmin, in blue, one reading a day. 1Y is the average of measured days.
+- **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged-wins). It gets the
+  shell's source line and work-day comparison next, without changing its chart.
+- **Unchanged:** read only, no Engine input, no new data or schema.
+
 
 
 ## HABIT-RHYTHM-001 — explicit habit answers and recent history (owner approved 2026-11-14)
@@ -3250,8 +3268,8 @@ Gavin approved the bounded recording/history/correction proposal ("Approved.").
   New explicit answers are additive, with the existing done boolean retained for compatibility.
   Corrections append at the real recording time, to the selected original lived-day record.
 - Existing current-day logging, schedule, archive, Alfred-confirmed marks and DATA routes remain.
-  History aligns to local 16:30 days, with recorded work context taking precedence; planned fallback
-  is labelled. Missing day records stay visible and unrecorded: browsing fabricates no day or answer.
+  History aligns to local 16:30 days, with recorded work context taking precedence, then confirmed
+  exceptions, then labelled planned fallback. Missing day records stay visible and unrecorded: browsing fabricates no day or answer.
 - Existing past days can be corrected. Calendar gaps with no original BEYOND day have no correction
   target and are read-only; creating historical day lifecycle records is outside this objective.
 - Quit tracker unchanged. Reminders, new schedules, health correlations and recommendation changes

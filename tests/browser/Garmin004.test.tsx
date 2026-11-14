@@ -96,9 +96,10 @@ describe("GARMIN-004 — Garmin numbers on TODAY", () => {
     const screen = await render(<App />);
     await screen.getByRole("button", { name: /open resting heart rate$/ }).click();
     const sheet = screen.getByRole("dialog", { name: "RESTING HEART RATE", exact: true });
-    await expect.element(sheet.getByRole("button", { name: "7D", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await sheet.getByRole("button", { name: "4W", exact: true }).click();
-    await expect.element(sheet.getByText(/^Usual: \d+ bpm · median of the last 28 days\.$/)).toBeVisible();
+    // METRIC-PAGE-001: resting heart rate opens the shared metric page, on its latest reading first.
+    await expect.element(sheet.getByRole("button", { name: "Latest reading", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await sheet.getByRole("button", { name: "Last 30 lived days", exact: true }).click();
+    await expect.element(sheet.getByText(/^Usual: \d+ bpm · median of the last 28 finished days\.$/)).toBeVisible();
     await shot("390-resting-4w");
   });
 

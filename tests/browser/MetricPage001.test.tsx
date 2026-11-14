@@ -30,9 +30,10 @@ const settle = async () => {
   for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish();
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 };
-const sheet = (name: "HYDRATION" | "STEPS") => page.getByRole("dialog", { name, exact: true });
+type Page = "HYDRATION" | "STEPS" | "RESTING HEART RATE";
+const sheet = (name: Page) => page.getByRole("dialog", { name, exact: true });
 const text = (sel: string) => document.querySelector(`dialog[open] ${sel}`)?.textContent ?? "";
-async function range(name: "HYDRATION" | "STEPS", label: string) {
+async function range(name: Page, label: string) {
   await sheet(name).getByRole("button", { name: label, exact: true }).click();
 }
 /** Two past lived days of water, so 7D has records and gaps. */
@@ -167,15 +168,42 @@ describe("METRIC-PAGE-001 pilot", () => {
     expect(await db.events.toArray()).toEqual(before);
   });
 
-  it("nothing spills, sentences keep 16 px, and both pages pass axe from 320 to 1024 px", async () => {
+  it("resting heart rate opens the same page from TODAY and BODY: its latest reading, Garmin blue, its own weekly meaning", async () => {
+    await seedLivedMonth();
+    await page.viewport(360, 800);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Resting heart rate / }).click();
+    await expect.element(sheet("RESTING HEART RATE")).toBeVisible();
+    await expect.poll(() => text("[data-md-hero]")).toMatch(/^\d+ bpm · (this lived day|lived day of )/);
+    expect(text(".md-source")).toContain("GARMIN");
+    expect(text(".md")).toContain("Garmin publishes resting heart rate once a day");
+    // One reading a day: no hourly picture, and the first range says so.
+    await expect.element(sheet("RESTING HEART RATE").getByRole("button", { name: "Latest reading", exact: true })).toHaveAttribute("aria-pressed", "true");
+    expect(document.querySelector("dialog[open] .md-chart")).toBeNull();
+    await range("RESTING HEART RATE", "Last 30 lived days");
+    await expect.poll(() => text("[data-md-coverage]")).toMatch(/of 29 finished days measured/);
+    expect(getComputedStyle(document.querySelector("dialog[open] .md-chart--resting .md-fill")!).fill).toBe("rgb(57, 135, 229)");
+    // 1Y averages measured days, never totals them.
+    await range("RESTING HEART RATE", "Last year, by week");
+    await expect.poll(() => text("[data-md-hero]")).toContain("bpm a measured day, on average");
+    expect(text("[data-md-usual]")).toMatch(/Usual: \d+ bpm · median of the last 28 finished days\.|Your usual appears after/);
+    await expect.element(sheet("RESTING HEART RATE").getByRole("button", { name: "ASK ALFRED", exact: true })).toBeVisible();
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-resting-1y.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
+    await sheet("RESTING HEART RATE").getByRole("button", { name: "CLOSE" }).click();
+    await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
+    await screen.getByRole("button", { name: "Open resting heart rate history" }).click();
+    await expect.element(sheet("RESTING HEART RATE")).toBeVisible();
+  });
+
+  it("nothing spills, sentences keep 16 px, and every page passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 900);
     const screen = await render(<App />);
-    for (const [tile, name] of [[/^Water 32 oz/, "HYDRATION"], [/^Steps /, "STEPS"]] as const) {
+    for (const [tile, name] of [[/^Water 32 oz/, "HYDRATION"], [/^Steps /, "STEPS"], [/^Resting heart rate /, "RESTING HEART RATE"]] as const) {
       await screen.getByRole("button", { name: tile }).click();
       await expect.element(sheet(name)).toBeVisible();
       await expect.poll(() => text("[data-md-hero]")).not.toBe("");
-      for (const r of ["Today, this lived day", "Last 7 lived days", "Last 30 lived days", "Last year, by week"]) {
+      for (const r of [name === "RESTING HEART RATE" ? "Latest reading" : "Today, this lived day", "Last 7 lived days", "Last 30 lived days", "Last year, by week"]) {
         await range(name, r);
         for (const width of [320, 412, 1024]) {
           await page.viewport(width, 900); await settle();

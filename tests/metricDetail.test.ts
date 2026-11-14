@@ -66,3 +66,12 @@ describe("summaries, usual and the work/off split", () => {
     expect(thin.work).toEqual({ median: null, days: SPLIT_MIN_DAYS - 1 });
   });
 });
+
+describe("resting heart rate keeps its own meaning", () => {
+  it("starts on its latest reading and averages a year by measured days", async () => {
+    const { rangesFor, WEEK_MODE } = await import("../src/application/metricDetail");
+    expect(rangesFor("resting")[0]).toEqual(["today", "LATEST", "Latest reading"]);
+    expect(rangesFor("water")[0]![1]).toBe("TODAY");
+    expect(WEEK_MODE.resting).toBe("mean");
+  });
+});

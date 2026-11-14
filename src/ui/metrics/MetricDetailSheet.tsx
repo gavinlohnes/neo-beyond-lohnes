@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMetricDetail, type MetricDetail } from "../../application/metricDetailQueries";
-import { DETAIL_RANGES, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange } from "../../application/metricDetail";
+import { rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange } from "../../application/metricDetail";
 import type { PeriodValue } from "../../domain/health/measuredSeries";
 import { LogSheet } from "../components/LogSheet";
 import { SourceTag } from "../foundation/primitives";
@@ -20,10 +20,14 @@ import "./metricDetail.css";
  * - The existing routes: water's records (corrections) and logging; Garmin sync and Alfred for steps.
  * Read only. Your logs are white; Garmin's measurements are Garmin blue (GARMIN-004). Nothing here changes advice.
  */
-const TITLE: Record<DetailMetric, string> = { water: "HYDRATION", steps: "STEPS" };
-const NOUN: Record<DetailMetric, { none: string; unit: string }> = { water: { none: "not logged", unit: "oz" }, steps: { none: "not measured", unit: "steps" } };
+const TITLE: Record<DetailMetric, string> = { water: "HYDRATION", steps: "STEPS", resting: "RESTING HEART RATE" };
+const NOUN: Record<DetailMetric, { none: string; unit: string }> = {
+  water: { none: "not logged", unit: "oz" }, steps: { none: "not measured", unit: "steps" }, resting: { none: "not measured", unit: "bpm" },
+};
+/** How 1Y's headline reads: a week's total, or the average of the days that have a record. */
+const YEAR_HERO: Record<DetailMetric, string> = { water: "oz a logged day, on average", steps: "steps a week, on average", resting: "bpm a measured day, on average" };
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
-const withUnit = (metric: DetailMetric, n: number) => metric === "water" ? `${fmt(n)} oz` : `${fmt(n)} steps`;
+const withUnit = (metric: DetailMetric, n: number) => `${fmt(n)} ${NOUN[metric].unit}`;
 const clock = (t: number) => { const d = new Date(t); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 const day = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const week = (t: number) => `Week of ${new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
@@ -114,9 +118,10 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
   const values = d && range !== "today" ? rangeValues(d.series, range, WEEK_MODE[metric]) : [];
   const index = selected ?? values.length - 1;
   const byWeek = range === "1y";
-  const label = (v: PeriodValue) => `${byWeek ? week(v.from) : day(v.from)} · ${v.value === null ? NOUN[metric].none : `${withUnit(metric, v.value)}${byWeek ? (WEEK_MODE[metric] === "sum" ? " that week" : " a logged day") : ""}`}${v.partial ? " so far" : ""}`;
-  // Water's yearly headline weighs each logged day equally, even when weeks have different coverage.
-  const dailyYear = byWeek && metric === "water";
+  const label = (v: PeriodValue) => `${byWeek ? week(v.from) : day(v.from)} · ${v.value === null ? NOUN[metric].none : `${withUnit(metric, v.value)}${byWeek ? (WEEK_MODE[metric] === "sum" ? " that week" : garmin ? " a measured day" : " a logged day") : ""}`}${v.partial ? " so far" : ""}`;
+  // A yearly average (water, resting heart rate) weighs each recorded day equally, even when weeks have different
+  // coverage; steps' year stays a weekly total.
+  const dailyYear = byWeek && WEEK_MODE[metric] === "mean";
   const summaryValues = dailyYear ? d?.series.slice(-52 * 7) ?? [] : values;
   const sum = summarise(summaryValues.filter((v) => !v.partial));
   const todayValue = d?.series.at(-1)?.value ?? null;
@@ -136,18 +141,22 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
       </div>
 
       <div role="group" aria-label={`${TITLE[metric]} range`} className="md-ranges">
-        {DETAIL_RANGES.map(([id, text, name]) => <button key={id} type="button" aria-pressed={range === id} aria-label={name} onClick={() => { setRange(id); setSelected(null); }}>{text}</button>)}
+        {rangesFor(metric).map(([id, text, name]) => <button key={id} type="button" aria-pressed={range === id} aria-label={name} onClick={() => { setRange(id); setSelected(null); }}>{text}</button>)}
       </div>
 
-      {garmin && <UnusualNote metric="steps" reading={d.unusual} />}
+      {garmin && <UnusualNote metric={metric === "resting" ? "resting" : "steps"} reading={d.unusual} />}
 
-      {range === "today" ? <>
-        <p className="md-hero" data-md-hero><b>{todayValue === null ? "—" : fmt(todayValue)}</b> <span>{todayValue === null ? `${NOUN[metric].none} yet this lived day` : `${NOUN[metric].unit} so far · since ${clock(d.today.from)}`}</span></p>
+      {range === "today" && d.today.kind === "latest" ? <>
+        {/* Resting heart rate is one reading a day: the newest one, with the lived day it belongs to. */}
+        <p className="md-hero" data-md-hero><b>{d.today.value === null ? "—" : fmt(d.today.value)}</b> <span>{d.today.value === null ? "not measured in the last two lived days" : `bpm · ${d.today.from !== null && d.today.from === d.series.at(-1)?.from ? "this lived day" : `lived day of ${day(d.today.from!)}`}`}</span></p>
+        <p className="md-meta">Garmin publishes resting heart rate once a day, so the newest reading can be yesterday's.</p>
+      </> : range === "today" ? <>
+        <p className="md-hero" data-md-hero><b>{todayValue === null ? "—" : fmt(todayValue)}</b> <span>{todayValue === null ? `${NOUN[metric].none} yet this lived day` : `${NOUN[metric].unit} so far · since ${clock(d.series.at(-1)!.from)}`}</span></p>
         {d.today.kind === "hours"
           ? (d.today.entries ? <WaterHours today={d.today} /> : <p className="md-meta">No water logged yet this lived day.</p>)
-          : (d.today.points.length > 1 ? <StepsRunning today={d.today} usual={d.usual.value} /> : <p className="md-meta">No steps measured yet this lived day. Send from the helper to update.</p>)}
+          : d.today.kind === "running" && (d.today.points.length > 1 ? <StepsRunning today={d.today} usual={d.usual.value} /> : <p className="md-meta">No steps measured yet this lived day. Send from the helper to update.</p>)}
       </> : <>
-        <p className="md-hero" data-md-hero><b>{sum.average === null ? "—" : fmt(sum.average)}</b> <span>{byWeek ? (WEEK_MODE[metric] === "sum" ? "steps a week, on average" : "oz a logged day, on average") : `${NOUN[metric].unit} a day, on average`}</span></p>
+        <p className="md-hero" data-md-hero><b>{sum.average === null ? "—" : fmt(sum.average)}</b> <span>{byWeek ? YEAR_HERO[metric] : `${NOUN[metric].unit} a day, on average`}</span></p>
         <p className="md-meta" data-md-coverage>{sum.recorded} of {sum.total} {byWeek && !dailyYear ? "finished weeks" : "finished days"} {garmin ? "measured" : "logged"}{sum.total - sum.recorded ? ` · ${sum.total - sum.recorded} ${NOUN[metric].none}, left out` : ""} · {byWeek && !dailyYear ? "week in progress" : "this lived day"} not counted</p>
         <Bars metric={metric} values={values} selected={index} onSelect={setSelected} label={label} usual={byWeek && WEEK_MODE[metric] === "sum" ? null : d.usual.value} />
         <p className="md-readout" aria-live="polite">{label(values[index]!)}</p>

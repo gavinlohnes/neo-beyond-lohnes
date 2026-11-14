@@ -18,8 +18,31 @@
   new habits, original habits, DATA, whole-life and LIFE. DST-specific New York run 12 PASS; architecture,
   TypeScript and production/PWA build PASS. Final required CI and independent exact-head review pending.
   Initial checks fixed a hidden retained dialog's placement and chronological test event selection.
-- **Next:** finish verification; push/open one PR, record actual results and independent verdict there.
+- **Recovery:** previous exact-head independent PASS and full CI green at `d9c18924`. Master advanced
+  through #521/#522/#523/#524, causing documentation conflicts. Integrated freshly fetched master
+  `3f84bc2940b3e1a2665cb30e343cdfffab2d2eae`; preserved both habit and upstream decision/capability records.
+  Also addressed prior non-blocking review notes: clear rollover prompt and canonical RECORDED >
+  CONFIRMED > PREDICTED context resolution (with labelled W/C/P work markers). Renewed integration
+  verification: full Node 2303 PASS / 1 existing skip; 41 combined focused tests PASS; New York DST
+  13 PASS; architecture, typecheck and production/PWA build PASS. New-head required CI and renewed
+  independent exact-head review remain required.
+- **Next:** finish current-head verification and independent review on the existing PR.
   No merge or expansion into reminders/health comparisons/new schedule rules.
+
+---
+
+# Historical upstream handoff — METRIC-PAGE-001 slice 2: resting heart rate (Gavin, 2026-11-14: "Approved and continue working")
+
+- **Branch:** `ccr-88f5c085-metric-sleep-rhr`, from master `c9d6702d`. **Builder:** Claude Code.
+- **What it does:** resting heart rate moves onto the shared metric page from TODAY and DATA, with LATEST, 7D, 30D and
+  1Y, its usual and unusual note, work days compared with days off, freshness and sync. Sleep keeps `SleepPeriods`,
+  which does more; the shell's source line and work-day comparison are the next slice.
+- **Pilot:** #519 merged at `c9d6702d` (the entry below is historical).
+- **Also open:**
+  - **#520 HABIT-RHYTHM-001** (Codex, Protected). Independent review was assigned to the reviewer session at Gavin's
+    approval.
+  - **#521 GARMIN-CAPTION-001** (Claude, Routine). Empty Garmin tiles keep a quiet caption.
+- **Next:** independent review of this slice, then Gavin merges.
 
 ---
 

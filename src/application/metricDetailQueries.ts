@@ -13,6 +13,7 @@ import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual
  * no writes, no Engine input, no recommendation change.
  * - Water is what you logged (the day ledger's effective totals, corrections applied). Garmin hydration is not imported.
  * - Steps are Garmin's watch measurements (GARMIN-004's snapshot, owner entries winning where they overlap upstream).
+ * - Resting heart rate is Garmin's lowest resting reading per lived day, published once a day (GARMIN-004).
  */
 export interface MetricDetail {
   metric: DetailMetric;
@@ -22,7 +23,9 @@ export interface MetricDetail {
   /** TODAY's picture: water by hour from the lived day's 16:30 start, or steps' running total. */
   today:
     | { kind: "hours"; from: number; slots: number[]; nowSlot: number; entries: number }
-    | { kind: "running"; from: number; points: { t: number; total: number }[] };
+    | { kind: "running"; from: number; points: { t: number; total: number }[] }
+    /** Resting heart rate: the newest reading, from this lived day or the one before (Garmin publishes it once a day). */
+    | { kind: "latest"; value: number | null; from: number | null };
   usual: DetailUsual & { dayKind?: "WORK" | "OFF" | null };
   split: { work: SplitSide; off: SplitSide };
   /** Garmin only: when the newest measurement was read on the phone. */
@@ -38,6 +41,19 @@ export async function getMetricDetail(metric: DetailMetric, now = Date.now()): P
   const contextOf = (dayId: string) => byDay.get(dayId)?.work.declared;
   const periods = recentPeriods(days, now, MEASURED_PERIODS);
   const current = periods.at(-1)!;
+
+  if (metric === "resting") {
+    const snapshot = await getMeasuredSnapshot(now);
+    const series = snapshot.resting;
+    const latest = [...series].reverse().slice(0, 2).find((v) => v.value !== null) ?? null;
+    return {
+      metric, source: "GARMIN", series,
+      today: { kind: "latest", value: latest?.value ?? null, from: latest?.from ?? null },
+      usual: { value: snapshot.usual.resting.value, samples: snapshot.usual.resting.samples, need: BASELINE_MIN_SAMPLES },
+      split: workOffSplit(series, contextOf),
+      asOf: snapshot.garminAsOf, unusual: snapshot.unusual.resting, readAt: snapshot.readAt,
+    };
+  }
 
   if (metric === "steps") {
     const snapshot = await getMeasuredSnapshot(now);

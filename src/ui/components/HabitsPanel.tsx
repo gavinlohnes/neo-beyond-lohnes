@@ -12,7 +12,7 @@ type Row = Workspace["habits"][number];
 type Day = Row["history"][number];
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const dateLabel = (d: Day) => new Date(d.from).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-const contextLabel = (d: Day) => d.work === "UNKNOWN" ? "Work context not recorded" : `${d.workPlanned ? "Planned " : ""}${d.work === "WORK" ? "work day" : "day off"}`;
+const contextLabel = (d: Day) => d.work === "UNKNOWN" ? "Work context not recorded" : `${d.workBasis === "CONFIRMED" ? "Confirmed " : d.workPlanned ? "Planned " : ""}${d.work === "WORK" ? "work day" : "day off"}`;
 const answerLabel = (d: Day) => d.answer === "UNRECORDED" && !d.applies ? "Not scheduled · Not recorded" : HABIT_ANSWER_LABEL[d.answer];
 const MARK: Record<HabitAnswer, string> = { DONE: "✓", NOT_DONE: "×", UNRECORDED: "—" };
 
@@ -22,7 +22,7 @@ function DayGrid({ days, selected, onPick }: { days: Day[]; selected?: string | 
       data-answer={d.answer} aria-label={`${dateLabel(d)} · ${answerLabel(d)} · ${contextLabel(d)}${!d.dayId ? " · No day record" : ""}`}
       onClick={() => onPick(d)}>
       <span>{new Date(d.from).getDate()}</span><span aria-hidden="true">{MARK[d.answer]}</span>
-      <span aria-hidden="true">{d.work === "WORK" ? (d.workPlanned ? "P" : "W") : "·"}</span>
+      <span aria-hidden="true">{d.work === "WORK" ? (d.workBasis === "CONFIRMED" ? "C" : d.workPlanned ? "P" : "W") : "·"}</span>
     </button>)}
   </div>;
 }
@@ -80,12 +80,12 @@ export function HabitsPanel({ active }: { active: boolean }) {
   return <><section className="bf habits-panel" aria-label="Habits">
     <CommandBar eyebrow="HABITS // DAILY" context={<p className="habit-copy">A quiet record. Missing answers stay unrecorded; past answers can be corrected.</p>} />
     {workspace && <p className="habit-copy">{new Date(workspace.from).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · Lived day since 16:30</p>}
-    <p className="habit-copy">✓ Done · × Didn't do it · — Not recorded. W marks a recorded work day; P marks planned work.</p>
+    <p className="habit-copy">✓ Done · × Didn't do it · — Not recorded. W marks recorded work; C marks confirmed work; P marks planned work.</p>
     {error && <p role="alert" className="habit-copy">{error}</p>}
     {readFailed && <button type="button" className="btn-secondary" disabled={busy} onClick={() => { setError(""); void load(); }}>RETRY HABITS</button>}
     <p role="status" className="habit-copy">{saved}</p>
     {!workspace && !readFailed && <p className="habit-copy">Reading habits…</p>}
-    {workspace && !workspace.dayId && <p className="habit-copy">Start today to record a habit. Existing past days can still be corrected.</p>}
+    {workspace && !workspace.dayId && <p className="habit-copy">No record for this lived day yet. Return to TODAY to start it. Existing past days can still be corrected.</p>}
     <div className="habit-list">
       {workspace?.habits.map((r) => <Panel key={r.habit.id} headingId={`habit-${r.habit.id}`} label={r.habit.name} icon={null} wide>
         <p className="habit-copy">{r.thisWeek} this week · {r.fourWeeks} in 4 weeks{!r.applies ? " · Not scheduled today" : ""}</p>
@@ -119,7 +119,7 @@ export function HabitsPanel({ active }: { active: boolean }) {
       {historyOpen && row && !selected && <p className="habit-copy">This date is outside the last 28 days. Close history and choose a recent day.</p>}
       {historyOpen && !row && <p className="habit-copy">This habit is no longer active. Close history to return.</p>}
       {historyOpen && row && selected && <div className="bf habit-history">
-        <p className="habit-copy">Last 28 lived days. Select a date to inspect or correct it. W is recorded work; P is planned work.</p>
+        <p className="habit-copy">Last 28 lived days. Select a date to inspect or correct it. W is recorded work, C confirmed work and P planned work.</p>
         <DayGrid days={row.history} selected={selected.date} onPick={(d) => { if (!lock.current) setSelection({ habitId: row.habit.id, date: d.date }); }} />
         <h3>{dateLabel(selected)}</h3>
         <p className="habit-copy">{contextLabel(selected)} · {answerLabel(selected)}</p>

@@ -40,3 +40,25 @@ it("distinguishes a corrected zero from an undone log and an unrecorded day", as
     expect(undone.today.kind === "hours" && undone.today.entries).toBe(0);
   } finally { vi.useRealTimers(); }
 });
+
+it("resting heart rate: Garmin's newest reading from this or the previous lived day, read without writing", async () => {
+  const { syntheticGarminMonth } = await import("./helpers/syntheticGarminMonth");
+  const { importActivitySnapshot } = await import("../src/application/externalActivityCommands");
+  const { getMeasuredSnapshot } = await import("../src/application/measuredQueries");
+  try {
+    const firstDay = new Date(2026, 8, 22, 16, 30).getTime(), now = new Date(2026, 9, 21, 22, 10).getTime();
+    vi.setSystemTime(now);
+    const { days, activity } = syntheticGarminMonth(firstDay, 30, now);
+    await db.beyondDays.bulkAdd(days);
+    await importActivitySnapshot(activity);
+    const before = await db.events.toArray();
+    const d = await getMetricDetail("resting", now);
+    const snapshot = await getMeasuredSnapshot(now);
+    expect(d.source).toBe("GARMIN");
+    expect(d.series).toEqual(snapshot.resting);
+    const newest = [...snapshot.resting].reverse().slice(0, 2).find((v) => v.value !== null) ?? null;
+    expect(d.today).toEqual({ kind: "latest", value: newest?.value ?? null, from: newest?.from ?? null });
+    expect(d.usual.value).toBe(snapshot.usual.resting.value);
+    expect(await db.events.toArray()).toEqual(before);
+  } finally { vi.useRealTimers(); }
+});

@@ -221,7 +221,7 @@ describe("MORE-OPERATOR-001", () => {
       .filter((element) => {
         if (!element.checkVisibility()) return false;
         const t = element.textContent?.trim() ?? "", cs = getComputedStyle(element), size = Number.parseFloat(cs.fontSize);
-        const isLabel = (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
+        const isLabel = !element.closest("button, input, select, textarea") && (t === t.toUpperCase() || cs.textTransform === "uppercase") && t.length <= 32;
         return size < (isLabel ? 10 : 16);
       })
       .map((element) => element.textContent);

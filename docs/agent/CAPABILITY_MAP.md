@@ -428,10 +428,13 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
 - [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
   Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
-- [METRIC-PAGE-001](METRIC-PAGE-001.md) is the approved hydration/steps pilot on the existing branch.
+- [METRIC-PAGE-001](METRIC-PAGE-001.md): `ui/metrics/MetricDetailSheet.tsx` with `application/metricDetail*.ts` is the shared metric page (hydration, steps, resting heart rate). Add a metric here, keeping its own week/source semantics, rather than another detail sheet. Sleep keeps `SleepPeriods` (richer).
   `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
   shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other
   metrics before owner assessment. Integration status and verification live in the checkpoint/PR.
+- [EXPORT-001](EXPORT-001.md) is the brief for HARVEST-001 backlog #5 (readable CSV export). Brief only: no code,
+  no builder assigned; the build waits for Gavin's go. Reuse `deliverCalendar` and the existing read queries.
+
 
 
 ### HABIT-RHYTHM-001 — explicit answers and lived-day history (2026-11-14)
@@ -441,7 +444,7 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   `application/habitCommands.ts` appends additive explicit HABIT_SET answers atomically; existing
   setHabitDone/getHabitDone callers keep their compatibility meaning. No table/migration introduced.
 - `getHabitWorkspace` composes a read-only 28-day calendar from existing day records, local 16:30
-  boundaries and labelled recorded/planned work context. Corrections target original records; gaps
+  boundaries and canonical labelled recorded/confirmed/planned work context. Corrections target original records; gaps
   do not create history. `HabitsPanel` reuses foundation panels and native LogSheet focus handling.
 - Quit tracker, reminders, new schedule semantics and health correlations remain excluded.
   Integration/review status belongs in the checkpoint and PR, not this capability index.

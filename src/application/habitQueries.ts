@@ -1,7 +1,9 @@
 import { db } from "../persistence/db";
 import { habitAnswerOf, projectHabitAnswers, type Habit } from "../domain/habits";
 import { getActiveDay, getSchedulePattern } from "./queries";
-import { formatLocalDate, isOperatorSavedSchedule, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
+import { formatLocalDate } from "../engine/scheduledContext";
+import { getConfirmedExceptions } from "./scheduleExceptions";
+import { getRecordedContexts, resolveWorkContext } from "./workContextResolution";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 
 const addDays = (date: Date, days: number) => { const next = new Date(date); next.setDate(next.getDate() + days); return next; };
@@ -21,14 +23,17 @@ export async function getHabitWorkspace(now = new Date()) {
     db.events.where("type").equals("HABIT_SET").toArray(),
   ]);
   const today = mostRecentBoundaryAtOrBefore(now);
-  const windows = Array.from({ length: 28 }, (_, i) => {
-    const from = addDays(today, i - 27), to = addDays(from, 1);
+  const starts = Array.from({ length: 28 }, (_, i) => addDays(today, i - 27));
+  const dates = starts.map(formatLocalDate);
+  const [recorded, confirmed] = await Promise.all([getRecordedContexts(dates), getConfirmedExceptions(dates)]);
+  const windows = starts.map((from) => {
+    const to = addDays(from, 1), date = formatLocalDate(from);
     const records = days.filter((d) => new Date(d.startedAt) >= from && new Date(d.startedAt) < to && new Date(d.startedAt) <= now)
       .sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
     const current = records.find((d) => d.id === activeDay?.id) ?? records.at(-1);
     const ids = new Set(records.map((d) => d.id));
-    const context = current?.workContext === "WORK" || current?.workContext === "OFF" ? current.workContext
-      : isOperatorSavedSchedule(schedule) ? scheduledWorkContextForLivedDay(from, schedule) : "UNKNOWN";
+    const resolved = resolveWorkContext(from, schedule, recorded.get(date), confirmed.get(date)?.kind);
+    const context = resolved.kind ?? "UNKNOWN";
     const scopedEvents = events.filter((e) => typeof e.beyondDayId === "string" && ids.has(e.beyondDayId)).sort((a, b) => a.occurredAt.localeCompare(b.occurredAt) || (a.seq ?? 0) - (b.seq ?? 0));
     const answerDays = new Map<string, string>();
     for (const event of scopedEvents) {
@@ -38,7 +43,7 @@ export async function getHabitWorkspace(now = new Date()) {
     return {
       answerDays,
       from: from.toISOString(), to: to.toISOString(), date: formatLocalDate(from), dayId: current?.id ?? null,
-      work: context, workPlanned: current?.workContext !== "WORK" && current?.workContext !== "OFF" && context !== "UNKNOWN",
+      work: context, workBasis: resolved.basis, workPlanned: resolved.basis === "PREDICTED",
       answers: projectHabitAnswers(scopedEvents),
     };
   });

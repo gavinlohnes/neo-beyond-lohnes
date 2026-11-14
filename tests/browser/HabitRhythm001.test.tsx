@@ -146,3 +146,12 @@ it("DATA shows explicit No honestly and opens the existing habits workspace with
   await expect.element(habits.getByRole("button", { name: "Didn't do it", exact: true })).toHaveAttribute("aria-pressed", "true");
   expect(await db.events.toArray()).toEqual(before);
 });
+
+it("explains the post-16:30 gap without starting or rewriting a day", async () => {
+  await seed(); vi.setSystemTime(new Date(2026, 10, 15, 16, 31));
+  const before = await db.events.toArray(), days = await db.beyondDays.toArray();
+  const screen = await render(<HabitsPanel active />);
+  await expect.element(screen.getByText(/No record for this lived day yet. Return to TODAY to start it/)).toBeVisible();
+  await expect.element(screen.getByRole("article", { name: "Stretch" }).getByRole("button", { name: "Done", exact: true })).toBeDisabled();
+  expect(await db.events.toArray()).toEqual(before); expect(await db.beyondDays.toArray()).toEqual(days);
+});
