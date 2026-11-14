@@ -17,13 +17,13 @@ export function habitApplies(habit: Habit, date: Date, scheduledWork: boolean) {
 }
 
 /** Read-only, local-calendar lived days: missing days are shown without inventing day records. */
-export async function getHabitWorkspace(now = new Date()) {
+async function readHabitCalendar(now: Date, count: 1 | 28) {
   const [habits, activeDay, schedule, days, events] = await Promise.all([
     getActiveHabits(), getActiveDay(), getSchedulePattern(), db.beyondDays.toArray(),
     db.events.where("type").equals("HABIT_SET").toArray(),
   ]);
   const today = mostRecentBoundaryAtOrBefore(now);
-  const starts = Array.from({ length: 28 }, (_, i) => addDays(today, i - 27));
+  const starts = Array.from({ length: count }, (_, i) => addDays(today, i - count + 1));
   const dates = starts.map(formatLocalDate);
   const [recorded, confirmed] = await Promise.all([getRecordedContexts(dates), getConfirmedExceptions(dates)]);
   const windows = starts.map((from) => {
@@ -70,6 +70,17 @@ export async function getHabitWorkspace(now = new Date()) {
       };
     }),
   };
+}
+
+/** Full history is requested only by the habits workspace, never by a dashboard chip. */
+export function getHabitWorkspace(now = new Date()) {
+  return readHabitCalendar(now, 28);
+}
+
+/** DATA needs today's answers only: do not hold Garmin readings behind 28 days of history lookups. */
+export async function getHabitToday(now = new Date()) {
+  const current = await readHabitCalendar(now, 1);
+  return current.habits.map(({ habit, answer, done, applies }) => ({ habit, answer, done, applies }));
 }
 
 /** Oldest first; habits created in the same millisecond keep a fixed order (name, then id), not the store's. */

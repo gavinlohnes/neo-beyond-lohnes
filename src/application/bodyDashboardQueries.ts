@@ -1,6 +1,6 @@
 import type { HabitAnswer } from "../domain/habits";
 import type { BeyondDay, SchedulePattern } from "../domain/common/types";
-import { getHabitWorkspace } from "./habitQueries";
+import { getHabitToday } from "./habitQueries";
 import { getMeasuredSnapshot, type MeasuredSnapshot } from "./measuredQueries";
 import { getPaceHistories, type PaceHistories } from "./pace";
 import { getSchedulePattern } from "./queries";
@@ -23,12 +23,12 @@ export async function getBodyDashboardExtras(day: BeyondDay | null, now: Date = 
   const [measured, pace, workspace, quit, schedule] = await Promise.all([
     getMeasuredSnapshot(now.getTime()).catch(() => null),
     day ? getPaceHistories(day, now).catch(() => null) : Promise.resolve(null),
-    getHabitWorkspace(now).catch(() => null),
+    getHabitToday(now).catch(() => null),
     getQuitSummary(day?.id, now).catch(() => undefined),
     getSchedulePattern().catch(() => null),
   ]);
   return {
     measured, pace, schedule, quit: quit ?? null,
-    habits: workspace ? workspace.habits.filter((h) => h.applies).map((h) => ({ name: h.habit.name, done: h.done, answer: h.answer })) : null,
+    habits: workspace ? workspace.filter((h) => h.applies).map((h) => ({ name: h.habit.name, done: h.done, answer: h.answer })) : null,
   };
 }
