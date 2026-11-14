@@ -3525,3 +3525,20 @@ Brief: [DAY-MAP-001.md](DAY-MAP-001.md). Branch `ccr-88f5c085-day-map`.
 - **New-mark outline** (branch `ccr-88f5c085-day-map-fresh`): marks new since the last look are outlined and named
   NEW.
 - **Next:** WEEK STRIP.
+
+---
+
+# BODY-DASH-001 — DATA opens on the numbers (Gavin, 2026-11-14) — Protected, approved
+
+Brief: [BODY-DASH-001.md](BODY-DASH-001.md). Branch `ccr-88f5c085-body-dash`.
+
+- **What it adds:** a numbers-first dashboard above DATA's shortcuts and the cave. Hydration, sleep, weight, nutrition,
+  steps, resting HR and lifestyle each show their source and freshness and link to their existing logging and history.
+- **Verification:** typecheck, the architecture check, the node and browser suites and the build; screenshots at 360,
+  412 and 1024 px.
+- **Next:**
+  1. independent exact-head review;
+  2. Gavin merges.
+- **Open decisions for Gavin:**
+  - trim the cave's NUMBERS tab (it repeats the dashboard);
+  - a shared D/W/M/Y metric page (BODY-DASH-002).

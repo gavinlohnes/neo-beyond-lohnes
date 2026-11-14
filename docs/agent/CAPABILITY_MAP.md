@@ -154,6 +154,13 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   biasing recommendation selection, are both recommendation-priority changes — owner sign-off
   obtained 2026-09-02.
 
+## BODY DASHBOARD (BODY-DASH-001)
+
+- `ui/screens/body/BodyDashboard.tsx` is DATA's numbers-first overview. Its cards read existing queries through
+  `application/bodyDashboardQueries.ts` (Garmin snapshot, water pace, habits, quit, schedule) and its pure helpers in
+  `application/bodyDashboard.ts`.
+- Add a card here rather than to `BodyScreen.tsx`. Reuse `MeasuredSheet` for any Garmin metric's history.
+
 ## NUTRITION
 
 - **Existing primitive**: `SavedMeal` (`src/domain/common/types.ts`) — fully manual, no food
