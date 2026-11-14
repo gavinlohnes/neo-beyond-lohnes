@@ -81,7 +81,8 @@ export function SleepPeriods({ active, onAllRecords }: { active: boolean; onAllR
       {/* METRIC-PAGE-001 slice 3: the shared metric page's source line. Garmin's night wins; a night it missed shows
           the main sleep you logged, named as yours. */}
       <div className="md-source" data-sleep-source>
-        <SourceTag garmin>{fresh?.stale ? "GARMIN · OLD" : "GARMIN"}</SourceTag>
+        {/* Review of #527: no Garmin tag without Garmin data. */}
+        {data.snapshot.garminAsOf !== null && <SourceTag garmin>{fresh?.stale ? "GARMIN · OLD" : "GARMIN"}</SourceTag>}
         {loggedFrom.size > 0 && <SourceTag>LOGGED</SourceTag>}
         <span className="md-meta">{data.snapshot.garminAsOf !== null ? describeGarminAsOf(data.snapshot.garminAsOf, data.snapshot.readAt) : "No Garmin data yet."} A night Garmin missed shows the main sleep you logged.</span>
       </div>

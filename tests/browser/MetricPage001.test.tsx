@@ -217,6 +217,19 @@ describe("METRIC-PAGE-001 pilot", () => {
     if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-sleep.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
   });
 
+  it("review of #527: the sleep page shows no GARMIN tag when there is no Garmin data", async () => {
+    vi.setSystemTime(MONTH_NOW);
+    const { startDay, logSleep } = await import("../../src/application/commands");
+    const day = await startDay();
+    await logSleep(day.id, 420, "PRIMARY");
+    await page.viewport(360, 900);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Main sleep|^Sleep / }).click();
+    await expect.element(page.getByRole("dialog", { name: "SLEEP", exact: true })).toBeVisible();
+    await expect.poll(() => text("[data-sleep-source]")).toContain("No Garmin data yet.");
+    expect(document.querySelector("dialog[open] [data-sleep-source] .bf-src--garmin")).toBeNull();
+  });
+
   it("nothing spills, sentences keep 16 px, and every page passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 900);
