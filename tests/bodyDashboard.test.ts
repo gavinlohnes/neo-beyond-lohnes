@@ -27,3 +27,11 @@ it("says how fresh Garmin is, and flags data older than 12 hours", () => {
   expect(garminFreshness(new Date(2026, 10, 18, 8).getTime(), now)).toEqual({ label: "Garmin as of 08:00 · 14 h old", stale: true });
   expect(garminFreshness(new Date(2026, 10, 17, 21).getTime(), now)!.label).toBe("Garmin as of Tue 21:00 · 25 h old");
 });
+
+it("review of #512: steps are today's own measured value, so history with no hours yet today is not a 0", async () => {
+  const { stepsSoFar } = await import("../src/application/bodyDashboard");
+  expect(stepsSoFar(null)).toBeNull();
+  expect(stepsSoFar({ any: false, steps: [{ value: 4000 }] })).toBeNull();
+  expect(stepsSoFar({ any: true, steps: [{ value: 5200 }, { value: null }] })).toBeNull(); // history, nothing yet today
+  expect(stepsSoFar({ any: true, steps: [{ value: 5200 }, { value: 1750 }] })).toBe(1750);
+});

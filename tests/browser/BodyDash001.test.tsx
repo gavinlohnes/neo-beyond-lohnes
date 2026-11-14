@@ -4,7 +4,7 @@ import { page, userEvent } from "vitest/browser";
 import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
-import { logBodyweight, logWater, updateSchedulePattern } from "../../src/application/commands";
+import { logBodyweight, logProtein, logWater, startDay, updateSchedulePattern } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { createHabit, setHabitDone } from "../../src/application/habitCommands";
 import { saveQuitHabit } from "../../src/application/quitCommands";
@@ -157,5 +157,18 @@ describe("BODY-DASH-001", () => {
     await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
     await expect.poll(() => [...document.querySelectorAll(".bd-src--garmin")].map((e) => e.textContent)).toContain("GARMIN · OLD");
     expect(text("sleep")).toMatch(/Garmin as of .* · \d+ h old/);
+  });
+
+  it("review of #512: protein alone shows protein, not \"0 kcal\" eaten; water's hours start at 16:30, not at day start", async () => {
+    await page.viewport(360, 800);
+    vi.setSystemTime(new Date(2026, 10, 18, 18, 2)); const day = await startDay();
+    vi.setSystemTime(new Date(2026, 10, 18, 19)); await logProtein(day.id, 30); await logWater(day.id, 12);
+    vi.setSystemTime(new Date(2026, 10, 18, 20));
+    const screen = await render(<App />);
+    await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
+    await expect.poll(() => text("nutrition")).toContain("Protein30");
+    expect(text("nutrition")).toContain("No meals logged");
+    expect(text("nutrition")).not.toMatch(/Eaten|0 kcal/);
+    expect([...card("water")!.querySelectorAll(".bd-axis span")].map((s) => s.textContent)).toEqual(["16:30", "NOW", "16:30"]);
   });
 });

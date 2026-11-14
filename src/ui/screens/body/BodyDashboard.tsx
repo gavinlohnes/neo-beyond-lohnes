@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ChevronRight, Droplet, Footprints, HeartPulse, ListChecks, Moon, Plus, Scale, Utensils } from "lucide-react";
 import type { BeyondDay, HydrationEntry } from "../../../domain/common/types";
 import type { WeighIn } from "../../../application/bodyTrendQueries";
-import { clockOf, garminFreshness, waterByHour, weightChange } from "../../../application/bodyDashboard";
+import { clockOf, garminFreshness, stepsSoFar, waterByHour, weightChange } from "../../../application/bodyDashboard";
+import { mostRecentBoundaryAtOrBefore } from "../../../engine/dayRollover";
 import { getBodyDashboardExtras, type BodyDashboardExtras } from "../../../application/bodyDashboardQueries";
 import { minuteOfDay, paceReading } from "../../../application/pace";
 import { hypnogram, sleepMinutes, type StageName } from "../../../domain/health/measuredSeries";
@@ -138,9 +139,10 @@ export function BodyDashboard(p: BodyDashboardProps) {
   const context = !p.day ? "No day started" : p.day.workContext === "OFF" ? "Day off" : shift ? `${shift.end.toDateString() !== shift.start.toDateString() ? "Night shift" : "Shift"} ${clockOf(shift.start.getTime())}–${clockOf(shift.end.getTime())}` : p.day.workContext === "WORK" ? "Work day" : "Work or off not set";
   const contextBasis = !p.day ? null : p.day.workContext === "UNKNOWN" ? (shift ? "schedule" : null) : "recorded";
 
-  // Water: today's hours, and your own usual pace (never a goal).
-  const slots = p.day ? waterByHour(p.water.entries, p.day.startedAt) : [];
-  const nowSlot = p.day ? Math.floor((nowMs - Date.parse(p.day.startedAt)) / 3_600_000) : -1;
+  // Water: the lived day's hours from 16:30 (review of #512: not from when the day was started), and your own usual pace.
+  const livedStart = p.day ? mostRecentBoundaryAtOrBefore(new Date(p.day.startedAt)).toISOString() : null;
+  const slots = livedStart ? waterByHour(p.water.entries, livedStart) : [];
+  const nowSlot = livedStart ? Math.floor((nowMs - Date.parse(livedStart)) / 3_600_000) : -1;
   const pace = p.day && extras?.pace ? paceReading("water", p.water.totalOz, extras.pace.water, minuteOfDay(p.day.startedAt, now)) : null;
   const lastWater = [...p.water.entries].filter((e) => e.effectiveAmountOz > 0).sort((a, b) => b.at.localeCompare(a.at))[0];
 
@@ -154,8 +156,8 @@ export function BodyDashboard(p: BodyDashboardProps) {
   const change = weightChange(p.weight.history);
   const weightSeries = [...p.weight.history].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt)).filter((w) => Date.parse(w.recordedAt) > nowMs - 30 * 86_400_000).map((w) => w.weightLbs);
   const burned = m?.anyCalories ? m.burnedToday.at(-1)?.total ?? null : null;
-  // Only real watch data: the snapshot's running total is zero-filled when nothing was measured.
-  const steps = m?.any && m.steps.some((s) => s.value !== null) && m.stepsToday.length ? m.stepsToday.at(-1)!.total : null;
+  // Only real watch data, read as TODAY reads it (review of #512).
+  const steps = stepsSoFar(m);
   const restingLatest = m?.any ? [...m.resting].reverse().find((r) => r.value !== null) ?? null : null;
   const restingSeries = m ? m.resting.slice(-14).map((r) => r.value) : [];
   const usualSteps = m?.usual.steps.value ?? null, usualResting = m?.usual.resting.value ?? null;
@@ -180,7 +182,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
         <Card id="water" icon={<Droplet size={18} />} label="HYDRATION" wide source={<Source>LOGGED</Source>} onOpen={() => p.onOpen("water")} openLabel="Open water history">
           <div className="bd-row">
             <p className="bd-value">{p.water.totalOz > 0 ? <>{fmt(p.water.totalOz)}<small> oz</small></> : <span className="bd-none">Not logged</span>}</p>
-            <div className="bd-viz">{p.day && <><WaterBars slots={slots} nowSlot={nowSlot} /><div className="bd-axis" aria-hidden="true"><span>{clockOf(p.day.startedAt)}</span><span>NOW</span><span>{clockOf(Date.parse(p.day.startedAt) + 86_400_000)}</span></div></>}</div>
+            <div className="bd-viz">{p.day && <><WaterBars slots={slots} nowSlot={nowSlot} /><div className="bd-axis" aria-hidden="true"><span>{clockOf(livedStart!)}</span><span>NOW</span><span>{clockOf(Date.parse(livedStart!) + 86_400_000)}</span></div></>}</div>
           </div>
           <p className="bd-meta" data-dash-water-pace>
             {pace?.usual.kind === "RANGE" ? `Your usual by now: ${fmt(pace.usual.low)}–${fmt(pace.usual.high)} oz` : pace ? `Learning your usual: ${pace.usual.days} of ${pace.usual.need} days` : "Your usual appears after 10 logged days"}
@@ -217,9 +219,10 @@ export function BodyDashboard(p: BodyDashboardProps) {
         </Card>
 
         <Card id="nutrition" icon={<Utensils size={18} />} label="NUTRITION" source={p.nutrition.mealsLogged ? <Source>LOGGED</Source> : null} onOpen={() => p.onOpen("nutrition")} openLabel="Open nutrition history">
+          {/* Review of #512: no bare zero (DENSITY-001). Calories need a logged meal; protein needs a protein record. */}
           {p.nutrition.mealsLogged > 0 || p.nutrition.proteinG > 0 ? <>
-            <Meter label="Eaten" value={p.nutrition.calories} of={p.nutrition.calorieTargetKcal} unit="kcal" />
-            <Meter label="Protein" value={p.nutrition.proteinG} of={p.nutrition.proteinTargetG} unit="g" />
+            {p.nutrition.mealsLogged > 0 ? <Meter label="Eaten" value={p.nutrition.calories} of={p.nutrition.calorieTargetKcal} unit="kcal" /> : <p className="bd-meta">No meals logged</p>}
+            {p.nutrition.proteinG > 0 && <Meter label="Protein" value={p.nutrition.proteinG} of={p.nutrition.proteinTargetG} unit="g" />}
           </> : <p className="bd-value"><span className="bd-none">No food logged</span></p>}
           {burned !== null && <p className="bd-meta bd-meta--garmin" data-dash-burned>Burned (Garmin estimate): {fmt(burned)} kcal</p>}
           {p.onLog && <div className="bd-quick bd-quick--one"><button type="button" disabled={p.busy} aria-label="Log food from the dashboard" onClick={() => p.onLog!("meal")}>LOG FOOD</button></div>}
@@ -227,7 +230,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
 
         <Card id="steps" icon={<Footprints size={18} />} label="STEPS" source={steps !== null ? garminSource : null} onOpen={m?.any ? () => setMeasuredOpen("steps") : undefined} openLabel="Open steps history">
           <p className="bd-value">{steps !== null ? fmt(steps) : <span className="bd-none">Not measured</span>}</p>
-          {steps !== null && <Spark values={m!.stepsToday.map((s) => s.total)} tone="garmin" area />}
+          {steps !== null && m!.stepsToday.length > 1 && <Spark values={m!.stepsToday.map((s) => s.total)} tone="garmin" area />}
           <p className="bd-meta">{usualSteps !== null ? `Usual ${m!.usual.steps.dayKind === "WORK" ? "work day" : "day off"}: ${fmt(usualSteps)}` : steps !== null ? "So far this lived day" : "From your watch, when synced"}</p>
         </Card>
 

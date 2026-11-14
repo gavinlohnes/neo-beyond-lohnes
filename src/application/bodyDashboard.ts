@@ -34,6 +34,14 @@ export function weightChange(history: readonly WeighIn[], days = 7): { lbs: numb
   return { lbs: Math.round((latest.weightLbs - base.weightLbs) * 10) / 10, days: span };
 }
 
+/**
+ * Review of #512: today's Garmin steps, the same reading TODAY's tile uses (the current period's own value), so a day
+ * with history but no measured hours yet reads as not measured, never 0. The running total always starts at 0.
+ */
+export function stepsSoFar(m: { any: boolean; steps: readonly { value: number | null }[] } | null): number | null {
+  return m?.any ? m.steps.at(-1)?.value ?? null : null;
+}
+
 /** "09:04" local. */
 export const clockOf = (at: number | string) => { const d = new Date(at); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 
