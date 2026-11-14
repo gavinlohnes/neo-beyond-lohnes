@@ -33,7 +33,13 @@ function assertNoCollisions(label: string) {
     }
   }
   const spill = [...document.querySelectorAll<HTMLElement>(".bd-card")].filter((c) => c.scrollWidth > c.clientWidth + 1).map((c) => c.dataset.dash);
-  expect({ overlaps, spill }, label).toEqual({ overlaps: [], spill: [] });
+  // Titles: never wider than their cell (a word that can't fit would overflow it), and one-word titles on one line.
+  const cramped = [...document.querySelectorAll<HTMLElement>(".bd-card__label")].filter((l) => l.scrollWidth > l.clientWidth + 1
+    || (!l.textContent!.includes(" ") && l.getClientRects().length && l.getBoundingClientRect().height > parseFloat(getComputedStyle(l).lineHeight) * 1.5)).map((l) => l.textContent);
+  // Stage key items never overlap one another.
+  const keys = [...document.querySelectorAll<HTMLElement>(".bd-stage-key li")].map((li) => li.getBoundingClientRect());
+  const keyOverlap = keys.some((a, i) => keys.slice(i + 1).some((b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5));
+  expect({ overlaps, spill, cramped, keyOverlap }, label).toEqual({ overlaps: [], spill: [], cramped: [], keyOverlap: false });
 }
 const card = (id: string) => document.querySelector<HTMLElement>(`[data-dash="${id}"]`);
 const text = (id: string) => card(id)?.textContent ?? "";

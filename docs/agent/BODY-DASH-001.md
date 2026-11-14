@@ -126,3 +126,13 @@ NUMBERS still shows TODAY's tiles and the Weight card above History. The smalles
 two into one quiet "Today's readings" disclosure in NUMBERS (closed by default) and keep History as is. This keeps
 every control the history and correction tests use ("water history", "WEIGHT HISTORY", dated weigh-ins), so nothing
 is removed. It's a separate PR for Gavin's go.
+
+### Final visual acceptance correction (Gavin, 2026-11-14)
+
+CSS only. Each card measures its own width (a container query).
+- **150 px or less of content:** the title's tracking tightens and keeps its icon. That's 360 px phones: WEIGHT and
+  NUTRITION sit on one line, and RESTING HR wraps only between its words.
+- **120 px or less:** the icon also steps aside. At 320 px every title is on one line.
+- **Stage key:** it becomes a 2 × 2 grid when the sleep card is under 330 px, so names and times don't crowd.
+- **Test:** the collision check now also fails on any title wider than its cell or any one-word title on two lines,
+  and on any overlap in the stage key.

@@ -115,3 +115,21 @@
 
 .bd button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .bd * { transition: none !important; } }
+
+/* Final visual acceptance (Gavin, 2026-11-14): compact titles never break mid-word or crowd their controls. Each card
+   measures itself; a narrow card drops its icon and tightens the title's tracking, so even "NUTRITION" or
+   "RESTING HR" fits beside › at 320 px. Words still wrap only between words. */
+.bd-card { container-type: inline-size; }
+.bd-card__label { hyphens: none; }
+@container (max-width: 150px) {
+  .bd-card__label { letter-spacing: .04em; }
+  .bd-card__head { gap: 4px; }
+}
+@container (max-width: 120px) {
+  .bd-card__icon { display: none; }
+  .bd-card__head { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+}
+/* The stage key takes two rows when the sleep card is narrow, so names and times never crowd. */
+@container (max-width: 330px) {
+  .bd-stage-key { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 6px; }
+}
