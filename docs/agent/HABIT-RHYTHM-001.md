@@ -2,7 +2,7 @@
 
 - **Owner approval:** Gavin approved the bounded proposal in this session ("Approved."): Done / Didn't do it / Not recorded, seven-day overview, 28-day history with work days marked, and past-day corrections. Improve the existing habit system, preserve records and foundation identity; no guilt/streaks. Quit tracker unchanged; reminders and sleep/heart-rate comparisons deferred.
 - **Lane:** Protected — explicit habit-answer event semantics and historical correction. This bounded owner approval covers those states and corrections; independent exact-head review, green CI and Gavin's merge remain required.
-- **Baseline:** freshly fetched master `c9d6702d3f2459aae7840e6cf402e9d6f9628b47` (metric pilot #519 merged); exact baseline recorded in Git history. Builder Codex. Branch `codex/habit-rhythm-001`; one PR to be linked when opened.
+- **Baseline:** freshly fetched master `c9d6702d3f2459aae7840e6cf402e9d6f9628b47` (metric pilot #519 merged); exact baseline recorded in Git history. Builder Codex. Branch `codex/habit-rhythm-001`; active [PR #520](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/520).
 
 ## Meaning and scope
 

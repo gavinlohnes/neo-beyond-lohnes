@@ -4,7 +4,8 @@
   Done / Didn't do it / Not recorded. [Brief](HABIT-RHYTHM-001.md). Protected answer-history semantics;
   independent exact-head review and green CI required, Gavin alone merges.
 - **Builder:** Codex. Fresh branch `codex/habit-rhythm-001`, baseline fetched master
-  `c9d6702d3f2459aae7840e6cf402e9d6f9628b47` (#519 metric pilot merged). No overlapping open habit PR.
+  `c9d6702d3f2459aae7840e6cf402e9d6f9628b47` (#519 metric pilot merged). Active
+  [PR #520](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/520); no overlapping habit PR.
 - **Implemented:** additive explicit HABIT_SET answers with legacy mark/undo compatibility; atomic append/
   no-op guards; local 16:30 28-day calendar with labelled work context and honest gaps; seven-day rows,
   shared history/correction sheet, read retry, write-error and same-tick submission guards. Existing
