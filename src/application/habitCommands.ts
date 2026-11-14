@@ -1,5 +1,6 @@
 import { db } from "../persistence/db";
-import type { Habit, HabitScheduleKind } from "../domain/habits";
+import { HABIT_ANSWERS, projectHabitAnswers, type Habit, type HabitScheduleKind, type HabitAnswer } from "../domain/habits";
+import { writeAtomically } from "./atomicWrite";
 import { ensureActiveDay, logEvent, newId } from "./commands";
 
 function cleanName(value: string) {
@@ -23,25 +24,35 @@ export async function setHabitArchived(id: string, archived: boolean) {
   await db.habits.update(id, { status: archived ? "ARCHIVED" : "ACTIVE", updatedAt: new Date().toISOString() });
 }
 
-/** Latest event wins, so a second tap corrects today's completion without erasing history. */
-export async function setHabitDone(habitId: string, done: boolean, dayId?: string): Promise<boolean> {
-  const habit = await db.habits.get(habitId);
-  if (!habit || habit.status !== "ACTIVE") throw new Error("HABIT_NOT_FOUND");
-  const day = dayId ? await db.beyondDays.get(dayId) : await ensureActiveDay();
-  if (!day) throw new Error("DAY_NOT_FOUND");
-  const current = await getHabitDone(day.id);
-  if (current.has(habitId) === done) return false;
-  const correlationId = newId();
-  await logEvent(day.id, "HABIT_SET", { commandId: correlationId, habitId, done }, "USER", correlationId);
-  return true;
+/** Append a real-time answer/correction to the explicitly selected existing lived day. */
+export async function setHabitAnswer(habitId: string, answer: HabitAnswer, dayId?: string): Promise<boolean> {
+  if (!HABIT_ANSWERS.includes(answer)) throw new Error("INVALID_HABIT_ANSWER");
+  // Preserve canonical lazy-day lifecycle outside this transaction (including its post-commit automation).
+  // Recheck the habit inside the answer transaction so a concurrent archive cannot pass the write guard.
+  const existing = await db.habits.get(habitId);
+  if (!existing || existing.status !== "ACTIVE") throw new Error("HABIT_NOT_FOUND");
+  const selectedDay = dayId ?? (await ensureActiveDay()).id;
+  return writeAtomically(["habits", "beyondDays"], async () => {
+    const habit = await db.habits.get(habitId);
+    if (!habit || habit.status !== "ACTIVE") throw new Error("HABIT_NOT_FOUND");
+    const day = await db.beyondDays.get(selectedDay);
+    if (!day) throw new Error("DAY_NOT_FOUND");
+    if (Date.parse(day.startedAt) > Date.now()) throw new Error("FUTURE_DAY");
+    const events = await db.events.where("beyondDayId").equals(day.id).toArray();
+    const current = projectHabitAnswers(events).get(habitId) ?? "UNRECORDED";
+    if (current === answer) return false;
+    const correlationId = newId();
+    await logEvent(day.id, "HABIT_SET", { commandId: correlationId, habitId, done: answer === "DONE", answer }, "USER", correlationId);
+    return true;
+  });
+}
+
+/** Compatibility gateway: existing callers retain their mark/undo meaning. */
+export function setHabitDone(habitId: string, done: boolean, dayId?: string): Promise<boolean> {
+  return setHabitAnswer(habitId, done ? "DONE" : "UNRECORDED", dayId);
 }
 
 export async function getHabitDone(dayId: string): Promise<Set<string>> {
-  const events = (await db.events.where("beyondDayId").equals(dayId).toArray()).filter((event) => event.type === "HABIT_SET");
-  const state = new Map<string, boolean>();
-  for (const event of events.sort((a, b) => a.occurredAt.localeCompare(b.occurredAt) || (a.seq ?? 0) - (b.seq ?? 0))) {
-    const payload = event.payload as { habitId?: unknown; done?: unknown };
-    if (typeof payload.habitId === "string" && typeof payload.done === "boolean") state.set(payload.habitId, payload.done);
-  }
-  return new Set([...state].filter(([, done]) => done).map(([id]) => id));
+  const events = await db.events.where("beyondDayId").equals(dayId).toArray();
+  return new Set([...projectHabitAnswers(events)].filter(([, answer]) => answer === "DONE").map(([id]) => id));
 }

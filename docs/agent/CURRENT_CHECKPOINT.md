@@ -1,3 +1,27 @@
+# Current objective — HABIT-RHYTHM-001 (owner approved 2026-11-14)
+
+- **Authorization:** Gavin approved recording, seven/28-day history and past-day correction, with explicit
+  Done / Didn't do it / Not recorded. [Brief](HABIT-RHYTHM-001.md). Protected answer-history semantics;
+  independent exact-head review and green CI required, Gavin alone merges.
+- **Builder:** Codex. Fresh branch `codex/habit-rhythm-001`, baseline fetched master
+  `c9d6702d3f2459aae7840e6cf402e9d6f9628b47` (#519 metric pilot merged). No overlapping open habit PR.
+- **Implemented:** additive explicit HABIT_SET answers with legacy mark/undo compatibility; atomic append/
+  no-op guards; local 16:30 28-day calendar with labelled work context and honest gaps; seven-day rows,
+  shared history/correction sheet, read retry, write-error and same-tick submission guards. Existing
+  create/schedule/archive, Alfred confirmation and DATA route remain; DATA labels now distinguish No
+  from unrecorded. No quit-tracker, schema, Engine, provider, dependency or backup-format changes.
+- **History boundary:** only existing day records can be corrected. Gaps are visible but do not
+  fabricate historical day lifecycle records or negative answers. Multiple manual starts in one
+  lived day retain the actual answer's original correction target.
+- **Verification:** full Node 2300 PASS / 1 existing skip; 30 focused real-Chromium tests PASS across
+  new habits, original habits, DATA, whole-life and LIFE. DST-specific New York run 12 PASS; architecture,
+  TypeScript and production/PWA build PASS. Final required CI and independent exact-head review pending.
+  Initial checks fixed a hidden retained dialog's placement and chronological test event selection.
+- **Next:** finish verification; push/open one PR, record actual results and independent verdict there.
+  No merge or expansion into reminders/health comparisons/new schedule rules.
+
+---
+
 # Current objective — METRIC-PAGE-001 hydration/steps pilot (2026-11-14)
 
 - **Owner authorization:** “Go ahead” after confirming the approved pilot scope. Continue existing branch
