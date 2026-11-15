@@ -1,3 +1,11 @@
+# Current objective — BEYOND 4.0-a part 1, slice 1: TODAY split, AT A GLANCE (no visible change)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-4a-foundation`. Routine. [Release brief](BEYOND-4.0-A.md) under
+  [BEYOND-4.0](BEYOND-4.0.md). TodayScreen.tsx 3,517 → 3,452 lines; `TodayNumbers.tsx` holds AT A GLANCE.
+- **Open:** #543 (Doctrine line, ready), #544 (4.0 master brief).
+
+---
+
 # Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
