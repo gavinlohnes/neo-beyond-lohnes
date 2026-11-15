@@ -1,8 +1,8 @@
 # Current objective — 4.0-b slice 2: one coach card
 
-- Builder Codex; branch `codex/4b-coach-card`, from fetched master `ba6df574` (deload merged). Owner resumes work; [approved order and scope](BEYOND-4.0-B.md). No competing implementation PR found.
+- Builder Codex; [active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/547), branch `codex/4b-coach-card`, from fetched master `ba6df574` (deload merged). Owner resumes work; [approved order and scope](BEYOND-4.0-B.md). No competing implementation PR found.
 - One optional evidence-backed suggestion below Engine guidance; existing feature confirmation flows own actions, local SKIP lasts until evidence changes. No new formulas, schema, dependency, provider or silent writes.
-- Review recovery: independent review found skip pruning could erase a temporarily ineligible dismissal and storage read failure could silently restore advice. Fixed with one evidence fingerprint per stable feature identity and explicit read-failure/retry, with browser regressions. Final exact-head review/CI remain required.
+- Review recovery: independent review found skip pruning could erase a temporarily ineligible dismissal and storage read failure could silently restore advice. Fixed with one evidence fingerprint per stable feature identity and explicit read-failure/retry, with browser regressions. Training advice also uses TODAY's existing Engine-suggested variant; RESET suppresses lift coaching, REDUCED reads reduced history. Final exact-head review/CI remain required.
 - Gates: focused query/browser and existing TODAY/App regressions, type/architecture/build, full CI and independent Protected exact-head review pending. Record final evidence in the PR handoff without changing the reviewed commit. Gavin alone merges; no automatic next slice.
 
 ---

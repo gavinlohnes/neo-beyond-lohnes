@@ -15,13 +15,13 @@ export interface CoachCard { id: string; key: string; title: string; evidence: s
 const key = (kind: string, evidence: unknown) => JSON.stringify([kind, evidence]);
 
 /** Approved 4.0-b order; reads only. Existing feature screens own confirmation and writes. */
-export async function getCoachCards(now = new Date()): Promise<CoachCard[]> {
+export async function getCoachCards(now = new Date(), suggestedVariant: "STANDARD" | "REDUCED" | "RESET" = "STANDARD"): Promise<CoachCard[]> {
   const cards: CoachCard[] = [];
   const [day, active, programme] = await Promise.all([getActiveDay(), getActiveWorkoutSession(), getProgrammeView(now)]);
   const declared = day ? await hasActivePlannedWork(day.id) : false;
   const template = active?.templateId ?? programme.planned.templateId ?? (declared ? suggestNextTemplate(await getLastAdvancingTemplate()) : null);
-  if (template && active?.sessionType !== "RECOVERY") {
-    const variant = active?.sessionType === "REDUCED" ? "REDUCED" : "STANDARD";
+  if (template && active?.sessionType !== "RECOVERY" && (active || suggestedVariant !== "RESET")) {
+    const variant = active ? (active.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD";
     const [exercises, undone, sessions] = await Promise.all([resolveTemplateExercises(template, variant), getUndoneSetIds(), db.workoutSessions.toArray()]);
     const finished = new Set(sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL").map((s) => s.id));
     for (const ex of exercises) {

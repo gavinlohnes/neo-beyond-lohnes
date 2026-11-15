@@ -24,6 +24,7 @@ it("composes approved order without writing and keys dismissals by the evidence"
   expect(groups.indexOf("JOURNAL")).toBeGreaterThan(groups.lastIndexOf("TRAIN"));
   expect(groups.indexOf("WEEKLY")).toBeGreaterThan(groups.indexOf("JOURNAL"));
   expect(groups.indexOf("DELTA")).toBeGreaterThan(groups.indexOf("WEEKLY"));
+  expect((await getCoachCards(new Date(2026, 10, 15), "RESET")).some((c) => c.destination === "TRAIN")).toBe(false);
   expect(await db.events.count()).toBe(before);
   // Node deliberately has no browser dismissal store; query itself never needs one.
   expect(cards[0]!.key).toBe((await getCoachCards(new Date(2026, 10, 15)))[0]!.key);

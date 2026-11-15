@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 import { getCoachCards, readCoachSkips, skipCoachCard, type CoachCard as Card, type CoachDestination } from "../../../application/coachCards";
 
 /** One optional suggestion below Engine guidance; accepting opens the existing confirmation flow. */
-export function CoachCard({ active, refreshKey, onOpen }: { active: boolean; refreshKey: number; onOpen: (destination: CoachDestination) => void }) {
+export function CoachCard({ active, refreshKey, variant = "STANDARD", onOpen }: { variant?: "STANDARD" | "REDUCED" | "RESET"; active: boolean; refreshKey: number; onOpen: (destination: CoachDestination) => void }) {
   const [cards, setCards] = useState<Card[]>([]), [skips, setSkips] = useState<string[]>([]), [error, setError] = useState(false), [retry, setRetry] = useState(0);
   const [skipError, setSkipError] = useState(false);
   useEffect(() => {
     if (!active) return;
     let live = true, request = 0;
-    const load = () => { const current = ++request; setCards([]); void getCoachCards().then((next) => { if (live && current === request) { try { const dismissed = readCoachSkips(); setCards(next); setSkips(dismissed); setError(false); } catch { setCards([]); setError(true); } } }, () => { if (live && current === request) { setCards([]); setError(true); } }); };
+    const load = () => { const current = ++request; setCards([]); void getCoachCards(new Date(), variant).then((next) => { if (live && current === request) { try { const dismissed = readCoachSkips(); setCards(next); setSkips(dismissed); setError(false); } catch { setCards([]); setError(true); } } }, () => { if (live && current === request) { setCards([]); setError(true); } }); };
     load();
     const visible = () => { if (document.visibilityState === "visible") load(); };
     const timer = window.setInterval(load, 60_000);
     document.addEventListener("visibilitychange", visible);
     return () => { live = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", visible); };
-  }, [active, refreshKey, retry]);
+  }, [active, refreshKey, retry, variant]);
   if (!active) return null;
   if (error) return <div className="meta" role="status">Coach advice is unavailable. <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY COACH</button></div>;
   const card = cards.find((c) => !skips.includes(c.key));
