@@ -10,8 +10,9 @@
   no figure while still learning (no 7 h fallback); MONTH, the energy forecast, the recovery-sleep offer (threshold
   unchanged at 1 h) and Alfred's context follow it. The Engine never reads it; `src/engine/**` untouched. The month
   grid's short-night underline stays on the 7 h guideline (labelled).
-- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; Gavin merges. Lane and
-  evidence on the PR. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
+- Lane PROTECTED (classifier: governance docs; semantically it also changes Alfred's sleep context and the recovery
+  offer). Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent
+  exact-head review; Gavin merges. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
 
 ---
 

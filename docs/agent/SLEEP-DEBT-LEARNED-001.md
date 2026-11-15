@@ -8,8 +8,11 @@
   [BEYOND-4.0](BEYOND-4.0.md) decision 1 lists sleep debt among the things BEYOND may learn; this is the read-only
   half (no learned Engine rule).
 - **Builder:** Grok Bot. Branch `codex/sleep-debt-learned-001` from fetched `origin/master` `4d74ac26` (#554 merged).
-- **Lane:** see the PR and checkpoint (classifier output plus semantic reading). No Engine, schema, backup, permission,
-  dependency or provider change; `src/engine/**` is untouched.
+- **Lane: PROTECTED.** `npm run check:risk -- 4d74ac26` suggests PROTECTED (governance docs: the Decision Register entry,
+  the 4.0 brief row, this brief). Semantically the code is a FEATURE-sized readout change, but it also changes what
+  Alfred's context says about sleep and when the recovery-sleep offer appears, so it is not downgraded: independent
+  exact-head review, green CI, Gavin merges. No Engine, schema, backup, permission, dependency or provider change;
+  `src/engine/**` is untouched.
 - **Active PR:** pending until opened; linked from the checkpoint.
 
 ## What changes
