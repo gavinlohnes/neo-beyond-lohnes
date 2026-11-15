@@ -3354,3 +3354,18 @@ An explicit task move changes plannedAt only, through the existing intent comman
   words with no AI call.
 - BEYOND fills every fix card from the record (the real before and after); a wrong id or impossible time is never a
   card. SAVE re-checks the record, refuses if it changed since, and runs the existing retime, correction or removal.
+
+## BEYOND-4.0 — "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
+
+[Master brief](agent/BEYOND-4.0.md). Gavin asked for "a pretty big transformation" and ruled:
+
+1. **The Engine learns** ("Yes. I want it to learn."): adaptive, deterministic, explained rules from his own history;
+   evidence and sample sizes shown; abstains when thin; suggests, never changes a record. Protected per change.
+2. **Coaching, Gavin keeps the final say:** BEYOND and Alfred may suggest with reasons; every change is confirmed.
+3. **TODAY may be redesigned** as a mission briefing, previewed on his phone before it replaces the current TODAY.
+4. **Photos only for progress pictures of himself:** no meal-photo logging. Alfred may describe change between two of
+   his progress photos only when he taps to ask; body photos are never sent automatically or kept outside the phone.
+5. **Proactive notifications, at most 3 a day**, each kind easy to turn off.
+
+Releases a (foundation + zero-effort input) → b (coach brain) → c (self-running week) → d (mission briefing), each with
+its own PRs, review where Protected, and Gavin's merge.

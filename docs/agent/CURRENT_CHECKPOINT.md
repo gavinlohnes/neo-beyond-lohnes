@@ -1,3 +1,12 @@
+# Current programme — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
+
+- **Authority:** [master brief](BEYOND-4.0.md). Builder for 4.0-a: Claude Code. Each release: own PRs; Protected parts
+  (Engine learning, TODAY redesign) get independent exact-head review; Gavin merges.
+- **Now:** 4.0-a step 1, the TODAY split (no visible change) and test-storage isolation.
+- **Open:** #543 (Doctrine line, review PASS, ready to merge).
+
+---
+
 # Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
