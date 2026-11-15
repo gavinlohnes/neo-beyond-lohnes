@@ -1,4 +1,14 @@
-# Current objective — UNIVERSAL-FAST-CAPTURE-001 (Gavin: universal fast capture, no destination required)
+# Current research handoff — HARVEST-002 (Gavin: Discover / Inspect / Classify / Rank / one Claude mission / Verify)
+
+- **Builder/researcher:** Codex, documentation-only `codex/harvest-002` from fetched master `5d78a5dd95bc566fcb8aada0ea7ed0b131d43143`. [Whole-product inventory and deeper capture/planning comparison](harvest/HARVEST-002.md). [Archival PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/539). No application/configuration/governance-rule changes.
+- **Truth:** speed pack #537 and raw capture #538 are merged. Week-planner PR #529 remains open, draft and conflicting at inspected head `32fb0f96`; its historical green checks do not establish current integration readiness. No live independent review/comment was visible when checked. Do not create another planner or duplicate Notes Sweep/Saved sorting.
+- **One proposed handoff:** [Claude mission](harvest/HARVEST-002-CLAUDE-MISSION.md) to finish the already-approved week planner on its existing branch, preserve current upstream work, renew tests/full CI/independent exact-head review and present Gavin's merge decision. No feature implementation or delegation has started during research; the user can assign this bounded handoff to Claude.
+- **Research quality:** primary sources/licences, verified findings, recommendations, unresolved questions and subjective ranking (including interaction quality/doctrine fit) recorded. Independent read-only review requested; final archival checks/review are in the research PR handoff. Product verification belongs to the actual implementation head; no new product test result claimed here.
+- **Next:** archive/index this research for reuse, then Gavin chooses/assigns the proposed single mission. No automatic merge, next feature chain, new Alfred tools or architecture authorization.
+
+---
+
+# Historical — UNIVERSAL-FAST-CAPTURE-001 (Gavin: universal fast capture, no destination required)
 
 - **Builder:** Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged as #537). [Brief](UNIVERSAL-FAST-CAPTURE-001.md). FEATURE lane: existing canonical saves, no Engine/command/schema/provider/dependency changes. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/538).
 - **Bounded implementation:** one-tap CAPTURE on TODAY opens raw multiline text in the existing shell sheet. Explicit CAPTURE saves an OPEN CaptureItem; leaving raw is valid. Optional MAKE A TASK previews copied/editable title and blank optional planned/due dates; only CREATE TASK/PLAN ITEM invokes existing atomic conversion with source provenance. OPEN CAPTURE is the existing later-processing route. No AI sorting, new notes app, broad navigation, family/metrics/training/evidence changes or Alfred writes.
