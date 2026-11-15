@@ -29,7 +29,12 @@ export function describeProposal(p: Extract<Proposal, { kind: "PROPOSAL" }>): st
   const from = `From your burn estimate (${kcal(p.maintenance.lowKcal)}–${kcal(p.maintenance.highKcal)} a day)`;
   const aim = p.direction === "HOLD"
     ? `and your goal of ${kcal(p.goalWeightLbs)} lb: you're within a pound of it, so this holds your weight`
-    : `and your aim: ${p.direction === "LOSE" ? "lose" : "gain"} ${p.ratePercent}% of your bodyweight a week toward ${kcal(p.goalWeightLbs)} lb, ${Math.abs(p.weeklyLbs) < 0.05 ? "about steady at this target" : `about ${lb(p.weeklyLbs)} a week`}`;
+    : `and your aim: ${p.direction === "LOSE" ? "lose" : "gain"} ${p.ratePercent}% of your bodyweight a week toward ${kcal(p.goalWeightLbs)} lb`;
+  // Review of #532: say the change the aim's number actually gives, with its direction; under a high floor it can be
+  // steady or the other way from the aim, and the words must say so.
+  const change = Math.abs(p.weeklyLbs) < 0.05 ? "about steady" : `about ${lb(p.weeklyLbs)} a week ${p.weeklyLbs < 0 ? "down" : "up"}`;
+  const against = p.direction !== "HOLD" && Math.abs(p.weeklyLbs) >= 0.05 && (p.weeklyLbs < 0) !== (p.direction === "LOSE");
+  const result = p.direction === "HOLD" ? "" : ` At ${kcal(p.aimKcal)} a day that's ${change}${against ? ", not toward your goal" : ""}.`;
   const notes = [
     p.limits.includes("BELOW_CAP") && `Your rate would be about ${lb(p.rateLbs)} a week; BEYOND caps it at ${kcal(MAX_BELOW_KCAL)} kcal a day under your burn.`,
     p.limits.includes("ABOVE_CAP") && `Your rate would be about ${lb(p.rateLbs)} a week; BEYOND caps it at ${kcal(MAX_ABOVE_KCAL)} kcal a day over your burn.`,
@@ -37,7 +42,7 @@ export function describeProposal(p: Extract<Proposal, { kind: "PROPOSAL" }>): st
     p.limits.includes("UNDER_FLOOR") && `Your target is under your floor of ${kcal(p.floorKcal)}, so this starts from the floor.`,
     p.limits.includes("STEP") && `Your aim works out to about ${kcal(p.aimKcal)}; BEYOND moves a target at most ${MAX_WEEKLY_STEP_KCAL} kcal a week${p.limits.includes("UNDER_FLOOR") ? ", starting from your floor" : ""}.`,
   ].filter(Boolean).join(" ");
-  return `${from} ${aim}. ${describeWeight(p.weight)}${notes ? ` ${notes}` : ""} ${p.currentKcal !== undefined ? `Your target now: ${kcal(p.currentKcal)}.` : "You have no calorie target yet."}`;
+  return `${from} ${aim}.${result} ${describeWeight(p.weight)}${notes ? ` ${notes}` : ""} ${p.currentKcal !== undefined ? `Your target now: ${kcal(p.currentKcal)}.` : "You have no calorie target yet."}`;
 }
 
 type Outcome = { kind: "SAVED"; kcal: number; undo: () => Promise<boolean> } | { kind: "UNDONE" } | { kind: "KEPT" } | { kind: "ERROR"; message: string };
@@ -49,7 +54,7 @@ export function CalorieProposal({ proposal }: { proposal: Proposal }) {
   if (proposal.kind === "WAITING") return <p className="meta" data-calorie-proposal="waiting" style={{ margin: 0 }}>{describeProposalWaiting(proposal.reason)}</p>;
   if (proposal.kind === "FITS") {
     return <p className="meta" data-calorie-proposal="fits" style={{ margin: 0 }}>
-      Your target of {kcal(proposal.currentKcal)} kcal a day already fits {proposal.direction === "HOLD" ? `holding your weight at ${kcal(proposal.goalWeightLbs)} lb` : `your aim toward ${kcal(proposal.goalWeightLbs)} lb`}. Nothing to change this week.
+      Your target of {kcal(proposal.currentKcal)} kcal a day already fits {proposal.floorHeld ? `your floor of ${kcal(proposal.aimKcal)}` : proposal.direction === "HOLD" ? `holding your weight at ${kcal(proposal.goalWeightLbs)} lb` : `your aim toward ${kcal(proposal.goalWeightLbs)} lb`}. Nothing to change this week.
     </p>;
   }
   const save = async () => {

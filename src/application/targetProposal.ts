@@ -47,7 +47,8 @@ export type CalorieProposal =
       /** What shaped the number beyond the plain arithmetic. */
       limits: ("STEP" | "FLOOR" | "BELOW_CAP" | "ABOVE_CAP" | "UNDER_FLOOR")[];
     }
-  | { kind: "FITS"; currentKcal: number; aimKcal: number; direction: ProposalDirection; goalWeightLbs: number; weight: CurrentWeight }
+  /** `floorHeld`: the aim is your floor, not your rate (review of #532). */
+  | { kind: "FITS"; currentKcal: number; aimKcal: number; direction: ProposalDirection; goalWeightLbs: number; weight: CurrentWeight; floorHeld: boolean }
   | { kind: "WAITING"; reason: "ESTIMATE" | "NO_GOAL" | "NO_WEIGHT" | "NO_RATE" };
 
 const round = (kcal: number) => Math.round(kcal / ROUND_TO) * ROUND_TO;
@@ -84,7 +85,7 @@ export function proposeCalorieTarget(
   // A current target under the floor never "fits": the weekly step starts from the floor instead (review of #531).
   const underFloor = current !== undefined && current < floor;
   if (current !== undefined && !underFloor && Math.abs(aim - current) < FITS_WITHIN_KCAL) {
-    return { kind: "FITS", currentKcal: current, aimKcal: aim, direction, goalWeightLbs: goal, weight };
+    return { kind: "FITS", currentKcal: current, aimKcal: aim, direction, goalWeightLbs: goal, weight, floorHeld: limits.includes("FLOOR") };
   }
   if (underFloor) limits.push("UNDER_FLOOR");
   const base = underFloor ? floor : current;

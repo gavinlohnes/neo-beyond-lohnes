@@ -39,7 +39,7 @@ describe("TARGET-PROPOSAL-001 proposeCalorieTarget", () => {
 
   it("says the target already fits when it is within 50 kcal of the aim", () => {
     expect(proposeCalorieTarget(estimate(2350, 2550), { calorieTargetKcal: 1975, goalWeightLbs: 180, weightChangeTargetPercentPerWeek: 0.5 }, w(200)))
-      .toEqual({ kind: "FITS", currentKcal: 1975, aimKcal: 1950, direction: "LOSE", goalWeightLbs: 180, weight: w(200) });
+      .toEqual({ kind: "FITS", currentKcal: 1975, aimKcal: 1950, direction: "LOSE", goalWeightLbs: 180, weight: w(200), floorHeld: false });
   });
 
   it("caps the rate at 1,000 under and 500 over maintenance, and never goes below 1,500", () => {
@@ -75,6 +75,17 @@ describe("TARGET-PROPOSAL-001 proposeCalorieTarget", () => {
     // Stepping down from above never lands under the floor.
     const p = proposeCalorieTarget(estimate(1700, 1900), { calorieTargetKcal: 1600, goalWeightLbs: 120, weightChangeTargetPercentPerWeek: 1, calorieFloorKcal: 1550 }, w(140));
     expect(p.kind === "PROPOSAL" && p.kcal).toBe(1550);
+  });
+
+  it("review of #532: a floor above the burn gives a gain, kept signed, and a target there fits the floor", async () => {
+    const { describeProposal } = await import("../src/ui/screens/weekly/CalorieProposal");
+    const p = proposeCalorieTarget(estimate(1900, 2100), { goalWeightLbs: 150, weightChangeTargetPercentPerWeek: 1, calorieFloorKcal: 2200 }, w(200));
+    expect(p).toMatchObject({ kind: "PROPOSAL", kcal: 2200, direction: "LOSE", weeklyLbs: 0.4, limits: ["FLOOR"] });
+    const words = p.kind === "PROPOSAL" ? describeProposal(p) : "";
+    expect(words).toContain("At 2,200 a day that's about 0.4 lb a week up, not toward your goal.");
+    expect(words).not.toMatch(/about 0\.4 lb a week[^ ]/);
+    expect(proposeCalorieTarget(estimate(1900, 2100), { calorieTargetKcal: 2200, goalWeightLbs: 150, weightChangeTargetPercentPerWeek: 1, calorieFloorKcal: 2200 }, w(200)))
+      .toMatchObject({ kind: "FITS", floorHeld: true });
   });
 
   it("TARGET-PROPOSAL-002: under a cap, the weekly change shown is the capped one, beside your rate's", () => {
