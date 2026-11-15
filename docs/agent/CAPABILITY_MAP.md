@@ -90,6 +90,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## INTELLIGENCE SPINE / DELTA
 
+- **Week planning (WEEK-PLANNER-002, owner selected):** `application/weekPlannerQueries.ts` composes existing Week Ahead work provenance, training-programme assignments or labelled existing workout suggestions, canonical eligible tasks and local cached calendar events. `ui/screens/more/WeekPlanner.tsx` lives inside Plan Today with a Week Ahead link. `moveWeekTask` wraps existing `modifyObligation` atomically with stale-plan and current-date guards; only planned attention moves, never deadlines/recurrence/status. No parallel plan store, auto allocation or invented free-time score. Native controls support touch/keyboard; draft intended dates survive midnight and open-sheet retry retains its choice. [Brief](WEEK-PLANNER-002.md). Reuse this rather than building a second week calendar.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,
@@ -439,6 +441,7 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
 - [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
   Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
+- [TIMELINE-EDIT-001](TIMELINE-EDIT-001.md): `application/logEntries.ts` is one meal/water/protein entry and its three fixes (move, correct, remove) over the existing facts; `ui/components/LogEntrySheet.tsx` is its sheet. Alfred's fix proposals (ALFRED-FIX-001) should call these.
 - [FOOD-SOURCES-001](FOOD-SOURCES-001.md): `application/foodSources.ts` groups corrected meal and protein logs into sources over finished lived days; `ui/metrics/FoodSources.tsx` lists them. Reuse it for any "what contributed" view.
 - [TARGET-PROPOSAL-001](TARGET-PROPOSAL-001.md): `application/targetProposal.ts` turns `engine/expenditure.ts`'s weight-trend burn estimate and the stored goal weight and weekly rate into a weekly calorie proposal (Weekly, save or keep). Reuse it for any target suggestion; it never writes.
 - [METRIC-PAGE-001](METRIC-PAGE-001.md): `ui/metrics/MetricDetailSheet.tsx` with `application/metricDetail*.ts` is the shared metric page (hydration, steps, resting heart rate, calories as eaten beside burned). `direction90` gives its 90-day-against-the-year line. Add a metric here, keeping its own week/source semantics, rather than another detail sheet. Sleep keeps `SleepPeriods` (richer).

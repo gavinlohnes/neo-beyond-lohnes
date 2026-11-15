@@ -27,7 +27,7 @@ import { FieldDisclosure } from "../../components/FieldDisclosure";
 const MAX_RECORD_LINES = 5;
 
 /** REFLECT-001: openInterviewKey opens the interview straight away (a new key opens it again); onOpenDelta shows all of DELTA. */
-export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpenPatterns, onOpenPlanItem, onOpenPlans }: { now?: Date; openInterviewKey?: number | undefined; onOpenDelta?: () => void; onOpenPatterns?: () => void; onOpenPlanItem?: (obligationId: string) => void; onOpenPlans?: () => void } = {}) {
+export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpenPatterns, onOpenPlanItem, onOpenPlans, onOpenWeekPlanner }: { now?: Date; openInterviewKey?: number | undefined; onOpenDelta?: () => void; onOpenPatterns?: () => void; onOpenPlanItem?: (obligationId: string) => void; onOpenPlans?: () => void; onOpenWeekPlanner?: () => void } = {}) {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
   const [readKey, setReadKey] = useState(0);
@@ -98,7 +98,7 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpen
           {/* WEEKAHEAD-001: read-only suggestions from the saved schedule and locked rotation. */}
           <Section label="WEEK AHEAD">
             <FieldDisclosure summary={weekAheadOpen ? "HIDE WEEK AHEAD" : "SHOW WEEK AHEAD"} open={weekAheadOpen} onToggle={setWeekAheadOpen}>
-              {weekAheadOpen && <WeekAheadView now={now} {...(onOpenPlanItem ? { onOpenPlanItem } : {})} {...(onOpenPlans ? { onOpenPlans } : {})} />}
+              {weekAheadOpen && <WeekAheadView now={now} {...(onOpenWeekPlanner ? { onOpenWeekPlanner } : {})} {...(onOpenPlanItem ? { onOpenPlanItem } : {})} {...(onOpenPlans ? { onOpenPlans } : {})} />}
             </FieldDisclosure>
           </Section>
 

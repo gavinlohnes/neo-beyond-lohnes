@@ -8,14 +8,15 @@ import { getEffectiveProteinTargetG } from "./nutritionTargetQueries";
  * listed by the time it was eaten (MacroFactor's timeline, owner ruling) rather than meal slots.
  * Read only: meals and protein-only logs as they stand after corrections and deletions.
  */
-export interface FoodDiaryEntry { at: string; name: string; proteinG: number; calories: number | null }
+/** TIMELINE-EDIT-001: `rootEventId` names the log, so a row can open its edit sheet. */
+export interface FoodDiaryEntry { at: string; name: string; proteinG: number; calories: number | null; rootEventId: string }
 export interface FoodDiary { entries: FoodDiaryEntry[]; proteinG: number; calories: number; proteinTargetG: number | undefined }
 
 export async function getFoodDiary(beyondDayId: string): Promise<FoodDiary> {
   const [meals, protein, proteinTargetG] = await Promise.all([getMealEntries(beyondDayId), getProteinEntries(beyondDayId), getEffectiveProteinTargetG()]);
   const entries: FoodDiaryEntry[] = [
-    ...meals.map((m) => ({ at: m.at, name: m.name, proteinG: m.effectiveProteinG, calories: m.effectiveCalories })),
-    ...protein.map((p) => ({ at: p.at, name: "Protein", proteinG: p.effectiveGrams, calories: null })),
+    ...meals.map((m) => ({ at: m.at, name: m.name, proteinG: m.effectiveProteinG, calories: m.effectiveCalories, rootEventId: m.rootEventId })),
+    ...protein.map((p) => ({ at: p.at, name: "Protein", proteinG: p.effectiveGrams, calories: null, rootEventId: p.rootEventId })),
   ].sort((a, b) => a.at.localeCompare(b.at));
   return {
     entries,
