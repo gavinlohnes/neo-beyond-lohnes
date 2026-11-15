@@ -72,3 +72,8 @@ release brief is finalised. Every Protected PR gets independent exact-head revie
   the Web Speech and barcode-detection capabilities of the phone's browser where available.
 - **OWN:** the learned rules, the planner composition, the briefing surface, the BEYOND-specific mapping.
 - **BUILD FROM SCRATCH:** decided per release; none expected for 4.0-a beyond small glue.
+
+
+## Owner sequence update — 15 November 2026
+
+After the coach card, Gavin selected work-run planning followed by the TODAY briefing preview ("Yes. 3 and 4."). Recovery coaching and the end-of-run debrief are parked for now. Deliver [4.0-c's bounded work-run draft journey](BEYOND-4.0-C.md) first, then the separately reviewed phone preview for 4.0-d. This changes priority, not data/Engine safeguards or merge authority.

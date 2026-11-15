@@ -1,9 +1,17 @@
-# Current objective — 4.0-b slice 3a: weekly training and recovery evidence
+# Current integration — merge the weekly recovery comparison, then TODAY preview
 
-- Builder Codex; branch `codex/4b-recovery-comparison` from fresh master `2bbceb73` (coach card merged). Gavin delegated the next decision and resumed work; [bounded brief](BEYOND-4.0-B.md). No competing active implementation PR found.
-- Optional read-only comparison within Weekly TRAINING: two seven-finished-lived-period windows, canonical weighted volume/counts, Garmin sleep/resting readings and existing personal-range interpretation/sample counts. No readiness score, causal verdict, new coaching rule/threshold, Engine/Garmin authority change, write, schema, dependency, provider or TODAY ranking change.
-- The lighter-week suggestion remains outside this slice: it would require a separately settled rule consistent with Garmin watch-only authority. Do not claim this evidence view delivers that coaching rule.
-- Verification/review/CI pending; final results maintained in the PR handoff without invalidating exact-head review. Gavin alone merges.
+- Gavin explicitly instructed “Merge 548. Start next work.” Work-run PR #549 is already merged at master `41339a37`. Resolve only the comparison branch's checkpoint conflict by preserving this current sequence and both handoffs; source merged automatically.
+- Existing comparison PR #548 remains read-only, with no new coaching rule or Engine/Garmin authority change. Prior exact-head review/CI at `b13cc2cd` are historical after integration; renew exact-head review, focused combined checks and full CI before the explicitly authorized merge. No admin bypass or auto-merge.
+- Next approved implementation: TODAY briefing preview (4.0-d), after integration, for Gavin to try before any replacement. Recovery coaching and debrief remain parked. No other PR is authorized for agent merge.
+
+---
+
+# Current objective — 4.0-c: work-run draft, then TODAY preview
+
+- Builder Codex; [active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/549), branch `codex/4c-work-run-plan` from fetched master `2bbceb73`. Gavin chose work-run planning then TODAY preview, parking recovery coaching and end-of-run debrief. [Bounded brief](BEYOND-4.0-C.md). No competing work-run PR found; ready comparison PR #548 remains untouched and independent.
+- Draft inside Plan Today → Week planner: first known work block and following off days within seven dates, existing meals/training/tasks/calendar/routines and safely matching next-shift sleep context. Unknowns stop the block; dates/provenance stay explicit. Edit and confirm once to save a Capture plan-note snapshot. No task/workout/food/preparation/notification writes or new live plan store.
+- Review recovery: independent review found confirmed changes become RECORDED after day start and could bypass sleep exclusion. Explicitly reconcile next-shift start/end and first/last-night assumptions with shared context for the previous/current/next lived dates, including recorded exception/manual overrides; no validation means omission. Regression coverage added.
+- Checks/review/CI pending. Final exact-head evidence belongs on the PR. Gavin alone merges; TODAY preview follows as a separate reviewed objective, not in this PR.
 
 ---
 
@@ -3992,3 +4000,15 @@ Brief: [VISUAL-FOUNDATION-004.md](VISUAL-FOUNDATION-004.md). Branch `ccr-88f5c08
   - **Recommended mission:** METRIC-PAGE-001, one metric page used everywhere, with a 90-day direction line.
   - **Status:** awaiting Gavin's go.
 
+
+
+---
+
+# Historical comparison handoff before integration
+
+# Current objective — 4.0-b slice 3a: weekly training and recovery evidence
+
+- Builder Codex; branch `codex/4b-recovery-comparison` from fresh master `2bbceb73` (coach card merged). Gavin delegated the next decision and resumed work; [bounded brief](BEYOND-4.0-B.md). No competing active implementation PR found.
+- Optional read-only comparison within Weekly TRAINING: two seven-finished-lived-period windows, canonical weighted volume/counts, Garmin sleep/resting readings and existing personal-range interpretation/sample counts. No readiness score, causal verdict, new coaching rule/threshold, Engine/Garmin authority change, write, schema, dependency, provider or TODAY ranking change.
+- The lighter-week suggestion remains outside this slice: it would require a separately settled rule consistent with Garmin watch-only authority. Do not claim this evidence view delivers that coaching rule.
+- Verification/review/CI pending; final results maintained in the PR handoff without invalidating exact-head review. Gavin alone merges.
