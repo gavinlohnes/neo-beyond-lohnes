@@ -1,3 +1,17 @@
+# Current objective — CAPTURE-PARITY-001 (capture → task works the same everywhere)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved the ranked item "Make turning a capture into a task work the same
+  everywhere" (HARVEST-002's best new refinement). [Brief](CAPTURE-PARITY-001.md). Branch `codex/capture-parity-001`
+  from fetched master `4d74ac26`.
+- Lane FEATURE: one shared confirm-first form (title, optional planned day, optional due date) for quick capture, Notes
+  Sweep and the Capture list, through the existing `convertCaptureToObligation`. No schema, Engine, event or
+  notification-kind change.
+- Gates: local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
+- Other open work, independent of this section: #555 SLEEP-DEBT-LEARNED-001 (sleep debt) and possibly a work-run
+  re-draft PR; each keeps its own checkpoint section. #473 stays a parked draft.
+
+---
+
 # Current objective — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
 
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /

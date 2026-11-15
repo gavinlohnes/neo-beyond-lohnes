@@ -1,11 +1,12 @@
 import { captureCommitFeedback } from "../feel/feedback";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CaptureItem } from "../../domain/common/types";
 import { deleteCaptureItem, resolveCaptureItem, restoreCaptureItem } from "../../application/commands";
 import { convertCaptureToObligation } from "../../application/intentCommands";
 import { getNotesSweepState } from "../../application/notesSweepQueries";
 import { describeError } from "../errorMessage";
 import { HoldButton } from "./HoldButton";
+import { CapturePromotionForm, capturePromotionError, capturePromotionInput, emptyCapturePromotionDraft, type CapturePromotionDraft } from "./CapturePromotionForm";
 
 type Outcome = "DONE" | "TASK" | "KEPT" | "DELETED";
 
@@ -16,6 +17,10 @@ type Outcome = "DONE" | "TASK" | "KEPT" | "DELETED";
  * and obligation commands; KEEP writes nothing; DELETE needs a hold and can
  * be undone until the sweep moves on. Renders nothing on work days or with
  * no notes waiting. `onSwept` lets TODAY refresh its own capture count.
+ *
+ * CAPTURE-PARITY-001: MAKE IT A TASK opens the same confirm-first form quick
+ * capture uses (title, optional planned day, optional due date); only its
+ * CREATE button writes, and CANCEL returns to the four choices.
  */
 export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; refreshKey?: number }) {
   const [items, setItems] = useState<CaptureItem[] | null>(null);
@@ -25,6 +30,9 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
   const [deleted, setDeleted] = useState<CaptureItem | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draft, setDraft] = useState<CapturePromotionDraft | null>(null);
+  // Same double-tap lock quick capture uses: one confirmation, one write.
+  const lock = useRef(false);
 
   const [loadKey, setLoadKey] = useState(0);
 
@@ -45,17 +53,21 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
 
   async function act(outcome: Outcome, write: () => Promise<unknown>) {
     const acknowledge = captureCommitFeedback();
-    if (busy) return;
+    if (busy || lock.current) return;
+    lock.current = true;
     setBusy(true);
     setError(null);
     try {
       await write();
       if (outcome !== "KEPT") acknowledge("LIGHT");
+      setDraft(null);
       setOutcomes((prev) => [...prev, outcome]);
       setIndex((i) => i + 1);
     } catch (e) {
-      setError(describeError(e, "That didn't save. Try again."));
+      // A failed task keeps the typed draft open for an explicit retry.
+      setError(outcome === "TASK" ? capturePromotionError(e, "Could not create the task. Your note and choices are kept.") : describeError(e, "That didn't save. Try again."));
     } finally {
+      lock.current = false;
       setBusy(false);
     }
   }
@@ -96,8 +108,22 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
     }
   }
 
+  function startTask(item: CaptureItem) {
+    if (busy) return;
+    setDeleted(null);
+    setError(null);
+    setDraft(emptyCapturePromotionDraft(item.text));
+  }
+
+  function cancelTask() {
+    if (busy) return;
+    setDraft(null);
+    setError(null);
+  }
+
   function close() {
     setOpen(false);
+    setDraft(null);
     setIndex(0);
     setDeleted(null);
     if (outcomes.length > 0) onSwept();
@@ -159,49 +185,58 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
                   </button>
                 </p>
               )}
-              <div className="notes-sweep__choices">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  disabled={busy}
-                  onClick={() => {
-                    setDeleted(null);
-                    void act("DONE", () => resolveCaptureItem(note.id));
-                  }}
-                >
-                  DONE
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  disabled={busy}
-                  onClick={() => {
-                    setDeleted(null);
-                    void act("TASK", () => convertCaptureToObligation(note.id, { title: note.text }));
-                  }}
-                >
-                  MAKE IT A TASK
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  disabled={busy}
-                  onClick={() => {
-                    setDeleted(null);
-                    void act("KEPT", async () => {});
-                  }}
-                >
-                  KEEP
-                </button>
-                <HoldButton
-                  className="btn-secondary"
-                  disabled={busy}
-                  hint="Hold to delete this note."
-                  onConfirm={() => void handleDelete(note)}
-                >
-                  DELETE
-                </HoldButton>
-              </div>
+              {draft ? (
+                <CapturePromotionForm
+                  className="notes-sweep__promotion"
+                  draft={draft}
+                  onChange={setDraft}
+                  busy={busy}
+                  onConfirm={() => void act("TASK", () => convertCaptureToObligation(note.id, capturePromotionInput(draft)))}
+                  onCancel={cancelTask}
+                  cancelLabel="CANCEL"
+                />
+              ) : (
+                <div className="notes-sweep__choices">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={busy}
+                    onClick={() => {
+                      setDeleted(null);
+                      void act("DONE", () => resolveCaptureItem(note.id));
+                    }}
+                  >
+                    DONE
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={busy}
+                    onClick={() => startTask(note)}
+                  >
+                    MAKE IT A TASK
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    disabled={busy}
+                    onClick={() => {
+                      setDeleted(null);
+                      void act("KEPT", async () => {});
+                    }}
+                  >
+                    KEEP
+                  </button>
+                  <HoldButton
+                    className="btn-secondary"
+                    disabled={busy}
+                    hint="Hold to delete this note."
+                    onConfirm={() => void handleDelete(note)}
+                  >
+                    DELETE
+                  </HoldButton>
+                </div>
+              )}
               {error && (
                 <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
                   {error}

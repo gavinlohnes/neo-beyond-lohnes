@@ -3442,3 +3442,16 @@ earlier first within a kind. Each kind can be switched off and there are owner-s
 nothing sounds inside a scheduled shift. Day off rides on the last shift's SHIFT'S DONE; plan-to-confirm moments wait
 for a new kind. No new alert kinds; settings sit on the schedule row and travel with backups. The phone keeps a
 four-week plan and re-arms it in the background; changes reach it at the next SYNC GARMIN.
+
+## CAPTURE-PARITY-001 — turning a capture into a task works the same everywhere (Gavin, 2026-11-15)
+
+Gavin approved the ranked item "Make turning a capture into a task work the same everywhere" (HARVEST-002's best new
+refinement). [Brief](agent/CAPTURE-PARITY-001.md).
+
+- Quick capture, Notes Sweep's MAKE IT A TASK and the Capture list's → TASK show one form: the capture's words as an
+  editable title, an optional planned day and an optional due date. Nothing is written until CREATE TASK (CREATE PLAN
+  ITEM once a planned day is set); cancelling writes nothing. A planned day is never a deadline.
+- Notes Sweep keeps its four choices (2026-10-04 ruling); MAKE IT A TASK now asks first instead of creating the task in
+  one tap. Example: "Renew truck registration" → MAKE IT A TASK → planned Fri, due Mon → CREATE PLAN ITEM.
+- The Capture list keeps its detected-date proposal for the due date only, still editable and clearable.
+- No schema, Engine, event or notification-kind change; every path uses the existing `convertCaptureToObligation`.

@@ -69,6 +69,10 @@ describe("NOTES-SWEEP-001 — day-off notes sweep", () => {
 
     await expect.element(screen.getByText("Renew truck registration")).toBeVisible();
     await screen.getByRole("button", { name: "MAKE IT A TASK" }).click();
+    // CAPTURE-PARITY-001: confirm-first, like quick capture — nothing is written until CREATE TASK.
+    await expect.element(screen.getByRole("textbox", { name: "Task title", exact: true })).toHaveValue("Renew truck registration");
+    expect(await getObligations()).toEqual([]);
+    await screen.getByRole("button", { name: "CREATE TASK", exact: true }).click();
 
     await expect.element(screen.getByText("Idea: deadlift on Fridays")).toBeVisible();
     await screen.getByRole("button", { name: "KEEP" }).click();

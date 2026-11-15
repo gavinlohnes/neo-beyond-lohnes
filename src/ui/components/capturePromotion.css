@@ -1,0 +1,7 @@
+/* CAPTURE-PARITY-001: shared by quick capture, the Capture list and Notes Sweep. */
+.capture-promotion { border: 1px solid var(--border-strong); margin: 0; padding: 12px; min-width: 0; display: grid; gap: 12px; }
+.capture-promotion legend { max-width: 100%; white-space: normal; }
+.capture-promotion .field { display: grid; gap: 6px; margin: 0; }
+.capture-promotion .input { min-width: 0; width: 100%; min-height: 44px; font-size: 16px; }
+.capture-promotion textarea { resize: vertical; }
+.capture-promotion .meta { margin: 0; }

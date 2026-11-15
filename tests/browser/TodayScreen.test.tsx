@@ -1055,7 +1055,7 @@ describe("TodayScreen (real browser) — Capture to Obligation handoff", () => {
     await expect.element(screen.getByText("renew the car registration")).toBeVisible();
 
     await screen.getByRole("button", { name: "→ TASK" }).click();
-    const titleInput = screen.getByRole("textbox", { name: "New obligation title" });
+    const titleInput = screen.getByRole("textbox", { name: "Task title", exact: true });
     await expect.element(titleInput).toHaveValue("renew the car registration");
 
     await screen.getByRole("button", { name: "CREATE TASK" }).click();
@@ -1080,10 +1080,10 @@ describe("TodayScreen (real browser) — Capture to Obligation handoff", () => {
 
     const screen = await render(<TodayScreen />);
     await screen.getByRole("button", { name: "→ TASK" }).click();
-    await expect.element(screen.getByRole("textbox", { name: "New obligation title" })).toBeVisible();
+    await expect.element(screen.getByRole("textbox", { name: "Task title", exact: true })).toBeVisible();
 
     await screen.getByRole("button", { name: "CANCEL" }).click();
-    await expect.element(screen.getByRole("textbox", { name: "New obligation title" })).not.toBeInTheDocument();
+    await expect.element(screen.getByRole("textbox", { name: "Task title", exact: true })).not.toBeInTheDocument();
     await expect.element(screen.getByText("maybe later")).toBeVisible();
     expect(await db.obligations.count()).toBe(0);
   });
@@ -1104,7 +1104,7 @@ describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Com
     const screen = await render(<TodayScreen />);
     await screen.getByRole("button", { name: "→ TASK" }).click();
 
-    const dueInput = screen.getByLabelText("Due date");
+    const dueInput = screen.getByLabelText("Due date (optional)");
     await expect.element(dueInput).toHaveValue(dateOffset(1));
     await expect.element(screen.getByText(/Detected from/)).toBeVisible();
 
@@ -1124,7 +1124,7 @@ describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Com
     const screen = await render(<TodayScreen />);
     await screen.getByRole("button", { name: "→ TASK" }).click();
 
-    const dueInput = screen.getByLabelText("Due date");
+    const dueInput = screen.getByLabelText("Due date (optional)");
     await expect.element(dueInput).toHaveValue("");
     await expect.element(screen.getByText(/Detected from/)).not.toBeInTheDocument();
 
@@ -1141,7 +1141,7 @@ describe("TodayScreen (real browser) — Capture Intelligence (chrono-node + Com
     const screen = await render(<TodayScreen />);
     await screen.getByRole("button", { name: "→ TASK" }).click();
 
-    const dueInput = screen.getByLabelText("Due date");
+    const dueInput = screen.getByLabelText("Due date (optional)");
     await expect.element(dueInput).toHaveValue(dateOffset(1));
     await dueInput.fill("");
     await expect.element(screen.getByText(/Detected from/)).not.toBeInTheDocument();
