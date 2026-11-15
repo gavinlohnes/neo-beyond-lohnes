@@ -79,10 +79,14 @@ describe("ALFRED-001", () => {
     const system = body.system as { text: string; cache_control?: unknown }[];
     expect(system[1]!.text).toMatch(/^BEYOND RECORDS/);
     expect(system[1]!.cache_control).toEqual({ type: "ephemeral" });
-    expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", "log_sleep", "log_weight", "add_reminder", "routine_new", "routine_edit", "project_new", "capture_note",
-      "check_in", "work_started", "work_ended", "task_done", "task_new_date", "task_plan", "clean_day", "open_training",
+    // ALFRED-TOOLS-001: the write tools come from the one registry, in its order; new ones are marked +.
+    expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", /* + */ "log_protein", "log_sleep", "log_weight",
+      /* + */ "correct_log", /* + */ "remove_log", "add_reminder", "routine_new", "routine_edit", "project_new", "capture_note",
+      "check_in", "work_started", "work_ended", /* + */ "set_work_context", /* + */ "schedule_change", /* + */ "schedule_swap", /* + */ "handoff_note",
+      "task_done", /* + */ "task_release", /* + */ "task_waiting", "task_new_date", "task_plan", /* + */ "habit_done", /* + */ "collection_add",
       // ALFRED-FIX-001: fix_entry (a confirmed move/correct/remove of a logged entry) and its day_entries read.
-      "person_date", "home_item", "remember", "forget", "memory_retire", "memory_restore", "fix_entry", "log_urge", "search_records", "day_entries", "get_days"]);
+      "fix_entry", "clean_day", "open_training",
+      "person_date", "home_item", "remember", "forget", "memory_retire", "memory_restore", "log_urge", "search_records", "day_entries", "get_days"]);
 
     // The next turn tells Alfred what happened to each card.
     next = () => reply([{ type: "text", text: "Noted." }], "end_turn");

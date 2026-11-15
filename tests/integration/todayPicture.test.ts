@@ -40,7 +40,7 @@ it("Alfred's context and the helper carry TODAY's NOW and NEXT with their source
   expect(text).toContain("Today: a work day, set from your saved schedule when the day started.");
   expect(text).toContain("NEXT: Next day off: Sat, Nov 21 · forecast · 1 confirmed change ahead. Next: a day off on Sat, Nov 21, from your saved schedule (a forecast, not a record).");
   expect(text).toContain("it is not a recommendation");
-  expect(text).toContain("each needs the operator's CONFIRM). Alfred cannot change any of it.");
+  expect(text).toContain("each needs the operator's CONFIRM). Alfred cannot change any of it himself; he may only propose a card the operator confirms.");
 
   const answer = (await answerQuestion("Why does today say work run?", at(18, 20)))!;
   expect(answer).toMatch(/^WORK RUN: Shift 1 of 3\. .* NEXT: Next day off: Sat, Nov 21 · forecast · 1 confirmed change ahead\./);

@@ -1,3 +1,18 @@
+# Current objective — ALFRED-TOOLS-001, then SHIFT-CORRECT-001 (Alfred follows commands)
+
+- Builder Grok Bot. Gavin, 2026-11-15 04:26 CT, after his "Im still working till 0600. Fix my log" screenshot: "Start
+  with missions 1 and 2 (tool registry + shift correction)"; "Yes, amend WORK TRANSITION to allow explicit shift
+  start/end corrections"; "Yes, low-risk logging runs immediately with undo" (recorded as ALFRED-ACT-001; not built).
+- Mission 1: branch `codex/alfred-tools-001` from fetched master `1c74307a`. [Brief](ALFRED-TOOLS-001.md). One typed
+  registry for every card kind; new confirm-first tools for existing commands; Alfred names what he can't do. Protected
+  (AI write proposals): independent exact-head review, green CI, Gavin merges. No schema, Engine or dependency change.
+- Mission 2: SHIFT-CORRECT-001, stacked on mission 1 (it adds a registry card). [Brief](SHIFT-CORRECT-001.md).
+- Checkpoint PR #551 (4.0-d merged) merged as `58bd0c65`; its text below is unchanged.
+- Gates: local `TZ=UTC npm run verify` green on each branch head before push; PRs [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) and [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553) open (Gavin approved
+  push, 2026-11-15 05:33 CT). Final exact-head evidence belongs on each PR. Gavin alone merges.
+
+---
+
 # Current state — 4.0-d preview merged; phone trial next
 
 - TODAY briefing preview [#550](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/550) merged by Gavin as `1c74307a` (head `4c156131`). The preview is opt-in on current TODAY; current TODAY remains the default landing.
