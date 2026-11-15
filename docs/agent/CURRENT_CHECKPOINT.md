@@ -1,4 +1,24 @@
-# Current programme — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
+# Builder takeover — BEYOND 4.0-b slice 1: DELOAD after a steady stall
+
+- **Builder:** Codex resumes Claude Code's existing `ccr-88f5c085-4b-deload` branch and [PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/546), following Gavin's explicit takeover instruction. No competing branch/PR or new scope.
+- **Recovered:** original head `c99f03c05187538e3c64ed65280dce35f00e426e` has green full PR CI, but no independent review comment was recorded at inspection. The audit/handoff and 4.0-a extraction have already merged; do not repeat them.
+- **Integration:** fresh master `4275e26340273d684f4f40d6b4009fd0c5800e70` merged cleanly, including the TODAY numbers extraction. Source behavior unchanged by takeover integration.
+- **Scope/authority:** existing [4.0-b brief](BEYOND-4.0-B.md), original approved deload rule only. Protected: deterministic evidence-backed advice, never applied/prefilled; preserve INCREASE/RE-ENTRY, existing records, excluded warmups/substitutions and undo semantics. No next coaching slice until this PR is resolved and owner-integrated.
+- **Gates:** fresh integration verification and independent exact-head review pending. Final review/CI evidence belongs in the PR handoff; do not infer final approval from original-head CI or historical text below.
+- **Next:** fix only scoped regressions/findings, obtain independent PASS and full green CI, maintain PR handoff, then Gavin decides merge. Never merge.
+
+---
+
+# Current objective — BEYOND 4.0-a part 1, slice 1: TODAY split, AT A GLANCE (no visible change)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-4a-foundation`. Routine. [Release brief](BEYOND-4.0-A.md) under
+  [BEYOND-4.0](BEYOND-4.0.md). TodayScreen.tsx 3,517 → 3,452 lines; `TodayNumbers.tsx` holds AT A GLANCE.
+- **Merged:** #543 (Doctrine line), #544 (4.0 master brief).
+
+---
+
+# Historical — documentation truth (merged as #542; completion plan step 5, Gavin: "Go", "Let's work")
+# Historical Claude handoff — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
 
 - **Authority:** [master brief](BEYOND-4.0.md). Each release: own PRs; Protected parts (Engine learning, TODAY
   redesign) get independent exact-head review; Gavin merges.

@@ -44,3 +44,7 @@ shows its evidence and abstains when thin. Garmin stays watch-only.
 - **REUSE:** the stall finding's test and the PR rule (`findSessionRecords`); RE-ENTRY's ~90% rounding.
 - **OWN:** the DELOAD mapping onto BEYOND's progression rule.
 - **BUILD FROM SCRATCH:** none.
+
+## Builder recovery
+
+Gavin explicitly asked Codex to pick up Claude's unfinished work. Codex resumes the existing deload branch/PR from `c99f03c0`, integrates fresh master `4275e263` without source conflicts, and completes verification plus independent exact-head Protected review. Original CI was green; no review PASS was recorded at inspection. No rule/ranking expansion or next slice is part of this takeover. Final evidence is maintained on the existing PR; Gavin alone merges.
