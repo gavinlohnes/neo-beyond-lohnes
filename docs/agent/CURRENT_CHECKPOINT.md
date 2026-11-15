@@ -1,3 +1,12 @@
+# Current objective — 4.0-b slice 3a: weekly training and recovery evidence
+
+- Builder Codex; branch `codex/4b-recovery-comparison` from fresh master `2bbceb73` (coach card merged). Gavin delegated the next decision and resumed work; [bounded brief](BEYOND-4.0-B.md). No competing active implementation PR found.
+- Optional read-only comparison within Weekly TRAINING: two seven-finished-lived-period windows, canonical weighted volume/counts, Garmin sleep/resting readings and existing personal-range interpretation/sample counts. No readiness score, causal verdict, new coaching rule/threshold, Engine/Garmin authority change, write, schema, dependency, provider or TODAY ranking change.
+- The lighter-week suggestion remains outside this slice: it would require a separately settled rule consistent with Garmin watch-only authority. Do not claim this evidence view delivers that coaching rule.
+- Verification/review/CI pending; final results maintained in the PR handoff without invalidating exact-head review. Gavin alone merges.
+
+---
+
 # Current objective — 4.0-b slice 2: one coach card
 
 - Builder Codex; [active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/547), branch `codex/4b-coach-card`, from fetched master `ba6df574` (deload merged). Owner resumes work; [approved order and scope](BEYOND-4.0-B.md). No competing implementation PR found.
