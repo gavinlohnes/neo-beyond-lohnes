@@ -4,7 +4,8 @@
 - **Recovered:** original head `c99f03c05187538e3c64ed65280dce35f00e426e` has green full PR CI, but no independent review comment was recorded at inspection. The audit/handoff and 4.0-a extraction have already merged; do not repeat them.
 - **Integration:** fresh master `4275e26340273d684f4f40d6b4009fd0c5800e70` merged cleanly, including the TODAY numbers extraction. Source behavior unchanged by takeover integration.
 - **Scope/authority:** existing [4.0-b brief](BEYOND-4.0-B.md), original approved deload rule only. Protected: deterministic evidence-backed advice, never applied/prefilled; preserve INCREASE/RE-ENTRY, existing records, excluded warmups/substitutions and undo semantics. No next coaching slice until this PR is resolved and owner-integrated.
-- **Gates:** fresh integration verification and independent exact-head review pending. Final review/CI evidence belongs in the PR handoff; do not infer final approval from original-head CI or historical text below.
+- **Review recovery:** independent review blocked integrated head `3a57e825`: old matching-slot or substituted loads could contaminate cross-template DELOAD. Fix uses the latest canonical top weight from the stall evidence itself; ordinary slot progression/RE-ENTRY are unchanged. Pure and canonical command/query regressions cover both defects and cross-variant repeat suppression.
+- **Gates:** original integration passed full Node (2361 / one existing skip), focused browser deload/re-entry, type/architecture/build; repair verification and renewed independent exact-head review/CI pending. Final review/CI evidence belongs in the PR handoff; do not infer final approval from original-head CI or historical text below.
 - **Next:** fix only scoped regressions/findings, obtain independent PASS and full green CI, maintain PR handoff, then Gavin decides merge. Never merge.
 
 ---

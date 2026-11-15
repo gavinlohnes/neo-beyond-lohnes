@@ -75,7 +75,13 @@ export function evaluateProgression(
   const step = prescription.incrementLbs > 0 ? prescription.incrementLbs : 1;
   const lighter = (fraction: number) => (fromWeight === undefined || fromWeight <= 0 ? undefined : Math.floor((fromWeight * fraction) / step) * step);
 
-  if (days === undefined || days < RE_ENTRY_DAYS) return deload(prescription, base, context.stall, fromWeight, lighter(DELOAD_FRACTION));
+  if (days === undefined || days < RE_ENTRY_DAYS) {
+    // DELOAD spans templates/variants. Its load must come from that same
+    // canonical, unsubstituted history, not an older matching slot or a substitute.
+    const stalledLoad = context.stall?.topWeights.at(-1);
+    const next = stalledLoad === undefined || stalledLoad <= 0 ? undefined : Math.floor((stalledLoad * DELOAD_FRACTION) / step) * step;
+    return deload(prescription, base, context.stall, stalledLoad, next);
+  }
   if (base.recommendation !== "INCREASE" && base.recommendation !== "HOLD") return base;
   const next = lighter(RE_ENTRY_FRACTION);
   if (fromWeight === undefined || next === undefined || next <= 0 || next >= fromWeight) return base;

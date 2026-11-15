@@ -48,3 +48,5 @@ shows its evidence and abstains when thin. Garmin stays watch-only.
 ## Builder recovery
 
 Gavin explicitly asked Codex to pick up Claude's unfinished work. Codex resumes the existing deload branch/PR from `c99f03c0`, integrates fresh master `4275e263` without source conflicts, and completes verification plus independent exact-head Protected review. Original CI was green; no review PASS was recorded at inspection. No rule/ranking expansion or next slice is part of this takeover. Final evidence is maintained on the existing PR; Gavin alone merges.
+
+Independent recovery review blocked the integrated head: DELOAD combined a cross-template stall with an older matching-slot load, and substituted weights could enter that load. Repair: derive DELOAD's load from the latest top set in its existing canonical stall evidence (already excludes warmups, skipped/undone sets and substitutions), keeping ordinary slot-scoped progression and RE-ENTRY unchanged. Added pure and canonical command/query regressions, including cross-variant repeat suppression. No threshold or owner-rule expansion. Renew independent exact-head review and CI after the repair.

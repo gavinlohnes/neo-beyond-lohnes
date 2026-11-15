@@ -86,11 +86,22 @@ describe("DELOAD in the progression rule", () => {
     expect(evaluateProgression(LEG_PRESS, MID, {})).toEqual(evaluateProgression(LEG_PRESS, MID));
     expect(evaluateProgression(LEG_PRESS, MID).recommendation).toBe("HOLD");
     const light = sets([[5, 10], [5, 10], [5, 10]]);
-    expect(evaluateProgression(LEG_PRESS, light, { stall: STALL }).recommendation).toBe("HOLD");
+    expect(evaluateProgression(LEG_PRESS, light, { stall: { sessions: 4, topWeights: [5, 5, 5, 5] } }).recommendation).toBe("HOLD");
   });
 
   it("mixed weights last time deload from the heaviest set done", () => {
     const mixed = sets([[270, 10], [260, 10], [260, 10]]);
     expect(evaluateProgression(LEG_PRESS, mixed, { stall: STALL })).toMatchObject({ recommendation: "DELOAD", lastWeight: 270, suggestedNextWeight: 240 });
   });
+});
+
+
+it("DELOAD uses its own recent canonical evidence instead of an older slot or substituted load", () => {
+  const stall = { sessions: 4, topWeights: [100, 100, 100, 100] };
+  const oldSlot = sets([[500, 10], [500, 10], [500, 10]]);
+  const mixedSubstitute = sets([[100, 10], [100, 10], [300, 10]]);
+  mixedSubstitute[2]!.substitutedName = "Different machine";
+  for (const history of [oldSlot, mixedSubstitute]) {
+    expect(evaluateProgression(LEG_PRESS, history, { stall })).toMatchObject({ recommendation: "DELOAD", lastWeight: 100, suggestedNextWeight: 90 });
+  }
 });
