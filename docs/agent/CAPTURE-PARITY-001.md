@@ -9,8 +9,9 @@
   confirm-first like quick capture; no schema, Engine or notification-kind change; do not merge.
 - **Builder:** Grok Bot. Branch `codex/capture-parity-001` from fetched `origin/master` `4d74ac26` (#554 merged).
   Worktree `/workspace/capture-parity` (other branches were in flight in the main checkout).
-- **Lane: FEATURE.** UI composition of existing commands. `npm run check:risk -- 4d74ac26` result is recorded in the
-  PR. Semantically: no Engine, schema, event, persistence, backup, permission, provider, navigation or dependency
+- **Lane: FEATURE.** UI composition of existing commands. `npm run check:risk -- 4d74ac26` suggests PROTECTED only
+  because `docs/UX_DECISIONS.md` and this brief sit on governance paths; the entry records a decision inside Gavin's
+  approved scope and amends no doctrine or authority (same as FOOD-SOURCES-001's Feature lane). Semantically: no Engine, schema, event, persistence, backup, permission, provider, navigation or dependency
   change; no AI autonomy. The one behaviour change, Notes Sweep's MAKE IT A TASK becoming confirm-first, makes a write
   *more* explicit. Normal review, green CI, Gavin merges.
 - **Overlap check:** open PRs #555 (sleep debt) and #473 (parked draft) touch no capture code; a work-run re-draft PR
