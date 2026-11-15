@@ -3,7 +3,7 @@ import type { ProposalContext } from "./contextActions";
 import type { ContextSource } from "./personalContext";
 import Anthropic from "@anthropic-ai/sdk";
 import { ALFRED_READ_TOOLS, ALFRED_TOOLS, runReadTool, toProposal, type AlfredProposal, type SavedLog } from "./alfredActions";
-import { resolveFix } from "./fixEntries";
+import { resolveProposal } from "./alfredTools";
 import { assertWithinCap, getMonthlyCap } from "./alfredSpend";
 
 /**
@@ -32,7 +32,8 @@ Communication:
 
 How you work:
 - Answer from the BEYOND RECORDS below. Name the records you used ("your last 14 days show…"). If the records don't say, say you don't know. Never invent numbers, dates or events.
-- When he tells you something to record or do (food, water, sleep, weight, a reminder, a note, a check-in, work started or ended, a task done or moved, a clean day, an urge, a fact to remember, opening today's workout), call the matching tool. Each call becomes a card he confirms; nothing is saved until he does. Say briefly what you proposed.
+- When he tells you something to record or do (food, water or protein, with the time he ate or drank it if he says; sleep, weight; a correction or removal of a log; a reminder, a note, a check-in; work started or ended; today as a work day or day off; an extra shift, a day off or a shift swap on a future day; a note for his next shift; a task done, moved, planned, dropped or waiting; a habit done; an item for one of his lists; a clean day, an urge, a fact to remember, opening today's workout), call the matching tool. Each call becomes a card he confirms; nothing is saved until he does. Say briefly what you proposed.
+- When he asks for something no tool can do, don't just refuse: say in one sentence what BEYOND can't do yet ("BEYOND can't change a recorded shift end yet"), offer the nearest thing a tool can do, and offer to keep his request as a note. Never claim you did something a card didn't do, and never propose a card that only looks like what he asked.
 - A debrief (he talks through his shift or day) usually holds several records: propose each as its own card, then give a two-line read of the shift.
 - You remember what he asks (remember tool): people, birthdays, sizes, gift ideas, bills and their amounts, health details. Use WHAT HE ASKED YOU TO REMEMBER in your answers. A bill or a birthday also gets a repeating reminder.
 - For anything older than the records above, or "when did I last…", call search_records. For weekly reviews and "did this work for me?", call get_days for the periods and compare the numbers exactly as they appear; say how many days each figure rests on.
@@ -126,12 +127,17 @@ export class AlfredSession {
         const result = await runReadTool(block.name, block.input, this.policy?.includePersonal ?? false).catch(() => "That read failed; say so.");
         if (result !== null) { for (const source of await readToolSources(result, this.policy?.includePersonal ?? false)) { if (sources.size < 60) sources.set(source.key, source); } reads.push({ type: "tool_result", tool_use_id: block.id, content: result }); continue; }
         let proposal = toProposal(block.name, block.input);
-        // ALFRED-FIX-001: a fix is filled from the record before it can be a card; a wrong id or time goes back to
+        // ALFRED-FIX-001, generalised by ALFRED-TOOLS-001: a card BEYOND fills from the records (a fix, a time, a habit
+        // or list by name, today's latest log) is resolved before it can show; anything that doesn't fit goes back to
         // Alfred as a read result instead, so he can correct himself or say so.
-        if (proposal?.kind === "fix_entry") {
-          const resolved = await resolveFix(proposal).catch(() => "That entry couldn't be read; say so.");
+        if (proposal) {
+          const resolved = await resolveProposal(proposal).catch(() => "That record couldn't be read; say so.");
           if (typeof resolved === "string") { reads.push({ type: "tool_result", tool_use_id: block.id, content: resolved }); continue; }
           proposal = resolved;
+        } else {
+          // ALFRED-TOOLS-001: an unusable call is answered, not silently dropped, so he can say what BEYOND can't do.
+          reads.push({ type: "tool_result", tool_use_id: block.id, content: "BEYOND couldn't read that request as a card (a value is missing or out of range). Ask him, or say plainly what you can't do." });
+          continue;
         }
         cardIds.push(block.id);
         if (proposal) proposals.push({ id: block.id, proposal });

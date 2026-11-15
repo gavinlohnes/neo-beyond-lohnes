@@ -3395,3 +3395,23 @@ its own PRs, review where Protected, and Gavin's merge.
 ## BEYOND 4.0-b slice 2 — one optional coach suggestion (owner-approved 2026-11-15)
 
 Under the primary Engine recommendation, never above it: today's lift advice, then a finished experiment awaiting verdict, a changed weekly calorie proposal, then DELTA's test offer. One card only; no candidate means no card. REVIEW opens its existing confirmation flow; no write or acceptance occurs on TODAY. SKIP is phone-local and evidence-bound. Hide while an active workout/reset/shift-down owns the operation. This approved secondary surface does not change Engine arbitration or reorder primary navigation.
+
+## ALFRED-TOOLS-001 — one tool registry; Alfred proposes what BEYOND can already do (Gavin, 2026-11-15)
+
+Gavin, 2026-11-15, 04:26 CT: "Start with missions 1 and 2 (tool registry + shift correction)." [Brief](agent/ALFRED-TOOLS-001.md).
+Every Alfred and free-helper card kind lives in one typed registry (tool, checks, fill-from-record, card line, guard,
+command, undo). Alfred may now propose protein, a time on food/water/protein, sleep/weight correction and removal,
+today WORK/OFF, a future overtime/time-off/swap, a next-shift handoff note, a task dropped or waiting, a habit done and
+a list item. Every one is still a card he confirms; BEYOND fills cards from the records, never Alfred. When no tool
+fits, Alfred says what BEYOND can't do yet instead of only refusing.
+
+## ALFRED-ACT-001 — low-risk logging may run immediately with UNDO (Gavin, 2026-11-15; decided, not built)
+
+Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo." Recorded now; built later as its own
+Protected objective. Intent: for a clear, explicit command, a small set of reversible logs (to be named in that brief:
+e.g. water, food, protein, weight, a habit or routine tick) may save at once and show UNDO plus a HISTORY record instead
+of waiting for SAVE; everything else stays one-tap confirm, and Engine decisions are never Alfred's. Until that
+objective ships, every Alfred change remains confirm-first. **Conflict to resolve in that objective:** the Doctrine
+(`OPERATOR_INTERFACE_DOCTRINE.md`, "proposes changes the operator confirms") and BEYOND-4.0 decision 2 ("every change is
+confirmed") must be amended in their own text in the same Protected PR, with the exact list of immediate actions.
+

@@ -41,7 +41,7 @@ describe("the four actions", () => {
     expect(await weekDay("2026-11-21")).toMatchObject({ work: "WORK", basis: "CONFIRMED", shiftStartHour: 18 });
     expect((await getWeekEnergyForecast(MON)).days.find((d) => d.date === "2026-11-21")?.work).toBe("WORK");
     expect(await alfred()).toContain("2026-11-21 WORK 18:00 (confirmed change)");
-    expect(await alfred()).toContain("Alfred cannot change the schedule.");
+    expect(await alfred()).toContain("Alfred cannot change the schedule himself; he may only propose a change (schedule_change, schedule_swap, set_work_context) as a card the operator confirms.");
     expect(await answerQuestion("when do i work", at(20, 9))).toBe("Next shift: Sat, Nov 21, 18:00. A schedule change you confirmed.");
     // No lived day was started or recorded by it.
     expect(await db.beyondDays.count()).toBe(0);

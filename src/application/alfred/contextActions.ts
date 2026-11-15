@@ -1,7 +1,7 @@
-import { getObligation } from "../intentQueries";
 import { db } from "../../persistence/db";
 import { writeAtomically } from "../atomicWrite";
 import { confirmProposal, type AlfredProposal } from "./alfredActions";
+import { guardKind } from "./alfredTools";
 import { operatorContextVersion } from "../operatorContext";
 import { personalContextVersion, proposalContextVersion } from "./personalContext";
 
@@ -19,17 +19,9 @@ export function confirmContextProposal(proposal: AlfredProposal, expected: Propo
     if (await personalContextVersion(includePersonal) !== expected.personalVersion || await proposalContextVersion() !== expected.actionVersion) {
       throw new Error("CONTEXT_CHANGED");
     }
-    if (proposal.kind === "task_done" || proposal.kind === "task_new_date" || proposal.kind === "task_plan") {
-      const current = await getObligation(proposal.task_id);
-      if (!current || current.title !== proposal.title || expected.taskVersions[proposal.task_id] !== JSON.stringify(current)) throw new Error("CONTEXT_CHANGED");
-    }
-    // ROUTINES-001 (review of #357, L3): an edit card applies only to the routine it was proposed for.
-    // FREE-HELPER-001 (review of #366): a tick applies only to the active routine it was read from.
-    if (proposal.kind === "routine_edit" || proposal.kind === "routine_tick") {
-      const current = await db.routines.get(proposal.routine_id);
-      if (!current || expected.routineVersions?.[proposal.routine_id] !== current.updatedAt) throw new Error("CONTEXT_CHANGED");
-      if (proposal.kind === "routine_tick" && (current.status !== "ACTIVE" || !current.steps.some((s) => s.id === proposal.step_id))) throw new Error("CONTEXT_CHANGED");
-    }
+    // ALFRED-TOOLS-001: each kind's own guard (a task card applies only to that task as read; a routine edit or tick
+    // only to that routine; a removal only to the log it named), from its registry entry.
+    await guardKind(proposal, expected);
     const result = await confirmProposal(proposal);
     return { result, personalVersion: await personalContextVersion(includePersonal), ...(expected.recordVersion !== undefined ? { recordVersion: await operatorContextVersion(includePersonal) } : {}) };
   });

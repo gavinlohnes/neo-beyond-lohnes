@@ -1,4 +1,27 @@
-# Current objective — 4.0-d: TODAY briefing preview
+# Current objective — ALFRED-TOOLS-001, then SHIFT-CORRECT-001 (Alfred follows commands)
+
+- Builder Grok Bot. Gavin, 2026-11-15 04:26 CT, after his "Im still working till 0600. Fix my log" screenshot: "Start
+  with missions 1 and 2 (tool registry + shift correction)"; "Yes, amend WORK TRANSITION to allow explicit shift
+  start/end corrections"; "Yes, low-risk logging runs immediately with undo" (recorded as ALFRED-ACT-001; not built).
+- Mission 1: branch `codex/alfred-tools-001` from fetched master `1c74307a`. [Brief](ALFRED-TOOLS-001.md). One typed
+  registry for every card kind; new confirm-first tools for existing commands; Alfred names what he can't do. Protected
+  (AI write proposals): independent exact-head review, green CI, Gavin merges. No schema, Engine or dependency change.
+- Mission 2: SHIFT-CORRECT-001, stacked on mission 1 (it adds a registry card). [Brief](SHIFT-CORRECT-001.md).
+- Checkpoint PR #551 (4.0-d merged) is still open; this file keeps its text below unchanged.
+- Gates: local `TZ=UTC npm run verify` green on each branch head before push; PRs not yet opened (Gavin asked for
+  local branches first). Final exact-head evidence belongs on each PR. Gavin alone merges.
+
+---
+
+# Current state — 4.0-d preview merged; phone trial next
+
+- TODAY briefing preview [#550](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/550) merged by Gavin as `1c74307a` (head `4c156131`). The preview is opt-in on current TODAY; current TODAY remains the default landing.
+- Next: Gavin tries the preview on his phone. Whether the briefing replaces TODAY is a separate Protected decision (decision 3) after the trial; nothing is authorized to replace TODAY yet.
+- Still parked: recovery coaching, end-of-run debrief, run debriefs and year-in-review. Per the master-brief correction, remaining 4.0 work is mostly upgrades to existing features. No implementation PR is active or authorized; the next objective waits for Gavin's choice.
+
+---
+
+# Historical — 4.0-d: TODAY briefing preview (merged as #550)
 
 - Builder Grok Bot; branch `codex/4d-today-preview` from fetched master `2fc13488`. Gavin approved starting the planned TODAY briefing preview after #548 merged ("Merge 548. Start next work", then "Let's finish the planned work"). [Bounded brief](BEYOND-4.0-D.md). No competing implementation PR found; #473 remains a parked draft. Recovery coaching and end-of-run debrief stay parked.
 - Opt-in PREVIEW BRIEFING on current TODAY, below Engine guidance. One read-only screen: NOW and NEXT from the existing TODAY picture plus issued Engine guidance; WHAT BEYOND HANDLED lists only an existing Garmin last-night import, or stays quiet. BACK TO TODAY, and leaving TODAY, restore the current TODAY. No replacement, no persisted home-screen switch, no recommendation writes.
