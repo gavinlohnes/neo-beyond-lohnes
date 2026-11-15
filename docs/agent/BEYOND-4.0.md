@@ -61,6 +61,22 @@ already in use).
   Preview first on his phone, then replace.
 - The phone-trial preview is specified in [BEYOND-4.0-D.md](BEYOND-4.0-D.md). That delivery does not replace TODAY and does not include run debriefs or a year-in-review.
 
+## Correction — already on master (2026-11-15)
+
+> **Correction (2026-11-15):** much of what this brief listed as new 4.0 work already exists
+> on master (checked at `2fc13488`). The 4.0-a input paths were the first such finding.
+> Remaining 4.0 work is upgrades to those features, plus a year-in-review, which is genuinely new.
+
+| Planned as new | Already in BEYOND |
+|---|---|
+| Automatic re-planning | **Partial.** Day-level adaptation exists: two short main sleeps suggest the reduced session (`engine/evaluate.ts`, SLEEP-ENGINE-001); 14-day RE-ENTRY; NO_CATCH_UP continuity; confirmed schedule exceptions propagate; Weekly can offer PLAN A LIGHTER / PLAN RECOVERY SLEEP, confirm-first. There is no multi-day plan re-drafting; [4.0-c](BEYOND-4.0-C.md) is explicitly not autonomous replanning. |
+| Key-moment notifications | **Working, off the 4.0 cap.** Health Bridge moments 3 hours before, 30 minutes before, and at shift end, plus tasks due at 16:00 (`bridgePlan.ts`, MomentAlerts). No 3/day cap, per-kind switches, quiet hours or day-off moments. The plan reaches the phone only on SYNC GARMIN. |
+| Personal experiments | **Working** (LOOP "Try" experiments, DELTA). Results are averages against usual days with sameness thresholds, not statistics. |
+| Adaptive calories | **Working** (expenditure estimate, TARGET-PROPOSAL). A weekly proposal you save or keep — not an Engine rule, and not macros. |
+| Sleep debt | **Working, read-only** (`getSleepDebt`: 7 hours a day over the last 7 logged days). A fixed need, not a learned one; the Engine does not read it. |
+| Run debriefs | **Working** (AFTER ACTION / END-OF-RUN, LOOP, weekly debrief). One suggestion from a fixed two-item list (lighter week or protect sleep), not an Engine accept/skip card. The parked 4.0-b lighter-week coaching rule overlaps that AFTER ACTION suggestion. |
+| Year-in-review | **Absent.** Building blocks already exist: month recap, MONTH-LETTER, day pixels, and the 90-day direction line. |
+
 ## Order and evidence
 
 a → b → c → d. Field use on the phone steers each release; the field-gate notes (LOG → NOTE) are read before each

@@ -15,7 +15,7 @@ A phone-trial **preview** of TODAY as a mission briefing, composed from existing
 
 ## Boundaries
 
-This is the briefing **preview** only. It does not replace TODAY, change primary navigation, or rebuild TodayScreen. Run debriefs and a year-in-review, named in the 4.0-d release sketch, are not part of this preview; end-of-run debrief and recovery coaching remain parked. No notifications, Alfred tools, schema, migration, dependency, provider or Engine change. No silent writes. Recommendation confirmation stays on current TODAY.
+This is the briefing **preview** only. It does not replace TODAY, change primary navigation, or rebuild TodayScreen. Run debriefs and a year-in-review, named in the 4.0-d release sketch, are not part of this preview; end-of-run debrief and recovery coaching remain parked. See the 2026-11-15 correction in [BEYOND-4.0.md](BEYOND-4.0.md): run debriefs already exist; year-in-review is still new. This preview still includes neither. No notifications, Alfred tools, schema, migration, dependency, provider or Engine change. No silent writes. Recommendation confirmation stays on current TODAY.
 
 ## Reuse disposition
 

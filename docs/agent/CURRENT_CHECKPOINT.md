@@ -2,6 +2,7 @@
 
 - Builder Grok Bot; branch `codex/4d-today-preview` from fetched master `2fc13488`. Gavin approved starting the planned TODAY briefing preview after #548 merged ("Merge 548. Start next work", then "Let's finish the planned work"). [Bounded brief](BEYOND-4.0-D.md). No competing implementation PR found; #473 remains a parked draft. Recovery coaching and end-of-run debrief stay parked.
 - Opt-in PREVIEW BRIEFING on current TODAY, below Engine guidance. One read-only screen: NOW and NEXT from the existing TODAY picture plus issued Engine guidance; WHAT BEYOND HANDLED lists only an existing Garmin last-night import, or stays quiet. BACK TO TODAY, and leaving TODAY, restore the current TODAY. No replacement, no persisted home-screen switch, no recommendation writes.
+- Master-brief correction (2026-11-15) records that much of 4.0's listed scope already exists on master; this preview is unchanged and still excludes run debriefs and year-in-review.
 - Gates: focused query/browser checks, existing TODAY/App regressions, type/architecture/build, full CI and independent Protected exact-head review pending. Final exact-head evidence belongs on the PR. Gavin alone merges.
 
 ---
