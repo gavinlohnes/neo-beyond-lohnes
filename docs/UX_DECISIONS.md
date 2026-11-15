@@ -3262,6 +3262,9 @@ as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
     split; never added, netted or turned into a deficit. GARMIN-005's other rules hold; its 4W becomes 30D.
 - **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged nights where Garmin
   missed). Slice 3 adds the shell's source line and work days compared with days off, without changing its chart.
+- **90-day direction (DIRECTION-90-001, Gavin 2026-11-14: "Approved"):** one line, "Last 90 days: … higher than /
+  lower than / about the same as your year's …", from medians of recorded days. Quiet until the records span 180 days.
+  Never a score, arrow or judgement. [Brief](agent/DIRECTION-90-001.md).
 - **Unchanged:** read only, no Engine input, no new data or schema.
 
 
