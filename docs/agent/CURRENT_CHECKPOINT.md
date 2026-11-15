@@ -1,3 +1,25 @@
+# Current objective — finish WEEK-PLANNER-002 on the existing PR
+
+- **Builder:** Codex resumes its preserved `codex/week-planner-001` branch / [existing PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529). Original bounded owner approval remains in [the brief](WEEK-PLANNER-002.md); merged HARVEST-002 selected completion of this delivery as the next mission, and Gavin asked what comes next. No new capability or architecture is authorized.
+- **Integration:** original head `32fb0f969d45dd790abb57ff5817baccbc8eba4c`, fresh master `b4739464` (research archive merged). Source merged automatically; the two conflicts were appended UX decisions and the checkpoint. Preserve all upstream source, decisions, raw capture, speed pack and research records while restoring the active planner handoff.
+- **Scope:** the existing seven-day agenda, honest work/programme/calendar context and explicit planned-date moves; deadlines/recurrence/status stay unchanged. No automatic scheduling, capacity score, workout overrides, new schema/provider/dependency, Alfred tools or another feature.
+- **Verification:** integration head `59145a5b` passed full Node (2344 / one existing skip), focused Chromium (45), UTC/New York planner integration, architecture, typecheck and build. Independent Protected review blocked that head: midnight can pass during the eligibility read. Fixed by revalidating the date after that awaited read, before the planned-date write; Node and real-Chromium regressions check rejection and unchanged task/event history. Fresh focused checks and final-head review/CI are required; current final results live in the PR handoff to avoid invalidating exact-head review with another documentation commit.
+- **Next:** complete that verification, fix only relevant regressions/findings, obtain an independent PASS and green CI, then mark the same PR ready for Gavin's merge decision. Never merge the PR or start another improvement.
+
+---
+
+# Historical implementation checkpoint — WEEK-PLANNER-002 (Gavin: “Week planner it is then”)
+
+- **Builder:** Codex; branch `codex/week-planner-001`, fresh master `77c8ab618e8bdd8eddba29d178ac476821eda806`. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529); no overlapping week-planner branch found. Existing older shift what-if PR remains separate.
+- **Authorization/scope:** [brief](WEEK-PLANNER-002.md). Make the existing read-only week actionable through Plan Today: work context, actual programme versus existing suggestions, canonical planned/due tasks, saved calendar freshness, explicit task placement/moves. No automatic scheduling, capacity score, deadline changes, per-date workout override, Engine/schema/provider/dependency expansion or primary navigation reorder.
+- **Recovered:** gym upgrade merged as #528. Its exact-head independent review PASS and full CI green are recorded on that PR; prior checkpoint review/CI pending text is historical.
+- **Implementation:** new compositional read model and native responsive date picker/agenda; moves reuse modifyObligation under the shared atomic gateway with current-date and stale-plan guards. Task details still complete/release. Normal task lists and Week Ahead remain; Week Ahead directly opens the planner. Draft intended dates, write/read errors and in-form retries preserve choices.
+- **Verification:** full Node 2325 PASS / one existing skip (280 files); planner integration 9 PASS in UTC and New York including DST. Focused real Chromium 28 PASS in six files, including populated 320–1024px/axe, actual navigation, deadline-preserving moves, drafts/midnight, retry and post-commit recovery. Architecture, TypeScript and production/PWA build PASS. Independent early recovery findings fixed and rechecked. Final exact-head review/full required CI are the remaining PR gates; consult the PR handoff for current results after this committed checkpoint.
+- **Next:** obtain independent exact-head review and green required CI on the existing PR, then present Gavin’s merge decision. Gavin alone merges. No new owner decision needed within the selected objective.
+
+
+---
+
 # Current research handoff — HARVEST-002 (Gavin: Discover / Inspect / Classify / Rank / one Claude mission / Verify)
 
 - **Builder/researcher:** Codex, documentation-only `codex/harvest-002` from fetched master `5d78a5dd95bc566fcb8aada0ea7ed0b131d43143`. [Whole-product inventory and deeper capture/planning comparison](harvest/HARVEST-002.md). [Archival PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/539). No application/configuration/governance-rule changes.

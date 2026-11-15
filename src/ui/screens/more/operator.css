@@ -138,3 +138,23 @@
 /* CONNECT-002: each mention opens its record; a full-size target. */
 .wiki-mentions li > .text-button { min-height:44px; display:inline-flex; align-items:center; text-align:left; }
 .plan-shutdown-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid var(--border-subtle); } .plan-shutdown-row > span { overflow-wrap:anywhere; min-width:0; } .plan-shutdown-row > .btn-secondary { flex:none; width:auto; min-height:44px; padding:8px 14px; }
+
+/* WEEK-PLANNER-002: native touch/keyboard date selection, no drag-only interaction. */
+.plan-smart-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.week-planner__days { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-block: 16px; }
+.week-planner__day { min-width: 0; min-height: 100px; background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); padding: 12px; text-align: left; font: inherit; display: grid; gap: 5px; overflow-wrap: anywhere; }
+.week-planner__day strong { color: var(--text-1); }
+.week-planner__day span { font-size: 14px; }
+.week-planner__day[aria-pressed="true"] { border-color: var(--text-1); background: var(--surface-2); }
+.week-planner__agenda { padding: 16px; border: 1px solid var(--border-strong); border-radius: 8px; margin-block: 16px; }
+.week-planner__agenda h3 { margin: 0 0 12px; }
+.week-planner__task { display: flex; align-items: center; gap: 8px; padding-block: 8px; }
+.week-planner__task .plan-task { flex: 1; min-width: 0; }
+.week-planner__task > .btn-secondary { width: auto; flex-shrink: 0; min-height: 44px; }
+.week-planner__task strong, .week-planner__event strong { overflow-wrap: anywhere; }
+.week-planner__event { display: grid; gap: 5px; margin-block: 12px; }
+.week-planner__event span { color: var(--text-2); }
+.week-planner__add { display: grid; gap: 10px; margin-top: 20px; }
+.week-planner .input { min-height: 44px; font-size: 16px; }
+.week-planner__receipt { border-left: 2px solid var(--text-1); padding: 12px; }
+@media (min-width: 700px) { .week-planner__days { grid-template-columns: repeat(4, minmax(0, 1fr)); } .plan-smart-lists { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
