@@ -1,7 +1,8 @@
 # Current objective — 4.0-c: work-run draft, then TODAY preview
 
-- Builder Codex; branch `codex/4c-work-run-plan` from fetched master `2bbceb73`. Gavin chose work-run planning then TODAY preview, parking recovery coaching and end-of-run debrief. [Bounded brief](BEYOND-4.0-C.md). No competing work-run PR found; ready comparison PR #548 remains untouched and independent.
+- Builder Codex; [active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/549), branch `codex/4c-work-run-plan` from fetched master `2bbceb73`. Gavin chose work-run planning then TODAY preview, parking recovery coaching and end-of-run debrief. [Bounded brief](BEYOND-4.0-C.md). No competing work-run PR found; ready comparison PR #548 remains untouched and independent.
 - Draft inside Plan Today → Week planner: first known work block and following off days within seven dates, existing meals/training/tasks/calendar/routines and safely matching next-shift sleep context. Unknowns stop the block; dates/provenance stay explicit. Edit and confirm once to save a Capture plan-note snapshot. No task/workout/food/preparation/notification writes or new live plan store.
+- Review recovery: independent review found confirmed changes become RECORDED after day start and could bypass sleep exclusion. Explicitly reconcile next-shift start/end and first/last-night assumptions with shared context for the previous/current/next lived dates, including recorded exception/manual overrides; no validation means omission. Regression coverage added.
 - Checks/review/CI pending. Final exact-head evidence belongs on the PR. Gavin alone merges; TODAY preview follows as a separate reviewed objective, not in this PR.
 
 ---

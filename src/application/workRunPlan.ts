@@ -1,3 +1,8 @@
+import type { SchedulePattern } from "../domain/common/types";
+import { formatLocalDate, livedDayShiftWindow } from "../engine/scheduledContext";
+import { getSchedulePattern } from "./queries";
+import { getConfirmedKinds } from "./scheduleExceptions";
+import { getRecordedContexts, livedDayOn, resolveWorkContext, type RecordedContext } from "./workContextResolution";
 import { getWeekPlanner, type WeekPlanner, type PlannerDay } from "./weekPlannerQueries";
 import { getMealPlanInputs } from "./mealPlanQueries";
 import { draftMealPlan } from "./mealPlan";
@@ -24,7 +29,7 @@ export function runBlock(days: readonly PlannerDay[]): PlannerDay[] {
 }
 
 /** Reuses existing drafts as labelled snapshots; it never assigns dates, logs food, ticks routines or changes training. */
-export function composeWorkRunDraft(week: WeekPlanner, meals: Meals, sleep: ShiftSleepPlan | null, routines: readonly Routine[], now: Date): WorkRunDraft {
+export function composeWorkRunDraft(week: WeekPlanner, meals: Meals, sleep: ShiftSleepPlan | null, routines: readonly Routine[], now: Date, sleepCompatible = false): WorkRunDraft {
   const generatedAt = now.toISOString(), days = runBlock(week.days);
   if (!days.length) return { text: null, generatedAt, message: "No known work block can be drafted inside the next seven dates. Confirm your work schedule or changes first; unknown days are not days off." };
   // The existing meal generator needs seven known dates. Never turn its boolean work field into an unknown-day guess.
@@ -51,7 +56,7 @@ export function composeWorkRunDraft(week: WeekPlanner, meals: Meals, sleep: Shif
   }
   lines.push("", "SLEEP — existing next-shift draft only");
   // Existing ROUTE uses the standing rotation. Do not present its cards as exception-aware multi-day sleep scheduling.
-  const sleepFits = sleep && !week.days.some((d) => d.basis === "CONFIRMED") && days.some((d) => d.date === sleep.shift.date && d.work === "WORK");
+  const sleepFits = sleepCompatible && sleep && !week.days.some((d) => d.basis === "CONFIRMED") && days.some((d) => d.date === sleep.shift.date && d.work === "WORK");
   if (sleepFits && sleep) {
     lines.push(`For the existing next-shift preview on ${sleep.shift.date}, not the whole work run. Review in ROUTE if your schedule changes.`);
     for (const card of sleep.cards) lines.push(`${card.title}: ${card.detail} Basis: ${card.basis}${card.source ? ` Source: ${card.source.label} ${card.source.url}` : ""}`);
@@ -64,7 +69,24 @@ export function composeWorkRunDraft(week: WeekPlanner, meals: Meals, sleep: Shif
   return { text: lines.join("\n"), message: null, generatedAt };
 }
 
+/** Match the source's shift times and first/last-night assumptions against shared recorded/exception context. */
+export function compatibleSleepPreview(sleep: ShiftSleepPlan, pattern: SchedulePattern, recorded: ReadonlyMap<string, RecordedContext>, confirmed: ReadonlyMap<string, "WORK" | "OFF">): boolean {
+  const start = livedDayOn(sleep.shift.date);
+  const dates = [-1, 0, 1].map((offset) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset, 16, 30));
+  const kinds = dates.map((date) => resolveWorkContext(date, pattern, recorded.get(formatLocalDate(date)), confirmed.get(formatLocalDate(date))).kind);
+  const window = livedDayShiftWindow(start, pattern);
+  return !!window && window.start.toISOString() === sleep.shift.start && window.end.toISOString() === sleep.shift.end &&
+    kinds.every((kind) => kind !== null) && kinds[1] === "WORK" &&
+    sleep.shift.firstOfRun === (kinds[0] === "OFF") && sleep.shift.lastOfRun === (kinds[2] === "OFF");
+}
+
 export async function getWorkRunDraft(now = new Date()): Promise<WorkRunDraft> {
-  const [week, meals, sleep, routines] = await Promise.all([getWeekPlanner(now), getMealPlanInputs(7, now), getShiftSleepPlan(now), getRoutines()]);
-  return composeWorkRunDraft(week, meals, sleep, routines, now);
+  const [week, meals, sleep, routines, pattern, confirmed] = await Promise.all([getWeekPlanner(now), getMealPlanInputs(7, now), getShiftSleepPlan(now), getRoutines(), getSchedulePattern(), getConfirmedKinds()]);
+  let compatible = false;
+  if (sleep) {
+    const start = livedDayOn(sleep.shift.date);
+    const dates = [-1, 0, 1].map((offset) => formatLocalDate(new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset, 16, 30)));
+    compatible = compatibleSleepPreview(sleep, pattern, await getRecordedContexts(dates), confirmed);
+  }
+  return composeWorkRunDraft(week, meals, sleep, routines, now, compatible);
 }

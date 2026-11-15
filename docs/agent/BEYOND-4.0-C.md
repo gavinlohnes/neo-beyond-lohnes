@@ -1,6 +1,6 @@
 # BEYOND 4.0-c — work-run planning
 
-**Owner authority:** Gavin selected work-run planning followed by the TODAY briefing preview, explicitly parking recovery coaching and end-of-run debrief for now ("Yes. 3 and 4."). This reorders the master brief's remaining work; it does not authorize a merge. Builder Codex, branch `codex/4c-work-run-plan`, from fetched master `2bbceb73` (coach card merged). No overlapping implementation PR found. Earlier read-only recovery comparison PR #548 remains ready and untouched, not a dependency. Protected conservative composition review; full required CI and independent exact-head review; Gavin alone merges.
+**Owner authority:** Gavin selected work-run planning followed by the TODAY briefing preview, explicitly parking recovery coaching and end-of-run debrief for now ("Yes. 3 and 4."). This reorders the master brief's remaining work; it does not authorize a merge. Builder Codex, [active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/549), branch `codex/4c-work-run-plan`, from fetched master `2bbceb73` (coach card merged). No overlapping implementation PR found. Earlier read-only recovery comparison PR #548 remains ready and untouched, not a dependency. Protected conservative composition review; full required CI and independent exact-head review; Gavin alone merges.
 
 ## This delivery
 
@@ -23,3 +23,5 @@ This is the complete bounded draft → edit → confirm → saved-note journey. 
 ## Verification
 
 Read-only composition, unknown/hypothetical gaps, block boundaries and horizon honesty; due/planned independence; shared meal context; confirmed-change sleep abstention; no read-side writes; no side effects until confirmation and only one raw note afterward; edits retained across lists, failed saves and cancelled regeneration; same-tick duplicate guard; phone width/axe and existing Week planner/navigation regressions. Architecture, TypeScript and production/PWA build; full required CI and independent exact-head review. Final results live on the PR to avoid invalidating review with a documentation-only head change.
+
+Independent review recovery: recorded context can hide an originating confirmed exception. Sleep inclusion now requires explicit reconciliation of shift start/end and first/last-night assumptions against the shared recorded/confirmed/forecast context for the previous, shift and next lived dates. Missing validation defaults to omission; manual and exception-origin records are both checked. No sleep rule is changed. Renew exact-head review/CI after this fix.

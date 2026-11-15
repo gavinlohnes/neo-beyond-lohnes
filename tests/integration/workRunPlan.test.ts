@@ -1,5 +1,7 @@
+import { DEFAULT_SCHEDULE_PATTERN, formatLocalDate, scheduledWorkContextForLivedDay } from "../../src/engine/scheduledContext";
+import { deriveShiftSleepPlan } from "../../src/application/shiftSleepPlan";
 import { expect, it } from "vitest";
-import { composeWorkRunDraft, getWorkRunDraft, runBlock } from "../../src/application/workRunPlan";
+import { compatibleSleepPreview, composeWorkRunDraft, getWorkRunDraft, runBlock } from "../../src/application/workRunPlan";
 import type { WeekPlanner, PlannerDay } from "../../src/application/weekPlannerQueries";
 import type { getMealPlanInputs } from "../../src/application/mealPlanQueries";
 import type { ShiftSleepPlan } from "../../src/application/shiftSleepPlan";
@@ -31,7 +33,7 @@ it("unknown gaps never become days off or get skipped to invent a complete run",
 });
 it("does not reuse standing-schedule sleep cards when confirmed changes need reconciliation", () => {
   const sleep = { shift: { date: week.days[0]!.date }, cards: [{ title: "Sleep preview", detail: "23:07", basis: "Existing recorded rhythm", source: null }] } as unknown as ShiftSleepPlan;
-  expect(composeWorkRunDraft(week, meals, sleep, [], now).text).toContain("23:07");
+  expect(composeWorkRunDraft(week, meals, sleep, [], now, true).text).toContain("23:07");
   const input = structuredClone(week); input.days[0]!.basis = "CONFIRMED";
   const result = composeWorkRunDraft(input, meals, sleep, [], now);
   expect(result.text).not.toContain("23:07");
@@ -41,4 +43,21 @@ it("reading an actual empty local store creates no day, plan or record", async (
   const before = await Promise.all(db.tables.map((table) => table.count()));
   await getWorkRunDraft(now);
   expect(await Promise.all(db.tables.map((table) => table.count()))).toEqual(before);
+});
+
+
+it("reconciles an exception after it becomes recorded, and manual overrides, before including sleep advice", () => {
+  const pattern = { ...DEFAULT_SCHEDULE_PATTERN, updatedAt: "2026-11-15T12:00:00.000Z" };
+  const sleep = Array.from({ length: 14 }, (_, n) => deriveShiftSleepPlan({ now: new Date(2026, 10, 15 + n, 12), pattern, rhythm: null, rows: [] })).find((plan) => plan !== null)!;
+  expect(sleep).toBeTruthy();
+  expect(compatibleSleepPreview(sleep, pattern, new Map(), new Map())).toBe(true);
+  const start = new Date(`${sleep.shift.date}T16:30:00`);
+  const previous = new Date(start.getFullYear(), start.getMonth(), start.getDate() - 1, 16, 30);
+  const kind = scheduledWorkContextForLivedDay(previous, pattern) === "WORK" ? "OFF" : "WORK";
+  for (const by of ["EXCEPTION", "OPERATOR"] as const) {
+    expect(compatibleSleepPreview(sleep, pattern, new Map([[formatLocalDate(previous), { kind, by }]]), new Map())).toBe(false);
+  }
+  expect(compatibleSleepPreview(sleep, pattern, new Map(), new Map([[formatLocalDate(previous), kind]]))).toBe(false);
+  // A caller lacking a reconciled source may never opt into the standing sleep cards implicitly.
+  expect(composeWorkRunDraft(week, meals, sleep, [], now).text).toContain("No matching sleep preview included");
 });
