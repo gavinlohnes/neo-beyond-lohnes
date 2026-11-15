@@ -7,9 +7,9 @@
   registry for every card kind; new confirm-first tools for existing commands; Alfred names what he can't do. Protected
   (AI write proposals): independent exact-head review, green CI, Gavin merges. No schema, Engine or dependency change.
 - Mission 2: SHIFT-CORRECT-001, stacked on mission 1 (it adds a registry card). [Brief](SHIFT-CORRECT-001.md).
-- Checkpoint PR #551 (4.0-d merged) is still open; this file keeps its text below unchanged.
-- Gates: local `TZ=UTC npm run verify` green on each branch head before push; PRs not yet opened (Gavin asked for
-  local branches first). Final exact-head evidence belongs on each PR. Gavin alone merges.
+- Checkpoint PR #551 (4.0-d merged) merged as `58bd0c65`; its text below is unchanged.
+- Gates: local `TZ=UTC npm run verify` green on each branch head before push; PRs [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) and [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553) open (Gavin approved
+  push, 2026-11-15 05:33 CT). Final exact-head evidence belongs on each PR. Gavin alone merges.
 
 ---
 
