@@ -216,6 +216,13 @@ export type DomainEventType =
   | "WORK_PERIOD_STARTED"
   /** LOG-TIME-001 (owner go 2026-10-28): when a water, protein or meal log actually happened, set after the fact. */
   | "LOG_RETIMED"
+  /**
+   * SHIFT-CORRECT-001 (Gavin, 2026-11-15: "Yes, amend WORK TRANSITION to allow explicit shift start/end corrections"):
+   * the operator's explicit correction of a recorded WORK_PERIOD_STARTED/ENDED mark: when it really happened, or that
+   * it shouldn't count (a shift end voided is a reopened shift). Append-only; the original mark is never touched.
+   */
+  | "WORK_PERIOD_RETIMED"
+  | "WORK_PERIOD_VOIDED"
   | "MISSION_CREATED"
   | "MISSION_MODIFIED"
   | "MISSION_ARCHIVED"
@@ -587,12 +594,42 @@ export interface WorkContextSetPayload {
  * time, schedule prediction, or any other automatic signal. "Shift end is
  * never inferred from time, schedule, GPS, inactivity, or other hidden
  * signals." At most one effective WORK_PERIOD_ENDED event exists per
- * BeyondDay — markWorkEnded is idempotent, not a correction chain, since
- * there is nothing to correct about "did the shift end," only whether it
- * has been marked yet.
+ * BeyondDay — markWorkEnded is idempotent.
+ *
+ * SHIFT-CORRECT-001 amendment (Gavin, 2026-11-15: "Yes, amend WORK TRANSITION
+ * to allow explicit shift start/end corrections"): the operator may correct a
+ * recorded mark explicitly — WORK_PERIOD_RETIMED (when it really happened) or
+ * WORK_PERIOD_VOIDED (it shouldn't count; for an end, the shift is reopened).
+ * Corrections supersede, never overwrite; nothing is inferred. "Effective"
+ * means the latest unvoided mark, at its latest retimed time
+ * (engine/workMarks.ts).
  */
 export interface WorkPeriodEndedPayload {
   commandId: string;
+}
+
+/**
+ * SHIFT-CORRECT-001 (Decision Register "WORK TRANSITION", amended 2026-11-15): a recorded work mark's real time, set
+ * after the fact by the operator's explicit correction — never inferred from clock, schedule or any hidden signal.
+ * `markEventId` names the original WORK_PERIOD_STARTED/ENDED event (also the causationId); `occurredAt` is the
+ * corrected time, inside that mark's lived day and not after the correction was made. The latest retime wins.
+ */
+export interface WorkPeriodRetimedPayload {
+  commandId: string;
+  markEventId: string;
+  mark: "STARTED" | "ENDED";
+  occurredAt: string;
+}
+
+/**
+ * SHIFT-CORRECT-001: the operator's explicit "this mark shouldn't count". A voided WORK_PERIOD_ENDED is a reopened
+ * shift: the day has no effective work-ended fact again, and a later explicit WORK ENDED records a new one. The
+ * original mark stays in history. Still at most one EFFECTIVE (unvoided) mark of each kind per BeyondDay.
+ */
+export interface WorkPeriodVoidedPayload {
+  commandId: string;
+  markEventId: string;
+  mark: "STARTED" | "ENDED";
 }
 
 /**

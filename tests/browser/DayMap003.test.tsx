@@ -45,10 +45,11 @@ it("lists the night so far, opens each item's own screen, writes nothing, and st
   await toggle.click();
   const list = screen.getByRole("list", { name: "The night so far" });
   const rows = () => [...document.querySelectorAll("#day-map-list li")].map((li) => li.textContent);
-  // TIMELINE-EDIT-001: a logged meal or water item also offers EDIT › (its time, amount or removal); work and plans don't.
+  // TIMELINE-EDIT-001: a logged meal or water item also offers EDIT › (its time, amount or removal); plans don't.
+  // SHIFT-CORRECT-001 (Gavin, 2026-11-15): the work mark offers EDIT › too (its start/end time, reopen).
   await expect.poll(rows).toEqual([
     expect.stringMatching(/ at 17:15EDIT ›FOOD ›$/),
-    "At work since 18:02",
+    "At work since 18:02EDIT ›",
     "Water 20 oz at 19:00EDIT ›WATER ›",
     "PLANNED · Usual sleep 07:30–14:15 (sleep plan, your Garmin rhythm)ROUTE ›",
   ]);

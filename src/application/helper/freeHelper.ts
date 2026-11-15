@@ -26,6 +26,8 @@ export interface HelperContext {
   lastLogs?: { water?: { id: string; value: number }; sleep?: { id: string; value: number }; weight?: { id: string; value: number } };
   /** ALFRED-FIX-001: the current and previous lived day's meal, water and protein entries, as they stand. */
   entries?: { id: string; dayStartedAt: string; snapshot: FixSnapshot }[];
+  /** SHIFT-CORRECT-001: today's effective work marks, the only ones a plain "still working" or "got off at" can fix. */
+  workMarks?: { dayId: string; dayStartedAt: string; workDay: boolean; started?: { eventId: string; at: string }; ended?: { eventId: string; at: string } } | null;
 }
 
 export interface HelperResult { cards: AlfredProposal[]; unknown: string[] }
@@ -256,6 +258,11 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     const fix = correction(text.toLowerCase().replace(/[,;!?]/g, " ").replace(/\s+/g, " ").trim(), ctx);
     return fix && fix !== "unclear" ? { cards: [fix], unknown: [] } : { cards, unknown: [text.trim()] };
   }
+  // SHIFT-CORRECT-001: a message about a recorded shift mark is read whole, before the negation check, so "I haven't
+  // clocked out" reopens rather than being refused; a clear one is the only card.
+  const shift = shiftFix(beforeNote, ctx);
+  if (shift === "unclear") return { cards, unknown: [text.trim()] };
+  if (shift) return { cards: [shift], unknown: [] };
   if (NEGATION.test(beforeNote.replace(/[’]/g, "'"))) return { cards, unknown: [text.trim()] };
   // ALFRED-FIX-001: a fix names a logged entry whole, before the message is split ("Butter Chicken and Rice").
   const wholeFix = entryFix(text.toLowerCase().trim().replace(/[.!]+$/, "").replace(/^(i |just |also |please )+/, "").replace(/\s+/g, " "), ctx);
@@ -364,6 +371,71 @@ export function parseQuickAdd(text: string, now = new Date()): QuickAdd | null {
 }
 
 /**
+ * A clock time he typed, as HH:MM: "23:00", "2300", "0600", "11pm", "7:30", "6 am". A bare "7" could be 07:00 or 19:00,
+ * so it is refused rather than guessed (review of #541).
+ */
+export function clockOf(h: string, m: string | undefined, ap: string | undefined): string | null {
+  let hour = Number(h), minute = Number(m ?? 0);
+  if (h.length >= 3 && m === undefined) { hour = Math.floor(Number(h) / 100); minute = Number(h) % 100; }
+  else if (m === undefined && !ap) return null;
+  if (ap) { if (hour < 1 || hour > 12) return null; hour = (hour % 12) + (ap.startsWith("p") ? 12 : 0); }
+  return hour >= 0 && hour < 24 && minute >= 0 && minute < 60 ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` : null;
+}
+const CLOCK = "(\\d{1,4})(?::(\\d{2}))?\\s*(am|pm|a\\.m\\.|p\\.m\\.)?(?:\\s*hours?)?";
+/** "0600" → "06:00"; null when it isn't one clear clock time. */
+export function parseClock(text: string): string | null {
+  const m = text.trim().toLowerCase().match(new RegExp(`^${CLOCK}$`));
+  return m ? clockOf(m[1]!, m[2], m[3]) : null;
+}
+
+// SHIFT-CORRECT-001 (Gavin's screenshot, 2026-11-15: "Im still working till 0600. Fix my log").
+const STILL_WORKING = /\b(still working(?=\s*(?:$|[.!,;?]|(?:till|til|until|thru|through|to)\s+\d|tonight|this morning|(?:my |a |the )?shift|here|at work))|still (?:at work|on shift|on the clock|clocked in|here at work)|(?:haven'?t|have not|didn'?t|did not|never) (?:clocked|clock|punched|punch) out(?: yet)?|not (?:off|done)(?: (?:work|with work|my shift))? yet|(?:my )?shift (?:isn'?t|is not|hasn'?t|has not) (?:over|ended|done|finished)|re-?open (?:my |the )?shift|un-?end (?:my |the )?shift|(?:i'?m|i am) not (?:off|done)(?: work)?)\b/;
+const UNTIL = new RegExp(`\\b(?:till|til|until|to|thru|through)\\s+(?:about\\s+|around\\s+)?${CLOCK}`);
+const SAID_END = new RegExp(`\\b(?:got off(?: work)?|clocked out|punched out|finished (?:work|my shift|shift)|left work|shift (?:ended|was over|finished)|off work|(?:i )?(?:was )?done (?:with )?(?:work|my shift))\\s+at\\s+${CLOCK}$|\\bshift end(?:ed)?(?: time)?\\s+(?:to|was|is|should be|should have been|at)\\s+${CLOCK}$`);
+const SAID_START = new RegExp(`\\b(?:clocked in|punched in|started (?:work|my shift|shift)|got to work|shift started)\\s+at\\s+${CLOCK}$|\\bshift start(?:ed)?(?: time)?\\s+(?:to|was|is|should be|should have been|at)\\s+${CLOCK}$`);
+
+/**
+ * SHIFT-CORRECT-001: a whole message about a recorded shift mark, read before the negation check because "haven't
+ * clocked out" is the point, not a negation. "still working (till 0600)" with an end recorded → Reopen shift;
+ * "got off at 06:00" / "shift end was 0600" → move the end (a time not reached yet → reopen, since an end is never
+ * later than now); "clocked in at 17:45" → move the start. Only today's effective marks; anything unclear → null/"unclear".
+ */
+function shiftFix(text: string, ctx: HelperContext): AlfredProposal | null | "unclear" {
+  const w = ctx.workMarks;
+  const c = text.toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, " ").trim();
+  const reopen = (until?: string | null): AlfredProposal | "unclear" => {
+    if (!w?.ended || !w.workDay) return "unclear";
+    return { kind: "shift_fix", action: "reopen", day_id: w.dayId, mark_event_id: w.ended.eventId, from_at: w.ended.at, ...(until ? { until } : {}) };
+  };
+  const sentence = c.split(/[.!?;\n]\s*/).map((x) => x.replace(/^(i |i'm |im |also |just |please )+/, "").trim()).filter(Boolean);
+  if (STILL_WORKING.test(c)) {
+    if (!w?.ended) return null; // nothing to reopen: the shift is still running in BEYOND
+    const u = c.match(UNTIL);
+    return reopen(u ? clockOf(u[1]!, u[2], u[3]) : null);
+  }
+  for (const part of sentence) {
+    const end = part.match(SAID_END), start = !end ? part.match(SAID_START) : null;
+    const m = end ?? start;
+    if (!m) continue;
+    const g = m[1] !== undefined ? m.slice(1, 4) : m.slice(4, 7);
+    const time = clockOf(g[0]!, g[1], g[2]);
+    if (!time || !w) return "unclear";
+    const at = placeTime(time, w.dayStartedAt, ctx.now);
+    if (!at) return "unclear";
+    if (end) {
+      if (!w.ended) return "unclear"; // no end recorded: WORK ENDED records now, not a past time
+      if (Date.parse(at) > ctx.now.getTime()) return reopen(time);
+      if (Date.parse(at) === Date.parse(w.ended.at) || (w.started && Date.parse(at) <= Date.parse(w.started.at))) return "unclear";
+      return { kind: "shift_fix", action: "move_end", day_id: w.dayId, mark_event_id: w.ended.eventId, from_at: w.ended.at, to_at: at };
+    }
+    if (!w.started || Date.parse(at) > ctx.now.getTime() || Date.parse(at) === Date.parse(w.started.at)) return "unclear";
+    if (w.ended && Date.parse(at) >= Date.parse(w.ended.at)) return "unclear";
+    return { kind: "shift_fix", action: "move_start", day_id: w.dayId, mark_event_id: w.started.eventId, from_at: w.started.at, to_at: at };
+  }
+  return null;
+}
+
+/**
  * ALFRED-FIX-001: "move the butter chicken to 23:00", "change the butter chicken to 11pm", "butter chicken was at 2300",
  * "butter chicken was 600 kcal", "remove the butter chicken". Only an entry in the current or previous lived day whose
  * name matches one way (the newest, when the same name was logged twice); anything else falls through to the other
@@ -386,21 +458,13 @@ function entryFix(c: string, ctx: HelperContext): AlfredProposal | null | "uncle
     const names = new Set(loose.map((e) => key(e.snapshot.name)));
     return names.size === 1 ? loose.sort((a, b) => a.snapshot.at.localeCompare(b.snapshot.at)).at(-1)! : null;
   };
-  const clock = (h: string, m: string | undefined, ap: string | undefined): string | null => {
-    let hour = Number(h), minute = Number(m ?? 0);
-    if (h.length >= 3 && m === undefined) { hour = Math.floor(Number(h) / 100); minute = Number(h) % 100; }
-    // A bare "7" could be 07:00 or 19:00: ask rather than guess (review of #541). 23:00, 2300, 11pm and 7:30 are clear.
-    else if (m === undefined && !ap) return null;
-    if (ap) { if (hour < 1 || hour > 12) return null; hour = (hour % 12) + (ap.startsWith("p") ? 12 : 0); }
-    return hour >= 0 && hour < 24 && minute >= 0 && minute < 60 ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` : null;
-  };
-  const t = "(\\d{1,4})(?::(\\d{2}))?\\s*(am|pm|a\\.m\\.|p\\.m\\.)?(?:\\s*hours?)?";
+  const t = CLOCK;
   const move = c.match(new RegExp(`^(?:move|change|set|put)\\s+(?:the time of\\s+)?(?:the |my )?(.+?)\\s+to\\s+(?:at\\s+)?${t}$`))
     ?? c.match(new RegExp(`^(?:the |my )?(.+?)\\s+was\\s+(?:at|eaten at|had at)\\s+${t}$`));
   if (move) {
     const entry = find(move[1]!);
     if (!entry) return null;
-    const time = clock(move[2]!, move[3], move[4]);
+    const time = clockOf(move[2]!, move[3], move[4]);
     const to = time ? placeTime(time, entry.dayStartedAt, ctx.now) : null;
     return to && Date.parse(to) !== Date.parse(entry.snapshot.at) ? { kind: "fix_entry", action: "move", entry_id: entry.id, time: time!, entry: entry.snapshot, to_at: to } : "unclear";
   }

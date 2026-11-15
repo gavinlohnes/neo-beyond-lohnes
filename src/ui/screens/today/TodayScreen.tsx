@@ -118,6 +118,7 @@ import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
 import { LogEntrySheet, type LogEntryTarget } from "../../components/LogEntrySheet";
+import { ShiftMarkSheet } from "../../components/ShiftMarkSheet";
 import type { DetailMetric } from "../../../application/metricDetail";
 import "./smallSteps.css";
 import "../../foundation/foundation.css";
@@ -354,6 +355,8 @@ export function TodayScreen({
   const [day, setDay] = useState<BeyondDay | null>(null);
   // TIMELINE-EDIT-001: the logged meal or water entry open for a fix (time, amount, remove).
   const [editTarget, setEditTarget] = useState<LogEntryTarget | null>(null);
+  // SHIFT-CORRECT-001: the shift sheet a work mark on the timeline opens.
+  const [shiftTarget, setShiftTarget] = useState<{ beyondDayId: string } | null>(null);
   // LAUNCH-STEADY-001: until the first read settles, "no day" is unknown, not a fact. TODAY shows a quiet reading
   // frame instead of "Mode not set / START DAY" flashing before the real day appears.
   const [dayRead, setDayRead] = useState(false);
@@ -2699,6 +2702,7 @@ export function TodayScreen({
             marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart).map((m) => (!m.planned && freshMarks.has(markKey(m)) ? { ...m, fresh: true as const } : m)) : undefined}
             onOpenSleepPlan={onOpenCave ? () => { if (!busyRef.current) onOpenCave("route"); } : undefined}
             onEditMark={(ref) => { if (!busyRef.current) setEditTarget(ref); }}
+            onEditShift={(shift) => { if (!busyRef.current) setShiftTarget(shift); }}
             markActions={{
               ...(onOpenHealthEvidence ? {
                 WATER: { label: "WATER", open: () => { if (!busyRef.current) onOpenHealthEvidence("water"); } },
@@ -2802,6 +2806,7 @@ export function TodayScreen({
     <SleepMetricSheet open={measuredOpen === "sleep"} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
     <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={() => refresh()} />
+    <ShiftMarkSheet target={shiftTarget} onClose={() => setShiftTarget(null)} onChanged={() => refresh()} />
     <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={refreshVersion}
       onRecords={detailOpen === "water" && onOpenHealthEvidence ? () => onOpenHealthEvidence("water") : undefined}
       onLog={detailOpen === "water" && onOpenRecord ? () => onOpenRecord("water") : undefined} />

@@ -42,9 +42,12 @@ export function ModeHeader({
   eyebrow,
   operation = false,
   onEditMark,
+  onEditShift,
 }: {
   /** TIMELINE-EDIT-001: opens a logged meal or water mark's edit sheet (change time, amount, remove). */
   onEditMark?: ((ref: NonNullable<PlacedMark["ref"]>) => void) | undefined;
+  /** SHIFT-CORRECT-001: open the shift sheet for a work mark (change its times, reopen it). */
+  onEditShift?: ((shift: NonNullable<PlacedMark["shift"]>) => void) | undefined;
   /** RESUME-FOLD-001: an operation (a workout, a reset) owns the screen, so the scene shrinks and RESUME stays above the fold. */
   operation?: boolean | undefined;
   /** VISUAL-FOUNDATION-003: the foundation's red slashes and the date, above the mode. */
@@ -177,6 +180,7 @@ export function ModeHeader({
           const action = markActions?.[m.kind];
           return <li key={i} className={m.planned ? "cc-tl-list__planned" : undefined}>
             <span>{m.planned ? "PLANNED · " : m.fresh ? <strong className="cc-tl-list__new">NEW · </strong> : ""}{m.label}</span>
+            {m.shift && onEditShift && <button type="button" className="cc-tl-list__open" aria-label={`Edit ${m.label}`} onClick={() => onEditShift(m.shift!)}>EDIT ›</button>}
             {m.ref && onEditMark && <button type="button" className="cc-tl-list__open" aria-label={`Edit ${m.label}`} onClick={() => onEditMark(m.ref!)}>EDIT ›</button>}
             {action && <button type="button" className="cc-tl-list__open" onClick={action.open}>{action.label} ›</button>}
           </li>;
