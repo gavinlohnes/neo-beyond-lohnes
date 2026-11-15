@@ -1,4 +1,14 @@
-# Current objective — TARGET-PROPOSAL-002: your own floor and #531's review notes (Gavin, 2026-11-15)
+# Current objective — METRIC-PAGE-001 slice 4: calories join the shared page (Gavin, 2026-11-14: "That's good for me")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-metric-calories`, from master `77c8ab61`. Feature lane: no independent
+  review required; Gavin merges. Codex's WEEK-PLANNER-002 (#529) is open and does not touch these files beyond docs.
+- **Scope:** TODAY's CALORIES tile opens the shared metric page: TODAY/7D/30D/1Y, eaten (LOGGED, white) beside burned
+  (GARMIN, blue), never added or netted, each with its own coverage, usual and work/off split; missing stays missing.
+  The old `MeasuredSheet` sheet retires (its shared pieces stay). [Brief](METRIC-PAGE-001.md#slice-4--calories-join-the-shared-page-gavin-2026-11-14-thats-good-for-me).
+- **Verification:** see the PR for the actual run results.
+- **Next:** CI green, then Gavin merges. After that every TODAY number with a detail view is on the shared page or
+  sleep's own page.
+# Historical — TARGET-PROPOSAL-002 (merged as #532): your own floor and #531's review notes (Gavin, 2026-11-15)
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-target-floor`, built on #531. Protected (additive stored field
   `calorieFloorKcal`); independent exact-head review, green CI, Gavin merges. Brief: TARGET-PROPOSAL-001.md § 002.

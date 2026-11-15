@@ -6,7 +6,7 @@ import { BASELINE_MIN_SAMPLES, median } from "../domain/health/baselines";
  * Lived days are BEYOND's 16:30 periods (`recentPeriods`); a period with no record stays `null` (missing, never 0).
  * Each metric keeps its own semantics: how a week is summarised, what its source is, what "usual" means.
  */
-export type DetailMetric = "water" | "steps" | "resting";
+export type DetailMetric = "water" | "steps" | "resting" | "calories";
 export type DetailRange = "today" | "7d" | "30d" | "1y";
 export const DETAIL_RANGES: readonly [DetailRange, string, string][] = [
   ["today", "TODAY", "Today, this lived day"], ["7d", "7D", "Last 7 lived days"], ["30d", "30D", "Last 30 lived days"], ["1y", "1Y", "Last year, by week"],
@@ -17,9 +17,10 @@ export function rangesFor(metric: DetailMetric): readonly [DetailRange, string, 
 }
 /**
  * How a week is summarised: water as the average of its logged days, steps as the week's measured total, resting heart
- * rate as the average of its measured days (as MeasuredSheet).
+ * rate as the average of its measured days (as MeasuredSheet); calories, eaten and burned alike, as the average of the
+ * days that have a record (as GARMIN-005).
  */
-export const WEEK_MODE: Record<DetailMetric, "mean" | "sum"> = { water: "mean", steps: "sum", resting: "mean" };
+export const WEEK_MODE: Record<DetailMetric, "mean" | "sum"> = { water: "mean", steps: "sum", resting: "mean", calories: "mean" };
 
 /** One value per lived period: `valueOf(dayId)` gives the record; periods without a BEYOND day have none. */
 export function dailySeries(periods: readonly { dayId: string | null; from: number; to: number }[], now: number,

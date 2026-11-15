@@ -12,7 +12,6 @@
 .measured-line { fill: none; stroke: #3987e5; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .measured-dot { fill: #3987e5; stroke: var(--p-s1, #030303); stroke-width: 2; }
 .measured-bar { cursor: pointer; }
-.measured-readout { margin: 0; color: var(--p-t1, var(--text-1)); }
 .measured-stages { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 0; }
 .measured-stages div { display: flex; flex-direction: column; border-top: 1px solid var(--p-line-2, #292929); padding-top: 6px; }
 .measured-stages dt { display: flex; align-items: center; gap: 6px; color: var(--p-t2, var(--text-2)); font-size: 13px; }
@@ -23,11 +22,6 @@
 .measured-table td { text-align: right; }
 .measured-table summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 /* GARMIN-005: eaten vs burned. */
-.measured-pair { display: flex; gap: 18px; flex-wrap: wrap; }
-.measured-pair span { white-space: nowrap; }
-.measured-legend { display: flex; gap: 16px; margin: 0; font-size: 13px; color: var(--p-t2, var(--text-2)); }
-.measured-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.measured-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .measured-table thead td, .measured-table thead th { color: var(--p-t2, var(--text-2)); font-size: 12px; }
 
 /* SYNC-001: the link to BEYOND Health Bridge reads as a button. */

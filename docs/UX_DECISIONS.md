@@ -379,6 +379,8 @@ Gavin approved [the brief](agent/GARMIN-005.md), including the defaults below an
   cannot erase already imported calorie values. If a later export cannot read calories, the prior
   value keeps the timestamp of the export that actually supplied it; active-only data does not
   expose the total-calorie comparison.
+- **Amended by METRIC-PAGE-001 slice 4 (Gavin, 2026-11-14):** the comparison now lives on the shared metric page
+  (TODAY/7D/30D/1Y), with eaten in white and burned in Garmin blue. Every meaning and trust rule above is unchanged.
 
 ## GARMIN-004 — Garmin numbers you can see (owner approved 2026-10-22)
 
@@ -3247,7 +3249,8 @@ The pilot was approved for hydration and steps ("Build and validate a reusable m
 as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
 [agent/METRIC-PAGE-001.md](agent/METRIC-PAGE-001.md).
 
-- **What opens it:** TODAY's tiles and DATA's panels for hydration, steps and resting heart rate.
+- **What opens it:** TODAY's tiles and DATA's panels for hydration, steps and resting heart rate, and (slice 4,
+  "That's good for me") TODAY's CALORIES tile.
 - **What it shows:** TODAY (or LATEST), 7D, 30D and 1Y on lived days, with gaps shown as gaps; your usual; work days
   compared with days off; the source and its freshness; and each metric's existing routes (records and corrections,
   logging, Garmin sync, Alfred).
@@ -3255,6 +3258,8 @@ as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
   - **Water:** your logs, in white, by the hour. 1Y is the average of logged days.
   - **Steps:** Garmin, in blue, as a running total. 1Y is weekly totals.
   - **Resting heart rate:** Garmin, in blue, one reading a day. 1Y is the average of measured days.
+  - **Calories:** eaten (your logs, white) beside burned (Garmin, blue), each with its own coverage, usual and work/off
+    split; never added, netted or turned into a deficit. GARMIN-005's other rules hold; its 4W becomes 30D.
 - **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged nights where Garmin
   missed). Slice 3 adds the shell's source line and work days compared with days off, without changing its chart.
 - **Unchanged:** read only, no Engine input, no new data or schema.
