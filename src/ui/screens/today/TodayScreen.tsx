@@ -2839,7 +2839,7 @@ export function TodayScreen({
       </button>}
 
     </section>}
-    {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>NOTE</button></div>}
+    {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>CAPTURE</button></div>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
     {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
