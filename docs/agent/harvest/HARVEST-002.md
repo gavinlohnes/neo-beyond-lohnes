@@ -2,7 +2,7 @@
 
 Date: 15 November 2026. Repository inspected: `gavinlohnes/neo-beyond-lohnes`, fetched master `5d78a5dd95bc566fcb8aada0ea7ed0b131d43143` (Universal fast capture merged). At initial inspection, the checked-out capture branch’s tree matched fetched master; subsequent harvest changes are documentation-only, with no product files changed.
 
-Authorization: Gavin requested the Discover → Inspect → Classify → Rank → one bounded Claude mission → Verify workflow, then clarified that coverage should span all BEYOND rather than focus on Alfred. Researcher: Codex. Archive branch: `codex/harvest-002`, same fetched master as the research snapshot. Routine documentation lane: facts, recommendations, mission proposal and indexes; no governance rule or new product authorization changed. Independent research QA passed after corrections; product approval/review remains separate. Gavin alone merges any archival PR.
+Authorization: Gavin requested the Discover → Inspect → Classify → Rank → one bounded Claude mission → Verify workflow, then clarified that coverage should span all BEYOND rather than focus on Alfred. Researcher: Codex. Archive branch: `codex/harvest-002`, same fetched master as the research snapshot. Routine documentation lane: facts, recommendations, mission proposal and indexes; no governance rule or new product authorization changed. Independent research QA passed after corrections; product approval/review remains separate. Gavin alone merges the [archival PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/539).
 
 ## Conclusion
 
