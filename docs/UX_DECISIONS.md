@@ -3303,3 +3303,9 @@ estimate".
   rate, and says which.
 - **Never:** Garmin's burned estimate as an input (GARMIN-005 unchanged); deficit, surplus, net, remaining or "left"
   wording; automatic targets; macro or protein changes; Engine or recommendation input.
+- **TARGET-PROPOSAL-002 (Gavin, 2026-11-15):** the floor is the operator's own setting in TARGETS (default 1,500,
+  1,000–4,000), and the proposal never goes below it; with a target under the floor the step starts from it. The
+  current weight is this week's average or a weigh-in from the last 14 days, shown with its source. Under a cap the
+  shown weekly change is the capped one.
+- **Owner direction (2026-11-15):** "I want Beyond to be smart and act like a coach or nutritionist or weight management
+  professional." Future proposals build toward this; each new capability is still approved by Gavin.

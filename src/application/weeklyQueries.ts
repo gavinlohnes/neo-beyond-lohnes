@@ -13,7 +13,7 @@ import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
 import { projectFindings, type FindingsResult } from "../engine/findings";
 import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
-import { proposeCalorieTarget, type CalorieProposal } from "./targetProposal";
+import { proposeCalorieTarget, WEIGHT_MAX_AGE_DAYS, type CalorieProposal, type CurrentWeight } from "./targetProposal";
 import { projectPersonalBaselines, type PersonalBaseline } from "../engine/personalBaselines";
 import { getCustomTemplates } from "./customTemplateQueries";
 import { burnedByPeriod, recentPeriods } from "../domain/health/measuredSeries";
@@ -220,10 +220,16 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     findings: { ...findings, exerciseNames },
     expenditure,
     garminBurned: await getGarminBurned(end),
-    // Current weight: this week's average weigh-in, else the latest one on record.
-    calorieProposal: proposeCalorieTarget(expenditure, targets, avgLbs ?? history.filter((w) => Date.parse(w.recordedAt) <= end).at(-1)?.weightLbs),
+    calorieProposal: proposeCalorieTarget(expenditure, targets, currentWeight(avgLbs, history, end)),
     baselines: projectPersonalBaselines(daySummaries, now),
   };
+}
+
+/** TARGET-PROPOSAL-002: this week's average weigh-in, else the latest one from the last 14 days, else none. */
+function currentWeight(avgLbs: number | undefined, history: readonly { recordedAt: string; weightLbs: number }[], end: number): CurrentWeight | undefined {
+  if (avgLbs !== undefined) return { lbs: avgLbs, basis: "WEEK_AVERAGE" };
+  const latest = history.filter((w) => Date.parse(w.recordedAt) <= end).at(-1);
+  return latest && end - Date.parse(latest.recordedAt) <= WEIGHT_MAX_AGE_DAYS * DAY_MS ? { lbs: latest.weightLbs, basis: "LATEST", at: latest.recordedAt } : undefined;
 }
 
 async function getGarminBurned(now: number): Promise<WeeklySummary["garminBurned"]> {

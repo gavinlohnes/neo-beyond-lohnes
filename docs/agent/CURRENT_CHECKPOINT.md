@@ -1,4 +1,14 @@
-# Current objective — TARGET-PROPOSAL-001: a weekly calorie proposal you save or keep (Gavin, 2026-11-14: "Approved")
+# Current objective — TARGET-PROPOSAL-002: your own floor and #531's review notes (Gavin, 2026-11-15)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-target-floor`, built on #531. Protected (additive stored field
+  `calorieFloorKcal`); independent exact-head review, green CI, Gavin merges. Brief: TARGET-PROPOSAL-001.md § 002.
+- **Then:** FOOD-SOURCES-001 (approved 2026-11-15), where calories and protein come from. DIRECTION-90-001 is built on
+  `ccr-88f5c085-metric-direction` and waits for #530.
+- **Ready to merge:** #530 (calories page), #531 (calorie proposal, review PASS).
+
+---
+
+# In review — TARGET-PROPOSAL-001 (#531): a weekly calorie proposal you save or keep (Gavin, 2026-11-14: "Approved")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-target-proposal`, from master `77c8ab61`. **Protected:** amends
   NUTRITION-003's "no formula" and Drop 6's "nothing reads the estimate". Needs independent exact-head review and green
