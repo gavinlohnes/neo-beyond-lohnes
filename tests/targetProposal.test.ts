@@ -60,7 +60,10 @@ describe("TARGET-PROPOSAL-001 proposeCalorieTarget", () => {
   it("TARGET-PROPOSAL-002: the floor is yours; with a target under it the step starts from the floor, never below", () => {
     // Your own floor of 1,800 holds, where the default would allow 1,500.
     expect(proposeCalorieTarget(estimate(1700, 1900), { goalWeightLbs: 120, weightChangeTargetPercentPerWeek: 0.5, calorieFloorKcal: 1800 }, w(140)))
-      .toMatchObject({ kcal: 1800, aimKcal: 1800, floorKcal: 1800, limits: ["FLOOR"] });
+      .toMatchObject({ kcal: 1800, aimKcal: 1800, floorKcal: 1800, limits: ["FLOOR"], rateLbs: -0.7 });
+    // Review of #532: the weekly change shown is the floor's (none: 1,800 is the 1,800 middle), not the rate's.
+    expect(proposeCalorieTarget(estimate(1700, 1900), { goalWeightLbs: 120, weightChangeTargetPercentPerWeek: 0.5, calorieFloorKcal: 1800 }, w(140)))
+      .toMatchObject({ weeklyLbs: 0 });
     // Review of #531: with a current 1,200 under the 1,500 floor, the weekly step starts from 1,500 (never 1,350).
     expect(proposeCalorieTarget(estimate(2350, 2550), { calorieTargetKcal: 1200, goalWeightLbs: 180, weightChangeTargetPercentPerWeek: 0.5 }, w(200)))
       .toMatchObject({ kind: "PROPOSAL", kcal: 1650, aimKcal: 1950, currentKcal: 1200, limits: ["UNDER_FLOOR", "STEP"] });

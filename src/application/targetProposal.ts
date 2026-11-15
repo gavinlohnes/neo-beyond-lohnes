@@ -77,7 +77,8 @@ export function proposeCalorieTarget(
   const maintenance = (expenditure.lowKcal + expenditure.highKcal) / 2;
   let aim = round(maintenance + daily);
   if (aim < floor) { aim = floor; limits.push("FLOOR"); }
-  const weeklyLbs = (daily * 7) / KCAL_PER_LB;
+  // Review of #532: when the floor lifts the aim, the weekly change is the floor's, not the rate's.
+  const weeklyLbs = limits.includes("FLOOR") ? ((aim - maintenance) * 7) / KCAL_PER_LB : (daily * 7) / KCAL_PER_LB;
 
   const current = targets.calorieTargetKcal;
   // A current target under the floor never "fits": the weekly step starts from the floor instead (review of #531).
