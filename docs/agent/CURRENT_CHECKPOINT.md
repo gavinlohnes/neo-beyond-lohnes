@@ -1,3 +1,13 @@
+# Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
+  (`docs/audit/`), the README's stale "AI optional" and navigation text, and the roadmap's current-plan header.
+- **Awaits Gavin:** the Doctrine's 2026-10-09 "AI optional" note (Protected, constitutional) — proposed wording in the PR.
+- **Plan status:** #529, #540 merged; #482 closed, #473 parked; ALFRED-FIX-001 #541 in independent review (BLOCK fixed at
+  `df5b8c5b`); then the field gate.
+
+---
+
 # Current objective — TIMELINE-EDIT-001: fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-timeline-edit`, from master after #535. Feature; Gavin merges.

@@ -19,8 +19,9 @@ points to. Last refreshed 2026-11-15 at master `b4739464`.
 8. `docs/audit/AUDIT-REPORT.md`: this audit's full picture.
 
 **Authority order when sources disagree:** Gavin's direct decision → the Doctrine → locked decisions → the current
-brief → the code → older material. Surface genuine conflicts; don't quietly resolve them. One is already known: the
-Doctrine and README still say "AI optional", but Alfred has been core since RULES-2026-10-31 (`PRODUCT_DIRECTION.md`).
+brief → the code → older material. Surface genuine conflicts; don't quietly resolve them. One is known: the Doctrine
+still carries the 2026-10-09 "AI optional" note, while Alfred has been core since RULES-2026-10-31
+(`PRODUCT_DIRECTION.md`; the README now says so). The Doctrine amendment awaits Gavin's approval.
 
 ---
 
@@ -117,15 +118,11 @@ nutritionist or weight management professional") without ever nagging, guilting 
 - **Recently merged:** calories on the metric page, the weekly calorie proposal and an adjustable floor, the 90-day
   direction line, where your food came from, no flash on launch, RESUME WORKOUT stays above the nav, speed under
   fatigue (#537), universal fast capture (#538), and HARVEST-002 research (#539).
-- **In flight:**
-  - **#529 week planner** (Codex): conflicting; HARVEST-002 recommends finishing it first.
-  - **TIMELINE-EDIT-001** (Claude): branch `ccr-88f5c085-timeline-edit`, edit a meal's or water's time, amount or
-    presence from TODAY's timeline and the food diary. Two existing timeline tests (DayMap003, DayMap004) fail and must
-    be fixed before a PR.
-  - **ALFRED-FIX-001** (approved, Protected, not started): Alfred and the free helper propose move, correct and remove
-    for a logged entry, through `application/logEntries.ts` (from the timeline-edit branch), with real before and after
-    values on each card.
-  - **#482, #473:** old, stalled; need Gavin's decision.
+- **Also merged since the audit:** the week planner (#529) and timeline editing (#540): fix a meal's or water's time,
+  amount or presence from TODAY's timeline and the food diary (`application/logEntries.ts`).
+- **In flight:** **ALFRED-FIX-001 (#541, Protected, in review):** Alfred and the free helper propose move, correct and
+  remove for a logged entry, with BEYOND filling the card's real before and after. #482 closed; #473 parked as draft.
+- **Plan:** ship existing work before new work (ROADMAP_1.0 "Current plan"); then the field gate on the phone.
 - **Known debt:** huge screen files (`TodayScreen.tsx` 3,500 lines), stale README and Doctrine AI note, documentation
   sprawl, CSS specificity fights, browser storage not reset between test files.
 - **Next big idea Gavin liked:** a weekly coach check-in (one weekly read, one suggestion, accept or skip).

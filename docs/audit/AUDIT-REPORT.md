@@ -179,11 +179,11 @@ skyline, the emblem), with strict accessibility rules (16 px sentences, 44 px ta
 
 | Feature | State |
 |---|---|
-| **Week planner** (move tasks across your week around shifts) | Built by Codex in **PR #529**; open, conflicting with master, needs finishing and review. HARVEST-002 recommends finishing this first. |
-| **Edit a log from TODAY's timeline / food diary** (TIMELINE-EDIT-001) | Built by Claude on branch `ccr-88f5c085-timeline-edit`; **2 existing timeline tests failing**, not yet a PR. |
-| **Alfred and the free helper fixing logs** (ALFRED-FIX-001) | Approved and designed (move, correct, remove a log by name). Not built. Today Alfred can only *add*; the free helper can correct only the latest water, sleep or weight. |
+| **Week planner** (move tasks across your week around shifts) | **Shipped** (#529, merged 2026-11-15 after independent review). |
+| **Edit a log from TODAY's timeline / food diary** (TIMELINE-EDIT-001) | **Shipped** (#540, merged 2026-11-15). |
+| **Alfred and the free helper fixing logs** (ALFRED-FIX-001) | Built, **in independent review** (#541). |
 | **Capture processing** | Raw capture, Notes Sweep and the Saved inbox all exist, but turning a note into a task works differently on each path (HARVEST-002: "refine"). |
-| **Old PRs #482 and #473** | A check-in tap fix (Nov 11) and a "shift what-if" comparison (Nov 9), open and apparently stalled. Need a decision. |
+| **Old PRs #482 and #473** | Decided by Gavin 2026-11-15: #482 closed (superseded by LAUNCH-STEADY-001), #473 parked as draft for the coach check-in. |
 | **Recommendations from evidence** | The Engine still decides from the check-in only; evidence-driven rules (deload, stalls, sleep debt) are noted but not approved. |
 
 ### Features planned but not implemented
@@ -223,7 +223,7 @@ skyline, the emblem), with strict accessibility rules (16 px sentences, 44 px ta
 1. **A few enormous screen files.** `TodayScreen.tsx` is 3,500 lines, `BodyScreen.tsx` 2,700, `TrainScreen.tsx`
    2,000 and `App.tsx` 900. They hold dozens of features' state and wiring, so every change risks side effects and
    changes collide (seen repeatedly in merges).
-2. **Out-of-date front-page documents:**
+2. **Out-of-date front-page documents** (README and roadmap corrected with this report's PR; the Doctrine awaits Gavin's approval):
    - `README.md` still says "**AI optional** … no AI provider integration". Alfred (Anthropic) has been core since
      2026-10-31. It also says COMMAND replaced MORE, but the nav shows MORE.
    - `OPERATOR_INTERFACE_DOCTRINE.md`, the top written authority, still carries the 2026-10-09 "AI optional"
