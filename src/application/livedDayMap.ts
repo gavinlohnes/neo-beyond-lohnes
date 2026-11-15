@@ -13,13 +13,14 @@ import { getHydrationEntries, getLatestCheckIn, getWorkPeriodEnded, getWorkPerio
 export type MapMarkKind = "SLEEP" | "WORK" | "WORKOUT" | "MEAL" | "WATER" | "CHECK_IN" | "NAP_PLAN" | "SLEEP_PLAN";
 /** `planned`: slice 2's outlined blocks ahead of NOW, from ROUTE's shift sleep plan; never a record. */
 /** `ref` (TIMELINE-EDIT-001): the log a meal or water mark came from, so it can open its edit sheet. */
-export interface MapMark { kind: MapMarkKind; at: string; until?: string; label: string; planned?: true; ref?: { beyondDayId: string; rootEventId: string } }
+/** `shift` (SHIFT-CORRECT-001): a work mark, so its EDIT opens the shift sheet (change a time, reopen). */
+export interface MapMark { kind: MapMarkKind; at: string; until?: string; label: string; planned?: true; ref?: { beyondDayId: string; rootEventId: string }; shift?: { beyondDayId: string } }
 export interface MapInput {
   sleep: { start: string; end: string } | null;
   meals: { at: string; name: string; ref?: MapMark["ref"] }[];
   water: { at: string; oz: number; ref?: MapMark["ref"] }[];
   checkIn: string | null;
-  work: { start: string | null; end: string | null };
+  work: { start: string | null; end: string | null; dayId?: string; corrected?: boolean };
   workouts: { start: string; end: string | null }[];
 }
 /** `fresh`: recorded since the last look on this device (DAY-MAP-001, outlined). */
@@ -33,7 +34,12 @@ const hm = (ms: number) => `${Math.floor(ms / 3_600_000)}h ${String(Math.round((
 export function deriveMapMarks(input: MapInput, now: Date): MapMark[] {
   const marks: MapMark[] = [];
   if (input.sleep) marks.push({ kind: "SLEEP", at: input.sleep.start, until: input.sleep.end, label: `Sleep ${hhmm(input.sleep.start)}–${hhmm(input.sleep.end)} (Garmin, ${hm(Date.parse(input.sleep.end) - Date.parse(input.sleep.start))})` });
-  if (input.work.start) marks.push({ kind: "WORK", at: input.work.start, until: input.work.end ?? now.toISOString(), label: input.work.end ? `Worked ${hhmm(input.work.start)}–${hhmm(input.work.end)}` : `At work since ${hhmm(input.work.start)}` });
+  // SHIFT-CORRECT-001: the work marks as they stand after any explicit correction; an end with no recorded start is
+  // still shown, so it can be corrected or reopened from the timeline.
+  const shift = input.work.dayId ? { shift: { beyondDayId: input.work.dayId } } : {};
+  const corrected = input.work.corrected ? " (corrected)" : "";
+  if (input.work.start) marks.push({ kind: "WORK", at: input.work.start, until: input.work.end ?? now.toISOString(), label: input.work.end ? `Worked ${hhmm(input.work.start)}–${hhmm(input.work.end)}${corrected}` : `At work since ${hhmm(input.work.start)}${corrected}`, ...shift });
+  else if (input.work.end) marks.push({ kind: "WORK", at: input.work.end, label: `Work ended at ${hhmm(input.work.end)}${corrected}`, ...shift });
   for (const w of input.workouts) marks.push({ kind: "WORKOUT", at: w.start, until: w.end ?? now.toISOString(), label: w.end ? `Workout ${hhmm(w.start)}–${hhmm(w.end)}` : `Workout since ${hhmm(w.start)}` });
   for (const m of input.meals) marks.push({ kind: "MEAL", at: m.at, label: `${m.name} at ${hhmm(m.at)}`, ...(m.ref ? { ref: m.ref } : {}) });
   for (const w of input.water) marks.push({ kind: "WATER", at: w.at, label: `Water ${Math.round(w.oz)} oz at ${hhmm(w.at)}`, ...(w.ref ? { ref: w.ref } : {}) });
@@ -86,7 +92,7 @@ export async function getLivedDayMap(day: BeyondDay, now: Date = new Date()): Pr
     meals: diary.entries.map((e) => ({ at: e.at, name: e.name, ref: { beyondDayId: day.id, rootEventId: e.rootEventId } })),
     water: water.map((w) => ({ at: w.at, oz: w.effectiveAmountOz, ref: { beyondDayId: day.id, rootEventId: w.rootEventId } })).filter((w) => w.oz > 0),
     checkIn: checkIn?.recordedAt ?? null,
-    work: { start: started?.occurredAt ?? null, end: ended?.occurredAt ?? null },
+    work: { start: started?.occurredAt ?? null, end: ended?.occurredAt ?? null, dayId: day.id, corrected: !!(started?.retimed || ended?.retimed) },
     workouts: workouts.filter((w) => w.status !== "ABANDONED").map((w) => ({ start: w.startedAt, end: w.endedAt ?? null })),
   }, now);
 }

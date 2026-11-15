@@ -82,7 +82,7 @@ describe("ALFRED-001", () => {
     // ALFRED-TOOLS-001: the write tools come from the one registry, in its order; new ones are marked +.
     expect((body.tools as { name: string }[]).map((t) => t.name)).toEqual(["log_meal", "log_water", /* + */ "log_protein", "log_sleep", "log_weight",
       /* + */ "correct_log", /* + */ "remove_log", "add_reminder", "routine_new", "routine_edit", "project_new", "capture_note",
-      "check_in", "work_started", "work_ended", /* + */ "set_work_context", /* + */ "schedule_change", /* + */ "schedule_swap", /* + */ "handoff_note",
+      "check_in", "work_started", "work_ended", /* + */ "set_work_context", /* + */ "schedule_change", /* + */ "schedule_swap", /* + SHIFT-CORRECT-001 */ "shift_fix", /* + */ "handoff_note",
       "task_done", /* + */ "task_release", /* + */ "task_waiting", "task_new_date", "task_plan", /* + */ "habit_done", /* + */ "collection_add",
       // ALFRED-FIX-001: fix_entry (a confirmed move/correct/remove of a logged entry) and its day_entries read.
       "fix_entry", "clean_day", "open_training",

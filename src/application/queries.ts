@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { effectiveWorkMarks, type EffectiveWorkMark } from "../engine/workMarks";
 import { effectiveLogTimes } from "./logTimes";
 import type {
   BeyondDay,
@@ -830,7 +831,11 @@ export async function getLastShiftDownCompletedAt(beyondDayId: string): Promise<
 
 export interface WorkPeriodEndedInfo {
   eventId: string;
+  /** When it happened: SHIFT-CORRECT-001's latest explicit retime, else when it was marked. */
   occurredAt: string;
+  /** SHIFT-CORRECT-001: when it was first recorded as happening, and whether it was corrected since. */
+  originalAt?: string;
+  retimed?: boolean;
 }
 
 /**
@@ -906,17 +911,20 @@ export async function getWorkContextSource(beyondDayId: string): Promise<WorkCon
  */
 /** SHIFT-CHANGE-001: the day's one WORK_PERIOD_STARTED fact, if any. markWorkStarted is its only writer. */
 export async function getWorkPeriodStarted(beyondDayId: string): Promise<WorkPeriodEndedInfo | undefined> {
-  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const started = events.find((e) => e.type === "WORK_PERIOD_STARTED");
-  if (!started) return undefined;
-  return { eventId: started.id, occurredAt: started.occurredAt };
+  return (await getWorkMarks(beyondDayId)).started;
 }
 
+/** SHIFT-CORRECT-001: the effective mark, after any explicit retime or void (engine/workMarks.ts). */
 export async function getWorkPeriodEnded(beyondDayId: string): Promise<WorkPeriodEndedInfo | undefined> {
-  const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED");
-  if (!ended) return undefined;
-  return { eventId: ended.id, occurredAt: ended.occurredAt };
+  return (await getWorkMarks(beyondDayId)).ended;
+}
+
+/** SHIFT-CORRECT-001: both effective work marks of a lived day, read once. */
+export async function getWorkMarks(beyondDayId: string): Promise<{ started?: WorkPeriodEndedInfo; ended?: WorkPeriodEndedInfo }> {
+  const marks = effectiveWorkMarks(await db.events.where("beyondDayId").equals(beyondDayId).toArray());
+  const info = (m: EffectiveWorkMark | undefined): WorkPeriodEndedInfo | undefined => (m ? { eventId: m.eventId, occurredAt: m.occurredAt, originalAt: m.originalAt, retimed: m.retimed } : undefined);
+  const started = info(marks.started), ended = info(marks.ended);
+  return { ...(started ? { started } : {}), ...(ended ? { ended } : {}) };
 }
 
 /**
@@ -930,7 +938,8 @@ export async function getWorkPeriodEnded(beyondDayId: string): Promise<WorkPerio
  */
 export async function hasUnresolvedPostShift(beyondDayId: string): Promise<boolean> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const ended = events.find((e) => e.type === "WORK_PERIOD_ENDED");
+  // SHIFT-CORRECT-001: the effective end (a reopened shift has none; a retimed end counts from its corrected time).
+  const ended = effectiveWorkMarks(events).ended;
   if (!ended) return false;
   // Harvest Checkpoint 7 (CI-discovered, unrelated to this sprint's own
   // changes — application/queries.ts's own hasUnresolvedPostShift is
@@ -1036,11 +1045,14 @@ export async function getSleepDraftEvidence(
   const events = (await db.events.where("beyondDayId").equals(beyondDayId).toArray()).filter(
     (e) => e.occurredAt <= openedIso,
   );
-  let anchor: DomainEvent | undefined;
+  let anchor: { occurredAt: string; type: "SHIFT_DOWN_COMPLETED" | "WORK_PERIOD_ENDED" } | undefined;
   let lastOperatorActionAt: string | null = null;
+  // SHIFT-CORRECT-001: the work end counts at its effective (corrected) time, and not at all once reopened.
+  const ended = effectiveWorkMarks(events).ended;
+  if (ended && ended.occurredAt <= openedIso) anchor = { occurredAt: ended.occurredAt, type: "WORK_PERIOD_ENDED" };
   for (const e of events) {
-    if ((e.type === "SHIFT_DOWN_COMPLETED" || e.type === "WORK_PERIOD_ENDED") && (!anchor || e.occurredAt >= anchor.occurredAt)) {
-      anchor = e;
+    if (e.type === "SHIFT_DOWN_COMPLETED" && (!anchor || e.occurredAt >= anchor.occurredAt)) {
+      anchor = { occurredAt: e.occurredAt, type: "SHIFT_DOWN_COMPLETED" };
     }
     if (e.source === "USER" && (lastOperatorActionAt === null || e.occurredAt > lastOperatorActionAt)) {
       lastOperatorActionAt = e.occurredAt;

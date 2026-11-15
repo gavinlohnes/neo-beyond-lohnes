@@ -4,7 +4,7 @@ import { getProjects } from "../projectQueries";
 import { getRoutines } from "../routineCommands";
 import { getActiveWorkoutSession } from "../trainQueries";
 import { resolveTemplateExercises } from "../customTemplateQueries";
-import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries } from "../queries";
+import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries, getWorkMarks } from "../queries";
 import type { HelperContext } from "./freeHelper";
 import type { WorkoutTemplateId } from "../../domain/workout/types";
 import { getLogTemplates } from "../snippetQueries";
@@ -21,6 +21,8 @@ export async function readHelperContext(now = new Date()): Promise<HelperContext
   const day = await getActiveDay();
   const [water, sleep, weight] = day ? await Promise.all([getHydrationEntries(day.id), getSleepEntries(day.id), getBodyweightEntries(day.id)]) : [[], [], []];
   const w = water.at(-1), s = sleep.at(-1), b = weight.at(-1);
+  // SHIFT-CORRECT-001: today's effective work marks, for "still working till 0600" or "got off at 06:00".
+  const marks = day ? await getWorkMarks(day.id) : {};
   // ALFRED-FIX-001: the entries a plain "move / remove / was N kcal" can fix, newest last.
   const entries = await recentEntries().catch(() => []);
   const exercises = session ? await resolveTemplateExercises(session.templateId as WorkoutTemplateId, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : [];
@@ -37,6 +39,11 @@ export async function readHelperContext(now = new Date()): Promise<HelperContext
       ...(b ? { weight: { id: b.headEventId, value: b.effectiveWeightLbs } } : {}),
     },
     entries: entries.map((e) => ({ id: e.rootEventId, dayStartedAt: e.dayStartedAt, snapshot: snapshotOf(e) })),
+    workMarks: day ? {
+      dayId: day.id, dayStartedAt: day.startedAt, workDay: day.workContext === "WORK",
+      ...(marks.started ? { started: { eventId: marks.started.eventId, at: marks.started.occurredAt } } : {}),
+      ...(marks.ended ? { ended: { eventId: marks.ended.eventId, at: marks.ended.occurredAt } } : {}),
+    } : null,
     workout: session ? { sessionId: session.id, exercises: exercises.map((e) => ({ id: e.exerciseId, name: e.name })) } : null,
   };
 }

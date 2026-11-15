@@ -10,8 +10,10 @@ const hhmm = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: 
  * LOG-TIME-001: a log's time, and one tap to say when it really happened. Saves a LOG_RETIMED fact;
  * the log and its amount are untouched. Any time inside the same lived day.
  */
-export function LogTimeEditor({ dayId, dayStartedAt, rootEventId, at, label, onSaved }: {
+export function LogTimeEditor({ dayId, dayStartedAt, rootEventId, at, label, onSaved, retime }: {
   dayId: string; dayStartedAt: string; rootEventId: string; at: string; label: string; onSaved: () => void | Promise<void>;
+  /** SHIFT-CORRECT-001: what saving the new time writes, when it isn't a log's LOG_RETIMED (a shift mark's correction). */
+  retime?: ((at: string) => Promise<boolean>) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(hhmm(at));
@@ -26,7 +28,7 @@ export function LogTimeEditor({ dayId, dayStartedAt, rootEventId, at, label, onS
     const next = resolveWhen({ kind: "AT", hhmm: value }, dayStartedAt, new Date());
     if (!next || saving) return;
     setSaving(true); setError(null);
-    try { if (await retimeLog(dayId, rootEventId, next)) acknowledge("LIGHT"); setOpen(false); await onSaved(); }
+    try { if (await (retime ? retime(next) : retimeLog(dayId, rootEventId, next))) acknowledge("LIGHT"); setOpen(false); await onSaved(); }
     catch (e) { setError(describeError(e, "The time was not changed.")); }
     finally { setSaving(false); }
   };
