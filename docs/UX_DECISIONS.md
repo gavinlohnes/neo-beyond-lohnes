@@ -3390,3 +3390,8 @@ authority; BEYOND works fully without him. No behaviour changes: this aligns the
 
 Releases a (foundation + zero-effort input) → b (coach brain) → c (self-running week) → d (mission briefing), each with
 its own PRs, review where Protected, and Gavin's merge.
+
+
+## BEYOND 4.0-b slice 2 — one optional coach suggestion (owner-approved 2026-11-15)
+
+Under the primary Engine recommendation, never above it: today's lift advice, then a finished experiment awaiting verdict, a changed weekly calorie proposal, then DELTA's test offer. One card only; no candidate means no card. REVIEW opens its existing confirmation flow; no write or acceptance occurs on TODAY. SKIP is phone-local and evidence-bound. Hide while an active workout/reset/shift-down owns the operation. This approved secondary surface does not change Engine arbitration or reorder primary navigation.

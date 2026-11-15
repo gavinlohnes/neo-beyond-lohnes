@@ -1,3 +1,5 @@
+import { CoachCard } from "./CoachCard";
+import type { CoachDestination } from "../../../application/coachCards";
 import { describeShiftRun, shiftRun } from "../../../application/shiftRun";
 import "../more/wholeLife.css";
 import { DRIVE_HOME_EVENT } from "../../driveHomeEvent";
@@ -295,6 +297,7 @@ export function TodayScreen({
   onOpenHealthEvidence,
   onOpenRecord,
   onOpenWeeklyReview,
+  onOpenCoach,
   onOpenSystems,
   onOpenCave,
   operationsOnly = false,
@@ -317,6 +320,7 @@ export function TodayScreen({
   onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: TrainDestination) => void;
   onOpenWeeklyReview?: () => void;
+  onOpenCoach?: (destination: CoachDestination) => void;
   /** SUIT-001: the SYSTEMS line opens the readout in COMMAND. */
   onOpenSystems?: () => void;
   /** SUIT-ALIVE S3/S4: the route and comms lines open the cave on that view. Absent, neither line shows. */
@@ -2664,6 +2668,7 @@ export function TodayScreen({
           : <h2>{checkIn ? describeAllClearHeadline() : "Log when you want."}</h2>}
         {(activeWorkout || activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && recommendation && <details><summary>WHY</summary><p>{recommendation.rationale}</p><p className="meta">Recorded Engine guidance. Your call.</p></details>}
       {(activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && <ConfirmPanel />}
+      {day && recommendation && onOpenCoach && <CoachCard active={active && !busy && !activeWorkout && !activeResetId && !activeShiftDownId} refreshKey={refreshVersion} variant={suggestedVariant} onOpen={onOpenCoach} />}
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
       {checkInOwnedHere && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
@@ -3000,6 +3005,7 @@ export function TodayScreen({
         </section>
       )}
 
+      {day && recommendation && onOpenCoach && <CoachCard active={active && !busy && !activeWorkout && !activeResetId && !activeShiftDownId} refreshKey={refreshVersion} variant={suggestedVariant} onOpen={onOpenCoach} />}
       {/* An active workout resumes from right under the card, above the fold. */}
       {day && dominant === "WORKOUT_ACTIVE" && <div className="today-resume-line"><ActiveWorkoutCard activeWorkout={activeWorkout} isDominant={false} fromEarlierDay={!!activeWorkout && activeWorkout.beyondDayId !== day.id} onOpenTrain={onOpenTrain} /></div>}
       {day && <ShiftRecoveryBrief active={active} now={now} />}
