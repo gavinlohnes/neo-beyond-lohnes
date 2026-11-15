@@ -1,3 +1,4 @@
+import { RecoveryComparison } from "./RecoveryComparison";
 import { useEffect, useState } from "react";
 import { describeError } from "../../errorMessage";
 import { getWeeklySummary, type WeeklySummary } from "../../../application/weeklyQueries";
@@ -31,6 +32,7 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpen
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [readError, setReadError] = useState<string | null>(null);
   const [readKey, setReadKey] = useState(0);
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
   const [gridOpen, setGridOpen] = useState(false);
   const [mirrorOpen, setMirrorOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -169,6 +171,9 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpen
             {summary.training.records.length > MAX_RECORD_LINES && (
               <p className="meta" style={{ margin: 0 }}>and {summary.training.records.length - MAX_RECORD_LINES} more</p>
             )}
+            <FieldDisclosure summary={recoveryOpen ? "HIDE TRAINING AND RECOVERY" : "COMPARE TRAINING AND RECOVERY"} open={recoveryOpen} onToggle={setRecoveryOpen}>
+              {recoveryOpen && <RecoveryComparison now={now} />}
+            </FieldDisclosure>
           </Section>
 
           {summary.quit && (
