@@ -19,9 +19,8 @@ points to. Last refreshed 2026-11-15 at master `b4739464`.
 8. `docs/audit/AUDIT-REPORT.md`: this audit's full picture.
 
 **Authority order when sources disagree:** Gavin's direct decision → the Doctrine → locked decisions → the current
-brief → the code → older material. Surface genuine conflicts; don't quietly resolve them. One is known: the Doctrine
-still carries the 2026-10-09 "AI optional" note, while Alfred has been core since RULES-2026-10-31
-(`PRODUCT_DIRECTION.md`; the README now says so). The Doctrine amendment awaits Gavin's approval.
+brief → the code → older material. Surface genuine conflicts; don't quietly resolve them. (The Doctrine's old "AI optional" note was replaced on
+2026-11-15 to match RULES-2026-10-31: Alfred is core, confirm-only, and the Engine keeps recommendations.)
 
 ---
 

@@ -2,11 +2,30 @@
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-4a-foundation`. Routine. [Release brief](BEYOND-4.0-A.md) under
   [BEYOND-4.0](BEYOND-4.0.md). TodayScreen.tsx 3,517 → 3,452 lines; `TodayNumbers.tsx` holds AT A GLANCE.
-- **Open:** #543 (Doctrine line, ready), #544 (4.0 master brief).
+- **Merged:** #543 (Doctrine line), #544 (4.0 master brief).
 
 ---
 
 # Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
+# Current programme — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
+
+- **Authority:** [master brief](BEYOND-4.0.md). Builder for 4.0-a: Claude Code. Each release: own PRs; Protected parts
+  (Engine learning, TODAY redesign) get independent exact-head review; Gavin merges.
+- **Now:** 4.0-a step 1, the TODAY split (no visible change).
+- **Merged:** #543 (Doctrine line).
+
+---
+
+# Historical — documentation truth (merged as #542; completion plan step 5, Gavin: "Go", "Let's work")
+# Historical — DOCTRINE-ALFRED-001 (merged as #543): the Doctrine records Alfred is part of BEYOND (Gavin, 2026-11-15: "Approved the doctrine")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-doctrine-alfred`. **Protected** (constitutional text): independent
+  exact-head review; Gavin merges. Replaces the 2026-10-09 "AI optional" note with RULES-2026-10-31. Docs only.
+- **Completion plan:** steps 1–5 merged (#529, #540, #541, #542; #482 closed, #473 parked). Next: the field gate.
+
+---
+
+# Historical — documentation truth (merged as #542) (completion plan step 5, Gavin: "Go", "Let's work")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
   (`docs/audit/`), the README's stale "AI optional" and navigation text, and the roadmap's current-plan header.

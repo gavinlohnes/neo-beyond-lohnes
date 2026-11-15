@@ -223,7 +223,7 @@ skyline, the emblem), with strict accessibility rules (16 px sentences, 44 px ta
 1. **A few enormous screen files.** `TodayScreen.tsx` is 3,500 lines, `BodyScreen.tsx` 2,700, `TrainScreen.tsx`
    2,000 and `App.tsx` 900. They hold dozens of features' state and wiring, so every change risks side effects and
    changes collide (seen repeatedly in merges).
-2. **Out-of-date front-page documents** (README and roadmap corrected with this report's PR; the Doctrine awaits Gavin's approval):
+2. **Out-of-date front-page documents** (all corrected 2026-11-15: README and roadmap in #542, the Doctrine by owner approval):
    - `README.md` still says "**AI optional** … no AI provider integration". Alfred (Anthropic) has been core since
      2026-10-31. It also says COMMAND replaced MORE, but the nav shows MORE.
    - `OPERATOR_INTERFACE_DOCTRINE.md`, the top written authority, still carries the 2026-10-09 "AI optional"
