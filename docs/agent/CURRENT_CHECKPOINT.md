@@ -1,4 +1,14 @@
-# Current objective — ALFRED-FIX-001: Alfred and the free helper fix a logged entry (Gavin, 2026-11-15: "Approved.", "Go")
+# Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
+  (`docs/audit/`), the README's stale "AI optional" and navigation text, and the roadmap's current-plan header.
+- **Awaits Gavin:** the Doctrine's 2026-10-09 "AI optional" note (Protected, constitutional) — proposed wording in the PR.
+- **Plan status:** #529, #540 merged; #482 closed, #473 parked; ALFRED-FIX-001 merged as #541; then the field gate.
+
+---
+
+# Historical — TIMELINE-EDIT-001 (merged as #540): fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+# Historical — ALFRED-FIX-001 (merged as #541): Alfred and the free helper fix a logged entry (Gavin, 2026-11-15: "Approved.", "Go")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-alfred-fix`, from master `d51017f8`. **Protected:** independent
   exact-head review, green CI, Gavin merges. [Brief](ALFRED-FIX-001.md).

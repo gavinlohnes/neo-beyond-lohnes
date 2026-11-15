@@ -7,14 +7,22 @@ Engine turns that history into one recommendation at a time — never a
 black box, every recommendation carries a full WHY trace.
 
 All data lives on-device in IndexedDB. There is no backend and no
-account system; getting data off the device is an explicit, user-
-initiated backup export.
+account system; backups are an explicit export, plus optional encrypted
+automatic backup to the owner's Google Drive.
 
-**Smart by design. AI optional.** Current production has no Delta assistant, embedded language
-model, AI provider integration or AI-specific dependency. Recommendations, advisory notes,
-personal baselines and date suggestions use local rules and existing records. Optional USDA
-food lookup is a non-AI service; manual meal entry remains available offline. See
-[Product Direction](docs/PRODUCT_DIRECTION.md) for the current intelligence strategy.
+**Alfred is part of BEYOND** (owner ruling RULES-2026-10-31, replacing the earlier "AI optional"
+note). Alfred is Claude, through the Anthropic API with the owner's own key: he answers from
+BEYOND's records and *proposes* changes as cards the owner confirms; he never writes on his own,
+and recommendations stay with the deterministic Engine. A free, no-AI helper handles plain
+requests. Online services in use: Anthropic, USDA and Open Food Facts lookups, Google Calendar
+(read-only), Google Drive backup, IFTTT; Garmin data arrives through the BEYOND Health Bridge
+Android app (`android/health-bridge`). Logging and the core day work offline. See
+[Product Direction](docs/PRODUCT_DIRECTION.md).
+
+**Where to start (2026-11-15):** [`AGENTS.md`](AGENTS.md), the live
+[checkpoint](docs/agent/CURRENT_CHECKPOINT.md), and the plain-language
+[audit](docs/audit/AUDIT-REPORT.md) and [AI handoff](docs/audit/AI-HANDOFF.md). Parts of the
+screen descriptions below are historical; the code and the decision register are current.
 
 ## Run it
 
@@ -111,14 +119,16 @@ not treated as the preferred pattern for new code:
   `CommandSurface`, `RootErrorBoundary`) reused across TODAY/TRAIN/BODY
   instead of each screen hand-repeating the same confirm/disclosure/
   collapse pattern.
-- **`src/ui/screens`** — TODAY, TRAIN, BODY, COMMAND (primary navigation; COMMAND replaced MORE in COMMAND-CENTER-001)
+- **`src/ui/screens`** — TODAY, TRAIN, BODY, COMMAND (the code's tab names; the operator sees **TODAY · TRAIN · LOG · DATA · MORE**, with LOG the centre button, DATA = `BODY` and MORE = `COMMAND`)
   plus HISTORY, REVIEW, SEARCH, Missions & Obligations, Work Schedule,
   Decision Journal, Exercise Library, and Custom Programs, all nested
   under COMMAND (see below).
 
 ## Screens
 
-Primary navigation is **TODAY / TRAIN / BODY / COMMAND**, per the Decision
+Primary navigation, as the operator sees it today: **TODAY · TRAIN · LOG · DATA · MORE** (in code
+`BODY` is DATA and `COMMAND` is MORE; LOG opens one logging sheet). Historical note: it was
+**TODAY / TRAIN / BODY / COMMAND**, per the Decision
 Register (Product Experience Sprint, P1 — an earlier build had briefly
 added HISTORY as a fifth primary tab; that was a placement error, now
 corrected. HISTORY itself, its queries, and its tests are unchanged).

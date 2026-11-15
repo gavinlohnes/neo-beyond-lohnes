@@ -7,13 +7,14 @@ resume authorized work when ownership permits, or recommend one next objective f
 New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
-## Current approved build — HABIT-RHYTHM-001 (2026-11-14)
+## Current plan — ship existing work before anything new (Gavin, 2026-11-15: "Go")
 
-Gavin approved explicit Done / Didn't do it / Not recorded, a seven-day overview, 28-day history
-and corrections to existing past-day records. [Bounded brief](agent/HABIT-RHYTHM-001.md). Quit
-tracker, reminders and health correlations stay out. METRIC-PAGE-001 merged as #519; this is the
-next single objective, not a standing approval for the harvest's other recommendations. Live
-verification/review and PR status are maintained in CURRENT_CHECKPOINT and GitHub.
+From the [audit](audit/AUDIT-REPORT.md): 1 week planner (#529, merged) → 2 timeline editing (#540, merged) →
+3 #482 closed, #473 parked (Gavin) → 4 ALFRED-FIX-001 (#541, merged) → 5 documentation truth (this
+README/roadmap/audit update; the Doctrine's "AI optional" note awaits Gavin's approval) → 6 the field gate on the
+phone. New objectives start only after these. Live status: CURRENT_CHECKPOINT and GitHub.
+
+Earlier: HABIT-RHYTHM-001 (2026-11-14) merged as #520.
 
 ## Earlier field priority — complete the 3.0 field gate
 
@@ -429,6 +430,6 @@ is the sole procedural authority; this roadmap records priorities and feature hi
 
 ## Later list (not part of 1.0)
 
-- Google Fit / Health Connect sync.
-- Progress photos.
+- ~~Google Fit / Health Connect sync.~~ Done: BEYOND Health Bridge (GARMIN-001…005).
+- ~~Progress photos.~~ Done: BODY-PROGRESS-001.
 - Pre-built meal plans.
