@@ -72,3 +72,24 @@ burned; reminders or notifications; any schema, backup, dependency or provider c
 - A browser test: the section's numbers and wording, SAVE writes exactly the proposed target and UNDO restores it,
   KEEP writes nothing, abstention copy, no forbidden words, 320–1024 px fit, axe.
 - Full Node and browser suites, typecheck, architecture check and build.
+
+## TARGET-PROPOSAL-002 — the review notes, and your own floor (Gavin, 2026-11-15)
+
+- **Authorization:** on #531's three non-blocking review notes: "1. The floor can be adjustable. I want Beyond to be
+  smart and act like a coach or nutritionist or weight management professional. 2. Approved 3. Do whatever you think
+  makes the most sense. I trust you." Branch `ccr-88f5c085-target-floor`, built on #531. Protected (an additive stored
+  field), so independent exact-head review; Gavin merges.
+- **Your floor:** TARGETS gains "Lowest calorie target BEYOND may propose (kcal/day)", stored as the optional
+  `calorieFloorKcal` (1,000–4,000) on the existing targets row. It is additive like `goalWeightLbs`: no Dexie version,
+  older rows and backups stay valid and read as the 1,500 default; blank clears it. It only bounds the proposal; you
+  can still type any target.
+- **Note 1 (floor):** the proposal never goes below the floor. With a current target under it, it never says "fits"
+  and the weekly step starts from the floor ("Your target is under your floor of 1,500, so this starts from the
+  floor.").
+- **Note 2 (old weigh-in):** the current weight is this week's average, else the latest weigh-in from the last 14 days,
+  else none (no proposal). The proposal says which: "Current weight 197.4 lb, this week's average." or "…, your
+  weigh-in on Nov 3."
+- **Note 3 (capped rate):** under a cap, "about X lb a week" is the capped change, and the note gives your rate's
+  uncapped one: "Your rate would be about 3.0 lb a week; BEYOND caps it at 1,000 kcal a day under your burn."
+- **Product direction recorded:** BEYOND should be smart and act like a coach, nutritionist or weight-management
+  professional. This guides future proposals; each new capability still comes to Gavin for approval.

@@ -4,6 +4,7 @@ import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { WeeklyCheckInScreen } from "../../src/ui/screens/weekly/WeeklyCheckInScreen";
+import { NutritionTargetsSettings } from "../../src/ui/screens/more/NutritionTargetsSettings";
 import { endDay, logBodyweight, startDay } from "../../src/application/commands";
 import { createSavedMeal, logMeal } from "../../src/application/nutritionCommands";
 import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
@@ -118,6 +119,43 @@ describe("TARGET-PROPOSAL-001", () => {
     render(<WeeklyCheckInScreen />);
     await expect.element(section().getByText(/^Set how fast you want your weight to change/)).toBeVisible();
     expect(section().getByRole("button").elements()).toHaveLength(0);
+  });
+
+  it("TARGET-PROPOSAL-002: says where the current weight came from, and won't use a weigh-in over 14 days old", async () => {
+    await seedMonth();
+    await updateNutritionTargets({ calorieTargetKcal: 2300, goalWeightLbs: 180, weightChangeTargetPercentPerWeek: 0.5 });
+    render(<WeeklyCheckInScreen />);
+    await expect.poll(() => document.querySelector("[data-calorie-proposal]")?.getAttribute("data-calorie-proposal")).toBe("proposal");
+    expect(text()).toMatch(/Current weight \d+\.\d lb, this week's average\./);
+    await cleanup();
+    // Three weeks later with no new weigh-in: no current weight, so no proposal.
+    vi.setSystemTime(now + 21 * DAY);
+    render(<WeeklyCheckInScreen />);
+    await expect.poll(() => document.querySelector("[data-calorie-proposal]")?.getAttribute("data-calorie-proposal")).toBe("waiting");
+    expect(text()).not.toMatch(/About [\d,]+ kcal a day/);
+  });
+
+  it("TARGET-PROPOSAL-002: the floor is set in TARGETS, holds the proposal up, and blank goes back to 1,500", async () => {
+    await seedMonth();
+    // A steep rate that would aim far lower than 2,200.
+    await updateNutritionTargets({ calorieTargetKcal: 2250, goalWeightLbs: 150, weightChangeTargetPercentPerWeek: 2 });
+    const screen = await render(<NutritionTargetsSettings />);
+    await screen.getByRole("button", { name: "Open TARGETS", exact: true }).click();
+    const floor = screen.getByRole("spinbutton", { name: "Lowest calorie target BEYOND may propose (kcal/day)", exact: true });
+    await expect.element(floor).toHaveValue(null);
+    await floor.fill("2200");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.poll(async () => (await db.nutritionTargets.get("current"))?.calorieFloorKcal).toBe(2200);
+    await cleanup();
+    render(<WeeklyCheckInScreen />);
+    await expect.element(section().getByText("About 2,200 kcal a day", { exact: true })).toBeVisible();
+    expect(text()).toContain("Your floor is 2,200 kcal a day (set in TARGETS), so it goes no lower.");
+    await cleanup();
+    const again = await render(<NutritionTargetsSettings />);
+    await again.getByRole("button", { name: "Open TARGETS", exact: true }).click();
+    await again.getByRole("spinbutton", { name: "Lowest calorie target BEYOND may propose (kcal/day)", exact: true }).clear();
+    await again.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.poll(async () => (await db.nutritionTargets.get("current"))?.calorieFloorKcal).toBeUndefined();
   });
 });
 
