@@ -10,7 +10,7 @@
 
 ## What Gavin sees
 
-**WHERE IT CAME FROM · LAST 30 DAYS**, with the top five sources, then "…and N other meals":
+**WHERE IT CAME FROM · 30 DAYS**, with the top five sources, then "…and N other meals":
 
 > Rice bowl · 6,500 kcal · 77% · 10 times
 > 8,400 kcal logged on 10 of the last 29 finished days; days with nothing logged are left out.

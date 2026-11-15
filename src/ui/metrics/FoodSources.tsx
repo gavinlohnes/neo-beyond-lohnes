@@ -26,7 +26,7 @@ export function FoodSources({ nutrient, windowDays, refreshKey = 0, onOpenDay }:
     return () => { live = false; };
   }, [nutrient, windowDays, refreshKey, attempt]);
   const unit = nutrient === "calories" ? "kcal" : "g";
-  const label = `WHERE IT CAME FROM · LAST ${windowDays} DAYS`;
+  const label = `WHERE IT CAME FROM · ${windowDays} DAYS`;
 
   return <section className="bf md-sources" aria-label={`Where your ${nutrient === "calories" ? "calories" : "protein"} came from, last ${windowDays} days`} data-food-sources={nutrient}>
     <p className="md-split__label">{label}</p>

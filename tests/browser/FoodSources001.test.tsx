@@ -46,7 +46,7 @@ describe("FOOD-SOURCES-001", () => {
     await screen.getByRole("button", { name: /open calories$/ }).click();
     const sheet = page.getByRole("dialog", { name: "CALORIES", exact: true });
     await sheet.getByRole("button", { name: "Last 7 lived days", exact: true }).click();
-    await expect.poll(text).toContain("WHERE IT CAME FROM · LAST 7 DAYS");
+    await expect.poll(text).toContain("WHERE IT CAME FROM · 7 DAYS");
     // The last 7 × 24 hours hold six finished lived days (23–28) and today, which isn't counted:
     // 6 bowls, 3 shakes (24, 26, 28), toast on 25 and 27.
     await expect.poll(() => [...box()!.querySelectorAll(".md-source-row summary")].map((s) => s.textContent)).toEqual([
@@ -54,7 +54,7 @@ describe("FOOD-SOURCES-001", () => {
     ]);
     expect(text()).toContain("5,200 kcal logged on 6 of the last 6 finished days");
     await sheet.getByRole("button", { name: "Last 30 lived days", exact: true }).click();
-    await expect.poll(text).toContain("WHERE IT CAME FROM · LAST 30 DAYS");
+    await expect.poll(text).toContain("WHERE IT CAME FROM · 30 DAYS");
     await expect.poll(text).toContain("logged on 10 of the last 29 finished days; days with nothing logged are left out.");
     // A row opens the days it was logged on, newest first.
     await sheet.getByText("Toast", { exact: true }).click();
