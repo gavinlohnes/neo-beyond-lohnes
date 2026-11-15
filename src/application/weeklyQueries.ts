@@ -13,6 +13,7 @@ import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
 import { projectFindings, type FindingsResult } from "../engine/findings";
 import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
+import { proposeCalorieTarget, type CalorieProposal } from "./targetProposal";
 import { projectPersonalBaselines, type PersonalBaseline } from "../engine/personalBaselines";
 import { getCustomTemplates } from "./customTemplateQueries";
 import { burnedByPeriod, recentPeriods } from "../domain/health/measuredSeries";
@@ -75,6 +76,11 @@ export interface WeeklySummary {
    * beside the weight-trend estimate so the two can be compared. Null without Garmin calories.
    */
   garminBurned: { averageKcal: number; days: number } | null;
+  /**
+   * TARGET-PROPOSAL-001: the calorie target BEYOND offers this week from the estimate above and your goal weight and
+   * weekly rate, or what it's waiting for. Saving it is the operator's own edit; nothing here writes.
+   */
+  calorieProposal: CalorieProposal;
   /**
    * YOUR USUAL (FOUNDATION-A-F1, 2026-10-04): the last 7 finished lived days
    * against Gavin's own usual range for main sleep, water and protein, per
@@ -189,6 +195,7 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     if (f.kind === "STALL" || f.kind === "EXERCISE_STORY") exerciseNames[f.exerciseId] = names.get(f.exerciseId) ?? f.exerciseId;
   }
 
+  const expenditure = projectExpenditure(daySummaries, history, now);
   return {
     weight: {
       ...(avgLbs !== undefined ? { avgLbs } : {}),
@@ -211,8 +218,10 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
       ...(targetGrams !== undefined ? { proteinTargetG: targetGrams } : {}),
     },
     findings: { ...findings, exerciseNames },
-    expenditure: projectExpenditure(daySummaries, history, now),
+    expenditure,
     garminBurned: await getGarminBurned(end),
+    // Current weight: this week's average weigh-in, else the latest one on record.
+    calorieProposal: proposeCalorieTarget(expenditure, targets, avgLbs ?? history.filter((w) => Date.parse(w.recordedAt) <= end).at(-1)?.weightLbs),
     baselines: projectPersonalBaselines(daySummaries, now),
   };
 }

@@ -1,4 +1,18 @@
-# Current objective — GYM-UPGRADE-001 (Gavin: “Approved”)
+# Current objective — TARGET-PROPOSAL-001: a weekly calorie proposal you save or keep (Gavin, 2026-11-14: "Approved")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-target-proposal`, from master `77c8ab61`. **Protected:** amends
+  NUTRITION-003's "no formula" and Drop 6's "nothing reads the estimate". Needs independent exact-head review and green
+  CI; Gavin alone merges. [Brief](TARGET-PROPOSAL-001.md).
+- **Scope:** Weekly's CALORIES FOR THIS WEEK proposes a calorie target from the weight-trend burn estimate and the
+  goal weight and weekly rate (capped, floored at 1,500, at most 150 kcal a week of change). SAVE (with UNDO) or KEEP.
+  No Garmin input, no Engine input, no schema or dependency.
+- **Also open:** #530 (METRIC-PAGE-001 slice 4, calories page), ready to merge. Codex's #529 (WEEK-PLANNER-002) touches
+  `WeeklyCheckInScreen.tsx` elsewhere in the file; expect at most a small merge.
+- **Next:** independent review at the PR's head, then Gavin merges.
+
+---
+
+# Historical — GYM-UPGRADE-001 (Gavin: “Approved”; merged as #528)
 
 - **Builder:** Codex; branch `codex/gym-upgrade-001`, fresh fetched master `0ffc2a3f3b2f76ec24493bfb8fc0b0bf47ab6a12`. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/528). No overlapping active training work found.
 - **Authorization:** [bounded brief](GYM-UPGRADE-001.md). Normal/Gym live workout, optional reps left, explicit warm-ups excluded from working statistics, honest previous-session finish. CSV deferred. No effort-driven recommendations.
