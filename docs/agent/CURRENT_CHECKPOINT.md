@@ -1,4 +1,21 @@
-# Current objective — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
+# Current objective — SLEEP-DEBT-LEARNED-001 (sleep owed against your own learned sleep)
+
+- Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
+  baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
+  Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
+  fetched master `4d74ac26`.
+- BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
+  (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
+- Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);
+  no figure while still learning (no 7 h fallback); MONTH, the energy forecast, the recovery-sleep offer (threshold
+  unchanged at 1 h) and Alfred's context follow it. The Engine never reads it; `src/engine/**` untouched. The month
+  grid's short-night underline stays on the 7 h guideline (labelled).
+- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; Gavin merges. Lane and
+  evidence on the PR. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
+
+---
+
+# Historical — BRIDGE-NOTIFY-001 (notification contract; merged as #554)
 
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /
   plan-to-confirm where they fit existing kinds, the plan through the background sync; no new kinds, no Engine change.

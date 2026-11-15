@@ -1,5 +1,6 @@
 import { getDaySummaries } from "./dayLedgerQueries";
 import { formatLocalDate } from "../engine/scheduledContext";
+import { deriveSleepDebt, type SleepDebt } from "./sleepDebt";
 
 /**
  * MONTH-001 (owner go 2026-10-31, ideas 9 and 10): a month on one page and the sleep owed. Read only,
@@ -16,7 +17,7 @@ export interface MonthDay {
   clean: boolean;
 }
 
-/** The adult sleep guideline (AASM / Sleep Research Society consensus: 7 hours or more). */
+/** The adult sleep guideline (AASM / Sleep Research Society consensus: 7 hours or more). Marks short nights on the month grid; sleep owed uses your learned sleep (./sleepDebt). */
 export const SLEEP_NEED_MINUTES = 7 * 60;
 
 export async function getMonth(year: number, month: number): Promise<MonthDay[]> {
@@ -32,11 +33,11 @@ export async function getMonth(year: number, month: number): Promise<MonthDay[]>
   return days;
 }
 
-/** Sleep owed over the last 7 lived days with sleep logged, against 7 hours a day. */
-export async function getSleepDebt(now = new Date()): Promise<{ owedMinutes: number; days: number }> {
-  const summaries = (await getDaySummaries())
-    .filter((s) => new Date(s.livedDayStart).getTime() <= now.getTime() && (s.sleep.primaryMinutes !== undefined || s.sleep.napMinutes))
-    .sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).slice(0, 7);
-  const owed = summaries.reduce((sum, s) => sum + Math.max(0, SLEEP_NEED_MINUTES - (s.sleep.primaryMinutes ?? 0) - (s.sleep.napMinutes ?? 0)), 0);
-  return { owedMinutes: owed, days: summaries.length };
+/**
+ * Sleep owed over the last 7 lived days with sleep logged, against your own learned usual main sleep for each kind
+ * of day (SLEEP-DEBT-LEARNED-001; see ./sleepDebt). No longer a fixed 7 hours: SLEEP_NEED_MINUTES above now only
+ * marks the month grid's short nights against the adult guideline.
+ */
+export async function getSleepDebt(now = new Date()): Promise<SleepDebt> {
+  return deriveSleepDebt(await getDaySummaries(), now);
 }
