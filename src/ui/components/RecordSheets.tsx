@@ -12,6 +12,7 @@ import { getActiveDay, getHydrationEntries } from "../../application/queries";
 import { getSavedMeals, getLikelySavedMeals } from "../../application/nutritionQueries";
 import { logMeal, logManualMeal, updateSavedMeal, archiveSavedMeal, voidMealLog, createSavedMeal, MAX_SERVINGS } from "../../application/nutritionCommands";
 import { getFoodDiary, type FoodDiary } from "../../application/foodDiaryQueries";
+import { LogEntrySheet, type LogEntryTarget } from "./LogEntrySheet";
 import { searchFoods, type FoodSearchResult } from "../../application/foodLookupQueries";
 import { lookupBarcode } from "../../application/barcodeLookup";
 import { BarcodeScanner } from "./BarcodeScanner";
@@ -70,6 +71,9 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   const [page, setPage] = useState<"list" | "new" | "quick" | "portion" | "edit" | "waterDetails" | "mealTools" | "food" | "scan">("list");
   // FOOD-001: the day's diary, the online search's results, and the food chosen from them.
   const [diary, setDiary] = useState<FoodDiary | null>(null);
+  // TIMELINE-EDIT-001: the day the diary belongs to, and the entry open for a fix.
+  const [diaryDayId, setDiaryDayId] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<LogEntryTarget | null>(null);
   const [online, setOnline] = useState<{ query: string; state: "searching" | "done"; results: FoodSearchResult[] } | null>(null);
   const [food, setFood] = useState<FoundFood | null>(null); const [amount, setAmount] = useState("1");
   const [scanNote, setScanNote] = useState<string | null>(null);
@@ -102,8 +106,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   useEffect(() => {
     if (!target) return;
     let current = true; setReadState("loading");
-    Promise.all([getSavedMeals(), getLikelySavedMeals(), getActiveDay().then(async (day) => day ? { water: (await getHydrationEntries(day.id)).at(-1)?.effectiveAmountOz ?? null, diary: await getFoodDiary(day.id) } : { water: null, diary: null })])
-      .then(([all, ranked, { water, diary: today }]) => { if (current) { setMeals(all); setLikely(ranked); setLastWater(water); setDiary(today); setReadState("ready"); } })
+    Promise.all([getSavedMeals(), getLikelySavedMeals(), getActiveDay().then(async (day) => day ? { water: (await getHydrationEntries(day.id)).at(-1)?.effectiveAmountOz ?? null, diary: await getFoodDiary(day.id), dayId: day.id } : { water: null, diary: null, dayId: null })])
+      .then(([all, ranked, { water, diary: today, dayId }]) => { if (current) { setMeals(all); setLikely(ranked); setLastWater(water); setDiary(today); setDiaryDayId(dayId); setReadState("ready"); } })
       .catch(() => { if (current) setReadState("error"); });
     return () => { current = false; };
   }, [target, retry]);
@@ -179,7 +183,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         <button type="button" className="btn-secondary" onClick={() => onHistory("water")}>WATER HISTORY</button>
       </>}
       {(target === "meal" || target === "myMeals") && <>
-        {target === "meal" && page === "list" && diary && <FoodDiaryHeader diary={diary} />}
+        {target === "meal" && page === "list" && diary && <FoodDiaryHeader diary={diary} onEdit={diaryDayId ? (rootEventId) => setEditTarget({ beyondDayId: diaryDayId, rootEventId }) : undefined} />}
+        <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={async () => { if (diaryDayId) setDiary(await getFoodDiary(diaryDayId)); }} />
         {(page === "list" || page === "new" || page === "quick" || page === "portion" || page === "food") && <WhenRow when={when} onChange={setWhen} disabled={busy} />}
         {page !== "list" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPage("list")}>BACK TO MY MEALS</button>}
         {page === "list" && <>
@@ -295,7 +300,7 @@ function WhenRow({ when, onChange, disabled }: { when: WhenChoice; onChange: (w:
  * FOOD-001: the top of MEAL — MyFitnessPal's "Goal − Food = Remaining" with protein as the headline
  * (owner ruling), and the day's food in the order it was eaten.
  */
-function FoodDiaryHeader({ diary }: { diary: FoodDiary }) {
+function FoodDiaryHeader({ diary, onEdit }: { diary: FoodDiary; onEdit?: ((rootEventId: string) => void) | undefined }) {
   const protein = Math.round(diary.proteinG), target = diary.proteinTargetG;
   const left = target === undefined ? null : Math.max(0, Math.round(target - protein));
   return <section className="food-diary" aria-label="Today's food">
@@ -303,7 +308,11 @@ function FoodDiaryHeader({ diary }: { diary: FoodDiary }) {
     <p className="meta">{target !== undefined ? `${protein} of ${Math.round(target)} g protein · ` : ""}{Math.round(diary.calories).toLocaleString("en-US")} kcal eaten</p>
     {diary.entries.length > 0 && <details className="food-diary__list">
       <summary>TODAY'S FOOD ({diary.entries.length})</summary>
-      <ol>{diary.entries.map((e, i) => <li key={`${e.at}-${i}`}><span className="food-diary__time">{clockOf(e.at)}</span> {e.name} · {round1(e.proteinG)} g{e.calories !== null ? ` · ${Math.round(e.calories)} kcal` : ""}</li>)}</ol>
+      {/* TIMELINE-EDIT-001: a row opens its fixes (change time, amount, remove). */}
+      <ol>{diary.entries.map((e, i) => {
+        const text = <><span className="food-diary__time">{clockOf(e.at)}</span> {e.name} · {round1(e.proteinG)} g{e.calories !== null ? ` · ${Math.round(e.calories)} kcal` : ""}</>;
+        return <li key={`${e.at}-${i}`}>{onEdit ? <button type="button" className="food-diary__row" aria-label={`Edit ${e.name} at ${clockOf(e.at)}`} onClick={() => onEdit(e.rootEventId)}>{text}<span className="food-diary__edit" aria-hidden="true">EDIT ›</span></button> : text}</li>;
+      })}</ol>
     </details>}
   </section>;
 }

@@ -1,3 +1,13 @@
+# Current objective — TIMELINE-EDIT-001: fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-timeline-edit`, from master after #535. Feature; Gavin merges.
+  [Brief](TIMELINE-EDIT-001.md).
+- **Also open:** #536 (LAUNCH-STEADY-001, no flash on launch).
+- **Next:** ALFRED-FIX-001 (Protected): Alfred and the free helper propose a move, correction or removal through
+  `application/logEntries.ts`, confirmed by Gavin.
+
+---
+
 # Current objective — FOOD-SOURCES-001: where your calories and protein came from (Gavin, 2026-11-15)
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, now on master (after #530). Feature lane; Gavin merges.

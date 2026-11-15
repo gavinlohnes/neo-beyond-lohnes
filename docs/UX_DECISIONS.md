@@ -3329,3 +3329,12 @@ estimate".
 - **Rules:** corrected values, undone meals left out; a saved meal is one source even if renamed, a typed meal groups
   by name; finished lived days only; missing days left out and counted, never zero; read only.
 - **Never:** judgement of foods, suggestions to cut or avoid, Engine or recommendation input.
+
+## TIMELINE-EDIT-001 — fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+
+[Brief](agent/TIMELINE-EDIT-001.md).
+
+- TODAY's timeline list (EDIT › on meal and water items) and the food diary's rows open one sheet for the entry:
+  CHANGE TIME, EDIT AMOUNT, REMOVE (confirmed).
+- Every fix is the existing append-only correction, retime or removal; HISTORY keeps the original. Times stay inside
+  their lived day. No Engine, schema, command or event change.

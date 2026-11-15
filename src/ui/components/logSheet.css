@@ -52,3 +52,16 @@
 .food-diary__list li { color: var(--text-2); padding: 4px 0; border-top: 1px solid var(--border-subtle); overflow-wrap: anywhere; }
 .food-diary__time { color: var(--text-1); font-variant-numeric: tabular-nums; }
 .barcode-scanner__video { width: 100%; max-height: 50vh; background: var(--black); object-fit: cover; margin-bottom: 8px; }
+/* TIMELINE-EDIT-001: one entry's sheet. Sentences 16 px; 44 px targets. */
+.log-entry { display: grid; gap: 12px; }
+.log-entry p { margin: 0; }
+.log-entry__amount { font-size: 18px; font-variant-numeric: tabular-nums; }
+.log-entry__amounts { display: grid; gap: 10px; }
+.log-entry__amounts label { display: grid; gap: 4px; font-size: 16px; }
+.log-entry__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.log-sheet .log-entry .btn-secondary, .log-entry .log-entry__actions .btn-secondary { width: auto; min-height: 44px; margin: 0; padding-inline: 14px; font-size: 16px; }
+.log-entry .meta { font-size: 16px; }
+/* TIMELINE-EDIT-001: a diary row is a button that opens its fixes. */
+.food-diary__row { display: flex; width: 100%; min-height: 44px; align-items: center; gap: 6px; padding: 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.food-diary__edit { margin-left: auto; padding-left: 8px; font-size: 12px; letter-spacing: .08em; color: var(--text-1); white-space: nowrap; }
+.log-entry .log-time__change { font-size: 16px; min-height: 44px; }

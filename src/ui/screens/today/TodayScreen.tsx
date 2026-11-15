@@ -114,6 +114,7 @@ import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
 import { SmallSteps } from "./SmallSteps";
 import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
+import { LogEntrySheet, type LogEntryTarget } from "../../components/LogEntrySheet";
 import type { DetailMetric } from "../../../application/metricDetail";
 import "./smallSteps.css";
 import "../../foundation/foundation.css";
@@ -345,6 +346,8 @@ export function TodayScreen({
   mealRefreshKey?: number;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
+  // TIMELINE-EDIT-001: the logged meal or water entry open for a fix (time, amount, remove).
+  const [editTarget, setEditTarget] = useState<LogEntryTarget | null>(null);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
@@ -2738,6 +2741,7 @@ export function TodayScreen({
             // DAY-MAP-001: like the band, the map steps aside while an operation owns the screen, so RESUME stays above the fold.
             marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart).map((m) => (!m.planned && freshMarks.has(markKey(m)) ? { ...m, fresh: true as const } : m)) : undefined}
             onOpenSleepPlan={onOpenCave ? () => { if (!busyRef.current) onOpenCave("route"); } : undefined}
+            onEditMark={(ref) => { if (!busyRef.current) setEditTarget(ref); }}
             markActions={{
               ...(onOpenHealthEvidence ? {
                 WATER: { label: "WATER", open: () => { if (!busyRef.current) onOpenHealthEvidence("water"); } },
@@ -2835,6 +2839,7 @@ export function TodayScreen({
     <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
     <SleepMetricSheet open={measuredOpen === "sleep"} onClose={() => setMeasuredOpen(null)}
       onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
+    <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={() => refresh()} />
     <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={refreshVersion}
       onRecords={detailOpen === "water" && onOpenHealthEvidence ? () => onOpenHealthEvidence("water") : undefined}
       onLog={detailOpen === "water" && onOpenRecord ? () => onOpenRecord("water") : undefined} />
