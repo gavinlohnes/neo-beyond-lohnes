@@ -37,6 +37,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## CAPTURE
 
+- **Speed/reachability (SPEED-UNDER-FATIGUE-001):** TODAY’s quiet NOTE shortcut opens the existing shell-owned `RecordSheets` Note form via `onOpenRecord("note")`; permanent LOG remains central and unchanged. No parallel composer, interpretation or save path. Workout handoff focuses/positions the current exercise; normal/Gym LOG precedes optional metadata, with canonical defaults and handlers unchanged. [Brief](SPEED-UNDER-FATIGUE-001.md). These are speed improvements, not the deferred full capture system.
+
 - **Existing primitive**: `captureItem`/`convertCaptureToObligation`
   (`src/application/commands.ts`, `src/application/intentCommands.ts`) — raw immutable text,
   fully manual triage, no derived fields.

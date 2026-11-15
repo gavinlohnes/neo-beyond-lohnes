@@ -350,7 +350,10 @@ export function TrainScreen({
       setChosenVariant(destination === "WORKOUT_STANDARD" ? "STANDARD" : "REDUCED");
     }
     requestAnimationFrame(() => {
-      if (session || destination !== "RECOVERY") headingRef.current?.focus();
+      if (session && session.sessionType !== "RECOVERY" && destination === "WORKOUT" && exerciseHeadingRef.current) {
+        exerciseHeadingRef.current.focus({ preventScroll: true });
+        exerciseHeadingRef.current.scrollIntoView({ block: "start", behavior: "instant" });
+      } else if (session || destination !== "RECOVERY") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
   }, [active, reading, readError, destination, destinationReady, session, onDestinationConsumed]);
@@ -1668,11 +1671,11 @@ export function TrainScreen({
                 // most important control on the whole screen.
                 return (
                   <div key={setNumber} style={{ marginBottom: 14 }}>
-                    {/* P4: exact repeat in one tap — the primary, fastest path. */}
+                    {/* Exact repeat stays one tap; LOG is the primary action for the displayed inputs. */}
                     {suggestion && display.setKind !== "WARMUP" && (
                       <button
-                        className="btn-primary"
-                        style={{ marginBottom: 8, fontSize: 18, padding: "18px var(--space-4)" }}
+                        className="btn-secondary"
+                        style={{ marginBottom: 8, fontSize: 16, padding: "12px var(--space-4)" }}
                         disabled={busy}
                         onClick={() => void handleLogExactRepeat(ex.exerciseId, setNumber, suggestion)}
                       >
@@ -1764,7 +1767,6 @@ export function TrainScreen({
                         +
                       </button>
                     </div>
-                    <SetDetails value={display} disabled={busy} onChange={(patch) => patchInput(ex.exerciseId, setNumber, patch)} />
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
                         className="btn-primary"
@@ -1787,6 +1789,7 @@ export function TrainScreen({
                     {logSetNotice?.key === inputKey(ex.exerciseId, setNumber) && (
                       <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{logSetNotice.message}</p>
                     )}
+                    <SetDetails value={display} disabled={busy} onChange={(patch) => patchInput(ex.exerciseId, setNumber, patch)} />
                   </div>
                 );
               })}

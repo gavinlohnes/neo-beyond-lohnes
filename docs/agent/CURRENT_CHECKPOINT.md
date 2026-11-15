@@ -1,4 +1,14 @@
-# Current objective — LAUNCH-STEADY-001: no flash on first launch (Gavin, 2026-11-15: "Approved.")
+# Current objective — SPEED-UNDER-FATIGUE-001 (Gavin, 2026-11-15: build only the speed pack)
+
+- **Builder:** Codex; branch `codex/speed-under-fatigue-001`, fresh master `eacbb3a0d1c1252da13281e972c0f879a11c6737`. [Brief](SPEED-UNDER-FATIGUE-001.md). FEATURE lane; no Engine/command/persistence/provider/dependency changes. One PR pending.
+- **Chosen paths:** quick Note from TODAY (one navigation tap instead of LOG → NOTE), existing workout resume lands at the current exercise, and current-set LOG sits immediately after required weight/reps in normal/Gym views. Optional metadata stays accessible below; exact-repeat retains its one-tap handler as a secondary shortcut. Defaults, rest, undo, skip, red-capacity gates and explicit saves remain.
+- **Repository truth:** LAUNCH-STEADY-001 and RESUME-FOLD-001 are merged; preserve those fixes. Week planner remains safely pushed in [its separate PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529), outside this objective. Claude's other approved queue entries are not this speed pack.
+- **Verification:** targeted workout/atomicity/Gym Node43 PASS; 112 unique focused real-Chromium checks PASS in seven files, including six speed acceptance cases and full TRAIN71, original LOG/resume-fold/Gym/recovery. Explicit saves, retained note drafts, current-exercise positioning, defaults/rest, optional metadata and 320–768px/axe accepted. Architecture, TypeScript and production/PWA build PASS. Full required CI remains the PR gate; consult its handoff for current results.
+- **Next:** obtain green required CI on this bounded PR, then Gavin's merge decision. No capture-system build, end-of-day feature, family sharing, metrics/evidence work, major surface or automatic writes. Never merge.
+
+---
+
+# Historical — LAUNCH-STEADY-001: no flash on first launch (Gavin, 2026-11-15: "Approved.")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-launch-steady`, from master `1fed57c8`. Routine; Gavin merges.
   [Brief](LAUNCH-STEADY-001.md).
