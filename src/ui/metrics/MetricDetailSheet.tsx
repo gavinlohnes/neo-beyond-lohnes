@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMetricDetail, type MetricDetail } from "../../application/metricDetailQueries";
-import { rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange } from "../../application/metricDetail";
+import { direction90, rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange, type Direction } from "../../application/metricDetail";
 import type { PeriodValue } from "../../domain/health/measuredSeries";
 import { LogSheet } from "../components/LogSheet";
 import { SourceTag } from "../foundation/primitives";
@@ -34,6 +34,22 @@ const withUnit = (metric: DetailMetric, n: number) => `${fmt(n)} ${NOUN[metric].
 const clock = (t: number) => { const d = new Date(t); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 const day = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const week = (t: number) => `Week of ${new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+
+/** DIRECTION-90-001: what counts as "about the same", in each metric's own unit. */
+const SAME_FLOOR: Record<DetailMetric, number> = { water: 1, steps: 100, resting: 1, calories: 25 };
+const PER_DAY: Record<DetailMetric, string> = { water: "oz a day", steps: "steps a day", resting: "bpm", calories: "kcal a day" };
+const way = (d: Direction) => (d.way === "SAME" ? "about the same as" : d.way === "HIGHER" ? "higher than" : "lower than");
+/** One plain sentence: the last 90 days against the last year. Quiet (null) until there's enough. Never a judgement. */
+function directionLine(d: MetricDetail): string | null {
+  if (d.metric === "calories") {
+    const e = direction90(d.eaten!.series, SAME_FLOOR.calories), b = direction90(d.series, SAME_FLOOR.calories);
+    const part = (what: string, x: Direction) => `${what} ${fmt(x.recent)} kcal a day, ${way(x)} your year's ${fmt(x.year)}`;
+    const parts = [e && part("eaten", e), b && part("burned", b)].filter(Boolean);
+    return parts.length ? `Last 90 days: ${parts.join("; ")}. Medians of recorded days.` : null;
+  }
+  const x = direction90(d.series, SAME_FLOOR[d.metric]);
+  return x ? `Last 90 days: ${fmt(x.recent)} ${PER_DAY[d.metric]}, ${way(x)} your year's ${fmt(x.year)}. Medians of ${d.source === "GARMIN" ? "measured" : "logged"} days.` : null;
+}
 
 /** Calories' usual, one for each series: the median of the last 28 finished days, once there are enough. */
 function caloriesUsual(d: MetricDetail): string {
@@ -286,6 +302,8 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         ? `Usual${metric === "steps" && d.usual.dayKind ? (d.usual.dayKind === "OFF" ? " on days off" : " on work days") : ""}: ${withUnit(metric, d.usual.value)} · median of the last 28 finished days.`
         : metric === "steps" && d.usual.dayKind === null ? "Usual steps need today set as a work day or a day off."
         : `Your usual appears after ${d.usual.need} ${garmin ? "measured" : "logged"} days (${d.usual.samples} so far).`}</p>
+
+      {directionLine(d) !== null && <p className="md-meta" data-md-direction>{directionLine(d)}</p>}
 
       <div className="md-actions">
         {metric === "water" && onLog && <button type="button" className="md-act" onClick={go(onLog)}>LOG WATER</button>}

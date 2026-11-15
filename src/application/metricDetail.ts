@@ -62,3 +62,27 @@ export function workOffSplit(series: readonly PeriodValue[], contextOf: (dayId: 
   };
   return { work: side("WORK"), off: side("OFF") };
 }
+
+/**
+ * DIRECTION-90-001 (Gavin, 2026-11-14: "Approved"): your last 90 finished lived days against your last year, in one
+ * plain sentence on the metric page. Medians of the recorded days, so one odd day can't swing it. It stays quiet until
+ * the records span 180 days and both windows have enough of them. Never a score, an arrow or a judgement: lower resting
+ * heart rate and more water are both just "lower" and "higher".
+ */
+export const DIRECTION_RECENT_DAYS = 90, DIRECTION_YEAR_DAYS = 365, DIRECTION_SPAN_DAYS = 180;
+export const DIRECTION_MIN_RECENT = 30, DIRECTION_MIN_YEAR = 90;
+/** Smaller differences read "about the same": a share of the year's value, or an absolute floor (1 bpm, 1 oz…). */
+export const DIRECTION_SAME_SHARE = 0.05;
+export interface Direction { recent: number; year: number; way: "HIGHER" | "LOWER" | "SAME"; recentDays: number; yearDays: number }
+export function direction90(series: readonly PeriodValue[], sameFloor = 1): Direction | null {
+  const finished = series.filter((v) => !v.partial);
+  const year = finished.slice(-DIRECTION_YEAR_DAYS).filter((v) => v.value !== null);
+  const recent = finished.slice(-DIRECTION_RECENT_DAYS).filter((v) => v.value !== null);
+  const last = finished.at(-1);
+  if (!last || !year.length || recent.length < DIRECTION_MIN_RECENT || year.length < DIRECTION_MIN_YEAR) return null;
+  // The records must reach back 180 days, so "the last year" is more than the last 90 days again.
+  if ((last.from - year[0]!.from) / 86_400_000 < DIRECTION_SPAN_DAYS - 1) return null;
+  const r = median(recent.map((v) => v.value!))!, y = median(year.map((v) => v.value!))!;
+  const way = Math.abs(r - y) < Math.max(sameFloor, Math.abs(y) * DIRECTION_SAME_SHARE) ? "SAME" : r > y ? "HIGHER" : "LOWER";
+  return { recent: r, year: y, way, recentDays: recent.length, yearDays: year.length };
+}
