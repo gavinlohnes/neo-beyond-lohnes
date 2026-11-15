@@ -320,8 +320,8 @@ export function TodayScreen({
   /** SUIT-ALIVE S3/S4: the route and comms lines open the cave on that view. Absent, neither line shows. */
   onOpenCave?: (tab: "tonight" | "route" | "brief") => void;
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
-  /** METRIC-PAGE-001: the shell's LOG sheet for one record kind (the metric page's LOG WATER). */
-  onOpenRecord?: ((target: "water") => void) | undefined;
+  /** Existing shell-owned forms: metric LOG WATER and direct quick Note, with canonical saves. */
+  onOpenRecord?: ((target: "water" | "note") => void) | undefined;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   operationsOnly?: boolean;
@@ -2839,6 +2839,7 @@ export function TodayScreen({
       </button>}
 
     </section>}
+    {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>NOTE</button></div>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
     {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
