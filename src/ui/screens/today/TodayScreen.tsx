@@ -321,8 +321,8 @@ export function TodayScreen({
   /** SUIT-ALIVE S3/S4: the route and comms lines open the cave on that view. Absent, neither line shows. */
   onOpenCave?: (tab: "tonight" | "route" | "brief") => void;
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
-  /** METRIC-PAGE-001: the shell's LOG sheet for one record kind (the metric page's LOG WATER). */
-  onOpenRecord?: ((target: "water") => void) | undefined;
+  /** Existing shell-owned forms: metric LOG WATER and direct quick Note, with canonical saves. */
+  onOpenRecord?: ((target: "water" | "note") => void) | undefined;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   operationsOnly?: boolean;
@@ -348,6 +348,9 @@ export function TodayScreen({
   const [day, setDay] = useState<BeyondDay | null>(null);
   // TIMELINE-EDIT-001: the logged meal or water entry open for a fix (time, amount, remove).
   const [editTarget, setEditTarget] = useState<LogEntryTarget | null>(null);
+  // LAUNCH-STEADY-001: until the first read settles, "no day" is unknown, not a fact. TODAY shows a quiet reading
+  // frame instead of "Mode not set / START DAY" flashing before the real day appears.
+  const [dayRead, setDayRead] = useState(false);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
@@ -673,7 +676,10 @@ export function TodayScreen({
   useEffect(() => {
     if (!active) return;
     setNow(new Date());
-    void refresh();
+    // LAUNCH-STEADY-001: however the read ends (even a failure past its first step), the reading frame ends with it.
+    // A superseded read leaves it to the newer one, which ends the frame itself.
+    const reading = refresh(), mine = refreshRequestIdRef.current;
+    void reading.finally(() => { if (mountedRef.current && refreshRequestIdRef.current === mine) setDayRead(true); });
     void getScheduledContext().then(setScheduledContext);
     void loadShiftClockSetup();
     // Best-effort: a missing plan just means SHIFT DOWN shows none.
@@ -780,6 +786,8 @@ export function TodayScreen({
       // rejection. A still-current refresh's failure is unchanged from
       // prior behavior (out of this correction's scope) and is rethrown.
       if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+      // A failed first read still ends the reading frame, so TODAY shows what it showed before.
+      setDayRead(true);
       throw err;
     }
     // Ownership decided HERE, immediately after the read above resolves —
@@ -954,6 +962,7 @@ export function TodayScreen({
       }
       currentContextDayIdRef.current = newDayId;
       setDay(activeDay);
+      setDayRead(true);
       setActiveWorkout(activeWorkoutSession);
       setYesterdayRecorded(nextYesterday);
       if (nextSchedule) setSchedulePattern(nextSchedule);
@@ -2645,7 +2654,7 @@ export function TodayScreen({
         />
       )}
 </> : activeWorkout ? <ActiveWorkoutCard activeWorkout={activeWorkout} isDominant onOpenTrain={onOpenTrain} fromEarlierDay={!!day && activeWorkout.beyondDayId !== day.id} />
-          : !day ? <><h2>Start your day</h2><button type="button" className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>START DAY</button></>
+          : !day ? (dayRead ? <><h2>Start your day</h2><button type="button" className="btn-primary" disabled={busy} onClick={() => void handleStartDay()}>START DAY</button></> : null)
           : activeResetId ? <>      {day && (
         <ResetCard
           prominent={resetIsPrimary}
@@ -2796,7 +2805,10 @@ export function TodayScreen({
             </p>
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
             <ActiveExperimentLine now={now} />
-          </ModeHeader></section> : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
+          </ModeHeader></section> : !dayRead
+      // LAUNCH-STEADY-001: until the first read settles, "no day" is unknown: a quiet reading frame, never "Mode not set".
+      ? <section className="today-situation cc-hero-wrap" aria-label="Reading today" aria-busy="true"><div className="cc-mode mode-empty today-reading"><p role="status" className="cc-mode-meta">Reading your day…</p><ModeCity now={now} workDay={false} /></div></section>
+      : <section className="today-situation cc-hero-wrap" aria-label="Day mode"><div className="cc-mode mode-empty"><h2 className="cc-mode-name">Mode not set</h2><p className="cc-mode-meta">Start a day to set your context.</p><ModeCity now={now} workDay={false} /><ModeScene now={now} workDay={false} hasAction={false} /></div></section>}
     {/* SYNC-002: the shell's one line here (what SYNC GARMIN brought back), right under the hero. */}
     {banners && <div className="today-banners">{banners}</div>}
     {/* LIFE-STATE-001: the state frames the day, right above its next action. Like the check-in line, it steps
@@ -2815,7 +2827,8 @@ export function TodayScreen({
       </section>}
     {/* VISUAL-FOUNDATION-003 (Gavin, 2026-11-14, Protected, approved): the numbers come right after the day's next step
         (and the after-the-run report); the preparation/life order below them is LIFE-STATE-001's, unchanged. */}
-    <section className="today-numbers" aria-label="Today's numbers">
+    {/* LAUNCH-STEADY-001: no NOT LOGGED tiles before the day has been read. */}
+    {dayRead && <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
       {stale && <p role="status"><Signal data-signal="stale-note">{staleRefresh === "HELD"
         ? "These are yesterday’s numbers. Today starts when you finish your workout, or 2 hours after your last set."
@@ -2829,7 +2842,8 @@ export function TodayScreen({
         {backupDue && <Signal data-signal="backup-line">{backupDue.days === null ? "No backup yet." : "Backup overdue."}</Signal>}
       </button>}
 
-    </section>
+    </section>}
+    {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>CAPTURE</button></div>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
     {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}

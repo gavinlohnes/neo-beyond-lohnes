@@ -296,7 +296,7 @@ export function MoreScreen({
   const [journalFocus, setJournalFocus] = useState<string | undefined>(undefined);
   // REFLECT-001: a reflective search entry (or a daily-note link) opens its view at the right place.
   const [reflectFocus, setReflectFocus] = useState<{ key: number; focus: ReflectFocus } | null>(null);
-  const [planListRequest, setPlanListRequest] = useState<{ key: number; list: "today" | "next7" | "noDate" } | null>(null);
+  const [planListRequest, setPlanListRequest] = useState<{ key: number; list: "today" | "next7" | "noDate" | "week" } | null>(null);
   // NAV-REACH-001: a jump between the reflective views (daily note, weekly interview, DELTA, patterns) remembers
   // where it came from, so the back button returns there instead of to the MORE menu.
   const [reflectReturn, setReflectReturn] = useState<"DAILY_NOTE" | "WEEKLY" | "REVIEW" | null>(null);
@@ -675,6 +675,7 @@ export function MoreScreen({
           {view === "HISTORY" && <>{reviewHistory ? <button type="button" className="btn-secondary" onClick={() => { setHistoryFocusDayId(null); setHistoryFocusEventId(null); setReviewHistory(false); setView("REVIEW"); }}>BACK TO REVIEW</button> : onReturnToHealth && <button type="button" className="btn-secondary" onClick={onReturnToHealth}>BACK TO DATA</button>}<Opening><HistoryScreen active={active} requestKey={navigationRequest} focusDayId={historyFocusDayId} focusEventId={historyFocusEventId} /></Opening></>}
           {view === "WEEKLY" && <WeeklyCheckInScreen openInterviewKey={reflectFocus?.focus === "INTERVIEW" ? reflectFocus.key : undefined} onOpenDelta={() => openReflect("DELTA")} onOpenPatterns={() => openReflect("PATTERNS")}
             onOpenPlanItem={(obligationId) => { setIntentFocus({ kind: "OBLIGATION", obligationId }); setView("INTENT"); setReflectReturn("WEEKLY"); }}
+            onOpenWeekPlanner={() => { setPlanListRequest({ key: Date.now(), list: "week" }); setView("PLAN"); setReflectReturn("WEEKLY"); }}
             onOpenPlans={() => { setPlanListRequest({ key: Date.now(), list: "noDate" }); setView("PLAN"); setReflectReturn("WEEKLY"); }} />}
           {view === "REPORT" && <><OperatorHeader destination="command">AFTER ACTION REPORT</OperatorHeader><ReportView /></>}
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}

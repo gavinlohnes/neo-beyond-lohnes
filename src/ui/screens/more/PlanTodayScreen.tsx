@@ -1,3 +1,4 @@
+import { WeekPlanner } from "./WeekPlanner";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { useEffect, useRef, useState } from "react";
@@ -13,9 +14,9 @@ import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence 
 import type { IntentFocus } from "./IntentScreen";
 
 /** FORECAST-DECIDE-001: listRequest opens a given list (a new key opens it again), e.g. No date from the forecast. */
-export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void; listRequest?: { key: number; list: "today" | "next7" | "noDate" } | null }) {
+export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void; listRequest?: { key: number; list: "today" | "next7" | "noDate" | "week" } | null }) {
   const [plan, setPlan] = useState<TaskSmartLists | null>(null);
-  const [list, setList] = useState<"today" | "next7" | "noDate">(listRequest?.list ?? "today");
+  const [list, setList] = useState<"today" | "next7" | "noDate" | "week">(listRequest?.list ?? "today");
   useEffect(() => { if (listRequest) setList(listRequest.list); }, [listRequest?.key]);
   const [readError, setReadError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -111,8 +112,10 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active
     <h2 className="more-title">Your plan</h2>
     <p className="meta">{plan ? planDate(plan.date) : "Today"} · Your choices and recorded deadlines. Not a recommendation.</p>
     <div className="plan-smart-lists" role="group" aria-label="Task views">
-      {([['today', 'Today'], ['next7', 'Next 7'], ['noDate', 'No date']] as const).map(([value, label]) => <button key={value} type="button" className="btn-secondary" aria-pressed={list === value} onClick={() => setList(value)}>{label}</button>)}
+      {([['today', 'Today'], ['next7', 'Next 7'], ['noDate', 'No date'], ['week', 'Week planner']] as const).map(([value, label]) => <button key={value} type="button" className="btn-secondary" aria-pressed={list === value} onClick={() => setList(value)}>{label}</button>)}
     </div>
+    <div hidden={list !== "week"}><WeekPlanner active={active && list === "week"} onOpen={(id) => onOpen({ kind: "OBLIGATION", obligationId: id })} onChanged={() => void refresh()} /></div>
+    {list !== "week" && <>
     <Section id="plan-commitments" eyebrow="YOUR COMMITMENTS" title={list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}
       wayIn={{ label: "All missions", ariaLabel: "Open all missions and obligations", onClick: () => onOpen(null) }}>
       <p className="more-section-purpose">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${plan ? planDate(plan.through) : "the next seven days"}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date."}</p>
@@ -157,6 +160,7 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active
       </> : <SectionEmpty line="Nothing planned is left open today." detail="A good place to stop. Leave yourself a line in the daily note if it helps." />}
       {due.length > 0 && <p className="meta">{due.length === 1 ? "1 task is due" : `${due.length} tasks are due`} today or earlier; it stays here until done or given a new due date.</p>}
     </Section>)({ movable: plan.today.filter((item) => !(item.dueAt && item.dueAt <= plan.date)), due: plan.today.filter((item) => item.dueAt && item.dueAt <= plan.date) })}
+    </>}
     <button type="button" className="btn-secondary" onClick={() => askAlfred(PLAN_MY_DAY_OFF_ASK)}>PLAN MY DAY OFF WITH ALFRED</button>
     <p className="meta">Open a task to complete it, release it, or change its dates. Nothing is moved automatically.</p>
   </div>;

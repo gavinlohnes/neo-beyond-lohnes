@@ -2,19 +2,85 @@
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-timeline-edit`, from master after #535. Feature; Gavin merges.
   [Brief](TIMELINE-EDIT-001.md).
-- **Also open:** #536 (LAUNCH-STEADY-001, no flash on launch).
+- **Also open:** #529 (WEEK-PLANNER-002, Codex), ready to merge. #536 merged. #482 and #473 await Gavin's decision.
 - **Next:** ALFRED-FIX-001 (Protected): Alfred and the free helper propose a move, correction or removal through
   `application/logEntries.ts`, confirmed by Gavin.
 
 ---
 
-# Current objective — FOOD-SOURCES-001: where your calories and protein came from (Gavin, 2026-11-15)
+# Current objective — finish WEEK-PLANNER-002 on the existing PR
+
+- **Builder:** Codex resumes its preserved `codex/week-planner-001` branch / [existing PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529). Original bounded owner approval remains in [the brief](WEEK-PLANNER-002.md); merged HARVEST-002 selected completion of this delivery as the next mission, and Gavin asked what comes next. No new capability or architecture is authorized.
+- **Integration:** original head `32fb0f969d45dd790abb57ff5817baccbc8eba4c`, fresh master `b4739464` (research archive merged). Source merged automatically; the two conflicts were appended UX decisions and the checkpoint. Preserve all upstream source, decisions, raw capture, speed pack and research records while restoring the active planner handoff.
+- **Scope:** the existing seven-day agenda, honest work/programme/calendar context and explicit planned-date moves; deadlines/recurrence/status stay unchanged. No automatic scheduling, capacity score, workout overrides, new schema/provider/dependency, Alfred tools or another feature.
+- **Verification:** integration head `59145a5b` passed full Node (2344 / one existing skip), focused Chromium (45), UTC/New York planner integration, architecture, typecheck and build. Independent Protected review blocked that head: midnight can pass during the eligibility read. Fixed by revalidating the date after that awaited read, before the planned-date write; Node and real-Chromium regressions check rejection and unchanged task/event history. Fresh focused checks and final-head review/CI are required; current final results live in the PR handoff to avoid invalidating exact-head review with another documentation commit.
+- **Next:** complete that verification, fix only relevant regressions/findings, obtain an independent PASS and green CI, then mark the same PR ready for Gavin's merge decision. Never merge the PR or start another improvement.
+
+---
+
+# Historical implementation checkpoint — WEEK-PLANNER-002 (Gavin: “Week planner it is then”)
+
+- **Builder:** Codex; branch `codex/week-planner-001`, fresh master `77c8ab618e8bdd8eddba29d178ac476821eda806`. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529); no overlapping week-planner branch found. Existing older shift what-if PR remains separate.
+- **Authorization/scope:** [brief](WEEK-PLANNER-002.md). Make the existing read-only week actionable through Plan Today: work context, actual programme versus existing suggestions, canonical planned/due tasks, saved calendar freshness, explicit task placement/moves. No automatic scheduling, capacity score, deadline changes, per-date workout override, Engine/schema/provider/dependency expansion or primary navigation reorder.
+- **Recovered:** gym upgrade merged as #528. Its exact-head independent review PASS and full CI green are recorded on that PR; prior checkpoint review/CI pending text is historical.
+- **Implementation:** new compositional read model and native responsive date picker/agenda; moves reuse modifyObligation under the shared atomic gateway with current-date and stale-plan guards. Task details still complete/release. Normal task lists and Week Ahead remain; Week Ahead directly opens the planner. Draft intended dates, write/read errors and in-form retries preserve choices.
+- **Verification:** full Node 2325 PASS / one existing skip (280 files); planner integration 9 PASS in UTC and New York including DST. Focused real Chromium 28 PASS in six files, including populated 320–1024px/axe, actual navigation, deadline-preserving moves, drafts/midnight, retry and post-commit recovery. Architecture, TypeScript and production/PWA build PASS. Independent early recovery findings fixed and rechecked. Final exact-head review/full required CI are the remaining PR gates; consult the PR handoff for current results after this committed checkpoint.
+- **Next:** obtain independent exact-head review and green required CI on the existing PR, then present Gavin’s merge decision. Gavin alone merges. No new owner decision needed within the selected objective.
+
+
+---
+
+# Current research handoff — HARVEST-002 (Gavin: Discover / Inspect / Classify / Rank / one Claude mission / Verify)
+
+- **Builder/researcher:** Codex, documentation-only `codex/harvest-002` from fetched master `5d78a5dd95bc566fcb8aada0ea7ed0b131d43143`. [Whole-product inventory and deeper capture/planning comparison](harvest/HARVEST-002.md). [Archival PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/539). No application/configuration/governance-rule changes.
+- **Truth:** speed pack #537 and raw capture #538 are merged. Week-planner PR #529 remains open, draft and conflicting at inspected head `32fb0f96`; its historical green checks do not establish current integration readiness. No live independent review/comment was visible when checked. Do not create another planner or duplicate Notes Sweep/Saved sorting.
+- **One proposed handoff:** [Claude mission](harvest/HARVEST-002-CLAUDE-MISSION.md) to finish the already-approved week planner on its existing branch, preserve current upstream work, renew tests/full CI/independent exact-head review and present Gavin's merge decision. No feature implementation or delegation has started during research; the user can assign this bounded handoff to Claude.
+- **Research quality:** primary sources/licences, verified findings, recommendations, unresolved questions and subjective ranking (including interaction quality/doctrine fit) recorded. Independent read-only review requested; final archival checks/review are in the research PR handoff. Product verification belongs to the actual implementation head; no new product test result claimed here.
+- **Next:** archive/index this research for reuse, then Gavin chooses/assigns the proposed single mission. No automatic merge, next feature chain, new Alfred tools or architecture authorization.
+
+---
+
+# Historical — UNIVERSAL-FAST-CAPTURE-001 (Gavin: universal fast capture, no destination required)
+
+- **Builder:** Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged as #537). [Brief](UNIVERSAL-FAST-CAPTURE-001.md). FEATURE lane: existing canonical saves, no Engine/command/schema/provider/dependency changes. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/538).
+- **Bounded implementation:** one-tap CAPTURE on TODAY opens raw multiline text in the existing shell sheet. Explicit CAPTURE saves an OPEN CaptureItem; leaving raw is valid. Optional MAKE A TASK previews copied/editable title and blank optional planned/due dates; only CREATE TASK/PLAN ITEM invokes existing atomic conversion with source provenance. OPEN CAPTURE is the existing later-processing route. No AI sorting, new notes app, broad navigation, family/metrics/training/evidence changes or Alfred writes.
+- **Verification:** 40 targeted Node checks PASS in four files (capture inbox/conversion/atomicity/native restoration). 67 unique real-Chromium checks PASS in seven files, including 11 new acceptance cases, original shell sheets/TODAY/LOG/speed/retention/atomicity. No-day/offline use, raw-first/no inferred date, explicit promotion/cancel, failed save/retained draft, same-tick duplicate guard, missing source, close/reopen/remount, source-linked backup and 320/375/768px axe accepted. Architecture, typecheck and production/PWA build PASS. Full required CI is the remaining PR gate; consult its handoff for current status after this committed checkpoint.
+- **Next:** obtain green required CI on the bounded PR and present Gavin’s normal review/merge decision. Never merge or start the next mission. Week planner remains preserved separately in #529.
+
+---
+
+# Historical — SPEED-UNDER-FATIGUE-001 (Gavin, 2026-11-15: build only the speed pack)
+
+- **Builder:** Codex; branch `codex/speed-under-fatigue-001`, fresh master `eacbb3a0d1c1252da13281e972c0f879a11c6737`. [Brief](SPEED-UNDER-FATIGUE-001.md). FEATURE lane; no Engine/command/persistence/provider/dependency changes. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/537).
+- **Chosen paths:** quick Note from TODAY (one navigation tap instead of LOG → NOTE), existing workout resume lands at the current exercise, and current-set LOG sits immediately after required weight/reps in normal/Gym views. Optional metadata stays accessible below; exact-repeat retains its one-tap handler as a secondary shortcut. Defaults, rest, undo, skip, red-capacity gates and explicit saves remain.
+- **Repository truth:** LAUNCH-STEADY-001 and RESUME-FOLD-001 are merged; preserve those fixes. Week planner remains safely pushed in [its separate PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529), outside this objective. Claude's other approved queue entries are not this speed pack.
+- **Verification:** targeted workout/atomicity/Gym Node43 PASS; 135 unique focused real-Chromium checks PASS in eight files, including six speed acceptance cases and full TRAIN71, original LOG/resume-fold/Gym/recovery. Explicit saves, retained note drafts, current-exercise positioning, defaults/rest, optional metadata and 320–768px/axe accepted. Architecture, TypeScript and production/PWA build PASS. Full required CI remains the PR gate; consult its handoff for current results.
+- **Next:** obtain green required CI on this bounded PR, then Gavin's merge decision. No capture-system build, end-of-day feature, family sharing, metrics/evidence work, major surface or automatic writes. Never merge.
+
+---
+
+# Historical — LAUNCH-STEADY-001: no flash on first launch (Gavin, 2026-11-15: "Approved.")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-launch-steady`, from master `1fed57c8`. Routine; Gavin merges.
+  [Brief](LAUNCH-STEADY-001.md).
+- **Approved queue, in order:** this; TIMELINE-EDIT-001 (tap a timeline mark or diary row to change its time, amount,
+  or undo, with the existing corrections); ALFRED-FIX-001 (Protected: Alfred and the free helper propose time, amount
+  and remove corrections, confirmed by Gavin).
+- **Merged since:** #533 (DIRECTION-90-001), #534 (FOOD-SOURCES-001), #535 (RESUME-FOLD-001).
+- **Resolved:** the CommandConsole RESUME WORKOUT bound was a real fold problem, fixed in #535 (RESUME-FOLD-001).
+
+---
+
+# Historical — FOOD-SOURCES-001 (merged as #534): where your calories and protein came from (Gavin, 2026-11-15)
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, now on master (after #530). Feature lane; Gavin merges.
   [Brief](FOOD-SOURCES-001.md).
 - **Scope:** WHERE IT CAME FROM on the calories page (7D/30D) and BODY's meal calories and protein history. Read only.
 - **Merged today:** #530 (calories page), #531 and #532 (calorie proposal and floor). **Also merged:** #533
   (DIRECTION-90-001, the 90-day line).
+
+---
+
 # Historical — DIRECTION-90-001 (merged as #533): the last 90 days against your year (Gavin, 2026-11-14: "Approved")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-direction`, now on master (after #530).

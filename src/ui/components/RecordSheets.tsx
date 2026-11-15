@@ -1,3 +1,4 @@
+import { FastCapture } from "./FastCapture";
 import { MealPlanPanel } from "../screens/body/MealPlanPanel";
 import { captureCommitFeedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
@@ -7,7 +8,7 @@ import { resolveWhen, type WhenChoice } from "../../application/logTimes";
 import { BodyScreen } from "../screens/body/BodyScreen";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
-import { ensureActiveDay, logWater, voidWaterLog, captureItem, deleteCaptureItem } from "../../application/commands";
+import { ensureActiveDay, logWater, voidWaterLog } from "../../application/commands";
 import { getActiveDay, getHydrationEntries } from "../../application/queries";
 import { getSavedMeals, getLikelySavedMeals } from "../../application/nutritionQueries";
 import { logMeal, logManualMeal, updateSavedMeal, archiveSavedMeal, voidMealLog, createSavedMeal, MAX_SERVINGS } from "../../application/nutritionCommands";
@@ -80,7 +81,6 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   const [mealId, setMealId] = useState<string | null>(null); const [servings, setServings] = useState(1);
   const [form, setForm] = useState<MealForm>(EMPTY); const [quick, setQuick] = useState<MealForm>({ ...EMPTY, name: "Quick add" });
   const [saveNext, setSaveNext] = useState(false); const [edit, setEdit] = useState<MealForm>(EMPTY);
-  const [note, setNote] = useState("");
   const [receipts, setReceipts] = useState<(Receipt & { id: number })[]>([]);
   const receiptId = useRef(0);
   const receiptKind = (receipt: Receipt) => receipt.notes ? "note" : receipt.history ?? "meal";
@@ -90,7 +90,6 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   }
   const dismissReceipt = (id: number) => setReceipts((old) => old.filter((entry) => entry.id !== id));
   useSessionDraft("record-sheet-meal", Object.values(form).some(Boolean) || !!quick.calories || !!quick.proteinG);
-  useSessionDraft("record-sheet-note", !!note);
   useSessionDraft("record-sheet-edit", page === "edit");
   const [bodyFocus, setBodyFocus] = useState<"water" | "sleep" | "weight" | "urge" | "meal" | "foodLookup" | "protein" | null>(null);
   const [bodyRequest, setBodyRequest] = useState(0);
@@ -260,7 +259,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         </>}
       </>}
       {target === "log" && <>{onAlfred && <button type="button" className="today-sheet__option" onClick={() => { close(); onAlfred(); }}>SAY IT TO ALFRED</button>}{(["water", "meal", "sleep", "weight", "note", "urge"] as const).map((kind) => <button type="button" className="today-sheet__option" key={kind} onClick={() => open(kind)}>{TITLE[kind]}</button>)}<button type="button" className="today-sheet__option" onClick={onWorkout}>WORKOUT SET → TRAIN</button></>}
-      {target === "note" && <><label className="field">Note<textarea className="input" aria-label="Capture a thought" value={note} onChange={(event) => setNote(event.target.value)} /></label><button type="button" className="btn-primary" disabled={busy || !note.trim()} onClick={() => void commit(async () => { const result = await captureItem(note); setNote(""); return { message: "Note captured.", notes: true, undo: () => deleteCaptureItem(result.id) }; })}>CAPTURE</button></>}
+      <div hidden={target !== "note"}><FastCapture busy={busy} onBusy={setBusy} onSaved={onSaved} onOpenCapture={onNotes} /></div>
       <div hidden={!bodyVisible}>{bodyFocus && <BodyScreen foodLookupEnabled={hiddenFeatures.foodLookup} correctionRequest={target === "record" ? correctionRequest : null} sheetFocus={bodyFocus === "foodLookup" ? "meal" : bodyFocus} focus={bodyFocus === "protein" ? null : bodyFocus} focusRequest={bodyRequest} visible={bodyVisible && target !== null} onMealJourneyInFlightChange={(next) => { const wasBusy = busyRef.current; setBusy(next); if (wasBusy && !next) onSaved(); }} />}</div>
     </LogSheet>
     {receipts.length > 0 && <div className="redesign-toast" role="status">{receipts.map((receipt) => <ReceiptItem key={receipt.id} receipt={receipt} dismiss={() => dismissReceipt(receipt.id)} />)}

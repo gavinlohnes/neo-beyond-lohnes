@@ -145,7 +145,6 @@ export function GymMode(props: GymModeProps) {
             onMinus={() => props.onAdjustReps(-1)}
             onPlus={() => props.onAdjustReps(1)}
           />
-          {props.onSetDetails && <SetDetails value={props.setDetails ?? {}} disabled={props.busy} onChange={props.onSetDetails} />}
           {props.notice && (
             <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
               {props.notice}
@@ -157,6 +156,7 @@ export function GymMode(props: GymModeProps) {
           <button type="button" className="btn-secondary gym-mode__skip" hidden={props.setDetails?.setKind === "WARMUP"} disabled={props.busy} onClick={props.onSkip}>
             SKIP
           </button>
+          {props.onSetDetails && <SetDetails value={props.setDetails ?? {}} disabled={props.busy} onChange={props.onSetDetails} />}
         </>
       )}
 

@@ -281,7 +281,11 @@ describe("Recommendation-to-Action Handoff (App shell)", () => {
     expect(screen.getByText("OPEN RECOVERY ON TRAIN", { exact: true }).elements()).toHaveLength(0);
     expect(screen.getByRole("button", { name: "RECOVERY", exact: true }).elements()).toHaveLength(0);
     expect((await db.workoutSessions.get(active.id))?.status).toBe("ACTIVE");
-    await expect.poll(() => document.activeElement).toBe(screen.getByText("BEYOND // TRAIN", { exact: true }).element());
+    // SPEED-UNDER-FATIGUE-001: resume goes to the current exercise, not the top header.
+    const exercise = screen.getByRole("heading", { name: "Machine Chest Press", exact: true });
+    await expect.poll(() => document.activeElement).toBe(exercise.element());
+    await expect.poll(() => exercise.element().getBoundingClientRect().top).toBeLessThan(window.innerHeight / 3);
+    expect(await db.performedSets.where("sessionId").equals(active.id).count()).toBe(0);
   });
 
   it("reload/remount returns to TODAY with the accepted handoff and never auto-starts", async () => {
