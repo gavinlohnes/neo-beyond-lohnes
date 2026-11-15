@@ -13,7 +13,7 @@
   Alfred's context says about sleep and when the recovery-sleep offer appears, so it is not downgraded: independent
   exact-head review, green CI, Gavin merges. No Engine, schema, backup, permission, dependency or provider change;
   `src/engine/**` is untouched.
-- **Active PR:** pending until opened; linked from the checkpoint.
+- **Active PR:** [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555).
 
 ## What changes
 
