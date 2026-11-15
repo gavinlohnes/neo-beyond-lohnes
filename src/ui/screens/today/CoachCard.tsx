@@ -8,7 +8,7 @@ export function CoachCard({ active, refreshKey, onOpen }: { active: boolean; ref
   useEffect(() => {
     if (!active) return;
     let live = true, request = 0;
-    const load = () => { const current = ++request; setCards([]); void getCoachCards().then((next) => { if (live && current === request) { setCards(next); setSkips(readCoachSkips()); setError(false); } }, () => { if (live && current === request) { setCards([]); setError(true); } }); };
+    const load = () => { const current = ++request; setCards([]); void getCoachCards().then((next) => { if (live && current === request) { try { const dismissed = readCoachSkips(); setCards(next); setSkips(dismissed); setError(false); } catch { setCards([]); setError(true); } } }, () => { if (live && current === request) { setCards([]); setError(true); } }); };
     load();
     const visible = () => { if (document.visibilityState === "visible") load(); };
     const timer = window.setInterval(load, 60_000);
@@ -24,6 +24,6 @@ export function CoachCard({ active, refreshKey, onOpen }: { active: boolean; ref
     {skipError && <p role="alert">Could not keep this skip on this phone. Try again.</p>}
     <p className="meta">Review first. Nothing is changed here.</p>
     <button type="button" className="btn-secondary" onClick={() => onOpen(card.destination)}>REVIEW SUGGESTION</button>{" "}
-    <button type="button" className="btn-secondary" onClick={() => { try { skipCoachCard(card, cards); setSkips(readCoachSkips()); setSkipError(false); } catch { setSkipError(true); } }}>SKIP</button>
+    <button type="button" className="btn-secondary" onClick={() => { try { skipCoachCard(card); setSkips(readCoachSkips()); setSkipError(false); } catch { setSkipError(true); } }}>SKIP</button>
   </section>;
 }
