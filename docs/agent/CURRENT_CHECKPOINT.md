@@ -7,7 +7,7 @@
 
 ---
 
-# Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
+# Historical — documentation truth (merged as #542; completion plan step 5, Gavin: "Go", "Let's work")
 # Historical — DOCTRINE-ALFRED-001 (merged as #543): the Doctrine records Alfred is part of BEYOND (Gavin, 2026-11-15: "Approved the doctrine")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-doctrine-alfred`. **Protected** (constitutional text): independent
