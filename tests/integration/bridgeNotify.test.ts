@@ -51,6 +51,15 @@ describe("BRIDGE-NOTIFY-001 — the notification contract", () => {
     expect(kept.map((m) => m.kind)).toEqual(["BEFORE_SHIFT", "WAKE", "TASK_DUE"]);
   });
 
+  it("two moments at the same time (different kinds) are two distinct alerts, each using a slot", () => {
+    // A 16:30 shift: "Shift in 30 minutes" and "Due today" both at 16:00. The Bridge shows both (keyed by time and kind).
+    // One lived day (Nov 2 16:30 to Nov 3 16:30): the two 16:00 moments take two of its three slots, so WAKE drops.
+    const day = [moment(at(3, 6), "SHIFT_DONE"), moment(at(3, 13, 30), "WAKE"), moment(at(3, 16), "BEFORE_SHIFT"), moment(at(3, 16), "TASK_DUE")];
+    const kept = applyAlertContract(day, ON);
+    expect(kept.map((m) => `${m.at}|${m.kind}`)).toEqual([`${at(3, 6)}|SHIFT_DONE`, `${at(3, 16)}|BEFORE_SHIFT`, `${at(3, 16)}|TASK_DUE`]);
+    expect(perLivedDay(kept)).toEqual([3]);
+  });
+
   it("quiet hours (crossing midnight) and quiet on the clock drop moments", () => {
     const quiet: KeyMomentAlertSettings = { off: [], quietFrom: "07:00", quietTo: "14:00" };
     expect(inQuietHours(at(3, 6, 59), quiet)).toBe(false);
@@ -76,6 +85,8 @@ describe("BRIDGE-NOTIFY-001 — the notification contract", () => {
     expect(plan.moments.at(-1)!.at - now.getTime()).toBeGreaterThan((HORIZON_DAYS - 1) * 24 * 3_600_000);
     expect(plan.moments.length).toBeGreaterThan(24);
     expect(plan.moments.every((m) => m.at > now.getTime())).toBe(true);
+    // Each moment's identity on the phone is its time and kind (Health Bridge Moment.key): never two alike.
+    expect(new Set(plan.moments.map((m) => `${m.at}|${m.kind}`)).size).toBe(plan.moments.length);
     // Two tasks on one day are one moment.
     expect(plan.moments.filter((m) => m.kind === "TASK_DUE")).toEqual([{ at: at(2, 16), kind: "TASK_DUE", title: "Due today", text: "Call the bank + 1 more", go: "" }]);
     // The end of a run says the days off start; a mid-run shift end keeps the usual debrief line.
