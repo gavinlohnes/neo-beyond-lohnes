@@ -129,6 +129,8 @@ describe("Production Command Console", () => {
       const screen = await render(<App />);
 
       await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).toBeVisible();
+      // LAUNCH-STEADY-001: the order is the day's, once it has been read (before that, a quiet reading frame).
+      await expect.element(screen.getByRole("region", { name: "Day mode" })).toBeVisible();
 
       const situation = document.querySelector<HTMLElement>(".today-situation");
       const guidance = document.querySelector<HTMLElement>(".console-guidance");
