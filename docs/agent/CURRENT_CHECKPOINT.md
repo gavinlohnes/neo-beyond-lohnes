@@ -1,3 +1,14 @@
+# Current objective — FOOD-SOURCES-001: where your calories and protein came from (Gavin, 2026-11-15)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, built on #530's branch. Feature lane; Gavin merges.
+  [Brief](FOOD-SOURCES-001.md).
+- **Scope:** WHERE IT CAME FROM on the calories page (7D/30D) and BODY's meal calories and protein history. Read only.
+- **Also open:** #530 (calories page) ready to merge; #532 (TARGET-PROPOSAL-002, your floor) in independent review;
+  DIRECTION-90-001 on `ccr-88f5c085-metric-direction`, waiting for #530.
+- **Next:** CI green, then Gavin merges, after #530.
+
+---
+
 # Current objective — METRIC-PAGE-001 slice 4: calories join the shared page (Gavin, 2026-11-14: "That's good for me")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-calories`, from master `77c8ab61`. Feature lane: no independent

@@ -16,7 +16,8 @@ export const TOP_SOURCES = 5;
 export const QUICK_PROTEIN = "Protein (quick log)";
 const DAY_MS = 86_400_000;
 
-export interface SourceEntry { key: string; name: string; at: string; beyondDayId: string; value: number }
+/** `at` is when it was eaten; `dayAt` is its lived day's 16:30 start, which names the day. */
+export interface SourceEntry { key: string; name: string; at: string; beyondDayId: string; dayAt: string; value: number }
 export interface FoodSource {
   key: string;
   /** The newest name it was logged under. */
@@ -26,7 +27,7 @@ export interface FoodSource {
   count: number;
   /** Share of the window's total, 0–1. */
   share: number;
-  /** Each lived day it was logged on, newest first, with that day's amount from it. */
+  /** Each lived day it was logged on (`at` is the lived day's start), newest first, with that day's amount from it. */
   days: { beyondDayId: string; at: string; value: number; count: number }[];
 }
 export interface FoodSources {
@@ -52,7 +53,7 @@ export function groupSources(entries: readonly SourceEntry[], top = TOP_SOURCES)
     const byDay = new Map<string, FoodSource["days"][number]>();
     for (const e of newest) {
       const day = byDay.get(e.beyondDayId);
-      if (day) { day.value += e.value; day.count += 1; } else byDay.set(e.beyondDayId, { beyondDayId: e.beyondDayId, at: e.at, value: e.value, count: 1 });
+      if (day) { day.value += e.value; day.count += 1; } else byDay.set(e.beyondDayId, { beyondDayId: e.beyondDayId, at: e.dayAt, value: e.value, count: 1 });
     }
     const sum = list.reduce((s, e) => s + e.value, 0);
     return { key, name: newest[0]!.name, total: sum, count: list.length, share: total > 0 ? sum / total : 0, days: [...byDay.values()] };
@@ -72,11 +73,11 @@ export async function getFoodSources(nutrient: SourceNutrient, windowDays: numbe
   const days = all.filter((d, i) => (d.endedAt !== undefined || i < all.length - 1) && Date.parse(d.startedAt) > start);
   const perDay = await Promise.all(days.map(async (d) => {
     const meals = (await getMealEntries(d.beyondDayId)).map((m): SourceEntry => ({
-      key: keyOf(m.savedMealId, m.name), name: m.name.trim(), at: m.at, beyondDayId: d.beyondDayId,
+      key: keyOf(m.savedMealId, m.name), name: m.name.trim(), at: m.at, beyondDayId: d.beyondDayId, dayAt: d.startedAt,
       value: nutrient === "calories" ? m.effectiveCalories : m.effectiveProteinG,
     }));
     const quick = nutrient === "protein" ? (await getProteinEntries(d.beyondDayId)).map((p): SourceEntry => ({
-      key: "protein:quick", name: QUICK_PROTEIN, at: p.at, beyondDayId: d.beyondDayId, value: p.effectiveGrams,
+      key: "protein:quick", name: QUICK_PROTEIN, at: p.at, beyondDayId: d.beyondDayId, dayAt: d.startedAt, value: p.effectiveGrams,
     })) : [];
     return [...meals, ...quick];
   }));

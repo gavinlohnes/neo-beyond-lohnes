@@ -3287,3 +3287,15 @@ Gavin approved the bounded recording/history/correction proposal ("Approved.").
 **Owner authorization:** Gavin approved clearer normal/Gym workout execution, optional “how many reps left” recording, warm-up/working labels and a finish compared with the previous session. CSV remains deferred.
 
 Working sets are the default. Additional warm-ups leave the prescribed working slot open and remain visible/undoable history, excluded from working counts, volume, records, trends and rotation evidence. Historical sets without a kind remain working sets. Optional integer reps left is 0–10: blank is unknown and 0 means none left. Previous effort is never copied implicitly. Effort is recording only and must not change recommendations without a separate owner decision. The recap compares matching actual lifts in the same template and STANDARD/REDUCED variant, labels a prior partial, excludes changed lifts and presents weight × reps as volume rather than a strength score. Existing training workflows and visual identity remain authoritative. No schema, dependency or provider expansion.
+
+## FOOD-SOURCES-001 — where your calories and protein came from (Gavin, 2026-11-15: "I approve food source as the next objective")
+
+[Brief](agent/FOOD-SOURCES-001.md).
+
+- **Where:** the calories metric page (7D and 30D) and BODY's YOUR PROGRESS for meal calories and protein (over the
+  chosen range).
+- **What:** WHERE IT CAME FROM, the top five sources by total with share and times logged, then the rest together; a
+  row opens its lived days, and in BODY a day opens its records.
+- **Rules:** corrected values, undone meals left out; a saved meal is one source even if renamed, a typed meal groups
+  by name; finished lived days only; missing days left out and counted, never zero; read only.
+- **Never:** judgement of foods, suggestions to cut or avoid, Engine or recommendation input.

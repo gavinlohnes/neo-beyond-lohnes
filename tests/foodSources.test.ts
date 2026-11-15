@@ -6,7 +6,7 @@ import { getMealEntries } from "../src/application/nutritionQueries";
 import { getFoodSources, groupSources, QUICK_PROTEIN, type SourceEntry } from "../src/application/foodSources";
 
 /** FOOD-SOURCES-001: where calories and protein came from, from your own logs after corrections. Read only. */
-const e = (key: string, name: string, at: string, beyondDayId: string, value: number): SourceEntry => ({ key, name, at, beyondDayId, value });
+const e = (key: string, name: string, at: string, beyondDayId: string, value: number): SourceEntry => ({ key, name, at, beyondDayId, dayAt: `start-${beyondDayId}`, value });
 
 describe("groupSources", () => {
   it("groups by source, biggest first, the top named and the rest together, with shares of the total", () => {
@@ -22,7 +22,7 @@ describe("groupSources", () => {
     expect(g.others).toEqual({ sources: 2, total: 300, share: 300 / 1900 });
     // Days newest first, two logs on one day summed.
     expect(g.sources[0]!.days.map((d) => d.beyondDayId)).toEqual(["d2", "d1"]);
-    expect(groupSources([e("a", "x", "t1", "d1", 100), e("a", "x", "t2", "d1", 50)]).sources[0]!.days).toEqual([{ beyondDayId: "d1", at: "t2", value: 150, count: 2 }]);
+    expect(groupSources([e("a", "x", "t1", "d1", 100), e("a", "x", "t2", "d1", 50)]).sources[0]!.days).toEqual([{ beyondDayId: "d1", at: "start-d1", value: 150, count: 2 }]);
   });
 
   it("names a source by its newest name, leaves out zero-value sources and returns nothing for no entries", () => {

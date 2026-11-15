@@ -47,17 +47,18 @@ describe("FOOD-SOURCES-001", () => {
     const sheet = page.getByRole("dialog", { name: "CALORIES", exact: true });
     await sheet.getByRole("button", { name: "Last 7 lived days", exact: true }).click();
     await expect.poll(text).toContain("WHERE IT CAME FROM · LAST 7 DAYS");
-    // Seven finished days (22–28): 7 bowls, 4 shakes (22, 24, 26, 28), toast on 25 and 27.
+    // The last 7 × 24 hours hold six finished lived days (23–28) and today, which isn't counted:
+    // 6 bowls, 3 shakes (24, 26, 28), toast on 25 and 27.
     await expect.poll(() => [...box()!.querySelectorAll(".md-source-row summary")].map((s) => s.textContent)).toEqual([
-      "Rice bowl4,550 kcal · 69% · 7 times", "Protein shake1,200 kcal · 18% · 4 times", "Toast400 kcal · 6% · 2 times",
+      "Rice bowl3,900 kcal · 75% · 6 times", "Protein shake900 kcal · 17% · 3 times", "Toast400 kcal · 8% · 2 times",
     ]);
-    expect(text()).toContain("6,150 kcal logged on 7 of the last 7 finished days");
+    expect(text()).toContain("5,200 kcal logged on 6 of the last 6 finished days");
     await sheet.getByRole("button", { name: "Last 30 lived days", exact: true }).click();
     await expect.poll(text).toContain("WHERE IT CAME FROM · LAST 30 DAYS");
     await expect.poll(text).toContain("logged on 10 of the last 29 finished days; days with nothing logged are left out.");
     // A row opens the days it was logged on, newest first.
     await sheet.getByText("Toast", { exact: true }).click();
-    expect([...box()!.querySelectorAll("details[open] .md-source-day")].map((d) => d.textContent)).toEqual(["Tue, Oct 20200 kcal", "Sun, Oct 18200 kcal"]);
+    expect([...box()!.querySelectorAll("details[open] .md-source-day")].map((d) => d.textContent)).toEqual(["Mon, Oct 19200 kcal", "Sat, Oct 17200 kcal"]);
     expect(text()).not.toMatch(JUDGEMENT);
     for (const width of [320, 412, 1024]) {
       await page.viewport(width, 900);
@@ -78,10 +79,10 @@ describe("FOOD-SOURCES-001", () => {
     await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("protein");
     await screen.getByRole("button", { name: "7 DAYS", exact: true }).click();
     await expect.poll(() => [...(box()?.querySelectorAll(".md-source-row summary") ?? [])].map((s) => s.textContent)).toEqual([
-      "Rice bowl280 g · 51% · 7 times", "Protein shake200 g · 37% · 4 times", "Protein (quick log)25 g · 5% · 1 time", "Toast16 g · 3% · 2 times",
+      "Rice bowl240 g · 56% · 6 times", "Protein shake150 g · 35% · 3 times", "Protein (quick log)25 g · 6% · 1 time", "Toast16 g · 4% · 2 times",
     ]);
     await screen.getByText("Protein (quick log)", { exact: true }).click();
-    await screen.getByRole("button", { name: /^Wed, Oct 21, 25 g: open that day's records$/ }).click();
+    await screen.getByRole("button", { name: /^Tue, Oct 20, 25 g: open that day's records$/ }).click();
     await expect.element(screen.getByRole("heading", { name: /^Protein · / })).toBeVisible();
   });
 
