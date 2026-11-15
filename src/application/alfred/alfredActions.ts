@@ -19,6 +19,7 @@ import { URGE_TRIGGERS, type UrgeTrigger } from "../../domain/common/types";
 import { setHabitDone } from "../habitCommands";
 import { addCollectionItem } from "../collectionCommands";
 import { getCollection } from "../collectionQueries";
+import { confirmFix, describeFix, describeRecentEntries, type FixProposal } from "./fixEntries";
 
 /**
  * ALFRED-001: what Alfred may propose. Each tool call becomes a card the operator confirms; only the
@@ -45,6 +46,8 @@ export type AlfredProposal =
   // GYM-SETS-001: one set into the workout in progress. Made only by the free helper, not by Alfred.
   // CORRECTIONS-001: change today's latest water/sleep/weight log through its correction chain. Free helper only.
   | { kind: "correct_log"; metric: "water" | "sleep" | "weight"; target_id: string; from: number; to: number }
+  // ALFRED-FIX-001: move, correct or remove one logged meal, water or protein entry; BEYOND fills the card from the record.
+  | FixProposal
   | { kind: "log_set"; session_id: string; exercise_id: string; exercise_name: string; weight: number; reps: number }
   | { kind: "clean_day" }
   | { kind: "open_training" }
@@ -140,6 +143,13 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
     description: name === "memory_retire" ? "Propose STOP USING an active PERSONAL_FACT. Keeps correction history; does not erase it." : "Propose RESTORE of a PERSONAL_FACT only from an operator-provided exact reference. Never invent a missing revision.",
     input_schema: { type: "object" as const, additionalProperties: false, required: ["memory_id", "revision", "source", "text"], properties: {
       memory_id: s("exact PERSONAL_FACT id"), revision: s("exact revision from its source"), source: { type: "string" as const, enum: ["PERSONAL_FACT"] }, text: s("exact current fact") } } })),
+  { name: "fix_entry", description: "Propose fixing one meal, water or protein entry he logged in the current or previous lived day: move it to the time he really had it, correct its amount, or remove it. Call day_entries first for the entry's id. BEYOND checks the id and fills the card from the record; he confirms. Never use this to log something new.",
+    input_schema: { type: "object", additionalProperties: false, required: ["entry_id", "action"], properties: {
+      entry_id: s("the id from day_entries"), action: { type: "string", enum: ["move", "correct", "remove"] },
+      time: s("move only: the new time as HH:MM, 24-hour (\"23:00\")"),
+      calories: { type: "number", description: "correct, meal only" }, protein_g: { type: "number", description: "correct, meal only" },
+      carbs_g: { type: "number", description: "correct, meal only" }, fat_g: { type: "number", description: "correct, meal only" },
+      oz: { type: "number", description: "correct, water only" }, grams: { type: "number", description: "correct, protein only" } } } },
   { name: "log_urge", description: "Propose logging an urge (his quit tracker) he says he had, with what set it off.",
     input_schema: { type: "object", additionalProperties: false, required: ["trigger"], properties: { trigger: { type: "string", enum: [...URGE_TRIGGERS], description: "what set it off" } } } },
 ];
@@ -151,6 +161,8 @@ export const ALFRED_TOOLS: Anthropic.Beta.BetaTool[] = [
 export const ALFRED_READ_TOOLS: Anthropic.Beta.BetaTool[] = [
   { name: "search_records", description: "Search his whole BEYOND history (events, meals, sleep, workouts and sets, tasks, notes, remembered facts) for words, newest first. Use for \"when did I last…\" and anything older than the records above.",
     input_schema: { type: "object", additionalProperties: false, required: ["query"], properties: { query: s("one or two words that would appear in the record, e.g. \"CPAP\", \"bench\", \"pizza\"") } } },
+  { name: "day_entries", description: "List his meal, water and protein entries in the current and previous lived day, each with its id, time and amount. Use before fix_entry.",
+    input_schema: { type: "object", additionalProperties: false, properties: {} } },
   { name: "get_days", description: "Read his lived days between two dates (YYYY-MM-DD, inclusive): work, sleep, food, water, check-in, workouts, urges, clean days. Use for weekly reviews and to compare periods (\"did this work for me?\"); compare numbers only as they appear.",
     input_schema: { type: "object", additionalProperties: false, required: ["from", "to"], properties: { from: s("YYYY-MM-DD"), to: s("YYYY-MM-DD") } } },
 ];
@@ -160,6 +172,7 @@ export async function runReadTool(name: string, input: unknown, includePersonal 
   const i = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
   const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
   if (name === "search_records") return typeof i.query === "string" ? searchRecords(i.query, 30, includePersonal) : "Give a word to search for.";
+  if (name === "day_entries") return describeRecentEntries();
   if (name === "get_days") { const from = date(i.from), to = date(i.to); return from && to ? getDays(from, to) : "Give from and to as YYYY-MM-DD."; }
   return null;
 }
@@ -222,6 +235,12 @@ export function toProposal(name: string, input: unknown): AlfredProposal | null 
       return person && occasion && fits ? { kind: "person_date", person, occasion, month, day, note: str(i.note) } : null;
     }
     case "log_urge": { const trigger = URGE_TRIGGERS.find((u) => u === i.trigger); return trigger ? { kind: "log_urge", trigger } : null; }
+    case "fix_entry": {
+      const id = str(i.entry_id), action = i.action === "move" || i.action === "correct" || i.action === "remove" ? i.action : undefined;
+      if (!id || !action) return null;
+      const values = { calories: num(i.calories), protein_g: num(i.protein_g), carbs_g: num(i.carbs_g), fat_g: num(i.fat_g), oz: num(i.oz), grams: num(i.grams) };
+      return { kind: "fix_entry", action, entry_id: id, time: str(i.time), values: Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined)) };
+    }
     default: return null;
   }
 }
@@ -254,6 +273,7 @@ export function describeProposal(p: AlfredProposal): string {
     case "task_new_date": return `New date: ${p.title} · ${humanDate(p.due_date)}`;
     case "task_plan": return `Plan: ${p.title} · ${humanDate(p.planned_date)}`;
     case "routine_tick": return `Tick: ${p.text} (${p.routine_title})`;
+    case "fix_entry": return describeFix(p);
     case "correct_log": return p.metric === "water" ? `Change last water: ${p.from} → ${p.to} oz` : p.metric === "sleep" ? `Change last sleep: ${Math.floor(p.from / 60)}h ${String(p.from % 60).padStart(2, "0")}m → ${Math.floor(p.to / 60)}h ${String(p.to % 60).padStart(2, "0")}m` : `Change last weight: ${p.from} → ${p.to} lbs`;
     case "log_set": return `Log set: ${p.exercise_name} ${p.weight} × ${p.reps}`;
     case "clean_day": return "Log today clean";
@@ -302,6 +322,7 @@ export async function confirmProposal(p: AlfredProposal): Promise<ConfirmResult>
   if (p.kind === "habit_done") { await setHabitDone(p.habit_id, true); return {}; }
   if (p.kind === "task_new_date") { await modifyObligation(p.task_id, { dueAt: p.due_date }); return {}; }
   if (p.kind === "task_plan") { await modifyObligation(p.task_id, { plannedAt: p.planned_date }); return {}; }
+  if (p.kind === "fix_entry") { await confirmFix(p); return {}; }
   if (p.kind === "correct_log") {
     const day = await ensureActiveDay();
     if (p.metric === "water") await correctWater(day.id, p.target_id, p.to);

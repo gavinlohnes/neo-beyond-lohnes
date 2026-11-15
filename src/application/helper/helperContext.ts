@@ -10,6 +10,7 @@ import type { WorkoutTemplateId } from "../../domain/workout/types";
 import { getLogTemplates } from "../snippetQueries";
 import { getActiveHabits } from "../habitQueries";
 import { getCollections } from "../collectionQueries";
+import { recentEntries, snapshotOf } from "../alfred/fixEntries";
 
 /**
  * The one read the free helper needs, shared by Alfred's sheet, search and drive home so the preview,
@@ -20,6 +21,8 @@ export async function readHelperContext(now = new Date()): Promise<HelperContext
   const day = await getActiveDay();
   const [water, sleep, weight] = day ? await Promise.all([getHydrationEntries(day.id), getSleepEntries(day.id), getBodyweightEntries(day.id)]) : [[], [], []];
   const w = water.at(-1), s = sleep.at(-1), b = weight.at(-1);
+  // ALFRED-FIX-001: the entries a plain "move / remove / was N kcal" can fix, newest last.
+  const entries = await recentEntries().catch(() => []);
   const exercises = session ? await resolveTemplateExercises(session.templateId as WorkoutTemplateId, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : [];
   return {
     now, savedMeals: meals, openTasks: tasks,
@@ -33,6 +36,7 @@ export async function readHelperContext(now = new Date()): Promise<HelperContext
       ...(s ? { sleep: { id: s.headEventId, value: s.effectiveDurationMinutes } } : {}),
       ...(b ? { weight: { id: b.headEventId, value: b.effectiveWeightLbs } } : {}),
     },
+    entries: entries.map((e) => ({ id: e.rootEventId, dayStartedAt: e.dayStartedAt, snapshot: snapshotOf(e) })),
     workout: session ? { sessionId: session.id, exercises: exercises.map((e) => ({ id: e.exerciseId, name: e.name })) } : null,
   };
 }

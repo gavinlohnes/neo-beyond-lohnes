@@ -3344,3 +3344,13 @@ An explicit task move changes plannedAt only, through the existing intent comman
   CHANGE TIME, EDIT AMOUNT, REMOVE (confirmed).
 - Every fix is the existing append-only correction, retime or removal; HISTORY keeps the original. Times stay inside
   their lived day. No Engine, schema, command or event change.
+
+## ALFRED-FIX-001 — Alfred and the free helper fix a logged entry (Gavin, 2026-11-15: "Approved."; Protected)
+
+[Brief](agent/ALFRED-FIX-001.md). Extends ALFRED-001's cards; Alfred still never writes.
+
+- Alfred reads the current and previous lived day's meal, water and protein entries with ids (`day_entries`) and
+  proposes `fix_entry`: move to a time, correct the amount, or remove. The free helper proposes the same from plain
+  words with no AI call.
+- BEYOND fills every fix card from the record (the real before and after); a wrong id or impossible time is never a
+  card. SAVE re-checks the record, refuses if it changed since, and runs the existing retime, correction or removal.
