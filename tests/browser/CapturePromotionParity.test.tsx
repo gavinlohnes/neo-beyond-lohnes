@@ -7,6 +7,7 @@ import { captureItem, setWorkContext, startDay, submitCheckIn } from "../../src/
 import { DailyControls as TodayScreen } from "../../src/ui/screens/today/TodayScreen";
 import { convertCaptureToObligation } from "../../src/application/intentCommands";
 import { db } from "../../src/persistence/db";
+import type { CheckInValues } from "../../src/ui/screens/today/checkInFields";
 
 /**
  * CAPTURE-PARITY-001 (owner-approved ranked item, 2026-11-15): an older
@@ -28,7 +29,7 @@ async function settle() {
   for (const animation of document.getAnimations()) if (animation.effect?.getComputedTiming().iterations !== Infinity) animation.finish();
 }
 
-const GREEN = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
+const GREEN: CheckInValues = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 };
 
 /** TODAY's attention-tier Capture list, exactly as TodayScreen.test reaches it. */
 async function captureList(texts: string[]) {
