@@ -15,8 +15,8 @@ TODAY as a mission briefing. [Master brief](agent/BEYOND-4.0.md) with Gavin's fi
 ## Completed — ship existing work before anything new (Gavin, 2026-11-15: "Go")
 
 From the [audit](audit/AUDIT-REPORT.md): 1 week planner (#529, merged) → 2 timeline editing (#540, merged) →
-3 #482 closed, #473 parked (Gavin) → 4 ALFRED-FIX-001 (#541, merged) → 5 documentation truth (this
-README/roadmap/audit update; the Doctrine's "AI optional" note awaits Gavin's approval) → 6 the field gate on the
+3 #482 closed, #473 parked (Gavin) → 4 ALFRED-FIX-001 (#541, merged) → 5 documentation truth (#542, and the Doctrine's
+"AI optional" note replaced by owner approval) → 6 the field gate on the
 phone. New objectives start only after these. Live status: CURRENT_CHECKPOINT and GitHub.
 
 Earlier: HABIT-RHYTHM-001 (2026-11-14) merged as #520.

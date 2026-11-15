@@ -3355,6 +3355,13 @@ An explicit task move changes plannedAt only, through the existing intent comman
 - BEYOND fills every fix card from the record (the real before and after); a wrong id or impossible time is never a
   card. SAVE re-checks the record, refuses if it changed since, and runs the existing retime, correction or removal.
 
+## DOCTRINE-ALFRED-001 — the Doctrine records that Alfred is part of BEYOND (Gavin, 2026-11-15: "Approved the doctrine")
+
+The Operator Interface Doctrine's 2026-10-09 "smart by design, AI optional; an AI Advisor is not required" note is
+replaced by RULES-2026-10-31, already in PRODUCT_DIRECTION: Alfred (Claude) is part of BEYOND, answers from the records,
+never invents facts and proposes changes the operator confirms; the deterministic Engine keeps recommendation
+authority; BEYOND works fully without him. No behaviour changes: this aligns the constitution with the ruling.
+
 ## BEYOND-4.0 — "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
 
 [Master brief](agent/BEYOND-4.0.md). Gavin asked for "a pretty big transformation" and ruled:

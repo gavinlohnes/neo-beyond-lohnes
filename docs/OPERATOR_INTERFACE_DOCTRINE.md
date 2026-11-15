@@ -17,10 +17,13 @@ must earn recession through evidence; it never earns authority over the operator
 
 - **INFORM → INTERPRET → RECOMMEND → USER DECIDES.** The deterministic Engine owns one primary
   Recommendation, and **NO ACTION REQUIRED** is a successful FIELD state.
-- The system reports and exposes evidence-grounded interpretations; an AI Advisor is not required.
-  Prediction is not fact, silence is valid, manual operation remains available, and user authority
-  is absolute. Owner amendment, 2026-10-09: smart by design, AI optional; Delta is not required.
-  Preserve deterministic intelligence and the operator's final decision.
+- The system reports and exposes evidence-grounded interpretations. Prediction is not fact, silence
+  is valid, manual operation remains available, and user authority is absolute. Owner amendment,
+  2026-10-31 (RULES-2026-10-31; recorded here 2026-11-15, Gavin: "Approved the doctrine"), replacing
+  2026-10-09's "AI optional": Alfred (Claude) is part of BEYOND. He answers from BEYOND's records,
+  never invents facts, and proposes changes the operator confirms; the deterministic Engine keeps
+  recommendation authority, and BEYOND works fully without him. Preserve deterministic intelligence
+  and the operator's final decision.
 - History and provenance remain inspectable. Corrections supersede rather than erase.
 
 ## Depth, attention, and control

@@ -2,12 +2,21 @@
 
 - **Authority:** [master brief](BEYOND-4.0.md). Builder for 4.0-a: Claude Code. Each release: own PRs; Protected parts
   (Engine learning, TODAY redesign) get independent exact-head review; Gavin merges.
-- **Now:** 4.0-a step 1, the TODAY split (no visible change) and test-storage isolation.
-- **Open:** #543 (Doctrine line, review PASS, ready to merge).
+- **Now:** 4.0-a step 1, the TODAY split (no visible change).
+- **Merged:** #543 (Doctrine line).
 
 ---
 
 # Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
+# Historical — DOCTRINE-ALFRED-001 (merged as #543): the Doctrine records Alfred is part of BEYOND (Gavin, 2026-11-15: "Approved the doctrine")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-doctrine-alfred`. **Protected** (constitutional text): independent
+  exact-head review; Gavin merges. Replaces the 2026-10-09 "AI optional" note with RULES-2026-10-31. Docs only.
+- **Completion plan:** steps 1–5 merged (#529, #540, #541, #542; #482 closed, #473 parked). Next: the field gate.
+
+---
+
+# Historical — documentation truth (merged as #542) (completion plan step 5, Gavin: "Go", "Let's work")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
   (`docs/audit/`), the README's stale "AI optional" and navigation text, and the roadmap's current-plan header.
