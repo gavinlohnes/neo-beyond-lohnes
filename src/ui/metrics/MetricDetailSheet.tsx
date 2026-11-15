@@ -4,6 +4,7 @@ import { rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type D
 import type { PeriodValue } from "../../domain/health/measuredSeries";
 import { LogSheet } from "../components/LogSheet";
 import { SourceTag } from "../foundation/primitives";
+import { FoodSources } from "./FoodSources";
 import { describeGarminAsOf, SyncGarminLink, UnusualNote } from "../screens/today/MeasuredSheet";
 import { askAlfred } from "../components/AlfredSheet";
 import { garminFreshness } from "../../application/bodyDashboard";
@@ -266,6 +267,9 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
           <table><tbody>{[...values].reverse().map((v) => <tr key={v.from}><th scope="row">{byWeek ? week(v.from) : day(v.from)}</th><td>{v.value === null ? (garmin ? "Not measured" : "Not logged") : withUnit(metric, v.value)}{v.partial ? " so far" : ""}</td></tr>)}</tbody></table>
         </details>
       </>}
+
+      {/* FOOD-SOURCES-001: what made up the eaten side, over the range's days. */}
+      {calories && (range === "7d" || range === "30d") && <FoodSources nutrient="calories" windowDays={range === "7d" ? 7 : 30} refreshKey={refreshKey} />}
 
       {calories ? <section className="md-split" aria-label="Work days and days off">
         {(["work", "off"] as const).map((k) => <div key={k} className="md-split__side" data-md-split={k}>
