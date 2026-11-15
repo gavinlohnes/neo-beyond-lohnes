@@ -7,8 +7,8 @@
   changes; stay inside `bridgePlan.ts` and the Android alert machinery; full gate; do not merge. It implements
   [BEYOND-4.0](BEYOND-4.0.md) decision 5 for the existing BRIDGE-MOMENTS-001/002 moments.
 - **Builder:** Grok Bot. Branch `codex/bridge-notify-001` from fetched `origin/master` `527332ef` (#552 merged).
-- **Lane: Protected.** `classify-risk` reports PROTECTED (persistence path, Android permissions surface); semantically
-  this touches a persisted settings row that backups carry and how notifications reach the owner. Independent
+- **Lane: Protected.** `npm run check:risk -- 527332ef` suggests PROTECTED (governance docs; domain types). Semantically
+  it also adds a persisted settings field that backups carry and changes how notifications reach the owner. Independent
   exact-head review, green CI; Gavin merges. No schema version, Engine, dependency, permission or provider change.
 
 ## What changes
