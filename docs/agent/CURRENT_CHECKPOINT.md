@@ -6,7 +6,7 @@
 
 ---
 
-# Current objective — documentation truth (completion plan step 5, Gavin: "Go", "Let's work")
+# Historical — documentation truth (merged as #542; completion plan step 5, Gavin: "Go", "Let's work")
 # Current programme — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
 
 - **Authority:** [master brief](BEYOND-4.0.md). Builder for 4.0-a: Claude Code. Each release: own PRs; Protected parts
