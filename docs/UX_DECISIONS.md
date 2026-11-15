@@ -3317,3 +3317,15 @@ estimate".
   shown weekly change is the capped one.
 - **Owner direction (2026-11-15):** "I want Beyond to be smart and act like a coach or nutritionist or weight management
   professional." Future proposals build toward this; each new capability is still approved by Gavin.
+
+## FOOD-SOURCES-001 — where your calories and protein came from (Gavin, 2026-11-15: "I approve food source as the next objective")
+
+[Brief](agent/FOOD-SOURCES-001.md).
+
+- **Where:** the calories metric page (7D and 30D) and BODY's YOUR PROGRESS for meal calories and protein (over the
+  chosen range).
+- **What:** WHERE IT CAME FROM, the top five sources by total with share and times logged, then the rest together; a
+  row opens its lived days, and in BODY a day opens its records.
+- **Rules:** corrected values, undone meals left out; a saved meal is one source even if renamed, a typed meal groups
+  by name; finished lived days only; missing days left out and counted, never zero; read only.
+- **Never:** judgement of foods, suggestions to cut or avoid, Engine or recommendation input.

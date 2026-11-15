@@ -1,4 +1,11 @@
-# Current objective — DIRECTION-90-001: the last 90 days against your year (Gavin, 2026-11-14: "Approved")
+# Current objective — FOOD-SOURCES-001: where your calories and protein came from (Gavin, 2026-11-15)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, now on master (after #530). Feature lane; Gavin merges.
+  [Brief](FOOD-SOURCES-001.md).
+- **Scope:** WHERE IT CAME FROM on the calories page (7D/30D) and BODY's meal calories and protein history. Read only.
+- **Merged today:** #530 (calories page), #531 and #532 (calorie proposal and floor). **Also merged:** #533
+  (DIRECTION-90-001, the 90-day line).
+# Historical — DIRECTION-90-001 (merged as #533): the last 90 days against your year (Gavin, 2026-11-14: "Approved")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-direction`, now on master (after #530).
   Feature lane; Gavin merges. [Brief](DIRECTION-90-001.md).

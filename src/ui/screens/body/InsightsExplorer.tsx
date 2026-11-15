@@ -3,6 +3,7 @@ import type { WeighIn } from "../../../application/bodyTrendQueries";
 import { formatShortDate } from "../../../application/bodyTrendQueries";
 import { INSIGHT_DAY_MS, insightPoints, insightWindow, type BodyInsights, type InsightMetric, type InsightPoint } from "../../../application/bodyInsightsQueries";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
+import { FoodSources } from "../../metrics/FoodSources";
 import "./insights.css";
 import "../../charts/suitData.css";
 
@@ -57,6 +58,12 @@ export function InsightsExplorer({ data, weights, goalWeightLbs, hideChart = fal
       <p className="meta">{metric === "weight" ? "Average per weigh-in" : "Average per recorded day segment"} · {window.current.length} {metric === "weight" ? "weigh-ins" : "observations"}</p>
       {(metric === "calories" || metric === "protein") && <p className="meta">Recorded intake only; active days may be partial.</p>}
     </div>
+    {/* FOOD-SOURCES-001: where it came from over the same range, each day opening its records. */}
+    {(metric === "calories" || metric === "protein") && <FoodSources nutrient={metric} windowDays={range} refreshKey={data.readAt}
+      onOpenDay={onSources ? (beyondDayId) => {
+        const day = data.days.find((d) => d.id === beyondDayId);
+        if (day) onSources({ id: beyondDayId, at: day.at, value: day[metric] ?? 0, source: { beyondDayId } }, metric);
+      } : undefined} />}
     {hideChart ? <p className="meta">The chart is hidden while your accomplishment timeline is open.</p> : <ObservationChart points={window.current} metric={metric} readAt={data.readAt} days={range}
       pointId={state.pointId} focusDayId={state.focusDayId}
       onSelect={(pointId) => change({ ...state, pointId })} onSources={onSources} />}
