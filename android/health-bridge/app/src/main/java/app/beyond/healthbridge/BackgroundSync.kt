@@ -77,6 +77,9 @@ object BackgroundSync {
 
 class GarminCheckWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
+        // BRIDGE-NOTIFY-001: each background check also re-arms BEYOND's last plan (four weeks, at most 3 a day)
+        // and refreshes the widget, so alerts keep coming between SYNC GARMIN taps. Nothing is read or sent.
+        try { MomentAlerts.arm(applicationContext); BriefWidget.refresh(applicationContext) } catch (e: Exception) { /* next check */ }
         try {
             if (HealthConnectClient.getSdkStatus(applicationContext) != HealthConnectClient.SDK_AVAILABLE) return Result.success()
             val client = HealthConnectClient.getOrCreate(applicationContext)

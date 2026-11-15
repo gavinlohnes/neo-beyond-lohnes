@@ -1,4 +1,24 @@
-# Current objective — ALFRED-TOOLS-001, then SHIFT-CORRECT-001 (Alfred follows commands)
+# Current objective — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
+
+- Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /
+  plan-to-confirm where they fit existing kinds, the plan through the background sync; no new kinds, no Engine change.
+  [Brief](BRIDGE-NOTIFY-001.md). Branch `codex/bridge-notify-001` from fetched master `527332ef` (#552 merged there).
+- Lane PROTECTED (persisted settings on the backed-up schedule row; notifications). No schema version, Engine,
+  permission or dependency change. Health Bridge 0.11.1 rolls a four-week plan forward; it needs a device check.
+- PR [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554). The independent review of `088c9609` blocked it
+  (late inexact alarm lost on re-arm; conflict with #553). Fixed on the same branch (Gavin, 2026-11-15: "Go ahead and
+  fix it"): `origin/master` `2e68feaf` merged in with a normal merge (no force-push); the Bridge re-arm keeps unshown
+  moments within a 2 h grace; same-time moments are two alerts; docs and settings copy corrected; quick taps keep every
+  change. See the brief's review responses. Needs a renewed independent exact-head review.
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. Plan-to-confirm moments and
+  a true BEYOND-to-Bridge background hand-off are deferred (see brief).
+- No other open work: ALFRED-TOOLS-001 [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) merged as
+  `527332ef` (2026-11-15 05:45 CT) and SHIFT-CORRECT-001 [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553)
+  merged as `2e68feaf` (2026-11-15 15:04 CT), both by Gavin. The ALFRED section below is kept as history.
+
+---
+
+# Historical — ALFRED-TOOLS-001, then SHIFT-CORRECT-001 (Alfred follows commands; both merged)
 
 - Builder Grok Bot. Gavin, 2026-11-15 04:26 CT, after his "Im still working till 0600. Fix my log" screenshot: "Start
   with missions 1 and 2 (tool registry + shift correction)"; "Yes, amend WORK TRANSITION to allow explicit shift
@@ -8,7 +28,7 @@
   (AI write proposals): independent exact-head review, green CI, Gavin merges. No schema, Engine or dependency change.
 - Mission 2: SHIFT-CORRECT-001, stacked on mission 1 (it adds a registry card). [Brief](SHIFT-CORRECT-001.md).
 - Checkpoint PR #551 (4.0-d merged) merged as `58bd0c65`; its text below is unchanged.
-- Gates: local `TZ=UTC npm run verify` green on each branch head before push; PRs [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) and [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553) open (Gavin approved
+- Gates: local `TZ=UTC npm run verify` green on each branch head before push; PRs [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) and [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553) opened (both since merged; Gavin approved
   push, 2026-11-15 05:33 CT). Final exact-head evidence belongs on each PR. Gavin alone merges.
 
 ---

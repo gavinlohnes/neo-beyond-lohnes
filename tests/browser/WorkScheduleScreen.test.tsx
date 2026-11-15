@@ -57,3 +57,32 @@ describe("WorkScheduleScreen (real browser)", () => {
     await expect.element(screen.getByRole("button", { name: "SAVE SCHEDULE", exact: true })).toBeDisabled();
   });
 });
+
+describe("BRIDGE-NOTIFY-001: key-moment alert settings (real browser)", () => {
+  it("turns one kind off and sets quiet hours, saved straight away", async () => {
+    const { getKeyMomentAlerts } = await import("../../src/application/keyMomentAlerts");
+    const screen = await render(<WorkScheduleScreen />);
+    const wake = screen.getByRole("button", { name: "Up for the shift alert", exact: true });
+    await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+    await wake.click();
+    await expect.element(wake).toHaveAttribute("aria-pressed", "false");
+    await screen.getByRole("button", { name: "Quiet hours", exact: true }).click();
+    await expect.element(screen.getByText("Saved. Your phone gets it at the next SYNC GARMIN.", { exact: true })).toBeVisible();
+    await expect.poll(getKeyMomentAlerts).toEqual({ off: ["WAKE"], quietFrom: "08:00", quietTo: "14:00" });
+  });
+
+  it("keeps both changes when two switches are tapped before the screen re-renders", async () => {
+    const { getKeyMomentAlerts, setKeyMomentAlerts } = await import("../../src/application/keyMomentAlerts");
+    await setKeyMomentAlerts({ off: [], quietFrom: null, quietTo: null });
+    const screen = await render(<WorkScheduleScreen />);
+    const wake = screen.getByRole("button", { name: "Up for the shift alert", exact: true });
+    const task = screen.getByRole("button", { name: "Task due alert", exact: true });
+    await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+    // Two taps in the same tick: the second must build on the first, not on the last render.
+    (wake.element() as HTMLElement).click();
+    (task.element() as HTMLElement).click();
+    await expect.element(task).toHaveAttribute("aria-pressed", "false");
+    await expect.element(wake).toHaveAttribute("aria-pressed", "false");
+    await expect.poll(getKeyMomentAlerts).toEqual({ off: ["WAKE", "TASK_DUE"], quietFrom: null, quietTo: null });
+  });
+});

@@ -26,6 +26,6 @@ describe("BRIDGE-MOMENTS-001", () => {
     await createObligation({ title: "Call the bank", dueAt: "2026-11-02" });
     await createObligation({ title: "Far off", dueAt: "2026-12-25" });
     const due = (await buildBridgePlan("https://example.test/beyond/", "", now)).moments.filter((m) => m.title === "Due today");
-    expect(due).toEqual([{ at: new Date(2026, 10, 2, 16, 0).getTime(), title: "Due today", text: "Call the bank", go: "" }]);
+    expect(due).toEqual([{ at: new Date(2026, 10, 2, 16, 0).getTime(), kind: "TASK_DUE", title: "Due today", text: "Call the bank", go: "" }]);
   });
 });

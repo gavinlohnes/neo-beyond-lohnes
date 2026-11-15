@@ -31,6 +31,21 @@ sync and BEYOND imports it straight away (BEYOND trusts the Bridge once SYNC GAR
 that phone). Android lets no app open BEYOND or write into it from the background, so that one tap
 stays. CI allows exactly the WorkManager services and the one background permission; still no Internet.
 
+BRIDGE-NOTIFY-001 (0.11.0, 0.11.1; Gavin 2026-11-15; BEYOND-4.0 decision 5): BEYOND's plan now reaches four
+weeks ahead and is already held to the notification contract in BEYOND (at most 3 a lived day, each kind can be
+turned off, quiet hours, nothing during a shift of the standing rotation). The Bridge still holds at most 24 alarms,
+so it rolls the window forward: after each moment fires, after a restart, at each SYNC GARMIN, and, only when Health
+Connect's "Access data in background" (Auto sync) is allowed, at each 3-hourly background check. Without background
+access the window still rolls on each fired alert and on restart. One SYNC GARMIN therefore keeps alerts coming for
+four weeks; a changed schedule, task or setting reaches the phone at the next SYNC GARMIN (Android lets BEYOND hand
+the Bridge nothing without a tap). No new permission.
+
+0.11.1 (review fixes): the alarms are inexact, so Android may deliver one up to an hour late. The Bridge remembers
+which moments it has actually shown; a re-arm sets again every moment not yet shown that is still to come or came due
+within the last 2 hours (it fires at once), so a re-arm can no longer cancel a late alarm for good, and a moment is
+never shown twice. A moment is identified by its time and kind, so two moments at the same minute (for example
+"Shift in 30 minutes" and "Due today" at 16:00) are two notifications.
+
 The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.

@@ -3433,3 +3433,12 @@ till 0600. Fix my log"): "Yes, amend WORK TRANSITION to allow explicit shift sta
 - Where: EDIT › on the work mark in TODAY's timeline (SHIFT sheet), Alfred's `shift_fix` card, and the free helper
   ("still working till 0600", "got off at 05:45"). Always one explicit confirm.
 - What it can't undo: an automation that already ran (the IFTTT "work ended" webhook); the card and sheet say so.
+
+## BRIDGE-NOTIFY-001 — key-moment alerts: 3 a day, kinds off, quiet hours (Gavin, 2026-11-15)
+
+Implements BEYOND-4.0 decision 5 for the existing Health Bridge moments. [Brief](agent/BRIDGE-NOTIFY-001.md).
+At most 3 alerts per lived day; when more are due, BEFORE SHIFT, then SHIFT'S DONE, then TASK DUE, then WAKE win,
+earlier first within a kind. Each kind can be switched off and there are owner-set quiet hours (MORE → Work Schedule);
+nothing sounds inside a scheduled shift. Day off rides on the last shift's SHIFT'S DONE; plan-to-confirm moments wait
+for a new kind. No new alert kinds; settings sit on the schedule row and travel with backups. The phone keeps a
+four-week plan and re-arms it in the background; changes reach it at the next SYNC GARMIN.
