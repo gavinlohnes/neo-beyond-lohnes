@@ -1,15 +1,15 @@
 # Current objective — FOOD-SOURCES-001: where your calories and protein came from (Gavin, 2026-11-15)
 
-- **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, built on #530's branch. Feature lane; Gavin merges.
+- **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, now on master (after #530). Feature lane; Gavin merges.
   [Brief](FOOD-SOURCES-001.md).
 - **Scope:** WHERE IT CAME FROM on the calories page (7D/30D) and BODY's meal calories and protein history. Read only.
-- **Also open:** #530 (calories page) ready to merge; #532 (TARGET-PROPOSAL-002, your floor) in independent review;
-  DIRECTION-90-001 on `ccr-88f5c085-metric-direction`, waiting for #530.
-- **Next:** CI green, then Gavin merges, after #530.
+- **Merged today:** #530 (calories page), #531 and #532 (calorie proposal and floor). **Also open:** #533
+  (DIRECTION-90-001, the 90-day line).
+- **Next:** CI green, then Gavin merges.
 
 ---
 
-# Current objective — METRIC-PAGE-001 slice 4: calories join the shared page (Gavin, 2026-11-14: "That's good for me")
+# Historical — METRIC-PAGE-001 slice 4 (merged as #530): calories join the shared page (Gavin, 2026-11-14: "That's good for me")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-calories`, from master `77c8ab61`. Feature lane: no independent
   review required; Gavin merges. Codex's WEEK-PLANNER-002 (#529) is open and does not touch these files beyond docs.
@@ -19,6 +19,27 @@
 - **Verification:** see the PR for the actual run results.
 - **Next:** CI green, then Gavin merges. After that every TODAY number with a detail view is on the shared page or
   sleep's own page.
+# Historical — TARGET-PROPOSAL-002 (merged as #532): your own floor and #531's review notes (Gavin, 2026-11-15)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-target-floor`, built on #531. Protected (additive stored field
+  `calorieFloorKcal`); independent exact-head review, green CI, Gavin merges. Brief: TARGET-PROPOSAL-001.md § 002.
+- **Then:** FOOD-SOURCES-001 (approved 2026-11-15), where calories and protein come from. DIRECTION-90-001 is built on
+  `ccr-88f5c085-metric-direction` and waits for #530.
+- **Merged:** #531 (calorie proposal). **Ready to merge:** #530 (calories page).
+
+---
+
+# Historical — TARGET-PROPOSAL-001 (merged as #531): a weekly calorie proposal you save or keep (Gavin, 2026-11-14: "Approved")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-target-proposal`, from master `77c8ab61`. **Protected:** amends
+  NUTRITION-003's "no formula" and Drop 6's "nothing reads the estimate". Needs independent exact-head review and green
+  CI; Gavin alone merges. [Brief](TARGET-PROPOSAL-001.md).
+- **Scope:** Weekly's CALORIES FOR THIS WEEK proposes a calorie target from the weight-trend burn estimate and the
+  goal weight and weekly rate (capped, floored at 1,500, at most 150 kcal a week of change). SAVE (with UNDO) or KEEP.
+  No Garmin input, no Engine input, no schema or dependency.
+- **Also open:** #530 (METRIC-PAGE-001 slice 4, calories page), ready to merge. Codex's #529 (WEEK-PLANNER-002) touches
+  `WeeklyCheckInScreen.tsx` elsewhere in the file; expect at most a small merge.
+- **Next:** independent review at the PR's head, then Gavin merges.
 
 ---
 

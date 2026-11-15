@@ -1834,6 +1834,10 @@ hitting a protein floor.
   "About 2,150–2,350 kcal a day", with what it came from and "Assumes those days' meals were all
   logged." It abstains ("Not enough data yet — needs …") below 14 meal-logged days or 8 weigh-ins
   spanning 2 weeks, and when the range would be wider than 1,000 kcal.
+- **Amended by TARGET-PROPOSAL-001 (Gavin, 2026-11-14: "Approved").** The target is still set only by the operator,
+  but Weekly now *offers* one: CALORIES FOR THIS WEEK reads the estimate above, with the operator's goal weight and
+  weekly rate, and proposes a number to SAVE (with UNDO) or KEEP. Nothing is saved without a tap; the estimate still
+  feeds nothing else (no Engine, recommendation, TODAY or Alfred). See TARGET-PROPOSAL-001 below.
 - **Protein target is derived, not set directly.** `getEffectiveProteinTargetG()`
   (`application/nutritionTargetQueries.ts`) = `proteinMultiplierGPerLb` × the most recently
   logged bodyweight (`getMostRecentBodyweight()`, cross-day — unlike the day-scoped
@@ -3287,6 +3291,29 @@ Gavin approved the bounded recording/history/correction proposal ("Approved.").
 **Owner authorization:** Gavin approved clearer normal/Gym workout execution, optional “how many reps left” recording, warm-up/working labels and a finish compared with the previous session. CSV remains deferred.
 
 Working sets are the default. Additional warm-ups leave the prescribed working slot open and remain visible/undoable history, excluded from working counts, volume, records, trends and rotation evidence. Historical sets without a kind remain working sets. Optional integer reps left is 0–10: blank is unknown and 0 means none left. Previous effort is never copied implicitly. Effort is recording only and must not change recommendations without a separate owner decision. The recap compares matching actual lifts in the same template and STANDARD/REDUCED variant, labels a prior partial, excludes changed lifts and presents weight × reps as volume rather than a strength score. Existing training workflows and visual identity remain authoritative. No schema, dependency or provider expansion.
+
+## TARGET-PROPOSAL-001 — a weekly calorie proposal you save or keep (Gavin, 2026-11-14: "Approved")
+
+[Brief](agent/TARGET-PROPOSAL-001.md). Protected: amends NUTRITION-003's "no formula" and Drop 6's "nothing reads the
+estimate".
+
+- **Where:** the weekly check-in, CALORIES FOR THIS WEEK, after EXPENDITURE. Nowhere else.
+- **The number:** the middle of the weight-trend burn estimate, moved by the operator's weekly rate (% of bodyweight ×
+  current weight × 3,500 / 7) toward the goal weight; holding within 1 lb of it. Capped at 1,000 kcal a day under and
+  500 over the burn, never below 1,500, moved at most 150 kcal a week from the current target, rounded to 50. Within 50
+  of the aim it says the target already fits.
+- **Choice:** SAVE writes the calorie target through the existing targets save with UNDO; KEEP / NOT NOW changes
+  nothing. No record of the choice is stored, and nothing reminds.
+- **Abstains** without the burn estimate, a goal weight, a weigh-in, or (when the goal is more than 1 lb away) a weekly
+  rate, and says which.
+- **Never:** Garmin's burned estimate as an input (GARMIN-005 unchanged); deficit, surplus, net, remaining or "left"
+  wording; automatic targets; macro or protein changes; Engine or recommendation input.
+- **TARGET-PROPOSAL-002 (Gavin, 2026-11-15):** the floor is the operator's own setting in TARGETS (default 1,500,
+  1,000–4,000), and the proposal never goes below it; with a target under the floor the step starts from it. The
+  current weight is this week's average or a weigh-in from the last 14 days, shown with its source. Under a cap the
+  shown weekly change is the capped one.
+- **Owner direction (2026-11-15):** "I want Beyond to be smart and act like a coach or nutritionist or weight management
+  professional." Future proposals build toward this; each new capability is still approved by Gavin.
 
 ## FOOD-SOURCES-001 — where your calories and protein came from (Gavin, 2026-11-15: "I approve food source as the next objective")
 
