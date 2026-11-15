@@ -42,12 +42,13 @@ it("TODAY resume lands on the next working set with defaults/rest intact and no 
   await screen.getByRole("button", { name: "RESUME WORKOUT", exact: true }).click();
   await expect.poll(() => document.activeElement?.textContent).toBe("Machine Chest Press");
   const heading = screen.getByRole("heading", { name: "Machine Chest Press", exact: true });
-  expect(heading.element().getBoundingClientRect().top).toBeLessThan(80);
+  await expect.poll(() => heading.element().getBoundingClientRect().top).toBeLessThan(window.innerHeight / 3);
   await expect.element(screen.getByRole("spinbutton", { name: "Set 2 weight in pounds" })).toHaveValue(100);
   await expect.element(screen.getByRole("spinbutton", { name: "Set 2 repetitions" })).toHaveValue(8);
   expect(await getPerformedSets(session.id)).toHaveLength(1);
   expect((await db.workoutSessions.get(session.id))?.activeRestEndsAt).toBe(before?.activeRestEndsAt);
   const log = screen.getByRole("button", { name: "LOG", exact: true }).element();
+  await expect.poll(() => log.getBoundingClientRect().bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
   const optional = screen.getByRole("combobox", { name: "Set type", exact: true }).element();
   expect(log.getBoundingClientRect().top).toBeLessThan(optional.getBoundingClientRect().top);
   expect(log.closest(".command-surface")?.querySelectorAll(".btn-primary")).toHaveLength(1);
