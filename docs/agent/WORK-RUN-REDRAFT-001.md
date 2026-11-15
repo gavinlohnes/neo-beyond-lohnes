@@ -6,8 +6,10 @@
   planner, under [4.0-c](BEYOND-4.0-C.md)'s conservative rules. Do not merge.
 - **Builder:** Grok Bot. Branch `codex/work-run-redraft-001` from fetched `origin/master` `4d74ac26` (#554 merged).
   PR #555 (SLEEP-DEBT-LEARNED-001) is open and touches the same docs; no source overlap.
-- **Lane:** see the PR (classify-risk output recorded there). Semantically it is a confirm-first offer on an existing
-  journey: no Engine, schema, command/event, notification, backup or provider change.
+- **Lane: Protected.** `npm run check:risk -- 4d74ac26` suggests PROTECTED (Decision Register and brief edits). It also
+  extends 4.0-c's Protected conservative composition review: it reads issued Engine guidance and offers a plan change.
+  Independent exact-head review, green CI; Gavin merges. No Engine, schema, command/event, notification, backup or
+  provider change.
 
 ## Triggers (the smallest well-defined set)
 

@@ -1,3 +1,17 @@
+# Current objective — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
+  `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).
+- Plan Today → Week planner offers DRAFT FRESH RUN PLAN when the latest saved work-run note no longer matches a covered
+  date's work context (confirmed extra shift included) or two-short-sleeps guidance was issued after it. Existing
+  replace warning and confirm-once save; NOT NOW until the change changes. No Engine, schema or notification change.
+- Lane PROTECTED (check:risk: governance docs; reads issued Engine guidance). Gates: local `TZ=UTC npm run verify`, PR
+  CI, independent exact-head review; Gavin merges. Deferred: a TODAY hint, more triggers (see brief).
+- Also open: SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555), awaiting review
+  and merge. It edits this file and UX_DECISIONS too; whichever merges second takes both sections.
+
+---
+
 # Current objective — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
 
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /
