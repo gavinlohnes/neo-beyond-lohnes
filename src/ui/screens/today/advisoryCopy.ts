@@ -51,6 +51,7 @@ function count(n: number, one: string, many: string): string {
 
 const PROGRESSION_GROUPS: Record<string, string> = {
   RE_ENTRY: "Easing back in",
+  DELOAD: "One lighter session",
   INCREASE: "Ready to add weight",
   REDUCE: "Lighter next time",
 };
