@@ -71,3 +71,7 @@
 /* The one system signal line under the numbers is a button: 16 px at every width. */
 .today-field.redesign-today .today-numbers .today-system-signal,
 .today-field.redesign-today .today-numbers .today-system-signal * { font-size: 16px; }
+
+/* SPEED-UNDER-FATIGUE-001: the existing Note form, one tap from TODAY's logging area. */
+.today-note-shortcut { margin-block: 8px; }
+.today-note-shortcut .btn-secondary { width: auto; min-height: 44px; font-size: 16px; padding: 8px 16px; }

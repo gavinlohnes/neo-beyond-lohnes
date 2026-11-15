@@ -84,6 +84,9 @@
 /* FIELD-AUTHORITY-001: when the schedule says nothing (or no day is set) the band stops
    dominating TODAY. Gotham stays; the scene below the context shrinks. */
 .redesign-today .cc-mode--thin .cc-scene { height: 36px; }
+/* RESUME-FOLD-001: while an operation owns the screen the scene takes the thin height too, as the day map already steps
+   aside, so RESUME stays above the nav at every phone width (at 412 x 800 the full scene put it 17 px under). */
+.redesign-today .cc-mode--operation .cc-scene { height: 36px; }
 .redesign-today .mode-empty .cc-scene { height: 52px; }
 .redesign-today .mode-empty { padding-bottom: 12px; }
 /* SUIT-ALIVE S3: the comms line closes the hero, flush to its bottom edge. Amber marks off-normal; red stays reserved. */

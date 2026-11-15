@@ -130,7 +130,10 @@ describe("ALFRED-003 brief on TODAY", () => {
     await startDay();
     const screen = await render(<App />);
     await expect.element(screen.getByRole("region", { name: "Day mode" })).toBeVisible();
-    expect(screen.container.querySelector(".alfred-brief")).toBeNull();
+    // No Claude brief and no request; FREE-BRIEF-001's free brief from your records may take its place. (This used to
+    // pass by checking during the launch flash, before any brief drew: LAUNCH-STEADY-001.)
+    expect(screen.container.querySelector('.alfred-brief[aria-label="Alfred\'s brief"]')).toBeNull();
+    for (const brief of screen.container.querySelectorAll(".alfred-brief")) expect(brief.getAttribute("aria-label")).toBe("Free brief");
     expect(requests).toHaveLength(0);
   });
 

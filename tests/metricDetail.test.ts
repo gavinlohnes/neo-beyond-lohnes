@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS } from "../src/application/metricDetail";
+import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90 } from "../src/application/metricDetail";
 import { recentPeriods, type PeriodValue } from "../src/domain/health/measuredSeries";
 import { BASELINE_MIN_SAMPLES } from "../src/domain/health/baselines";
 
@@ -73,5 +73,43 @@ describe("resting heart rate keeps its own meaning", () => {
     expect(rangesFor("resting")[0]).toEqual(["today", "LATEST", "Latest reading"]);
     expect(rangesFor("water")[0]![1]).toBe("TODAY");
     expect(WEEK_MODE.resting).toBe("mean");
+  });
+});
+
+describe("DIRECTION-90-001 direction90", () => {
+  const D = 86_400_000;
+  /** n finished lived days ending yesterday, plus today in progress; value(i) for day i (0 oldest), null = missing. */
+  const days = (n: number, value: (i: number) => number | null): PeriodValue[] => [
+    ...Array.from({ length: n }, (_, i) => ({ dayId: `d${i}`, from: i * D, to: (i + 1) * D, value: value(i), partial: false })),
+    { dayId: "today", from: n * D, to: (n + 1) * D, value: 99_999, partial: true },
+  ];
+
+  it("compares the medians of the last 90 finished days and the last year, leaving today out", () => {
+    // A year at 8,000, the last 90 days at 9,000: higher. Today's huge partial value is ignored.
+    expect(direction90(days(365, (i) => (i >= 275 ? 9000 : 8000)), 100)).toEqual({ recent: 9000, year: 8000, way: "HIGHER", recentDays: 90, yearDays: 365 });
+    expect(direction90(days(365, (i) => (i >= 275 ? 54 : 58)), 1)).toMatchObject({ recent: 54, year: 58, way: "LOWER" });
+  });
+
+  it("reads small differences as about the same: under 5% of the year, or under the metric's floor", () => {
+    expect(direction90(days(365, (i) => (i >= 275 ? 8300 : 8000)), 100)).toMatchObject({ way: "SAME" });
+    expect(direction90(days(365, (i) => (i >= 275 ? 55 : 58)), 1)).toMatchObject({ way: "LOWER" });
+    expect(direction90(days(365, (i) => (i >= 275 ? 56 : 58)), 1)).toMatchObject({ way: "SAME" });
+    // For small values the floor decides: 1,080 against 1,000 steps is 8%, but under the 100-step floor.
+    expect(direction90(days(365, (i) => (i >= 275 ? 1080 : 1000)), 100)).toMatchObject({ way: "SAME" });
+  });
+
+  it("stays quiet until the records span 180 days and both windows have enough of them", () => {
+    expect(direction90(days(170, () => 8000), 100)).toBeNull();
+    expect(direction90(days(180, () => 8000), 100)).not.toBeNull();
+    // A year of records: 30 recorded in the last 90 days is enough, 18 is not.
+    expect(direction90(days(365, (i) => (i < 275 || i % 3 === 0 ? 8000 : null)), 100)).not.toBeNull();
+    expect(direction90(days(365, (i) => (i < 275 || i % 5 === 0 ? 8000 : null)), 100)).toBeNull();
+    // Recent records only: no year to compare with.
+    expect(direction90(days(365, (i) => (i >= 300 ? 8000 : null)), 100)).toBeNull();
+  });
+
+  it("skips missing days rather than counting them as zero", () => {
+    const withGaps = direction90(days(365, (i) => (i % 3 === 0 ? null : 8000)), 100)!;
+    expect(withGaps).toMatchObject({ recent: 8000, year: 8000, way: "SAME", recentDays: 60 });
   });
 });

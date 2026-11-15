@@ -20,3 +20,8 @@
 Full Node: 2325 PASS, one existing skip, 280 files. Planner integration 9 PASS in UTC and America/New_York, including DST dates, exclusive-end/overnight calendar overlap, independent due/planned dates, programme assignments without invented work context, confirmed shift changes, stale/concurrent/closed/archived guards, rollback, native backup and in-transaction midnight validation. Focused real Chromium 28 PASS in six files (planner, actual More/weekly navigation, existing smart lists, Week Plan, Week Ahead and friction copy); populated 320/375/768/1024 widths, axe, typed draft retention, midnight reselection, open-sheet retry, same-tick guard, post-commit read failure, Escape/focus and canonical detail route. Architecture, TypeScript and production/PWA build PASS; diff whitespace clean.
 
 Early independent review's three recovery findings were fixed, regression tested and independently rechecked. Final exact-head independent review and full required CI remain prerequisites on the active PR; current result lives in that PR's review/CI handoff, since a follow-up documentation commit itself would require a renewed exact-head review. Gavin alone merges.
+
+
+## Delivery recovery — 2026-11-15
+
+HARVEST-002 is merged and recommends finishing this existing approved PR before a new improvement. Codex resumes the same preserved branch and objective; no competing Builder or branch found. Integrate fetched master `b4739464` into original head `32fb0f96`; source merges automatically, with two documentation conflicts resolved by preserving both planner and upstream decisions/handoffs. Earlier tests/CI are historical, not renewed approval. Fresh integration verification and independent final-head review are required before ready. No expansion or merge.

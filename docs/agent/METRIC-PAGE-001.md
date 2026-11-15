@@ -74,3 +74,25 @@ inside `SleepPeriods`, without changing its chart.
 - **Also:** slice 2's review note is done. Tests now cover LATEST falling back to the previous lived day, and saying
   nothing when neither day has a reading.
 
+
+## Slice 4 — calories join the shared page (Gavin, 2026-11-14: "That's good for me")
+
+- **Branch:** `ccr-88f5c085-metric-calories`, from master `77c8ab61`. **Builder:** Claude Code. Feature lane: no
+  independent review required; Gavin merges.
+- **Authorization:** Gavin approved the proposed scope: TODAY's CALORIES tile opens the shared page with TODAY, 7D,
+  30D and 1Y; eaten (LOGGED) beside burned (GARMIN), never added together or netted; work days compared with days off
+  for both; missing days stay gaps; the old sheet retires. Excluded: targets, scores, deficit judgments, new data,
+  schema, dependencies, Engine.
+- **Leverage gate.** REUSE: the shared page shell (ranges, source line, split, usual, table, Alfred and Garmin sync),
+  `workOffSplit`/`usualOf`, and GARMIN-005's snapshot series (`burned`, `eaten`, `eatenToday`, `burnedToday`,
+  `caloriesAsOf`). OWN: the paired chart and wording. BUILD FROM SCRATCH: none.
+- **What GARMIN-005 keeps:** two series side by side, no net/remaining/deficit/surplus, `Garmin as of …`, the 10–20%
+  watch-estimate caveat, completed-period averages that leave today out, read only. 4W becomes 30D, like steps.
+- **Colours:** eaten is your logs, in white (as water); burned is Garmin blue. GARMIN-005's aqua was a sheet-local
+  choice and retires with the sheet.
+- **Retired:** `MeasuredSheet`'s sheet component and its calories/steps charts. The file keeps the shared pieces
+  sleep and the shell import (`BarChart`, `Hypnogram`, `describeUsual`, `SyncGarminLink`, …).
+- **Tests:** a query test (both series equal the snapshot's, a day without meals is null, the eaten usual waits for
+  enough logged days, no writes); a browser case (sources, today's running totals, 7D stubs for missing eaten, colours,
+  readout, table columns, split, usuals, no net wording, no writes); calories joins the 320–1024 px size and axe sweep.
+  GARMIN-005's tests now run on the shared page.

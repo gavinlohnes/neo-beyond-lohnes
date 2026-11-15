@@ -37,6 +37,10 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## CAPTURE
 
+- **Raw-first fast capture (UNIVERSAL-FAST-CAPTURE-001):** `ui/components/FastCapture.tsx` lives in the existing shell-owned RecordSheets Note target. TODAY’s one-tap CAPTURE goes straight to raw text; no type/folder/date and no inference. A saved raw thought may remain OPEN or explicitly preview a task/plan item using existing atomic `convertCaptureToObligation`; planned day and due date stay optional and independent. Current-session drafts survive sheet close; saved raw items and source history remain canonical/native-backed. OPEN CAPTURE reuses the existing later-processing route. No new inbox/notes store, AI sorting, provider or writer tools. [Brief](UNIVERSAL-FAST-CAPTURE-001.md).
+
+- **Speed/reachability (SPEED-UNDER-FATIGUE-001):** TODAY’s quiet NOTE shortcut opens the existing shell-owned `RecordSheets` Note form via `onOpenRecord("note")`; permanent LOG remains central and unchanged. No parallel composer, interpretation or save path. Workout handoff focuses/positions the current exercise; normal/Gym LOG precedes optional metadata, with canonical defaults and handlers unchanged. [Brief](SPEED-UNDER-FATIGUE-001.md). These are speed improvements, not the deferred full capture system.
+
 - **Existing primitive**: `captureItem`/`convertCaptureToObligation`
   (`src/application/commands.ts`, `src/application/intentCommands.ts`) — raw immutable text,
   fully manual triage, no derived fields.
@@ -426,13 +430,20 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   explicit `[[links]]` to a record. Reuse before building another backlink or "related" view.
 
 
+### HARVEST-002 — whole-product direction check (2026-11-15)
+
+- [Research and classification](harvest/HARVEST-002.md): current master `5d78a5dd` breadth inventory spans daily use, training, nutrition, recovery, habits, shifts, planning and review/Alfred; capture/planning received the deeper reference comparison. Raw capture, Notes Sweep, Saved sorting and search already exist. Latest primary-source licences verified: Super Productivity MIT; Vikunja AGPL; Loop GPL (latter two ideas only).
+- [One proposed Claude mission](harvest/HARVEST-002-CLAUDE-MISSION.md): finish existing week-planner PR #529 on its own branch, currently draft/conflicting, with fresh integration, independent exact-head review, green CI and Gavin's merge. Do not build a competing planner or implement the other ranked candidates automatically. Recommendations and unresolved field questions are explicit; this index changes no governance rule.
+
 ### CHP-001 / HARVEST-001 — accepted research baseline (2026-11-14)
 
 - [Capability Harvest Protocol](CHP-001.md) records the three approved refinements: inspect locked decisions,
   record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
 - [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
   Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
-- [METRIC-PAGE-001](METRIC-PAGE-001.md): `ui/metrics/MetricDetailSheet.tsx` with `application/metricDetail*.ts` is the shared metric page (hydration, steps, resting heart rate). Add a metric here, keeping its own week/source semantics, rather than another detail sheet. Sleep keeps `SleepPeriods` (richer).
+- [FOOD-SOURCES-001](FOOD-SOURCES-001.md): `application/foodSources.ts` groups corrected meal and protein logs into sources over finished lived days; `ui/metrics/FoodSources.tsx` lists them. Reuse it for any "what contributed" view.
+- [TARGET-PROPOSAL-001](TARGET-PROPOSAL-001.md): `application/targetProposal.ts` turns `engine/expenditure.ts`'s weight-trend burn estimate and the stored goal weight and weekly rate into a weekly calorie proposal (Weekly, save or keep). Reuse it for any target suggestion; it never writes.
+- [METRIC-PAGE-001](METRIC-PAGE-001.md): `ui/metrics/MetricDetailSheet.tsx` with `application/metricDetail*.ts` is the shared metric page (hydration, steps, resting heart rate, calories as eaten beside burned). `direction90` gives its 90-day-against-the-year line. Add a metric here, keeping its own week/source semantics, rather than another detail sheet. Sleep keeps `SleepPeriods` (richer).
   `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
   shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other
   metrics before owner assessment. Integration status and verification live in the checkpoint/PR.

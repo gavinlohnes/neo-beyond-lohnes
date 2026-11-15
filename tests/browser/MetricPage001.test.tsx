@@ -30,7 +30,7 @@ const settle = async () => {
   for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish();
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 };
-type Page = "HYDRATION" | "STEPS" | "RESTING HEART RATE";
+type Page = "HYDRATION" | "STEPS" | "RESTING HEART RATE" | "CALORIES";
 const sheet = (name: Page) => page.getByRole("dialog", { name, exact: true });
 const text = (sel: string) => document.querySelector(`dialog[open] ${sel}`)?.textContent ?? "";
 async function range(name: Page, label: string) {
@@ -230,11 +230,74 @@ describe("METRIC-PAGE-001 pilot", () => {
     expect(document.querySelector("dialog[open] [data-sleep-source] .bf-src--garmin")).toBeNull();
   });
 
+  it("slice 4: TODAY's CALORIES opens the shared page: eaten in white beside burned in Garmin blue, never combined, gaps as gaps", async () => {
+    await seedLivedMonth();
+    await page.viewport(360, 900);
+    const screen = await render(<App />);
+    const before = await db.events.toArray();
+    await screen.getByRole("button", { name: /open calories$/ }).click();
+    await expect.element(sheet("CALORIES")).toBeVisible();
+    await expect.poll(() => text("[data-md-hero]")).toMatch(/^640 eaten[\d,]+ burned$/);
+    // Both sources named, Garmin's freshness and its watch-estimate caveat.
+    expect(document.querySelector("dialog[open] .md-source .bf-src--garmin")).not.toBeNull();
+    expect(text(".md-source")).toMatch(/^LOGGEDGARMINEaten is what you logged\. Burned is Garmin's estimate, resting plus active; watch estimates can be off by 10–20%\. Garmin as of /);
+    await expect.element(sheet("CALORIES").getByRole("img", { name: /^Today so far: eaten 640 kcal, burned [\d,]+ kcal\.$/ })).toBeVisible();
+    await range("CALORIES", "Last 7 lived days");
+    // The seed logs a meal only today: every finished day's eaten is missing (a stub), never a zero bar.
+    await expect.poll(() => text("[data-md-coverage]")).toBe("kcal a day, on average · of 6 finished days, 0 logged and 6 measured; days without a record left out · this lived day not counted");
+    expect(text("[data-md-hero]")).toMatch(/^— eaten[\d,]+ burned$/);
+    const pairs = document.querySelectorAll("dialog[open] .md-chart--calories .md-bar");
+    expect(pairs).toHaveLength(7);
+    expect(pairs[0]!.querySelector(".md-missing")).not.toBeNull();
+    expect(getComputedStyle(pairs[0]!.querySelector(".md-fill--garmin")!).fill).toBe("rgb(57, 135, 229)");
+    // Your logs draw in the page's primary text colour, as water's do.
+    expect(getComputedStyle(pairs[6]!.querySelector(".md-fill--logged")!).fill).toBe(getComputedStyle(document.querySelector("dialog[open] .md-readout")!).color);
+    await sheet("CALORIES").getByRole("button", { name: /^.+ · eaten not logged · burned [\d,]+ kcal$/ }).first().click();
+    expect(text(".md-readout")).toMatch(/eaten not logged · burned [\d,]+ kcal$/);
+    await sheet("CALORIES").getByText("Show as table", { exact: true }).click();
+    expect([...document.querySelectorAll("dialog[open] .md-table thead th")].map((th) => th.textContent)).toEqual(["Day", "Eaten", "Burned"]);
+    // Work days against days off for each series, and each usual on its own.
+    expect(text('[data-md-split="work"]')).toMatch(/^WORK DAYSEaten: not enough yet[\d,]+ burned0 logged · \d+ measured · last 8 weeks$/);
+    expect(text("[data-md-usual]")).toMatch(/^Usual eaten appears after 14 logged days \(0 so far\) · usual burned [\d,]+ kcal · median of the last 28 finished days\.$/);
+    await range("CALORIES", "Last year, by week");
+    await expect.poll(() => text("[data-md-hero]")).toMatch(/eaten[\d,]+ burned$/);
+    expect(text(".md")).not.toMatch(/remaining|deficit|surplus|\bnet\b|calories left/i);
+    await expect.element(sheet("CALORIES").getByRole("button", { name: "ASK ALFRED", exact: true })).toBeVisible();
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-calories-1y.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
+    expect(await db.events.toArray()).toEqual(before);
+  });
+
+  it("DIRECTION-90-001: with 200 days of water, one plain line compares the last 90 days with the year; a month stays quiet", async () => {
+    const { syntheticGarminMonth } = await import("../helpers/syntheticGarminMonth");
+    const first = MONTH_NOW - 199 * DAY - 5 * H - 40 * 60_000; // 200 lived days, the last in progress
+    const { days } = syntheticGarminMonth(first, 200, MONTH_NOW);
+    await db.beyondDays.bulkAdd(days);
+    for (let i = 0; i < 200; i++) { vi.setSystemTime(Date.parse(days[i]!.startedAt) + 2 * H); await logWater(days[i]!.id, i >= 110 ? 60 : 40); }
+    vi.setSystemTime(MONTH_NOW);
+    const before = await db.events.count();
+    await page.viewport(360, 900);
+    await render(<MetricDetailSheet open metric="water" onClose={() => {}} />);
+    await expect.poll(() => text("[data-md-direction]")).toBe("Last 90 days: 60 oz a day, higher than your year's 40. Medians of logged days.");
+    // The same line in every range; never a score or a verdict.
+    await range("HYDRATION", "Last year, by week");
+    expect(text("[data-md-direction]")).toBe("Last 90 days: 60 oz a day, higher than your year's 40. Medians of logged days.");
+    expect(text(".md")).not.toMatch(/better|worse|improv|score|great|well done/i);
+    expect(await db.events.count()).toBe(before);
+    if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-direction.png`, element: document.querySelector("dialog[open]") as HTMLElement }); }
+  });
+
+  it("DIRECTION-90-001: a month of records says nothing about direction yet", async () => {
+    await seedLivedMonth(); await seedPastWater();
+    await render(<MetricDetailSheet open metric="steps" onClose={() => {}} />);
+    await expect.poll(() => text("[data-md-hero]")).not.toBe("");
+    expect(document.querySelector("dialog[open] [data-md-direction]")).toBeNull();
+  });
+
   it("nothing spills, sentences keep 16 px, and every page passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 900);
     const screen = await render(<App />);
-    for (const [tile, name] of [[/^Water 32 oz/, "HYDRATION"], [/^Steps /, "STEPS"], [/^Resting heart rate /, "RESTING HEART RATE"]] as const) {
+    for (const [tile, name] of [[/^Water 32 oz/, "HYDRATION"], [/^Steps /, "STEPS"], [/^Resting heart rate /, "RESTING HEART RATE"], [/open calories$/, "CALORIES"]] as const) {
       await screen.getByRole("button", { name: tile }).click();
       await expect.element(sheet(name)).toBeVisible();
       await expect.poll(() => text("[data-md-hero]")).not.toBe("");

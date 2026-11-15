@@ -379,6 +379,8 @@ Gavin approved [the brief](agent/GARMIN-005.md), including the defaults below an
   cannot erase already imported calorie values. If a later export cannot read calories, the prior
   value keeps the timestamp of the export that actually supplied it; active-only data does not
   expose the total-calorie comparison.
+- **Amended by METRIC-PAGE-001 slice 4 (Gavin, 2026-11-14):** the comparison now lives on the shared metric page
+  (TODAY/7D/30D/1Y), with eaten in white and burned in Garmin blue. Every meaning and trust rule above is unchanged.
 
 ## GARMIN-004 — Garmin numbers you can see (owner approved 2026-10-22)
 
@@ -1832,6 +1834,10 @@ hitting a protein floor.
   "About 2,150–2,350 kcal a day", with what it came from and "Assumes those days' meals were all
   logged." It abstains ("Not enough data yet — needs …") below 14 meal-logged days or 8 weigh-ins
   spanning 2 weeks, and when the range would be wider than 1,000 kcal.
+- **Amended by TARGET-PROPOSAL-001 (Gavin, 2026-11-14: "Approved").** The target is still set only by the operator,
+  but Weekly now *offers* one: CALORIES FOR THIS WEEK reads the estimate above, with the operator's goal weight and
+  weekly rate, and proposes a number to SAVE (with UNDO) or KEEP. Nothing is saved without a tap; the estimate still
+  feeds nothing else (no Engine, recommendation, TODAY or Alfred). See TARGET-PROPOSAL-001 below.
 - **Protein target is derived, not set directly.** `getEffectiveProteinTargetG()`
   (`application/nutritionTargetQueries.ts`) = `proteinMultiplierGPerLb` × the most recently
   logged bodyweight (`getMostRecentBodyweight()`, cross-day — unlike the day-scoped
@@ -3243,7 +3249,8 @@ The pilot was approved for hydration and steps ("Build and validate a reusable m
 as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
 [agent/METRIC-PAGE-001.md](agent/METRIC-PAGE-001.md).
 
-- **What opens it:** TODAY's tiles and DATA's panels for hydration, steps and resting heart rate.
+- **What opens it:** TODAY's tiles and DATA's panels for hydration, steps and resting heart rate, and (slice 4,
+  "That's good for me") TODAY's CALORIES tile.
 - **What it shows:** TODAY (or LATEST), 7D, 30D and 1Y on lived days, with gaps shown as gaps; your usual; work days
   compared with days off; the source and its freshness; and each metric's existing routes (records and corrections,
   logging, Garmin sync, Alfred).
@@ -3251,8 +3258,13 @@ as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
   - **Water:** your logs, in white, by the hour. 1Y is the average of logged days.
   - **Steps:** Garmin, in blue, as a running total. 1Y is weekly totals.
   - **Resting heart rate:** Garmin, in blue, one reading a day. 1Y is the average of measured days.
+  - **Calories:** eaten (your logs, white) beside burned (Garmin, blue), each with its own coverage, usual and work/off
+    split; never added, netted or turned into a deficit. GARMIN-005's other rules hold; its 4W becomes 30D.
 - **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged nights where Garmin
   missed). Slice 3 adds the shell's source line and work days compared with days off, without changing its chart.
+- **90-day direction (DIRECTION-90-001, Gavin 2026-11-14: "Approved"):** one line, "Last 90 days: … higher than /
+  lower than / about the same as your year's …", from medians of recorded days. Quiet until the records span 180 days.
+  Never a score, arrow or judgement. [Brief](agent/DIRECTION-90-001.md).
 - **Unchanged:** read only, no Engine input, no new data or schema.
 
 
@@ -3283,6 +3295,40 @@ Gavin approved the bounded recording/history/correction proposal ("Approved.").
 
 Working sets are the default. Additional warm-ups leave the prescribed working slot open and remain visible/undoable history, excluded from working counts, volume, records, trends and rotation evidence. Historical sets without a kind remain working sets. Optional integer reps left is 0–10: blank is unknown and 0 means none left. Previous effort is never copied implicitly. Effort is recording only and must not change recommendations without a separate owner decision. The recap compares matching actual lifts in the same template and STANDARD/REDUCED variant, labels a prior partial, excludes changed lifts and presents weight × reps as volume rather than a strength score. Existing training workflows and visual identity remain authoritative. No schema, dependency or provider expansion.
 
+## TARGET-PROPOSAL-001 — a weekly calorie proposal you save or keep (Gavin, 2026-11-14: "Approved")
+
+[Brief](agent/TARGET-PROPOSAL-001.md). Protected: amends NUTRITION-003's "no formula" and Drop 6's "nothing reads the
+estimate".
+
+- **Where:** the weekly check-in, CALORIES FOR THIS WEEK, after EXPENDITURE. Nowhere else.
+- **The number:** the middle of the weight-trend burn estimate, moved by the operator's weekly rate (% of bodyweight ×
+  current weight × 3,500 / 7) toward the goal weight; holding within 1 lb of it. Capped at 1,000 kcal a day under and
+  500 over the burn, never below 1,500, moved at most 150 kcal a week from the current target, rounded to 50. Within 50
+  of the aim it says the target already fits.
+- **Choice:** SAVE writes the calorie target through the existing targets save with UNDO; KEEP / NOT NOW changes
+  nothing. No record of the choice is stored, and nothing reminds.
+- **Abstains** without the burn estimate, a goal weight, a weigh-in, or (when the goal is more than 1 lb away) a weekly
+  rate, and says which.
+- **Never:** Garmin's burned estimate as an input (GARMIN-005 unchanged); deficit, surplus, net, remaining or "left"
+  wording; automatic targets; macro or protein changes; Engine or recommendation input.
+- **TARGET-PROPOSAL-002 (Gavin, 2026-11-15):** the floor is the operator's own setting in TARGETS (default 1,500,
+  1,000–4,000), and the proposal never goes below it; with a target under the floor the step starts from it. The
+  current weight is this week's average or a weigh-in from the last 14 days, shown with its source. Under a cap the
+  shown weekly change is the capped one.
+- **Owner direction (2026-11-15):** "I want Beyond to be smart and act like a coach or nutritionist or weight management
+  professional." Future proposals build toward this; each new capability is still approved by Gavin.
+
+## FOOD-SOURCES-001 — where your calories and protein came from (Gavin, 2026-11-15: "I approve food source as the next objective")
+
+[Brief](agent/FOOD-SOURCES-001.md).
+
+- **Where:** the calories metric page (7D and 30D) and BODY's YOUR PROGRESS for meal calories and protein (over the
+  chosen range).
+- **What:** WHERE IT CAME FROM, the top five sources by total with share and times logged, then the rest together; a
+  row opens its lived days, and in BODY a day opens its records.
+- **Rules:** corrected values, undone meals left out; a saved meal is one source even if renamed, a typed meal groups
+  by name; finished lived days only; missing days left out and counted, never zero; read only.
+- **Never:** judgement of foods, suggestions to cut or avoid, Engine or recommendation input.
 
 ## WEEK-PLANNER-002 — actionable week from existing plans (2026-11-14)
 
