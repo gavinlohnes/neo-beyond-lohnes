@@ -15,6 +15,7 @@ import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
+import { TodayBriefingPreview } from "./TodayBriefingPreview";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
@@ -703,7 +704,8 @@ export function TodayScreen({
   const lookBaseRef = useRef<LookSnapshot | null>(null);
   // DAY-MAP-001: map marks new since the last look on this device, outlined for this visit.
   const [freshMarks, setFreshMarks] = useState<ReadonlySet<string>>(() => new Set());
-  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
+  const [briefingPreview, setBriefingPreview] = useState(false);
+  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); setBriefingPreview(false); } }, [active]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
@@ -2672,6 +2674,7 @@ export function TodayScreen({
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
       {checkInOwnedHere && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
+      {dayRead && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setBriefingPreview(true); }}>PREVIEW BRIEFING</button></div>}
     </section>
   </>;
 
@@ -2680,6 +2683,11 @@ export function TodayScreen({
   // steps aside (an operation, the late sleep prompt) or NEXT couldn't be read, the hero keeps it.
   const bandHidden = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep;
   const bandCarriesRun = !!day && !!lifeReading && !!ahead && !bandHidden;
+  if (!operationsOnly && briefingPreview) return <TodayBriefingPreview active={active} onBack={() => setBriefingPreview(false)} onOpen={(destination) => {
+    if (destination === "PLAN") onOpenPlan?.();
+    else if (onOpenBody) onOpenBody("sleep");
+    else onOpenHealthEvidence?.("sleep");
+  }} />;
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
