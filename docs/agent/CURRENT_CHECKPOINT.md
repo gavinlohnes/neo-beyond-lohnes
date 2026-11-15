@@ -1,3 +1,13 @@
+# Current objective — TIMELINE-EDIT-001: fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-timeline-edit`, from master after #535. Feature; Gavin merges.
+  [Brief](TIMELINE-EDIT-001.md).
+- **Also open:** #529 (WEEK-PLANNER-002, Codex), ready to merge. #536 merged. #482 and #473 await Gavin's decision.
+- **Next:** ALFRED-FIX-001 (Protected): Alfred and the free helper propose a move, correction or removal through
+  `application/logEntries.ts`, confirmed by Gavin.
+
+---
+
 # Current objective — finish WEEK-PLANNER-002 on the existing PR
 
 - **Builder:** Codex resumes its preserved `codex/week-planner-001` branch / [existing PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/529). Original bounded owner approval remains in [the brief](WEEK-PLANNER-002.md); merged HARVEST-002 selected completion of this delivery as the next mission, and Gavin asked what comes next. No new capability or architecture is authorized.

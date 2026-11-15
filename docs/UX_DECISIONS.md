@@ -3335,3 +3335,12 @@ estimate".
 Gavin selected the week planner after the proposal to bring shifts, commitments and workouts together and make rearranging an overloaded week easy. The bounded implementation reuses Week Ahead, work-context precedence, the operator’s programme and canonical task/calendar readers. Inside Plan Today, seven local dates show work provenance, distinctly assigned versus suggested workouts, planned tasks, deadlines and saved calendar freshness. Counts describe known items, not hours available or a capacity grade. Shifts retain 16:30 lived-day ownership; tasks/calendar retain calendar dates with an explicit explanation.
 
 An explicit task move changes plannedAt only, through the existing intent command within its atomic gateway. Due date, recurrence, status and mission rules are preserved; stale/closed/archived tasks or dates outside the acquired transaction’s current seven-day window are rejected. No automatic scheduling or new recommendation rules; no per-date workout overrides, schema, provider or dependency change. Existing task-detail completion/release and all prior Plan Today views remain. Drafts keep their intended date across midnight and require explicit reselection; unavailable context is not an empty day, and a saved move remains saved if its follow-up read fails. Independent exact-head review and green CI precede Gavin’s separate merge decision.
+
+## TIMELINE-EDIT-001 — fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+
+[Brief](agent/TIMELINE-EDIT-001.md).
+
+- TODAY's timeline list (EDIT › on meal and water items) and the food diary's rows open one sheet for the entry:
+  CHANGE TIME, EDIT AMOUNT, REMOVE (confirmed).
+- Every fix is the existing append-only correction, retime or removal; HISTORY keeps the original. Times stay inside
+  their lived day. No Engine, schema, command or event change.
