@@ -1,4 +1,14 @@
-# Current objective — TIMELINE-EDIT-001: fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+# Current objective — ALFRED-FIX-001: Alfred and the free helper fix a logged entry (Gavin, 2026-11-15: "Approved.", "Go")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-alfred-fix`, from master `d51017f8`. **Protected:** independent
+  exact-head review, green CI, Gavin merges. [Brief](ALFRED-FIX-001.md).
+- **Completion plan (Gavin, "Go"):** 1 #529 week planner (Codex; ready); 2 TIMELINE-EDIT-001 merged as #540;
+  3 #482 closed, #473 parked as draft (Gavin); 4 this; 5 audit docs + "Alfred is core" doctrine/README amendment
+  (needs Gavin's approval); 6 field gate on the phone. New work only after.
+
+---
+
+# Historical — TIMELINE-EDIT-001 (merged as #540): fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-timeline-edit`, from master after #535. Feature; Gavin merges.
   [Brief](TIMELINE-EDIT-001.md).

@@ -441,6 +441,7 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
 - [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
   Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
+- [ALFRED-FIX-001](ALFRED-FIX-001.md): `application/alfred/fixEntries.ts` (+ pure `fixEntryRules.ts`) resolves and confirms Alfred's and the free helper's `fix_entry` cards over `logEntries.ts`. Extend it (sleep, weight) rather than adding another correction path.
 - [TIMELINE-EDIT-001](TIMELINE-EDIT-001.md): `application/logEntries.ts` is one meal/water/protein entry and its three fixes (move, correct, remove) over the existing facts; `ui/components/LogEntrySheet.tsx` is its sheet. Alfred's fix proposals (ALFRED-FIX-001) should call these.
 - [FOOD-SOURCES-001](FOOD-SOURCES-001.md): `application/foodSources.ts` groups corrected meal and protein logs into sources over finished lived days; `ui/metrics/FoodSources.tsx` lists them. Reuse it for any "what contributed" view.
 - [TARGET-PROPOSAL-001](TARGET-PROPOSAL-001.md): `application/targetProposal.ts` turns `engine/expenditure.ts`'s weight-trend burn estimate and the stored goal weight and weekly rate into a weekly calorie proposal (Weekly, save or keep). Reuse it for any target suggestion; it never writes.

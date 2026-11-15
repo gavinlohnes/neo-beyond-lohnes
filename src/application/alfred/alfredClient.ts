@@ -3,6 +3,7 @@ import type { ProposalContext } from "./contextActions";
 import type { ContextSource } from "./personalContext";
 import Anthropic from "@anthropic-ai/sdk";
 import { ALFRED_READ_TOOLS, ALFRED_TOOLS, runReadTool, toProposal, type AlfredProposal, type SavedLog } from "./alfredActions";
+import { resolveFix } from "./fixEntries";
 import { assertWithinCap, getMonthlyCap } from "./alfredSpend";
 
 /**
@@ -124,8 +125,15 @@ export class AlfredSession {
         if (block.type !== "tool_use") continue;
         const result = await runReadTool(block.name, block.input, this.policy?.includePersonal ?? false).catch(() => "That read failed; say so.");
         if (result !== null) { for (const source of await readToolSources(result, this.policy?.includePersonal ?? false)) { if (sources.size < 60) sources.set(source.key, source); } reads.push({ type: "tool_result", tool_use_id: block.id, content: result }); continue; }
+        let proposal = toProposal(block.name, block.input);
+        // ALFRED-FIX-001: a fix is filled from the record before it can be a card; a wrong id or time goes back to
+        // Alfred as a read result instead, so he can correct himself or say so.
+        if (proposal?.kind === "fix_entry") {
+          const resolved = await resolveFix(proposal).catch(() => "That entry couldn't be read; say so.");
+          if (typeof resolved === "string") { reads.push({ type: "tool_result", tool_use_id: block.id, content: resolved }); continue; }
+          proposal = resolved;
+        }
         cardIds.push(block.id);
-        const proposal = toProposal(block.name, block.input);
         if (proposal) proposals.push({ id: block.id, proposal });
       }
       if (!reads.length || round === 4) { this.openToolUses = cardIds; this.pendingReads = reads; break; }
