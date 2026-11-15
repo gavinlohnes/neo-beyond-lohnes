@@ -1,6 +1,6 @@
 # SPEED-UNDER-FATIGUE-001 — common actions with less hunting
 
-**Owner:** Gavin's explicit “Speed under fatigue pack” instruction, 2026-11-15. Builder Codex. Branch `codex/speed-under-fatigue-001`, fresh master `eacbb3a0d1c1252da13281e972c0f879a11c6737`. FEATURE lane: bounded UI/reachability improvements only; no command, Engine, persistence, dependency or provider change. Green CI and Gavin's merge required. PR pending.
+**Owner:** Gavin's explicit “Speed under fatigue pack” instruction, 2026-11-15. Builder Codex. Branch `codex/speed-under-fatigue-001`, fresh master `eacbb3a0d1c1252da13281e972c0f879a11c6737`. FEATURE lane: bounded UI/reachability improvements only; no command, Engine, persistence, dependency or provider change. Green CI and Gavin's merge required. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/537).
 
 ## Three selected actions and evidence
 
