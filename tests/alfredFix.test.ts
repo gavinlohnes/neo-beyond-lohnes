@@ -88,7 +88,31 @@ describe("the free helper's fixes", () => {
       expect(interpret("move the dentist to 23:00", ctx).cards.every((c) => c.kind !== "fix_entry")).toBe(true);
       // An impossible time is refused rather than guessed.
       expect(interpret("move the butter chicken to 25:00", ctx).cards).toEqual([]);
+      // A bare hour could be morning or evening: asked, not guessed (review of #541).
+      expect(interpret("move the butter chicken to 7", ctx).cards).toEqual([]);
+      expect(card("move the butter chicken to 7:30 pm")).toBe("Move Butter Chicken and Rice · 19:15 → 19:30");
       void snapshotOf(meal);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("review of #541: words longer than an entry's name, or naming an open task, are never a fix", async () => {
+    try {
+      vi.setSystemTime(at(17));
+      const day = await startDay();
+      vi.setSystemTime(at(18, 30));
+      await logManualMeal(day.id, { name: "Dinner", calories: 700, proteinG: 40, carbsG: 70, fatG: 20 });
+      const { createObligation } = await import("../src/application/intentCommands");
+      await createObligation({ title: "Dinner reservation" });
+      vi.setSystemTime(at(19));
+      const ctx = await readHelperContext(at(19));
+      for (const text of ["delete the dinner reservation", "move the dinner reservation to 20:00", "remove the dinner reservation"]) {
+        expect(interpret(text, ctx).cards.some((c) => c.kind === "fix_entry"), text).toBe(false);
+      }
+      // Without the task, longer words still don't fix the shorter-named meal.
+      const noTask = { ...ctx, openTasks: [] };
+      expect(interpret("delete the dinner plans", noTask).cards.some((c) => c.kind === "fix_entry")).toBe(false);
+      // The meal itself is still fixable by its own name.
+      expect(describeFix(interpret("move dinner to 20:00", noTask).cards[0] as FixProposal)).toBe("Move Dinner · 18:30 → 20:00");
     } finally { vi.useRealTimers(); }
   });
 });

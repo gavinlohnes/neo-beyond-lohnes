@@ -12,7 +12,8 @@ export * from "./fixEntryRules";
  */
 /** The current and previous lived day's entries: what a fix may name. */
 export async function recentEntries(): Promise<DayLogEntry[]> {
-  const days = (await db.beyondDays.toArray()).sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 2);
+  // The two newest by the startedAt index, not a scan of every day (review of #541).
+  const days = await db.beyondDays.orderBy("startedAt").reverse().limit(2).toArray();
   return (await Promise.all(days.map((d) => getDayLogEntries(d.id)))).flat();
 }
 

@@ -375,14 +375,22 @@ function entryFix(c: string, ctx: HelperContext): AlfredProposal | null | "uncle
   const find = (wanted: string) => {
     const w = key(wanted.replace(/\b(entry|log|i (just )?(logged|ate|had))\b/g, " "));
     if (!w) return null;
+    // Review of #541: an open task, project or routine step that matches wins, so "delete the dinner reservation" is
+    // never read as the meal "Dinner".
+    const steps = ctx.routines.flatMap((r) => r.steps);
+    if (matchOne(ctx.openTasks, wanted) || matchOne(ctx.openProjects, wanted) || matchOne(steps, wanted)) return null;
     const exact = entries.filter((e) => key(e.snapshot.name) === w);
-    const loose = exact.length ? exact : entries.filter((e) => { const n = key(e.snapshot.name); return n.includes(w) || (w.length >= 4 && w.includes(n)); });
+    // Only shorter words for a longer name ("butter chicken" for "Butter Chicken and Rice"), never the reverse:
+    // words longer than an entry's name are about something else (review of #541).
+    const loose = exact.length ? exact : w.length >= 3 ? entries.filter((e) => key(e.snapshot.name).includes(w)) : [];
     const names = new Set(loose.map((e) => key(e.snapshot.name)));
     return names.size === 1 ? loose.sort((a, b) => a.snapshot.at.localeCompare(b.snapshot.at)).at(-1)! : null;
   };
   const clock = (h: string, m: string | undefined, ap: string | undefined): string | null => {
     let hour = Number(h), minute = Number(m ?? 0);
     if (h.length >= 3 && m === undefined) { hour = Math.floor(Number(h) / 100); minute = Number(h) % 100; }
+    // A bare "7" could be 07:00 or 19:00: ask rather than guess (review of #541). 23:00, 2300, 11pm and 7:30 are clear.
+    else if (m === undefined && !ap) return null;
     if (ap) { if (hour < 1 || hour > 12) return null; hour = (hour % 12) + (ap.startsWith("p") ? 12 : 0); }
     return hour >= 0 && hour < 24 && minute >= 0 && minute < 60 ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` : null;
   };
