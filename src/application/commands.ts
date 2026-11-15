@@ -903,6 +903,8 @@ export async function updateSchedulePattern(input: SchedulePatternInput): Promis
     ...parsed,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
+    // BRIDGE-NOTIFY-001: the key-moment alert settings share this row; a schedule save keeps them.
+    ...(existing?.keyMomentAlerts ? { keyMomentAlerts: existing.keyMomentAlerts } : {}),
   };
   await db.schedulePatterns.put(record);
   return record;

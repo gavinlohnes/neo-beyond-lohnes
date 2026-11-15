@@ -3415,3 +3415,11 @@ objective ships, every Alfred change remains confirm-first. **Conflict to resolv
 (`OPERATOR_INTERFACE_DOCTRINE.md`, "proposes changes the operator confirms") and BEYOND-4.0 decision 2 ("every change is
 confirmed") must be amended in their own text in the same Protected PR, with the exact list of immediate actions.
 
+## BRIDGE-NOTIFY-001 — key-moment alerts: 3 a day, kinds off, quiet hours (Gavin, 2026-11-15)
+
+Implements BEYOND-4.0 decision 5 for the existing Health Bridge moments. [Brief](agent/BRIDGE-NOTIFY-001.md).
+At most 3 alerts per lived day; when more are due, BEFORE SHIFT, then SHIFT'S DONE, then TASK DUE, then WAKE win,
+earlier first within a kind. Each kind can be switched off and there are owner-set quiet hours (MORE → Work Schedule);
+nothing sounds inside a scheduled shift. Day off rides on the last shift's SHIFT'S DONE; plan-to-confirm moments wait
+for a new kind. No new alert kinds; settings sit on the schedule row and travel with backups. The phone keeps a
+four-week plan and re-arms it in the background; changes reach it at the next SYNC GARMIN.

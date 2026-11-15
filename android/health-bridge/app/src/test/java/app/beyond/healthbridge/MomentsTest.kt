@@ -23,4 +23,13 @@ class MomentsTest {
         assertNull(parsePlan("not json"))
         assertEquals(0, parsePlan(json.replace("?alfred=debrief", "https://elsewhere"))!!.moments.count { it.go.isNotEmpty() })
     }
+
+    @Test fun armsARollingWindowPastTheMomentThatFired() {
+        val many = (1..30).joinToString(",") { "{\"at\":${it * 1000},\"kind\":\"BEFORE_SHIFT\",\"title\":\"t$it\",\"text\":\"\",\"go\":\"\"}" }
+        val plan = parsePlan("""{"home":"https://example.test/beyond/","brief":"","moments":[$many]}""")!!
+        assertEquals((1..24).map { it * 1000L }, toArm(plan, 0, 24).map { it.at })
+        // Moment 5 just fired: the window starts after it and reaches moment 29.
+        assertEquals((6..29).map { it * 1000L }, toArm(plan, 5000, 24).map { it.at })
+        assertEquals(emptyList<Long>(), toArm(plan, 30_000, 24).map { it.at })
+    }
 }

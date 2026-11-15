@@ -57,3 +57,17 @@ describe("WorkScheduleScreen (real browser)", () => {
     await expect.element(screen.getByRole("button", { name: "SAVE SCHEDULE", exact: true })).toBeDisabled();
   });
 });
+
+describe("BRIDGE-NOTIFY-001: key-moment alert settings (real browser)", () => {
+  it("turns one kind off and sets quiet hours, saved straight away", async () => {
+    const { getKeyMomentAlerts } = await import("../../src/application/keyMomentAlerts");
+    const screen = await render(<WorkScheduleScreen />);
+    const wake = screen.getByRole("button", { name: "Up for the shift alert", exact: true });
+    await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+    await wake.click();
+    await expect.element(wake).toHaveAttribute("aria-pressed", "false");
+    await screen.getByRole("button", { name: "Quiet hours", exact: true }).click();
+    await expect.element(screen.getByText("Saved. Your phone gets it at the next SYNC GARMIN.", { exact: true })).toBeVisible();
+    await expect.poll(getKeyMomentAlerts).toEqual({ off: ["WAKE"], quietFrom: "08:00", quietTo: "14:00" });
+  });
+});

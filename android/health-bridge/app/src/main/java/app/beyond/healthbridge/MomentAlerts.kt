@@ -37,11 +37,11 @@ object MomentAlerts {
 
     fun plan(context: Context): BridgePlan? = parsePlan(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null))
 
-    fun arm(context: Context) {
+    fun arm(context: Context, after: Long = System.currentTimeMillis()) {
         val alarms = context.getSystemService(AlarmManager::class.java) ?: return
         for (i in 0 until MAX) alarms.cancel(alarm(context, i, null))
         val plan = plan(context) ?: return
-        upcoming(plan, System.currentTimeMillis()).take(MAX).forEachIndexed { i, m ->
+        toArm(plan, after, MAX).forEachIndexed { i, m ->
             // Inexact on purpose: no exact-alarm permission; Android may shift it a few minutes.
             alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, m.at, alarm(context, i, m))
         }
@@ -71,6 +71,8 @@ object MomentAlerts {
             .setAutoCancel(true)
             .build()
         try { manager.notify((at / 1000).toInt(), notification) } catch (e: SecurityException) { /* notifications are off */ }
+        // BRIDGE-NOTIFY-001: roll the alarm window forward past the moment that just fired.
+        arm(context, maxOf(System.currentTimeMillis(), at))
         BriefWidget.refresh(context)
     }
 }

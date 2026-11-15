@@ -864,6 +864,22 @@ export interface SchedulePattern {
   postWorkTailHours: number;
   createdAt: string;
   updatedAt: string;
+  /**
+   * BRIDGE-NOTIFY-001: the owner's key-moment alert settings, kept on the same "current" row so native
+   * backups carry them with no schema change. Optional and unindexed; read and validated on its own
+   * (application/keyMomentAlerts.ts), never by the schedule's own parser.
+   */
+  keyMomentAlerts?: KeyMomentAlertSettings;
+}
+
+/** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */
+export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE";
+
+/** BRIDGE-NOTIFY-001: which kinds are off, and the owner's quiet hours ("HH:MM" local, may cross midnight). */
+export interface KeyMomentAlertSettings {
+  off: KeyMomentKind[];
+  quietFrom: string | null;
+  quietTo: string | null;
 }
 
 /**

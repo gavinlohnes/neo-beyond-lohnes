@@ -29,5 +29,13 @@ fun parsePlan(json: String?): BridgePlan? = try {
 
 fun upcoming(plan: BridgePlan, now: Long): List<Moment> = plan.moments.filter { it.at > now }
 
+/**
+ * BRIDGE-NOTIFY-001: the alarms to set now. BEYOND's plan reaches four weeks ahead (already capped at 3 a day, with
+ * the owner's kinds off and quiet hours applied in BEYOND); the phone holds at most [max] alarms, so each re-arm
+ * (after a moment fires, at each background check, after a restart) rolls the window forward. `after` keeps a
+ * moment that has just fired from being set again.
+ */
+fun toArm(plan: BridgePlan, after: Long, max: Int): List<Moment> = upcoming(plan, after).take(max)
+
 /** The page a moment opens: BEYOND's home, plus its query (e.g. ?alfred=debrief). */
 fun momentUrl(plan: BridgePlan, moment: Moment?): String = plan.home + (moment?.go ?: "")
