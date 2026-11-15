@@ -1,4 +1,13 @@
-# Current objective — SPEED-UNDER-FATIGUE-001 (Gavin, 2026-11-15: build only the speed pack)
+# Current objective — UNIVERSAL-FAST-CAPTURE-001 (Gavin: universal fast capture, no destination required)
+
+- **Builder:** Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged as #537). [Brief](UNIVERSAL-FAST-CAPTURE-001.md). FEATURE lane: existing canonical saves, no Engine/command/schema/provider/dependency changes. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/538).
+- **Bounded implementation:** one-tap CAPTURE on TODAY opens raw multiline text in the existing shell sheet. Explicit CAPTURE saves an OPEN CaptureItem; leaving raw is valid. Optional MAKE A TASK previews copied/editable title and blank optional planned/due dates; only CREATE TASK/PLAN ITEM invokes existing atomic conversion with source provenance. OPEN CAPTURE is the existing later-processing route. No AI sorting, new notes app, broad navigation, family/metrics/training/evidence changes or Alfred writes.
+- **Verification:** 40 targeted Node checks PASS in four files (capture inbox/conversion/atomicity/native restoration). 67 unique real-Chromium checks PASS in seven files, including 11 new acceptance cases, original shell sheets/TODAY/LOG/speed/retention/atomicity. No-day/offline use, raw-first/no inferred date, explicit promotion/cancel, failed save/retained draft, same-tick duplicate guard, missing source, close/reopen/remount, source-linked backup and 320/375/768px axe accepted. Architecture, typecheck and production/PWA build PASS. Full required CI is the remaining PR gate; consult its handoff for current status after this committed checkpoint.
+- **Next:** obtain green required CI on the bounded PR and present Gavin’s normal review/merge decision. Never merge or start the next mission. Week planner remains preserved separately in #529.
+
+---
+
+# Historical — SPEED-UNDER-FATIGUE-001 (Gavin, 2026-11-15: build only the speed pack)
 
 - **Builder:** Codex; branch `codex/speed-under-fatigue-001`, fresh master `eacbb3a0d1c1252da13281e972c0f879a11c6737`. [Brief](SPEED-UNDER-FATIGUE-001.md). FEATURE lane; no Engine/command/persistence/provider/dependency changes. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/537).
 - **Chosen paths:** quick Note from TODAY (one navigation tap instead of LOG → NOTE), existing workout resume lands at the current exercise, and current-set LOG sits immediately after required weight/reps in normal/Gym views. Optional metadata stays accessible below; exact-repeat retains its one-tap handler as a secondary shortcut. Defaults, rest, undo, skip, red-capacity gates and explicit saves remain.
