@@ -16,6 +16,7 @@ import type {
 } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { deriveCapacity } from "./capacity";
+import { effectiveWorkMarks } from "./workMarks";
 import { mostRecentBoundaryAtOrBefore } from "./dayRollover";
 import { findSessionRecords } from "./personalRecords";
 import { deriveScheduledContext, scheduledWorkContextForLivedDay, type SchedulePhase } from "./scheduledContext";
@@ -191,6 +192,9 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   "SLEEP_LOG_VOIDED",
   "BODYWEIGHT_LOG_VOIDED",
   "URGE_UNDONE",
+  // SHIFT-CORRECT-001: an explicit correction of a work mark.
+  "WORK_PERIOD_RETIMED",
+  "WORK_PERIOD_VOIDED",
 ]);
 
 const TRAINING_SET_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(["SET_LOGGED", "SET_SKIPPED"]);
@@ -327,7 +331,8 @@ function summarizeDay(
   // Work
   const workContextEvents = ofType(events, "WORK_CONTEXT_SET");
   const latestWorkContext = workContextEvents[workContextEvents.length - 1];
-  const workEnded = ofType(events, "WORK_PERIOD_ENDED")[0];
+  // SHIFT-CORRECT-001: the effective end, after any explicit retime or reopen.
+  const workEnded = effectiveWorkMarks(events).ended;
   const dayEnded = ofType(events, "DAY_ENDED")[0];
 
   // Sleep

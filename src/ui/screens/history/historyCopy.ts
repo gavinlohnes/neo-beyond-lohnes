@@ -82,6 +82,11 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return "Work marked ended.";
     case "WORK_PERIOD_STARTED":
       return "Work marked started.";
+    // SHIFT-CORRECT-001: explicit corrections of a work mark; the original stays above them.
+    case "WORK_PERIOD_RETIMED":
+      return `Shift ${p.mark === "STARTED" ? "start" : "end"} corrected to ${new Date(String(p.occurredAt)).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`;
+    case "WORK_PERIOD_VOIDED":
+      return p.mark === "ENDED" ? "Shift reopened (work-ended mark removed)." : "Shift start mark removed.";
     case "LOG_RETIMED":
       return `${p.loggedType === "WATER_LOGGED" ? "Water" : p.loggedType === "MEAL_LOGGED" ? "Meal" : "Protein"} log moved to ${new Date(String(p.occurredAt)).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}.`;
     case "WORK_CONTEXT_SET":

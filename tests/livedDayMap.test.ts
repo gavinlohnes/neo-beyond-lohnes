@@ -59,3 +59,12 @@ it("the hidden sentence names marks new since the last look", () => {
   const withFresh = marks.map((m) => (m === water ? { ...m, fresh: true as const } : m));
   expect(describeMap(withFresh)).toBe("Recorded since the day started: At work since 18:02; Water 20 oz at 19:00; Water 16 oz at 23:00. New since you last looked: Water 16 oz at 23:00.");
 });
+
+it("SHIFT-CORRECT-001: a work mark carries its day for EDIT, says when it was corrected, and an end alone still shows", () => {
+  const none = { sleep: null, meals: [], water: [], checkIn: null, workouts: [] };
+  const worked = deriveMapMarks({ ...none, work: { start: at(18, 18, 2), end: at(19, 6), dayId: "d1", corrected: true } }, new Date(2026, 10, 19, 7));
+  expect(worked).toEqual([{ kind: "WORK", at: at(18, 18, 2), until: at(19, 6), label: "Worked 18:02–06:00 (corrected)", shift: { beyondDayId: "d1" } }]);
+  const endOnly = deriveMapMarks({ ...none, work: { start: null, end: at(19, 4, 20), dayId: "d1" } }, new Date(2026, 10, 19, 7));
+  expect(endOnly).toEqual([{ kind: "WORK", at: at(19, 4, 20), label: "Work ended at 04:20", shift: { beyondDayId: "d1" } }]);
+  expect(deriveMapMarks({ ...none, work: { start: null, end: null, dayId: "d1" } }, new Date(2026, 10, 19, 7))).toEqual([]);
+});

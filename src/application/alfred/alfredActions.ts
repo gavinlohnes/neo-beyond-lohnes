@@ -7,7 +7,7 @@ import type { UrgeTrigger } from "../../domain/common/types";
 import type { RepeatUnit } from "../homeCommands";
 import { getDays, searchRecords } from "./alfredSearch";
 import { describeRecentEntries, type FixProposal } from "./fixEntries";
-import { confirmKind, describeKind, labelKind, parseTool, REGISTRY_TOOLS } from "./alfredTools";
+import { confirmKind, describeKind, labelKind, noteKind, parseTool, REGISTRY_TOOLS } from "./alfredTools";
 
 /**
  * ALFRED-001: what Alfred may propose. Each tool call becomes a card the operator confirms; only the
@@ -17,6 +17,7 @@ import { confirmKind, describeKind, labelKind, parseTool, REGISTRY_TOOLS } from 
  */
 /** ALFRED-TOOLS-001: when it happened. `time` is what Alfred asked ("03:10"); BEYOND places it in the lived day as `at`. */
 type Timed = { time?: string | undefined; at?: string | undefined };
+export type ShiftFixAction = "move_start" | "move_end" | "reopen" | "remove_start";
 export type AlfredProposal =
   | { kind: "log_meal"; saved_meal_id?: string | undefined; name: string; calories: number; protein_g: number; carbs_g?: number | undefined; fat_g?: number | undefined; servings?: number | undefined; /** FREE-HELPER-002: also keep it as a saved meal, so next time it logs free. */ remember?: boolean | undefined } & Timed
   | { kind: "log_water"; oz: number } & Timed
@@ -35,6 +36,9 @@ export type AlfredProposal =
   | { kind: "schedule_change"; date: string; work: "WORK" | "OFF"; note?: string | undefined }
   | { kind: "schedule_swap"; work_date: string; off_date: string; note?: string | undefined }
   | { kind: "handoff_note"; note: string; day_id?: string | undefined }
+  // SHIFT-CORRECT-001: correct a recorded shift start/end, reopen an ended shift, or take back a start. BEYOND fills
+  // day_id, mark_event_id, from_at and to_at from the records before the card shows.
+  | { kind: "shift_fix"; action: ShiftFixAction; time?: string | undefined; until?: string | undefined; day_id?: string | undefined; mark_event_id?: string | undefined; from_at?: string | undefined; to_at?: string | undefined }
   | { kind: "task_done"; task_id: string; title: string }
   // ALFRED-TOOLS-001: no longer needed (RELEASED) and waiting.
   | { kind: "task_release"; task_id: string; title: string }
@@ -124,6 +128,11 @@ export function describeProposal(p: AlfredProposal): string {
   return describeKind(p);
 }
 
+/** SHIFT-CORRECT-001: a second line a card must show before SAVE (what it can't undo), if any. */
+export function describeProposalNote(p: AlfredProposal): string | undefined {
+  return noteKind(p);
+}
+
 /** The confirm button's word: OPEN for a card that only opens a screen, SAVE for a record. */
 export const confirmLabel = (p: AlfredProposal) => labelKind(p);
 
@@ -142,7 +151,7 @@ export function describeConfirmError(e: unknown): string {
   if (m.startsWith("PROJECT_FINISHED")) return "That project is finished. Reopen it first. Nothing changed.";
   if (m.startsWith("PROJECT_NOT_FOUND")) return "BEYOND couldn't find that project. Nothing changed.";
   // ALFRED-TOOLS-001: these commands already say what went wrong in plain words after the code.
-  if (/^(EXCEPTION_[A-Z_]+|EMPTY_HANDOFF|HANDOFF_TOO_LONG|LOG_NOT_FOUND|CHANGED_SINCE_CARD|WORKOUT_NOT_ACTIVE|LOG_TIME_[A-Z_]+): /.test(m)) return `${m.slice(m.indexOf(": ") + 2).replace(/\.?$/, ".")} Nothing changed.`;
+  if (/^(WORK_MARK_[A-Z_]+|EXCEPTION_[A-Z_]+|EMPTY_HANDOFF|HANDOFF_TOO_LONG|LOG_NOT_FOUND|CHANGED_SINCE_CARD|WORKOUT_NOT_ACTIVE|LOG_TIME_[A-Z_]+): /.test(m)) { const said = m.slice(m.indexOf(": ") + 2).replace(/\.?$/, "."); return `${said.charAt(0).toUpperCase()}${said.slice(1)} Nothing changed.`; }
   if (m.includes("NOT_FOUND")) return "BEYOND couldn't find that task. Nothing changed.";
   return "That didn't save. Nothing changed. Try again.";
 }

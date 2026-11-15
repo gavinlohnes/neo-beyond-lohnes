@@ -23,12 +23,15 @@ import type {
   WorkContextSetPayload,
   WorkContextSource,
   ShiftHandoffNotedPayload,
+  WorkPeriodRetimedPayload,
+  WorkPeriodVoidedPayload,
   ShiftHandoffReadPayload,
 } from "../domain/common/types";
 import { SHIFT_HANDOFF_MAX_LENGTH } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { schedulePatternInputSchema, type SchedulePatternInput } from "../persistence/schedulePatternValidation";
 import { checkLogTime, effectiveLogTimes } from "./logTimes";
+import { effectiveWorkMarks } from "../engine/workMarks";
 import { getStandingWorkContext, getWorkPeriodEnded, getWorkPeriodStarted, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import { emitAutomationEvent } from "./iftttAutomations";
@@ -805,9 +808,10 @@ export async function setWorkContext(
  * "Exactly one effective work-ended fact": idempotent by construction — a
  * day that already has a WORK_PERIOD_ENDED event is left untouched rather
  * than logging a duplicate, so rapid double-taps or a retried request
- * can't fork the history. This is not a correction chain (see
- * WorkPeriodEndedPayload's doc comment) — there is nothing to correct
- * about "did the shift end," only whether it has been marked yet.
+ * can't fork the history. "Already has" means an EFFECTIVE end
+ * (SHIFT-CORRECT-001, 2026-11-15): once the operator explicitly reopens a
+ * shift (voidWorkMark), WORK ENDED records a new end. Its time can be
+ * corrected explicitly with retimeWorkMark; see WorkPeriodEndedPayload.
  */
 /**
  * SHIFT-CHANGE-001 (owner go 2026-10-28: "Just hit it and it's logged"): the one-tap record that work
@@ -851,6 +855,61 @@ export async function markWorkEnded(beyondDayId: string): Promise<boolean> {
   });
   if (changed) emitAutomationEvent("work_ended");
   return changed;
+}
+
+/**
+ * SHIFT-CORRECT-001 (Gavin, 2026-11-15: "Yes, amend WORK TRANSITION to allow explicit shift start/end corrections";
+ * his screenshot: "Im still working till 0600. Fix my log" after a 04:20 WORK ENDED). The operator's explicit
+ * correction of a recorded work mark, never inferred: an append-only WORK_PERIOD_RETIMED naming the original mark.
+ * The time stays inside the mark's lived day (16:30 to 16:30), is not later than now (a shift that hasn't ended yet is
+ * reopened, then marked ended when it does), and keeps start before end. A no-op writes nothing.
+ */
+export async function retimeWorkMark(beyondDayId: string, mark: "STARTED" | "ENDED", at: string, now: Date = new Date()): Promise<boolean> {
+  const occurredAt = await placeInDay(beyondDayId, at);
+  if (Date.parse(occurredAt) > now.getTime()) {
+    throw new Error(mark === "ENDED"
+      ? "WORK_MARK_AHEAD: a shift end can't be later than now. If you're still working, reopen the shift and mark WORK ENDED when you're off."
+      : "WORK_MARK_AHEAD: a shift start can't be later than now.");
+  }
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const marks = effectiveWorkMarks(await db.events.where("beyondDayId").equals(beyondDayId).toArray());
+    const target = mark === "STARTED" ? marks.started : marks.ended;
+    if (!target) throw new Error(`WORK_MARK_NOT_FOUND: there's no recorded shift ${mark === "STARTED" ? "start" : "end"} on that day to correct.`);
+    if (Date.parse(target.occurredAt) === Date.parse(occurredAt)) return false;
+    if (mark === "ENDED" && marks.started && Date.parse(occurredAt) <= Date.parse(marks.started.occurredAt)) {
+      throw new Error("WORK_MARK_ORDER: a shift end must be after the shift start.");
+    }
+    if (mark === "STARTED" && marks.ended && Date.parse(occurredAt) >= Date.parse(marks.ended.occurredAt)) {
+      throw new Error("WORK_MARK_ORDER: a shift start must be before the shift end.");
+    }
+    const commandId = newId();
+    const payload: WorkPeriodRetimedPayload = { commandId, markEventId: target.eventId, mark, occurredAt };
+    await logEvent(beyondDayId, "WORK_PERIOD_RETIMED", payload, "USER", commandId, target.eventId);
+    return true;
+  });
+}
+
+/**
+ * SHIFT-CORRECT-001: the operator's explicit "that mark shouldn't count". Voiding the end REOPENS the shift: the day
+ * has no effective work-ended fact again (TODAY offers WORK ENDED once more) and a later explicit WORK ENDED records a
+ * new one. Only on the active work day, like markWorkEnded. A start can be voided only while no end is recorded.
+ * The original mark stays in HISTORY. Anything an automation already did when it was marked is not undone.
+ */
+export async function voidWorkMark(beyondDayId: string, mark: "STARTED" | "ENDED"): Promise<boolean> {
+  return writeAtomically(DAY_WRITE_TABLES, async () => {
+    const day = await db.beyondDays.get(beyondDayId);
+    if (!day || day.status !== "ACTIVE" || day.workContext !== "WORK") {
+      throw new Error("NOT_AN_ACTIVE_WORK_DAY: a shift mark can be reopened or removed only on the active work day.");
+    }
+    const marks = effectiveWorkMarks(await db.events.where("beyondDayId").equals(beyondDayId).toArray());
+    const target = mark === "STARTED" ? marks.started : marks.ended;
+    if (!target) return false;
+    if (mark === "STARTED" && marks.ended) throw new Error("WORK_MARK_ORDER: reopen the shift before removing its start.");
+    const commandId = newId();
+    const payload: WorkPeriodVoidedPayload = { commandId, markEventId: target.eventId, mark };
+    await logEvent(beyondDayId, "WORK_PERIOD_VOIDED", payload, "USER", commandId, target.eventId);
+    return true;
+  });
 }
 
 /**

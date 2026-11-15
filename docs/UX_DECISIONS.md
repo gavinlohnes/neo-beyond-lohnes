@@ -3415,6 +3415,25 @@ objective ships, every Alfred change remains confirm-first. **Conflict to resolv
 (`OPERATOR_INTERFACE_DOCTRINE.md`, "proposes changes the operator confirms") and BEYOND-4.0 decision 2 ("every change is
 confirmed") must be amended in their own text in the same Protected PR, with the exact list of immediate actions.
 
+## WORK TRANSITION amended — explicit shift start/end corrections (SHIFT-CORRECT-001, Gavin, 2026-11-15)
+
+Gavin, 2026-11-15, 04:26 CT, after WORK ENDED had been recorded at 04:20 while he was still working ("Im still working
+till 0600. Fix my log"): "Yes, amend WORK TRANSITION to allow explicit shift start/end corrections."
+[Brief](agent/SHIFT-CORRECT-001.md).
+
+- Unchanged: a shift's start and end are never inferred from time, schedule, GPS, inactivity or any hidden signal, and a
+  day has at most one effective work-ended fact.
+- New: the operator may explicitly **change the time** of a recorded start or end, **reopen** a shift marked ended, or
+  remove a start marked by mistake (while no end is recorded). Each is an append-only correction naming the original
+  (WORK_PERIOD_RETIMED / WORK_PERIOD_VOIDED); HISTORY keeps both. A corrected time stays inside the lived day, is never
+  later than now, and keeps start before end. A shift that hasn't ended yet is reopened, then marked WORK ENDED when it
+  does.
+- Every reader (TODAY, the brief, post-shift, the sleep draft, the Engine day ledger, Alfred's context) uses the
+  corrected value.
+- Where: EDIT › on the work mark in TODAY's timeline (SHIFT sheet), Alfred's `shift_fix` card, and the free helper
+  ("still working till 0600", "got off at 05:45"). Always one explicit confirm.
+- What it can't undo: an automation that already ran (the IFTTT "work ended" webhook); the card and sheet say so.
+
 ## BRIDGE-NOTIFY-001 — key-moment alerts: 3 a day, kinds off, quiet hours (Gavin, 2026-11-15)
 
 Implements BEYOND-4.0 decision 5 for the existing Health Bridge moments. [Brief](agent/BRIDGE-NOTIFY-001.md).

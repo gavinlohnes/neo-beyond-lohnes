@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { captureItem, ensureActiveDay, logBodyweight, logProtein, logSleep, logWater, markWorkEnded, markWorkStarted, noteShiftHandoff, setWorkContext, submitCheckIn, correctWater, correctSleep, correctBodyweight, voidSleepLog, voidBodyweightLog } from "../commands";
-import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries, getWorkPeriodEnded } from "../queries";
+import { retimeWorkMark, voidWorkMark, captureItem, ensureActiveDay, logBodyweight, logProtein, logSleep, logWater, markWorkEnded, markWorkStarted, noteShiftHandoff, setWorkContext, submitCheckIn, correctWater, correctSleep, correctBodyweight, voidSleepLog, voidBodyweightLog } from "../commands";
+import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries, getWorkMarks, getWorkPeriodEnded } from "../queries";
+import { readAutomationConfig } from "../iftttAutomations";
 import { createSavedMeal, logManualMeal, logMeal } from "../nutritionCommands";
 import { getActiveWorkoutSession, getPerformedSets } from "../trainQueries";
 import { logSet } from "../trainCommands";
@@ -52,6 +53,8 @@ export interface ActionSpec<K extends Kind> {
   guard?: (p: ProposalOf<K>, expected: ProposalContext) => Promise<void>;
   /** The confirm: runs the matching BEYOND command. */
   confirm: (p: ProposalOf<K>) => Promise<ConfirmResult>;
+  /** SHIFT-CORRECT-001: a second line shown on the card before SAVE (what it can't take back), if any. */
+  note?: (p: ProposalOf<K>) => string | undefined;
   /** OPEN for a card that only opens a screen; SAVE otherwise. */
   label?: "OPEN" | "SAVE";
 }
@@ -328,6 +331,71 @@ export const REGISTRY: Registry = {
     describe: (p) => `Swap shifts · work ${humanDate(p.work_date)} · off ${humanDate(p.off_date)}${p.note ? ` · ${p.note}` : ""}`,
     confirm: async (p) => { await confirmShiftSwap({ workDate: p.work_date, offDate: p.off_date, ...(p.note ? { note: p.note } : {}) }); return {}; },
   },
+  // SHIFT-CORRECT-001 (Gavin, 2026-11-15: "Yes, amend WORK TRANSITION to allow explicit shift start/end corrections"):
+  // his screenshot's "Im still working till 0600. Fix my log" is a reopen; "I got off at 06:00" later is move_end.
+  shift_fix: {
+    tool: { description: "Propose correcting TODAY's recorded shift marks: move_end (the shift really ended at an earlier time than recorded, or a later one that has already passed), move_start (it really started at another time), reopen (it was marked ended but he is still working: the end is taken back and he marks WORK ENDED when he's off; put the time he says he works till in until), remove_start (a start marked by mistake, only while no end is recorded). Times are HH:MM, 24-hour, never later than now. BEYOND fills the card from the records.",
+      input_schema: obj(["action"], { action: { type: "string", enum: ["move_start", "move_end", "reopen", "remove_start"] }, time: s("move_start/move_end: the real time, HH:MM 24-hour"), until: s("reopen only: when he says he works till, HH:MM") }) },
+    parse: (i) => {
+      const action = i.action === "move_start" || i.action === "move_end" || i.action === "reopen" || i.action === "remove_start" ? i.action : undefined;
+      if (!action) return null;
+      const time = str(i.time), until = str(i.until);
+      if ((action === "move_start" || action === "move_end") && !time) return null;
+      return { kind: "shift_fix", action, ...(time && action.startsWith("move") ? { time } : {}), ...(until && action === "reopen" && /^\d{2}:\d{2}$/.test(until) ? { until } : {}) };
+    },
+    resolve: async (p, now) => {
+      const day = await getActiveDay();
+      if (!day) return "There's no lived day open, so there's no shift to correct.";
+      const marks = await getWorkMarks(day.id);
+      const base = { ...p, day_id: day.id };
+      if (p.action === "reopen") {
+        if (!marks.ended) return "His shift isn't marked ended, so there is nothing to reopen; it is still running in BEYOND.";
+        if (day.workContext !== "WORK") return "Today isn't set as a work day, so there's no shift to reopen.";
+        return { ...base, mark_event_id: marks.ended.eventId, from_at: marks.ended.occurredAt };
+      }
+      if (p.action === "remove_start") {
+        if (!marks.started) return "No shift start is recorded today.";
+        if (marks.ended) return "The shift is marked ended; reopen it first, or move the start instead.";
+        return { ...base, mark_event_id: marks.started.eventId, from_at: marks.started.occurredAt };
+      }
+      const target = p.action === "move_end" ? marks.ended : marks.started;
+      if (!target) return p.action === "move_end" ? "No shift end is recorded today. If he's off now, propose work_ended; it records now." : "No shift start is recorded today. If he's at work, propose work_started; it records now.";
+      const to = p.time ? placeTime(p.time, day.startedAt, now) : null;
+      if (!to) return "That time can't be placed in today's lived day. Give a real time as HH:MM, 24-hour.";
+      if (Date.parse(to) > now.getTime()) return p.action === "move_end" ? "That end time hasn't happened yet. If he's still working, propose reopen (with until), and he marks WORK ENDED when he's off." : "A shift start can't be later than now.";
+      if (Date.parse(to) === Date.parse(target.occurredAt)) return `The shift ${p.action === "move_end" ? "end" : "start"} is already ${hhmm(to)}.`;
+      if (p.action === "move_end" && marks.started && Date.parse(to) <= Date.parse(marks.started.occurredAt)) return `A shift end must be after its start (${hhmm(marks.started.occurredAt)}).`;
+      if (p.action === "move_start" && marks.ended && Date.parse(to) >= Date.parse(marks.ended.occurredAt)) return `A shift start must be before its end (${hhmm(marks.ended.occurredAt)}).`;
+      const { time: _time, ...rest } = base;
+      return { ...rest, mark_event_id: target.eventId, from_at: target.occurredAt, to_at: to };
+    },
+    describe: (p) => {
+      const from = p.from_at ? hhmm(p.from_at) : "?";
+      if (p.action === "reopen") return `Reopen shift (marked ended ${from})${p.until ? ` · working till ${p.until}` : ""}`;
+      if (p.action === "remove_start") return `Remove shift start (${from})`;
+      return `Shift ${p.action === "move_end" ? "end" : "start"} ${from} → ${p.to_at ? hhmm(p.to_at) : "?"}`;
+    },
+    note: (p) => {
+      const ifttt = readAutomationConfig();
+      const ran = (p.action === "reopen" || p.action === "move_end") && ifttt.enabled && ifttt.events.includes("work_ended")
+        ? " Your “work ended” phone automation already ran when it was marked; this can't take that back." : "";
+      if (p.action === "reopen") return `TODAY offers WORK ENDED again; tap it when you're off. HISTORY keeps the ${p.from_at ? hhmm(p.from_at) : "original"} mark.${ran}`;
+      return `HISTORY keeps the original mark.${ran}`;
+    },
+    guard: async (p) => {
+      if (!p.day_id || !p.mark_event_id) throw new Error("CONTEXT_CHANGED");
+      const marks = await getWorkMarks(p.day_id);
+      const current = p.action === "move_end" || p.action === "reopen" ? marks.ended : marks.started;
+      if (!current || current.eventId !== p.mark_event_id || current.occurredAt !== p.from_at) throw new Error("CONTEXT_CHANGED");
+    },
+    confirm: async (p) => {
+      if (!p.day_id) throw new Error("CHANGED_SINCE_CARD: this card has no record behind it.");
+      if (p.action === "reopen") { if (!(await voidWorkMark(p.day_id, "ENDED"))) throw new Error("WORK_MARK_NOT_FOUND: the shift isn't marked ended any more."); return {}; }
+      if (p.action === "remove_start") { if (!(await voidWorkMark(p.day_id, "STARTED"))) throw new Error("WORK_MARK_NOT_FOUND: no shift start is recorded any more."); return {}; }
+      await retimeWorkMark(p.day_id, p.action === "move_end" ? "ENDED" : "STARTED", p.to_at!);
+      return {};
+    },
+  },
   // NOTES-HANDOFF-001, opened to Alfred: a note for his next shift, on a day whose shift is marked ended.
   handoff_note: {
     tool: { description: `Propose a handoff note for his NEXT shift (what to pick up, who to call), only after today's shift is marked ended. At most ${SHIFT_HANDOFF_MAX_LENGTH} characters, in his words.`,
@@ -568,4 +636,5 @@ export const describeKind = (p: AlfredProposal) => anySpec(p.kind).describe(p);
 export const confirmKind = (p: AlfredProposal) => anySpec(p.kind).confirm(p);
 export const guardKind = async (p: AlfredProposal, expected: ProposalContext) => { await anySpec(p.kind).guard?.(p, expected); };
 export const labelKind = (p: AlfredProposal) => anySpec(p.kind).label ?? "SAVE";
+export const noteKind = (p: AlfredProposal) => anySpec(p.kind).note?.(p);
 export { spec as registryEntry };

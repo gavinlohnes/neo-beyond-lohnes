@@ -465,3 +465,13 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   do not create history. `HabitsPanel` reuses foundation panels and native LogSheet focus handling.
 - Quit tracker, reminders, new schedule semantics and health correlations remain excluded.
   Integration/review status belongs in the checkpoint and PR, not this capability index.
+
+### SHIFT-CORRECT-001 — explicit work-mark corrections (2026-11-15)
+
+- Approved scope: [brief](SHIFT-CORRECT-001.md); WORK TRANSITION amended in the Decision Register.
+- Read work marks only through `getWorkMarks` / `getWorkPeriodStarted` / `getWorkPeriodEnded` (application) or the pure
+  `effectiveWorkMarks(events)` (engine); never `events.find(type === "WORK_PERIOD_ENDED")`, which ignores retimes and
+  reopens. Write corrections only via `retimeWorkMark` / `voidWorkMark`.
+- `application/shiftMarks.ts` (sheet view + automation note), `ui/components/ShiftMarkSheet.tsx`; `LogTimeEditor`
+  takes an optional `retime` for anything that isn't a log. The free helper exposes `parseClock`/`clockOf`.
+- Alfred cards: the registry (`application/alfred/alfredTools.ts`, ALFRED-TOOLS-001) now has an optional `note` line.
