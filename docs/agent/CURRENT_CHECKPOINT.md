@@ -3,7 +3,7 @@
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
   baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
   Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
-  fetched master `4d74ac26`.
+  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555).
 - BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
   (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
 - Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);
