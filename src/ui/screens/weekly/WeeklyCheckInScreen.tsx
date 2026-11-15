@@ -7,6 +7,7 @@ import { formatUsd } from "../body/quitCopy";
 import { describeExpenditure, describeGarminBurned } from "./weeklyCopy";
 import { describeBurdenLine, describeFindings, describeWaitingFindings } from "./weeklyCopy";
 import { PersonalBaselines } from "./PersonalBaselines";
+import { CalorieProposal } from "./CalorieProposal";
 import { Ribbon } from "./Ribbon";
 import { HeatGrid } from "./HeatGrid";
 import { MirrorView } from "./MirrorView";
@@ -197,7 +198,7 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpen
             )}
           </Section>
 
-          {/* Drop 6: a read-only estimated range — never a target, never fed anywhere. */}
+          {/* Drop 6: a read-only estimated range. Only the calorie proposal below reads it (TARGET-PROPOSAL-001). */}
           <Section label="EXPENDITURE">
             {(() => {
               const copy = describeExpenditure(summary.expenditure);
@@ -209,6 +210,11 @@ export function WeeklyCheckInScreen({ now, openInterviewKey, onOpenDelta, onOpen
                 </>
               );
             })()}
+          </Section>
+
+          {/* TARGET-PROPOSAL-001: a calorie target BEYOND offers; nothing changes until you save. */}
+          <Section label="CALORIES FOR THIS WEEK">
+            <CalorieProposal proposal={summary.calorieProposal} />
           </Section>
 
           {/* Drop 1 (Burden Meter): one neutral, read-only line. */}

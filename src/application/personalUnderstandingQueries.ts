@@ -32,6 +32,7 @@ export async function getPersonalUnderstanding(now = new Date()) {
       ["weightChangeTargetPercentPerWeek", "Weekly weight change", "% of bodyweight/week"],
       ["muscleSetsTargetPerWeek", "Weekly sets per muscle", "sets"],
       ["strengthSessionsTargetPerWeek", "Weekly strength sessions", "sessions"],
+      ["calorieFloorKcal", "Lowest proposed calories", "kcal"],
     ] as const;
     return {
       readAt: now.toISOString(),

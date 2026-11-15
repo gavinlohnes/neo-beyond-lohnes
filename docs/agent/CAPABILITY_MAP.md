@@ -430,6 +430,7 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   record reference licences before reuse, and preserve/index harvests with findings separated from recommendations/questions.
 - [HARVEST-001](harvest/HARVEST-001.md) preserves the accepted whole-product baseline and lifestyle-logging parity gaps.
   Research recommendations are not implementation approval. Reuse its licence/decision findings before repeating discovery.
+- [TARGET-PROPOSAL-001](TARGET-PROPOSAL-001.md): `application/targetProposal.ts` turns `engine/expenditure.ts`'s weight-trend burn estimate and the stored goal weight and weekly rate into a weekly calorie proposal (Weekly, save or keep). Reuse it for any target suggestion; it never writes.
 - [METRIC-PAGE-001](METRIC-PAGE-001.md): `ui/metrics/MetricDetailSheet.tsx` with `application/metricDetail*.ts` is the shared metric page (hydration, steps, resting heart rate, calories as eaten beside burned). Add a metric here, keeping its own week/source semantics, rather than another detail sheet. Sleep keeps `SleepPeriods` (richer).
   `application/metricDetail*` composes the existing day ledger and measured snapshot; `ui/metrics/MetricDetailSheet`
   shares inspection from TODAY/DATA. Reuse canonical periods, corrections and source routes; do not expand to other

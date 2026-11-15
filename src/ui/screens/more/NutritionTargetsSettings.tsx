@@ -37,6 +37,7 @@ function formInputs(targets: NutritionTargets | null) {
     weightRate: targets?.weightChangeTargetPercentPerWeek?.toString() ?? "",
     muscleSets: targets?.muscleSetsTargetPerWeek?.toString() ?? "",
     sessions: targets?.strengthSessionsTargetPerWeek?.toString() ?? "",
+    floor: targets?.calorieFloorKcal?.toString() ?? "",
   };
 }
 
@@ -56,6 +57,7 @@ export function NutritionTargetsSettings() {
   const [weightRateInput, setWeightRateInput] = useState("");
   const [muscleSetsInput, setMuscleSetsInput] = useState("");
   const [sessionsInput, setSessionsInput] = useState("");
+  const [floorInput, setFloorInput] = useState("");
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +89,7 @@ export function NutritionTargetsSettings() {
     setWeightRateInput(filled.weightRate);
     setMuscleSetsInput(filled.muscleSets);
     setSessionsInput(filled.sessions);
+    setFloorInput(filled.floor);
     setError(null);
     setOpen(true);
   }
@@ -101,6 +104,7 @@ export function NutritionTargetsSettings() {
     const weightRateValue = weightRateInput.trim() ? Number(weightRateInput) : undefined;
     const muscleSetsValue = muscleSetsInput.trim() ? Number(muscleSetsInput) : undefined;
     const sessionsValue = sessionsInput.trim() ? Number(sessionsInput) : undefined;
+    const floorValue = floorInput.trim() ? Number(floorInput) : undefined;
     // Existing nutrition fields retain their historical "blank means unchanged"
     // behavior. The additive Review targets are optional, so blank clears them.
     const changes = {
@@ -112,6 +116,8 @@ export function NutritionTargetsSettings() {
       ...(weightRateValue !== targets?.weightChangeTargetPercentPerWeek ? { weightChangeTargetPercentPerWeek: weightRateValue ?? null } : {}),
       ...(muscleSetsValue !== targets?.muscleSetsTargetPerWeek ? { muscleSetsTargetPerWeek: muscleSetsValue ?? null } : {}),
       ...(sessionsValue !== targets?.strengthSessionsTargetPerWeek ? { strengthSessionsTargetPerWeek: sessionsValue ?? null } : {}),
+      // TARGET-PROPOSAL-002: optional; blank goes back to the 1,500 default.
+      ...(floorValue !== targets?.calorieFloorKcal ? { calorieFloorKcal: floorValue ?? null } : {}),
     };
     if (Object.keys(changes).length === 0) {
       setError(NO_CHANGES_MESSAGE);
@@ -187,6 +193,16 @@ export function NutritionTargetsSettings() {
             onChange={(e) => setCalorieInput(e.target.value)}
             className="input"
           />
+        </div>
+        <div>
+          <label className="meta" htmlFor="calorie-floor-input" style={{ display: "block", marginBottom: 4 }}>
+            Lowest calorie target BEYOND may propose (kcal/day)
+          </label>
+          <input id="calorie-floor-input" type="number" min="1000" max="4000" step="50" aria-label="Lowest calorie target BEYOND may propose (kcal/day)"
+            placeholder="1500" value={floorInput} onChange={(e) => setFloorInput(e.target.value)} className="input" />
+          <p className="meta" style={{ marginTop: 4 }}>
+            Weekly's calorie proposal never goes below this. Blank uses 1,500. You can still type any target yourself.
+          </p>
         </div>
         <div>
           <label className="meta" htmlFor="protein-multiplier-input" style={{ display: "block", marginBottom: 4 }}>

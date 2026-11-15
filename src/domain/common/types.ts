@@ -539,6 +539,8 @@ export interface NutritionTargets {
   weightChangeTargetPercentPerWeek?: number;
   muscleSetsTargetPerWeek?: number;
   strengthSessionsTargetPerWeek?: number;
+  /** TARGET-PROPOSAL-002 (Gavin, 2026-11-15): the lowest calorie target Weekly may propose; unset means 1,500. */
+  calorieFloorKcal?: number;
   createdAt: string;
   updatedAt: string;
 }
