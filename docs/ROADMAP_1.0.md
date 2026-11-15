@@ -7,7 +7,12 @@ resume authorized work when ownership permits, or recommend one next objective f
 New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
-## Current plan — ship existing work before anything new (Gavin, 2026-11-15: "Go")
+## Now — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15)
+
+Approved transformation in four releases: a foundation + zero-effort input → b coach brain → c self-running week → d
+TODAY as a mission briefing. [Master brief](agent/BEYOND-4.0.md) with Gavin's five decisions.
+
+## Completed — ship existing work before anything new (Gavin, 2026-11-15: "Go")
 
 From the [audit](audit/AUDIT-REPORT.md): 1 week planner (#529, merged) → 2 timeline editing (#540, merged) →
 3 #482 closed, #473 parked (Gavin) → 4 ALFRED-FIX-001 (#541, merged) → 5 documentation truth (#542, and the Doctrine's
