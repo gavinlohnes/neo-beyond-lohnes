@@ -1,3 +1,4 @@
+import { WorkRunPlanner } from "./WorkRunPlanner";
 import { WeekPlanner } from "./WeekPlanner";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -14,7 +15,7 @@ import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence 
 import type { IntentFocus } from "./IntentScreen";
 
 /** FORECAST-DECIDE-001: listRequest opens a given list (a new key opens it again), e.g. No date from the forecast. */
-export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active?: boolean; onOpen: (focus: IntentFocus | null) => void; listRequest?: { key: number; list: "today" | "next7" | "noDate" | "week" } | null }) {
+export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapture }: { active?: boolean; onOpenCapture?: (() => void) | undefined; onOpen: (focus: IntentFocus | null) => void; listRequest?: { key: number; list: "today" | "next7" | "noDate" | "week" } | null }) {
   const [plan, setPlan] = useState<TaskSmartLists | null>(null);
   const [list, setList] = useState<"today" | "next7" | "noDate" | "week">(listRequest?.list ?? "today");
   useEffect(() => { if (listRequest) setList(listRequest.list); }, [listRequest?.key]);
@@ -114,7 +115,7 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest }: { active
     <div className="plan-smart-lists" role="group" aria-label="Task views">
       {([['today', 'Today'], ['next7', 'Next 7'], ['noDate', 'No date'], ['week', 'Week planner']] as const).map(([value, label]) => <button key={value} type="button" className="btn-secondary" aria-pressed={list === value} onClick={() => setList(value)}>{label}</button>)}
     </div>
-    <div hidden={list !== "week"}><WeekPlanner active={active && list === "week"} onOpen={(id) => onOpen({ kind: "OBLIGATION", obligationId: id })} onChanged={() => void refresh()} /></div>
+    <div hidden={list !== "week"}><WorkRunPlanner active={active && list === "week"} onOpenCapture={onOpenCapture} /><WeekPlanner active={active && list === "week"} onOpen={(id) => onOpen({ kind: "OBLIGATION", obligationId: id })} onChanged={() => void refresh()} /></div>
     {list !== "week" && <>
     <Section id="plan-commitments" eyebrow="YOUR COMMITMENTS" title={list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}
       wayIn={{ label: "All missions", ariaLabel: "Open all missions and obligations", onClick: () => onOpen(null) }}>
