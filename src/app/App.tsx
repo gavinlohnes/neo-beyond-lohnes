@@ -351,6 +351,7 @@ function AppWorkspaces() {
   const [trainDestination, setTrainDestination] = useState<TrainDestination | null>(shortcut === "workout" ? "WORKOUT" : null);
   // FIND-001: a LIFT/PR search result opens TRAIN → RECORDS at that lift; the top-bar icon opens SEARCH.
   const [trainRecordsFocus, setTrainRecordsFocus] = useState<string | null>(null);
+  const [coachDeltaRequest, setCoachDeltaRequest] = useState(0);
   const [moreView, setMoreView] = useState<MoreView>(sharedHealth && !oneTapSync ? "HEALTH_IMPORT" : sharedInbox ? "SAVED" : "MENU");
   const [reviewDestination, setReviewDestination] = useState<{ key: number; view: WholePictureDestination } | null>(null);
   useEffect(() => {
@@ -785,6 +786,10 @@ function AppWorkspaces() {
               onOpenHealthEvidence={openBodyEvidence}
               onOpenRecord={(target) => openRecordSheet(target)}
               onOpenWeeklyReview={() => openMore("REVIEW")}
+              onOpenCoach={(destination) => {
+                if (destination === "TRAIN") openTrain("WORKOUT");
+                else { openMore(destination === "JOURNAL" ? "JOURNAL" : destination === "WEEKLY" ? "WEEKLY" : "REVIEW"); if (destination === "DELTA") setCoachDeltaRequest((n) => n + 1); }
+              }}
               onOpenSystems={() => { openMore("SYSTEMS"); }}
               onOpenCave={(tab) => { openCave(tab); }}
               toolsRequest={toolsRequest}
@@ -807,7 +812,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}

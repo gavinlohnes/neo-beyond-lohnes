@@ -167,6 +167,7 @@ export function MoreScreen({
   dailyBanners, dailyRefreshKey = 0, onDailyContextChanged,
   active = true,
   navigationRequest = 0,
+  coachDeltaRequest = 0,
   recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null,
   initialView = "MENU",
   onOpenRecords,
@@ -199,6 +200,7 @@ export function MoreScreen({
   onDailyContextChanged?: () => void;
   active?: boolean;
   navigationRequest?: number;
+  coachDeltaRequest?: number;
   recordFocus?: IntentFocus | null;
   memoryFocusId?: string | null;
   /** CONNECT-002: the lived day a tapped [[link]] opened; null is the current day. */
@@ -295,6 +297,7 @@ export function MoreScreen({
   // FIND-001: a NOTE or DAY result opens HISTORY with that day open.
   const [journalFocus, setJournalFocus] = useState<string | undefined>(undefined);
   // REFLECT-001: a reflective search entry (or a daily-note link) opens its view at the right place.
+  useEffect(() => { if (coachDeltaRequest) setReflectFocus({ key: coachDeltaRequest, focus: "DELTA" }); }, [coachDeltaRequest]);
   const [reflectFocus, setReflectFocus] = useState<{ key: number; focus: ReflectFocus } | null>(null);
   const [planListRequest, setPlanListRequest] = useState<{ key: number; list: "today" | "next7" | "noDate" | "week" } | null>(null);
   // NAV-REACH-001: a jump between the reflective views (daily note, weekly interview, DELTA, patterns) remembers

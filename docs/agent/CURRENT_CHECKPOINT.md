@@ -1,3 +1,11 @@
+# Current objective — 4.0-b slice 2: one coach card
+
+- Builder Codex; branch `codex/4b-coach-card`, from fetched master `ba6df574` (deload merged). Owner resumes work; [approved order and scope](BEYOND-4.0-B.md). No competing implementation PR found.
+- One optional evidence-backed suggestion below Engine guidance; existing feature confirmation flows own actions, local SKIP lasts until evidence changes. No new formulas, schema, dependency, provider or silent writes.
+- Gates: focused query/browser and existing TODAY/App regressions, type/architecture/build, full CI and independent Protected exact-head review pending. Record final evidence in the PR handoff without changing the reviewed commit. Gavin alone merges; no automatic next slice.
+
+---
+
 # Builder takeover — BEYOND 4.0-b slice 1: DELOAD after a steady stall
 
 - **Builder:** Codex resumes Claude Code's existing `ccr-88f5c085-4b-deload` branch and [PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/546), following Gavin's explicit takeover instruction. No competing branch/PR or new scope.
