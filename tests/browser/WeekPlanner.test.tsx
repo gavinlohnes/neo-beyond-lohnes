@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page, userEvent } from "vitest/browser";
 import axe from "axe-core";
+import { db } from "../../src/persistence/db";
 import { PlanTodayScreen } from "../../src/ui/screens/more/PlanTodayScreen";
 import { createObligation } from "../../src/application/intentCommands";
 import { getObligation } from "../../src/application/intentQueries";
@@ -132,4 +133,23 @@ it("same-tick saves commit once and a failed post-save refresh still reports the
   expect((await getObligation(item.id))?.plannedAt).toBe("2026-11-17");
   await screen.getByRole("button", { name: "RETRY WEEK", exact: true }).click();
   await expect.element(screen.getByRole("button", { name: /^Saved fact/ })).toBeVisible();
+});
+
+
+it("keeps the move unsaved when midnight passes during the eligibility read", async () => {
+  const item = await createObligation({ title: "Midnight pending", plannedAt: "2026-11-15" });
+  const { screen } = await open();
+  await screen.getByRole("button", { name: /^Sun, Nov 15/ }).click();
+  await screen.getByRole("button", { name: "Plan Midnight pending", exact: true }).click();
+  const sheet = screen.getByRole("dialog", { name: "Choose a planned day" });
+  await sheet.getByRole("combobox", { name: "Planned day" }).selectOptions("2026-11-14");
+  const count = await db.events.count();
+  const crossMidnight = (value: unknown) => { vi.setSystemTime(new Date(2026, 10, 15, 0, 1)); return value; };
+  db.obligations.hook("reading", crossMidnight);
+  try {
+    await sheet.getByRole("button", { name: "SAVE PLANNED DAY", exact: true }).click();
+    await expect.element(sheet.getByRole("alert")).toHaveTextContent("outside the current seven-day plan");
+  } finally { db.obligations.hook("reading").unsubscribe(crossMidnight); }
+  expect((await getObligation(item.id))?.plannedAt).toBe("2026-11-15");
+  expect(await db.events.count()).toBe(count);
 });

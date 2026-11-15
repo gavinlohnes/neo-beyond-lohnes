@@ -25,3 +25,5 @@ Early independent review's three recovery findings were fixed, regression tested
 ## Delivery recovery — 2026-11-15
 
 HARVEST-002 is merged and recommends finishing this existing approved PR before a new improvement. Codex resumes the same preserved branch and objective; no competing Builder or branch found. Integrate fetched master `b4739464` into original head `32fb0f96`; source merges automatically, with two documentation conflicts resolved by preserving both planner and upstream decisions/handoffs. Earlier tests/CI are historical, not renewed approval. Fresh integration verification and independent final-head review are required before ready. No expansion or merge.
+
+Independent integration review found a midnight crossing during eligibility reads after transaction acquisition. Revalidate after that awaited read before the planned-date write; Node and real-Chromium regressions assert rejection with no task/event mutation. Final exact-head review and CI remain required; see active PR for current results.

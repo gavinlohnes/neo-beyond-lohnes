@@ -105,3 +105,15 @@ it("reuses saved rotation forecasts and confirmed changes without calling either
   expect(changed.days[1]).toMatchObject({ work: kind, basis: "CONFIRMED" });
   expect(changed.days[0]?.basis).toBe("PREDICTED");
 });
+
+
+it("rejects a target that becomes yesterday while reading eligibility without writing", async () => {
+  const task = await createObligation({ title: "Midnight read", plannedAt: "2026-11-15" });
+  const count = await db.events.count();
+  const crossMidnight = (value: unknown) => { vi.setSystemTime(new Date(2026, 10, 15, 0, 1)); return value; };
+  db.obligations.hook("reading", crossMidnight);
+  try { await expect(moveWeekTask(task.id, "2026-11-14", task)).rejects.toThrow("outside the current"); }
+  finally { db.obligations.hook("reading").unsubscribe(crossMidnight); }
+  expect((await getObligation(task.id))?.plannedAt).toBe("2026-11-15");
+  expect(await db.events.count()).toBe(count);
+});
