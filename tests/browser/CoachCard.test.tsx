@@ -46,6 +46,6 @@ it("sits below the Engine on TODAY and opens the existing feature without saving
   expect(Boolean((primary ?? primaryCard)?.compareDocumentPosition(coach.element())! & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
   const count = await db.events.count();
   await coach.getByRole("button", { name: "REVIEW SUGGESTION" }).click();
-  await expect.element(screen.getByRole("button", { name: "Open LOG", exact: true })).not.toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "TRAIN", exact: true })).toHaveAttribute("aria-current", "page");
   expect(await db.events.count()).toBe(count);
 });
