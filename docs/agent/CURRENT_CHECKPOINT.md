@@ -1,9 +1,9 @@
 # Current objective — UNIVERSAL-FAST-CAPTURE-001 (Gavin: universal fast capture, no destination required)
 
-- **Builder:** Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged as #537). [Brief](UNIVERSAL-FAST-CAPTURE-001.md). FEATURE lane: existing canonical saves, no Engine/command/schema/provider/dependency changes. PR pending.
+- **Builder:** Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged as #537). [Brief](UNIVERSAL-FAST-CAPTURE-001.md). FEATURE lane: existing canonical saves, no Engine/command/schema/provider/dependency changes. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/538).
 - **Bounded implementation:** one-tap CAPTURE on TODAY opens raw multiline text in the existing shell sheet. Explicit CAPTURE saves an OPEN CaptureItem; leaving raw is valid. Optional MAKE A TASK previews copied/editable title and blank optional planned/due dates; only CREATE TASK/PLAN ITEM invokes existing atomic conversion with source provenance. OPEN CAPTURE is the existing later-processing route. No AI sorting, new notes app, broad navigation, family/metrics/training/evidence changes or Alfred writes.
 - **Verification:** 40 targeted Node checks PASS in four files (capture inbox/conversion/atomicity/native restoration). 67 unique real-Chromium checks PASS in seven files, including 11 new acceptance cases, original shell sheets/TODAY/LOG/speed/retention/atomicity. No-day/offline use, raw-first/no inferred date, explicit promotion/cancel, failed save/retained draft, same-tick duplicate guard, missing source, close/reopen/remount, source-linked backup and 320/375/768px axe accepted. Architecture, typecheck and production/PWA build PASS. Full required CI is the remaining PR gate; consult its handoff for current status after this committed checkpoint.
-- **Next:** publish the bounded PR, obtain green required CI and present Gavin’s normal review/merge decision. Never merge or start the next mission. Week planner remains preserved separately in #529.
+- **Next:** obtain green required CI on the bounded PR and present Gavin’s normal review/merge decision. Never merge or start the next mission. Week planner remains preserved separately in #529.
 
 ---
 

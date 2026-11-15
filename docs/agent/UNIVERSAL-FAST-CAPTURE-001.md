@@ -1,6 +1,6 @@
 # UNIVERSAL-FAST-CAPTURE-001 — raw first, organize only on purpose
 
-**Owner authorization:** Gavin explicitly requested universal fast capture with no destination required, 2026-11-15. Raw by default; optional confirmed promotion into existing plan/task/note pathways; leaving raw is valid. No AI sorting, new notes app, broad navigation, family/metrics/training/evidence changes or Alfred writes. Builder Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged). FEATURE lane: UI composition of existing commands; no new event/store/schema/provider/dependency/Engine semantics. Required CI, normal review and Gavin's merge. PR pending.
+**Owner authorization:** Gavin explicitly requested universal fast capture with no destination required, 2026-11-15. Raw by default; optional confirmed promotion into existing plan/task/note pathways; leaving raw is valid. No AI sorting, new notes app, broad navigation, family/metrics/training/evidence changes or Alfred writes. Builder Codex; branch `codex/universal-fast-capture-001`, fresh master `bc93cc25c5e5103ba3e31f6645835028a8c57dfd` (speed pack merged). FEATURE lane: UI composition of existing commands; no new event/store/schema/provider/dependency/Engine semantics. Required CI, normal review and Gavin's merge. [Active PR](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/538).
 
 ## Bounded journey
 
