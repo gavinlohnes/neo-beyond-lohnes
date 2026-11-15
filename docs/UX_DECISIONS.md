@@ -1095,7 +1095,8 @@ below, this entry wins; the older entry is kept for history.
   enough data yet: sleep before workouts (2 of 6 each way), …") and never shown as a finding.
   Recomputed on every read; nothing stored, nothing fed to the Engine, nothing to accept or act on.
   Adopting a finding as a rule, deload/stall *suggestions*, and any Engine use wait for separate
-  sign-off. The Day Ledger's sleep gains `primaryLogs` (each main-sleep log's time and minutes) so a
+  sign-off. *(2026-11-15: the stall became the DELOAD suggestion, with Gavin's sign-off; see the
+  progression rule's deload amendment.)* The Day Ledger's sleep gains `primaryLogs` (each main-sleep log's time and minutes) so a
   sleep can be placed before a workout by time.
 - **Historical presentation; superseded by REDESIGN-001 above. As built: check-in draft (Drop 5, owner approval 2026-10-03 — "Never auto-confirm. Record
   whether each draft was confirmed unchanged or adjusted.").** The check-in form (MANUAL CHECK-IN,
@@ -1662,6 +1663,19 @@ USER_DECIDES remaining authoritative.
   the set inputs still pre-fill from the last performed set, unchanged. Pure rule in
   `engine/progression.ts` (`RE_ENTRY_DAYS`, `RE_ENTRY_FRACTION`); the day count comes from
   `application/trainQueries.ts`'s `getDaysSinceExerciseLastPerformed`.
+- **Deload after a stall — a second amendment to the locked progression rule (BEYOND 4.0-b slice 1;
+  direct owner approval 2026-11-15: "I approve the [deload] rule").** When a lift's last 4 finished
+  sessions — any template or variant, the last within 28 days — set no new record (the stall
+  finding's own test: heaviest or reps, the PR rule) and are steady (every top set within 95% of the
+  run's heaviest), a HOLD or REDUCE becomes `DELOAD`: about 90% of the last load (clean last weight,
+  or the heaviest set done), rounded **down** to the exercise's own increment, for one session; the
+  locked rule builds back from there. It never replaces INCREASE, and a 14-day layoff gets RE-ENTRY.
+  A lighter session inside the run (the deload itself, or building back) means it isn't a plain
+  stall, so DELOAD comes back only after 4 new sessions without a record. The WHY is visible ("No
+  new record in your last 4 sessions — suggests one lighter session at 90lb (about 90% of 100lb),
+  then building back."); never applied, never pre-fills an input. Pure rule in
+  `engine/progression.ts` (`DELOAD_FRACTION`) and `engine/stall.ts` (`deloadStall`, shared with the
+  stall finding); the history comes from `application/trainQueries.ts`'s `getProgressionSuggestion`.
 - HOLD has three distinct sub-paths in the engine (clean hold, incomplete
   evidence, mixed weights in recent history) and only the clean-hold path
   sets a numeric `lastWeight`. UI copy must fall back to the engine's own

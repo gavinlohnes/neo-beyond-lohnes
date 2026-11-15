@@ -1,5 +1,6 @@
 import { isWorkingSet } from "../domain/workout/types";
 import type { ExercisePrescription, PerformedSet } from "../domain/workout/types";
+import type { DeloadStall } from "./stall";
 
 /**
  * TRAIN progression (Decision Register, TRAIN — locked, reconfirmed by
@@ -17,7 +18,7 @@ import type { ExercisePrescription, PerformedSet } from "../domain/workout/types
  * from HOLD (which implies real evidence was weighed and didn't qualify
  * for a change).
  */
-export type ProgressionRecommendation = "INCREASE" | "HOLD" | "REDUCE" | "NO_HISTORY" | "RE_ENTRY";
+export type ProgressionRecommendation = "INCREASE" | "HOLD" | "REDUCE" | "NO_HISTORY" | "RE_ENTRY" | "DELOAD";
 
 export interface ProgressionSuggestion {
   recommendation: ProgressionRecommendation;
@@ -26,6 +27,8 @@ export interface ProgressionSuggestion {
   suggestedNextWeight?: number;
   /** RE_ENTRY only: whole days since the exercise was last performed. */
   daysSinceLastPerformed?: number;
+  /** DELOAD only: the stalled run's top-set weights, oldest first. */
+  stallTopWeights?: number[];
 }
 
 /**
@@ -42,10 +45,14 @@ export interface ProgressionSuggestion {
  */
 export const RE_ENTRY_DAYS = 14;
 export const RE_ENTRY_FRACTION = 0.9;
+/** DELOAD: about this share of the last load, for one session. */
+export const DELOAD_FRACTION = 0.9;
 
 export interface ProgressionContext {
   /** Whole days since the exercise was last performed anywhere; undefined when unknown. */
   daysSinceLastPerformed?: number | undefined;
+  /** The exercise's steady stall, when it has one (engine/stall.ts deloadStall). */
+  stall?: DeloadStall | undefined;
 }
 
 /**
@@ -61,23 +68,48 @@ export function evaluateProgression(
 ): ProgressionSuggestion {
   const base = evaluateLastSession(prescription, lastSessionSets.filter((s) => s.setKind !== "WARMUP"));
   const days = context.daysSinceLastPerformed;
-  if (days === undefined || days < RE_ENTRY_DAYS) return base;
-  if (base.recommendation !== "INCREASE" && base.recommendation !== "HOLD") return base;
-
   // The load to ease back from: the clean last weight when there is one,
   // otherwise (mixed/incomplete evidence) the heaviest set actually done.
   const performedWeights = lastSessionSets.filter((s) => isWorkingSet(s)).map((s) => s.weight);
   const fromWeight = base.lastWeight ?? (performedWeights.length > 0 ? Math.max(...performedWeights) : undefined);
-  if (fromWeight === undefined || fromWeight <= 0) return base;
   const step = prescription.incrementLbs > 0 ? prescription.incrementLbs : 1;
-  const next = Math.floor((fromWeight * RE_ENTRY_FRACTION) / step) * step;
-  if (next <= 0 || next >= fromWeight) return base;
+  const lighter = (fraction: number) => (fromWeight === undefined || fromWeight <= 0 ? undefined : Math.floor((fromWeight * fraction) / step) * step);
+
+  if (days === undefined || days < RE_ENTRY_DAYS) return deload(prescription, base, context.stall, fromWeight, lighter(DELOAD_FRACTION));
+  if (base.recommendation !== "INCREASE" && base.recommendation !== "HOLD") return base;
+  const next = lighter(RE_ENTRY_FRACTION);
+  if (fromWeight === undefined || next === undefined || next <= 0 || next >= fromWeight) return base;
   return {
     recommendation: "RE_ENTRY",
     reason: `${days} days since your last ${prescription.name} — suggests ${next}lb (about 90% of ${fromWeight}lb) to start back.`,
     lastWeight: fromWeight,
     suggestedNextWeight: next,
     daysSinceLastPerformed: days,
+  };
+}
+
+/**
+ * DELOAD (4.0-b slice 1; Gavin, 2026-11-15: "I approve the [deload] rule"; amends the locked progression rule the
+ * way RE-ENTRY did). When the lift's last 4 sessions in the past 28 days set no new record, all at about the same
+ * weight (engine/stall.ts deloadStall), a HOLD or REDUCE becomes DELOAD: about DELOAD_FRACTION of the last load,
+ * rounded down to the exercise's own increment, for one session; the locked rule builds back from there. Never
+ * replaces INCREASE (you're moving) or RE_ENTRY (a layoff wins). Advisory only: never applied, never pre-filled.
+ */
+function deload(
+  prescription: ExercisePrescription,
+  base: ProgressionSuggestion,
+  stall: DeloadStall | undefined,
+  fromWeight: number | undefined,
+  next: number | undefined,
+): ProgressionSuggestion {
+  if (!stall || (base.recommendation !== "HOLD" && base.recommendation !== "REDUCE")) return base;
+  if (fromWeight === undefined || next === undefined || next <= 0 || next >= fromWeight) return base;
+  return {
+    recommendation: "DELOAD",
+    reason: `No new record for ${prescription.name} in your last ${stall.sessions} sessions — suggests one lighter session at ${next}lb (about 90% of ${fromWeight}lb), then building back.`,
+    lastWeight: fromWeight,
+    suggestedNextWeight: next,
+    stallTopWeights: stall.topWeights,
   };
 }
 

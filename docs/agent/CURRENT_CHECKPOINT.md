@@ -1,10 +1,11 @@
 # Current programme — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
 
-- **Authority:** [master brief](BEYOND-4.0.md). Builder for 4.0-a: Claude Code. Each release: own PRs; Protected parts
-  (Engine learning, TODAY redesign) get independent exact-head review; Gavin merges.
-- **Now:** 4.0-a step 1, the TODAY split (no visible change).
-- **Merged:** #543 (Doctrine line).
-
+- **Authority:** [master brief](BEYOND-4.0.md). Each release: own PRs; Protected parts (Engine learning, TODAY
+  redesign) get independent exact-head review; Gavin merges.
+- **4.0-a:** complete with slice 1 (#545); the input features already existed ([4.0-a](BEYOND-4.0-A.md)).
+- **Now:** [4.0-b](BEYOND-4.0-B.md) slice 1, DELOAD after a steady stall (Gavin: "Start 4.0-B", "I approve the
+  [deload] rule"). Branch `ccr-88f5c085-4b-deload`. Protected: independent review.
+- **Next:** slice 2, one coach card at a time; its ranking goes to Gavin first.
 ---
 
 # Historical — documentation truth (merged as #542; completion plan step 5, Gavin: "Go", "Let's work")

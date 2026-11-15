@@ -19,6 +19,7 @@ import { db } from "../persistence/db";
 import { estimateSessionMinutes } from "../engine/timeFit";
 import { doesSessionAdvanceRotation, suggestNextTemplate } from "../engine/trainSuggestion";
 import { evaluateProgression, type ProgressionSuggestion } from "../engine/progression";
+import { buildExerciseHistories, deloadStall } from "../engine/stall";
 import { WORKOUT_TEMPLATE_ORDER } from "../domain/workout/types";
 import type {
   ExercisePrescription,
@@ -159,7 +160,8 @@ export async function getProgressionSuggestion(
     return { recommendation: "NO_HISTORY", reason: "Unknown exercise for this template/variant." };
   }
 
-  const sessions = (await db.workoutSessions.toArray())
+  const allSessions = await db.workoutSessions.toArray();
+  const sessions = allSessions
     .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE")
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
   // PERF-001: this exercise's live sets, read once and grouped by session, instead of two reads per past session.
@@ -174,8 +176,15 @@ export async function getProgressionSuggestion(
   for (let i = sessions.length - 1; i >= 0; i--) {
     const sets = bySession.get(sessions[i]!.id) ?? [];
     if (sets.length > 0) {
+      // DELOAD (4.0-b slice 1): the lift's stall across every finished session, any template or variant, judged
+      // for records with the stall finding's own rule (engine/stall.ts).
+      const finished = allSessions
+        .filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL")
+        .map((s) => ({ sessionId: s.id, startedAt: s.startedAt }));
+      const history = buildExerciseHistories(finished, [...bySession.values()].flat()).get(exerciseId) ?? [];
       return evaluateProgression(prescription, sets, {
         daysSinceLastPerformed: await getDaysSinceExerciseLastPerformed(exerciseId, now),
+        stall: deloadStall(history, now),
       });
     }
   }

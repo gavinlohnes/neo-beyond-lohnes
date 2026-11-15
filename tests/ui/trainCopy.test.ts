@@ -140,6 +140,7 @@ describe("describeRecommendationLabel", () => {
     expect(describeRecommendationLabel("REDUCE")).toBe("lower the weight");
     expect(describeRecommendationLabel("NO_HISTORY")).toBe("first time");
     expect(describeRecommendationLabel("RE_ENTRY")).toBe("ease back in");
+    expect(describeRecommendationLabel("DELOAD")).toBe("one lighter session");
   });
 });
 
@@ -365,11 +366,12 @@ describe("TRAIN-003 — summarizeProgressionSuggestions / describeProgressionSum
       { suggestion: { recommendation: "REDUCE" as const, reason: "x" } },
       { suggestion: { recommendation: "NO_HISTORY" as const, reason: "x" } },
       { suggestion: { recommendation: "RE_ENTRY" as const, reason: "x" } },
+      { suggestion: { recommendation: "DELOAD" as const, reason: "x" } },
     ];
     const counts = summarizeProgressionSuggestions(suggestions);
-    expect(counts).toEqual({ increase: 2, hold: 1, reduce: 1, reEntry: 1, noHistory: 1, total: 6 });
+    expect(counts).toEqual({ increase: 2, hold: 1, reduce: 1, reEntry: 1, deload: 1, noHistory: 1, total: 7 });
     expect(describeProgressionSummary(counts)).toBe(
-      "2 ready to increase, 1 holding steady, 1 suggest reducing, 1 easing back in, and 1 without history yet.",
+      "2 ready to increase, 1 holding steady, 1 suggest reducing, 1 easing back in, 1 due a lighter session, and 1 without history yet.",
     );
   });
 

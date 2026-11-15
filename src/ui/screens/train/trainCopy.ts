@@ -174,6 +174,8 @@ export function describeRecommendationLabel(recommendation: ProgressionSuggestio
       return "first time";
     case "RE_ENTRY":
       return "ease back in";
+    case "DELOAD":
+      return "one lighter session";
   }
 }
 
@@ -205,6 +207,9 @@ export function describeProgressionAdvisory(suggestion: ProgressionSuggestion): 
     suggestion.daysSinceLastPerformed !== undefined
   ) {
     return `${suggestion.daysSinceLastPerformed} days since you last did this — suggests easing back in at ${suggestion.suggestedNextWeight}lb (about 90% of ${suggestion.lastWeight}lb).`;
+  }
+  if (suggestion.recommendation === "DELOAD" && suggestion.suggestedNextWeight !== undefined && suggestion.lastWeight !== undefined) {
+    return `No new record in your last ${suggestion.stallTopWeights?.length ?? 4} sessions — suggests one lighter session at ${suggestion.suggestedNextWeight}lb (about 90% of ${suggestion.lastWeight}lb), then building back.`;
   }
   if (suggestion.recommendation === "INCREASE" && suggestion.suggestedNextWeight !== undefined) {
     return `Last time hit the top of the rep range — suggests increasing to ${suggestion.suggestedNextWeight}lb.`;
@@ -276,6 +281,8 @@ export interface ProgressionSummaryCounts {
   reduce: number;
   /** RE-ENTRY (2026-10-03): back after 14+ days. */
   reEntry: number;
+  /** DELOAD (4.0-b): a steady stall. */
+  deload: number;
   noHistory: number;
   total: number;
 }
@@ -289,12 +296,13 @@ export interface ProgressionSummaryCounts {
 export function summarizeProgressionSuggestions(
   suggestions: { suggestion: ProgressionSuggestion }[],
 ): ProgressionSummaryCounts {
-  const counts: ProgressionSummaryCounts = { increase: 0, hold: 0, reduce: 0, reEntry: 0, noHistory: 0, total: suggestions.length };
+  const counts: ProgressionSummaryCounts = { increase: 0, hold: 0, reduce: 0, reEntry: 0, deload: 0, noHistory: 0, total: suggestions.length };
   for (const { suggestion } of suggestions) {
     if (suggestion.recommendation === "INCREASE") counts.increase++;
     else if (suggestion.recommendation === "HOLD") counts.hold++;
     else if (suggestion.recommendation === "REDUCE") counts.reduce++;
     else if (suggestion.recommendation === "RE_ENTRY") counts.reEntry++;
+    else if (suggestion.recommendation === "DELOAD") counts.deload++;
     else counts.noHistory++;
   }
   return counts;
@@ -317,6 +325,7 @@ export function describeProgressionSummary(counts: ProgressionSummaryCounts): st
   if (counts.hold > 0) parts.push(`${counts.hold} holding steady`);
   if (counts.reduce > 0) parts.push(`${counts.reduce} suggest reducing`);
   if (counts.reEntry > 0) parts.push(`${counts.reEntry} easing back in`);
+  if (counts.deload > 0) parts.push(`${counts.deload} due a lighter session`);
   if (counts.noHistory > 0) parts.push(`${counts.noHistory} without history yet`);
   return `${joinWithAnd(parts)}.`;
 }

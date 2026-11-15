@@ -1,9 +1,10 @@
-import { isWorkingSet } from "../domain/workout/types";
 import type { SchedulePattern } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import type { DaySummary, LedgerWorkout } from "./dayLedger";
-import { findSessionRecords } from "./personalRecords";
 import { livedDayShiftWindow, type SchedulePhase } from "./scheduledContext";
+import { buildExerciseHistories, isStalled, RECENT_EXERCISE_DAYS, STALL_SESSIONS } from "./stall";
+
+export { RECENT_EXERCISE_DAYS, STALL_SESSIONS };
 
 /**
  * READ-ONLY FINDINGS (owner approval 2026-10-03: "read-only findings over
@@ -30,10 +31,6 @@ export const MIN_URGES = 6;
 export const SHORT_SLEEP_MINUTES = 6 * 60;
 /** A main-sleep log counts as "before" a workout when logged within this long before it started. */
 export const SLEEP_LOOKBACK_HOURS = 24;
-/** A stall: this many sessions in a row of one exercise with no new record. */
-export const STALL_SESSIONS = 4;
-/** Stall and story only cover exercises done within this many days. */
-export const RECENT_EXERCISE_DAYS = 28;
 /** An exercise story needs at least this many sessions… */
 export const STORY_MIN_SESSIONS = 4;
 /** …spanning at least this many days. */
@@ -167,7 +164,10 @@ export function projectFindings(input: FindingsInput): FindingsResult {
   }
 
   // 4 + 5. Per exercise, over every finished session that logged it.
-  const perExercise = exerciseHistories(input);
+  const perExercise = buildExerciseHistories(
+    input.summaries.flatMap((d) => d.workouts).filter(isFinished),
+    input.sets,
+  );
   const recentCutoff = input.now.getTime() - RECENT_EXERCISE_DAYS * DAY_MS;
   const active = [...perExercise.entries()]
     .filter(([, sessions]) => sessions[sessions.length - 1]!.t > recentCutoff)
@@ -178,9 +178,8 @@ export function projectFindings(input: FindingsInput): FindingsResult {
   for (const [exerciseId, sessions] of active) {
     if (stalls >= MAX_PER_EXERCISE_TEMPLATE) break;
     // The first session can never set a record (nothing to beat), so a stall needs one more before the run.
-    if (sessions.length < STALL_SESSIONS + 1) continue;
+    if (!isStalled(sessions)) continue;
     const run = sessions.slice(-STALL_SESSIONS);
-    if (run.some((s) => s.record)) continue;
     const tops = run.map((s) => s.topWeight);
     findings.push({ kind: "STALL", exerciseId, sessions: STALL_SESSIONS, topWeights: { min: Math.min(...tops), max: Math.max(...tops) } });
     stalls += 1;
@@ -199,50 +198,4 @@ export function projectFindings(input: FindingsInput): FindingsResult {
   }
 
   return { findings, waiting };
-}
-
-interface ExerciseSession {
-  t: number;
-  topWeight: number;
-  /** This session set a record (heaviest or reps) for the exercise. */
-  record: boolean;
-}
-
-/** Every finished session's top set per exercise, oldest first, judged for records the way the ledger judges PRs. */
-function exerciseHistories(input: FindingsInput): Map<string, ExerciseSession[]> {
-  const sessions = input.summaries
-    .flatMap((d) => d.workouts)
-    .filter(isFinished)
-    .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
-  const setsBySession = new Map<string, PerformedSet[]>();
-  for (const set of input.sets) {
-    const list = setsBySession.get(set.sessionId) ?? [];
-    list.push(set);
-    setsBySession.set(set.sessionId, list);
-  }
-
-  const history = new Map<string, ExerciseSession[]>();
-  const prior: PerformedSet[] = [];
-  for (const session of sessions) {
-    const sets = setsBySession.get(session.sessionId) ?? [];
-    const records = findSessionRecords(prior, sets);
-    const counted = sets.filter((s) => isWorkingSet(s) && !s.substitutedName && s.reps > 0);
-    const byExercise = new Map<string, PerformedSet[]>();
-    for (const set of counted) {
-      const list = byExercise.get(set.exerciseId) ?? [];
-      list.push(set);
-      byExercise.set(set.exerciseId, list);
-    }
-    for (const [exerciseId, exSets] of byExercise) {
-      const list = history.get(exerciseId) ?? [];
-      list.push({
-        t: new Date(session.startedAt).getTime(),
-        topWeight: Math.max(...exSets.map((s) => s.weight)),
-        record: exSets.some((s) => records.has(s.id)),
-      });
-      history.set(exerciseId, list);
-    }
-    prior.push(...sets);
-  }
-  return history;
 }
