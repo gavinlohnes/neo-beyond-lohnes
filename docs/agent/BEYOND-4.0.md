@@ -59,6 +59,7 @@ already in use).
 ### 4.0-d — TODAY as a mission briefing (Protected: decision 3)
 - One cinematic screen: now, next, what BEYOND handled; detail one tap deeper. Run debriefs and a year-in-review.
   Preview first on his phone, then replace.
+- The phone-trial preview is specified in [BEYOND-4.0-D.md](BEYOND-4.0-D.md). That delivery does not replace TODAY and does not include run debriefs or a year-in-review.
 
 ## Order and evidence
 
