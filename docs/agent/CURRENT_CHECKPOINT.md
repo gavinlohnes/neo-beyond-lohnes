@@ -5,13 +5,33 @@
 - **Approved queue, in order:** this; TIMELINE-EDIT-001 (tap a timeline mark or diary row to change its time, amount,
   or undo, with the existing corrections); ALFRED-FIX-001 (Protected: Alfred and the free helper propose time, amount
   and remove corrections, confirmed by Gavin).
-- **Open:** #533 (DIRECTION-90-001) ready to merge; #534 (FOOD-SOURCES-001) green, to be updated after #533 merges.
-- **Known issue:** CommandConsole's RESUME WORKOUT bound fails intermittently (16.5 px under the nav, order-dependent,
-  also on master); its own small fix later.
+- **Merged since:** #533 (DIRECTION-90-001), #534 (FOOD-SOURCES-001), #535 (RESUME-FOLD-001).
+- **Resolved:** the CommandConsole RESUME WORKOUT bound was a real fold problem, fixed in #535 (RESUME-FOLD-001).
 
 ---
 
-# Current objective — METRIC-PAGE-001 slice 4: calories join the shared page (Gavin, 2026-11-14: "That's good for me")
+# Historical — FOOD-SOURCES-001 (merged as #534): where your calories and protein came from (Gavin, 2026-11-15)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-food-sources`, now on master (after #530). Feature lane; Gavin merges.
+  [Brief](FOOD-SOURCES-001.md).
+- **Scope:** WHERE IT CAME FROM on the calories page (7D/30D) and BODY's meal calories and protein history. Read only.
+- **Merged today:** #530 (calories page), #531 and #532 (calorie proposal and floor). **Also merged:** #533
+  (DIRECTION-90-001, the 90-day line).
+
+---
+
+# Historical — DIRECTION-90-001 (merged as #533): the last 90 days against your year (Gavin, 2026-11-14: "Approved")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-metric-direction`, now on master (after #530).
+  Feature lane; Gavin merges. [Brief](DIRECTION-90-001.md).
+- **Scope:** one line on the shared metric page comparing the median of the last 90 finished lived days with the last
+  year's; quiet until 180 days of records. Read only.
+- **Merged today:** #530 (calories page), #531 and #532 (calorie proposal and floor). FOOD-SOURCES-001 follows.
+- **Next:** CI green, then Gavin merges.
+
+---
+
+# Historical — METRIC-PAGE-001 slice 4 (merged as #530): calories join the shared page (Gavin, 2026-11-14: "That's good for me")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-calories`, from master `77c8ab61`. Feature lane: no independent
   review required; Gavin merges. Codex's WEEK-PLANNER-002 (#529) is open and does not touch these files beyond docs.

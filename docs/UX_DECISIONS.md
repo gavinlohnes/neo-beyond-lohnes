@@ -3262,6 +3262,9 @@ as #519. Slice 2 was approved after it ("Approved and continue working"). Brief:
     split; never added, netted or turned into a deficit. GARMIN-005's other rules hold; its 4W becomes 30D.
 - **Sleep keeps `SleepPeriods`,** which does more (period navigation, night evidence, rhythm, logged nights where Garmin
   missed). Slice 3 adds the shell's source line and work days compared with days off, without changing its chart.
+- **90-day direction (DIRECTION-90-001, Gavin 2026-11-14: "Approved"):** one line, "Last 90 days: … higher than /
+  lower than / about the same as your year's …", from medians of recorded days. Quiet until the records span 180 days.
+  Never a score, arrow or judgement. [Brief](agent/DIRECTION-90-001.md).
 - **Unchanged:** read only, no Engine input, no new data or schema.
 
 
@@ -3314,3 +3317,15 @@ estimate".
   shown weekly change is the capped one.
 - **Owner direction (2026-11-15):** "I want Beyond to be smart and act like a coach or nutritionist or weight management
   professional." Future proposals build toward this; each new capability is still approved by Gavin.
+
+## FOOD-SOURCES-001 — where your calories and protein came from (Gavin, 2026-11-15: "I approve food source as the next objective")
+
+[Brief](agent/FOOD-SOURCES-001.md).
+
+- **Where:** the calories metric page (7D and 30D) and BODY's YOUR PROGRESS for meal calories and protein (over the
+  chosen range).
+- **What:** WHERE IT CAME FROM, the top five sources by total with share and times logged, then the rest together; a
+  row opens its lived days, and in BODY a day opens its records.
+- **Rules:** corrected values, undone meals left out; a saved meal is one source even if renamed, a typed meal groups
+  by name; finished lived days only; missing days left out and counted, never zero; read only.
+- **Never:** judgement of foods, suggestions to cut or avoid, Engine or recommendation input.
