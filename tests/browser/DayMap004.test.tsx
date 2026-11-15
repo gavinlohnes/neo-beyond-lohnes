@@ -40,7 +40,7 @@ it("outlines what's new since the last look, once", async () => {
   expect(document.querySelector(".cc-tl-fresh")!.classList.contains("cc-tl-pin--water")).toBe(true);
   expect(document.querySelector("[data-day-map-summary]")!.textContent).toContain("New since you last looked: Water 16 oz at 23:00.");
   await screen.getByRole("button", { name: "THE NIGHT SO FAR · 3 · 1 NEW" }).click();
-  await expect.poll(() => [...document.querySelectorAll("#day-map-list li")].at(-1)?.textContent).toBe("NEW · Water 16 oz at 23:00");
+  await expect.poll(() => [...document.querySelectorAll("#day-map-list li")].at(-1)?.textContent).toBe("NEW · Water 16 oz at 23:00EDIT ›"); // TIMELINE-EDIT-001: logged water can be fixed
   // Contrast checked too: the red NEW label must stay readable.
   expect((await axe.run(screen.container, { runOnly: ["wcag2a", "wcag2aa"] })).violations.map((v) => v.id)).toEqual([]);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
