@@ -40,7 +40,10 @@ export function ModeHeader({
   onOpenSleepPlan,
   markActions,
   eyebrow,
+  operation = false,
 }: {
+  /** RESUME-FOLD-001: an operation (a workout, a reset) owns the screen, so the scene shrinks and RESUME stays above the fold. */
+  operation?: boolean | undefined;
   /** VISUAL-FOUNDATION-003: the foundation's red slashes and the date, above the mode. */
   eyebrow?: string | undefined;
   /** DAY-MAP-001 slice 3: where each kind of mark opens (its existing screen). Kinds left out are facts only. */
@@ -111,7 +114,7 @@ export function ModeHeader({
   }, [mode]);
 
   return (
-    <section className={`mode-header cc-mode${scheduledPhase ? "" : " cc-mode--thin"}`} data-mode={mode ?? "UNSET"} aria-label="Mode">
+    <section className={`mode-header cc-mode${scheduledPhase ? "" : " cc-mode--thin"}${operation ? " cc-mode--operation" : ""}`} data-mode={mode ?? "UNSET"} aria-label="Mode">
       {eyebrow && <p className="mode-header__eyebrow" data-today-date><span className="bf-slashes" aria-hidden="true">///</span>{` ${eyebrow}`}</p>}
       <button
         ref={trigger}
