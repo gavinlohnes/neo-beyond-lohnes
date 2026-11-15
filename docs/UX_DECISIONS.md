@@ -3442,3 +3442,12 @@ earlier first within a kind. Each kind can be switched off and there are owner-s
 nothing sounds inside a scheduled shift. Day off rides on the last shift's SHIFT'S DONE; plan-to-confirm moments wait
 for a new kind. No new alert kinds; settings sit on the schedule row and travel with backups. The phone keeps a
 four-week plan and re-arms it in the background; changes reach it at the next SYNC GARMIN.
+
+## WORK-RUN-REDRAFT-001 — offer a fresh work-run draft when something changes (Gavin, 2026-11-15)
+
+Extends 4.0-c's work-run draft journey. [Brief](agent/WORK-RUN-REDRAFT-001.md). Plan Today → Week planner offers
+DRAFT FRESH RUN PLAN when the latest saved work-run note no longer matches: a covered date (today onward, within seven
+dates) now has different work/off context or shift start (a confirmed extra shift included), or the existing
+two-short-main-sleeps guidance was issued after the note was saved. The offer only offers: the existing replace
+warning protects unsaved edits, a new note is saved only on CONFIRM SAVE PLAN NOTE, and old notes are never edited.
+NOT NOW lasts until the change changes. No TODAY hint, notification, Engine or schema change.
