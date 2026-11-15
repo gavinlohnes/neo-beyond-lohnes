@@ -181,7 +181,7 @@ skyline, the emblem), with strict accessibility rules (16 px sentences, 44 px ta
 |---|---|
 | **Week planner** (move tasks across your week around shifts) | **Shipped** (#529, merged 2026-11-15 after independent review). |
 | **Edit a log from TODAY's timeline / food diary** (TIMELINE-EDIT-001) | **Shipped** (#540, merged 2026-11-15). |
-| **Alfred and the free helper fixing logs** (ALFRED-FIX-001) | Built, **in independent review** (#541). |
+| **Alfred and the free helper fixing logs** (ALFRED-FIX-001) | **Shipped** (#541, merged 2026-11-15 after independent review). |
 | **Capture processing** | Raw capture, Notes Sweep and the Saved inbox all exist, but turning a note into a task works differently on each path (HARVEST-002: "refine"). |
 | **Old PRs #482 and #473** | Decided by Gavin 2026-11-15: #482 closed (superseded by LAUNCH-STEADY-001), #473 parked as draft for the coach check-in. |
 | **Recommendations from evidence** | The Engine still decides from the check-in only; evidence-driven rules (deload, stalls, sleep debt) are noted but not approved. |

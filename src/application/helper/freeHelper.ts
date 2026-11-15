@@ -1,6 +1,7 @@
 import * as chrono from "chrono-node";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import type { AlfredProposal } from "../alfred/alfredActions";
+import { cleanValues, placeTime, type FixSnapshot } from "../alfred/fixEntryRules";
 import type { UrgeTrigger } from "../../domain/common/types";
 
 /**
@@ -23,6 +24,8 @@ export interface HelperContext {
   workout?: { sessionId: string; exercises: { id: string; name: string }[] } | null;
   /** CORRECTIONS-001: today's latest water, sleep and weight logs, the only ones a plain correction can change. */
   lastLogs?: { water?: { id: string; value: number }; sleep?: { id: string; value: number }; weight?: { id: string; value: number } };
+  /** ALFRED-FIX-001: the current and previous lived day's meal, water and protein entries, as they stand. */
+  entries?: { id: string; dayStartedAt: string; snapshot: FixSnapshot }[];
 }
 
 export interface HelperResult { cards: AlfredProposal[]; unknown: string[] }
@@ -254,6 +257,9 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     return fix && fix !== "unclear" ? { cards: [fix], unknown: [] } : { cards, unknown: [text.trim()] };
   }
   if (NEGATION.test(beforeNote.replace(/[’]/g, "'"))) return { cards, unknown: [text.trim()] };
+  // ALFRED-FIX-001: a fix names a logged entry whole, before the message is split ("Butter Chicken and Rice").
+  const wholeFix = entryFix(text.toLowerCase().trim().replace(/[.!]+$/, "").replace(/^(i |just |also |please )+/, "").replace(/\s+/g, " "), ctx);
+  if (wholeFix && wholeFix !== "unclear") return { cards: [wholeFix], unknown: [] };
   for (const raw of clauses(text)) {
     const c = norm(raw.replace(/^(i |just |also |and )+/i, "")).replace(/\boz\b/g, "oz");
     const lower = raw.toLowerCase().trim().replace(/[.!]+$/, "").replace(/^(i |just |also )+/, "");
@@ -269,7 +275,7 @@ export function interpret(text: string, ctx: HelperContext): HelperResult {
     else if (WORK_START.test(c)) card = { kind: "work_started" };
     else if (WORK_END.test(c)) card = { kind: "work_ended" };
     else if (/^(clean day|today was clean|log clean(?: day)?|clean today)$/.test(c)) card = { kind: "clean_day" };
-    else card = correction(lower, ctx) ?? gymSet(lower, ctx) ?? water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
+    else card = entryFix(lower, ctx) ?? correction(lower, ctx) ?? gymSet(lower, ctx) ?? water(lower) ?? weight(lower) ?? sleep(lower) ?? urge(c) ?? checkIn(c) ?? taskAction(lower, ctx)
       ?? (/(^|\s)-\s*\d/.test(lower) ? "unclear" : meal(lower.replace(/[^a-z0-9 .]+/g, " ").replace(/\s+/g, " "), ctx)); // a negative amount is a typo, not a log
     if (card && card !== "unclear") cards.push(card);
     else unknown.push(raw.trim());
@@ -355,4 +361,60 @@ export function parseQuickAdd(text: string, now = new Date()): QuickAdd | null {
   const card = remind(`remind me to ${words}`, { now } as HelperContext);
   if (!card || card.kind !== "add_reminder" || !card.due_date || card.repeat_rrule) return null;
   return { title: card.title, date: card.due_date, ...(card.when_note ? { time: card.when_note } : {}) };
+}
+
+/**
+ * ALFRED-FIX-001: "move the butter chicken to 23:00", "change the butter chicken to 11pm", "butter chicken was at 2300",
+ * "butter chicken was 600 kcal", "remove the butter chicken". Only an entry in the current or previous lived day whose
+ * name matches one way (the newest, when the same name was logged twice); anything else falls through to the other
+ * readers, so "move the dentist to friday" is still a task.
+ */
+function entryFix(c: string, ctx: HelperContext): AlfredProposal | null | "unclear" {
+  const entries = ctx.entries ?? [];
+  if (!entries.length) return null;
+  const find = (wanted: string) => {
+    const w = key(wanted.replace(/\b(entry|log|i (just )?(logged|ate|had))\b/g, " "));
+    if (!w) return null;
+    // Review of #541: an open task, project or routine step that matches wins, so "delete the dinner reservation" is
+    // never read as the meal "Dinner".
+    const steps = ctx.routines.flatMap((r) => r.steps);
+    if (matchOne(ctx.openTasks, wanted) || matchOne(ctx.openProjects, wanted) || matchOne(steps, wanted)) return null;
+    const exact = entries.filter((e) => key(e.snapshot.name) === w);
+    // Only shorter words for a longer name ("butter chicken" for "Butter Chicken and Rice"), never the reverse:
+    // words longer than an entry's name are about something else (review of #541).
+    const loose = exact.length ? exact : w.length >= 3 ? entries.filter((e) => key(e.snapshot.name).includes(w)) : [];
+    const names = new Set(loose.map((e) => key(e.snapshot.name)));
+    return names.size === 1 ? loose.sort((a, b) => a.snapshot.at.localeCompare(b.snapshot.at)).at(-1)! : null;
+  };
+  const clock = (h: string, m: string | undefined, ap: string | undefined): string | null => {
+    let hour = Number(h), minute = Number(m ?? 0);
+    if (h.length >= 3 && m === undefined) { hour = Math.floor(Number(h) / 100); minute = Number(h) % 100; }
+    // A bare "7" could be 07:00 or 19:00: ask rather than guess (review of #541). 23:00, 2300, 11pm and 7:30 are clear.
+    else if (m === undefined && !ap) return null;
+    if (ap) { if (hour < 1 || hour > 12) return null; hour = (hour % 12) + (ap.startsWith("p") ? 12 : 0); }
+    return hour >= 0 && hour < 24 && minute >= 0 && minute < 60 ? `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}` : null;
+  };
+  const t = "(\\d{1,4})(?::(\\d{2}))?\\s*(am|pm|a\\.m\\.|p\\.m\\.)?(?:\\s*hours?)?";
+  const move = c.match(new RegExp(`^(?:move|change|set|put)\\s+(?:the time of\\s+)?(?:the |my )?(.+?)\\s+to\\s+(?:at\\s+)?${t}$`))
+    ?? c.match(new RegExp(`^(?:the |my )?(.+?)\\s+was\\s+(?:at|eaten at|had at)\\s+${t}$`));
+  if (move) {
+    const entry = find(move[1]!);
+    if (!entry) return null;
+    const time = clock(move[2]!, move[3], move[4]);
+    const to = time ? placeTime(time, entry.dayStartedAt, ctx.now) : null;
+    return to && Date.parse(to) !== Date.parse(entry.snapshot.at) ? { kind: "fix_entry", action: "move", entry_id: entry.id, time: time!, entry: entry.snapshot, to_at: to } : "unclear";
+  }
+  const remove = c.match(/^(?:remove|delete|undo)\s+(?:the |my )?(.+)$/);
+  if (remove) {
+    const entry = find(remove[1]!);
+    return entry ? { kind: "fix_entry", action: "remove", entry_id: entry.id, entry: entry.snapshot } : null;
+  }
+  const kcal = c.match(/^(?:the |my )?(.+?)\s+(?:was|should be|should have been|is)\s+(\d{1,5})\s*(?:kcal|calories|cals?)$/);
+  if (kcal) {
+    const entry = find(kcal[1]!);
+    if (!entry || entry.snapshot.kind !== "MEAL") return null;
+    const values = cleanValues("MEAL", { calories: Number(kcal[2]) }, entry.snapshot);
+    return values ? { kind: "fix_entry", action: "correct", entry_id: entry.id, values, entry: entry.snapshot } : "unclear";
+  }
+  return null;
 }

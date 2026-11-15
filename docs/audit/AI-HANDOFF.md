@@ -120,8 +120,8 @@ nutritionist or weight management professional") without ever nagging, guilting 
   fatigue (#537), universal fast capture (#538), and HARVEST-002 research (#539).
 - **Also merged since the audit:** the week planner (#529) and timeline editing (#540): fix a meal's or water's time,
   amount or presence from TODAY's timeline and the food diary (`application/logEntries.ts`).
-- **In flight:** **ALFRED-FIX-001 (#541, Protected, in review):** Alfred and the free helper propose move, correct and
-  remove for a logged entry, with BEYOND filling the card's real before and after. #482 closed; #473 parked as draft.
+- **Also merged:** **ALFRED-FIX-001 (#541):** Alfred and the free helper propose move, correct and remove for a logged
+  entry, with BEYOND filling the card's real before and after. #482 closed; #473 parked as draft.
 - **Plan:** ship existing work before new work (ROADMAP_1.0 "Current plan"); then the field gate on the phone.
 - **Known debt:** huge screen files (`TodayScreen.tsx` 3,500 lines), stale README and Doctrine AI note, documentation
   sprawl, CSS specificity fights, browser storage not reset between test files.

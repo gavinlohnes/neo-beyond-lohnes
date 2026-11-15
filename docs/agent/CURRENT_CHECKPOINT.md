@@ -3,12 +3,22 @@
 - **Builder:** Claude Code; branch `ccr-88f5c085-audit` (docs only, routine). The audit and AI handoff
   (`docs/audit/`), the README's stale "AI optional" and navigation text, and the roadmap's current-plan header.
 - **Awaits Gavin:** the Doctrine's 2026-10-09 "AI optional" note (Protected, constitutional) — proposed wording in the PR.
-- **Plan status:** #529, #540 merged; #482 closed, #473 parked; ALFRED-FIX-001 #541 in independent review (BLOCK fixed at
-  `df5b8c5b`); then the field gate.
+- **Plan status:** #529, #540 merged; #482 closed, #473 parked; ALFRED-FIX-001 merged as #541; then the field gate.
 
 ---
 
-# Current objective — TIMELINE-EDIT-001: fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+# Historical — TIMELINE-EDIT-001 (merged as #540): fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
+# Historical — ALFRED-FIX-001 (merged as #541): Alfred and the free helper fix a logged entry (Gavin, 2026-11-15: "Approved.", "Go")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-alfred-fix`, from master `d51017f8`. **Protected:** independent
+  exact-head review, green CI, Gavin merges. [Brief](ALFRED-FIX-001.md).
+- **Completion plan (Gavin, "Go"):** 1 #529 week planner (Codex; ready); 2 TIMELINE-EDIT-001 merged as #540;
+  3 #482 closed, #473 parked as draft (Gavin); 4 this; 5 audit docs + "Alfred is core" doctrine/README amendment
+  (needs Gavin's approval); 6 field gate on the phone. New work only after.
+
+---
+
+# Historical — TIMELINE-EDIT-001 (merged as #540): fix a meal or water entry where you see it (Gavin, 2026-11-15: "Approved.")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-timeline-edit`, from master after #535. Feature; Gavin merges.
   [Brief](TIMELINE-EDIT-001.md).
