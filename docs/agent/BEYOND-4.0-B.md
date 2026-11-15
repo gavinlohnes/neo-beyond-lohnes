@@ -24,8 +24,12 @@ So 4.0-b turns existing evidence into coaching rather than building a new brain.
 1. **DELOAD after a steady stall** (this PR). A lift's last 4 sessions in the past 28 days set no record, all at
    about the same weight → one lighter session at ~90%, rounded down to the lift's increment. Never replaces
    INCREASE or RE-ENTRY; never applied. The stall test is shared with the finding (`engine/stall.ts`).
-2. **One coach card at a time:** the most useful current suggestion from the pieces above, with its evidence,
-   ACCEPT or SKIP. Composition of recommendation authority, so Protected; the ranking goes to Gavin first.
+2. **One coach card at a time** (Gavin, 2026-11-15: "I approve it in your recommended order"). On TODAY, under the
+   Engine's recommendation and never above it, one suggestion with its evidence; nothing when nothing qualifies.
+   Order: (1) today's lift advice on a training day (DELOAD, RE-ENTRY, REDUCE); (2) a finished experiment waiting
+   for your verdict; (3) the weekly calorie proposal when it proposes a change; (4) DELTA's offer to test
+   something. ACCEPT is that feature's existing action; SKIP hides it until its evidence changes (this phone's
+   browser only) and the next takes its place. Protected.
 3. **Recovery against training load:** a weekly read of training volume against sleep and resting-heart-rate
    baselines, suggesting a lighter week when they diverge. Rule and thresholds to Gavin first.
 4. **End-of-run debrief with one suggestion**, building on END-OF-RUN-001.
