@@ -1,3 +1,12 @@
+# Current objective — BEYOND 4.0-a part 1, slice 1: TODAY split, AT A GLANCE (no visible change)
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-4a-foundation`. Routine. [Release brief](BEYOND-4.0-A.md) under
+  [BEYOND-4.0](BEYOND-4.0.md). TodayScreen.tsx 3,517 → 3,452 lines; `TodayNumbers.tsx` holds AT A GLANCE.
+- **Merged:** #543 (Doctrine line), #544 (4.0 master brief).
+
+---
+
+# Historical — documentation truth (merged as #542; completion plan step 5, Gavin: "Go", "Let's work")
 # Current programme — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15: five decisions)
 
 - **Authority:** [master brief](BEYOND-4.0.md). Builder for 4.0-a: Claude Code. Each release: own PRs; Protected parts

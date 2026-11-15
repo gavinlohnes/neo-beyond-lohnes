@@ -32,6 +32,9 @@ already in use).
 ## Four releases (each usable on its own)
 
 ### 4.0-a — Foundation and zero-effort input
+
+> **Correction (2026-11-15):** voice logging, barcode scan, background Garmin sync and home-screen shortcuts already
+> exist (see [4.0-a](BEYOND-4.0-A.md)). Release a is the TODAY slice plus a field check of those paths.
 - **Foundation (no visible change):** split `TodayScreen.tsx` (3,500 lines) into self-contained sections, each owning
   its reads; reset browser storage between test files. Prerequisite for safe speed later.
 - **Voice logging:** speak a log ("two eggs and a shake", "16 oz water", "rough night") through the free helper and
