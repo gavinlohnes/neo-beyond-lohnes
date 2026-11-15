@@ -1,3 +1,16 @@
+# Current objective — LAUNCH-STEADY-001: no flash on first launch (Gavin, 2026-11-15: "Approved.")
+
+- **Builder:** Claude Code; branch `ccr-88f5c085-launch-steady`, from master `1fed57c8`. Routine; Gavin merges.
+  [Brief](LAUNCH-STEADY-001.md).
+- **Approved queue, in order:** this; TIMELINE-EDIT-001 (tap a timeline mark or diary row to change its time, amount,
+  or undo, with the existing corrections); ALFRED-FIX-001 (Protected: Alfred and the free helper propose time, amount
+  and remove corrections, confirmed by Gavin).
+- **Open:** #533 (DIRECTION-90-001) ready to merge; #534 (FOOD-SOURCES-001) green, to be updated after #533 merges.
+- **Known issue:** CommandConsole's RESUME WORKOUT bound fails intermittently (16.5 px under the nav, order-dependent,
+  also on master); its own small fix later.
+
+---
+
 # Current objective — METRIC-PAGE-001 slice 4: calories join the shared page (Gavin, 2026-11-14: "That's good for me")
 
 - **Builder:** Claude Code; branch `ccr-88f5c085-metric-calories`, from master `77c8ab61`. Feature lane: no independent

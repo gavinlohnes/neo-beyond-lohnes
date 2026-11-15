@@ -12,3 +12,5 @@
 
 /* ATTENTION-001: deliberate depth, in BEYOND's equipment grammar. */
 .support-disclosure { min-width: 0; margin-block: 12px; border: 1px solid var(--border-strong); border-inline-start: 2px solid var(--border-strong); background: var(--surface-1); overflow-wrap: anywhere; }
+/* LAUNCH-STEADY-001: the label and its hint never run together ("BRIEFFree"). The summary keeps its disclosure marker. */
+.support-disclosure__hint { margin-inline-start: 10px; }

@@ -345,6 +345,9 @@ export function TodayScreen({
   mealRefreshKey?: number;
 } = {}) {
   const [day, setDay] = useState<BeyondDay | null>(null);
+  // LAUNCH-STEADY-001: until the first read settles, "no day" is unknown, not a fact. TODAY shows a quiet reading
+  // frame instead of "Mode not set / START DAY" flashing before the real day appears.
+  const [dayRead, setDayRead] = useState(false);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
@@ -777,6 +780,8 @@ export function TodayScreen({
       // rejection. A still-current refresh's failure is unchanged from
       // prior behavior (out of this correction's scope) and is rethrown.
       if (!mountedRef.current || myRequestId !== refreshRequestIdRef.current) return;
+      // A failed first read still ends the reading frame, so TODAY shows what it showed before.
+      setDayRead(true);
       throw err;
     }
     // Ownership decided HERE, immediately after the read above resolves —
@@ -951,6 +956,7 @@ export function TodayScreen({
       }
       currentContextDayIdRef.current = newDayId;
       setDay(activeDay);
+      setDayRead(true);
       setActiveWorkout(activeWorkoutSession);
       setYesterdayRecorded(nextYesterday);
       if (nextSchedule) setSchedulePattern(nextSchedule);
@@ -2728,6 +2734,13 @@ export function TodayScreen({
   // steps aside (an operation, the late sleep prompt) or NEXT couldn't be read, the hero keeps it.
   const bandHidden = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep;
   const bandCarriesRun = !!day && !!lifeReading && !!ahead && !bandHidden;
+  // LAUNCH-STEADY-001: the first launch waits for its day before drawing a mode, a next step or numbers.
+  if (!operationsOnly && !dayRead) return <div className="screen command-console today-field redesign-today" aria-busy="true">
+    <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
+    <section className="today-situation cc-hero-wrap" aria-label="Reading today"><div className="cc-mode mode-empty today-reading">
+      <p role="status" className="cc-mode-meta">Reading your day…</p>
+    </div></section>
+  </div>;
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
