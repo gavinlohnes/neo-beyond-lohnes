@@ -12,6 +12,8 @@ import { projectPersonalBaselines } from "../engine/personalBaselines";
  * NO_FAKE_PRECISION: a day whose kind is still learning (or whose work context is unknown) is not judged and adds
  * nothing; with no judged day there is no owed figure at all ("still learning", with the day counts), never a fallback
  * to a fixed 7 hours. A night at or above the target owes nothing and repays nothing (no negative debt), as before.
+ * FOLLOWUPS-001 (#555 review): only a day with main sleep logged is judged against the main-sleep target; a day with
+ * only a nap logged is not judged and is "not counted", as the baseline leaves it out. Naps on a judged day still count.
  * Pure, derived on read, never stored, never read by the Engine: a readout, not a rule.
  */
 export const SLEEP_DEBT_DAYS = 7;
@@ -40,7 +42,7 @@ export interface SleepDebt {
   owedMinutes: number;
   /** Lived days with sleep logged that were looked at (at most SLEEP_DEBT_DAYS). */
   days: number;
-  /** Of those, the days judged against a learned target. */
+  /** Of those, the days judged against a learned target (main sleep logged; nap-only days are not judged). */
   judgedDays: number;
   targets: Record<DayKind, SleepTarget>;
   perDay: SleepDebtDay[];
@@ -48,6 +50,8 @@ export interface SleepDebt {
 
 const slept = (records: readonly DaySummary[]) => records.reduce((sum, r) => sum + (r.sleep.primaryMinutes ?? 0) + (r.sleep.napMinutes ?? 0), 0);
 const hasSleep = (r: DaySummary) => r.sleep.primaryMinutes !== undefined || !!r.sleep.napMinutes;
+/** Main sleep logged in the lived day: the same test the MAIN_SLEEP baseline uses to include a day. */
+const hasMainSleep = (records: readonly DaySummary[]) => records.some((r) => r.sleep.primaryMinutes !== undefined);
 
 /** The learned main-sleep targets, straight from the personal baselines (no Engine change, no new statistic). */
 export function learnedSleepTargets(summaries: readonly DaySummary[], now: Date): Record<DayKind, SleepTarget> {
@@ -67,7 +71,7 @@ export function deriveSleepDebt(summaries: readonly DaySummary[], now: Date): Sl
   const logged = [...groupLivedDays(summaries.filter((s) => new Date(s.livedDayStart).getTime() <= now.getTime() && hasSleep(s))).values()]
     .sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).slice(0, SLEEP_DEBT_DAYS);
   const perDay = logged.map((day): SleepDebtDay => {
-    const target = day.kind === "UNKNOWN" ? undefined : targets[day.kind];
+    const target = day.kind === "UNKNOWN" || !hasMainSleep(day.records) ? undefined : targets[day.kind];
     const targetMinutes = target?.kind === "LEARNED" ? target.minutes : undefined;
     const sleptMinutes = slept(day.records);
     return { livedDayStart: day.livedDayStart, kind: day.kind, sleptMinutes, targetMinutes, owedMinutes: targetMinutes === undefined ? 0 : Math.max(0, targetMinutes - sleptMinutes) };
@@ -93,5 +97,5 @@ export function describeSleepTargets(targets: Record<DayKind, SleepTarget>, form
 export function describeUnjudged(debt: SleepDebt): string {
   const left = debt.days - debt.judgedDays;
   if (debt.status !== "LEARNED" || left === 0) return "";
-  return `${left} logged day${left === 1 ? "" : "s"} not counted (still learning that kind of day, or work/off unknown).`;
+  return `${left} logged day${left === 1 ? "" : "s"} not counted (still learning that kind of day, work/off unknown, or only a nap logged).`;
 }

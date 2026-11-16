@@ -3456,6 +3456,9 @@ Gavin chose ranked item 2 ("Measure sleep debt against your own learned sleep, n
 - MONTH, the energy forecast and Alfred's context use it; the recovery-sleep offer keeps its one-hour threshold on the
   learned figure and is not offered while still learning. The Engine does not read it. The month grid's short-night
   underline stays on the 7 h guideline, labelled as such.
+- FOLLOWUPS-001 (from #555's review): only a day with **main sleep** logged is judged. A day with only a nap logged is
+  not measured against a full night; it is listed as not counted, as the baseline leaves it out. Naps on a judged day
+  still count toward the night.
 
 ## WORK-RUN-REDRAFT-001 — offer a fresh work-run draft when something changes (Gavin, 2026-11-15)
 
