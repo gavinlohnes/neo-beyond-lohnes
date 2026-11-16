@@ -1,4 +1,20 @@
-# Current objective — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes)
+# Current objective — CAPTURE-PARITY-001 (capture → task works the same everywhere)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved the ranked item "Make turning a capture into a task work the same
+  everywhere" (HARVEST-002's best new refinement). [Brief](CAPTURE-PARITY-001.md). Branch `codex/capture-parity-001`
+  from fetched master `4d74ac26`.
+- Lane FEATURE: one shared confirm-first form (title, optional planned day, optional due date) for quick capture, Notes
+  Sweep and the Capture list, through the existing `convertCaptureToObligation`. No schema, Engine, event or
+  notification-kind change.
+- Gates: local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
+- SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
+  `abd9dc71` (2026-11-15 18:06 CT) and WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
+  merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT); `origin/master` `44a1c5b0` merged into this branch normally
+  (docs conflict only, all sections kept). Their sections are history. #473 stays a parked draft.
+
+---
+
+# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
   `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).
@@ -12,6 +28,7 @@
   `abd9dc71`; master merged into this branch normally (docs conflict only, both sections kept). Its section is history.
 - Independent review of `8d4f7434` blocked two trigger defects (days off before the note's first day not compared;
   short-sleep re-offer after NOT NOW / a fresh save). Fixed; see the brief's review response. Renewed review needed.
+- Merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT).
 
 ---
 

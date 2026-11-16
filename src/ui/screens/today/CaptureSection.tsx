@@ -2,6 +2,7 @@ import { Signal } from "../../components/Signal";
 import type { CaptureItem } from "../../../domain/common/types";
 import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { CapturePromotionForm, type CapturePromotionDraft } from "../../components/CapturePromotionForm";
 
 /**
  * TodayScreen decomposition (2026-09-02): extracted verbatim from
@@ -16,10 +17,8 @@ export function CaptureListRow({
   item,
   busy,
   captureConversion,
-  conversionTitle,
-  setConversionTitle,
-  conversionDueAt,
-  setConversionDueAt,
+  conversionDraft,
+  setConversionDraft,
   conversionDateSuggestion,
   onRequestConversion,
   onCancelConversion,
@@ -29,10 +28,8 @@ export function CaptureListRow({
   item: CaptureItem;
   busy: boolean;
   captureConversion: { id: string; text: string } | null;
-  conversionTitle: string;
-  setConversionTitle: (title: string) => void;
-  conversionDueAt: string;
-  setConversionDueAt: (dueAt: string) => void;
+  conversionDraft: CapturePromotionDraft;
+  setConversionDraft: (draft: CapturePromotionDraft) => void;
   conversionDateSuggestion: CaptureDateSuggestion | null;
   onRequestConversion: (item: CaptureItem) => void;
   onCancelConversion: () => void;
@@ -64,43 +61,22 @@ export function CaptureListRow({
         </div>
       </div>
       {converting && (
-        <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--border-subtle)" }}>
-          <input
-            type="text"
-            className="input"
-            aria-label="New obligation title"
-            style={{ marginBottom: 8 }}
-            value={conversionTitle}
-            disabled={busy}
-            onChange={(e) => setConversionTitle(e.target.value)}
+        <div style={{ marginTop: 8 }}>
+          {/* CAPTURE-PARITY-001: the same confirm-first form quick capture uses; the row's own CANCEL closes it. */}
+          <CapturePromotionForm
+            draft={conversionDraft}
+            onChange={setConversionDraft}
+            busy={busy}
+            onConfirm={onConfirmConversion}
+            dueHint={
+              conversionDateSuggestion && conversionDateSuggestion.dueAt === conversionDraft.dueAt ? (
+                <p className="meta">
+                  {conversionDateSuggestion.confidence === "STRONG" ? "Detected" : "Possibly detected"} from “
+                  {conversionDateSuggestion.matchedText}” — clear the due date above if this isn't right.
+                </p>
+              ) : undefined
+            }
           />
-          <label className="meta" style={{ display: "block", marginBottom: 4 }} htmlFor={`capture-due-${item.id}`}>
-            DUE (OPTIONAL)
-          </label>
-          <input
-            id={`capture-due-${item.id}`}
-            type="date"
-            className="input"
-            aria-label="Due date"
-            style={{ marginBottom: 4 }}
-            value={conversionDueAt}
-            disabled={busy}
-            onChange={(e) => setConversionDueAt(e.target.value)}
-          />
-          {conversionDateSuggestion && conversionDateSuggestion.dueAt === conversionDueAt && (
-            <p className="meta" style={{ marginBottom: 8 }}>
-              {conversionDateSuggestion.confidence === "STRONG" ? "Detected" : "Possibly detected"} from “
-              {conversionDateSuggestion.matchedText}” — clear the date above if this isn't right.
-            </p>
-          )}
-          <button
-            className="btn-primary"
-            style={{ width: "100%" }}
-            disabled={busy || !conversionTitle.trim()}
-            onClick={onConfirmConversion}
-          >
-            CREATE TASK
-          </button>
         </div>
       )}
     </div>
@@ -118,10 +94,8 @@ export function CaptureToolsCard({
   justResolvedCapture,
   onUndoResolve,
   captureConversion,
-  conversionTitle,
-  setConversionTitle,
-  conversionDueAt,
-  setConversionDueAt,
+  conversionDraft,
+  setConversionDraft,
   conversionDateSuggestion,
   onRequestConversion,
   onCancelConversion,
@@ -138,10 +112,8 @@ export function CaptureToolsCard({
   justResolvedCapture: { id: string; text: string } | null;
   onUndoResolve: () => void;
   captureConversion: { id: string; text: string } | null;
-  conversionTitle: string;
-  setConversionTitle: (title: string) => void;
-  conversionDueAt: string;
-  setConversionDueAt: (dueAt: string) => void;
+  conversionDraft: CapturePromotionDraft;
+  setConversionDraft: (draft: CapturePromotionDraft) => void;
   conversionDateSuggestion: CaptureDateSuggestion | null;
   onRequestConversion: (item: CaptureItem) => void;
   onCancelConversion: () => void;
@@ -187,10 +159,8 @@ export function CaptureToolsCard({
               item={item}
               busy={busy}
               captureConversion={captureConversion}
-              conversionTitle={conversionTitle}
-              setConversionTitle={setConversionTitle}
-              conversionDueAt={conversionDueAt}
-              setConversionDueAt={setConversionDueAt}
+              conversionDraft={conversionDraft}
+              setConversionDraft={setConversionDraft}
               conversionDateSuggestion={conversionDateSuggestion}
               onRequestConversion={onRequestConversion}
               onCancelConversion={onCancelConversion}
