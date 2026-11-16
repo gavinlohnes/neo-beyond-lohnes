@@ -18,7 +18,7 @@ async function openSearch() {
   return { screen, box };
 }
 
-it("logs for free through the usual confirm card; nothing is written until SAVE", async () => {
+it("logs for free; nothing is written until DO, and a clear water log then saves at once with UNDO (ALFRED-ACT-001)", async () => {
   const day = await startDay();
   const { screen, box } = await openSearch();
   await box.fill("16 oz water");
@@ -27,8 +27,8 @@ it("logs for free through the usual confirm card; nothing is written until SAVE"
   expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
   await go.click();
   const card = screen.getByRole("dialog", { name: "ALFRED" }).getByRole("group", { name: "Log 16 oz water" });
-  await expect.element(card).toBeVisible();
-  await card.getByRole("button", { name: "SAVE" }).click();
+  await expect.element(card.getByText("Logged.")).toBeVisible();
+  await expect.element(card.getByRole("button", { name: "Undo: Log 16 oz water" })).toBeVisible();
   await expect.poll(() => db.events.where("beyondDayId").equals(day.id).filter((e) => e.type === "WATER_LOGGED").count()).toBe(1);
 });
 

@@ -25,14 +25,17 @@ const send = async (screen: Awaited<ReturnType<typeof render>>, text: string) =>
   await screen.getByRole("button", { name: "SEND", exact: true }).click();
 };
 
-it("logs and answers for free with no key and no signal; SAVE writes through BEYOND's own commands", async () => {
+it("logs and answers for free with no key and no signal; writes go through BEYOND's own commands", async () => {
   await startDay();
   vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
   await send(screen, "16 oz water and slept 6h");
   await expect.element(screen.getByText("BEYOND · FREE")).toBeVisible();
-  await screen.getByRole("group", { name: "Log 16 oz water" }).getByRole("button", { name: "SAVE" }).click();
+  // ALFRED-ACT-001: the clear water log saved at once (UNDO shown); the sleep still waits for SAVE.
+  await expect.element(screen.getByRole("group", { name: "Log 16 oz water" }).getByText("Logged.")).toBeVisible();
   await expect.poll(() => db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
+  await screen.getByRole("group", { name: /^Log main sleep 6h/ }).getByRole("button", { name: "SAVE" }).click();
+  await expect.poll(() => db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(1);
   await send(screen, "how much water today?");
   await expect.element(screen.getByText("Water today: 16 oz.")).toBeVisible();
   expect(requests).toBe(0);
@@ -91,7 +94,8 @@ it("a free meal card refuses to save if the saved meal changed after it was show
   await startDay();
   const meal = await createSavedMeal({ name: "Chicken bowl", calories: 600, proteinG: 50, carbsG: 60, fatG: 15 });
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
-  await send(screen, "ate the chicken bowl");
+  // ALFRED-ACT-001: one serving of a saved meal saves at once; four servings is unusual, so it keeps its card.
+  await send(screen, "ate 4 chicken bowl");
   const card = screen.getByRole("group", { name: /^Log Chicken bowl/ });
   await expect.element(card).toBeVisible();
   await updateSavedMeal(meal.id, { calories: 900, proteinG: 20 });
@@ -117,15 +121,17 @@ it("SAVE + REMEMBER MEAL keeps a food as a saved meal, so next time it logs free
 it("UNDO on a saved log card takes it back with the LOG sheet's own void (CARD-UNDO-001)", async () => {
   const day = await startDay();
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
-  await send(screen, "16 oz water and slept 6h");
-  const water = screen.getByRole("group", { name: "Log 16 oz water" });
-  await water.getByRole("button", { name: "SAVE" }).click();
-  await water.getByRole("button", { name: "Undo: Log 16 oz water" }).click();
-  await expect.element(water.getByText("Undone. Nothing of it is counted.")).toBeVisible();
+  // ALFRED-ACT-001: water now saves at once (its own UNDO window: tests/browser/AlfredAct001), so a sleep card is used here.
+  await send(screen, "slept 6h");
+  const sleep = screen.getByRole("group", { name: /^Log main sleep 6h/ });
+  await sleep.getByRole("button", { name: "SAVE" }).click();
+  await sleep.getByRole("button", { name: /^Undo: Log main sleep 6h/ }).click();
+  await expect.element(sleep.getByText("Undone. Nothing of it is counted.")).toBeVisible();
   const events = await db.events.where("beyondDayId").equals(day.id).toArray();
-  expect(events.filter((e) => e.type === "WATER_LOGGED")).toHaveLength(1);
-  expect(events.filter((e) => e.type === "WATER_LOG_VOIDED")).toHaveLength(1);
+  expect(events.filter((e) => e.type === "SLEEP_LOGGED")).toHaveLength(1);
+  expect(events.filter((e) => e.type === "SLEEP_LOG_VOIDED")).toHaveLength(1);
   // A card that isn't a log (or was skipped) has no UNDO.
-  await screen.getByRole("group", { name: /^Log main sleep 6h/ }).getByRole("button", { name: "SKIP" }).click();
+  await send(screen, "napped 30 minutes");
+  await screen.getByRole("group", { name: /^Log nap 0h 30m/ }).getByRole("button", { name: "SKIP" }).click();
   expect(document.querySelectorAll("[aria-label^='Undo:']")).toHaveLength(0);
 });

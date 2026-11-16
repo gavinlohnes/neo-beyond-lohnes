@@ -1,4 +1,20 @@
-# Current objective — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes)
+# Current objective — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO)
+
+- Builder Grok Bot. Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"; started as wave 2
+  of the overnight plan he approved. [Brief](ALFRED-ACT-001.md). Branch `codex/alfred-act-001` from fetched master
+  `4d74ac26`, rebased onto `44a1c5b0` (#555 and #556 merged) before the first push.
+- Lane PROTECTED (consequential AI autonomy; Doctrine and BEYOND-4.0 decision 2 amended in their own text; Decision
+  Register entry marked built). No schema, Engine, dependency, provider or notification change.
+- Immediate with 10 s UNDO: water, a saved meal (never Alfred's estimate), protein,
+  weight (within 10 lb of the last), habit done, a set in the workout in progress; only when clear (no time, ordinary
+  amount, whole message understood, not repeated). Everything else keeps its confirm card.
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. PR: pending.
+- Other open work runs in parallel and this section doesn't track it: #557 (CAPTURE-PARITY-001) was open at this
+  branch's push; others may be. WORK-RUN-REDRAFT-001 #556 merged as `44a1c5b0`; its section below is history.
+
+---
+
+# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556, `44a1c5b0`)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
   `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).

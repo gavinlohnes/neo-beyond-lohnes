@@ -3405,7 +3405,7 @@ today WORK/OFF, a future overtime/time-off/swap, a next-shift handoff note, a ta
 a list item. Every one is still a card he confirms; BEYOND fills cards from the records, never Alfred. When no tool
 fits, Alfred says what BEYOND can't do yet instead of only refusing.
 
-## ALFRED-ACT-001 — low-risk logging may run immediately with UNDO (Gavin, 2026-11-15; decided, not built)
+## ALFRED-ACT-001 — low-risk logging may run immediately with UNDO (Gavin, 2026-11-15; built by ALFRED-ACT-001)
 
 Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo." Recorded now; built later as its own
 Protected objective. Intent: for a clear, explicit command, a small set of reversible logs (to be named in that brief:
@@ -3414,6 +3414,19 @@ of waiting for SAVE; everything else stays one-tap confirm, and Engine decisions
 objective ships, every Alfred change remains confirm-first. **Conflict to resolve in that objective:** the Doctrine
 (`OPERATOR_INTERFACE_DOCTRINE.md`, "proposes changes the operator confirms") and BEYOND-4.0 decision 2 ("every change is
 confirmed") must be amended in their own text in the same Protected PR, with the exact list of immediate actions.
+
+**Built (ALFRED-ACT-001, [brief](agent/ALFRED-ACT-001.md)); the conflict above is resolved** by amendments in the
+Doctrine and BEYOND-4.0 decision 2. Locked:
+
+- Immediate with a 10-second UNDO, per the registry's `autonomy`: water, a meal, protein, weight, a habit done, a set
+  into the workout in progress. Nothing else; sleep, shift marks, schedule, tasks, memory, collections, handoff notes,
+  `correct_log`/`remove_log`/`fix_entry` and every edit of an existing record stay one-tap confirm.
+- Only when clear: no time named; an ordinary amount; a meal only from his saved meals (never Alfred's estimate; a
+  new food keeps its card and SAVE + REMEMBER MEAL); a weight within 10 lb of his last; a habit not already done; the whole message understood; not
+  repeated in the message. Otherwise the card, as before. Alfred and the free helper follow the same rule.
+- UNDO is the record's existing append-only reversal (void, the habit's earlier answer, TRAIN's set undo), survives
+  backup, and is available only inside the window, which holds while UNDO is hovered or focused. After it the entry
+  stays and is changed through LOG or HISTORY.
 
 ## WORK TRANSITION amended — explicit shift start/end corrections (SHIFT-CORRECT-001, Gavin, 2026-11-15)
 
