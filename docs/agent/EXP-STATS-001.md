@@ -9,8 +9,9 @@
 - **Builder:** Grok Bot. Branch `codex/exp-stats-001` from fetched `origin/master` `abd9dc71` (#555 merged).
   Worktree `/workspace/exp-stats`. Fast-forwarded onto `44a1c5b0` after Gavin merged #556 (2026-11-15 18:42 CT),
   before push; no code overlap.
-- **Lane: FEATURE.** Honest readout of the existing LOOP TRY comparison. `npm run check:risk` may suggest PROTECTED
-  only because this brief, the LOOP/capability-map notes and the checkpoint sit on governance paths; those record the
+- **Active PR:** [#559](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/559).
+- **Lane: FEATURE.** Honest readout of the existing LOOP TRY comparison. `npm run check:risk -- origin/master` suggests PROTECTED only because this brief, LOOP.md and
+  CAPABILITY_MAP.md sit on governance paths; those record the
   approved objective and the comparison's wording, and amend no doctrine or authority. Semantically: no Engine, schema,
   event, persistence, backup, permission, provider, navigation or dependency change; experiments are still never an
   Engine input. Normal review, green CI, Gavin merges.

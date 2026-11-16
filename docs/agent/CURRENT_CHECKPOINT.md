@@ -2,7 +2,7 @@
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
   experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
-  fast-forwarded onto `44a1c5b0` after Gavin merged [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
+  PR [#559](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/559); fast-forwarded onto `44a1c5b0` after Gavin merged [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
   (2026-11-15 18:42 CT).
 - The existing LOOP TRY comparison now reports a Welch 95% range on the difference of means, with day counts, and says
   "can't tell yet" when that range crosses zero or "not enough data yet" when a side is thin, instead of declaring a
