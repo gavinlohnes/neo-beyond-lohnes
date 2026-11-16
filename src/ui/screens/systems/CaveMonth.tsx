@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMonth, getSleepDebt, SLEEP_NEED_MINUTES, type MonthDay } from "../../../application/monthQueries";
+import { describeSleepTargets, describeUnjudged, type SleepDebt } from "../../../application/sleepDebt";
 import { AlfredText, askAlfred } from "../../components/AlfredSheet";
 import { listReviews, weekLabel } from "../../../application/alfred/alfredReview";
 import type { AlfredReview } from "../../../domain/alfred/types";
@@ -9,7 +10,7 @@ import { MonthRecapView } from "./MonthRecapView";
 
 /**
  * MONTH-001 (owner go 2026-10-31, ideas 9–11): the month on one page — each lived day's shift, sleep,
- * protein, training and clean day — with the sleep owed this week. Tap a day for its numbers and to ask
+ * protein, training and clean day — with the sleep owed this week (against your learned sleep, SLEEP-DEBT-LEARNED-001). Tap a day for its numbers and to ask
  * Alfred about it. Read only.
  */
 const hm = (m: number) => `${Math.floor(m / 60)}h${String(Math.round(m % 60)).padStart(2, "0")}`;
@@ -19,7 +20,7 @@ const longDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateStri
 export function CaveMonthView() {
   const [cursor, setCursor] = useState(() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
   const [days, setDays] = useState<MonthDay[] | null>(null);
-  const [debt, setDebt] = useState<{ owedMinutes: number; days: number } | null>(null);
+  const [debt, setDebt] = useState<SleepDebt | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<AlfredReview[]>([]);
@@ -40,8 +41,10 @@ export function CaveMonthView() {
   const day = days?.find((d) => d.date === picked);
 
   return <div className="month">
-    {debt && <p className="month__debt" role="status">{debt.days === 0 ? "No sleep logged yet, so nothing to count as owed."
-      : `Sleep owed, last ${debt.days} logged day${debt.days === 1 ? "" : "s"}: ${hm(debt.owedMinutes)} against ${SLEEP_NEED_MINUTES / 60} h a day.`}</p>}
+    {/* SLEEP-DEBT-LEARNED-001: against your own usual sleep for each kind of day; no figure while still learning. */}
+    {debt && <p className="month__debt" role="status">{debt.status === "NO_SLEEP" ? "No sleep logged yet, so nothing to count as owed."
+      : debt.status === "LEARNING" ? `Sleep owed: no figure yet while BEYOND learns your usual sleep: ${describeSleepTargets(debt.targets, hm)}.`
+      : `Sleep owed, last ${debt.judgedDays} logged day${debt.judgedDays === 1 ? "" : "s"}: ${hm(debt.owedMinutes)} below your usual (low end: ${describeSleepTargets(debt.targets, hm)}).${describeUnjudged(debt) ? ` ${describeUnjudged(debt)}` : ""}`}</p>}
     <div className="month__head">
       <button type="button" className="btn-secondary" aria-label="Previous month" onClick={() => step(-1)}>‹</button>
       <h3 className="cave__cap">{title}</h3>
@@ -61,7 +64,7 @@ export function CaveMonthView() {
           <span className="month__marks">{d.workouts ? "▲" : ""}{d.clean ? "✓" : ""}</span>
         </button>)}
       </div>
-      <p className="meta">Red top line: a work day. Sleep under {SLEEP_NEED_MINUTES / 60} h underlined red · protein in grams · ▲ trained · ✓ clean day.</p>
+      <p className="meta">Red top line: a work day. Sleep under the {SLEEP_NEED_MINUTES / 60} h guideline underlined red · protein in grams · ▲ trained · ✓ clean day.</p>
     </>}
     {day && <section className="cave__block" aria-label={longDate(day.date)}>
       <h3 className="cave__cap">{longDate(day.date)}</h3>

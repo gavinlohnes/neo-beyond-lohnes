@@ -1,16 +1,35 @@
-# Current objective — FOLLOWUPS-001 (BRIDGE-NOTIFY-001 review follow-ups)
+# Current objective — FOLLOWUPS-001 (review follow-ups: BRIDGE-NOTIFY-001 N1/N2/N4; sleep-debt nap-only days)
 
 - Builder Grok Bot. Gavin approved the overnight plan on 2026-11-15 (wave 2, item 6). [Brief](FOLLOWUPS-001.md). Branch
-  `codex/followups-001` from fetched master `4d74ac26` (#554 merged).
+  `codex/followups-001` from fetched master `4d74ac26`; `origin/master` `abd9dc71` (#555 merged) merged in normally.
 - Fixes #554 review notes N1 (no duplicate after upgrading from 0.11.0), N2 (an alarm delivered over 2 h late is
   dropped) and N4 (a failed alert-settings save is not re-applied by a queued change). Health Bridge 0.11.2.
-- Lane PROTECTED (inherited). No new alert kind, Engine, schema, permission or dependency change. The sleep-debt
-  nap-only-day fix waits for #555 to merge.
+- Fixes the #555 review note on nap-only days: only days with main sleep logged are judged against the main-sleep
+  target; a nap-only day is "not counted", like the baseline.
+- Lane PROTECTED (inherited). No new alert kind, Engine, schema, permission or dependency change.
 - Gates: local `TZ=UTC npm run verify`; PR CI including android; independent exact-head review; Gavin merges.
 
 ---
 
-# Historical — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
+# Historical — SLEEP-DEBT-LEARNED-001 (sleep owed against your own learned sleep)
+
+- Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
+  baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
+  Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
+  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555), merged by Gavin as `abd9dc71` (2026-11-15 18:06 CT).
+- BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
+  (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
+- Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);
+  no figure while still learning (no 7 h fallback); MONTH, the energy forecast, the recovery-sleep offer (threshold
+  unchanged at 1 h) and Alfred's context follow it. The Engine never reads it; `src/engine/**` untouched. The month
+  grid's short-night underline stays on the 7 h guideline (labelled).
+- Lane PROTECTED (classifier: governance docs; semantically it also changes Alfred's sleep context and the recovery
+  offer). Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent
+  exact-head review; Gavin merges. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
+
+---
+
+# Historical — BRIDGE-NOTIFY-001 (notification contract; merged as #554)
 
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /
   plan-to-confirm where they fit existing kinds, the plan through the background sync; no new kinds, no Engine change.

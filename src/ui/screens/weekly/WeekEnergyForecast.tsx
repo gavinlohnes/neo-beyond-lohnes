@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ForecastDay, WeekEnergyForecast } from "../../../application/weekEnergyForecast";
 import { RUN_MEAN_FLOOR } from "../../../application/rotationProjection";
-import { SLEEP_NEED_MINUTES } from "../../../application/monthQueries";
+import { describeSleepTargets, describeUnjudged } from "../../../application/sleepDebt";
 
 /**
  * WEEK ENERGY FORECAST: the week's summary and each day's line. Information only; it shows recorded history
@@ -10,8 +10,6 @@ import { SLEEP_NEED_MINUTES } from "../../../application/monthQueries";
 const weekday = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" });
 const energy = (n: number) => `${n.toFixed(1)} of 5`;
 const hoursMinutes = (minutes: number) => { const m = Math.round(minutes); return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} m`; };
-// The sleep need is the same constant getSleepDebt measures against, so the wording follows the maths.
-const need = `${SLEEP_NEED_MINUTES / 60} h`;
 
 function place(day: ForecastDay): string {
   if (day.position === undefined) return day.work === "WORK" ? "A run of shifts over 3 weeks long" : "Over 3 weeks off";
@@ -40,10 +38,13 @@ export function WeekEnergyForecastSummary({ forecast }: { forecast: WeekEnergyFo
           ? `Lowest ${weekday(lowest.date)} (${energy(lowest.energy.mean!)}), best ${weekday(best.date)} (${energy(best.energy.mean!)}).`
           : "Not enough history yet to name a low or a high day. Each day you check in adds to it."}
       </p>
-      {sleepOwed.days > 0 && <p className="meta" style={{ margin: "2px 0 0" }}>
-        {sleepOwed.owedMinutes > 0
-          ? `Sleep owed: ${hoursMinutes(sleepOwed.owedMinutes)} against ${need} a night over your last ${sleepOwed.days} logged days.`
-          : `No sleep owed against ${need} a night over your last ${sleepOwed.days} logged days.`}
+      {/* SLEEP-DEBT-LEARNED-001: measured against your own usual sleep for each kind of day, or still learning. */}
+      {sleepOwed.days > 0 && <p className="meta" data-sleep-owed style={{ margin: "2px 0 0" }}>
+        {sleepOwed.status === "LEARNING"
+          ? `Sleep owed: no figure yet while BEYOND learns your usual sleep: ${describeSleepTargets(sleepOwed.targets, hoursMinutes)}.`
+          : `${sleepOwed.owedMinutes > 0
+            ? `Sleep owed: ${hoursMinutes(sleepOwed.owedMinutes)} below your usual over your last ${sleepOwed.judgedDays} logged days.`
+            : `No sleep owed against your usual over your last ${sleepOwed.judgedDays} logged days.`} Your usual, low end: ${describeSleepTargets(sleepOwed.targets, hoursMinutes)}.${describeUnjudged(sleepOwed) ? ` ${describeUnjudged(sleepOwed)}` : ""}`}
       </p>}
       <p className="meta" style={{ margin: "2px 0 0" }}>A forecast from your history: the check-in energy and main sleep you recorded at the same place in past runs of the same length, or of any length when those are too few. Not a promise, and nothing changes.</p>
     </section>
@@ -65,9 +66,11 @@ export function forecastActions(forecast: WeekEnergyForecast): { lighter: Foreca
   } : null;
   // The first day off from tomorrow on; today's sleep is already under way.
   const off = forecast.days.slice(1).find((day) => day.work === "OFF");
-  const recovery = forecast.sleepOwed.owedMinutes >= 60 && off ? {
+  // Unchanged threshold (an hour); the figure is now against your learned usual sleep, and while it is still learning
+  // there is no figure, so no offer (SLEEP-DEBT-LEARNED-001).
+  const recovery = forecast.sleepOwed.status === "LEARNED" && forecast.sleepOwed.owedMinutes >= 60 && off ? {
     key: "recovery", title: "Recovery sleep", plannedAt: off.date,
-    description: `From the energy forecast: about ${hoursMinutes(forecast.sleepOwed.owedMinutes)} of sleep owed over your last ${forecast.sleepOwed.days} logged days.`,
+    description: `From the energy forecast: about ${hoursMinutes(forecast.sleepOwed.owedMinutes)} of sleep owed against your usual over your last ${forecast.sleepOwed.judgedDays} logged days.`,
   } : null;
   return { lighter, recovery };
 }
@@ -108,7 +111,7 @@ export function ForecastActions({ forecast, plannedOn, onCreate, onOpenPlanItem,
         </div>
       </>}
       {recovery && <>
-        <p className="meta" style={{ margin: "6px 0 0" }}>Sleep owed is about {hoursMinutes(forecast.sleepOwed.owedMinutes)}. {weekday(recovery.plannedAt)} is your next day off.</p>
+        <p className="meta" style={{ margin: "6px 0 0" }}>Sleep owed against your usual is about {hoursMinutes(forecast.sleepOwed.owedMinutes)}. {weekday(recovery.plannedAt)} is your next day off.</p>
         <div className="button-row">{offer(recovery, `PLAN RECOVERY SLEEP ON ${weekday(recovery.plannedAt).toUpperCase()}`)}</div>
       </>}
       {best && best.date !== low?.date && onOpenPlans && <>
