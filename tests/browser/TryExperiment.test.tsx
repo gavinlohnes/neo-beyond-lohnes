@@ -25,7 +25,7 @@ for (const width of [320, 390]) it(`starts an experiment from the Journal and sh
   await expect.element(card).toBeVisible();
   await expect.element(screen.getByText(/^Day 1 of 7 · /)).toBeVisible();
   await expect.element(screen.getByText("You expected: Better energy on shift 1")).toBeVisible();
-  await expect.element(screen.getByText(/^Not enough recorded yet: this needs 3 recorded work days/)).toBeVisible();
+  await expect.element(screen.getByText(/^Not enough data yet: this needs 3 recorded work days/)).toBeVisible();
   const [entry] = await db.decisionJournalEntries.toArray();
   expect(entry).toMatchObject({ title: "Try: Nap 40 min before night 1", status: "OPEN" });
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
