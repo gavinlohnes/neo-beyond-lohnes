@@ -8,7 +8,7 @@
   edit, Alfred's `add_reminder` card) one line says whether it will alert, or "Won't alert:" and why. No Dexie version,
   Engine, alert-kind, Bridge, permission or dependency change.
 - Lane PROTECTED (check:risk: domain types; semantically a backed-up field and notification timing). Gates: focused tests
-  under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges.
+  under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges.
 - CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
   its section below is history.
 
@@ -78,7 +78,7 @@
   fix it"): `origin/master` `2e68feaf` merged in with a normal merge (no force-push); the Bridge re-arm keeps unshown
   moments within a 2 h grace; same-time moments are two alerts; docs and settings copy corrected; quick taps keep every
   change. See the brief's review responses. Needs a renewed independent exact-head review.
-- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. Plan-to-confirm moments and
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges. Plan-to-confirm moments and
   a true BEYOND-to-Bridge background hand-off are deferred (see brief).
 - No other open work: ALFRED-TOOLS-001 [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) merged as
   `527332ef` (2026-11-15 05:45 CT) and SHIFT-CORRECT-001 [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553)

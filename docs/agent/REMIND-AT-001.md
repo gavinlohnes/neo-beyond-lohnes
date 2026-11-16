@@ -26,7 +26,7 @@
 - **Honest when setting it.** `reminderAlert` runs the same contract with the task in it (replacing its saved copy when
   editing) and the screens show one line: "Alerts at 17:30 on Mon 16 Nov. Your phone gets it at the next SYNC GARMIN.",
   or "Won't alert:" with the reason: already passed; task alerts off; in quiet hours (named); during a shift of the
-  standing rotation; that day already has 3 alerts that come first. A time more than four weeks out says it reaches the
+  standing rotation; that lived day (named from its 16:30 start) already has 3 alerts that come first. A time more than four weeks out says it reaches the
   phone at a SYNC GARMIN within four weeks of it (the plan's horizon). The line is true as of now; it says so implicitly
   by being recomputed wherever the task is shown.
 - **Where it's set.** MORE → Missions & Obligations (also where a task opens from PLAN or LIFE): the create form and the task editor get a "Remind at" time (enabled once a due
@@ -48,6 +48,9 @@
 
 ## Acceptance evidence
 
+- `tests/remindAtTime.test.ts` (unit, both TZs): HH:MM parsing (rejects `24:00`, `7:30`, `5pm`, seconds), alert instant
+  and 16:00 fallback, DST fall-back (25 h apart in Chicago, same 17:30) and spring-forward gap, the contract with a timed
+  `TASK_DUE` (quiet-hours edges, lived-day cap by priority then time, next lived day uncapped, switch off), every line.
 - `tests/integration/remindAt.test.ts` (both TZs): store/clear/refuse without a due date/keep on new date/carry to next
   occurrence; native backup round-trip and malformed-time fallback; timed `TASK_DUE` at its time beside a 16:00 one,
   same-minute grouping, unique keys; every reason (past, on the clock, cap full with priority and time order, own copy

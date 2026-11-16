@@ -73,7 +73,7 @@ describe("REMIND-AT-001 — reminders at a set time", () => {
     expect(await reminderAlert({ dueAt: "2026-11-10", remindAt: "09:00" }, NOW)).toMatchObject({ state: "ALERTS" });
     const full = await reminderAlert({ dueAt: "2026-11-10", remindAt: "12:00" }, NOW);
     expect(full).toMatchObject({ state: "SILENT", reason: "CAP_FULL" });
-    expect(describeReminderAlert(full)).toBe("Won't alert: Tue 10 Nov already has 3 alerts that come first (shift alerts, then earlier tasks).");
+    expect(describeReminderAlert(full)).toBe("Won't alert: the day from 16:30 Mon 9 Nov already has 3 alerts that come first (shift alerts, then earlier tasks).");
     // Editing the saved task itself is judged without its old copy.
     const own = await createObligation({ title: "Own", dueAt: "2026-11-10", remindAt: "12:00" });
     expect(await reminderAlert({ dueAt: "2026-11-10", remindAt: "09:30", obligationId: own.id }, NOW)).toMatchObject({ state: "ALERTS" });

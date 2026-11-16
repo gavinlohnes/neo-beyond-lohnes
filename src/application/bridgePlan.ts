@@ -166,7 +166,11 @@ export function describeReminderAlert(alert: ReminderAlert, settings?: KeyMoment
         case "KIND_OFF": return "Won't alert: task alerts are off (MORE → Work Schedule → KEY-MOMENT ALERTS).";
         case "QUIET_HOURS": return `Won't alert: ${clockOf(alert.at!)} is in your quiet hours${settings?.quietFrom && settings.quietTo ? ` (${settings.quietFrom} to ${settings.quietTo})` : ""}.`;
         case "ON_THE_CLOCK": return `Won't alert: ${clockOf(alert.at!)} falls during a shift of your standing rotation.`;
-        case "CAP_FULL": return `Won't alert: ${dayOf(alert.at!)} already has 3 alerts that come first (shift alerts, then earlier tasks).`;
+        case "CAP_FULL": {
+          // The cap counts BEYOND's lived day (16:30 to 16:30), so name that day, not the calendar date.
+          const from = mostRecentBoundaryAtOrBefore(new Date(alert.at!)).getTime();
+          return `Won't alert: the day from ${clockOf(from)} ${dayOf(from)} already has 3 alerts that come first (shift alerts, then earlier tasks).`;
+        }
       }
   }
 }
