@@ -3,10 +3,11 @@
 - Builder Grok Bot. Gavin, 2026-11-15, approved sprint plan Wave 3 ("year-in-review built on the monthRecap cards");
   resumed on his return for Claude's review. [Brief](YEAR-REVIEW-001.md). Branch `codex/year-review-001` from fetched
   master `b921d303`.
-- Lane FEATURE: pure rollup of the month recap's own counting helpers across a calendar year plus a tap-to-open block
+- Lane: classify-risk suggests PROTECTED (the brief is on a governance path); semantically a feature. Pure rollup of the month recap's own counting helpers across a calendar year plus a tap-to-open block
   on MONTH. Months under 7 logged days are named and left out; "N of 12 months counted" shown. No Engine, schema,
   alert, dependency, navigation or TODAY change.
-- Gates: local `TZ=UTC npm run verify`; PR CI; Claude review; Gavin merges.
+- Gates: local `TZ=UTC npm run verify` green (557 files, 4122 tests); PR CI; independent exact-head review (Claude);
+  Gavin merges.
 - CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
   its section below is history.
 
