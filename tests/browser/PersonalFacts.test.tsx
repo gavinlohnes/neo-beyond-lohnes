@@ -67,7 +67,7 @@ it("drops retired facts and old model transcript before the next request; pendin
   vi.spyOn(window, "fetch").mockImplementation(async (_input, init) => {
     requests.push(JSON.parse(String(init?.body)));
     return new Response(JSON.stringify({ id: "synthetic", type: "message", role: "assistant", model: "claude-haiku-5-5",
-      content: requests.length === 1 ? [{ type: "text", text: "Synthetic private keepsake" }, { type: "tool_use", id: "water", name: "log_water", input: { oz: 8 } }] : [{ type: "text", text: "Fresh answer" }],
+      content: requests.length === 1 ? [{ type: "text", text: "Synthetic private keepsake" }, { type: "tool_use", id: "sleep", name: "log_sleep", input: { minutes: 480 } }] : [{ type: "text", text: "Fresh answer" }],
       stop_reason: requests.length === 1 ? "tool_use" : "end_turn", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 10 } }), { headers: { "content-type": "application/json" } });
   });
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
@@ -76,7 +76,8 @@ it("drops retired facts and old model transcript before the next request; pendin
   await stopUsingMemory(memory.reference!);
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
   await expect.element(screen.getByText(/changed/).last()).toBeVisible();
-  expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
+  // ALFRED-ACT-001: a sleep card (still confirm-first) carries this; a clear water log would save at once.
+  expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
   await send("Help again"); await expect.element(screen.getByText("Fresh answer", { exact: true })).toBeVisible();
   expect(JSON.stringify(requests[0])).toContain("Synthetic private keepsake");
   expect(JSON.stringify(requests[1])).not.toContain("Synthetic private keepsake");

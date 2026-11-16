@@ -1,4 +1,26 @@
-# Current objective — REMIND-AT-001 (reminders at a set time, inside the 3-a-day cap)
+# Current objective — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO)
+
+- Builder Grok Bot. Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"; started as wave 2
+  of the overnight plan he approved. [Brief](ALFRED-ACT-001.md). Branch `codex/alfred-act-001` from fetched master
+  `4d74ac26`, rebased onto `44a1c5b0` (#555 and #556 merged) before the first push. PR [#560](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/560).
+- Lane PROTECTED (consequential AI autonomy; Doctrine and BEYOND-4.0 decision 2 amended in their own text; Decision
+  Register entry marked built). No schema, Engine, dependency, provider or notification change.
+- Immediate with 10 s UNDO: water, a saved meal (never Alfred's estimate), protein,
+  weight (within 10 lb of the last), habit done, a set in the workout in progress; only when clear (no time, ordinary
+  amount, whole message understood, not repeated). Everything else keeps its confirm card, including `add_reminder`
+  (with or without a REMIND-AT `remindAt` time).
+- Independent review of `365d2a45` was PASS (no blockers). Since then `origin/master` was merged in normally: `b921d303`
+  (#557) as `3a49f926`, then `17f6bc8e` (#558 FOLLOWUPS-001, #562 REMIND-AT-001; owner session 2026-11-16). Conflicts:
+  this checkpoint (all sections kept) and the `add_reminder` registry entry (kept `autonomy: "confirm"` and master's
+  HH:MM `remindAt` description). Review non-blocking notes 1 (meal comment) and 3 (post-write refresh failure) fixed;
+  note 2 (set UNDO is last-set only) stays as documented in the brief. Those sections below are history.
+- Gates: local `TZ=UTC npm run verify`; PR CI on the exact head; **renewed independent exact-head review REQUIRED, not
+  yet done** (the PASS review is stale); Gavin merges. #561 (multi-action) stays stacked on this branch and waits.
+  Exact head, checks run and CI are in the PR handoff.
+
+---
+
+# Historical — REMIND-AT-001 (reminders at a set time, inside the 3-a-day cap; merged as #562)
 
 - Builder Grok Bot. Gavin, 2026-11-15 17:49 CT, approved the overnight sprint plan (Wave 3: "REMIND-AT-001 (reminders at
   a set time, inside the 3-a-day cap)"). [Brief](REMIND-AT-001.md). PR [#562](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/562). Branch `codex/remind-at-001` from fetched master
@@ -16,6 +38,7 @@
   (next lived day's cap from 16:30; backups without `remindAt`). See the brief's last section. Exact head, checks run and
   CI are in the PR handoff. Remaining gates: green CI on that head; **independent exact-head review REQUIRED, not yet
   done**; Gavin merges.
+- Merged by Gavin as `17f6bc8e` (2026-11-16).
 
 ---
 
@@ -41,6 +64,7 @@
   (2026-11-15 18:42 CT) and CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged
   by Gavin as `b921d303` (2026-11-15 18:57 CT); `origin/master` `b921d303` merged into this branch normally (docs
   conflict only, all sections kept). Their sections below are history.
+- Merged by Gavin as `e84751fe`.
 
 ---
 
@@ -61,7 +85,7 @@
 
 ---
 
-# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556)
+# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556, `44a1c5b0`)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
   `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).

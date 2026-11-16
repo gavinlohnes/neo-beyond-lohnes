@@ -17,6 +17,10 @@ import { deltaAnswer } from "./DeltaViews";
 import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
+import { immediateCards, pauseWindow, resumeWindow, runImmediate, undoAct, undoOpen, ACT_UNDO_MS, type UndoWindow } from "../../application/alfred/alfredAct";
+import type { ProposalSource } from "../../application/alfred/alfredTools";
+import type { ProposalContext } from "../../application/alfred/contextActions";
+import type { AlfredProposal } from "../../application/alfred/alfredActions";
 import "./alfred.css";
 
 /**
@@ -157,13 +161,18 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       if (!onlyFood && ((result.unknown.length && alfredReady) || result.cards.length === 0)) { route = "alfred"; return; }
       const ctx = result.cards.length ? await buildPlanningContext(included) : null;
       const left = onlyFood ? " I don't know that food yet. Find it free below, or ask Alfred to estimate it." : result.unknown.length ? ` I couldn't do “${result.unknown.join("”, “")}”. ${whyNoAlfred()}` : "";
+      const cards = result.cards.map((proposal, n) => ({ id: `free-${Date.now()}-${n}`, proposal }));
+      const context = ctx ? { recordVersion: ctx.recordVersion, personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } : undefined;
+      // ALFRED-ACT-001: clear low-risk logs run now with UNDO; the rest stay cards. Only a fully understood message.
+      const acted = context ? await act(cards, context, "helper", result.unknown.length === 0) : null;
+      const ran = acted ? Object.keys(acted.done).length : 0;
       setText("");
       setTurns((all) => [...all, { role: "user", text: q }, {
         role: "alfred", free: true,
-        text: (result.cards.length ? "Here's what I can do for free. SAVE the ones you want." : "Nothing to save yet.") + left,
+        text: (ran && ran === cards.length ? "Logged. UNDO within 10 seconds if that's wrong." : ran ? "Logged what was clear (UNDO within 10 seconds). SAVE the others you want." : result.cards.length ? "Here's what I can do for free. SAVE the ones you want." : "Nothing to save yet.") + left,
         ...(onlyFood ? { foods: foods as string[], estimate: q } : {}),
-        ...(ctx ? { context: { recordVersion: ctx.recordVersion, personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } } : {}),
-        proposals: result.cards.map((proposal, n) => ({ id: `free-${Date.now()}-${n}`, proposal, state: "pending" as const })),
+        ...(acted ? { context: acted.context } : context ? { context } : {}),
+        proposals: cards.map((c) => withAct(c, acted)),
       }]);
     } catch {
       setText(q); setError("The free helper couldn't read your records. Nothing changed. Try again.");
@@ -189,7 +198,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
     if (!navigator.onLine) { setText(q); setError("Alfred needs a connection. Your local records and draft are still here."); return; }
     working.current = true;
     setBusy(true); setError(null); setText("");
-    const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.state === "undone" ? "skipped" as const : p.state])); // an undone card counts as not saved
+    // An undone card counts as not saved; ALFRED-ACT-001: one BEYOND saved at once is "logged", not "confirmed".
+    const decisions = Object.fromEntries(turns.flatMap((t) => t.proposals ?? []).map((p) => [p.id, p.immediate && p.state === "saved" ? "logged" as const : p.state]));
     setTurns((all) => [...all, { role: "user", text: q, ...(depth === "deep" ? { deep: true } : {}) }]);
     let meteredSession: AlfredSession | null = null, usageBefore = 0;
     try {
@@ -213,7 +223,10 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       lastContext.current = next; setSnapshot(next);
       meteredSession = session.current; usageBefore = meteredSession.usageUsd;
       const reply = await session.current.send(q, decisions, depth);
-      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: [...new Map([...next.sources, ...(reply.sources ?? [])].map((s) => [s.key, s])).values()], context: { recordVersion: next.recordVersion, personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions }, proposals: reply.proposals.map((p) => ({ ...p, state: "pending" as const })) }]);
+      const context: ProposalContext = { recordVersion: next.recordVersion, personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions };
+      // ALFRED-ACT-001: his clear low-risk logs run now with UNDO, through the same guarded confirm as SAVE.
+      const acted = reply.proposals.length ? await act(reply.proposals, context, "alfred", true) : null;
+      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: [...new Map([...next.sources, ...(reply.sources ?? [])].map((s) => [s.key, s])).values()], context: acted?.context ?? context, proposals: reply.proposals.map((p) => withAct(p, acted)) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
       // A failed send may leave the model session half-written, so it's dropped. Say so when earlier
@@ -227,6 +240,42 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       if (charged > 0) { setSpent((s) => s + charged); setMonthSpent(addSpend(charged)); }
       working.current = false; setBusy(false);
     }
+  }
+
+  /**
+   * ALFRED-ACT-001: run a message's clear low-risk logs now. Any that can't run (the records moved, the command refused)
+   * simply stay cards. His own writes advance this conversation's context, as a SAVE does.
+   */
+  async function act(cards: { id: string; proposal: AlfredProposal }[], context: ProposalContext, source: ProposalSource, understoodAll: boolean) {
+    let acted: Awaited<ReturnType<typeof runImmediate>>;
+    try {
+      const ids = await immediateCards(cards, source, { understoodAll });
+      if (!ids.size) return null;
+      acted = await runImmediate(cards, ids, context, included);
+    } catch { return null; }
+    if (Object.keys(acted.done).length) {
+      if (lastContext.current && lastContext.current.recordVersion === context.recordVersion && lastContext.current.personalVersion === context.personalVersion) {
+        lastContext.current = { ...lastContext.current, personalVersion: acted.context.personalVersion, recordVersion: acted.context.recordVersion ?? lastContext.current.recordVersion };
+      }
+      // Written is written: a failing refresh or haptic must not turn saved entries back into SAVE cards (a second write).
+      try { captureCommitFeedback()("LIGHT"); } catch { /* feedback is best-effort */ }
+      try { onSaved(); } catch { /* the entries are saved; TODAY refreshes on its next load */ }
+    }
+    return acted;
+  }
+  const withAct = <C extends { id: string; proposal: AlfredProposal }>(c: C, acted: Awaited<ReturnType<typeof act>>) => {
+    const done = acted?.done[c.id];
+    return done ? { id: c.id, proposal: c.proposal, state: "saved" as const, immediate: true, ...(done.undo ? { undo: done.undo, auto: done.window } : {}) } : { id: c.id, proposal: c.proposal, state: "pending" as const };
+  };
+  /** ALFRED-ACT-001: hold the UNDO window open while he hovers or focuses it; close it when it runs out. */
+  function setWindow(turnIndex: number, id: string, change: (w: UndoWindow) => UndoWindow | undefined) {
+    setTurns((all) => all.map((t, i) => i !== turnIndex || !t.proposals ? t : { ...t, proposals: t.proposals.map((p) => {
+      if (p.id !== id || !p.auto) return p;
+      const next = change(p.auto);
+      if (next) return { ...p, auto: next };
+      const { auto: _auto, undo: _undo, ...rest } = p;
+      return rest;
+    }) }));
   }
 
   async function decide(turnIndex: number, id: string, save: boolean, remember = false) {
@@ -260,9 +309,12 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   async function undoCard(turnIndex: number, id: string) {
     const card = turns[turnIndex]?.proposals?.find((p) => p.id === id);
     if (!card?.undo || card.state !== "saved" || working.current) return;
+    // ALFRED-ACT-001: a log saved at once can be undone only while its window is open.
+    if (card.immediate && !undoOpen(card.auto)) { setWindow(turnIndex, id, () => undefined); return; }
     working.current = true; setBusy(true); setError(null);
     try {
-      await undoSavedLog(card.undo);
+      if (card.immediate) { if (await undoAct(card.undo, card.auto!) !== "UNDONE") throw new Error("UNDO_FAILED"); }
+      else await undoSavedLog(card.undo);
       onSaved();
       // Review of #385: his own UNDO is not an outside change; carry the record version forward like a SAVE.
       const before = turns[turnIndex]!.context?.recordVersion;
@@ -270,7 +322,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => all.map((t, i) => {
         const context = t.context && before !== undefined && after && t.context.recordVersion === before ? { ...t.context, recordVersion: after } : t.context;
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
-        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, state: "undone" as const } : p) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => { if (p.id !== id) return p; const { auto: _auto, ...rest } = p; return { ...rest, state: "undone" as const }; }) };
       }));
       if (after && lastContext.current && lastContext.current.recordVersion === before) lastContext.current = { ...lastContext.current, recordVersion: after };
     } catch { setError("That couldn't be undone. Change it from LOG or the day's history."); }
@@ -373,8 +425,10 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
               {p.proposal.kind === "log_meal" && !p.proposal.saved_meal_id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, true, true)}>SAVE + REMEMBER MEAL</button>}
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
-            </div> : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : "Saved.") : p.state === "undone" ? (p.proposal.kind === "log_meal" && p.proposal.remember ? "Undone. The saved meal stays in MY MEALS." : "Undone. Nothing of it is counted.") : "Skipped."}</p>
-              {p.state === "saved" && p.undo && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undoCard(i, p.id)} aria-label={`Undo: ${describeProposal(p.proposal)}`}>UNDO</button>}</div>}
+            </div> : p.state === "saved" && p.auto && p.undo ? <ActUndo window={p.auto} label={describeProposal(p.proposal)} busy={busy}
+                onUndo={() => void undoCard(i, p.id)} onPause={() => setWindow(i, p.id, (w) => pauseWindow(w))} onResume={() => setWindow(i, p.id, (w) => resumeWindow(w))} onExpire={() => setWindow(i, p.id, () => undefined)} />
+            : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : p.immediate ? "Logged. To change it, use LOG or HISTORY." : "Saved.") : p.state === "undone" ? (p.proposal.kind === "log_meal" && p.proposal.remember ? "Undone. The saved meal stays in MY MEALS." : "Undone. Nothing of it is counted.") : "Skipped."}</p>
+              {p.state === "saved" && p.undo && !p.immediate && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undoCard(i, p.id)} aria-label={`Undo: ${describeProposal(p.proposal)}`}>UNDO</button>}</div>}
           </div>)}
         </div>)}
         {busy && <p className="meta" role="status">Alfred is reading your records…</p>}
@@ -411,6 +465,31 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       <p className="meta alfred-cost">This conversation ≈ ${usd(spent)} · this month ≈ ${usd(monthSpent)}{cap ? ` of $${cap.toFixed(2)}` : ""}</p>
     </>
   </LogSheet>;
+}
+
+/**
+ * ALFRED-ACT-001: the confirmation of a log BEYOND saved at once. UNDO is a real button, never focused for him; the
+ * countdown is visual only (screen readers hear "Logged" once, not every second), and it holds while he hovers or
+ * focuses the confirmation (WCAG 2.2.1), so a keyboard or screen-reader user is never raced. When it runs out the
+ * entry stays, editable from LOG or HISTORY.
+ */
+function ActUndo({ window: w, label, busy, onUndo, onPause, onResume, onExpire }: { window: UndoWindow; label: string; busy: boolean; onUndo: () => void; onPause: () => void; onResume: () => void; onExpire: () => void }) {
+  const [now, setNow] = useState(() => Date.now());
+  const held = w.pausedLeft !== undefined;
+  useEffect(() => {
+    if (held) return;
+    const tick = () => { const t = Date.now(); setNow(t); if (t > w.until) onExpire(); };
+    const timer = setInterval(tick, 250);
+    tick();
+    return () => clearInterval(timer);
+  }, [w.until, held]);
+  const left = Math.max(0, Math.ceil((held ? w.pausedLeft! : w.until - now) / 1000));
+  return <div className="alfred-card__row alfred-act" onMouseEnter={onPause} onMouseLeave={onResume} onFocus={onPause}
+    onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onResume(); }}>
+    <p className="meta">Logged.</p>
+    <button type="button" className="btn-secondary" disabled={busy} onClick={onUndo} aria-label={`Undo: ${label}`}>UNDO</button>
+    <span className="meta alfred-act__left" aria-hidden="true">{held ? "held" : `${Math.min(left, ACT_UNDO_MS / 1000)}s`}</span>
+  </div>;
 }
 
 /**
