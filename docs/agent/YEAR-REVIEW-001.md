@@ -6,9 +6,9 @@
   that adds up the month recap's months; no Engine rule, alert kind, migration/schema, dependency or TODAY change.
 - **Builder:** Grok Bot. Branch `codex/year-review-001` from fetched `origin/master` `b921d303` (#557 merged).
   Worktree `/workspace/year-review`.
-- **Lane: FEATURE.** Pure application rollup plus one tap-to-open UI block on MONTH. `npm run check:risk` may suggest
-  PROTECTED only because this brief and the checkpoint sit on governance paths; they record the approved objective and
-  amend no doctrine or authority. Semantically: no Engine, schema, event, persistence write, backup, permission,
+- **Lane: FEATURE.** Pure application rollup plus one tap-to-open UI block on MONTH. `node scripts/classify-risk.mjs origin/master`
+  suggests PROTECTED, only because this brief sits on a governance path; it records the approved objective and amends
+  no doctrine or authority. Review it to the PROTECTED standard anyway (independent exact-head review). Semantically: no Engine, schema, event, persistence write, backup, permission,
   notification, navigation or dependency change; no AI.
 - **Overlap check:** open PRs #558 (follow-ups, Bridge), #559 (experiment statistics), #560/#561 (Alfred) do not touch
   `monthRecap`, `monthQueries` or MONTH.
