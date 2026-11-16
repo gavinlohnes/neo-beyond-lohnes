@@ -3,7 +3,7 @@
 - **Authorization:** wave 2 of the overnight plan Gavin approved on 2026-11-15 ("Approved. If you have anything you
   want to change ask me and I'll decide."). Builds on ALFRED-TOOLS-001 (#552, merged) and ALFRED-ACT-001 (#560).
 - **Builder:** Grok Bot. Branch `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45` (stacked on
-  #560). PR targets `codex/alfred-act-001`; **it merges after #560** and is then retargeted to `master`.
+  #560), PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561). PR targets `codex/alfred-act-001`; **it merges after #560** and is then retargeted to `master`.
 - **Lane: PROTECTED** (AI autonomy surface stacked on #560; classify-risk). Independent exact-head review, green CI;
   Gavin merges. No Engine, schema, migration, dependency, provider, alert or low-risk-definition change.
 

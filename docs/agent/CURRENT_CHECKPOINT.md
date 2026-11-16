@@ -6,7 +6,7 @@
 - Lane PROTECTED. No Engine, schema, dependency, alert or low-risk-definition change.
 - One message → one card per part, in order; ALFRED-ACT-001's rule picks which run at once, each with its own UNDO;
   at most 5 at once per message (more → none at once, he's told); a card that didn't save says why; no double writes.
-- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges.
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561).
 
 ---
 
