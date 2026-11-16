@@ -25,6 +25,7 @@ import { getCollection, getCollections } from "../collectionQueries";
 import { confirmScheduleException, confirmShiftSwap } from "../scheduleExceptions";
 import { confirmFix, describeFix, resolveFix, hhmm, placeTime } from "./fixEntries";
 import { matchOne } from "../helper/freeHelper";
+import { CLOCK_HHMM } from "../../persistence/intentValidation";
 import { db } from "../../persistence/db";
 import type { AlfredProposal, ConfirmResult } from "./alfredActions";
 import type { ProposalContext } from "./contextActions";
@@ -203,7 +204,7 @@ export const REGISTRY: Registry = {
     },
   },
   add_reminder: {
-    tool: { description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"9:30\") in when_note.",
+    tool: { description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"09:30\") in when_note; a clock time as HH:MM, 24-hour (\"17:30\"), with a due_date becomes the reminder's alert time on that day (same 3-a-day cap and quiet hours).",
       input_schema: obj(["title"], { title: s("short reminder text in his words"), due_date: s("YYYY-MM-DD"), repeat_rrule: s("RRULE, only if it repeats"), when_note: s("time or moment of day he named"), project_id: s("id from OPEN PROJECTS, only when this is a step of that project"), project_title: s("that project's exact title, required with project_id") }) },
     parse: (i) => { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id), project_title: str(i.project_title) } : null; },
     describe: (p) => `${p.project_id ? `Add step to ${p.project_title ?? "a project"}` : "Remind"}: ${p.title}${p.due_date ? ` · ${humanDate(p.due_date)}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`,
@@ -215,8 +216,10 @@ export const REGISTRY: Registry = {
       }
       await createObligation({
         title: p.title,
-        ...(p.when_note ? { description: p.when_note } : {}),
+        // REMIND-AT-001: a clock time on a due date is the reminder's alert time; anything else stays a note.
+        ...(p.when_note && !(p.due_date && CLOCK_HHMM.test(p.when_note)) ? { description: p.when_note } : {}),
         ...(p.due_date ? { dueAt: p.due_date } : {}),
+        ...(p.due_date && p.when_note && CLOCK_HHMM.test(p.when_note) ? { remindAt: p.when_note } : {}),
         ...(p.repeat_rrule ? { recurrence: { rrule: anchoredRepeat(p.repeat_rrule, p.due_date) } } : {}),
         ...(p.project_id ? { projectId: p.project_id } : {}),
       });

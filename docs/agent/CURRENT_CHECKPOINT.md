@@ -1,4 +1,25 @@
-# Current objective — FOLLOWUPS-001 (review follow-ups: BRIDGE-NOTIFY-001 N1/N2/N4; sleep-debt nap-only days)
+# Current objective — REMIND-AT-001 (reminders at a set time, inside the 3-a-day cap)
+
+- Builder Grok Bot. Gavin, 2026-11-15 17:49 CT, approved the overnight sprint plan (Wave 3: "REMIND-AT-001 (reminders at
+  a set time, inside the 3-a-day cap)"). [Brief](REMIND-AT-001.md). PR [#562](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/562). Branch `codex/remind-at-001` from fetched master
+  `b921d303` (#557 merged).
+- A task may carry an optional `remindAt` (HH:MM on its due date); its alert fires then as the existing `TASK_DUE` kind,
+  under the same switch, quiet hours, priority and 3-a-day cap. Where the time is set (Missions & Obligations create and
+  edit, Alfred's `add_reminder` card) one line says whether it will alert, or "Won't alert:" and why. No Dexie version,
+  Engine, alert-kind, Bridge, permission or dependency change.
+- Lane PROTECTED (check:risk: domain types; semantically a backed-up field and notification timing). Gates: focused tests
+  under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`,
+  then FOLLOWUPS-001 [#558](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/558) as `e84751fe`; `origin/master`
+  `e84751fe` merged into this branch normally (checkpoint conflict only, all sections kept). Their sections below are history.
+- Merge and audit (2026-11-16): no behaviour defect; `add_reminder` example `"9:30"` → `"09:30"` plus coverage tests
+  (next lived day's cap from 16:30; backups without `remindAt`). See the brief's last section. Exact head, checks run and
+  CI are in the PR handoff. Remaining gates: green CI on that head; **independent exact-head review REQUIRED, not yet
+  done**; Gavin merges.
+
+---
+
+# Historical — FOLLOWUPS-001 (review follow-ups: BRIDGE-NOTIFY-001 N1/N2/N4; sleep-debt nap-only days; merged as #558)
 
 - Builder Grok Bot. Gavin approved the overnight plan on 2026-11-15 (wave 2, item 6). [Brief](FOLLOWUPS-001.md). Branch
   `codex/followups-001` from fetched master `4d74ac26`; `origin/master` `abd9dc71` (#555 merged) merged in normally.
@@ -88,7 +109,7 @@
   fix it"): `origin/master` `2e68feaf` merged in with a normal merge (no force-push); the Bridge re-arm keeps unshown
   moments within a 2 h grace; same-time moments are two alerts; docs and settings copy corrected; quick taps keep every
   change. See the brief's review responses. Needs a renewed independent exact-head review.
-- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. Plan-to-confirm moments and
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges. Plan-to-confirm moments and
   a true BEYOND-to-Bridge background hand-off are deferred (see brief).
 - No other open work: ALFRED-TOOLS-001 [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) merged as
   `527332ef` (2026-11-15 05:45 CT) and SHIFT-CORRECT-001 [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553)
