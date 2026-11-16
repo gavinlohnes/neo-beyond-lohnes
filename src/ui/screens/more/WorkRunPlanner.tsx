@@ -42,7 +42,7 @@ export function WorkRunPlanner({ active, onOpenCapture }: { active: boolean; onO
     <p className="meta">One editable draft from your existing plans and records. Confirm once to save a plan note in Capture; each feature keeps its existing action controls.</p>
     {offer && offer.fingerprint !== actedOn && <div role="group" aria-label="Something changed since your saved plan note">
       <p><strong>Something changed since your saved plan note</strong> (saved {new Date(offer.savedAt).toLocaleString()}):</p>
-      <ul>{offer.reasons.map((reason) => <li key={reason.kind === "SHORT_SLEEP" ? reason.recommendationId : reason.date}>{describeRedraftReason(reason)}</li>)}</ul>
+      <ul>{offer.reasons.map((reason) => <li key={reason.kind === "SHORT_SLEEP" ? "short-sleep" : reason.date}>{describeRedraftReason(reason)}</li>)}</ul>
       <p className="meta">Draft a fresh run plan? Your saved note stays as it is. A new note is saved only when you confirm it.</p>
       <button type="button" className="btn-secondary" disabled={busy || !active} onClick={() => void generate()}>DRAFT FRESH RUN PLAN</button>{" "}
       <button type="button" className="btn-secondary" disabled={busy} onClick={notNow}>NOT NOW</button>

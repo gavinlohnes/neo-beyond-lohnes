@@ -3,7 +3,7 @@ import { captureItem, resolveCaptureItem, startDay, updateSchedulePattern } from
 import { confirmScheduleException } from "../../src/application/scheduleExceptions";
 import { getWorkRunDraft, runBlock } from "../../src/application/workRunPlan";
 import { getWeekPlanner, type PlannerDay } from "../../src/application/weekPlannerQueries";
-import { describeRedraftReason, detectWorkRunChange, getWorkRunRedraftOffer, parseWorkRunNote, type SavedRunNote } from "../../src/application/workRunRedraft";
+import { describeRedraftReason, detectWorkRunChange, dismissRedraftOffer, getWorkRunRedraftOffer, isRedraftDismissed, parseWorkRunNote, shortSleepSighting, type SavedRunNote } from "../../src/application/workRunRedraft";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import type { Recommendation } from "../../src/domain/common/types";
 import { db } from "../../src/persistence/db";
@@ -15,7 +15,9 @@ const days = [day(0, "WORK"), day(1, "WORK"), day(2, "OFF"), day(3, "OFF"), day(
 const noteText = ["Work-run plan · 2026-11-15 to 2026-11-18", "Draft snapshot…", "", "2026-11-15 — Work (saved schedule forecast) · starts 18:00", "Training: x",
   "", "2026-11-16 — Work (saved schedule forecast) · starts 18:00", "", "2026-11-17 — Day off (saved schedule forecast)", "", "2026-11-18 — Day off (confirmed change)"].join("\n");
 const note = parseWorkRunNote({ id: "note", text: noteText, capturedAt: "2026-11-15T18:00:00.000Z" })!;
-const rec = (streak: boolean, issuedAt: string) => ({ id: `rec-${issuedAt}`, issuedAt, trace: { inputs: [{ key: "shortSleepStreak", value: streak }] } } as unknown as Recommendation);
+const NIGHTS = JSON.stringify([{ livedDayStart: "2026-11-14T22:30:00.000Z", minutes: 300 }, { livedDayStart: "2026-11-13T22:30:00.000Z", minutes: 290 }]);
+const rec = (streak: boolean, issuedAt: string, evidence = NIGHTS) => ({ id: `rec-${issuedAt}`, issuedAt, trace: { inputs: [{ key: "shortSleepStreak", value: streak }, ...(evidence ? [{ key: "shortSleepEvidence", value: evidence }] : [])] } } as unknown as Recommendation);
+const seen = (...recs: Recommendation[]) => shortSleepSighting(recs.at(-1)!, recs);
 
 it("reads the saved note's own day lines; non-plan notes and fully edited notes are not compared", () => {
   expect(note.days).toEqual([
@@ -37,7 +39,7 @@ it("no offer when nothing changed, only basis changed, or the saved dates are pa
   // Yesterday's change is history, not a reason to redraft: start Week planner on the 17th.
   const fromThe17th = structuredClone(days).slice(2); const past = { ...note, days: [{ date: "2026-11-16", work: "OFF" as const, startHour: null }, ...note.days.slice(2)] };
   expect(detectWorkRunChange(past, fromThe17th, null)).toBeNull();
-  expect(detectWorkRunChange(null, days, rec(true, "2026-11-16T00:00:00.000Z"))).toBeNull();
+  expect(detectWorkRunChange(null, days, seen(rec(true, "2026-11-16T00:00:00.000Z")))).toBeNull();
 });
 
 it("a confirmed extra shift, a dropped shift or a moved start on a covered date offers a fresh draft", () => {
@@ -53,15 +55,41 @@ it("a confirmed extra shift, a dropped shift or a moved start on a covered date 
   expect(both.fingerprint).not.toBe(offer.fingerprint);
 });
 
-it("two short main sleeps count only when that guidance was issued after the note was saved", () => {
-  expect(detectWorkRunChange(note, days, rec(false, "2026-11-16T00:00:00.000Z"))).toBeNull();
-  expect(detectWorkRunChange(note, days, rec(true, "2026-11-15T17:00:00.000Z"))).toBeNull();
-  const offer = detectWorkRunChange(note, days, rec(true, "2026-11-16T00:00:00.000Z"))!;
-  expect(offer.reasons).toEqual([{ kind: "SHORT_SLEEP", recommendationId: "rec-2026-11-16T00:00:00.000Z", issuedAt: "2026-11-16T00:00:00.000Z" }]);
-  expect(describeRedraftReason(offer.reasons[0]!)).toContain("Two short main sleeps");
-  const past: SavedRunNote = { ...note, days: [{ date: "2026-11-14", work: "WORK", startHour: 18 }] };
-  expect(detectWorkRunChange(past, days, rec(true, "2026-11-16T00:00:00.000Z"))).toBeNull();
+it("days off before the note's first day line count as saved days off: an extra shift confirmed today or tomorrow is offered", () => {
+  // Saved on a day off: the draft skipped the known leading days off, so the note's day lines start on the 17th.
+  const offStart = [day(0, "OFF"), day(1, "OFF"), day(2, "WORK"), day(3, "WORK"), day(4, "OFF"), day(5, "OFF"), day(6, "WORK")];
+  const text = ["Work-run plan · 2026-11-17 to 2026-11-20", "", "2026-11-17 — Work (saved schedule forecast) · starts 18:00", "2026-11-18 — Work (saved schedule forecast) · starts 18:00",
+    "2026-11-19 — Day off (saved schedule forecast)", "2026-11-20 — Day off (saved schedule forecast)"].join("\n");
+  const saved = parseWorkRunNote({ id: "off-note", text, capturedAt: new Date(2026, 10, 15, 12).toISOString() })!;
+  expect(runBlock(offStart).map((d) => d.date)).toEqual(["2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20"]);
+  expect(detectWorkRunChange(saved, offStart, null)).toBeNull();
+  const tomorrow = structuredClone(offStart); tomorrow[1] = day(1, "WORK", "CONFIRMED");
+  expect(runBlock(tomorrow)[0]!.date).toBe("2026-11-16");
+  const offer = detectWorkRunChange(saved, tomorrow, null)!;
+  expect(offer.reasons.map(describeRedraftReason)).toEqual(["2026-11-16: a day off before your note's first day; now Work from 18:00 (confirmed change)."]);
+  const today = structuredClone(offStart); today[0] = day(0, "WORK", "CONFIRMED");
+  expect(detectWorkRunChange(saved, today, null)?.reasons.map((r) => r.kind === "WORK_CHANGED" && r.date)).toEqual(["2026-11-15"]);
+  // The next day, the 15th is history and is not compared.
+  expect(detectWorkRunChange(saved, today.slice(1), null)).toBeNull();
 });
+
+it("two short main sleeps count only when guidance first carried those nights after the note was saved", () => {
+  expect(detectWorkRunChange(note, days, seen(rec(false, "2026-11-16T00:00:00.000Z")))).toBeNull();
+  expect(seen(rec(true, "2026-11-16T00:00:00.000Z", ""))).toBeNull();
+  expect(detectWorkRunChange(note, days, seen(rec(true, "2026-11-15T17:00:00.000Z")))).toBeNull();
+  const offer = detectWorkRunChange(note, days, seen(rec(true, "2026-11-16T00:00:00.000Z")))!;
+  expect(offer.reasons).toEqual([{ kind: "SHORT_SLEEP", evidence: NIGHTS, firstIssuedAt: "2026-11-16T00:00:00.000Z" }]);
+  expect(describeRedraftReason(offer.reasons[0]!)).toContain("Two short main sleeps");
+  // Same nights, judged before the note and reissued after it at a later check-in: not new.
+  expect(detectWorkRunChange(note, days, seen(rec(true, "2026-11-15T17:00:00.000Z"), rec(true, "2026-11-16T00:00:00.000Z")))).toBeNull();
+  const past: SavedRunNote = { ...note, days: [{ date: "2026-11-14", work: "WORK", startHour: 18 }] };
+  expect(detectWorkRunChange({ ...past, capturedAt: "2026-11-14T18:00:00.000Z" }, days, seen(rec(true, "2026-11-16T00:00:00.000Z")))).toBeNull();
+});
+
+async function addRec(beyondDayId: string, id: string, at: Date, evidence = NIGHTS) {
+  const trace = { engineVersion: "t", evaluatedAt: "", inputs: [{ key: "shortSleepStreak", value: true }, { key: "shortSleepEvidence", value: evidence }], derived: [], matchedRules: [], selectedRecommendation: "NO_ACTION_REQUIRED", selectionReason: "" };
+  await db.recommendations.add({ id, beyondDayId, issuedAt: at.toISOString(), kind: "NO_ACTION_REQUIRED", priority: 0, title: "", rationale: "", suggestedCommand: null, trace, statusAtIssue: "NO_ACTION_REQUIRED" } as unknown as Recommendation);
+}
 
 describe("against the real local store", () => {
   const now = new Date(2026, 10, 1, 12);
@@ -94,10 +122,35 @@ describe("against the real local store", () => {
   it("a note set aside in Capture, and guidance with the short-sleep fact, follow the rules", async () => {
     const saved = await captureItem((await getWorkRunDraft(now)).text!);
     const active = await startDay();
-    const trace = { engineVersion: "t", evaluatedAt: "", inputs: [{ key: "shortSleepStreak", value: true }], derived: [], matchedRules: [], selectedRecommendation: "NO_ACTION_REQUIRED", selectionReason: "" };
-    await db.recommendations.add({ id: "r1", beyondDayId: active.id, issuedAt: new Date(2026, 10, 1, 13).toISOString(), kind: "NO_ACTION_REQUIRED", priority: 0, title: "", rationale: "", suggestedCommand: null, trace, statusAtIssue: "NO_ACTION_REQUIRED" } as unknown as Recommendation);
+    await addRec(active.id, "r1", new Date(2026, 10, 1, 13));
     expect((await getWorkRunRedraftOffer(now))?.reasons.map((r) => r.kind)).toEqual(["SHORT_SLEEP"]);
     await resolveCaptureItem(saved.id);
     expect(await getWorkRunRedraftOffer(now)).toBeNull();
+  });
+
+  it("two check-ins with the same streak: NOT NOW stays dismissed and a fresh confirmed save ends the offer", async () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) });
+    try {
+      await captureItem((await getWorkRunDraft(now)).text!);
+      const active = await startDay();
+      await addRec(active.id, "r1", new Date(2026, 10, 1, 13));
+      const first = (await getWorkRunRedraftOffer(now))!;
+      dismissRedraftOffer(first);
+      await addRec(active.id, "r2", new Date(2026, 10, 1, 15));
+      const second = (await getWorkRunRedraftOffer(now))!;
+      expect(second.fingerprint).toBe(first.fingerprint);
+      expect(isRedraftDismissed(second)).toBe(true);
+      // Fresh confirmed save after the nights were judged, then a later check-in reissues the same streak.
+      vi.setSystemTime(new Date(2026, 10, 1, 16));
+      await captureItem((await getWorkRunDraft(new Date(2026, 10, 1, 16))).text!);
+      await addRec(active.id, "r3", new Date(2026, 10, 1, 17));
+      expect(await getWorkRunRedraftOffer(new Date(2026, 10, 1, 17))).toBeNull();
+      // New nights are a new change.
+      await addRec(active.id, "r4", new Date(2026, 10, 1, 18), JSON.stringify([{ livedDayStart: "later" }]));
+      const fresh = (await getWorkRunRedraftOffer(new Date(2026, 10, 1, 18)))!;
+      expect(fresh.reasons.map((r) => r.kind)).toEqual(["SHORT_SLEEP"]);
+      expect(isRedraftDismissed(fresh)).toBe(false);
+    } finally { vi.unstubAllGlobals(); }
   });
 });

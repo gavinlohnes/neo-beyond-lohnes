@@ -19,16 +19,23 @@ The latest saved work-run note in Capture is the snapshot. Its own day lines (`Y
 
 1. **Work context changed on a date the note still covers.** For a saved date that is today or later and inside Week
    planner's seven dates, the current recorded / confirmed / forecast context says Work where the note says Day off,
-   Day off where it says Work, or a different known shift start. This is how a confirmed extra shift (overtime or a
-   swap) shows up; a confirmed day off, a recorded override or a saved-rotation change are the same signal and are
-   included rather than special-cased. The reason line names the basis (e.g. "confirmed change").
+   Day off where it says Work, or a different known shift start. The dates from the note's local save date up to its
+   first day line count as saved days off: the draft (`runBlock`) skips only known leading days off (a leading unknown
+   day stops the draft), so a note saved on a day off starts at the next shift, and a shift later confirmed on one of
+   those skipped days (today, tomorrow) is compared too. With that, this is how a confirmed extra shift (overtime or a
+   swap) shows up, including on the days off before the saved run; a confirmed day off, a recorded override or a
+   saved-rotation change are the same signal and are included rather than special-cased. The reason line names the
+   basis (e.g. "confirmed change"). Edge: deleting the first day line of a note makes that date read as a day off.
 2. **Two short main sleeps (SLEEP-ENGINE-001), reused read-only.** The active day's latest issued Engine guidance
-   carries the existing `shortSleepStreak` trace fact (`traceShortSleepStreak`, the same reading TODAY and TRAIN use),
-   and it was issued after the note was saved, while the note still covers a date. Nothing is recomputed.
+   carries the existing `shortSleepStreak` trace fact (`traceShortSleepStreak`, the same reading TODAY and TRAIN use)
+   with its existing `shortSleepEvidence` (the nights the Engine judged). It is new only when the earliest issued
+   guidance carrying that exact evidence came after the note was saved, while the note still covers a date. Guidance
+   is reissued at every check-in, so the nights, not a recommendation, identify the change. Nothing is recomputed.
 
 Never an offer: no saved work-run note; the latest one resolved in Capture; no day line left after editing; every
 covered date past or outside the horizon; a date that is now unknown or what-if (unknown days are never guessed); only
-the basis changed (forecast → recorded with the same work/off and start); short-sleep guidance issued before the note.
+the basis changed (forecast → recorded with the same work/off and start); short-sleep nights already judged in guidance
+issued before the note (including later reissues of the same nights); guidance without short-sleep evidence.
 
 Not triggers, on purpose: SHIFT-CORRECT-001's WORK_PERIOD_RETIMED / VOIDED (they correct recorded worked times on past
 or current days, not the plan's future dates; a correction that changes a covered day's work/off context still shows
@@ -41,8 +48,10 @@ Plan Today → Week planner → *Plan your work run*: when a trigger fires, a pa
 and a new note is saved only on confirm. **DRAFT FRESH RUN PLAN** runs the existing draft path, so an edited unsaved
 draft gets the existing "Replace edited draft" warning (REPLACE EDITED DRAFT / KEEP MY DRAFT). Then the unchanged
 REVIEW PLAN NOTE → CONFIRM SAVE PLAN NOTE step saves one new Capture note; the offer is re-read and goes away because
-the new note matches. **NOT NOW** hides it until the change itself changes (a fingerprint of the note and reasons in
-this device's local storage, the coach card's SKIP pattern); an unreadable value shows the offer again. Old notes are
+the new note matches. **NOT NOW** hides it until the change itself changes: a fingerprint of the note, each changed
+date with its new context, and the judged nights for short sleep (never a recommendation id, so a later check-in with
+the same nights stays dismissed), in this device's local storage, the coach card's SKIP pattern; an unreadable value
+shows the offer again. Old notes are
 never edited.
 
 ## Boundaries
@@ -59,10 +68,19 @@ fits an offer to open a MORE planner without adding a new card, so it is deferre
 - **OWN:** parsing the note's own day lines and the comparison/offer copy.
 - **BUILD FROM SCRATCH:** none.
 
+## Review response (2026-11-15, review of `8d4f7434`)
+
+Blocked on two findings, both fixed: (1) days off before the note's first day line were never compared, so an
+extra shift confirmed today or tomorrow was missed; they now count as saved days off. (2) The short-sleep offer returned
+after NOT NOW and after a fresh save because each check-in issues new guidance; the trigger and fingerprint now use the
+trace's judged nights (`shortSleepEvidence`). Regression tests added for both.
+
 ## Verification
 
 `tests/integration/workRunRedraft.test.ts` (no false offer when nothing or only the basis changed, past/unknown dates,
-extra/dropped shift and moved start, short-sleep timing, resolved notes, real-store confirmed overtime end to end, no
+extra/dropped shift and moved start, an extra shift confirmed on the days off before the note's first day line
+(OFF,OFF,WORK,WORK,OFF,OFF,WORK), short-sleep timing by judged nights, two same-streak check-ins keeping NOT NOW and
+ending after a fresh confirmed save, resolved notes, real-store confirmed overtime end to end, no
 read-side writes) and `tests/browser/WorkRunRedraft.test.tsx` (nothing shown when unchanged, NOT NOW persistence and
 re-offer on a new change, replace warning, confirm-only single save, Week planner placement, 320 px and axe), in UTC
 and America/Chicago. Full `TZ=UTC npm run verify`; PR CI; independent review if the lane requires it; Gavin merges.

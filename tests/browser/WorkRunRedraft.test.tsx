@@ -17,7 +17,7 @@ afterEach(async () => { await cleanup(); vi.clearAllMocks(); localStorage.remove
 const draft = { text: "Work-run plan · 2026-11-15 to 2026-11-18\n2026-11-17 — Work (confirmed change) · starts 18:00", message: null, generatedAt: "2026-11-15T12:00:00.000Z" };
 const offer = (fingerprint = "note|2026-11-17:WORK:18"): RedraftOffer => ({ noteId: "note", savedAt: "2026-11-15T12:00:00.000Z", fingerprint, reasons: [
   { kind: "WORK_CHANGED", date: "2026-11-17", saved: { date: "2026-11-17", work: "OFF", startHour: null }, now: { work: "WORK", startHour: 18, basis: "CONFIRMED" } },
-  { kind: "SHORT_SLEEP", recommendationId: "r1", issuedAt: "2026-11-15T13:00:00.000Z" }] });
+  { kind: "SHORT_SLEEP", evidence: "[nights]", firstIssuedAt: "2026-11-15T13:00:00.000Z" }] });
 const group = (screen: Awaited<ReturnType<typeof render>>) => screen.getByRole("group", { name: "Something changed since your saved plan note" });
 
 it("shows nothing when nothing changed", async () => {

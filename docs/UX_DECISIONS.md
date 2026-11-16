@@ -3447,7 +3447,8 @@ four-week plan and re-arms it in the background; changes reach it at the next SY
 
 Extends 4.0-c's work-run draft journey. [Brief](agent/WORK-RUN-REDRAFT-001.md). Plan Today → Week planner offers
 DRAFT FRESH RUN PLAN when the latest saved work-run note no longer matches: a covered date (today onward, within seven
-dates) now has different work/off context or shift start (a confirmed extra shift included), or the existing
-two-short-main-sleeps guidance was issued after the note was saved. The offer only offers: the existing replace
+dates) now has different work/off context or shift start (a confirmed extra shift included, also on the days off
+before the note's first day), or the existing two-short-main-sleeps guidance first judged its nights after the note
+was saved. The offer only offers: the existing replace
 warning protects unsaved edits, a new note is saved only on CONFIRM SAVE PLAN NOTE, and old notes are never edited.
 NOT NOW lasts until the change changes. No TODAY hint, notification, Engine or schema change.
