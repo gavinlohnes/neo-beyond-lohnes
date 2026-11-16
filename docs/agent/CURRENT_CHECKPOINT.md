@@ -1,4 +1,18 @@
-# Current objective — CAPTURE-PARITY-001 (capture → task works the same everywhere)
+# Current objective — YEAR-REVIEW-001 (your year in BEYOND, built on the month recap)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved sprint plan Wave 3 ("year-in-review built on the monthRecap cards");
+  resumed on his return for Claude's review. [Brief](YEAR-REVIEW-001.md). Branch `codex/year-review-001` from fetched
+  master `b921d303`.
+- Lane FEATURE: pure rollup of the month recap's own counting helpers across a calendar year plus a tap-to-open block
+  on MONTH. Months under 7 logged days are named and left out; "N of 12 months counted" shown. No Engine, schema,
+  alert, dependency, navigation or TODAY change.
+- Gates: local `TZ=UTC npm run verify`; PR CI; Claude review; Gavin merges.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
+  its section below is history.
+
+---
+
+# Historical — CAPTURE-PARITY-001 (capture → task works the same everywhere)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved the ranked item "Make turning a capture into a task work the same
   everywhere" (HARVEST-002's best new refinement). [Brief](CAPTURE-PARITY-001.md). Branch `codex/capture-parity-001`

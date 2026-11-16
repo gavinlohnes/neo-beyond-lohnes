@@ -1,4 +1,5 @@
 import { getDaySummaries } from "./dayLedgerQueries";
+import type { DaySummary } from "../engine/dayLedger";
 import { formatLocalDate } from "../engine/scheduledContext";
 import { deriveSleepDebt, type SleepDebt } from "./sleepDebt";
 
@@ -21,7 +22,11 @@ export interface MonthDay {
 export const SLEEP_NEED_MINUTES = 7 * 60;
 
 export async function getMonth(year: number, month: number): Promise<MonthDay[]> {
-  const summaries = await getDaySummaries();
+  return monthDays(await getDaySummaries(), year, month);
+}
+
+/** The pure half of getMonth (YEAR-REVIEW-001 reads all twelve months from one read of the summaries). */
+export function monthDays(summaries: readonly DaySummary[], year: number, month: number): MonthDay[] {
   const byDate = new Map(summaries.map((s) => [formatLocalDate(new Date(s.livedDayStart)), s]));
   const days: MonthDay[] = [];
   for (let d = new Date(year, month, 1); d.getMonth() === month; d.setDate(d.getDate() + 1)) {

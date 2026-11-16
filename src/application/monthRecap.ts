@@ -46,21 +46,12 @@ export function deriveMonthRecap(input: RecapInput): MonthRecap {
   if (letter.daysLogged === 0) return { title: letter.title, cards };
 
   // Best run: consecutive recorded work days; the one with the highest check-in energy (at least 2 check-ins).
-  const runs: MonthDay[][] = [];
-  for (const d of days) {
-    const last = runs.at(-1);
-    if (d.dayId && d.work === "WORK") { if (last && isNext(last.at(-1)!.date, d.date)) last.push(d); else runs.push([d]); }
-  }
-  const scored = runs.flatMap((run) => {
-    const values = run.flatMap((d) => (d.dayId && energy.has(d.dayId) ? [energy.get(d.dayId)!] : []));
-    return values.length >= 2 ? [{ run, mean: values.reduce((a, b) => a + b, 0) / values.length, n: values.length }] : [];
-  });
-  const best = scored.reduce<(typeof scored)[number] | null>((p, c) => (!p || c.mean > p.mean ? c : p), null);
+  const { best, runs: scoredRuns } = bestRun(days, energy);
   if (best) {
     const span = best.run.length === 1 ? short(best.run[0]!.date) : `${short(best.run[0]!.date)}–${short(best.run.at(-1)!.date)}`;
     cards.push({ id: "BEST_RUN", title: "Your best run", lines: [
       `${span}: ${plural(best.run.length, "shift")}. Check-in energy averaged ${best.mean.toFixed(1)} of 5 (${plural(best.n, "day")}).`,
-      scored.length > 1 ? `The highest of ${scored.length} runs with at least 2 check-ins.` : "The only run with at least 2 check-ins.",
+      scoredRuns > 1 ? `The highest of ${scoredRuns} runs with at least 2 check-ins.` : "The only run with at least 2 check-ins.",
     ] });
   }
 
@@ -77,22 +68,12 @@ export function deriveMonthRecap(input: RecapInput): MonthRecap {
   }
 
   // Tags and people, from the month's daily notes. Each counts days, not mentions.
-  const monthIds = new Set(days.flatMap((d) => (d.dayId ? [d.dayId] : [])));
-  const monthNotes = notes.filter((n) => monthIds.has(n.dayId));
-  const tagDays = new Map<string, number>();
-  for (const n of monthNotes) for (const t of noteTags(n.text)) tagDays.set(t, (tagDays.get(t) ?? 0) + 1);
+  const { tagDays, personDays } = noteDays(days, notes, people);
   if (tagDays.size) cards.push({ id: "TAGS", title: "Your top tags", lines: top(tagDays).map(([t, c]) => `#${t}: ${plural(c, "day")}`) });
-
-  const known = new Map(people.map((p) => [p.toLowerCase(), p]));
-  const personDays = new Map<string, number>();
-  for (const n of monthNotes) for (const label of new Set(wikiLabels(n.text).map((l) => l.toLowerCase()))) {
-    const name = known.get(label);
-    if (name) personDays.set(name, (personDays.get(name) ?? 0) + 1);
-  }
   if (personDays.size) cards.push({ id: "PEOPLE", title: "Who you wrote about", lines: top(personDays).map(([p, c]) => `[[${p}]]: ${plural(c, "day")}`) });
 
   // Experiments you closed this month, in your own words.
-  const finished = experiments.filter((e) => e.entry.status === "REVIEWED" && e.entry.reviewedAt && within(e.entry.reviewedAt, year, month));
+  const finished = finishedIn(experiments, year, month);
   if (finished.length) cards.push({ id: "EXPERIMENTS", title: plural(finished.length, "experiment") + " finished", lines: finished.slice(0, 3).map((e) =>
     `${e.what} (${plural(e.days, "day")}): ${e.entry.outcome ?? "closed"}${e.entry.lesson ? `. Lesson: ${e.entry.lesson}` : ""}`) });
 
@@ -107,6 +88,49 @@ export function deriveMonthRecap(input: RecapInput): MonthRecap {
 
 const ORDER: RecapCard["id"][] = ["MONTH", "BEST_RUN", "SLEEP", "TRAINING", "TAGS", "PEOPLE", "EXPERIMENTS"];
 const order = (cards: RecapCard[]) => [...cards].sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
+
+/*
+ * The recap's counting rules, shared with YEAR-REVIEW-001 so a year is the same months added up, never recounted
+ * a different way.
+ */
+export interface BestRun { run: MonthDay[]; mean: number; n: number }
+/** Consecutive recorded work days; the run with the highest check-in energy among runs with at least 2 check-ins. */
+export function bestRun(days: readonly MonthDay[], energy: ReadonlyMap<string, number>): { best: BestRun | null; runs: number } {
+  const runs: MonthDay[][] = [];
+  for (const d of days) {
+    const last = runs.at(-1);
+    if (d.dayId && d.work === "WORK") { if (last && isNext(last.at(-1)!.date, d.date)) last.push(d); else runs.push([d]); }
+  }
+  const scored = runs.flatMap((run) => {
+    const values = run.flatMap((d) => (d.dayId && energy.has(d.dayId) ? [energy.get(d.dayId)!] : []));
+    return values.length >= 2 ? [{ run, mean: values.reduce((a, b) => a + b, 0) / values.length, n: values.length }] : [];
+  });
+  return { best: scored.reduce<BestRun | null>((p, c) => (!p || c.mean > p.mean ? c : p), null), runs: scored.length };
+}
+/** Days each #tag and each person you keep in People appear in these days' notes (days, not mentions). */
+export function noteDays(days: readonly MonthDay[], notes: RecapInput["notes"], people: readonly string[]) {
+  const ids = new Set(days.flatMap((d) => (d.dayId ? [d.dayId] : [])));
+  const own = notes.filter((n) => ids.has(n.dayId));
+  const tagDays = new Map<string, number>();
+  for (const n of own) for (const t of noteTags(n.text)) tagDays.set(t, (tagDays.get(t) ?? 0) + 1);
+  const known = new Map(people.map((p) => [p.toLowerCase(), p]));
+  const personDays = new Map<string, number>();
+  for (const n of own) for (const label of new Set(wikiLabels(n.text).map((l) => l.toLowerCase()))) {
+    const name = known.get(label);
+    if (name) personDays.set(name, (personDays.get(name) ?? 0) + 1);
+  }
+  return { tagDays, personDays };
+}
+/** Experiments you reviewed (closed) in this local calendar month. */
+export const finishedIn = (experiments: readonly Experiment[], year: number, month: number) =>
+  experiments.filter((e) => e.entry.status === "REVIEWED" && e.entry.reviewedAt && within(e.entry.reviewedAt, year, month));
+/** One calendar month's sleep timing: the nights inside it, up to now. */
+export function monthRhythm(evidence: Parameters<typeof deriveSleepRhythm>[0], summaries: Parameters<typeof deriveSleepRhythm>[1], year: number, month: number, now: Date): SleepRhythm {
+  const end = new Date(Math.min(new Date(year, month + 1, 1).getTime() - 1, now.getTime()));
+  const days = Math.max(1, Math.round((end.getTime() - new Date(year, month, 1).getTime()) / 86_400_000));
+  return deriveSleepRhythm(evidence, summaries, end, days);
+}
+
 /** b is the calendar day after a (local dates, yyyy-mm-dd). */
 function isNext(a: string, b: string): boolean {
   const d = new Date(`${a}T12:00:00`); d.setDate(d.getDate() + 1);
@@ -123,10 +147,8 @@ export async function getMonthRecap(year: number, month: number, now: Date = new
   const energy = new Map<string, number>();
   for (const c of [...checkIns].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))) energy.set(c.beyondDayId, c.energy);
   // Each month's sleep timing: the nights inside that calendar month.
-  const end = (y: number, m: number) => new Date(Math.min(new Date(y, m + 1, 1).getTime() - 1, now.getTime()));
-  const daysIn = (y: number, m: number) => Math.max(1, Math.round((end(y, m).getTime() - new Date(y, m, 1).getTime()) / 86_400_000));
   const evidence = records.map((r) => r.evidence);
-  const rhythmFor = (y: number, m: number) => deriveSleepRhythm(evidence, summaries, end(y, m), daysIn(y, m));
+  const rhythmFor = (y: number, m: number) => monthRhythm(evidence, summaries, y, m, now);
   const prevY = month === 0 ? year - 1 : year, prevM = (month + 11) % 12;
   return deriveMonthRecap({
     year, month, now, days, energy, notes: notes.filter((n): n is DailyNote => !!n), people: view ? personNames(view) : [],
