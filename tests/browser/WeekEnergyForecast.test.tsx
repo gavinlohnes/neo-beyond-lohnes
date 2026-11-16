@@ -23,7 +23,7 @@ it("forecasts the week from recorded runs, writes nothing, and follows a schedul
   const screen = await render(<WeekAheadView now={now} />);
   await expect.element(screen.getByText("ENERGY FORECAST")).toBeVisible();
   await expect.element(screen.getByText(/^Lowest \w{3} \(\d\.\d of 5\), best \w{3} \(\d\.\d of 5\)\.$/)).toBeVisible();
-  await expect.element(screen.getByText(/^Sleep owed: \d+ h \d\d m against 7 h a night over your last 7 logged days\.$|^No sleep owed/)).toBeVisible();
+  await expect.element(screen.getByText(/^(Sleep owed: \d+ h \d\d m below your usual|No sleep owed against your usual) over your last 7 logged days\. Your usual, low end: work days \d+ h \d\d m \(from \d+ days\), days off \d+ h \d\d m \(from \d+ days\)\.$/)).toBeVisible();
   await expect.poll(() => lines(screen.container).length).toBe(7);
   const first = lines(screen.container);
   for (const line of first) expect(line).toMatch(/^(Shift|Day off) \d+ of \d+ · energy (\d\.\d of 5 \(\d+ days\) · main sleep .* · from (your past \d+-(shift|day-off) runs|past runs of any length)$|: not enough history)/);
