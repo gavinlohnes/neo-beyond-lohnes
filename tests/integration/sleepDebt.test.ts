@@ -80,7 +80,7 @@ describe.each([
     expect(debt.perDay.slice(0, 3).map((d) => d.owedMinutes)).toEqual([40, 0, 0]);
     expect(debt.days - debt.judgedDays).toBeGreaterThanOrEqual(2);
     expect(describeSleepTargets(debt.targets, hm)).toBe("work days 5h40 (from 12 days), days off still learning (4 of 10 days)");
-    expect(describeUnjudged(debt)).toMatch(/^\d logged days not counted \(still learning that kind of day, or work\/off unknown\)\.$/);
+    expect(describeUnjudged(debt)).toMatch(/^\d logged days not counted \(still learning that kind of day, work\/off unknown, or only a nap logged\)\.$/);
   });
 
   it("a day whose work context is unknown is not judged", () => {
@@ -106,6 +106,24 @@ describe.each([
     ];
     const debt = deriveSleepDebt(history, NOW);
     expect(debt.perDay.slice(0, 2).map((d) => [d.sleptMinutes, d.owedMinutes])).toEqual([[320, 20], [320, 20]]);
+  });
+
+  it("FOLLOWUPS-001: a day with only a nap logged is not judged against a full night, and is named as not counted", () => {
+    const history = [...workHistory(), ...offHistory(),
+      day(1, "WORK", { napMinutes: 45 }), // nap only: not judged (it would have owed 295 against 340)
+      day(2, "WORK", { primaryMinutes: 280, napMinutes: 40 }), // main sleep logged: judged, the nap still counts (owes 20)
+    ];
+    const debt = deriveSleepDebt(history, NOW);
+    expect(debt.perDay.slice(0, 2).map((d) => [d.sleptMinutes, d.targetMinutes, d.owedMinutes])).toEqual([[45, undefined, 0], [320, 340, 20]]);
+    expect(debt).toMatchObject({ status: "LEARNED", owedMinutes: 20, days: SLEEP_DEBT_DAYS, judgedDays: SLEEP_DEBT_DAYS - 1 });
+    expect(describeUnjudged(debt)).toBe("1 logged day not counted (still learning that kind of day, work/off unknown, or only a nap logged).");
+    // The baseline leaves the nap-only day out too: the target is unchanged by it.
+    expect(debt.targets).toEqual(learnedSleepTargets([...workHistory(), ...offHistory()], NOW));
+    // Only naps in the window: no owed figure ("still learning"), never a nap judged as a night.
+    const naps = Array.from({ length: SLEEP_DEBT_DAYS }, (_, i) => day(i + 1, "WORK", { napMinutes: 30 }));
+    const napsOnly = deriveSleepDebt([...workHistory(), ...offHistory(), ...naps], NOW);
+    expect(napsOnly.targets.WORK).toEqual({ kind: "LEARNED", minutes: 340, baselineDays: 12 });
+    expect(napsOnly).toMatchObject({ status: "LEARNING", owedMinutes: 0, judgedDays: 0, days: SLEEP_DEBT_DAYS });
   });
 
   it("nothing logged: NO_SLEEP", () => {

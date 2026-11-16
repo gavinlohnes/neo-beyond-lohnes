@@ -63,7 +63,21 @@ export function applyAlertContract(
   return kept.sort((a, b) => a.at - b.at);
 }
 
-export async function buildBridgePlan(home: string, brief: string, now = new Date()): Promise<BridgePlan> {
+/** REMIND-AT-001: a 24-hour HH:MM clock time (the shape a reminder time is stored in). */
+export const isClockTime = (v: string | undefined): v is string => !!v && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+
+interface PlanTask { id: string; title: string; dueAt?: string | undefined; remindAt?: string | undefined }
+
+/** REMIND-AT-001: the local instant of a task's alert: its reminder time on the due date, else 16:00 that day. */
+export function taskAlertAt(dueAt: string, remindAt?: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dueAt)) return null;
+  const [y, m, d] = dueAt.split("-").map(Number) as [number, number, number];
+  const [h, min] = isClockTime(remindAt) ? remindAt.split(":").map(Number) as [number, number] : [16, 0];
+  return new Date(y, m - 1, d, h, min).getTime();
+}
+
+/** Every candidate moment for the horizon (before the contract), with the shifts it was built from. */
+async function planCandidates(now: Date, tasks: PlanTask[]) {
   const [pattern, settings] = await Promise.all([getSchedulePattern(), getKeyMomentAlerts()]);
   const shiftOf = (d: number) => livedDayShiftWindow(new Date(now.getFullYear(), now.getMonth(), now.getDate() + d - 1, 16, 30), pattern);
   const shifts = new Map<number, { start: Date; end: Date; lastOfRun: boolean }>();
@@ -83,20 +97,88 @@ export async function buildBridgePlan(home: string, brief: string, now = new Dat
     );
   }
   // BRIDGE-MOMENTS-002: open tasks due within the horizon reach the phone at 16:00 on their day, one moment a day.
-  const tasks = await getUnresolvedObligations().catch(() => []);
-  const due = new Map<number, string[]>();
+  // REMIND-AT-001: a task with a reminder time alerts at that time instead, still as TASK_DUE (same switch, quiet hours,
+  // priority and cap). Tasks at the same minute share one moment, so a moment's time and kind stay unique.
+  const due = new Map<number, { titles: string[]; timed: boolean }>();
   for (const t of tasks) {
-    if (!t.dueAt || !/^\d{4}-\d{2}-\d{2}$/.test(t.dueAt)) continue;
-    const [y, m, d] = t.dueAt.split("-").map(Number) as [number, number, number];
-    const at = new Date(y, m - 1, d, 16, 0).getTime();
-    if (at > now.getTime() && at - now.getTime() < (HORIZON_DAYS + 1) * 24 * 60 * MIN) due.set(at, [...(due.get(at) ?? []), t.title]);
+    const at = t.dueAt ? taskAlertAt(t.dueAt, t.remindAt) : null;
+    if (at === null) continue;
+    if (at > now.getTime() && at - now.getTime() < (HORIZON_DAYS + 1) * 24 * 60 * MIN) {
+      const slot = due.get(at) ?? { titles: [], timed: true };
+      due.set(at, { titles: [...slot.titles, t.title], timed: slot.timed && !!t.remindAt });
+    }
   }
-  for (const [at, titles] of due) {
+  for (const [at, { titles, timed }] of due) {
     const text = titles.length === 1 ? titles[0]!.slice(0, 120) : `${titles[0]!.slice(0, 100)} + ${titles.length - 1} more`;
-    moments.push({ at, kind: "TASK_DUE", title: "Due today", text, go: "" });
+    moments.push({ at, kind: "TASK_DUE", title: timed ? "Reminder" : "Due today", text, go: "" });
   }
-  const future = moments.filter((m) => m.at > now.getTime());
-  return { home, brief: brief.slice(0, 400), moments: applyAlertContract(future, settings, [...shifts.values()]) };
+  return { settings, shifts: [...shifts.values()], moments: moments.filter((m) => m.at > now.getTime()) };
+}
+
+export async function buildBridgePlan(home: string, brief: string, now = new Date()): Promise<BridgePlan> {
+  const tasks = await getUnresolvedObligations().catch(() => []);
+  const { settings, shifts, moments } = await planCandidates(now, tasks);
+  return { home, brief: brief.slice(0, 400), moments: applyAlertContract(moments, settings, shifts) };
+}
+
+/**
+ * REMIND-AT-001: whether a reminder time will actually reach the phone, said when it is set, never silently dropped.
+ * Runs the same contract as the plan, with this task in it (replacing its saved copy when `obligationId` is given).
+ * True as of now: a shift or an earlier task added later can still take the day's slot.
+ */
+export type ReminderAlert =
+  | { state: "ALERTS"; at: number }
+  | { state: "LATER"; at: number }
+  | { state: "SILENT"; at: number | null; reason: "PAST" | "KIND_OFF" | "QUIET_HOURS" | "ON_THE_CLOCK" | "CAP_FULL" };
+
+export async function reminderAlert(input: { dueAt: string; remindAt: string; title?: string; obligationId?: string }, now = new Date()): Promise<ReminderAlert> {
+  const at = taskAlertAt(input.dueAt, input.remindAt);
+  if (at === null || at <= now.getTime()) return { state: "SILENT", at, reason: "PAST" };
+  const saved = (await getUnresolvedObligations().catch(() => [])).filter((t) => t.id !== input.obligationId);
+  const self: PlanTask = { id: input.obligationId ?? "new", title: input.title ?? "Reminder", dueAt: input.dueAt, remindAt: input.remindAt };
+  const { settings, shifts, moments } = await planCandidates(now, [...saved, self]);
+  if (settings.off.includes("TASK_DUE")) return { state: "SILENT", at, reason: "KIND_OFF" };
+  if (inQuietHours(at, settings)) return { state: "SILENT", at, reason: "QUIET_HOURS" };
+  const onTheClock = (t: number, list: { start: Date; end: Date }[]) => list.some((s) => t > s.start.getTime() && t < s.end.getTime());
+  if (onTheClock(at, shifts)) return { state: "SILENT", at, reason: "ON_THE_CLOCK" };
+  if (at - now.getTime() >= (HORIZON_DAYS + 1) * 24 * 60 * MIN) return { state: "LATER", at };
+  const kept = applyAlertContract(moments, settings, shifts);
+  return kept.some((m) => m.at === at && m.kind === "TASK_DUE") ? { state: "ALERTS", at } : { state: "SILENT", at, reason: "CAP_FULL" };
+}
+
+function clockOf(at: number): string {
+  const d = new Date(at);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+function dayOf(at: number): string {
+  return new Date(at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
+/** REMIND-AT-001: the one line every place that sets a reminder time shows. */
+export function describeReminderAlert(alert: ReminderAlert, settings?: KeyMomentAlertSettings): string {
+  const when = alert.at === null ? "" : `${clockOf(alert.at)} on ${dayOf(alert.at)}`;
+  switch (alert.state) {
+    case "ALERTS": return `Alerts at ${when}. Your phone gets it at the next SYNC GARMIN.`;
+    case "LATER": return `Set for ${when}. It's over four weeks away, so it reaches your phone at a SYNC GARMIN within four weeks of it; the 3-a-day cap and quiet hours still apply.`;
+    case "SILENT":
+      switch (alert.reason) {
+        case "PAST": return "Won't alert: that time has already passed.";
+        case "KIND_OFF": return "Won't alert: task alerts are off (MORE → Work Schedule → KEY-MOMENT ALERTS).";
+        case "QUIET_HOURS": return `Won't alert: ${clockOf(alert.at!)} is in your quiet hours${settings?.quietFrom && settings.quietTo ? ` (${settings.quietFrom} to ${settings.quietTo})` : ""}.`;
+        case "ON_THE_CLOCK": return `Won't alert: ${clockOf(alert.at!)} falls during a shift of your standing rotation.`;
+        case "CAP_FULL": {
+          // The cap counts BEYOND's lived day (16:30 to 16:30), so name that day, not the calendar date.
+          const from = mostRecentBoundaryAtOrBefore(new Date(alert.at!)).getTime();
+          return `Won't alert: the day from ${clockOf(from)} ${dayOf(from)} already has 3 alerts that come first (shift alerts, then earlier tasks).`;
+        }
+      }
+  }
+}
+
+/** REMIND-AT-001: the status line, ready for the screen. */
+export async function reminderAlertLine(input: { dueAt: string; remindAt: string; title?: string; obligationId?: string }, now = new Date()): Promise<string> {
+  const [alert, settings] = await Promise.all([reminderAlert(input, now), getKeyMomentAlerts()]);
+  return describeReminderAlert(alert, settings);
 }
 
 /** The SYNC GARMIN link, carrying the plan to the Bridge. */

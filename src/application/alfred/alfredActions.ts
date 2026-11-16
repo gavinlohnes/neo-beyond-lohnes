@@ -1,6 +1,9 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { voidBodyweightLog, voidProteinLog, voidSleepLog, voidWaterLog } from "../commands";
 import { voidMealLog } from "../nutritionCommands";
+import { undoHabitDone } from "../habitCommands";
+import { undoLastSet } from "../trainCommands";
+import type { HabitAnswer } from "../../domain/habits";
 import type { RoutineMoment } from "../../domain/routines";
 import type { MemoryTopic } from "../../domain/alfred/types";
 import type { UrgeTrigger } from "../../domain/common/types";
@@ -80,9 +83,15 @@ type Zero = 0 | Scale;
 
 /** What a confirm asks of the shell beyond the write (open TRAIN). */
 /** CARD-UNDO-001: what to void if he taps UNDO on a saved log card (the same void the LOG sheet's UNDO uses). */
-export interface SavedLog { kind: "water" | "sleep" | "weight" | "meal" | "protein"; dayId: string; eventId: string }
+/** ALFRED-ACT-001: also a habit tick (put back its earlier answer) and a gym set (TRAIN's own UNDO of that set). */
+export type SavedLog =
+  | { kind: "water" | "sleep" | "weight" | "meal" | "protein"; dayId: string; eventId: string }
+  | { kind: "habit"; dayId: string; habitId: string; prior: HabitAnswer }
+  | { kind: "set"; dayId: string; sessionId: string; performedSetId: string };
 export interface ConfirmResult { open?: "TRAIN"; undo?: SavedLog }
 export async function undoSavedLog(saved: SavedLog): Promise<boolean> {
+  if (saved.kind === "habit") return undoHabitDone(saved.habitId, saved.dayId, saved.prior);
+  if (saved.kind === "set") return undoLastSet(saved.dayId, saved.sessionId, saved.performedSetId);
   if (saved.kind === "water") return voidWaterLog(saved.dayId, saved.eventId);
   if (saved.kind === "sleep") return voidSleepLog(saved.dayId, saved.eventId);
   if (saved.kind === "weight") return voidBodyweightLog(saved.dayId, saved.eventId);

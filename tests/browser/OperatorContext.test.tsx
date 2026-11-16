@@ -60,7 +60,7 @@ it("drops stale operational conversation history when a routine changes, and bou
   const requests: Record<string, unknown>[] = [];
   vi.spyOn(window, "fetch").mockImplementation(async (_input, init) => {
     requests.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-    return new Response(JSON.stringify({ id: "synthetic", type: "message", role: "assistant", model: "claude-haiku-5-5", content: [{ type: "text", text: "Old routine wording" }, { type: "tool_use", id: "water", name: "log_water", input: { oz: 8 } }], stop_reason: "tool_use", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 10 } }), { headers: { "content-type": "application/json" } });
+    return new Response(JSON.stringify({ id: "synthetic", type: "message", role: "assistant", model: "claude-haiku-5-5", content: [{ type: "text", text: "Old routine wording" }, { type: "tool_use", id: "sleep", name: "log_sleep", input: { minutes: 480 } }], stop_reason: "tool_use", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 10 } }), { headers: { "content-type": "application/json" } });
   });
   const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={() => {}} />);
   const send = async (text: string) => { await screen.getByRole("textbox", { name: "Message Alfred" }).fill(text); await screen.getByRole("button", { name: "SEND", exact: true }).click(); await expect.element(screen.getByText("Alfred is reading your records…", { exact: true })).not.toBeInTheDocument(); };
@@ -69,7 +69,8 @@ it("drops stale operational conversation history when a routine changes, and bou
   await modifyRoutine(routine.id, { title: "Corrected routine wording" });
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Your context changed");
-  expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
+  // ALFRED-ACT-001: a sleep card (still confirm-first) carries the stale-context check; clear water would save at once.
+  expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
   await send("Use the current records"); await expect.poll(() => requests.length).toBe(2);
   expect(JSON.stringify(requests[1])).not.toContain("Old routine wording");
   expect(JSON.stringify(requests[1])).toContain("Corrected routine wording");

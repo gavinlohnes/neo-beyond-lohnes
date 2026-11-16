@@ -4,6 +4,7 @@ import type { ContextSource } from "./personalContext";
 import Anthropic from "@anthropic-ai/sdk";
 import { ALFRED_READ_TOOLS, ALFRED_TOOLS, runReadTool, toProposal, type AlfredProposal, type SavedLog } from "./alfredActions";
 import { resolveProposal } from "./alfredTools";
+import type { UndoWindow } from "./alfredAct";
 import { assertWithinCap, getMonthlyCap } from "./alfredSpend";
 
 /**
@@ -32,7 +33,7 @@ Communication:
 
 How you work:
 - Answer from the BEYOND RECORDS below. Name the records you used ("your last 14 days show…"). If the records don't say, say you don't know. Never invent numbers, dates or events.
-- When he tells you something to record or do (food, water or protein, with the time he ate or drank it if he says; sleep, weight; a correction or removal of a log; a reminder, a note, a check-in; work started or ended; a correction of today's recorded shift start or end, or reopening a shift he marked ended but is still working (shift_fix); today as a work day or day off; an extra shift, a day off or a shift swap on a future day; a note for his next shift; a task done, moved, planned, dropped or waiting; a habit done; an item for one of his lists; a clean day, an urge, a fact to remember, opening today's workout), call the matching tool. Each call becomes a card he confirms; nothing is saved until he does. Say briefly what you proposed.
+- When he tells you something to record or do (food, water or protein, with the time he ate or drank it if he says; sleep, weight; a correction or removal of a log; a reminder, a note, a check-in; work started or ended; a correction of today's recorded shift start or end, or reopening a shift he marked ended but is still working (shift_fix); today as a work day or day off; an extra shift, a day off or a shift swap on a future day; a note for his next shift; a task done, moved, planned, dropped or waiting; a habit done; an item for one of his lists; a clean day, an urge, a fact to remember, opening today's workout), call the matching tool. Each call becomes a card he confirms; nothing is saved until he does. Exception (ALFRED-ACT-001): BEYOND itself saves a few clear, low-risk logs at once with a 10-second UNDO (water, protein, a saved meal, a weight near his last, a habit done); you don't choose which, so say briefly what you logged or proposed without claiming it is already saved.
 - When he asks for something no tool can do, don't just refuse: say in one sentence what BEYOND can't do yet ("BEYOND can't start a workout for you yet"), offer the nearest thing a tool can do, and offer to keep his request as a note. Never claim you did something a card didn't do, and never propose a card that only looks like what he asked.
 - A debrief (he talks through his shift or day) usually holds several records: propose each as its own card, then give a two-line read of the shift.
 - You remember what he asks (remember tool): people, birthdays, sizes, gift ideas, bills and their amounts, health details. Use WHAT HE ASKED YOU TO REMEMBER in your answers. A bill or a birthday also gets a repeating reminder.
@@ -43,7 +44,16 @@ How you work:
 - BEYOND's own Engine makes recommendations. You explain, plan and remember; you don't override it.
 - Be calm, short and concrete, like a trusted aide. No cheerleading, guilt, streaks or urgency. Plain sentences; short lists only when they help. Use his local times (24-hour).`;
 
-export interface AlfredTurn { role: "user" | "alfred"; text: string; deep?: boolean; /** FREE-HELPER-001: answered by BEYOND itself, at no cost. */ free?: boolean; /** FREE-HELPER-002: foods to look up free, and the words Alfred would get if asked. */ foods?: string[]; estimate?: string; sources?: ContextSource[]; context?: ProposalContext; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" | "undone"; /** CARD-UNDO-001 */ undo?: SavedLog }[] }
+export interface AlfredTurn { role: "user" | "alfred"; text: string; deep?: boolean; /** FREE-HELPER-001: answered by BEYOND itself, at no cost. */ free?: boolean; /** FREE-HELPER-002: foods to look up free, and the words Alfred would get if asked. */ foods?: string[]; estimate?: string; sources?: ContextSource[]; context?: ProposalContext; proposals?: { id: string; proposal: AlfredProposal; state: "pending" | "saved" | "skipped" | "undone"; /** CARD-UNDO-001 */ undo?: SavedLog; /** ALFRED-ACT-001: saved at once; UNDO while this window is open. */ auto?: UndoWindow; /** ALFRED-ACT-001: it ran at once (kept after the window closes). */ immediate?: boolean }[] }
+/** What he did with each card from the last reply. ALFRED-ACT-001: "logged" ran at once; "undone" he took back. */
+export type Decision = "saved" | "skipped" | "pending" | "logged" | "undone";
+const DECISION_WORDS: Record<Decision, string> = {
+  saved: "The operator confirmed it; it is saved in BEYOND.",
+  skipped: "The operator skipped it; nothing was saved.",
+  pending: "Shown to the operator as a card; not confirmed yet.",
+  logged: "BEYOND saved it at once (a clear low-risk log) and he kept it.",
+  undone: "He tapped UNDO; nothing of it is counted.",
+};
 export interface AlfredContextPolicy { includePersonal: boolean; assertFresh: () => Promise<void> }
 export interface AlfredReply { sources?: ContextSource[]; text: string; proposals: { id: string; proposal: AlfredProposal }[]; costUsd: number }
 
@@ -77,10 +87,9 @@ export class AlfredSession {
   updateContext(context: string, policy?: AlfredContextPolicy) { this.context = context; this.policy = policy; }
 
   /** `decisions` says what the operator did with each card from the last reply. */
-  async send(text: string, decisions: Record<string, "saved" | "skipped" | "pending"> = {}, depth: AlfredDepth = "everyday"): Promise<AlfredReply> {
+  async send(text: string, decisions: Record<string, Decision> = {}, depth: AlfredDepth = "everyday"): Promise<AlfredReply> {
     const content: Anthropic.Beta.BetaContentBlockParam[] = this.openToolUses.map((id) => ({
-      type: "tool_result" as const, tool_use_id: id,
-      content: decisions[id] === "saved" ? "The operator confirmed it; it is saved in BEYOND." : decisions[id] === "skipped" ? "The operator skipped it; nothing was saved." : "Shown to the operator as a card; not confirmed yet.",
+      type: "tool_result" as const, tool_use_id: id, content: DECISION_WORDS[decisions[id] ?? "pending"],
     }));
     content.unshift(...this.pendingReads);
     content.push({ type: "text", text });

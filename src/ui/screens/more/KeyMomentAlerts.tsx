@@ -7,6 +7,9 @@ import { describeError } from "../../errorMessage";
  * BRIDGE-NOTIFY-001 (Gavin, 2026-11-15; BEYOND-4.0 decision 5): each key-moment kind easy to turn off, and quiet
  * hours. Saved as soon as it's changed; the phone gets them with the plan at the next SYNC GARMIN. Each change applies to
  * the latest settings (not the last render) and saves run one after another, so quick taps never drop a change.
+ * FOLLOWUPS-001 (review note N4): each change is a "set" (this kind off, quiet hours on), applied when its save runs to
+ * what is actually stored. A failed save is dropped on its own: changes queued after it still save, without it, and
+ * the screen goes back to what is stored plus those changes.
  */
 const KINDS: { kind: KeyMomentKind; label: string; when: string }[] = [
   { kind: "BEFORE_SHIFT", label: "Before the shift", when: "30 minutes before it starts" },
@@ -15,6 +18,7 @@ const KINDS: { kind: KeyMomentKind; label: string; when: string }[] = [
   { kind: "WAKE", label: "Up for the shift", when: "3 hours before it starts" },
 ];
 const DEFAULT_QUIET = { quietFrom: "08:00", quietTo: "14:00" };
+type Update = (current: KeyMomentAlertSettings) => KeyMomentAlertSettings;
 
 export function KeyMomentAlerts() {
   const [settings, setSettings] = useState<KeyMomentAlertSettings | null>(null);
@@ -22,6 +26,7 @@ export function KeyMomentAlerts() {
   const latest = useRef<KeyMomentAlertSettings | null>(null);
   const saved = useRef<KeyMomentAlertSettings | null>(null);
   const saving = useRef<Promise<void>>(Promise.resolve());
+  const pending = useRef<Update[]>([]);
   useEffect(() => {
     let live = true;
     void getKeyMomentAlerts().then((s) => { if (live) { latest.current = s; saved.current = s; setSettings(s); } });
@@ -29,23 +34,29 @@ export function KeyMomentAlerts() {
   }, []);
   if (!settings) return null;
 
-  function change(update: (current: KeyMomentAlertSettings) => KeyMomentAlertSettings) {
+  function change(update: Update) {
     if (!latest.current) return;
-    const next = update(latest.current);
-    latest.current = next;
-    setSettings(next);
+    pending.current.push(update);
+    latest.current = update(latest.current);
+    setSettings(latest.current);
     saving.current = saving.current.then(async () => {
+      if (!saved.current) return;
       try {
-        await setKeyMomentAlerts(next);
-        saved.current = next;
+        // On what is stored, not on the screen's optimistic value: a failed earlier change is not carried along.
+        saved.current = await setKeyMomentAlerts(update(saved.current));
         setStatus("Saved. Your phone gets it at the next SYNC GARMIN.");
+        pending.current = pending.current.filter((u) => u !== update);
       } catch (e) {
-        // Back to what is actually stored; a later queued change still applies on top of it.
-        if (latest.current === next && saved.current) { latest.current = saved.current; setSettings(saved.current); }
+        pending.current = pending.current.filter((u) => u !== update);
+        // Back to what is stored, with the changes still queued on top of it.
+        latest.current = pending.current.reduce((s, u) => u(s), saved.current);
+        setSettings(latest.current);
         setStatus(describeError(e, "Could not save."));
       }
     });
   }
+  const setKind = (kind: KeyMomentKind, on: boolean): Update => (s) =>
+    on ? { ...s, off: s.off.filter((k) => k !== kind) } : s.off.includes(kind) ? s : { ...s, off: [...s.off, kind] };
   const quietOn = settings.quietFrom !== null && settings.quietTo !== null;
 
   return (
@@ -69,7 +80,7 @@ export function KeyMomentAlerts() {
               className={`chip ${on ? "chip--selected" : ""}`}
               aria-pressed={on}
               aria-label={`${label} alert`}
-              onClick={() => change((s) => ({ ...s, off: s.off.includes(kind) ? s.off.filter((k) => k !== kind) : [...s.off, kind] }))}
+              onClick={() => { if (latest.current) change(setKind(kind, latest.current.off.includes(kind))); }}
             >
               {on ? "ON" : "OFF"}
             </button>
@@ -87,7 +98,12 @@ export function KeyMomentAlerts() {
             className={`chip ${quietOn ? "chip--selected" : ""}`}
             aria-pressed={quietOn}
             aria-label="Quiet hours"
-            onClick={() => change((s) => (s.quietFrom !== null && s.quietTo !== null ? { ...s, quietFrom: null, quietTo: null } : { ...s, ...DEFAULT_QUIET }))}
+            onClick={() => {
+              const cur = latest.current;
+              if (!cur) return;
+              const turnOff = cur.quietFrom !== null && cur.quietTo !== null;
+              change((s) => (turnOff ? { ...s, quietFrom: null, quietTo: null } : { ...s, ...DEFAULT_QUIET }));
+            }}
           >
             {quietOn ? "ON" : "OFF"}
           </button>

@@ -24,6 +24,7 @@ import {
   satisfyObligation,
 } from "../../../application/intentCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { ReminderAlertLine } from "../../components/ReminderAlertLine";
 import { ProjectsSection } from "./ProjectsSection";
 import { saveObligationEdits } from "../../../application/projectCommands";
 import { getProjects } from "../../../application/projectQueries";
@@ -271,10 +272,11 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   const [newObligationMissionId, setNewObligationMissionId] = useState("");
   const [newObligationDueAt, setNewObligationDueAt] = useState("");
   const [newObligationPlannedAt, setNewObligationPlannedAt] = useState("");
+  const [newObligationRemindAt, setNewObligationRemindAt] = useState("");
   const [newObligationRecurrence, setNewObligationRecurrence] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
 
   const missionCreateDirty = newMissionTitle.length > 0;
-  const obligationCreateDirty = [newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt].some((value) => value.length > 0)
+  const obligationCreateDirty = [newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRemindAt].some((value) => value.length > 0)
     || !sameRecurrence(newObligationRecurrence, EMPTY_RECURRENCE);
   // DAILY-EXPERIENCE-001 review blocker 2: reload/update warnings cover these drafts too.
   useSessionDraft("intent-create-mission", missionCreateDirty);
@@ -375,6 +377,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         ...(newObligationMissionId ? { missionId: newObligationMissionId } : {}),
         ...(newObligationDueAt ? { dueAt: newObligationDueAt } : {}),
         ...(newObligationPlannedAt ? { plannedAt: newObligationPlannedAt } : {}),
+        ...(newObligationDueAt && newObligationRemindAt ? { remindAt: newObligationRemindAt } : {}),
         ...(recurrence ? { recurrence } : {}),
       });
       acknowledge("LIGHT");
@@ -382,6 +385,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
       setNewObligationMissionId("");
       setNewObligationDueAt("");
       setNewObligationPlannedAt("");
+      setNewObligationRemindAt("");
       setNewObligationRecurrence(EMPTY_RECURRENCE);
       setObligationCreateOpen(false);
       await refreshList();
@@ -534,7 +538,13 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
             <label htmlFor={`${uid}-planned`} className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
             <input id={`${uid}-planned`} type="date" className="input" value={newObligationPlannedAt} disabled={busy} onChange={(e) => setNewObligationPlannedAt(e.target.value)} />
           </div>
+          <div>
+            <label htmlFor={`${uid}-remind`} className="meta" style={{ display: "block", marginBottom: 4 }}>Remind at</label>
+            <input id={`${uid}-remind`} type="time" className="input" value={newObligationRemindAt} disabled={busy || !newObligationDueAt} onChange={(e) => setNewObligationRemindAt(e.target.value)} />
+          </div>
         </div>
+        {!newObligationDueAt && newObligationRemindAt && <p className="meta">A reminder time needs a due date.</p>}
+        <ReminderAlertLine dueAt={newObligationDueAt} remindAt={newObligationRemindAt} title={newObligationTitle.trim()} />
         <RecurrencePicker form={newObligationRecurrence} onChange={setNewObligationRecurrence} idPrefix={`${uid}-recurrence`} disabled={busy} />
         <button className="btn-primary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
           CREATE OBLIGATION
@@ -723,6 +733,7 @@ function ObligationDetail({
   const [description, setDescription] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [plannedAt, setPlannedAt] = useState("");
+  const [remindAt, setRemindAt] = useState("");
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
   const [projectId, setProjectId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -731,7 +742,7 @@ function ObligationDetail({
   const [historyOpen, setHistoryOpen] = useState(false);
   useSessionDraft(`intent-obligation-edit-${obligationId}`, editing && obligation !== null
     && (title !== obligation.title || description !== (obligation.description ?? "") || dueAt !== (obligation.dueAt ?? "")
-      || plannedAt !== (obligation.plannedAt ?? "") || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))
+      || plannedAt !== (obligation.plannedAt ?? "") || remindAt !== (obligation.remindAt ?? "") || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))
       || projectId !== (obligation.projectId ?? "")));
 
   const loadSequence = useRef(0);
@@ -748,7 +759,7 @@ function ObligationDetail({
     setObligation(found);
     if (found && !keepInput) {
       setTitle(found.title); setDescription(found.description ?? ""); setDueAt(found.dueAt ?? "");
-      setPlannedAt(found.plannedAt ?? ""); setRecurrenceForm(recurrenceFormFor(found.recurrence)); setProjectId(found.projectId ?? "");
+      setPlannedAt(found.plannedAt ?? ""); setRemindAt(found.remindAt ?? ""); setRecurrenceForm(recurrenceFormFor(found.recurrence)); setProjectId(found.projectId ?? "");
     }
     setHistory(trail);
   }
@@ -770,6 +781,8 @@ function ObligationDetail({
         description: description.trim() || undefined,
         dueAt: dueAt || undefined,
         plannedAt: plannedAt || undefined,
+        // REMIND-AT-001: clearing the time removes it; a time without a due date is refused by the command.
+        ...(remindAt ? (remindAt !== obligation?.remindAt ? { remindAt } : {}) : obligation?.remindAt ? { remindAt: null } : {}),
         ...(recurrence ? { recurrence } : {}),
       }, projectId || null);
       acknowledge("LIGHT");
@@ -819,7 +832,9 @@ function ObligationDetail({
                 {mission && <p className="meta">Mission: {mission.title}</p>}
                 {project && <p className="meta">Project: {project.title}</p>}
                 {obligation.projectId && !project && <p className="meta">Project: unavailable</p>}
-                {obligation.dueAt && <p className="meta">Due: {obligation.dueAt}</p>}
+                {obligation.dueAt && <p className="meta">Due: {obligation.dueAt}{obligation.remindAt ? ` · reminder ${obligation.remindAt}` : ""}</p>}
+                {obligation.dueAt && obligation.remindAt && obligation.status !== "SATISFIED" && obligation.status !== "RELEASED"
+                  && <ReminderAlertLine dueAt={obligation.dueAt} remindAt={obligation.remindAt} title={obligation.title} obligationId={obligation.id} />}
                 {obligation.plannedAt && <p className="meta">Planned: {obligation.plannedAt}</p>}
                 {obligation.recurrence && <p className="meta">Repeats: {describeRecurrence(obligation.recurrence.rrule)}</p>}
                 {obligation.resolvedAt && (
@@ -880,7 +895,13 @@ function ObligationDetail({
                     <label htmlFor={`obligation-planned-${obligationId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Planned</label>
                     <input id={`obligation-planned-${obligationId}`} type="date" className="input" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} />
                   </div>
+                  <div>
+                    <label htmlFor={`obligation-remind-${obligationId}`} className="meta" style={{ display: "block", marginBottom: 4 }}>Remind at</label>
+                    <input id={`obligation-remind-${obligationId}`} type="time" className="input" value={remindAt} disabled={!dueAt} onChange={(e) => setRemindAt(e.target.value)} />
+                  </div>
                 </div>
+                {!dueAt && remindAt && <p className="meta">A reminder time needs a due date.</p>}
+                <ReminderAlertLine dueAt={dueAt} remindAt={remindAt} title={title.trim()} obligationId={obligationId} />
                 <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix={`obligation-recurrence-${obligationId}`} disabled={busy} />
                 <select className="input" style={{ marginBottom: 8 }} aria-label="Project" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
                   <option value="">No project</option>

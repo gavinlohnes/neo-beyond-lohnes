@@ -225,11 +225,11 @@ export async function skipSet(
  * affordance only when something exists to undo, never called
  * defensively "just in case."
  */
-export async function undoLastSet(beyondDayId: string, sessionId: string): Promise<boolean> {
+export async function undoLastSet(beyondDayId: string, sessionId: string, /** ALFRED-ACT-001: only if the last set is still this one. */ expectedSetId?: string): Promise<boolean> {
   return writeWorkoutAtomically(async () => {
     const visible = await getPerformedSets(sessionId);
     const last = [...visible].sort(compareSetOrder).at(-1);
-    if (!last) return false;
+    if (!last || (expectedSetId !== undefined && last.id !== expectedSetId)) return false;
 
     const correlationId = newId();
     await logEvent(
