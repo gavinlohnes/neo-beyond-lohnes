@@ -89,7 +89,8 @@ they were read (`CONTEXT_CHANGED`) or the command refuses, that card and the res
   is required.
 - Merge conflicts: `CURRENT_CHECKPOINT.md` (all sections kept) and the `add_reminder` registry entry, resolved as
   `autonomy: "confirm"` plus master's REMIND-AT description (a HH:MM `when_note` with a due date sets the alert time).
-  A reminder, timed or not, stays a confirm card; the six immediate kinds are unchanged.
+  A reminder, timed or not, stays a confirm card (now also asserted in `alfredAct.test.ts` with a 17:30 `when_note`);
+  the six immediate kinds are unchanged.
 - Note 1 fixed: the `alfredAct.ts` header now says only one of his SAVED meals may run at once; a typed new food or
   Alfred's estimate keeps SAVE + REMEMBER MEAL. Comment only.
 - Note 3 fixed: in `AlfredSheet`'s `act()`, only `immediateCards` / `runImmediate` failures fall back to cards. Once
