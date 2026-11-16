@@ -2,9 +2,10 @@
 
 - **Authorization:** wave 2 of the overnight plan Gavin approved on 2026-11-15 ("Approved. If you have anything you
   want to change ask me and I'll decide."). Builds on ALFRED-TOOLS-001 (#552, merged) and ALFRED-ACT-001 (#560).
-- **Builder:** Grok Bot. Branch `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45` (stacked on
-  #560), PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561). PR targets `codex/alfred-act-001`; **it merges after #560** and is then retargeted to `master`.
-- **Lane: PROTECTED** (AI autonomy surface stacked on #560; classify-risk). Independent exact-head review, green CI;
+- **Builder:** Grok Bot. Branch `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45` (first stacked on
+  #560), PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561). #560 merged as `8084b1be`; its final head
+  `44ab6d83` and then `origin/master` `3eece4ac` (#559) were merged in normally and the PR now targets `master`.
+- **Lane: PROTECTED** (AI autonomy surface built on #560; classify-risk). Independent exact-head review, green CI;
   Gavin merges. No Engine, schema, migration, dependency, provider, alert or low-risk-definition change.
 
 ## Behaviour
@@ -33,8 +34,12 @@
   own reversal (CARD-UNDO-001) and its own 10 s window that holds on hover/focus. UNDO ALL would need a multi-record
   undo with partial states (one already undone, one expired, one changed since) for little gain; per-card is simpler
   and exactly correct. He undoes only the part that was wrong.
-- Also fixes #560 review note 1: the `alfredAct.ts` header said "a saved or fully-stated meal"; only saved meals run at
-  once. The persona's at-once list now also names a set in the workout in progress (already in the rule).
+- #560 review note 1 (the `alfredAct.ts` header said "a saved or fully-stated meal") was fixed in #560 itself before it
+  merged; its wording is kept. The persona's at-once list now also names a set in the workout in progress (already in
+  the rule).
+- Merging #560's final head kept its post-write rule in the multi-action path: once any at-once entry is written, a
+  failing haptic or TODAY refresh never turns the saved cards back into SAVE cards (no second write); only a failure
+  while checking or running the cards gives the "nothing was saved at once" line.
 
 ## Leverage gate
 
@@ -51,7 +56,8 @@
   mid-message refusal stops in order with notes and the waiting card still saves; a replayed message writes nothing.
 - `tests/browser/AlfredMulti001.test.tsx` at 320 px, axe clean: free helper logs two waters at once with separate
   UNDO (undo one, the other stays) while sleep and the reminder wait; six waters → none at once and the note; Alfred's
-  six cards keep their order and get the note.
+  six cards keep their order and get the note; a failing refresh after two at-once waters keeps both saved with their
+  own UNDO and no SAVE (fails against the pre-merge `act()`, which turned them back into SAVE cards).
 
 ## Deferred
 

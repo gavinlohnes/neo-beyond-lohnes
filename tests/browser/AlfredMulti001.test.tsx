@@ -4,6 +4,7 @@ import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
+import { AlfredSheet } from "../../src/ui/components/AlfredSheet";
 import { startDay } from "../../src/application/commands";
 import { getHydrationEntries, getSleepEntries } from "../../src/application/queries";
 
@@ -82,5 +83,25 @@ describe("ALFRED-MULTI-001", () => {
     const names = (await sheet.getByRole("group", { name: /^Log \d+ oz water$/ }).elements()).map((e) => e.getAttribute("aria-label"));
     expect(names).toEqual([4, 6, 8, 10, 12, 14].map((oz) => `Log ${oz} oz water`));
     expect(await water(day.id)).toBe(0);
+  });
+  it("a failing refresh after several immediate saves keeps every one saved with its UNDO; no SAVE that would write twice", async () => {
+    vi.setSystemTime(new Date(2026, 10, 14, 17, 0));
+    const day = await startDay();
+    vi.setSystemTime(T0);
+    await page.viewport(320, 740);
+    const onSaved = vi.fn(() => { throw new Error("refresh failed"); });
+    const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={onSaved} />);
+    const sheet = screen.getByRole("dialog", { name: "ALFRED" });
+    await send(sheet, "drank 16 oz water, 8 oz water and slept 7h");
+    await expect.element(sheet.getByText("Logged 2 at once (UNDO within 10 seconds). SAVE the others you want.")).toBeVisible();
+    expect(onSaved).toHaveBeenCalled();
+    for (const oz of [16, 8]) {
+      const card = sheet.getByRole("group", { name: `Log ${oz} oz water` });
+      await expect.element(card.getByRole("button", { name: `Undo: Log ${oz} oz water` })).toBeVisible();
+      expect(card.getByRole("button", { name: "SAVE" }).elements()).toHaveLength(0);
+    }
+    expect(sheet.getByText(/couldn't check these/).elements()).toHaveLength(0);
+    await expect.element(sheet.getByRole("group", { name: "Log main sleep 7h 00m" }).getByRole("button", { name: "SAVE", exact: true })).toBeVisible();
+    expect(await water(day.id)).toBe(24);
   });
 });
