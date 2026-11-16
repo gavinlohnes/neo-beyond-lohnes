@@ -97,6 +97,13 @@ export interface Obligation {
   dueAt?: string;
   /** YYYY-MM-DD. Planned attention — distinct from dueAt and resolvedAt. */
   plannedAt?: string;
+  /**
+   * REMIND-AT-001 (Gavin, 2026-11-15 sprint plan: "reminders at a set time, inside the 3-a-day cap"): HH:MM, 24-hour,
+   * a local clock time on the dueAt day when the phone should remind him. Only with a dueAt; asked for by the owner,
+   * never inferred. A wall-clock time like dueAt itself, so it means the same hour across a DST change. Optional and
+   * unindexed: no schema version change. The task-due alert then fires at this time instead of 16:00.
+   */
+  remindAt?: string;
   /** ISO timestamp. Set only by satisfyObligation/releaseObligation — actual occurrence, distinct from dueAt/plannedAt. */
   resolvedAt?: string;
   /** Freeform evidence of how it was resolved — set only alongside resolvedAt. */

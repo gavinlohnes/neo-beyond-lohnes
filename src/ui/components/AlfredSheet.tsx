@@ -7,6 +7,7 @@ import { AlfredContextPanel } from "./AlfredContextPanel";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
+import { ReminderAlertLine } from "./ReminderAlertLine";
 import { confirmLabel, describeConfirmError, describeProposal, describeProposalNote, undoSavedLog } from "../../application/alfred/alfredActions";
 import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
@@ -366,6 +367,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
             {p.state === "pending" && describeProposalNote(p.proposal) && <p className="meta">{describeProposalNote(p.proposal)}</p>}
+            {p.state === "pending" && p.proposal.kind === "add_reminder" && p.proposal.due_date && p.proposal.when_note && <ReminderAlertLine dueAt={p.proposal.due_date} remindAt={p.proposal.when_note} title={p.proposal.title} />}
             {["remember", "person_date", "home_item"].includes(p.proposal.kind) && <p className="meta">Personal facts are available to Alfred by default. Corrections keep history. Stop using removes them from active context; it does not erase them. New exports require this build or newer.</p>}
             {p.state === "pending" ? <div className="alfred-card__row">
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
