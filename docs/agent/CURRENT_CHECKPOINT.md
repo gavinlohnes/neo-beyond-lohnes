@@ -1,4 +1,16 @@
-# Current objective — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO)
+# Current objective — ALFRED-MULTI-001 (several actions in one message)
+
+- Builder Grok Bot. Wave 2 of the overnight plan Gavin approved 2026-11-15. [Brief](ALFRED-MULTI-001.md). Branch
+  `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45`, **stacked on #560**: PR base is
+  `codex/alfred-act-001`; merge after #560, then retarget to master.
+- Lane PROTECTED. No Engine, schema, dependency, alert or low-risk-definition change.
+- One message → one card per part, in order; ALFRED-ACT-001's rule picks which run at once, each with its own UNDO;
+  at most 5 at once per message (more → none at once, he's told); a card that didn't save says why; no double writes.
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges.
+
+---
+
+# In flight (base of the stack) — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO)
 
 - Builder Grok Bot. Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"; started as wave 2
   of the overnight plan he approved. [Brief](ALFRED-ACT-001.md). Branch `codex/alfred-act-001` from fetched master

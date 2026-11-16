@@ -4,7 +4,7 @@ import { whyConfirm, type ProposalSource } from "./alfredTools";
 
 /**
  * ALFRED-ACT-001 (Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"). A clear command to
- * log one of the low-risk kinds (water, a saved or fully-stated meal, protein, weight near his last, a habit done, a set
+ * log one of the low-risk kinds (water, one of his saved meals, protein, weight near his last, a habit done, a set
  * in the workout in progress) runs at once through the SAME guarded confirm a card's SAVE uses, and shows UNDO for
  * ACT_UNDO_MS. UNDO is the existing append-only void/undo of that record (CARD-UNDO-001). Everything else, and anything
  * ambiguous, stays a card he confirms. The rule, in order:
@@ -36,6 +36,21 @@ export async function immediateCards(cards: Card[], source: ProposalSource, opts
   return out;
 }
 
+/**
+ * ALFRED-MULTI-001: one message may hold several records ("16 oz water, weighed 181, slept 7h, remind me to call mum").
+ * Each is its own card from the registry, kept in the order he said them; the immediate ones run at once (above) and
+ * each keeps its OWN UNDO, the rest wait for SAVE. At most MAX_AT_ONCE run at once from one message: more than that is
+ * more likely a paste or a slip than a report, so none of them run at once and he is told; every card still waits for
+ * SAVE, so nothing is dropped or guessed.
+ */
+export const MAX_AT_ONCE = 5;
+export interface ActPlan { ids: Set<string>; overCap: boolean }
+export async function planAct(cards: Card[], source: ProposalSource, opts: { understoodAll: boolean }): Promise<ActPlan> {
+  const ids = await immediateCards(cards, source, opts);
+  return ids.size > MAX_AT_ONCE ? { ids: new Set(), overCap: true } : { ids, overCap: false };
+}
+export const OVER_CAP_NOTE = `That's more than ${MAX_AT_ONCE} logs in one message, so BEYOND saved none of them at once. SAVE the ones you want.`;
+
 export interface ActResult {
   /** Cards that ran, with their UNDO (absent when the command had nothing to take back) and its window. */
   done: Record<string, { undo?: SavedLog | undefined; window: UndoWindow }>;
@@ -60,6 +75,35 @@ export async function runImmediate(cards: Card[], ids: Set<string>, context: Pro
     }
   }
   return { done, context: ctx };
+}
+
+/**
+ * ALFRED-MULTI-001: what each card that was meant to run at once but didn't is told, so a failure is never silent.
+ * The one that stopped says why (nothing of it was saved); the ones after it say they are waiting for SAVE.
+ */
+export function heldNotes(cards: Card[], ids: Set<string>, acted: ActResult, describe: (error: unknown) => string): Record<string, string> {
+  const notes: Record<string, string> = {};
+  if (!acted.stopped) return notes;
+  let after = false;
+  for (const c of cards) {
+    if (!ids.has(c.id)) continue;
+    if (c.id === acted.stopped.id) {
+      const e = acted.stopped.error;
+      notes[c.id] = e instanceof Error && e.message === "CONTEXT_CHANGED" ? "Not logged: your records changed while BEYOND was saving. Nothing of it was saved. Ask again." : `Not logged: ${describe(e)}`;
+      after = true;
+    } else if (after) notes[c.id] = "Not logged yet, because the one before it didn't save. SAVE it if you still want it.";
+  }
+  return notes;
+}
+
+/** ALFRED-MULTI-001: the free helper's one line for a message, by what ran at once and what waits. */
+export function helperSummary(total: number, ran: number, stopped: boolean, overCap: boolean): string {
+  if (!total) return "Nothing to save yet.";
+  if (ran && ran === total) return ran === 1 ? "Logged. UNDO within 10 seconds if that's wrong." : `Logged all ${ran}. UNDO any of them within 10 seconds.`;
+  if (ran) return `Logged ${ran} at once (UNDO within 10 seconds). SAVE the others you want.${stopped ? " One didn't save; it says why below." : ""}`;
+  if (overCap) return OVER_CAP_NOTE;
+  if (stopped) return "One didn't save; it says why below. SAVE the ones you want.";
+  return "Here's what I can do for free. SAVE the ones you want.";
 }
 
 /** UNDO from the window: refused once it has closed (the entry stays; change it from LOG or HISTORY). */
