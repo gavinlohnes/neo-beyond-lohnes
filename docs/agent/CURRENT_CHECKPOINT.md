@@ -8,7 +8,7 @@
 - Immediate with 10 s UNDO: water, a saved meal (never Alfred's estimate), protein,
   weight (within 10 lb of the last), habit done, a set in the workout in progress; only when clear (no time, ordinary
   amount, whole message understood, not repeated). Everything else keeps its confirm card.
-- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. PR: pending.
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. PR [#560](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/560).
 - Other open work runs in parallel and this section doesn't track it: #557 (CAPTURE-PARITY-001) was open at this
   branch's push; others may be. WORK-RUN-REDRAFT-001 #556 merged as `44a1c5b0`; its section below is history.
 

@@ -4,7 +4,7 @@
   the Decision Register as decided, not built; started 2026-11-15 evening as wave 2 of the overnight plan Gavin
   approved ("Approved. If you have anything you want to change ask me and I'll decide.").
 - **Builder:** Grok Bot. Branch `codex/alfred-act-001` from fetched `origin/master` `4d74ac26`, then rebased onto
-  `44a1c5b0` (#555 and #556 merged) before the first push. PR: pending. Worked in its own worktree because other objectives ran in parallel.
+  `44a1c5b0` (#555 and #556 merged) before the first push. PR: [#560](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/560). Worked in its own worktree because other objectives ran in parallel.
 - **Lane: PROTECTED** (consequential AI autonomy; amends Doctrine and BEYOND-4.0 decision 2). Independent exact-head
   review, green CI; Gavin merges. No schema, Engine, dependency, provider or notification change.
 
