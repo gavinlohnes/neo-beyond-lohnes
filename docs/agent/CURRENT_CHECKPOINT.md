@@ -12,8 +12,8 @@
   independent review of `d11166bb` applied the PROTECTED bar and was PASS (no blockers).
 - Owner session 2026-11-16 ("Finish the next one"): `origin/master` `8084b1be` (#558 FOLLOWUPS-001, #562 REMIND-AT-001,
   #560 ALFRED-ACT-001) merged in normally (this checkpoint was the only conflict; all sections kept, theirs are history).
-  Review non-blocking note 1 fixed (intro wording now matches the rule); note 2 covered by a 320px browser check on a
-  long "can't tell yet" result line. See the brief's review response.
+  Review non-blocking note 1 fixed (intro wording now matches the rule); note 2 left as is (wrapping already guaranteed;
+  the review said no change needed). See the brief's review response.
 - Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
   **renewed independent exact-head review REQUIRED, not yet done** (the PASS review is stale); Gavin merges. Exact head,
   checks run and CI are in the PR handoff. #561 waits (stacked on the merged #560 branch); #563 and #473 are separate.

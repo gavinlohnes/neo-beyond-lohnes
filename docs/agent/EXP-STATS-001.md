@@ -61,3 +61,12 @@
 - A formal equivalence test (TOST) or a bootstrap interval (Welch is enough for these small daily samples).
 - Intervals on the training-count line (it remains a count, not a winner).
 - Using days outside the Whole Picture window (the existing comparison's horizon is unchanged).
+
+## Review response (2026-11-16)
+
+- Independent review of `d11166bb`: PASS, no blockers. `origin/master` `8084b1be` (#558, #562, #560) was then merged
+  in normally (checkpoint conflict only, all sections kept), so a renewed independent exact-head review is required.
+- Note 1 fixed: the result intro now reads "if the range crosses zero and still reaches a meaningful gap, we can't tell
+  yet", matching the rule (a tight range that includes zero still reads "about the same") and LOOP.md.
+- Note 2 left as is, per the review ("no change needed"): result lines sit in `.follow-up` with
+  `overflow-wrap: anywhere`; no new 320px long-line browser test was added.
