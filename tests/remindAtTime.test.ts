@@ -7,7 +7,7 @@ import type { KeyMomentAlertSettings } from "../src/domain/common/types";
 const chicago = Intl.DateTimeFormat().resolvedOptions().timeZone === "America/Chicago";
 const at = (y: number, mo: number, d: number, h: number, mi = 0) => new Date(y, mo - 1, d, h, mi).getTime();
 const NONE: KeyMomentAlertSettings = { off: [], quietFrom: null, quietTo: null };
-const m = (when: number, kind: BridgeMoment["kind"], text = kind): BridgeMoment => ({ at: when, kind, title: "", text, go: "" });
+const m = (when: number, kind: BridgeMoment["kind"], text: string = kind): BridgeMoment => ({ at: when, kind, title: "", text, go: "" });
 
 describe("REMIND-AT-001 — time parsing", () => {
   it("accepts only a 24-hour HH:MM clock time", () => {
