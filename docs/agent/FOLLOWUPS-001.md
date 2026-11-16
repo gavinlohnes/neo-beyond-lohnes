@@ -50,5 +50,30 @@ which is out of scope.
   code), and off-then-on with the first save failing ends on.
 - `tests/integration/sleepDebt.test.ts`: a nap-only day is not judged and is named as not counted; a nap on a judged
   day still counts; a window of only naps has no figure. Passes in UTC and America/Chicago; fails on the old code.
-- Local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges.
+- `tests/integration/operatorContext.test.ts`: Alfred's LEARNED sleep line names a nap-only day as not counted
+  (`only a nap was logged`).
+- Local checks on the review-response head (full `TZ=UTC npm run verify` was not re-run; it was run at `3bfe893c`):
+  `TZ=UTC npm run typecheck`; `TZ=UTC npm run check:architecture`; `TZ=UTC npm run build`; sleepDebt + operatorContext
+  + WorkScheduleScreen tests under `TZ=UTC` and `TZ=America/Chicago`; Moments.kt + MomentsTest.kt compiled with kotlinc
+  on JDK 17 + JUnit 4.13.2 (10/10). PR CI including android; renewed independent exact-head review; Gavin merges.
 - Device: install the 0.11.2 Bridge over 0.11.1 and tap SYNC GARMIN once; alerts keep coming, none twice.
+
+## Review response (2026-11-16, review of `3bfe893c`)
+
+Independent PROTECTED review of `3bfe893c` was PASS with no blockers
+([review](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/558#pullrequestreview-5913779010)). A stray
+PLACEHOLDER comment on that same head is not a review. `origin/master` `b921d303` was then merged in normally as
+`a0c9b742` (docs conflict only, all sections kept). That made the exact-head review stale.
+
+Non-blocking notes 1 and 3 from that review are fixed on this head. Note 2 is left documented: N1/N2 tests cover the
+pure functions (`seedShown`, `shouldShow`, `toArm`/`rearm`); `MomentAlerts.shown()` / `notify()` need the Android SDK,
+so CI's android job is authoritative.
+
+1. `android/health-bridge/README.md` now matches the code: an alarm delivered 2 hours or more after its moment is
+   dropped (including one delivered at exactly `GRACE_MS`); the 0.11.0 upgrade seeds only stored-plan moments already
+   due within the 2 hour grace, not every already-due moment (older ones are already outside the window).
+3. `tests/integration/operatorContext.test.ts` asserts the LEARNED sleep line includes the
+   `only a nap was logged` clause when a nap-only day is left out of the figure.
+
+**Renewed independent exact-head review is REQUIRED on this head; it has not been done.** The author does not
+self-review. Gavin merges; this objective does not merge.

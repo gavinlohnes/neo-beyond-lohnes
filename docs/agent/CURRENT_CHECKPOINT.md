@@ -2,12 +2,20 @@
 
 - Builder Grok Bot. Gavin approved the overnight plan on 2026-11-15 (wave 2, item 6). [Brief](FOLLOWUPS-001.md). Branch
   `codex/followups-001` from fetched master `4d74ac26`; `origin/master` `abd9dc71` (#555 merged) merged in normally.
-- Fixes #554 review notes N1 (no duplicate after upgrading from 0.11.0), N2 (an alarm delivered over 2 h late is
+- Fixes #554 review notes N1 (no duplicate after upgrading from 0.11.0), N2 (an alarm delivered 2 hours or more late is
   dropped) and N4 (a failed alert-settings save is not re-applied by a queued change). Health Bridge 0.11.2.
 - Fixes the #555 review note on nap-only days: only days with main sleep logged are judged against the main-sleep
   target; a nap-only day is "not counted", like the baseline.
 - Lane PROTECTED (inherited). No new alert kind, Engine, schema, permission or dependency change.
-- Gates: local `TZ=UTC npm run verify`; PR CI including android; independent exact-head review; Gavin merges.
+- Independent review of `3bfe893c` was PASS with no blockers. `origin/master` `b921d303` was then merged in normally
+  as `a0c9b742` (docs only), so that exact-head review is stale. Non-blocking notes 1 (README wording) and 3
+  (operatorContext nap-only clause) are fixed on this head; note 2 is left documented (needs Android SDK). See the
+  brief's review response.
+- Local checks on this head: `TZ=UTC` typecheck, check:architecture, and build; sleepDebt + operatorContext +
+  WorkScheduleScreen tests under UTC and America/Chicago; Moments.kt + MomentsTest.kt (kotlinc, JDK 17, JUnit 4.13.2)
+  10/10. Full `TZ=UTC npm run verify` was not re-run (optional; last run at `3bfe893c`).
+- Remaining gates: green required CI including android on this exact head; **renewed independent exact-head review
+  REQUIRED, not yet done**; Gavin merges. The author does not self-review.
 - WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556) merged by Gavin as `44a1c5b0`
   (2026-11-15 18:42 CT) and CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged
   by Gavin as `b921d303` (2026-11-15 18:57 CT); `origin/master` `b921d303` merged into this branch normally (docs
