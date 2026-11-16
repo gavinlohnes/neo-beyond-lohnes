@@ -112,6 +112,31 @@ describe("NOTES-SWEEP-001 — day-off notes sweep", () => {
     expect((await getOpenCaptureItems())[0]).toEqual(before);
   });
 
+  it("CANCEL after MAKE IT A TASK keeps the previous delete's UNDO", async () => {
+    await dayOffWithNotes(["Old grocery list", "Call the dentist"]);
+    const deleted = (await getOpenCaptureItems())[0]!;
+    const screen = await render(<NotesSweep onSwept={() => {}} />);
+    await screen.getByRole("button", { name: "SWEEP" }).click();
+    await holdToConfirm(screen.getByRole("button", { name: "DELETE" }));
+    await expect.element(screen.getByText("Call the dentist")).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "MAKE IT A TASK" }).click();
+    await expect.element(screen.getByRole("textbox", { name: "Task title", exact: true })).toHaveValue("Call the dentist");
+    // UNDO is hidden while the form is open, not discarded.
+    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).not.toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "CANCEL", exact: true }).click();
+    for (const name of ["DONE", "MAKE IT A TASK", "KEEP", "DELETE"]) {
+      await expect.element(screen.getByRole("button", { name, exact: true })).toBeVisible();
+    }
+    await expect.element(screen.getByRole("button", { name: "UNDO", exact: true })).toBeVisible();
+
+    await screen.getByRole("button", { name: "UNDO", exact: true }).click();
+    await expect.element(screen.getByText("Old grocery list")).toBeVisible();
+    expect((await getOpenCaptureItems())[0]).toEqual(deleted);
+  });
+
   it("KEEP writes nothing", async () => {
     await dayOffWithNotes(["Call the dentist"]);
     const before = await getAllCaptureItems();

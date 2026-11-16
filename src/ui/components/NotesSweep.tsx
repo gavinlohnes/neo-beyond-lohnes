@@ -60,6 +60,7 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
     try {
       await write();
       if (outcome !== "KEPT") acknowledge("LIGHT");
+      setDeleted(null);
       setDraft(null);
       setOutcomes((prev) => [...prev, outcome]);
       setIndex((i) => i + 1);
@@ -110,7 +111,8 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
 
   function startTask(item: CaptureItem) {
     if (busy) return;
-    setDeleted(null);
+    // Opening the form is not moving on: keep the previous delete so CANCEL
+    // can still UNDO it. UNDO is hidden while the form is open.
     setError(null);
     setDraft(emptyCapturePromotionDraft(item.text));
   }
@@ -177,7 +179,7 @@ export function NotesSweep({ onSwept, refreshKey = 0 }: { onSwept: () => void; r
                 Note {index + 1} of {items.length} · {formatCaptured(note.capturedAt)}
               </p>
               <p className="card-title notes-sweep__note">{note.text}</p>
-              {deleted && (
+              {deleted && !draft && (
                 <p className="meta" role="status" style={{ margin: "0 0 8px" }}>
                   Deleted.{" "}
                   <button type="button" className="notes-sweep__undo" disabled={busy} onClick={() => void handleUndoDelete()}>
