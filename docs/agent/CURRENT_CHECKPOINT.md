@@ -2,15 +2,27 @@
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
   experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
-  PR [#559](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/559); fast-forwarded onto `44a1c5b0` after Gavin merged [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
-  (2026-11-15 18:42 CT).
+  PR [#559](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/559). Fast-forwarded onto `44a1c5b0` after #556
+  merged (2026-11-15 18:42 CT); `origin/master` `b921d303` (#557) merged in normally (checkpoint conflict only).
 - The existing LOOP TRY comparison now reports a Welch 95% range on the difference of means, with day counts, and says
   "can't tell yet" when that range crosses zero or "not enough data yet" when a side is thin, instead of declaring a
   winner. Pure application-layer functions; minimal wording in the existing result view. No Engine, schema, alert-kind
   or dependency change.
 - Lane FEATURE (classifier may say PROTECTED only for governance-path docs; semantically a readout change). Gates:
   focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
-- Other open work, independent of this section: #557 capture parity, #558 follow-ups. #473 stays a parked draft.
+- Other open work, independent of this section: #558 follow-ups. #473 stays a parked draft.
+
+---
+
+# Historical — CAPTURE-PARITY-001 (capture → task works the same everywhere; merged as #557)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved the ranked item "Make turning a capture into a task work the same
+  everywhere" (HARVEST-002's best new refinement). [Brief](CAPTURE-PARITY-001.md). Branch `codex/capture-parity-001`
+  from fetched master `4d74ac26`.
+- Lane FEATURE: one shared confirm-first form (title, optional planned day, optional due date) for quick capture, Notes
+  Sweep and the Capture list, through the existing `convertCaptureToObligation`. No schema, Engine, event or
+  notification-kind change.
+- PR [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303` (2026-11-15 18:57 CT).
 
 ---
 

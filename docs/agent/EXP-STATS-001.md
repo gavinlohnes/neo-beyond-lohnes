@@ -15,10 +15,10 @@
   approved objective and the comparison's wording, and amend no doctrine or authority. Semantically: no Engine, schema,
   event, persistence, backup, permission, provider, navigation or dependency change; experiments are still never an
   Engine input. Normal review, green CI, Gavin merges.
-- **Overlap check:** #556 work-run re-draft merged as `44a1c5b0` while this branch was in flight (checkpoint-only
-  conflict; resolved by making this the current section and #556 historical). Open PRs #557 (capture parity) and #558
-  (follow-ups) do not touch `tryExperiment.ts` or the Experiments view. No competing experiment-stats branch. The
-  existing TRY feature (#309) is on master; this tightens its comparison, it does not add a new one.
+- **Overlap check:** #556 work-run re-draft merged as `44a1c5b0` and #557 capture parity as `b921d303` while this
+  branch was in flight (checkpoint-only conflicts; resolved by keeping this the current section and those historical).
+  Open PR #558 (follow-ups) does not touch `tryExperiment.ts` or the Experiments view. No competing experiment-stats
+  branch. The existing TRY feature (#309) is on master; this tightens its comparison, it does not add a new one.
 
 ## What changes
 
