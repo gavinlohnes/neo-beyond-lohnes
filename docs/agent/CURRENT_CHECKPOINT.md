@@ -12,6 +12,8 @@
   its section below is history.
 - `origin/master` `3eece4ac` (#558, #559, #560, #562) merged in normally (this checkpoint was the only conflict; all
   sections kept, theirs are history). Renewed independent exact-head review needed after this merge; Gavin merges.
+- #561 ALFRED-MULTI-001 (now targeting master) is a separate open PR awaiting its own review; not part of this objective.
+  Exact head, checks run and CI for this PR are in the PR handoff.
 
 ---
 
@@ -34,6 +36,7 @@
 - Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
   **renewed independent exact-head review REQUIRED, not yet done** (the PASS review is stale); Gavin merges. Exact head,
   checks run and CI are in the PR handoff. #561 waits (stacked on the merged #560 branch); #563 and #473 are separate.
+- Merged by Gavin as `3eece4ac` (2026-11-16 05:42 CT).
 
 ---
 
