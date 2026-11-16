@@ -3,6 +3,7 @@ import { deriveWeekEnergyForecast } from "../../src/application/weekEnergyForeca
 import type { PictureRow } from "../../src/application/wholePictureProjection";
 import type { SchedulePattern } from "../../src/domain/common/types";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
+import type { SleepDebt } from "../../src/application/sleepDebt";
 
 /** BIG-IDEAS-001 item 2. Invented history only. */
 const row = (context: "WORK" | "OFF", energy?: number, sleepHours?: number) => ({ context, energy, sleepHours, start: "x", dayIds: ["d"], sessions: 0 }) as unknown as PictureRow;
@@ -12,7 +13,8 @@ const block = () => [row("WORK", 3, 6), row("WORK", 2, 5), row("OFF", 4, 9), row
 // Gavin's rotation from Mon Oct 26 (Week A): Mon, Tue work; Wed, Thu off; Fri–Sun work.
 const pattern: SchedulePattern = { id: "current", anchorMonday: "2026-08-17", weeks: [{ workdays: [1, 2, 5, 6, 0] }, { workdays: [3, 4] }], shiftStartHour: 18, shiftEndHour: 6, postWorkTailHours: 6, createdAt: "2026-08-17T00:00:00.000Z", updatedAt: "2026-10-05T00:00:00.000Z" };
 const now = new Date(2026, 9, 26, 9);
-const owed = { owedMinutes: 150, days: 7 };
+const owed: SleepDebt = { status: "LEARNED", owedMinutes: 150, days: 7, judgedDays: 7, perDay: [],
+  targets: { WORK: { kind: "LEARNED", minutes: 330, baselineDays: 24 }, OFF: { kind: "LEARNED", minutes: 450, baselineDays: 18 } } };
 
 describe("WEEK ENERGY FORECAST", () => {
   it("places each day in its scheduled run and gives that place's recorded energy and sleep in past runs of the same length", () => {

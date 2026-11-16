@@ -3442,3 +3442,18 @@ earlier first within a kind. Each kind can be switched off and there are owner-s
 nothing sounds inside a scheduled shift. Day off rides on the last shift's SHIFT'S DONE; plan-to-confirm moments wait
 for a new kind. No new alert kinds; settings sit on the schedule row and travel with backups. The phone keeps a
 four-week plan and re-arms it in the background; changes reach it at the next SYNC GARMIN.
+
+## SLEEP-DEBT-LEARNED-001 — sleep owed against your own usual sleep, not 7 hours (Gavin, 2026-11-15)
+
+Gavin chose ranked item 2 ("Measure sleep debt against your own learned sleep, not a fixed 7 hours").
+[Brief](agent/SLEEP-DEBT-LEARNED-001.md). Supersedes ALFRED-004's "sleep owed against 7 hours" for the owed figure.
+
+- Each of the last 7 lived days with sleep logged is judged against the **low end of your usual main sleep for that
+  kind of day** (work or off), the same personal baseline Weekly shows (56 days, at least 10 of the kind). Below it
+  owes the difference; at or above owes nothing and repays nothing.
+- **Still learning** while a kind has fewer than 10 days: those nights aren't counted, and with none counted there is
+  **no figure** (never a 7-hour fallback). Every readout shows the targets and how many days each is based on.
+- MONTH, the energy forecast and Alfred's context use it; the recovery-sleep offer keeps its one-hour threshold on the
+  learned figure and is not offered while still learning. The Engine does not read it. The month grid's short-night
+  underline stays on the 7 h guideline, labelled as such.
+

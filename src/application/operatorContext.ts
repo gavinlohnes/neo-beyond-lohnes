@@ -14,7 +14,8 @@ import { getProjectViews } from "./projectQueries";
 import { getRoutines } from "./routineCommands";
 import { ROUTINE_MOMENT_LABELS } from "../domain/routines";
 import { MEMORY_LABELS } from "../domain/memory";
-import { getSleepDebt, SLEEP_NEED_MINUTES } from "./monthQueries";
+import { getSleepDebt } from "./monthQueries";
+import { describeSleepTargets } from "./sleepDebt";
 import { getWeekAhead } from "./weekAheadQueries";
 import { describeTodayPicture, getTodayPicture } from "./todayPicture";
 import { getMeasuredSnapshot } from "./measuredQueries";
@@ -142,8 +143,11 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
       `SCHEDULE NEXT 7 DAYS: ${v.days.map((d) => d.basis === "UNKNOWN" ? `${d.date} unknown` : `${d.date} ${d.work}${d.shiftStartHour !== null ? ` ${d.shiftStartHour}:00` : ""} (${d.basis === "RECORDED" ? "recorded" : d.basis === "CONFIRMED" ? "confirmed change" : "forecast"})`).join(" · ")}. Forecast days are predictions, not availability; confirmed changes are plans the operator confirmed, not work done; recorded days are what was set for that lived day. Alfred cannot change the schedule himself; he may only propose a change (schedule_change, schedule_swap, set_work_context) as a card the operator confirms.`, "Configured forecast")]);
     await read("Garmin measurements", () => getMeasuredSnapshot(now.getTime()), (v) => [s("MEASURED", "garmin", JSON.stringify([v.lastNight, v.stepsToday.length > 1 ? v.stepsToday.at(-1)?.total : null, v.resting.at(-1), v.resting.at(-2), v.garminAsOf]), "Applicable Garmin measurements",
       `GARMIN: ${v.lastNight ? `last main sleep ${hm(sleepMinutes(v.lastNight))}, ${date(v.lastNight.startTime)} → ${date(v.lastNight.endTime)}` : "no Garmin sleep in the last 36 hours"}; steps so far today ${v.stepsToday.length > 1 ? v.stepsToday.at(-1)!.total : "not measured"}; latest resting HR ${v.resting.at(-1)?.value ?? v.resting.at(-2)?.value ?? "not measured"}.`, "Measurement", { freshness: "Last main sleep uses the existing 36-hour wake-time window; other readings retain their source dates" })]);
-    await read("Sleep comparison", () => getSleepDebt(now), (d) => d.days ? [s("SLEEP_SUMMARY", "sleep", JSON.stringify(d), "Recorded sleep comparison",
-      `SLEEP OWED: ${hm(d.owedMinutes)} over the last ${d.days} days with sleep logged, against ${SLEEP_NEED_MINUTES / 60} h a day. A fixed-baseline comparison, not a medical debt or recovery verdict.`)] : []);
+    // SLEEP-DEBT-LEARNED-001: against his own learned usual sleep per kind of day; no figure while still learning.
+    await read("Sleep comparison", () => getSleepDebt(now), (d) => d.days ? [s("SLEEP_SUMMARY", "sleep", JSON.stringify([d.status, d.owedMinutes, d.days, d.judgedDays, d.targets]), "Recorded sleep comparison",
+      d.status === "LEARNING"
+        ? `SLEEP OWED: no figure yet. BEYOND is still learning his usual sleep (${describeSleepTargets(d.targets, hm)}); ${d.days} day${d.days === 1 ? "" : "s"} with sleep logged. Do not substitute a fixed 7 hours.`
+        : `SLEEP OWED: ${hm(d.owedMinutes)} over the last ${d.judgedDays} days with sleep logged${d.judgedDays < d.days ? ` (${d.days - d.judgedDays} more not counted: that kind of day is still learning or its work context is unknown)` : ""}, against the low end of his own usual main sleep for that kind of day: ${describeSleepTargets(d.targets, hm)}. A personal-baseline comparison, not a medical debt or recovery verdict.`)] : []);
     // SUPERCHARGE-001: what DELTA has learned, as counted facts. Note- and journal-based facts follow the personal opt-in.
     await read("What DELTA has learned", () => getDeltaKnowledge(now), (k) => deltaFacts(k, options.includePersonal || options.purpose === "local").map((f) =>
       s("DELTA", f.id, f.text, "What DELTA has learned", f.text, "Derived from records", { at: f.at })));

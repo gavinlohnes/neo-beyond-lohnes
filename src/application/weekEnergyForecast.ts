@@ -4,6 +4,7 @@ import { groupRuns, RUN_MEAN_FLOOR } from "./rotationProjection";
 import { pictureMean, pictureValues, type PictureRow } from "./wholePictureProjection";
 import { getSchedulePattern } from "./queries";
 import { getSleepDebt } from "./monthQueries";
+import type { SleepDebt } from "./sleepDebt";
 import { getWholePicture } from "./wholePictureQueries";
 import { getRecordedContexts } from "./workContextResolution";
 import { getConfirmedExceptions } from "./scheduleExceptions";
@@ -13,7 +14,7 @@ import { getConfirmedExceptions } from "./scheduleExceptions";
  * of the seven Week Ahead days: its place in the run from the saved schedule (shift 2 of 3, day off 1 of 2),
  * and the energy and main sleep you actually recorded at that place in past runs of the same length (shift 3
  * of past 3-shift runs). When those give fewer than RUN_MEAN_FLOOR days, it uses every past run that reached
- * that place (ROTATION-002's shift-by-shift view) and says so. Plus the sleep owed over your last 7 logged days. A forecast from your history: read only,
+ * that place (ROTATION-002's shift-by-shift view) and says so. Plus the sleep owed over your last 7 logged days, against your own learned sleep (SLEEP-DEBT-LEARNED-001). A forecast from your history: read only,
  * never an Engine input, never saved. A mean needs RUN_MEAN_FLOOR (3) days; below that only the count is shown.
  */
 export interface ForecastSide { mean: number | undefined; days: number }
@@ -36,7 +37,7 @@ export interface WeekEnergyForecast {
   /** The days with a forecast mean that sit lowest and highest; null when fewer than two days have one. */
   lowest: ForecastDay | null;
   best: ForecastDay | null;
-  sleepOwed: { owedMinutes: number; days: number };
+  sleepOwed: SleepDebt;
 }
 
 const BACK = 21, AHEAD = 28;
@@ -45,7 +46,7 @@ const kindAt = (now: Date, offset: number, pattern: SchedulePattern) =>
   scheduledWorkContextForLivedDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 17), pattern);
 
 export function deriveWeekEnergyForecast(input: {
-  now: Date; pattern: SchedulePattern; rows: readonly PictureRow[]; sleepOwed: { owedMinutes: number; days: number };
+  now: Date; pattern: SchedulePattern; rows: readonly PictureRow[]; sleepOwed: SleepDebt;
   /** CONTEXT-INTEGRATION-001: recorded WORK/OFF by lived-day date; recorded days win over the rotation (history, and today). */
   recorded?: ReadonlyMap<string, "WORK" | "OFF">;
   /** SCHEDULE-EXCEPTIONS-001: confirmed changes by date, after the record and before the rotation. */
