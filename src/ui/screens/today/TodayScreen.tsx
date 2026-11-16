@@ -105,6 +105,7 @@ import { ShiftDownCard } from "./ShiftDownCard";
 import { EndDayCard } from "./EndDayCard";
 import { CommitmentsCard } from "./CommitmentsCard";
 import { CaptureListRow, CaptureToolsCard } from "./CaptureSection";
+import { canConfirmCapturePromotion, capturePromotionError, capturePromotionInput, emptyCapturePromotionDraft, type CapturePromotionDraft } from "../../components/CapturePromotionForm";
 import { suggestCaptureDueDate } from "../../../engine/captureIntelligence";
 import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
@@ -491,14 +492,15 @@ export function TodayScreen({
   // commitmentFeedback below, since undoing would mean deleting an
   // Obligation, which Drop 01 doctrine has no operation for.
   const [captureConversion, setCaptureConversion] = useState<{ id: string; text: string } | null>(null);
-  const [conversionTitle, setConversionTitle] = useState("");
+  // CAPTURE-PARITY-001: title, planned day and due date are one draft shared
+  // with quick capture's form (components/CapturePromotionForm.tsx).
+  const [conversionDraft, setConversionDraft] = useState<CapturePromotionDraft>(emptyCapturePromotionDraft());
   // Capture Intelligence layer (2026-09-02): a chrono-node/Compromise-derived
   // due-date proposal (see engine/captureIntelligence.ts), pre-filled into
   // this same editable field the moment the conversion panel opens — never
   // applied on its own. conversionDateSuggestion is kept only to show the
-  // evidence line ("Detected from ..."); conversionDueAt is the actual,
+  // evidence line ("Detected from ..."); conversionDraft.dueAt is the actual,
   // freely editable/clearable form value that gets submitted.
-  const [conversionDueAt, setConversionDueAt] = useState("");
   const [conversionDateSuggestion, setConversionDateSuggestion] = useState<CaptureDateSuggestion | null>(null);
   const [captureConversionFeedback, setCaptureConversionFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
   const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
@@ -1523,41 +1525,45 @@ export function TodayScreen({
   function requestCaptureConversion(item: CaptureItem) {
     if (busy || busyRef.current) return;
     setCaptureConversionFeedback(null);
-    setConversionTitle(item.text);
     const suggestion = suggestCaptureDueDate(item.text, new Date());
     setConversionDateSuggestion(suggestion);
-    setConversionDueAt(suggestion?.dueAt ?? "");
+    setConversionDraft({ ...emptyCapturePromotionDraft(item.text), dueAt: suggestion?.dueAt ?? "" });
     setCaptureConversion({ id: item.id, text: item.text });
   }
 
   function cancelCaptureConversion() {
     if (busy || busyRef.current) return;
     setCaptureConversion(null);
-    setConversionDueAt("");
+    setConversionDraft(emptyCapturePromotionDraft());
     setConversionDateSuggestion(null);
   }
 
   async function confirmCaptureConversion() {
     const acknowledge = captureCommitFeedback();
-    if (busy || busyRef.current || !captureConversion || !conversionTitle.trim()) return;
+    if (busy || busyRef.current || !captureConversion || !canConfirmCapturePromotion(conversionDraft)) return;
     const target = captureConversion;
-    const title = conversionTitle.trim();
-    const dueAt = conversionDueAt.trim();
+    const input = capturePromotionInput(conversionDraft);
     busyRef.current = true;
     setBusy(true);
     setCaptureConversionFeedback(null);
     try {
-      await convertCaptureToObligation(target.id, { title, ...(dueAt ? { dueAt } : {}) });
+      await convertCaptureToObligation(target.id, input);
       acknowledge("LIGHT");
       setCaptureConversion(null);
-      setConversionDueAt("");
+      setConversionDraft(emptyCapturePromotionDraft());
       setConversionDateSuggestion(null);
       await refresh();
-      setCaptureConversionFeedback({ kind: "SUCCESS", message: `Task created: ${title}` });
+      setCaptureConversionFeedback({
+        kind: "SUCCESS",
+        message: input.plannedAt
+          ? `Plan item created: ${input.title}. Its planned day is separate from its deadline.`
+          : `Task created: ${input.title}`,
+      });
     } catch (error) {
+      // The typed draft stays open so a retry needs no retyping.
       setCaptureConversionFeedback({
         kind: "ERROR",
-        message: describeError(error, "Could not create the task."),
+        message: capturePromotionError(error, "Could not create the task. Your capture and choices are kept."),
       });
     } finally {
       busyRef.current = false;
@@ -2242,10 +2248,8 @@ export function TodayScreen({
         justResolvedCapture={justResolvedCapture}
         onUndoResolve={() => void handleUndoResolveCapture()}
         captureConversion={captureConversion}
-        conversionTitle={conversionTitle}
-        setConversionTitle={setConversionTitle}
-        conversionDueAt={conversionDueAt}
-        setConversionDueAt={setConversionDueAt}
+        conversionDraft={conversionDraft}
+        setConversionDraft={setConversionDraft}
         conversionDateSuggestion={conversionDateSuggestion}
         onRequestConversion={requestCaptureConversion}
         onCancelConversion={cancelCaptureConversion}
@@ -3386,10 +3390,8 @@ export function TodayScreen({
                   item={item}
                   busy={busy}
                   captureConversion={captureConversion}
-                  conversionTitle={conversionTitle}
-                  setConversionTitle={setConversionTitle}
-                  conversionDueAt={conversionDueAt}
-                  setConversionDueAt={setConversionDueAt}
+                  conversionDraft={conversionDraft}
+                  setConversionDraft={setConversionDraft}
                   conversionDateSuggestion={conversionDateSuggestion}
                   onRequestConversion={requestCaptureConversion}
                   onCancelConversion={cancelCaptureConversion}

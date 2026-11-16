@@ -5,6 +5,7 @@ import { convertCaptureToObligation } from "../../application/intentCommands";
 import { captureCommitFeedback } from "../feel/feedback";
 import { describeError } from "../errorMessage";
 import { useSessionDraft } from "../sessionDrafts";
+import { CapturePromotionForm, capturePromotionError, capturePromotionInput, capturePromotionSuccess, emptyCapturePromotionDraft, type CapturePromotionDraft } from "./CapturePromotionForm";
 import "./fastCapture.css";
 
 /** Raw capture and deliberate promotion use the same canonical commands as Capture tools. */
@@ -14,9 +15,7 @@ export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
   const [text, setText] = useState("");
   const [saved, setSaved] = useState<CaptureItem | null>(null);
   const [promoting, setPromoting] = useState(false);
-  const [title, setTitle] = useState("");
-  const [plannedAt, setPlannedAt] = useState("");
-  const [dueAt, setDueAt] = useState("");
+  const [draft, setDraft] = useState<CapturePromotionDraft>(emptyCapturePromotionDraft());
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [promoted, setPromoted] = useState(false);
@@ -38,30 +37,27 @@ export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
     finally { lock.current = false; onBusy(false); requestAnimationFrame(() => { if (input.current?.getClientRects().length) input.current.focus(); }); }
   }
   async function promote() {
-    if (lock.current || busy || !saved || !title.trim() || promoted) return;
+    if (lock.current || busy || !saved || !draft.title.trim() || promoted) return;
     lock.current = true; onBusy(true); setError(null); setMessage(null);
     const acknowledge = captureCommitFeedback();
     try {
-      await convertCaptureToObligation(saved.id, { title: title.trim(), ...(plannedAt ? { plannedAt } : {}), ...(dueAt ? { dueAt } : {}) });
-      setPromoted(true); setPromoting(false); setTitle(""); setPlannedAt(""); setDueAt("");
-      setMessage(plannedAt ? "Plan item created. Its planned day is separate from its deadline." : "Task created. No planned day was added.");
+      await convertCaptureToObligation(saved.id, capturePromotionInput(draft));
+      setPromoted(true); setPromoting(false); setDraft(emptyCapturePromotionDraft());
+      setMessage(capturePromotionSuccess(draft));
       acknowledge("LIGHT"); notifySaved();
       requestAnimationFrame(() => input.current?.focus());
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : "";
-      setError(message.startsWith("CAPTURE_NOT_OPEN") || message.startsWith("CAPTURE_NOT_FOUND")
-        ? "This capture was already processed or removed elsewhere. Your task draft is kept; open Capture to inspect it."
-        : describeError(cause, "Could not create the task. Your raw capture and choices are kept."));
+      setError(capturePromotionError(cause, "Could not create the task. Your raw capture and choices are kept."));
     } finally { lock.current = false; onBusy(false); }
   }
   function startPromotion() {
     if (!saved || busy || lock.current || promoted) return;
-    setTitle(saved.text); setPlannedAt(""); setDueAt(""); setError(null); setPromoting(true);
+    setDraft(emptyCapturePromotionDraft(saved.text)); setError(null); setPromoting(true);
     requestAnimationFrame(() => taskTitle.current?.focus());
   }
   function keepRaw() {
     if (busy || lock.current) return;
-    setPromoting(false); setTitle(""); setPlannedAt(""); setDueAt(""); setError(null);
+    setPromoting(false); setDraft(emptyCapturePromotionDraft()); setError(null);
     requestAnimationFrame(() => input.current?.focus());
   }
   return <div className="fast-capture">
@@ -76,15 +72,7 @@ export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
       <p className="card-body fast-capture__text">{saved.text}</p>
       {!promoting && !promoted && <button type="button" className="btn-secondary" disabled={busy} onClick={startPromotion}>MAKE A TASK</button>}
     </div>}
-    {promoting && <fieldset className="fast-capture__promotion" disabled={busy}>
-      <legend className="tool-label">OPTIONAL · CREATE A TASK OR PLAN ITEM</legend>
-      <p className="meta">Only this confirmation creates a task. Your original capture stays in history.</p>
-      <label className="field">Task title<textarea ref={taskTitle} className="input" aria-label="Task title" rows={2} value={title} onChange={(e) => setTitle(e.target.value)} /></label>
-      <label className="field">Planned day (optional)<input className="input" type="date" aria-label="Planned day (optional)" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} /></label>
-      <label className="field">Due date (optional)<input className="input" type="date" aria-label="Due date (optional)" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></label>
-      <button type="button" className="btn-primary" disabled={busy || !title.trim()} onClick={() => void promote()}>{plannedAt ? "CREATE PLAN ITEM" : "CREATE TASK"}</button>
-      <button type="button" className="btn-secondary" onClick={keepRaw}>KEEP RAW</button>
-    </fieldset>}
+    {promoting && <CapturePromotionForm draft={draft} onChange={setDraft} busy={busy} titleRef={taskTitle} onConfirm={() => void promote()} onCancel={keepRaw} />}
     {error && <p role="alert">{error}</p>}
     <button type="button" className="text-button fast-capture__open" disabled={busy} onClick={onOpenCapture}>OPEN CAPTURE</button>
   </div>;

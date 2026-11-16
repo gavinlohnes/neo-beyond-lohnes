@@ -76,6 +76,8 @@ describe("registry autonomy", () => {
       { kind: "correct_log", metric: "water", target_id: "x", from: 16, to: 12 },
       { kind: "remove_log", metric: "weight", target_id: "x", from: 200 },
       { kind: "capture_note", text: "buy filters" },
+      // REMIND-AT-001 (merged #562): a reminder with a set alert time is still a card he confirms.
+      { kind: "add_reminder", title: "Call the pharmacy", due_date: "2026-11-16", when_note: "17:30" },
     );
     expect((await immediateCards(list, "alfred", { understoodAll: true })).size).toBe(0);
     expect((await immediateCards(list, "helper", { understoodAll: true })).size).toBe(0);

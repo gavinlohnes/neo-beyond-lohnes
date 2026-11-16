@@ -42,7 +42,8 @@ fun upcoming(plan: BridgePlan, now: Long): List<Moment> = plan.moments.filter { 
  * The alarms are inexact (no exact-alarm permission): Android may deliver one up to an hour after its time, and Doze can
  * hold it a little longer. A re-arm inside that window must not cancel such an alarm for good, so every moment that is
  * not yet shown and came due less than [GRACE_MS] ago is set again (a time in the past fires at once). Older ones are
- * dropped rather than shown hours late (for example after the phone was off).
+ * dropped rather than shown hours late (for example after the phone was off): a re-arm no longer sets them, and an alarm
+ * Android delivers after the window is not shown ([shouldShow]).
  */
 const val GRACE_MS = 2 * 60 * 60 * 1000L
 
@@ -59,6 +60,22 @@ fun keyTime(key: String): Long? = key.substringBefore('|').toLongOrNull()
  */
 fun toArm(plan: BridgePlan, now: Long, shown: Set<String>, max: Int): List<Moment> =
     plan.moments.filter { it.at > now - GRACE_MS && it.key !in shown }.take(max)
+
+/**
+ * FOLLOWUPS-001 (N2): whether a fired alarm's moment is shown now. Same window as [toArm]: not yet [shown] and came due
+ * less than [GRACE_MS] ago. An alarm Android delivers later than that is dropped rather than shown hours late.
+ */
+fun shouldShow(moment: Moment, now: Long, shown: Set<String>): Boolean =
+    moment.key !in shown && moment.at > now - GRACE_MS
+
+/**
+ * FOLLOWUPS-001 (N1): the shown set to start from when none was ever stored (the first run after upgrading from 0.11.0,
+ * which kept none). Every moment of the stored plan already due within the grace window counts as shown: 0.11.0 most
+ * likely showed it already, so it is not shown a second time. The cost is one-off and bounded: a moment whose 0.11.0
+ * alarm Android was still holding at that instant is not shown.
+ */
+fun seedShown(plan: BridgePlan?, now: Long): Set<String> =
+    plan?.moments?.filter { it.at <= now && it.at > now - GRACE_MS }?.map { it.key }?.toSet() ?: emptySet()
 
 /** The shown keys worth keeping: anything older than the grace window can never be armed again. */
 fun pruneShown(shown: Set<String>, now: Long): Set<String> =

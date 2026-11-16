@@ -7,6 +7,7 @@ import { AlfredContextPanel } from "./AlfredContextPanel";
 // The Claude SDK loads only when Alfred is first used, so it stays out of BEYOND's start-up bundle.
 import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/alfred/alfredClient";
 const loadClient = () => import("../../application/alfred/alfredClient");
+import { ReminderAlertLine } from "./ReminderAlertLine";
 import { confirmLabel, describeConfirmError, describeProposal, describeProposalNote, undoSavedLog } from "../../application/alfred/alfredActions";
 import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
@@ -250,18 +251,22 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
    * one that didn't save says why on its card, and the ones after it say they wait for SAVE. Never silent.
    */
   async function act(cards: { id: string; proposal: AlfredProposal }[], context: ProposalContext, source: ProposalSource, understoodAll: boolean) {
+    let acted: Awaited<ReturnType<typeof runImmediate>>, ids: Set<string>;
     try {
       const plan = await planAct(cards, source, { understoodAll });
       if (!plan.ids.size) return plan.overCap ? { overCap: true } : null;
-      const result = await runImmediate(cards, plan.ids, context, included);
-      if (Object.keys(result.done).length) {
-        captureCommitFeedback()("LIGHT"); onSaved();
-        if (lastContext.current && lastContext.current.recordVersion === context.recordVersion && lastContext.current.personalVersion === context.personalVersion) {
-          lastContext.current = { ...lastContext.current, personalVersion: result.context.personalVersion, recordVersion: result.context.recordVersion ?? lastContext.current.recordVersion };
-        }
-      }
-      return { result, notes: heldNotes(cards, plan.ids, result, describeConfirmError) };
+      ids = plan.ids;
+      acted = await runImmediate(cards, ids, context, included);
     } catch { return { unchecked: "BEYOND couldn't check these just now, so nothing was saved at once. SAVE the ones you want." }; }
+    if (Object.keys(acted.done).length) {
+      if (lastContext.current && lastContext.current.recordVersion === context.recordVersion && lastContext.current.personalVersion === context.personalVersion) {
+        lastContext.current = { ...lastContext.current, personalVersion: acted.context.personalVersion, recordVersion: acted.context.recordVersion ?? lastContext.current.recordVersion };
+      }
+      // Written is written: a failing refresh or haptic must not turn saved entries back into SAVE cards (a second write).
+      try { captureCommitFeedback()("LIGHT"); } catch { /* feedback is best-effort */ }
+      try { onSaved(); } catch { /* the entries are saved; TODAY refreshes on its next load */ }
+    }
+    return { result: acted, notes: heldNotes(cards, ids, acted, describeConfirmError) };
   }
   type Acted = { result?: Awaited<ReturnType<typeof runImmediate>>; notes?: Record<string, string>; overCap?: boolean; unchecked?: string } | null;
   const withAct = <C extends { id: string; proposal: AlfredProposal }>(c: C, acted: Acted) => {
@@ -422,6 +427,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
             <p>{describeProposal(p.proposal)}</p>
             {p.state === "pending" && describeProposalNote(p.proposal) && <p className="meta">{describeProposalNote(p.proposal)}</p>}
             {p.state === "pending" && p.held && <p className="meta">{p.held}</p>}
+            {p.state === "pending" && p.proposal.kind === "add_reminder" && p.proposal.due_date && p.proposal.when_note && <ReminderAlertLine dueAt={p.proposal.due_date} remindAt={p.proposal.when_note} title={p.proposal.title} />}
             {["remember", "person_date", "home_item"].includes(p.proposal.kind) && <p className="meta">Personal facts are available to Alfred by default. Corrections keep history. Stop using removes them from active context; it does not erase them. New exports require this build or newer.</p>}
             {p.state === "pending" ? <div className="alfred-card__row">
               <button type="button" className="btn-primary" disabled={busy} onClick={() => void decide(i, p.id, true)}>{confirmLabel(p.proposal)}</button>
