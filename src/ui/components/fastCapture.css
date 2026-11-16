@@ -5,6 +5,4 @@
 .fast-capture__text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .fast-capture__message { margin: 0; }
 .fast-capture__saved { border-top: 1px solid var(--border-subtle); padding-top: 12px; min-width: 0; }
-.fast-capture__promotion { border: 1px solid var(--border-strong); margin: 0; padding: 12px; min-width: 0; display: grid; gap: 12px; }
-.fast-capture__promotion legend { max-width: 100%; white-space: normal; }
 .fast-capture__open { min-height: 44px; justify-self: start; font-size: 16px; }
