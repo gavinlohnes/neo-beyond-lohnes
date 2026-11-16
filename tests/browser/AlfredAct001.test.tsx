@@ -4,6 +4,7 @@ import { cleanup, render } from "vitest-browser-react";
 import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
+import { AlfredSheet } from "../../src/ui/components/AlfredSheet";
 import { startDay } from "../../src/application/commands";
 import { getHydrationEntries, getSleepEntries } from "../../src/application/queries";
 
@@ -118,5 +119,23 @@ describe("ALFRED-ACT-001", () => {
     expect(await water(day.id)).toBe(0);
     expect(await getSleepEntries(day.id)).toEqual([]);
     expect((await axe.run(sheet.element(), { runOnly: ["wcag2a", "wcag2aa"] })).violations.map((v) => v.id)).toEqual([]);
+  });
+  it("a failing refresh after an immediate save still shows it saved with UNDO, never a SAVE that would write twice (#560 review note 3)", async () => {
+    vi.setSystemTime(new Date(2026, 10, 14, 17, 0));
+    const day = await startDay();
+    vi.setSystemTime(T0);
+    localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
+    await page.viewport(320, 740);
+    const onSaved = vi.fn(() => { throw new Error("refresh failed"); });
+    const screen = await render(<AlfredSheet open onClose={() => {}} onSaved={onSaved} />);
+    const sheet = screen.getByRole("dialog", { name: "ALFRED" });
+    replies = [() => reply([{ type: "tool_use", id: "w1", name: "log_water", input: { oz: 20 } }])];
+    await send(sheet, "twenty ounces of water");
+    const card = sheet.getByRole("group", { name: "Log 20 oz water" });
+    await expect.element(card.getByText("Logged.")).toBeVisible();
+    expect(onSaved).toHaveBeenCalled();
+    expect(card.getByRole("button", { name: "SAVE" }).elements()).toHaveLength(0);
+    await expect.element(card.getByRole("button", { name: "Undo: Log 20 oz water" })).toBeVisible();
+    expect(await water(day.id)).toBe(20);
   });
 });

@@ -4,9 +4,9 @@ import { whyConfirm, type ProposalSource } from "./alfredTools";
 
 /**
  * ALFRED-ACT-001 (Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"). A clear command to
- * log one of the low-risk kinds (water, a saved or fully-stated meal, protein, weight near his last, a habit done, a set
- * in the workout in progress) runs at once through the SAME guarded confirm a card's SAVE uses, and shows UNDO for
- * ACT_UNDO_MS. UNDO is the existing append-only void/undo of that record (CARD-UNDO-001). Everything else, and anything
+ * log one of the six low-risk kinds (water; one of his SAVED meals only, never a typed new food or Alfred's estimate,
+ * which keep SAVE + REMEMBER MEAL; protein; weight near his last; a habit done; a set in the workout in progress) runs
+ * at once through the SAME guarded confirm a card's SAVE uses, and shows UNDO for ACT_UNDO_MS. UNDO is the existing append-only void/undo of that record (CARD-UNDO-001). Everything else, and anything
  * ambiguous, stays a card he confirms. The rule, in order:
  *   1. the kind's registry `autonomy` is "immediate-undo" (every other kind: card);
  *   2. the whole message was understood (the free helper left nothing unknown);

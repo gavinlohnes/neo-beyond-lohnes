@@ -151,3 +151,29 @@ it("SLEEP-DEBT-LEARNED-001: Alfred's sleep line has no owed figure while BEYOND 
   expect(line).toBe("SLEEP OWED: no figure yet. BEYOND is still learning his usual sleep (work days still learning (0 of 10 days), days off still learning (0 of 10 days)); 1 day with sleep logged. Do not substitute a fixed 7 hours.");
   expect(line).not.toMatch(/against 7 h/);
 });
+it("FOLLOWUPS-001: Alfred's LEARNED sleep line names a nap-only day as not counted, and judges only days with main sleep", async () => {
+  const monthQueries = await import("../../src/application/monthQueries");
+  const { deriveSleepDebt } = await import("../../src/application/sleepDebt");
+  await startDay();
+  const now = new Date();
+  // Lived day `back` days before the current one (lived days start at 16:30).
+  const start = (back: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1 - back, 16, 30).toISOString();
+  let n = 0;
+  const day = (back: number, kind: "WORK" | "OFF", sleep: { primaryMinutes?: number; napMinutes?: number }) => ({
+    beyondDayId: `s${++n}`, startedAt: start(back), livedDayStart: start(back), work: { declared: kind, scheduled: "OFF" as const }, sleep,
+    workouts: [], urges: [], cleanDay: false, burden: { manualEntries: 0, corrections: 0, trainingSets: 0 },
+  });
+  // 12 work and 12 off baseline nights (8+ lived days back), then a nap-only work day and a judged work night.
+  const history = [
+    ...Array.from({ length: 12 }, (_, i) => day(8 + i * 2, "WORK", { primaryMinutes: [340, 350, 360, 370, 380][i % 5]! })),
+    ...Array.from({ length: 12 }, (_, i) => day(9 + i * 2, "OFF", { primaryMinutes: [460, 470, 480, 490, 500][i % 5]! })),
+    day(1, "WORK", { napMinutes: 45 }),
+    day(2, "WORK", { primaryMinutes: 280, napMinutes: 40 }),
+  ];
+  const debt = deriveSleepDebt(history, now);
+  expect(debt).toMatchObject({ status: "LEARNED", owedMinutes: 20, days: 7, judgedDays: 6 });
+  vi.spyOn(monthQueries, "getSleepDebt").mockResolvedValue(debt);
+  const local = await readOperatorContext({ purpose: "local", includePersonal: true });
+  const line = local.records.find((r) => r.kind === "SLEEP_SUMMARY")!.text;
+  expect(line).toBe("SLEEP OWED: 0h20 over the last 6 days with sleep logged (1 more not counted: that kind of day is still learning, its work context is unknown, or only a nap was logged), against the low end of his own usual main sleep for that kind of day: work days 5h40 (from 12 days), days off 7h40 (from 12 days). A personal-baseline comparison, not a medical debt or recovery verdict.");
+});

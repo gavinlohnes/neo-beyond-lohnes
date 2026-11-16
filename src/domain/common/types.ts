@@ -828,6 +828,8 @@ export interface ObligationModifiedPayload {
     dueAt?: string;
     plannedAt?: string;
     recurrence?: { freq: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number };
+    /** REMIND-AT-001: HH:MM on the due date; null removed it. */
+    remindAt?: string | null;
   };
 }
 
