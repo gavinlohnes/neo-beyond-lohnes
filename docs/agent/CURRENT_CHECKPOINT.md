@@ -3,14 +3,91 @@
 - Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
   experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
   PR [#559](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/559). Fast-forwarded onto `44a1c5b0` after #556
-  merged (2026-11-15 18:42 CT); `origin/master` `b921d303` (#557) merged in normally (checkpoint conflict only).
+  merged; `origin/master` `b921d303` (#557) merged in normally (checkpoint conflict only).
 - The existing LOOP TRY comparison now reports a Welch 95% range on the difference of means, with day counts, and says
-  "can't tell yet" when that range crosses zero or "not enough data yet" when a side is thin, instead of declaring a
-  winner. Pure application-layer functions; minimal wording in the existing result view. No Engine, schema, alert-kind
-  or dependency change.
-- Lane FEATURE (classifier may say PROTECTED only for governance-path docs; semantically a readout change). Gates:
-  focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
-- Other open work, independent of this section: #558 follow-ups. #473 stays a parked draft.
+  "can't tell yet" when that range crosses zero and still reaches a meaningful gap, or "not enough data yet" when a side
+  is thin, instead of declaring a winner. Pure application-layer functions; minimal wording in the existing result
+  view. No Engine, schema, alert-kind or dependency change.
+- Lane FEATURE (classifier says PROTECTED only for governance-path docs; semantically a readout change). The
+  independent review of `d11166bb` applied the PROTECTED bar and was PASS (no blockers).
+- Owner session 2026-11-16 ("Finish the next one"): `origin/master` `8084b1be` (#558 FOLLOWUPS-001, #562 REMIND-AT-001,
+  #560 ALFRED-ACT-001) merged in normally (this checkpoint was the only conflict; all sections kept, theirs are history).
+  Review non-blocking note 1 fixed (intro wording now matches the rule); note 2 covered by a 320px browser check on a
+  long "can't tell yet" result line. See the brief's review response.
+- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
+  **renewed independent exact-head review REQUIRED, not yet done** (the PASS review is stale); Gavin merges. Exact head,
+  checks run and CI are in the PR handoff. #561 waits (stacked on the merged #560 branch); #563 and #473 are separate.
+
+---
+
+# Historical — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO; merged as #560)
+
+- Builder Grok Bot. Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"; started as wave 2
+  of the overnight plan he approved. [Brief](ALFRED-ACT-001.md). Branch `codex/alfred-act-001` from fetched master
+  `4d74ac26`, rebased onto `44a1c5b0` (#555 and #556 merged) before the first push. PR [#560](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/560).
+- Lane PROTECTED (consequential AI autonomy; Doctrine and BEYOND-4.0 decision 2 amended in their own text; Decision
+  Register entry marked built). No schema, Engine, dependency, provider or notification change.
+- Immediate with 10 s UNDO: water, a saved meal (never Alfred's estimate), protein,
+  weight (within 10 lb of the last), habit done, a set in the workout in progress; only when clear (no time, ordinary
+  amount, whole message understood, not repeated). Everything else keeps its confirm card, including `add_reminder`
+  (with or without a REMIND-AT `remindAt` time).
+- Independent review of `365d2a45` was PASS (no blockers). Since then `origin/master` was merged in normally: `b921d303`
+  (#557) as `3a49f926`, then `17f6bc8e` (#558 FOLLOWUPS-001, #562 REMIND-AT-001; owner session 2026-11-16). Conflicts:
+  this checkpoint (all sections kept) and the `add_reminder` registry entry (kept `autonomy: "confirm"` and master's
+  HH:MM `remindAt` description). Review non-blocking notes 1 (meal comment) and 3 (post-write refresh failure) fixed;
+  note 2 (set UNDO is last-set only) stays as documented in the brief. Those sections below are history.
+- Gates: local `TZ=UTC npm run verify`; PR CI on the exact head; **renewed independent exact-head review REQUIRED, not
+  yet done** (the PASS review is stale); Gavin merges. #561 (multi-action) stays stacked on this branch and waits.
+  Exact head, checks run and CI are in the PR handoff.
+- Merged by Gavin as `8084b1be` (2026-11-16 04:32 CT). #561 (multi-action) was stacked on its branch.
+
+---
+
+# Historical — REMIND-AT-001 (reminders at a set time, inside the 3-a-day cap; merged as #562)
+
+- Builder Grok Bot. Gavin, 2026-11-15 17:49 CT, approved the overnight sprint plan (Wave 3: "REMIND-AT-001 (reminders at
+  a set time, inside the 3-a-day cap)"). [Brief](REMIND-AT-001.md). PR [#562](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/562). Branch `codex/remind-at-001` from fetched master
+  `b921d303` (#557 merged).
+- A task may carry an optional `remindAt` (HH:MM on its due date); its alert fires then as the existing `TASK_DUE` kind,
+  under the same switch, quiet hours, priority and 3-a-day cap. Where the time is set (Missions & Obligations create and
+  edit, Alfred's `add_reminder` card) one line says whether it will alert, or "Won't alert:" and why. No Dexie version,
+  Engine, alert-kind, Bridge, permission or dependency change.
+- Lane PROTECTED (check:risk: domain types; semantically a backed-up field and notification timing). Gates: focused tests
+  under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`,
+  then FOLLOWUPS-001 [#558](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/558) as `e84751fe`; `origin/master`
+  `e84751fe` merged into this branch normally (checkpoint conflict only, all sections kept). Their sections below are history.
+- Merge and audit (2026-11-16): no behaviour defect; `add_reminder` example `"9:30"` → `"09:30"` plus coverage tests
+  (next lived day's cap from 16:30; backups without `remindAt`). See the brief's last section. Exact head, checks run and
+  CI are in the PR handoff. Remaining gates: green CI on that head; **independent exact-head review REQUIRED, not yet
+  done**; Gavin merges.
+- Merged by Gavin as `17f6bc8e` (2026-11-16).
+
+---
+
+# Historical — FOLLOWUPS-001 (review follow-ups: BRIDGE-NOTIFY-001 N1/N2/N4; sleep-debt nap-only days; merged as #558)
+
+- Builder Grok Bot. Gavin approved the overnight plan on 2026-11-15 (wave 2, item 6). [Brief](FOLLOWUPS-001.md). Branch
+  `codex/followups-001` from fetched master `4d74ac26`; `origin/master` `abd9dc71` (#555 merged) merged in normally.
+- Fixes #554 review notes N1 (no duplicate after upgrading from 0.11.0), N2 (an alarm delivered 2 hours or more late is
+  dropped) and N4 (a failed alert-settings save is not re-applied by a queued change). Health Bridge 0.11.2.
+- Fixes the #555 review note on nap-only days: only days with main sleep logged are judged against the main-sleep
+  target; a nap-only day is "not counted", like the baseline.
+- Lane PROTECTED (inherited). No new alert kind, Engine, schema, permission or dependency change.
+- Independent review of `3bfe893c` was PASS with no blockers. `origin/master` `b921d303` was then merged in normally
+  as `a0c9b742` (docs only), so that exact-head review is stale. Non-blocking notes 1 (README wording) and 3
+  (operatorContext nap-only clause) are fixed on this head; note 2 is left documented (needs Android SDK). See the
+  brief's review response.
+- Local checks on this head: `TZ=UTC` typecheck, check:architecture, and build; sleepDebt + operatorContext +
+  WorkScheduleScreen tests under UTC and America/Chicago; Moments.kt + MomentsTest.kt (kotlinc, JDK 17, JUnit 4.13.2)
+  10/10. Full `TZ=UTC npm run verify` was not re-run (optional; last run at `3bfe893c`).
+- Remaining gates: green required CI including android on this exact head; **renewed independent exact-head review
+  REQUIRED, not yet done**; Gavin merges. The author does not self-review.
+- WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556) merged by Gavin as `44a1c5b0`
+  (2026-11-15 18:42 CT) and CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged
+  by Gavin as `b921d303` (2026-11-15 18:57 CT); `origin/master` `b921d303` merged into this branch normally (docs
+  conflict only, all sections kept). Their sections below are history.
+- Merged by Gavin as `e84751fe`.
 
 ---
 
@@ -22,11 +99,16 @@
 - Lane FEATURE: one shared confirm-first form (title, optional planned day, optional due date) for quick capture, Notes
   Sweep and the Capture list, through the existing `convertCaptureToObligation`. No schema, Engine, event or
   notification-kind change.
-- PR [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303` (2026-11-15 18:57 CT).
+- Gates: local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
+- SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
+  `abd9dc71` (2026-11-15 18:06 CT) and WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
+  merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT); `origin/master` `44a1c5b0` merged into this branch normally
+  (docs conflict only, all sections kept). Their sections are history. #473 stays a parked draft.
+- Merged by Gavin as `b921d303` (2026-11-15 18:57 CT).
 
 ---
 
-# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556)
+# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556, `44a1c5b0`)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
   `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).
@@ -46,8 +128,7 @@
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
   baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
   Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
-  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
-  `abd9dc71` (2026-11-15).
+  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555), merged by Gavin as `abd9dc71` (2026-11-15 18:06 CT).
 - BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
   (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
 - Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);
@@ -71,7 +152,7 @@
   fix it"): `origin/master` `2e68feaf` merged in with a normal merge (no force-push); the Bridge re-arm keeps unshown
   moments within a 2 h grace; same-time moments are two alerts; docs and settings copy corrected; quick taps keep every
   change. See the brief's review responses. Needs a renewed independent exact-head review.
-- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. Plan-to-confirm moments and
+- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges. Plan-to-confirm moments and
   a true BEYOND-to-Bridge background hand-off are deferred (see brief).
 - No other open work: ALFRED-TOOLS-001 [#552](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/552) merged as
   `527332ef` (2026-11-15 05:45 CT) and SHIFT-CORRECT-001 [#553](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/553)

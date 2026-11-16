@@ -46,6 +46,12 @@ within the last 2 hours (it fires at once), so a re-arm can no longer cancel a l
 never shown twice. A moment is identified by its time and kind, so two moments at the same minute (for example
 "Shift in 30 minutes" and "Due today" at 16:00) are two notifications.
 
+0.11.2 (FOLLOWUPS-001): an alarm Android delivers 2 hours or more after its moment is dropped rather than shown, the
+same window a re-arm uses. On the first run after upgrading from 0.11.0 (which kept no record of shown moments), every
+moment of the stored plan that came due within the last 2 hours counts as shown (older ones are already outside the
+window), so nothing 0.11.0 showed appears a second time (the one-off cost: an alarm Android was still holding at that
+instant is not shown).
+
 The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.

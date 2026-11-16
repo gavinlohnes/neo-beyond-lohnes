@@ -54,21 +54,22 @@ describe("ALFRED-001", () => {
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     next = () => reply([
       { type: "text", text: "Logged both for you to confirm." },
-      { type: "tool_use", id: "toolu_1", name: "log_water", input: { oz: 20 } },
+      // ALFRED-ACT-001: a clear water log now saves at once (tests/browser/AlfredAct001); sleep still waits for SAVE.
+      { type: "tool_use", id: "toolu_1", name: "log_sleep", input: { minutes: 420 } },
       { type: "tool_use", id: "toolu_2", name: "add_reminder", input: { title: "Call CPAP place", due_date: "2026-11-01", when_note: "after you wake" } },
     ]);
     const screen = await render(<App />);
     await screen.getByRole("button", { name: "Ask Alfred" }).first().click();
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
-    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("Sort out the uniform order and 20 oz water, and remind me to call the CPAP place after I wake");
+    await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("Sort out the uniform order and I slept 7 hours, and remind me to call the CPAP place after I wake");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await expect.element(sheet.getByText("Logged both for you to confirm.")).toBeVisible();
     // Nothing is written until SAVE.
-    expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
-    const water = sheet.getByRole("group", { name: "Log 20 oz water" });
-    await water.getByRole("button", { name: "SAVE" }).click();
-    await expect.poll(() => db.events.where("beyondDayId").equals(day.id).filter((e) => e.type === "WATER_LOGGED").count()).toBe(1);
-    await expect.element(water.getByText("Saved.")).toBeVisible();
+    expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
+    const sleep = sheet.getByRole("group", { name: "Log main sleep 7h 00m" });
+    await sleep.getByRole("button", { name: "SAVE" }).click();
+    await expect.poll(() => db.events.where("beyondDayId").equals(day.id).filter((e) => e.type === "SLEEP_LOGGED").count()).toBe(1);
+    await expect.element(sleep.getByText("Saved.")).toBeVisible();
     await sheet.getByRole("group", { name: /^Remind: Call CPAP place/ }).getByRole("button", { name: "SKIP" }).click();
     expect(await db.obligations.count()).toBe(0);
 

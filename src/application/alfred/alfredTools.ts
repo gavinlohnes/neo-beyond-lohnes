@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { retimeWorkMark, voidWorkMark, captureItem, ensureActiveDay, logBodyweight, logProtein, logSleep, logWater, markWorkEnded, markWorkStarted, noteShiftHandoff, setWorkContext, submitCheckIn, correctWater, correctSleep, correctBodyweight, voidSleepLog, voidBodyweightLog } from "../commands";
-import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries, getWorkMarks, getWorkPeriodEnded } from "../queries";
+import { getActiveDay, getMostRecentBodyweight, getBodyweightEntries, getHydrationEntries, getSleepEntries, getWorkMarks, getWorkPeriodEnded } from "../queries";
 import { readAutomationConfig } from "../iftttAutomations";
 import { createSavedMeal, logManualMeal, logMeal } from "../nutritionCommands";
 import { getActiveWorkoutSession, getPerformedSets } from "../trainQueries";
@@ -18,13 +18,15 @@ import { addHomeItem, describeRepeat, isRealDate, REPEAT_UNITS } from "../homeCo
 import { formatLocalDate } from "../../engine/scheduledContext";
 import { MEMORY_TOPICS } from "../../domain/alfred/types";
 import { SHIFT_HANDOFF_MAX_LENGTH, URGE_TRIGGERS } from "../../domain/common/types";
-import { setHabitDone } from "../habitCommands";
+import { getHabitAnswer, setHabitDone } from "../habitCommands";
+import { getSavedMeals } from "../nutritionQueries";
 import { getActiveHabits } from "../habitQueries";
 import { addCollectionItem } from "../collectionCommands";
 import { getCollection, getCollections } from "../collectionQueries";
 import { confirmScheduleException, confirmShiftSwap } from "../scheduleExceptions";
 import { confirmFix, describeFix, resolveFix, hhmm, placeTime } from "./fixEntries";
 import { matchOne } from "../helper/freeHelper";
+import { CLOCK_HHMM } from "../../persistence/intentValidation";
 import { db } from "../../persistence/db";
 import type { AlfredProposal, ConfirmResult } from "./alfredActions";
 import type { ProposalContext } from "./contextActions";
@@ -34,8 +36,9 @@ import type { ProposalContext } from "./contextActions";
  * place that says what Alfred and the free helper may propose. Each kind has, side by side: the tool Claude sees (if
  * Alfred may call it), how its raw input is checked into a proposal, how BEYOND fills it from the records before a
  * card shows, the card's one line, the guard re-checked inside the confirm transaction, and the existing BEYOND
- * command the confirm runs (with its undo, where one exists). Alfred never writes: every entry here is a card the
- * operator confirms (ALFRED-001, DOCTRINE-ALFRED-001). The mapped type below makes a kind without an entry a type error.
+ * command the confirm runs (with its undo, where one exists). Every entry states its `autonomy`: a card the operator
+ * confirms (ALFRED-001, DOCTRINE-ALFRED-001), or, for the few low-risk logs ALFRED-ACT-001 names, a clear command that
+ * runs at once with a 10-second UNDO. The mapped type below makes a kind without an entry a type error.
  */
 export type Kind = AlfredProposal["kind"];
 export type ProposalOf<K extends Kind> = Extract<AlfredProposal, { kind: K }>;
@@ -57,7 +60,22 @@ export interface ActionSpec<K extends Kind> {
   note?: (p: ProposalOf<K>) => string | undefined;
   /** OPEN for a card that only opens a screen; SAVE otherwise. */
   label?: "OPEN" | "SAVE";
+  /**
+   * ALFRED-ACT-001 (Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"): whether a clear
+   * command runs at once with a 10-second UNDO, or waits for SAVE on a card. Every kind states it; only the low-risk
+   * logs below are "immediate-undo", and even they run at once only when `clear` says so.
+   */
+  autonomy: Autonomy;
+  /**
+   * ALFRED-ACT-001: for an "immediate-undo" kind, undefined when this card is clear enough to run at once; otherwise the
+   * reason it keeps its card (a missing or unusual amount, a time, an estimate). Reads the records; never writes.
+   */
+  clear?: (p: ProposalOf<K>, source: ProposalSource) => Promise<string | undefined>;
 }
+/** ALFRED-ACT-001: immediate with UNDO, or a card he confirms. */
+export type Autonomy = "immediate-undo" | "confirm";
+/** ALFRED-ACT-001: who read his words into the card: Alfred (Claude) or BEYOND's free helper. */
+export type ProposalSource = "alfred" | "helper";
 export type Registry = { [K in Kind]: ActionSpec<K> };
 
 const n = (description: string) => ({ type: "number" as const, description });
@@ -78,6 +96,9 @@ export const humanDate = (iso: string, now = new Date()) => {
 };
 const hm = (minutes: number) => `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
 const at = (p: { at?: string | undefined }) => (p.at ? ` · at ${hhmm(p.at)}` : "");
+/** ALFRED-ACT-001: a log he gave a time for keeps its card (BEYOND placed the time in the lived day; he checks it). */
+const timed = (p: { at?: string | undefined; time?: string | undefined }) => (p.at || p.time ? "a time was given" : undefined);
+const within = (v: number, lo: number, hi: number) => (Number.isFinite(v) && v >= lo && v <= hi ? undefined : "an unusual amount");
 
 /** RELATIONSHIPS-001 fix: anchor Alfred's bare RRULE on its due date (or today) so repeats don't drift. */
 function anchoredRepeat(rule: string, due: string | undefined): string {
@@ -116,10 +137,22 @@ const describeMetric = (metric: "water" | "sleep" | "weight", v: number) => (met
 
 export const REGISTRY: Registry = {
   log_meal: {
+    autonomy: "immediate-undo",
     tool: { description: "Propose logging food the operator says he ate. Use saved_meal_id when it matches one of his saved meals; otherwise give your best macro estimate and say it is an estimate. Give time only when he said when he ate it.",
       input_schema: obj(["name", "calories", "protein_g"], { saved_meal_id: s("id from SAVED MEALS when it matches"), name: s("what he ate"), calories: n("kcal for the amount eaten"), protein_g: n("grams of protein"), carbs_g: n("grams of carbs"), fat_g: n("grams of fat"), servings: n("servings of the saved meal, default 1"), time: TIME }) },
     parse: (i) => { const nm = str(i.name), kcal = num(i.calories), p = num(i.protein_g); return nm && kcal !== undefined && p !== undefined ? { kind: "log_meal", name: nm, calories: kcal, protein_g: p, carbs_g: num(i.carbs_g), fat_g: num(i.fat_g), saved_meal_id: str(i.saved_meal_id), servings: num(i.servings), time: str(i.time) } : null; },
     resolve: placeAt,
+    // ALFRED-ACT-001: at once only for one of his saved meals (its numbers are his own; 0.25 to 3 servings). Alfred's
+    // estimate keeps its card, so he sees the guess before it counts; so does a new food with typed numbers, which keeps
+    // SAVE + REMEMBER MEAL on offer.
+    clear: async (p, source) => {
+      if (timed(p)) return timed(p);
+      if (p.remember) return "it also keeps a saved meal";
+      if (!p.saved_meal_id) return source === "alfred" ? "the macros are Alfred's estimate" : "a new food (SAVE + REMEMBER MEAL is offered)";
+      const meal = (await getSavedMeals()).find((m) => m.id === p.saved_meal_id);
+      if (!meal) return "no saved meal matches";
+      return within(p.servings ?? 1, 0.25, 3);
+    },
     describe: (p) => `Log ${p.name}${p.servings && p.servings !== 1 ? ` × ${p.servings}` : ""} · ${Math.round(p.calories)} kcal · ${Math.round(p.protein_g)} g protein${at(p)}`,
     confirm: async (p) => {
       const day = await ensureActiveDay();
@@ -134,34 +167,47 @@ export const REGISTRY: Registry = {
     },
   },
   log_water: {
+    autonomy: "immediate-undo",
     tool: { description: "Propose logging water or another plain drink, in fluid ounces. Give time only when he said when.", input_schema: obj(["oz"], { oz: n("fluid ounces"), time: TIME }) },
     parse: (i) => { const oz = num(i.oz); return oz ? { kind: "log_water", oz, time: str(i.time) } : null; },
     resolve: placeAt,
+    clear: async (p) => timed(p) ?? within(p.oz, 1, 64),
     describe: (p) => `Log ${Math.round(p.oz)} oz water${at(p)}`,
     confirm: async (p) => { const day = await ensureActiveDay(); return { undo: { kind: "water", dayId: day.id, eventId: await logWater(day.id, Math.round(p.oz), p.at) } }; },
   },
   // ALFRED-TOOLS-001: protein on its own (a shake, a bar's grams), the LOG sheet's PROTEIN.
   log_protein: {
+    autonomy: "immediate-undo",
     tool: { description: "Propose logging protein on its own (a shake, a scoop) in grams, when he gives grams rather than a meal. Give time only when he said when.", input_schema: obj(["grams"], { grams: n("grams of protein"), time: TIME }) },
     parse: (i) => { const g = num(i.grams); return g && g <= 1000 ? { kind: "log_protein", grams: g, time: str(i.time) } : null; },
     resolve: placeAt,
+    clear: async (p) => timed(p) ?? within(p.grams, 1, 100),
     describe: (p) => `Log ${Math.round(p.grams)} g protein${at(p)}`,
     confirm: async (p) => { const day = await ensureActiveDay(); return { undo: { kind: "protein", dayId: day.id, eventId: await logProtein(day.id, Math.round(p.grams), p.at) } }; },
   },
   log_sleep: {
+    autonomy: "confirm",
     tool: { description: "Propose logging sleep he describes, as a duration. Main sleep unless he says nap.", input_schema: obj(["minutes"], { minutes: n("minutes slept"), nap: { type: "boolean", description: "true for a nap" } }) },
     parse: (i) => { const m = num(i.minutes); return m ? { kind: "log_sleep", minutes: Math.round(m), nap: i.nap === true } : null; },
     describe: (p) => `Log ${p.nap ? "nap" : "main sleep"} ${hm(p.minutes)}`,
     confirm: async (p) => { const day = await ensureActiveDay(); return { undo: { kind: "sleep", dayId: day.id, eventId: await logSleep(day.id, p.minutes, p.nap ? "SUPPLEMENTAL" : "PRIMARY") } }; },
   },
   log_weight: {
+    autonomy: "immediate-undo",
     tool: { description: "Propose logging a bodyweight he reports, in pounds.", input_schema: obj(["lbs"], { lbs: n("pounds") }) },
     parse: (i) => { const lbs = num(i.lbs); return lbs ? { kind: "log_weight", lbs } : null; },
+    // ALFRED-ACT-001: at once only within 10 lb of his last weigh-in; a first weigh-in or a big jump (a typo?) keeps its card.
+    clear: async (p) => {
+      const last = await getMostRecentBodyweight();
+      if (last === undefined) return "no earlier weigh-in to compare";
+      return Math.abs(p.lbs - last) <= 10 ? undefined : "far from his last weigh-in";
+    },
     describe: (p) => `Log weight ${p.lbs} lb`,
     confirm: async (p) => { const day = await ensureActiveDay(); return { undo: { kind: "weight", dayId: day.id, eventId: await logBodyweight(day.id, p.lbs) } }; },
   },
   // CORRECTIONS-001, opened to Alfred by ALFRED-TOOLS-001: today's latest water, sleep or weight, through its correction chain.
   correct_log: {
+    autonomy: "confirm",
     tool: { description: "Propose correcting today's latest water, sleep or weight log to the right amount (water oz, sleep minutes, weight lbs). BEYOND fills in which log and its current value. For meals, protein or older water use fix_entry.",
       input_schema: obj(["metric", "to"], { metric: { type: "string", enum: ["water", "sleep", "weight"] }, to: n("the right amount: oz, minutes or lbs") }) },
     parse: (i) => { const metric = metricOf(i.metric), to = num(i.to); return metric && to ? { kind: "correct_log", metric, target_id: "", from: 0, to: metric === "weight" ? to : Math.round(to) } : null; },
@@ -183,6 +229,7 @@ export const REGISTRY: Registry = {
   },
   // ALFRED-TOOLS-001: take out today's latest sleep or weight log (the LOG sheet's own void; HISTORY keeps it).
   remove_log: {
+    autonomy: "confirm",
     tool: { description: "Propose removing today's latest sleep or weight log when he says it was wrong and shouldn't count. BEYOND fills in which log. HISTORY keeps the original. For meals, water or protein use fix_entry.",
       input_schema: obj(["metric"], { metric: { type: "string", enum: ["sleep", "weight"] } }) },
     parse: (i) => (i.metric === "sleep" || i.metric === "weight" ? { kind: "remove_log", metric: i.metric, target_id: "", from: 0 } : null),
@@ -203,7 +250,8 @@ export const REGISTRY: Registry = {
     },
   },
   add_reminder: {
-    tool: { description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"9:30\") in when_note.",
+    autonomy: "confirm",
+    tool: { description: "Propose a reminder or task. due_date is the local calendar date it is due (YYYY-MM-DD). For repeats give an iCalendar RRULE (e.g. FREQ=MONTHLY;BYMONTHDAY=15). Put the time or moment he named (\"after I wake\", \"09:30\") in when_note; a clock time as HH:MM, 24-hour (\"17:30\"), with a due_date becomes the reminder's alert time on that day (same 3-a-day cap and quiet hours).",
       input_schema: obj(["title"], { title: s("short reminder text in his words"), due_date: s("YYYY-MM-DD"), repeat_rrule: s("RRULE, only if it repeats"), when_note: s("time or moment of day he named"), project_id: s("id from OPEN PROJECTS, only when this is a step of that project"), project_title: s("that project's exact title, required with project_id") }) },
     parse: (i) => { const t = str(i.title); const due = str(i.due_date); return t ? { kind: "add_reminder", title: t, due_date: due && isRealDate(due) ? due : undefined, repeat_rrule: str(i.repeat_rrule), when_note: str(i.when_note), project_id: str(i.project_id), project_title: str(i.project_title) } : null; },
     describe: (p) => `${p.project_id ? `Add step to ${p.project_title ?? "a project"}` : "Remind"}: ${p.title}${p.due_date ? ` · ${humanDate(p.due_date)}` : ""}${p.when_note ? ` · ${p.when_note}` : ""}${p.repeat_rrule ? " · repeats" : ""}`,
@@ -215,8 +263,10 @@ export const REGISTRY: Registry = {
       }
       await createObligation({
         title: p.title,
-        ...(p.when_note ? { description: p.when_note } : {}),
+        // REMIND-AT-001: a clock time on a due date is the reminder's alert time; anything else stays a note.
+        ...(p.when_note && !(p.due_date && CLOCK_HHMM.test(p.when_note)) ? { description: p.when_note } : {}),
         ...(p.due_date ? { dueAt: p.due_date } : {}),
+        ...(p.due_date && p.when_note && CLOCK_HHMM.test(p.when_note) ? { remindAt: p.when_note } : {}),
         ...(p.repeat_rrule ? { recurrence: { rrule: anchoredRepeat(p.repeat_rrule, p.due_date) } } : {}),
         ...(p.project_id ? { projectId: p.project_id } : {}),
       });
@@ -224,6 +274,7 @@ export const REGISTRY: Registry = {
     },
   },
   routine_new: {
+    autonomy: "confirm",
     tool: { description: "Propose a ROUTINE he describes for one moment of his rotation: BEFORE_SHIFT, ON_SHIFT, AFTER_SHIFT or DAY_OFF. Steps are his own, short, in order (1 to 15). Use what he says he does; don't add steps he didn't mention without asking.",
       input_schema: obj(["title", "moment", "steps"], { title: s("short name, e.g. Pre-shift"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "when it applies" }, steps: { type: "array", minItems: 1, maxItems: 15, items: s("one step") } }) },
     parse: (i) => {
@@ -235,6 +286,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await createRoutine({ title: p.title, moment: p.moment, steps: p.steps }); return {}; },
   },
   routine_edit: {
+    autonomy: "confirm",
     tool: { description: "Propose a change he asked for to one of his ROUTINES (by id): a new name, moment, or the full new list of steps in order. Only when he asks; never change a routine on your own.",
       input_schema: obj(["routine_id", "title"], { routine_id: s("id from ROUTINES"), title: s("the routine's name (new name if renaming)"), moment: { type: "string", enum: [...ROUTINE_MOMENTS], description: "new moment, if changing" }, steps: { type: "array", minItems: 1, maxItems: 15, items: s("one step"), description: "the full new list, if changing steps" } }) },
     parse: (i) => {
@@ -253,6 +305,7 @@ export const REGISTRY: Registry = {
     },
   },
   project_new: {
+    autonomy: "confirm",
     tool: { description: "Propose a new PROJECT: something finite he wants to get done (renew a passport, clear the garage), with its first steps. Use it when he asks for help getting something done. Steps are concrete actions in his words, 1 to 8, in a sensible order. Give a due_date only for a date he named or one that is a fact (an appointment). Not for ongoing direction: that is a Mission.",
       input_schema: obj(["title", "steps"], { title: s("short project name"), finish: s("what finished looks like, in his words, if he said"), steps: { type: "array", minItems: 1, maxItems: 8, items: obj(["title"], { title: s("one concrete step"), due_date: s("YYYY-MM-DD, only if known") }) } }) },
     parse: (i) => {
@@ -268,12 +321,14 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await createProject({ title: p.title, ...(p.finish ? { finish: p.finish } : {}) }, p.steps.map((st) => ({ title: st.title, ...(st.due_date ? { dueAt: st.due_date } : {}) }))); return {}; },
   },
   capture_note: {
+    autonomy: "confirm",
     tool: { description: "Propose saving a note or thought he wants kept, with no due date.", input_schema: obj(["text"], { text: s("the note") }) },
     parse: (i) => { const t = str(i.text); return t ? { kind: "capture_note", text: t } : null; },
     describe: (p) => `Note: ${p.text}`,
     confirm: async (p) => { await captureItem(p.text); return {}; },
   },
   check_in: {
+    autonomy: "confirm",
     tool: { description: "Propose BEYOND's check-in from how he says he feels. Use all five scales from his words; if he hasn't said enough to place one, ask instead of guessing. BEYOND's Engine reads the check-in and makes its own recommendation.",
       input_schema: obj(["energy", "stress", "mood", "soreness", "alcohol_urge"], { energy: scale("1 drained … 5 sharp", 1), stress: scale("1 calm … 5 maxed", 1), mood: scale("1 low … 5 good", 1), soreness: scale("0 none … 5 very sore", 0), alcohol_urge: scale("0 none … 5 strong", 0) }) },
     parse: (i) => {
@@ -286,12 +341,14 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { const day = await ensureActiveDay(); await submitCheckIn(day.id, { energy: p.energy, stress: p.stress, mood: p.mood, soreness: p.soreness, alcoholUrge: p.alcohol_urge }); return {}; },
   },
   work_started: {
+    autonomy: "confirm",
     tool: { description: "Propose recording that his shift has actually started, now (he says he's at work, clocked in, started).", input_schema: none },
     parse: () => ({ kind: "work_started" }),
     describe: () => "Started work",
     confirm: async () => { const day = await ensureActiveDay(); await markWorkStarted(day.id); return {}; },
   },
   work_ended: {
+    autonomy: "confirm",
     tool: { description: "Propose recording that his shift is over, now (he says he's off, done, leaving work). Never for a shift that is still going.", input_schema: none },
     parse: () => ({ kind: "work_ended" }),
     describe: () => "Work ended",
@@ -299,6 +356,7 @@ export const REGISTRY: Registry = {
   },
   // ALFRED-TOOLS-001: today is a work day or a day off (TODAY's own WORK/OFF switch, always his MANUAL declaration).
   set_work_context: {
+    autonomy: "confirm",
     tool: { description: "Propose setting TODAY (the current lived day) as a work day or a day off, when he says today is different from what BEYOND shows (\"I'm off today\", \"got called in\"). Not for future days: use schedule_change.",
       input_schema: obj(["context"], { context: { type: "string", enum: ["WORK", "OFF"] } }) },
     parse: (i) => (i.context === "WORK" || i.context === "OFF" ? { kind: "set_work_context", context: i.context } : null),
@@ -318,6 +376,7 @@ export const REGISTRY: Registry = {
   },
   // SCHEDULE-EXCEPTIONS-001, opened to Alfred by ALFRED-TOOLS-001: overtime or time off on one future day.
   schedule_change: {
+    autonomy: "confirm",
     tool: { description: "Propose a confirmed change to his schedule on ONE future day: an extra shift (WORK on a scheduled day off) or time off (OFF on a scheduled work day). Use the date the shift starts. Not for today: use set_work_context.",
       input_schema: obj(["date", "kind"], { date: s("YYYY-MM-DD, a future day"), kind: { type: "string", enum: ["WORK", "OFF"] }, note: s("why, in his words, if he said") }) },
     parse: (i) => { const d = str(i.date); return d && isRealDate(d) && (i.kind === "WORK" || i.kind === "OFF") ? { kind: "schedule_change", date: d, work: i.kind, note: str(i.note) } : null; },
@@ -325,6 +384,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await confirmScheduleException({ date: p.date, kind: p.work, ...(p.note ? { note: p.note } : {}) }); return {}; },
   },
   schedule_swap: {
+    autonomy: "confirm",
     tool: { description: "Propose a shift swap: he works work_date (a scheduled day off) instead of off_date (a scheduled work day). Both future days.",
       input_schema: obj(["work_date", "off_date"], { work_date: s("YYYY-MM-DD he will now work"), off_date: s("YYYY-MM-DD he will now have off"), note: s("why, if he said") }) },
     parse: (i) => { const w = str(i.work_date), o = str(i.off_date); return w && o && isRealDate(w) && isRealDate(o) ? { kind: "schedule_swap", work_date: w, off_date: o, note: str(i.note) } : null; },
@@ -334,6 +394,7 @@ export const REGISTRY: Registry = {
   // SHIFT-CORRECT-001 (Gavin, 2026-11-15: "Yes, amend WORK TRANSITION to allow explicit shift start/end corrections"):
   // his screenshot's "Im still working till 0600. Fix my log" is a reopen; "I got off at 06:00" later is move_end.
   shift_fix: {
+    autonomy: "confirm",
     tool: { description: "Propose correcting TODAY's recorded shift marks: move_end (the shift really ended at an earlier time than recorded, or a later one that has already passed), move_start (it really started at another time), reopen (it was marked ended but he is still working: the end is taken back and he marks WORK ENDED when he's off; put the time he says he works till in until), remove_start (a start marked by mistake, only while no end is recorded). Times are HH:MM, 24-hour, never later than now. BEYOND fills the card from the records.",
       input_schema: obj(["action"], { action: { type: "string", enum: ["move_start", "move_end", "reopen", "remove_start"] }, time: s("move_start/move_end: the real time, HH:MM 24-hour"), until: s("reopen only: when he says he works till, HH:MM") }) },
     parse: (i) => {
@@ -398,6 +459,7 @@ export const REGISTRY: Registry = {
   },
   // NOTES-HANDOFF-001, opened to Alfred: a note for his next shift, on a day whose shift is marked ended.
   handoff_note: {
+    autonomy: "confirm",
     tool: { description: `Propose a handoff note for his NEXT shift (what to pick up, who to call), only after today's shift is marked ended. At most ${SHIFT_HANDOFF_MAX_LENGTH} characters, in his words.`,
       input_schema: obj(["note"], { note: s("the note") }) },
     parse: (i) => { const t = str(i.note); return t ? { kind: "handoff_note", note: t } : null; },
@@ -416,6 +478,7 @@ export const REGISTRY: Registry = {
     },
   },
   task_done: {
+    autonomy: "confirm",
     tool: TASK("Propose marking one of his OPEN TASKS done. Use the task's id from the records."),
     parse: (i) => { const t = taskInput(i); return t ? { kind: "task_done", ...t } : null; },
     describe: (p) => `Done: ${p.title}`,
@@ -424,6 +487,7 @@ export const REGISTRY: Registry = {
   },
   // ALFRED-TOOLS-001: "no longer needed" (RELEASED, distinct from done) and "waiting on someone".
   task_release: {
+    autonomy: "confirm",
     tool: TASK("Propose dropping one of his OPEN TASKS because it's no longer needed (not done). Only when he says so."),
     parse: (i) => { const t = taskInput(i); return t ? { kind: "task_release", ...t } : null; },
     describe: (p) => `No longer needed: ${p.title}`,
@@ -431,6 +495,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await releaseObligation(p.task_id); return {}; },
   },
   task_waiting: {
+    autonomy: "confirm",
     tool: TASK("Propose marking one of his OPEN TASKS as waiting on someone or something else."),
     parse: (i) => { const t = taskInput(i); return t ? { kind: "task_waiting", ...t } : null; },
     describe: (p) => `Waiting: ${p.title}`,
@@ -438,6 +503,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await markObligationWaiting(p.task_id); return {}; },
   },
   task_new_date: {
+    autonomy: "confirm",
     tool: { description: "Propose moving one of his OPEN TASKS to a new due date (YYYY-MM-DD). Use the task's id from the records.",
       input_schema: obj(["task_id", "title", "due_date"], { task_id: s("id from OPEN TASKS"), title: s("the task's title"), due_date: s("YYYY-MM-DD") }) },
     parse: (i) => { const t = taskInput(i), due = str(i.due_date); return t && due && isRealDate(due) ? { kind: "task_new_date", ...t, due_date: due } : null; },
@@ -447,6 +513,7 @@ export const REGISTRY: Registry = {
   },
   // WEEK-PLAN-001: the day he means to work on an open task (its planned date), not its due date.
   task_plan: {
+    autonomy: "confirm",
     tool: { description: "Propose the day he'll work on one of his OPEN TASKS (its planned date, YYYY-MM-DD), for planning his week. Not its due date. One card per task; fit his shifts and sleep, keep work nights light, and never treat unknown time as free.",
       input_schema: obj(["task_id", "title", "planned_date"], { task_id: s("id from OPEN TASKS"), title: s("the task's title"), planned_date: s("YYYY-MM-DD") }) },
     parse: (i) => { const t = taskInput(i), day = str(i.planned_date); return t && day && isRealDate(day) ? { kind: "task_plan", ...t, planned_date: day } : null; },
@@ -456,6 +523,7 @@ export const REGISTRY: Registry = {
   },
   // HABITS-001 (free helper), opened to Alfred by name: BEYOND finds the habit, never Alfred's guess.
   habit_done: {
+    autonomy: "immediate-undo",
     tool: { description: "Propose ticking one of his habits done for today, by the habit's name as he says it. BEYOND finds the habit; if it can't, you'll be told.", input_schema: obj(["habit"], { habit: s("the habit's name") }) },
     parse: (i) => { const h = str(i.habit); return h ? { kind: "habit_done", habit_id: "", name: h } : null; },
     resolve: async (p) => {
@@ -463,10 +531,23 @@ export const REGISTRY: Registry = {
       const habit = matchOne(await getActiveHabits(), p.name);
       return habit ? { ...p, habit_id: habit.id, name: habit.name } : `No single habit matches "${p.name}". Ask him which habit he means.`;
     },
+    // ALFRED-ACT-001: at once only for one active habit BEYOND found that isn't already done today.
+    clear: async (p) => {
+      if (!p.habit_id || !(await getActiveHabits()).some((h) => h.id === p.habit_id)) return "no single habit matched";
+      const day = await getActiveDay();
+      return day && (await getHabitAnswer(p.habit_id, day.id)) === "DONE" ? "already done today" : undefined;
+    },
     describe: (p) => `Done today: ${p.name}`,
-    confirm: async (p) => { await setHabitDone(p.habit_id, true); return {}; },
+    // ALFRED-ACT-001: the answer it had before, so UNDO puts exactly that back.
+    confirm: async (p) => {
+      const day = await ensureActiveDay();
+      const prior = await getHabitAnswer(p.habit_id, day.id);
+      const changed = await setHabitDone(p.habit_id, true, day.id);
+      return changed ? { undo: { kind: "habit", dayId: day.id, habitId: p.habit_id, prior } } : {};
+    },
   },
   routine_tick: {
+    autonomy: "confirm",
     describe: (p) => `Tick: ${p.text} (${p.routine_title})`,
     // FREE-HELPER-001 (review of #366): a tick applies only to the active routine it was read from.
     guard: async (p, expected) => {
@@ -478,6 +559,7 @@ export const REGISTRY: Registry = {
   },
   // COLLECTIONS-001 (free helper), opened to Alfred by name.
   collection_add: {
+    autonomy: "confirm",
     tool: { description: "Propose adding one item to one of his COLLECTIONS (a list he keeps, e.g. Books, Gift ideas), by the collection's name. BEYOND finds the list; if it can't, you'll be told.", input_schema: obj(["collection", "value"], { collection: s("the list's name"), value: s("the item, in his words") }) },
     parse: (i) => { const c = str(i.collection), v = str(i.value); return c && v ? { kind: "collection_add", collection_id: "", collection_name: c, field_id: "", field_label: "", value: v.slice(0, 200) } : null; },
     resolve: async (p) => {
@@ -495,6 +577,7 @@ export const REGISTRY: Registry = {
     },
   },
   fix_entry: {
+    autonomy: "confirm",
     tool: { description: "Propose fixing one meal, water or protein entry he logged in the current or previous lived day: move it to the time he really had it, correct its amount, or remove it. Call day_entries first for the entry's id. BEYOND checks the id and fills the card from the record; he confirms. Never use this to log something new.",
       input_schema: obj(["entry_id", "action"], {
         entry_id: s("the id from day_entries"), action: { type: "string", enum: ["move", "correct", "remove"] },
@@ -515,6 +598,8 @@ export const REGISTRY: Registry = {
   },
   // GYM-SETS-001: one set into the workout in progress. Free helper only.
   log_set: {
+    autonomy: "immediate-undo",
+    clear: async (p) => ((await getActiveWorkoutSession())?.id === p.session_id ? undefined : "no workout in progress"),
     describe: (p) => `Log set: ${p.exercise_name} ${p.weight} × ${p.reps}`,
     confirm: async (p) => {
       const session = await getActiveWorkoutSession();
@@ -522,16 +607,20 @@ export const REGISTRY: Registry = {
       // The next number after any logged or skipped set of this exercise, as TRAIN numbers them (review of #386).
       const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((st) => st.exerciseId === p.exercise_id && st.setKind !== "WARMUP").map((st) => st.setNumber));
       await logSet(session.beyondDayId, session.id, p.exercise_id, last + 1, p.weight, p.reps);
-      return {};
+      // ALFRED-ACT-001: the set just written, so UNDO takes back exactly this one (TRAIN's own SET_UNDONE).
+      const performed = (await getPerformedSets(session.id)).find((st) => st.exerciseId === p.exercise_id && st.setNumber === last + 1 && st.setKind !== "WARMUP");
+      return performed ? { undo: { kind: "set", dayId: session.beyondDayId, sessionId: session.id, performedSetId: performed.id } } : {};
     },
   },
   clean_day: {
+    autonomy: "confirm",
     tool: { description: "Propose logging today as a clean day in his QUIT TRACKER, only when he says today was clean.", input_schema: none },
     parse: () => ({ kind: "clean_day" }),
     describe: () => "Log today clean",
     confirm: async () => { const day = await ensureActiveDay(); await logCleanDay(day.id); return {}; },
   },
   open_training: {
+    autonomy: "confirm",
     tool: { description: "Offer to open TRAIN so he can start or resume today's workout. BEYOND picks the session there.", input_schema: none },
     parse: () => ({ kind: "open_training" }),
     describe: () => "Open TRAIN for today's workout",
@@ -539,6 +628,7 @@ export const REGISTRY: Registry = {
     label: "OPEN",
   },
   person_date: {
+    autonomy: "confirm",
     tool: { description: "Propose keeping a person's yearly date (birthday, anniversary) as one card: it saves the fact and a reminder that repeats every year. Use it instead of remember plus add_reminder whenever he gives a person and a month and day. Only dates he stated; never guess a year or a date.",
       input_schema: obj(["person", "occasion", "month", "day"], { person: s("the person, as he names them"), occasion: s("Birthday, Anniversary, or a short name for the date"),
         month: { type: "integer", minimum: 1, maximum: 12, description: "month number" }, day: { type: "integer", minimum: 1, maximum: 31, description: "day of the month" }, note: s("anything he added about them, e.g. a gift idea") }) },
@@ -554,6 +644,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await addPersonDate({ person: p.person, occasion: p.occasion, month: p.month, day: p.day, note: p.note }); return {}; },
   },
   home_item: {
+    autonomy: "confirm",
     tool: { description: "Propose keeping a HOME item as one card: what to know about it (size, model, who to call, warranty) and, if it recurs, how often and the next due date. Use it for house upkeep (furnace filter every 3 months, smoke alarm batteries every year). Only facts and intervals he stated; ask for the next due date rather than guessing it.",
       input_schema: obj(["item"], { item: s("short name, e.g. Furnace filter"), details: s("what to know, in his words, e.g. 16x25x1, Home Depot"),
         every: { type: "integer", minimum: 1, maximum: 60, description: "repeat every N units, only if it recurs" }, unit: { type: "string", enum: [...REPEAT_UNITS], description: "WEEKS, MONTHS or YEARS" }, first_due: s("YYYY-MM-DD, next due date, required with every") }) },
@@ -569,6 +660,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await addHomeItem({ item: p.item, details: p.details, ...(p.every && p.unit && p.first_due ? { repeat: { every: p.every, unit: p.unit, firstDue: p.first_due } } : {}) }); return {}; },
   },
   remember: {
+    autonomy: "confirm",
     tool: { description: "Propose keeping a fact he wants remembered: people (birthdays, sizes, gift ideas), money (a bill's amount and due day), health, home, work. One fact per call, in his words.",
       input_schema: obj(["text", "topic"], { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } }) },
     parse: (i) => { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; },
@@ -576,6 +668,7 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await rememberFact(p.text, p.topic); return {}; },
   },
   forget: {
+    autonomy: "confirm",
     tool: { description: "Propose physical deletion of an unconverted ALFRED_MEMORY legacy entry only. For PERSONAL_FACT use memory_retire, which retains history.",
       input_schema: obj(["memory_id", "text", "source"], { source: { type: "string", enum: ["ALFRED_MEMORY"] }, memory_id: s("id from WHAT HE ASKED YOU TO REMEMBER"), text: s("the fact") }) },
     parse: (i) => { const id = str(i.memory_id), t = str(i.text); return id && t && (i.source === undefined || i.source === "ALFRED_MEMORY") ? { kind: "forget", source: "ALFRED_MEMORY", memory_id: id, text: t } : null; },
@@ -583,18 +676,21 @@ export const REGISTRY: Registry = {
     confirm: async (p) => { await forgetFact(p.memory_id, undefined, p.text); return {}; },
   },
   memory_retire: {
+    autonomy: "confirm",
     tool: { description: "Propose STOP USING an active PERSONAL_FACT. Keeps correction history; does not erase it.", input_schema: memoryRef() },
     parse: (i) => { const r = memoryInput(i); return r ? { kind: "memory_retire", ...r } : null; },
     describe: (p) => `Stop using: ${p.text} · Correction history retained.`,
     confirm: async (p) => { await stopUsingMemory({ source: p.source, id: p.memory_id, revision: p.revision }, p.text); return {}; },
   },
   memory_restore: {
+    autonomy: "confirm",
     tool: { description: "Propose RESTORE of a PERSONAL_FACT only from an operator-provided exact reference. Never invent a missing revision.", input_schema: memoryRef() },
     parse: (i) => { const r = memoryInput(i); return r ? { kind: "memory_restore", ...r } : null; },
     describe: (p) => `Restore: ${p.text} · Available to Alfred again.`,
     confirm: async (p) => { await restoreMemory({ source: p.source, id: p.memory_id, revision: p.revision }, p.text); return {}; },
   },
   log_urge: {
+    autonomy: "confirm",
     tool: { description: "Propose logging an urge (his quit tracker) he says he had, with what set it off.", input_schema: obj(["trigger"], { trigger: { type: "string", enum: [...URGE_TRIGGERS], description: "what set it off" } }) },
     parse: (i) => { const trigger = URGE_TRIGGERS.find((u) => u === i.trigger); return trigger ? { kind: "log_urge", trigger } : null; },
     describe: (p) => `Log an urge · ${p.trigger.toLowerCase().replace("_", " ")}`,
@@ -637,4 +733,12 @@ export const confirmKind = (p: AlfredProposal) => anySpec(p.kind).confirm(p);
 export const guardKind = async (p: AlfredProposal, expected: ProposalContext) => { await anySpec(p.kind).guard?.(p, expected); };
 export const labelKind = (p: AlfredProposal) => anySpec(p.kind).label ?? "SAVE";
 export const noteKind = (p: AlfredProposal) => anySpec(p.kind).note?.(p);
+export const autonomyOf = (kind: Kind): Autonomy => anySpec(kind).autonomy;
+/** ALFRED-ACT-001: undefined when this card may run at once; otherwise why it keeps its card. */
+export async function whyConfirm(p: AlfredProposal, source: ProposalSource): Promise<string | undefined> {
+  const entry = anySpec(p.kind);
+  if (entry.autonomy !== "immediate-undo") return "this kind is always confirmed";
+  if (!entry.clear) return "no clarity rule";
+  return entry.clear(p, source);
+}
 export { spec as registryEntry };

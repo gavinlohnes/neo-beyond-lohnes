@@ -14,6 +14,8 @@ import type { Mission, Obligation, Project } from "../domain/intent/types";
  */
 
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+/** REMIND-AT-001: a 24-hour local clock time. */
+export const CLOCK_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const missionStatusSchema = z.enum(["ACTIVE", "ARCHIVED"]);
 const obligationStatusSchema = z.enum(["OPEN", "WAITING", "SATISFIED", "RELEASED"]);
@@ -63,10 +65,13 @@ const obligationInputFields = {
   dueAt: z.string().regex(DATE_ONLY, "dueAt must be YYYY-MM-DD").optional(),
   plannedAt: z.string().regex(DATE_ONLY, "plannedAt must be YYYY-MM-DD").optional(),
   recurrence: recurrenceRuleSchema.optional(),
+  remindAt: z.string().regex(CLOCK_HHMM, "remindAt must be HH:MM").optional(),
 };
 
 /** Input to createObligation. PROJECTS-001: may name its Project at creation; later moves use setObligationProject. */
-export const obligationInputSchema = z.object({ ...obligationInputFields, projectId: z.string().min(1).optional() });
+export const obligationInputSchema = z
+  .object({ ...obligationInputFields, projectId: z.string().min(1).optional() })
+  .refine((v) => !v.remindAt || !!v.dueAt, "REMIND_AT_NEEDS_DUE: a reminder time needs a due date");
 export type ObligationInput = z.infer<typeof obligationInputSchema>;
 
 /** Input to modifyObligation — same fields, all optional, at least one required. */
@@ -78,6 +83,8 @@ export const obligationModifyInputSchema = z
     dueAt: obligationInputFields.dueAt,
     plannedAt: obligationInputFields.plannedAt,
     recurrence: obligationInputFields.recurrence,
+    /** REMIND-AT-001: null removes the reminder time. */
+    remindAt: obligationInputFields.remindAt.or(z.null()).optional(),
   })
   .refine((v) => Object.values(v).some((value) => value !== undefined), "At least one field must change");
 export type ObligationModifyInput = z.infer<typeof obligationModifyInputSchema>;
@@ -90,6 +97,8 @@ export const obligationSchema = z.object({
   missionId: obligationInputFields.missionId,
   dueAt: obligationInputFields.dueAt,
   plannedAt: obligationInputFields.plannedAt,
+  // REMIND-AT-001: a malformed time on a restored row is dropped, never the whole task.
+  remindAt: obligationInputFields.remindAt.catch(undefined),
   resolvedAt: z.string().optional(),
   resolutionNote: z.string().optional(),
   recurrence: recurrenceRuleSchema.optional(),

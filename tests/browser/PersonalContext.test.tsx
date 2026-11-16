@@ -98,18 +98,19 @@ it("removes superseded text from the actual next request and resets history afte
 
 it("rejects a stale proposal, then confirms one fresh action exactly once", async () => {
   const day = await startDay(), first = await fact(day.id); const screen = await show(); await optIn(screen);
-  responses.push(() => response("", { name: "log_water", input: { oz: 8 } }));
-  await send(screen, "Log eight ounces");
-  const save = screen.getByRole("group", { name: "Log 8 oz water" }).getByRole("button", { name: "SAVE" });
+  // ALFRED-ACT-001: clear water now saves at once; a sleep card (still confirm-first) carries the stale-context check.
+  responses.push(() => response("", { name: "log_sleep", input: { minutes: 480 } }));
+  await send(screen, "Log eight hours of sleep");
+  const save = screen.getByRole("group", { name: "Log main sleep 8h 00m" }).getByRole("button", { name: "SAVE" });
   await expect.element(save).toBeVisible();
   await recordMemory({ dayId: day.id, factId: first.factId, expectedPreviousId: first.id, action: "IRRELEVANT" });
   await save.click(); await expect.element(screen.getByRole("alert")).toHaveTextContent("Your context changed");
-  expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
-  responses.push(() => response("", { name: "log_water", input: { oz: 8 } }));
+  expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
+  responses.push(() => response("", { name: "log_sleep", input: { minutes: 480 } }));
   await send(screen, "Try again"); await expect.element(screen.getByRole("button", { name: "SAVE", exact: true })).toBeVisible();
   const button = screen.getByRole("button", { name: "SAVE", exact: true }).element() as HTMLButtonElement;
   button.click(); button.click();
-  await expect.poll(() => db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
+  await expect.poll(() => db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(1);
 });
 
 it("does not present an answer whose personal sources changed while Claude was answering", async () => {
@@ -126,14 +127,15 @@ it("does not present an answer whose personal sources changed while Claude was a
 
 it("keeps an old card bound to its original lived day after asking another question", async () => {
   await startDay(); const screen = await show();
-  responses.push(() => response("", { name: "log_water", input: { oz: 8 } }));
-  await send(screen, "Log eight ounces");
+  // ALFRED-ACT-001: a sleep card (still confirm-first) carries the lived-day guard; clear water would save at once.
+  responses.push(() => response("", { name: "log_sleep", input: { minutes: 480 } }));
+  await send(screen, "Log eight hours of sleep");
   await expect.element(screen.getByRole("button", { name: "SAVE", exact: true })).toBeVisible();
   vi.setSystemTime(new Date(2026, 10, 1, 17)); await startDay();
   await send(screen, "What is my schedule now?");
   await screen.getByRole("button", { name: "SAVE", exact: true }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Your context changed");
-  expect(await db.events.where("type").equals("WATER_LOGGED").count()).toBe(0);
+  expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
 });
 
 it("opens the exact original memory from an answer for correction through the canonical route", async () => {
@@ -188,10 +190,11 @@ it("a saved remember card keeps sibling cards and the conversation going", async
     content: [{ type: "text", text: "Two things." }, { type: "tool_use", id: "r1", name: "remember", input: { text: "Invented gift idea", topic: "OTHER" } }, { type: "tool_use", id: "w1", name: "log_water", input: { oz: 12 } }],
     stop_reason: "tool_use", stop_sequence: null, usage: { input_tokens: 100, output_tokens: 20 } }), { headers: { "content-type": "application/json" } }));
   await send(screen, "Remember the gift idea and log 12 oz water");
+  // ALFRED-ACT-001: the clear water sibling saved at once; the remember card still waits for SAVE and still saves.
+  await expect.element(screen.getByRole("group", { name: "Log 12 oz water" }).getByText("Logged.")).toBeVisible();
+  await expect.poll(() => db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
   await screen.getByRole("group", { name: "Remember (other): Invented gift idea" }).getByRole("button", { name: "SAVE", exact: true }).click();
   await expect.element(screen.getByText("Saved.", { exact: true })).toBeVisible();
-  await screen.getByRole("group", { name: "Log 12 oz water" }).getByRole("button", { name: "SAVE", exact: true }).click();
-  await expect.poll(() => db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
   expect(screen.container.querySelector("[role=alert]")).toBeNull();
   await send(screen, "Thanks");
   expect(screen.container.textContent).not.toContain("Personal context changed");

@@ -52,6 +52,27 @@ export function setHabitDone(habitId: string, done: boolean, dayId?: string): Pr
   return setHabitAnswer(habitId, done ? "DONE" : "UNRECORDED", dayId);
 }
 
+/** ALFRED-ACT-001: one habit's effective answer on a lived day (UNRECORDED when none). */
+export async function getHabitAnswer(habitId: string, dayId: string): Promise<HabitAnswer> {
+  const events = await db.events.where("beyondDayId").equals(dayId).toArray();
+  return projectHabitAnswers(events).get(habitId) ?? "UNRECORDED";
+}
+
+/**
+ * ALFRED-ACT-001: UNDO of a tick Alfred or the free helper made at once. Puts back the answer the habit had before
+ * (an appended HABIT_SET, exactly as un-ticking does), and only while the tick is still the effective answer, so a
+ * later change by hand is never overwritten.
+ */
+export async function undoHabitDone(habitId: string, dayId: string, prior: HabitAnswer): Promise<boolean> {
+  if (prior === "DONE" || !HABIT_ANSWERS.includes(prior)) return false;
+  return writeAtomically(["habits", "beyondDays"], async () => {
+    if (await getHabitAnswer(habitId, dayId) !== "DONE") return false;
+    const correlationId = newId();
+    await logEvent(dayId, "HABIT_SET", { commandId: correlationId, habitId, done: false, answer: prior }, "USER", correlationId);
+    return true;
+  });
+}
+
 export async function getHabitDone(dayId: string): Promise<Set<string>> {
   const events = await db.events.where("beyondDayId").equals(dayId).toArray();
   return new Set([...projectHabitAnswers(events)].filter(([, answer]) => answer === "DONE").map(([id]) => id));

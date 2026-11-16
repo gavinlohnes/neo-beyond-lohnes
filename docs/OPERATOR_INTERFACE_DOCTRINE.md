@@ -23,7 +23,12 @@ must earn recession through evidence; it never earns authority over the operator
   2026-10-09's "AI optional": Alfred (Claude) is part of BEYOND. He answers from BEYOND's records,
   never invents facts, and proposes changes the operator confirms; the deterministic Engine keeps
   recommendation authority, and BEYOND works fully without him. Preserve deterministic intelligence
-  and the operator's final decision.
+  and the operator's final decision. Owner amendment, 2026-11-15 (ALFRED-ACT-001; Gavin, 04:26 CT:
+  "Yes, low-risk logging runs immediately with undo"): one exception to confirm-first. A clear command
+  to log water, one of his saved meals, protein, a weight near his last, a habit done, or a set
+  in the workout in progress runs at once with a 10-second UNDO (the record's own append-only void),
+  by the rule in [ALFRED-ACT-001](agent/ALFRED-ACT-001.md). Anything ambiguous, and every other
+  change, is still a card he confirms; Engine decisions are never Alfred's.
 - History and provenance remain inspectable. Corrections supersede rather than erase.
 
 ## Depth, attention, and control

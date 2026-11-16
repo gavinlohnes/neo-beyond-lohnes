@@ -189,6 +189,7 @@ export async function createObligation(
       ...(parsed.missionId ? { missionId: parsed.missionId } : {}),
       ...(parsed.dueAt ? { dueAt: parsed.dueAt } : {}),
       ...(parsed.plannedAt ? { plannedAt: parsed.plannedAt } : {}),
+      ...(parsed.remindAt ? { remindAt: parsed.remindAt } : {}),
       ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}),
       ...(parsed.projectId ? { projectId: parsed.projectId } : {}),
       source: "USER",
@@ -259,8 +260,11 @@ export async function modifyObligation(obligationId: string, changes: Obligation
       if (!mission) throw notFound("MISSION", parsed.missionId);
       assertMissionActive(mission);
     }
+    const { remindAt: _previousTime, ...rest } = existing;
+    const remindAt = parsed.remindAt === null ? undefined : (parsed.remindAt ?? existing.remindAt);
     const updated: Obligation = {
-      ...existing,
+      ...rest,
+      ...(remindAt ? { remindAt } : {}),
       ...(parsed.title !== undefined ? { title: parsed.title } : {}),
       ...(parsed.description !== undefined ? { description: parsed.description } : {}),
       ...(parsed.missionId !== undefined ? { missionId: parsed.missionId } : {}),
@@ -269,6 +273,8 @@ export async function modifyObligation(obligationId: string, changes: Obligation
       ...(parsed.recurrence !== undefined ? { recurrence: parsed.recurrence } : {}),
       updatedAt: new Date().toISOString(),
     };
+    // REMIND-AT-001: a reminder time only means something on a due date.
+    if (updated.remindAt && !updated.dueAt) throw new Error("REMIND_AT_NEEDS_DUE: a reminder time needs a due date.");
     await db.obligations.put(updated);
     const correlationId = newId();
     await logIntentEvent(
@@ -364,6 +370,8 @@ async function materializeNextOccurrence(existing: Obligation): Promise<void> {
     ...(existing.missionId ? { missionId: existing.missionId } : {}),
     ...(keepProject ? { projectId: project.id } : {}),
     dueAt: nextDueAt,
+    // REMIND-AT-001: the next occurrence keeps its reminder time, on its own due date.
+    ...(existing.remindAt ? { remindAt: existing.remindAt } : {}),
     recurrence: existing.recurrence,
   });
 }
