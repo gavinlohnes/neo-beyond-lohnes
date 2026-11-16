@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
 import { getSchedulePattern } from "../../src/application/queries";
 import { WorkScheduleScreen } from "../../src/ui/screens/more/WorkScheduleScreen";
@@ -84,5 +84,47 @@ describe("BRIDGE-NOTIFY-001: key-moment alert settings (real browser)", () => {
     await expect.element(task).toHaveAttribute("aria-pressed", "false");
     await expect.element(wake).toHaveAttribute("aria-pressed", "false");
     await expect.poll(getKeyMomentAlerts).toEqual({ off: ["WAKE", "TASK_DUE"], quietFrom: null, quietTo: null });
+  });
+
+  it("FOLLOWUPS-001 (N4): a failed save is not re-applied by a change queued behind it", async () => {
+    const { getKeyMomentAlerts, setKeyMomentAlerts } = await import("../../src/application/keyMomentAlerts");
+    const { db } = await import("../../src/persistence/db");
+    await setKeyMomentAlerts({ off: [], quietFrom: null, quietTo: null });
+    const screen = await render(<WorkScheduleScreen />);
+    const wake = screen.getByRole("button", { name: "Up for the shift alert", exact: true });
+    const task = screen.getByRole("button", { name: "Task due alert", exact: true });
+    await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+    // The first save fails (the write is refused once); the second tap is already queued behind it.
+    const put = vi.spyOn(db.schedulePatterns, "put").mockRejectedValueOnce(new Error("Storage is full."));
+    try {
+      (wake.element() as HTMLElement).click();
+      (task.element() as HTMLElement).click();
+      await expect.poll(() => put.mock.calls.length).toBe(2);
+      // Only the change that saved is stored, and the screen shows what is stored.
+      await expect.poll(getKeyMomentAlerts).toEqual({ off: ["TASK_DUE"], quietFrom: null, quietTo: null });
+      await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+      await expect.element(task).toHaveAttribute("aria-pressed", "false");
+    } finally {
+      put.mockRestore();
+    }
+  });
+
+  it("FOLLOWUPS-001 (N4): off then on again, the first save failing, ends on", async () => {
+    const { getKeyMomentAlerts, setKeyMomentAlerts } = await import("../../src/application/keyMomentAlerts");
+    const { db } = await import("../../src/persistence/db");
+    await setKeyMomentAlerts({ off: [], quietFrom: null, quietTo: null });
+    const screen = await render(<WorkScheduleScreen />);
+    const wake = screen.getByRole("button", { name: "Up for the shift alert", exact: true });
+    await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+    const put = vi.spyOn(db.schedulePatterns, "put").mockRejectedValueOnce(new Error("Storage is full."));
+    try {
+      (wake.element() as HTMLElement).click(); // off: fails
+      (wake.element() as HTMLElement).click(); // on again: the owner's last word
+      await expect.poll(() => put.mock.calls.length).toBe(2);
+      await expect.poll(getKeyMomentAlerts).toEqual({ off: [], quietFrom: null, quietTo: null });
+      await expect.element(wake).toHaveAttribute("aria-pressed", "true");
+    } finally {
+      put.mockRestore();
+    }
   });
 });

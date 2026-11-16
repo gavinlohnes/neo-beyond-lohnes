@@ -9,8 +9,34 @@
   Engine, alert-kind, Bridge, permission or dependency change.
 - Lane PROTECTED (check:risk: domain types; semantically a backed-up field and notification timing). Gates: focused tests
   under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent exact-head review (Claude, per owner 2026-11-15); owner merges.
-- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
-  its section below is history.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`,
+  then FOLLOWUPS-001 [#558](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/558) as `e84751fe`; `origin/master`
+  `e84751fe` merged into this branch normally (checkpoint conflict only, all sections kept). Their sections below are history.
+
+---
+
+# Historical — FOLLOWUPS-001 (review follow-ups: BRIDGE-NOTIFY-001 N1/N2/N4; sleep-debt nap-only days; merged as #558)
+
+- Builder Grok Bot. Gavin approved the overnight plan on 2026-11-15 (wave 2, item 6). [Brief](FOLLOWUPS-001.md). Branch
+  `codex/followups-001` from fetched master `4d74ac26`; `origin/master` `abd9dc71` (#555 merged) merged in normally.
+- Fixes #554 review notes N1 (no duplicate after upgrading from 0.11.0), N2 (an alarm delivered 2 hours or more late is
+  dropped) and N4 (a failed alert-settings save is not re-applied by a queued change). Health Bridge 0.11.2.
+- Fixes the #555 review note on nap-only days: only days with main sleep logged are judged against the main-sleep
+  target; a nap-only day is "not counted", like the baseline.
+- Lane PROTECTED (inherited). No new alert kind, Engine, schema, permission or dependency change.
+- Independent review of `3bfe893c` was PASS with no blockers. `origin/master` `b921d303` was then merged in normally
+  as `a0c9b742` (docs only), so that exact-head review is stale. Non-blocking notes 1 (README wording) and 3
+  (operatorContext nap-only clause) are fixed on this head; note 2 is left documented (needs Android SDK). See the
+  brief's review response.
+- Local checks on this head: `TZ=UTC` typecheck, check:architecture, and build; sleepDebt + operatorContext +
+  WorkScheduleScreen tests under UTC and America/Chicago; Moments.kt + MomentsTest.kt (kotlinc, JDK 17, JUnit 4.13.2)
+  10/10. Full `TZ=UTC npm run verify` was not re-run (optional; last run at `3bfe893c`).
+- Remaining gates: green required CI including android on this exact head; **renewed independent exact-head review
+  REQUIRED, not yet done**; Gavin merges. The author does not self-review.
+- WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556) merged by Gavin as `44a1c5b0`
+  (2026-11-15 18:42 CT) and CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged
+  by Gavin as `b921d303` (2026-11-15 18:57 CT); `origin/master` `b921d303` merged into this branch normally (docs
+  conflict only, all sections kept). Their sections below are history.
 
 ---
 
@@ -27,6 +53,7 @@
   `abd9dc71` (2026-11-15 18:06 CT) and WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
   merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT); `origin/master` `44a1c5b0` merged into this branch normally
   (docs conflict only, all sections kept). Their sections are history. #473 stays a parked draft.
+- Merged by Gavin as `b921d303` (2026-11-15 18:57 CT).
 
 ---
 
@@ -53,7 +80,7 @@
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
   baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
   Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
-  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555).
+  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555), merged by Gavin as `abd9dc71` (2026-11-15 18:06 CT).
 - BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
   (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
 - Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);

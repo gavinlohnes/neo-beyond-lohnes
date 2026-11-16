@@ -1,6 +1,7 @@
 package app.beyond.healthbridge
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -118,5 +119,36 @@ class MomentsTest {
         assertEquals(next, carryOver(null, next, now, emptySet()))
         // The stored form reads back the same.
         assertEquals(merged, parsePlan(planJson(merged)))
+    }
+
+    @Test fun anAlarmDeliveredPastTheGraceWindowIsNotShown() {
+        // FOLLOWUPS-001 (N2): the show step uses the same window as the re-arm.
+        val at = 15 * hour
+        val wake = planOf(at to "WAKE").moments[0]
+        assertTrue(shouldShow(wake, at, emptySet()))
+        assertTrue(shouldShow(wake, at + hour, emptySet())) // an hour late (Android's inexact window): shown
+        assertTrue(shouldShow(wake, at + GRACE_MS - 1, emptySet()))
+        assertFalse(shouldShow(wake, at + GRACE_MS, emptySet())) // as late as the window: dropped, as toArm drops it
+        assertFalse(shouldShow(wake, at + 5 * hour, emptySet()))
+        assertFalse(shouldShow(wake, at, setOf(wake.key))) // already shown: never twice
+        assertEquals(toArm(planOf(at to "WAKE"), at + GRACE_MS, emptySet(), 24).isEmpty(), !shouldShow(wake, at + GRACE_MS, emptySet()))
+    }
+
+    @Test fun theFirstRunAfterUpgradingFrom0110TreatsDueMomentsAsShown() {
+        // FOLLOWUPS-001 (N1): 0.11.0 kept no shown set. SHIFT_DONE at 06:00 showed under 0.11.0; the first re-arm under
+        // the new version at 07:00 must not set it again.
+        val plan = planOf(4 * hour - 1 to "WAKE", 6 * hour to "SHIFT_DONE", 7 * hour to "TASK_DUE", 16 * hour to "BEFORE_SHIFT")
+        val now = 7 * hour
+        val seeded = seedShown(plan, now)
+        assertEquals(setOf("${6 * hour}|SHIFT_DONE", "${7 * hour}|TASK_DUE"), seeded) // WAKE is past the window anyway
+        val alarms = FakeAlarms()
+        rearm(alarms, plan, now, seeded, 24)
+        assertEquals(listOf("${16 * hour}|BEFORE_SHIFT"), alarms.pending())
+        assertFalse(shouldShow(plan.moments[1], now, seeded))
+        // Without the seed (the old behaviour) the 06:00 moment would be shown a second time.
+        assertTrue(toArm(plan, now, emptySet(), 24).any { it.kind == "SHIFT_DONE" })
+        // Nothing stored yet (a fresh install): nothing to seed. Future moments are never seeded.
+        assertTrue(seedShown(null, now).isEmpty())
+        assertTrue(seedShown(plan, 0).isEmpty())
     }
 }
