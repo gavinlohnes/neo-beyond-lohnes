@@ -3457,3 +3457,11 @@ Gavin chose ranked item 2 ("Measure sleep debt against your own learned sleep, n
   learned figure and is not offered while still learning. The Engine does not read it. The month grid's short-night
   underline stays on the 7 h guideline, labelled as such.
 
+## WORK-RUN-REDRAFT-001 — offer a fresh work-run draft when something changes (Gavin, 2026-11-15)
+
+Extends 4.0-c's work-run draft journey. [Brief](agent/WORK-RUN-REDRAFT-001.md). Plan Today → Week planner offers
+DRAFT FRESH RUN PLAN when the latest saved work-run note no longer matches: a covered date (today onward, within seven
+dates) now has different work/off context or shift start (a confirmed extra shift included, also on the days off
+before the note's first day), or the existing two-short-main-sleeps guidance first judged its nights after the note
+was saved. The offer only offers: the existing replace warning protects unsaved edits, a new note is saved only on CONFIRM SAVE PLAN NOTE, and old notes are never edited.
+NOT NOW lasts until the change changes. No TODAY hint, notification, Engine or schema change.
