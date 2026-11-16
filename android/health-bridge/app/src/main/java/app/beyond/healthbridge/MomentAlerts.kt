@@ -34,7 +34,7 @@ object MomentAlerts {
         val next = parsePlan(json) ?: return
         val now = System.currentTimeMillis()
         // BRIDGE-NOTIFY-001 review fix: keep an old moment that is due but still waiting on Android (see carryOver).
-        val plan = carryOver(plan(context), next, now, shown(context))
+        val plan = carryOver(plan(context), next, now, shown(context, now))
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, planJson(plan)).apply()
         arm(context, now)
         BriefWidget.refresh(context)
@@ -43,8 +43,14 @@ object MomentAlerts {
     fun plan(context: Context): BridgePlan? = parsePlan(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null))
 
     /** BRIDGE-NOTIFY-001 review fix: the keys of moments already shown, so a re-arm never cancels one still to show. */
-    private fun shown(context: Context): Set<String> =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getStringSet(SHOWN, null)?.toSet() ?: emptySet()
+    private fun shown(context: Context, now: Long = System.currentTimeMillis()): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (prefs.contains(SHOWN)) return prefs.getStringSet(SHOWN, null)?.toSet() ?: emptySet()
+        // FOLLOWUPS-001 (N1): first run after upgrading from 0.11.0, which kept no shown set; see seedShown.
+        val seeded = seedShown(plan(context), now)
+        saveShown(context, seeded)
+        return seeded
+    }
 
     private fun saveShown(context: Context, shown: Set<String>) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putStringSet(SHOWN, HashSet(shown)).apply()
@@ -53,7 +59,7 @@ object MomentAlerts {
     @Synchronized
     fun arm(context: Context, now: Long = System.currentTimeMillis()) {
         val alarms = context.getSystemService(AlarmManager::class.java) ?: return
-        val shown = pruneShown(shown(context), now)
+        val shown = pruneShown(shown(context, now), now)
         saveShown(context, shown)
         rearm(object : AlarmSlots {
             override fun cancel(slot: Int) {
@@ -76,14 +82,19 @@ object MomentAlerts {
     fun openBeyond(context: Context, url: String, code: Int): PendingIntent =
         PendingIntent.getActivity(context, code, Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    /** Shows the moment named by [key] (an alarm set by 0.11.0 carries only [at]) once, then rolls the window on. */
+    /**
+     * Shows the moment named by [key] (an alarm set by 0.11.0 carries only [at]) once, if it came due within GRACE_MS
+     * ([shouldShow]), then rolls the window on.
+     */
     @Synchronized
     fun notify(context: Context, key: String?, at: Long) {
         val plan = plan(context) ?: return
         val moment = plan.moments.firstOrNull { if (key != null) it.key == key else it.at == at } ?: return
         val now = System.currentTimeMillis()
-        val shown = shown(context)
+        val shown = shown(context, now)
         if (moment.key in shown) return
+        // FOLLOWUPS-001 (N2): an alarm delivered more than GRACE_MS late is dropped, as a re-arm would drop it.
+        if (!shouldShow(moment, now, shown)) { arm(context, now); return }
         saveShown(context, pruneShown(shown + moment.key, now))
         val manager = context.getSystemService(NotificationManager::class.java)
         if (manager != null) {

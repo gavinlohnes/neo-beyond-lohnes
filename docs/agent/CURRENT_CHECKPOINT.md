@@ -1,4 +1,16 @@
-# Current objective — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
+# Current objective — FOLLOWUPS-001 (BRIDGE-NOTIFY-001 review follow-ups)
+
+- Builder Grok Bot. Gavin approved the overnight plan on 2026-11-15 (wave 2, item 6). [Brief](FOLLOWUPS-001.md). Branch
+  `codex/followups-001` from fetched master `4d74ac26` (#554 merged).
+- Fixes #554 review notes N1 (no duplicate after upgrading from 0.11.0), N2 (an alarm delivered over 2 h late is
+  dropped) and N4 (a failed alert-settings save is not re-applied by a queued change). Health Bridge 0.11.2.
+- Lane PROTECTED (inherited). No new alert kind, Engine, schema, permission or dependency change. The sleep-debt
+  nap-only-day fix waits for #555 to merge.
+- Gates: local `TZ=UTC npm run verify`; PR CI including android; independent exact-head review; Gavin merges.
+
+---
+
+# Historical — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
 
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /
   plan-to-confirm where they fit existing kinds, the plan through the background sync; no new kinds, no Engine change.

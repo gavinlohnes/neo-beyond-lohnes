@@ -6,8 +6,8 @@ android {
         applicationId = "app.beyond.healthbridge"
         minSdk = 28
         targetSdk = 35
-        versionCode = 13
-        versionName = "0.11.1"
+        versionCode = 14
+        versionName = "0.11.2"
     }
     buildFeatures { buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
