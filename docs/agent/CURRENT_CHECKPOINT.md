@@ -7,12 +7,50 @@
   Sweep and the Capture list, through the existing `convertCaptureToObligation`. No schema, Engine, event or
   notification-kind change.
 - Gates: local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
-- Other open work, independent of this section: #555 SLEEP-DEBT-LEARNED-001 (sleep debt) and possibly a work-run
-  re-draft PR; each keeps its own checkpoint section. #473 stays a parked draft.
+- SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
+  `abd9dc71` (2026-11-15 18:06 CT) and WORK-RUN-REDRAFT-001 [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
+  merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT); `origin/master` `44a1c5b0` merged into this branch normally
+  (docs conflict only, all sections kept). Their sections are history. #473 stays a parked draft.
 
 ---
 
-# Current objective — BRIDGE-NOTIFY-001 (notification contract; plan stays on the phone)
+# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
+  `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).
+- Plan Today → Week planner offers DRAFT FRESH RUN PLAN when the latest saved work-run note no longer matches a covered
+  date's work context (a confirmed extra shift included, also on the days off before its first day) or guidance first
+  judged two short sleeps after it. Existing replace warning and confirm-once save; NOT NOW until the change changes.
+  No Engine, schema or notification change.
+- Lane PROTECTED (check:risk: governance docs; reads issued Engine guidance). Gates: local `TZ=UTC npm run verify`, PR
+  CI, independent exact-head review; Gavin merges. Deferred: a TODAY hint, more triggers (see brief).
+- SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
+  `abd9dc71`; master merged into this branch normally (docs conflict only, both sections kept). Its section is history.
+- Independent review of `8d4f7434` blocked two trigger defects (days off before the note's first day not compared;
+  short-sleep re-offer after NOT NOW / a fresh save). Fixed; see the brief's review response. Renewed review needed.
+- Merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT).
+
+---
+
+# Historical — SLEEP-DEBT-LEARNED-001 (sleep owed against your own learned sleep; merged as #555)
+
+- Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
+  baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
+  Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
+  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555).
+- BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
+  (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
+- Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);
+  no figure while still learning (no 7 h fallback); MONTH, the energy forecast, the recovery-sleep offer (threshold
+  unchanged at 1 h) and Alfred's context follow it. The Engine never reads it; `src/engine/**` untouched. The month
+  grid's short-night underline stays on the 7 h guideline (labelled).
+- Lane PROTECTED (classifier: governance docs; semantically it also changes Alfred's sleep context and the recovery
+  offer). Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent
+  exact-head review; Gavin merges. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
+
+---
+
+# Historical — BRIDGE-NOTIFY-001 (notification contract; merged as #554)
 
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 1: 3-a-day cap, per-kind switches, quiet hours, day-off /
   plan-to-confirm where they fit existing kinds, the plan through the background sync; no new kinds, no Engine change.

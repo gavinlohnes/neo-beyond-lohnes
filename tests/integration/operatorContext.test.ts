@@ -142,3 +142,12 @@ it("CONNECTED-001: shares recent daily notes only when personal context is opted
   expect(withheld.coverage.find((c) => c.category === "Daily notes and calendar")?.state).toBe("excluded");
   expect(await all()).toEqual(before);
 });
+it("SLEEP-DEBT-LEARNED-001: Alfred's sleep line has no owed figure while BEYOND is still learning his usual sleep, and no fixed 7 hours", async () => {
+  const { logSleep } = await import("../../src/application/commands");
+  const day = await startDay();
+  await logSleep(day.id, 300, "PRIMARY");
+  const local = await readOperatorContext({ purpose: "local", includePersonal: true });
+  const line = local.records.find((r) => r.kind === "SLEEP_SUMMARY")!.text;
+  expect(line).toBe("SLEEP OWED: no figure yet. BEYOND is still learning his usual sleep (work days still learning (0 of 10 days), days off still learning (0 of 10 days)); 1 day with sleep logged. Do not substitute a fixed 7 hours.");
+  expect(line).not.toMatch(/against 7 h/);
+});

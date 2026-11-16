@@ -5,6 +5,16 @@ import axe from "axe-core";
 import { WeekAheadView } from "../../src/ui/screens/weekly/WeekAheadView";
 import { db } from "../../src/persistence/db";
 import { seedRotation } from "./helpers/rotation";
+import { correctSleep } from "../../src/application/commands";
+import { getDaySummaries } from "../../src/application/dayLedgerQueries";
+import { getSleepEntries } from "../../src/application/queries";
+
+/** SLEEP-DEBT-LEARNED-001: make the newest seeded night a 3-hour one, so the week truly owes over an hour against his usual. */
+async function shortenLatestNight(): Promise<void> {
+  const [latest] = (await getDaySummaries()).sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart));
+  const [entry] = await getSleepEntries(latest!.beyondDayId);
+  await correctSleep(latest!.beyondDayId, entry!.headEventId, 180);
+}
 
 /** FORECAST-DECIDE-001: the forecast's low day, sleep owed and best day each lead to an existing path, on CONFIRM. */
 beforeEach(async () => { await page.viewport(360, 800); });
@@ -12,6 +22,8 @@ afterEach(async () => { await cleanup(); vi.useRealTimers(); });
 
 it("offers a lighter low day, recovery sleep on the next day off and a plan for the best day; writes only on CONFIRM", async () => {
   await seedRotation();
+  // The seeded week alone owes under an hour against his learned usual sleep (see the CANCEL test); one 3-hour night tips it over.
+  await shortenLatestNight();
   const now = new Date(2026, 9, 27, 12);
   vi.setSystemTime(now);
   const schedule = JSON.stringify(await db.schedulePatterns.toArray());
@@ -33,7 +45,7 @@ it("offers a lighter low day, recovery sleep on the next day off and a plan for 
   await actions.getByRole("button", { name: "MOVE “Keep Sun light”" }).click();
   expect(opened).toEqual([light!.id]);
 
-  await expect.element(actions.getByText(/^Sleep owed is about \d+ h \d{2} m\. Wed is your next day off\.$/)).toBeVisible();
+  await expect.element(actions.getByText(/^Sleep owed against your usual is about \d+ h \d{2} m\. Wed is your next day off\.$/)).toBeVisible();
   await actions.getByRole("button", { name: "PLAN RECOVERY SLEEP ON WED" }).click();
   await actions.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CONFIRM" }).click();
   await expect.poll(async () => (await db.obligations.toArray()).map((o) => [o.title, o.plannedAt]).sort()).toEqual([["Keep Sun light", "2026-11-01"], ["Recovery sleep", "2026-10-28"]]);
@@ -54,6 +66,10 @@ it("CANCEL writes nothing, and without a way to open plans the best-day link is 
   await actions.getByRole("button", { name: "PLAN A LIGHTER SUN" }).click();
   await actions.getByRole("group", { name: "Preview" }).getByRole("button", { name: "CANCEL" }).click();
   expect(await db.obligations.count()).toBe(0);
+  // SLEEP-DEBT-LEARNED-001: the seeded week owes under an hour against his own usual sleep, so no recovery offer
+  // (the one-hour threshold is unchanged; against a fixed 7 hours this week would have offered it).
+  await expect.element(screen.getByText(/^Sleep owed: 0 h \d\d m below your usual over your last 7 logged days\./)).toBeVisible();
+  expect(actions.getByRole("button", { name: /^PLAN RECOVERY SLEEP/ }).elements()).toHaveLength(0);
   // Without onOpenPlans the best-day link is left out.
   expect(actions.getByRole("button", { name: /^CHOOSE A PLAN FOR/ }).elements()).toHaveLength(0);
 });
