@@ -68,3 +68,18 @@
   the note as before).
 - Moving a reminder out of quiet hours instead of dropping it; snooze; more than one reminder per task.
 - Telling him later if a reminder that alerted when set loses its slot to a shift or earlier task added afterwards.
+
+## Merge, audit and review readiness (2026-11-16)
+
+- **Merge:** `origin/master` `e84751fe` (FOLLOWUPS-001 #558: Bridge 0.11.2 N1/N2/N4, sleep-debt nap-only days) merged
+  in normally as `62a40253`. Only `docs/agent/CURRENT_CHECKPOINT.md` conflicted (both sections kept; #558 is history).
+  No overlap with #558's code: it changed the Bridge (Kotlin), `sleepDebt.ts`, `operatorContext.ts` and
+  `KeyMomentAlerts.tsx`, not `bridgePlan.ts`. The Bridge's 2-hour late-drop (N2) and shown-set seeding (N1) act on
+  whatever moments the plan sends, so a timed `TASK_DUE` is treated like any other moment there; no Bridge change.
+- **Audit against this brief** (exact time and date; unset keeps 16:00; clearing; next occurrence keeps the time;
+  lived-day boundary; DST; kind, priority, switch, quiet hours and cap; the "won't alert" line; backups; Alfred): no
+  behaviour defect found. One wording fix: the `add_reminder` tool description's example `"9:30"` contradicted its own
+  `HH:MM` rule (a model copying it would get a note, not an alert time); now `"09:30"`, with a test that every clock
+  example in that description is `HH:MM`. Added evidence: a reminder at 16:30 or later counts toward the next lived
+  day's cap (and the line names that day from 16:30), and a backed-up task without `remindAt` restores unchanged.
+- **Review:** independent exact-head review **REQUIRED; not yet done**. The author does not self-review. Gavin merges.

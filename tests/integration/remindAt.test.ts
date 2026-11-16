@@ -6,6 +6,8 @@ import { getObligations } from "../../src/application/intentQueries";
 import { confirmProposal, toProposal } from "../../src/application/alfred/alfredActions";
 import { interpret, type HelperContext } from "../../src/application/helper/freeHelper";
 import { db } from "../../src/persistence/db";
+import { REGISTRY } from "../../src/application/alfred/alfredTools";
+import { CLOCK_HHMM } from "../../src/persistence/intentValidation";
 import { applyAnyRestore } from "../../src/persistence/restore";
 
 /**
@@ -40,10 +42,14 @@ describe("REMIND-AT-001 — reminders at a set time", () => {
   it("survives a native backup, and a malformed restored time drops only the time", async () => {
     await db.open();
     const task = await createObligation({ title: "Dentist", dueAt: "2026-11-12", remindAt: "08:15" });
+    // A row without the field (as in every backup made before REMIND-AT-001) restores unchanged.
+    const old = await createObligation({ title: "Old untimed", dueAt: "2026-11-12" });
     const file = new File([await db.export({ prettyJson: true })], "native-backup.json", { type: "application/json" });
     await modifyObligation(task.id, { remindAt: null });
     await applyAnyRestore(file);
     expect((await getObligations()).find((o) => o.id === task.id)?.remindAt).toBe("08:15");
+    expect((await getObligations()).find((o) => o.id === old.id)).toMatchObject({ title: "Old untimed", dueAt: "2026-11-12" });
+    expect((await getObligations()).find((o) => o.id === old.id)?.remindAt).toBeUndefined();
     await db.obligations.update(task.id, { remindAt: "half eight" });
     const read = (await getObligations()).find((o) => o.id === task.id);
     expect(read?.title).toBe("Dentist");
@@ -118,5 +124,9 @@ describe("REMIND-AT-001 — reminders at a set time", () => {
     expect(all.find((o) => o.title === "CPAP")).toMatchObject({ description: "after I wake" });
     expect(all.find((o) => o.title === "CPAP")?.remindAt).toBeUndefined();
     expect(all.find((o) => o.title === "Undated")).toMatchObject({ description: "17:30" });
+    // The tool's own examples of a clock time are the HH:MM shape it turns into an alert time.
+    const desc = REGISTRY.add_reminder.tool?.description ?? "";
+    expect(desc).toContain("HH:MM");
+    for (const clock of desc.match(/\d{1,2}:\d{2}/g) ?? []) expect(CLOCK_HHMM.test(clock)).toBe(true);
   });
 });

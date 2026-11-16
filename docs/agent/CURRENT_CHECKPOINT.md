@@ -12,6 +12,10 @@
 - CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`,
   then FOLLOWUPS-001 [#558](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/558) as `e84751fe`; `origin/master`
   `e84751fe` merged into this branch normally (checkpoint conflict only, all sections kept). Their sections below are history.
+- Merge and audit (2026-11-16): no behaviour defect; `add_reminder` example `"9:30"` → `"09:30"` plus coverage tests
+  (next lived day's cap from 16:30; backups without `remindAt`). See the brief's last section. Exact head, checks run and
+  CI are in the PR handoff. Remaining gates: green CI on that head; **independent exact-head review REQUIRED, not yet
+  done**; Gavin merges.
 
 ---
 

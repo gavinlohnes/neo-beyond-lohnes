@@ -62,6 +62,17 @@ describe("REMIND-AT-001 — a timed TASK_DUE under the cap and quiet hours", () 
     const next = applyAlertContract([...moments, m(at(2026, 11, 17, 17), "TASK_DUE", "evening")], NONE);
     expect(next.map((k) => k.text)).toContain("evening");
     expect(applyAlertContract(moments, { off: ["TASK_DUE"], quietFrom: null, quietTo: null }).some((k) => k.kind === "TASK_DUE")).toBe(false);
+    // A reminder at or after 16:30 counts toward the NEXT lived day's cap (16:30 Tue to 16:30 Wed) and loses there by time.
+    const tue = [
+      m(at(2026, 11, 17, 16, 30), "TASK_DUE", "16:30 reminder"),
+      m(at(2026, 11, 17, 17, 30), "BEFORE_SHIFT", "tue shift"),
+      m(at(2026, 11, 18, 6), "SHIFT_DONE", "wed done"),
+      m(at(2026, 11, 18, 9), "TASK_DUE", "wed 9am"),
+    ];
+    expect(applyAlertContract([...moments, ...tue], NONE).map((k) => k.text))
+      .toEqual(["BEFORE_SHIFT", "SHIFT_DONE", "9am reminder", "16:30 reminder", "tue shift", "wed done"]);
+    expect(describeReminderAlert({ state: "SILENT", at: at(2026, 11, 18, 9), reason: "CAP_FULL" }))
+      .toBe("Won't alert: the day from 16:30 Tue 17 Nov already has 3 alerts that come first (shift alerts, then earlier tasks).");
   });
 
   it("says every won't-alert reason in one plain line", () => {
