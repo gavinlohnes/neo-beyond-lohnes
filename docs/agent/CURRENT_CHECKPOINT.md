@@ -1,16 +1,46 @@
 # Current objective — ALFRED-MULTI-001 (several actions in one message)
 
 - Builder Grok Bot. Wave 2 of the overnight plan Gavin approved 2026-11-15. [Brief](ALFRED-MULTI-001.md). Branch
-  `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45`, **stacked on #560**: PR base is
-  `codex/alfred-act-001`; merge after #560, then retarget to master.
+  `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45`, first stacked on #560. PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561).
 - Lane PROTECTED. No Engine, schema, dependency, alert or low-risk-definition change.
 - One message → one card per part, in order; ALFRED-ACT-001's rule picks which run at once, each with its own UNDO;
   at most 5 at once per message (more → none at once, he's told); a card that didn't save says why; no double writes.
-- Gates: local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges. PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561).
+- Owner session 2026-11-16 ("Next"): #560 merged as `8084b1be` and #559 as `3eece4ac`. The final #560 head `44ab6d83`
+  (its review fixes) was merged in normally, then `origin/master` `3eece4ac`; the PR base was retargeted from
+  `codex/alfred-act-001` to master. Conflicts: `act()` in AlfredSheet (kept the 5-at-once plan and held-card notes, and
+  #560's rule that a failing haptic or refresh after writes never turns saved entries back into SAVE cards), the reminder
+  alert line next to the held-card note on cards, the alfredAct comment (#560's saved-meals wording), and this checkpoint
+  (all sections kept; the ones below are history).
+- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
+  **independent exact-head review REQUIRED, not yet done** (never reviewed); Gavin merges. Exact head, checks run and CI
+  are in the PR handoff.
 
 ---
 
-# In flight (base of the stack) — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO)
+# Historical — EXP-STATS-001 (honest statistics for personal experiments; merged as #559)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
+  experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
+  PR [#559](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/559). Fast-forwarded onto `44a1c5b0` after #556
+  merged; `origin/master` `b921d303` (#557) merged in normally (checkpoint conflict only).
+- The existing LOOP TRY comparison now reports a Welch 95% range on the difference of means, with day counts, and says
+  "can't tell yet" when that range crosses zero and still reaches a meaningful gap, or "not enough data yet" when a side
+  is thin, instead of declaring a winner. Pure application-layer functions; minimal wording in the existing result
+  view. No Engine, schema, alert-kind or dependency change.
+- Lane FEATURE (classifier says PROTECTED only for governance-path docs; semantically a readout change). The
+  independent review of `d11166bb` applied the PROTECTED bar and was PASS (no blockers).
+- Owner session 2026-11-16 ("Finish the next one"): `origin/master` `8084b1be` (#558 FOLLOWUPS-001, #562 REMIND-AT-001,
+  #560 ALFRED-ACT-001) merged in normally (this checkpoint was the only conflict; all sections kept, theirs are history).
+  Review non-blocking note 1 fixed (intro wording now matches the rule); note 2 left as is (wrapping already guaranteed;
+  the review said no change needed). See the brief's review response.
+- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
+  **renewed independent exact-head review REQUIRED, not yet done** (the PASS review is stale); Gavin merges. Exact head,
+  checks run and CI are in the PR handoff. #561 waits (stacked on the merged #560 branch); #563 and #473 are separate.
+- Merged by Gavin as `3eece4ac` (2026-11-16 05:42 CT).
+
+---
+
+# Historical — ALFRED-ACT-001 (low-risk logging runs immediately with UNDO; merged as #560)
 
 - Builder Grok Bot. Gavin, 2026-11-15, 04:26 CT: "Yes, low-risk logging runs immediately with undo"; started as wave 2
   of the overnight plan he approved. [Brief](ALFRED-ACT-001.md). Branch `codex/alfred-act-001` from fetched master
@@ -29,6 +59,7 @@
 - Gates: local `TZ=UTC npm run verify`; PR CI on the exact head; **renewed independent exact-head review REQUIRED, not
   yet done** (the PASS review is stale); Gavin merges. #561 (multi-action) stays stacked on this branch and waits.
   Exact head, checks run and CI are in the PR handoff.
+- Merged by Gavin as `8084b1be` (2026-11-16 04:32 CT). #561 (multi-action) was stacked on its branch.
 
 ---
 
@@ -105,13 +136,10 @@
   date's work context (a confirmed extra shift included, also on the days off before its first day) or guidance first
   judged two short sleeps after it. Existing replace warning and confirm-once save; NOT NOW until the change changes.
   No Engine, schema or notification change.
-- Lane PROTECTED (check:risk: governance docs; reads issued Engine guidance). Gates: local `TZ=UTC npm run verify`, PR
-  CI, independent exact-head review; Gavin merges. Deferred: a TODAY hint, more triggers (see brief).
-- SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
-  `abd9dc71`; master merged into this branch normally (docs conflict only, both sections kept). Its section is history.
-- Independent review of `8d4f7434` blocked two trigger defects (days off before the note's first day not compared;
-  short-sleep re-offer after NOT NOW / a fresh save). Fixed; see the brief's review response. Renewed review needed.
-- Merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT).
+- Lane PROTECTED (check:risk: governance docs; reads issued Engine guidance). PR
+  [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556) merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT).
+  Independent review of `8d4f7434` had blocked two trigger defects (days off before the note's first day not compared;
+  short-sleep re-offer after NOT NOW / a fresh save); those were fixed before merge.
 
 ---
 
@@ -128,8 +156,7 @@
   unchanged at 1 h) and Alfred's context follow it. The Engine never reads it; `src/engine/**` untouched. The month
   grid's short-night underline stays on the 7 h guideline (labelled).
 - Lane PROTECTED (classifier: governance docs; semantically it also changes Alfred's sleep context and the recovery
-  offer). Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent
-  exact-head review; Gavin merges. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
+  offer).
 
 ---
 

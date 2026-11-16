@@ -72,16 +72,19 @@
   experiment shows as one quiet line under TODAY's mode ("Trying: … · day 3 of 14"). Its card shows
   results so far and at the end: main sleep, check-in energy and training on the experiment's days
   against your usual days of the same kind in the Whole Picture window, with day counts on each
-  side; gaps under 15 min of sleep or 0.3 energy read "about the same"; fewer than 3 days a side
-  says what is missing. Closing it (It helped / No clear difference / It didn't help + lesson) is
-  the journal's own review.
+  side and a 95% range on the difference of means; gaps under 15 min of sleep or 0.3 energy read
+  "about the same" when the range stays small; a range that crosses zero and still reaches a
+  meaningful gap says "can't tell yet"; fewer than 3 days a side says "not enough data yet" and what
+  is missing. Closing it (It helped / No clear difference / It didn't help + lesson) is the
+  journal's own review.
 - **Storage:** an ordinary journal entry titled "Try: …" whose context starts with one fixed window
   line (`Window YYYY-MM-DD for N days · WORK|OFF|ALL`) written and read by
   `application/tryExperiment.ts`. Editing that line away turns it back into a plain entry.
 - **Not in scope:** per-day "did I do it" marking, reminders, Engine input, AI, causal claims.
 - **REUSE:** Decision Journal commands/review, Whole Picture rows and `PICTURE_MEAN_FLOOR`, the
-  lived-day boundary, REFLECT's chip pattern. **OWN:** the window line, the comparison rule and its
-  "about the same" thresholds. **BUILD FROM SCRATCH:** none.
+  lived-day boundary, REFLECT's chip pattern. **OWN:** the window line, the comparison rule, its
+  "about the same" thresholds, and the Welch interval plus "can't tell yet" wording (EXP-STATS-001).
+  **BUILD FROM SCRATCH:** none.
 
 ## Step 4 — REMEMBER (#310, merged)
 
