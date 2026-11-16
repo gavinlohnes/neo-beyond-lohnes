@@ -9,7 +9,7 @@
 - **Lane: Protected.** `npm run check:risk -- b921d303` suggests PROTECTED (domain types). Semantically it adds an
   optional persisted field that native backups carry and changes when an existing notification fires. Independent
   exact-head review, green CI; Gavin merges. No Dexie version, Engine, dependency, permission, Bridge or alert-kind change.
-- **Active PR:** pending (linked from the checkpoint once opened).
+- **Active PR:** [#562](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/562).
 
 ## What changes
 

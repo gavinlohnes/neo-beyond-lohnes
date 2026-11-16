@@ -1,7 +1,7 @@
 # Current objective — REMIND-AT-001 (reminders at a set time, inside the 3-a-day cap)
 
 - Builder Grok Bot. Gavin, 2026-11-15 17:49 CT, approved the overnight sprint plan (Wave 3: "REMIND-AT-001 (reminders at
-  a set time, inside the 3-a-day cap)"). [Brief](REMIND-AT-001.md). Branch `codex/remind-at-001` from fetched master
+  a set time, inside the 3-a-day cap)"). [Brief](REMIND-AT-001.md). PR [#562](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/562). Branch `codex/remind-at-001` from fetched master
   `b921d303` (#557 merged).
 - A task may carry an optional `remindAt` (HH:MM on its due date); its alert fires then as the existing `TASK_DUE` kind,
   under the same switch, quiet hours, priority and 3-a-day cap. Where the time is set (Missions & Obligations create and
