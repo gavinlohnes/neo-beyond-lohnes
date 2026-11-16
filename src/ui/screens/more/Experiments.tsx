@@ -98,9 +98,9 @@ function ExperimentCard({ experiment: e, rows, onClosed }: { experiment: Experim
     {e.entry.expectation && <p className="meta">You expected: {e.entry.expectation}</p>}
     {rows === "error" && <p className="meta">The comparison is unavailable right now, not empty.</p>}
     {result && <>
-      <p className="meta">{ended ? "Result" : "So far"}, from your recorded days. A pattern, not proof:</p>
+      <p className="meta">{ended ? "Result" : "So far"}, from your recorded days. A pattern, not proof; if the range crosses zero, we can't tell yet:</p>
       {result.enough ? <ul>{result.lines.map((line) => <li key={line.text} className="meta">{line.text}</li>)}</ul>
-        : <p className="meta" data-try-not-yet>Not enough recorded yet: this needs {result.need}.</p>}
+        : <p className="meta" data-try-not-yet>Not enough data yet: this needs {result.need}.</p>}
     </>}
     {ended && <>
       <div className="reflect-chips" role="group" aria-label="How did the experiment go?">

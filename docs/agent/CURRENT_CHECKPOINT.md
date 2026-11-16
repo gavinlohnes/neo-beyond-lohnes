@@ -1,4 +1,20 @@
-# Current objective — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes)
+# Current objective — EXP-STATS-001 (honest statistics for personal experiments)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
+  experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
+  fast-forwarded onto `44a1c5b0` after Gavin merged [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556)
+  (2026-11-15 18:42 CT).
+- The existing LOOP TRY comparison now reports a Welch 95% range on the difference of means, with day counts, and says
+  "can't tell yet" when that range crosses zero or "not enough data yet" when a side is thin, instead of declaring a
+  winner. Pure application-layer functions; minimal wording in the existing result view. No Engine, schema, alert-kind
+  or dependency change.
+- Lane FEATURE (classifier may say PROTECTED only for governance-path docs; semantically a readout change). Gates:
+  focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; normal review; Gavin merges.
+- Other open work, independent of this section: #557 capture parity, #558 follow-ups. #473 stays a parked draft.
+
+---
+
+# Historical — WORK-RUN-REDRAFT-001 (offer a fresh work-run draft when something changes; merged as #556)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved ranked item 4 ("Go ahead"). [Brief](WORK-RUN-REDRAFT-001.md). Branch
   `codex/work-run-redraft-001` from fetched master `4d74ac26` (#554 merged).
@@ -6,12 +22,10 @@
   date's work context (a confirmed extra shift included, also on the days off before its first day) or guidance first
   judged two short sleeps after it. Existing replace warning and confirm-once save; NOT NOW until the change changes.
   No Engine, schema or notification change.
-- Lane PROTECTED (check:risk: governance docs; reads issued Engine guidance). Gates: local `TZ=UTC npm run verify`, PR
-  CI, independent exact-head review; Gavin merges. Deferred: a TODAY hint, more triggers (see brief).
-- SLEEP-DEBT-LEARNED-001 [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
-  `abd9dc71`; master merged into this branch normally (docs conflict only, both sections kept). Its section is history.
-- Independent review of `8d4f7434` blocked two trigger defects (days off before the note's first day not compared;
-  short-sleep re-offer after NOT NOW / a fresh save). Fixed; see the brief's review response. Renewed review needed.
+- Lane PROTECTED (check:risk: governance docs; reads issued Engine guidance). PR
+  [#556](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/556) merged by Gavin as `44a1c5b0` (2026-11-15 18:42 CT).
+  Independent review of `8d4f7434` had blocked two trigger defects (days off before the note's first day not compared;
+  short-sleep re-offer after NOT NOW / a fresh save); those were fixed before merge.
 
 ---
 
@@ -20,7 +34,8 @@
 - Builder Grok Bot. Gavin, 2026-11-15, chose ranked item 2: recalculate sleep owed against the existing personal
   baseline instead of 7 h; work days vs days off where the baseline supports it; "still learning" with day counts;
   Engine unchanged (readout only). [Brief](SLEEP-DEBT-LEARNED-001.md). Branch `codex/sleep-debt-learned-001` from
-  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555).
+  fetched master `4d74ac26`; PR [#555](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/555) merged by Gavin as
+  `abd9dc71` (2026-11-15).
 - BRIDGE-NOTIFY-001 [#554](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/554) merged by Gavin as `4d74ac26`
   (2026-11-15 16:16 CT); its section below is history. The 0.11.1 Health Bridge phone check is Gavin's.
 - Each logged night is judged against the low end of its kind's usual main-sleep range (`projectPersonalBaselines`);
@@ -28,8 +43,7 @@
   unchanged at 1 h) and Alfred's context follow it. The Engine never reads it; `src/engine/**` untouched. The month
   grid's short-night underline stays on the 7 h guideline (labelled).
 - Lane PROTECTED (classifier: governance docs; semantically it also changes Alfred's sleep context and the recovery
-  offer). Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent
-  exact-head review; Gavin merges. Next approved candidate after this PR is green: work-run re-draft on change (ranked list).
+  offer).
 
 ---
 

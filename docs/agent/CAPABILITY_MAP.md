@@ -341,8 +341,9 @@ fresh general review.
   this for any "you said X, how did it go?" loop rather than a new record kind.
 - LOOP step 3 (TRY): `application/tryExperiment.ts` — experiments are journal entries ("Try: …" +
   a fixed window line); `experimentResult` compares in-window days with usual days of the same
-  kind from Whole Picture rows, with counts and an "about the same" band. Reuse for any bounded
-  personal comparison.
+  kind from Whole Picture rows, with counts, a 95% interval on the difference of means, an "about
+  the same" band, and "can't tell yet" / "not enough data yet" when the range is inconclusive or a
+  side is thin. Reuse for any bounded personal comparison.
 - LOOP step 4 (REMEMBER): `application/remember.ts` returns your own reviewed conclusions at the
   matching moment by structure (same recommendation kind, next shift's PREP, next experiment).
   Extend it for new "when this comes up again" moments; keep it informational.
