@@ -1,4 +1,20 @@
-# Current objective — CAPTURE-PARITY-001 (capture → task works the same everywhere)
+# Current objective — REMIND-AT-001 (reminders at a set time, inside the 3-a-day cap)
+
+- Builder Grok Bot. Gavin, 2026-11-15 17:49 CT, approved the overnight sprint plan (Wave 3: "REMIND-AT-001 (reminders at
+  a set time, inside the 3-a-day cap)"). [Brief](REMIND-AT-001.md). Branch `codex/remind-at-001` from fetched master
+  `b921d303` (#557 merged).
+- A task may carry an optional `remindAt` (HH:MM on its due date); its alert fires then as the existing `TASK_DUE` kind,
+  under the same switch, quiet hours, priority and 3-a-day cap. Where the time is set (Missions & Obligations create and
+  edit, Alfred's `add_reminder` card) one line says whether it will alert, or "Won't alert:" and why. No Dexie version,
+  Engine, alert-kind, Bridge, permission or dependency change.
+- Lane PROTECTED (check:risk: domain types; semantically a backed-up field and notification timing). Gates: focused tests
+  under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI; independent exact-head review; Gavin merges.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
+  its section below is history.
+
+---
+
+# Historical — CAPTURE-PARITY-001 (capture → task works the same everywhere; merged as #557)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved the ranked item "Make turning a capture into a task work the same
   everywhere" (HARVEST-002's best new refinement). [Brief](CAPTURE-PARITY-001.md). Branch `codex/capture-parity-001`

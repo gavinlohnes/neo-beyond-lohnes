@@ -84,7 +84,9 @@ export interface Mission {
  * precision BEYOND's doctrine elsewhere rejects. `resolvedAt` is a real
  * instant (ISO timestamp) — what actually happened, when it actually
  * happened. `overdue` is NOT a field: always derived by comparing dueAt
- * to now, at read time, never stored.
+ * to now, at read time, never stored. REMIND-AT-001: dueAt stays a day;
+ * the optional `remindAt` is only when the owner asked to be reminded on it
+ * (he named the time), never a deadline and never inferred.
  */
 export interface Obligation {
   id: string;
