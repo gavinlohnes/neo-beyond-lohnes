@@ -1,4 +1,23 @@
-# Current objective — EXP-STATS-001 (honest statistics for personal experiments)
+# Current objective — YEAR-REVIEW-001 (your year in BEYOND, built on the month recap)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved sprint plan Wave 3 ("year-in-review built on the monthRecap cards");
+  resumed on his return for Claude's review. [Brief](YEAR-REVIEW-001.md). Branch `codex/year-review-001` from fetched
+  master `b921d303`.
+- Lane: classify-risk suggests PROTECTED (the brief is on a governance path); semantically a feature. Pure rollup of the month recap's own counting helpers across a calendar year plus a tap-to-open block
+  on MONTH. Months under 7 logged days are named and left out; "N of 12 months counted" shown. No Engine, schema,
+  alert, dependency, navigation or TODAY change.
+- Gates: local `TZ=UTC npm run verify` green (557 files, 4122 tests); PR CI; independent exact-head review (Claude);
+  Gavin merges.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
+  its section below is history.
+- `origin/master` `3eece4ac` (#558, #559, #560, #562) merged in normally (this checkpoint was the only conflict; all
+  sections kept, theirs are history). Renewed independent exact-head review needed after this merge; Gavin merges.
+- #561 ALFRED-MULTI-001 (now targeting master) is a separate open PR awaiting its own review; not part of this objective.
+  Exact head, checks run and CI for this PR are in the PR handoff.
+
+---
+
+# Historical — EXP-STATS-001 (honest statistics for personal experiments; merged as #559, `3eece4ac`)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
   experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
@@ -17,6 +36,7 @@
 - Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
   **renewed independent exact-head review REQUIRED, not yet done** (the PASS review is stale); Gavin merges. Exact head,
   checks run and CI are in the PR handoff. #561 waits (stacked on the merged #560 branch); #563 and #473 are separate.
+- Merged by Gavin as `3eece4ac` (2026-11-16 05:42 CT).
 
 ---
 
