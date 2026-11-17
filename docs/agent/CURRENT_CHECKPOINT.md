@@ -14,10 +14,32 @@
 - Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
   **independent exact-head review REQUIRED, not yet done** (never reviewed); Gavin merges. Exact head, checks run and CI
   are in the PR handoff.
+- Owner session 2026-11-17 ("561 needs fixed now"): the PR was conflicting after #563 YEAR-REVIEW-001 merged as
+  `ba6436f3`; `origin/master` `ba6436f3` merged in normally (this checkpoint was the only conflict; all sections kept,
+  theirs are history). No review findings were posted on `138efe77`; no app code changed in this merge.
 
 ---
 
-# Historical — EXP-STATS-001 (honest statistics for personal experiments; merged as #559)
+# Historical — YEAR-REVIEW-001 (your year in BEYOND, built on the month recap; merged as #563, `ba6436f3`)
+
+- Builder Grok Bot. Gavin, 2026-11-15, approved sprint plan Wave 3 ("year-in-review built on the monthRecap cards");
+  resumed on his return for Claude's review. [Brief](YEAR-REVIEW-001.md). Branch `codex/year-review-001` from fetched
+  master `b921d303`.
+- Lane: classify-risk suggests PROTECTED (the brief is on a governance path); semantically a feature. Pure rollup of the month recap's own counting helpers across a calendar year plus a tap-to-open block
+  on MONTH. Months under 7 logged days are named and left out; "N of 12 months counted" shown. No Engine, schema,
+  alert, dependency, navigation or TODAY change.
+- Gates: local `TZ=UTC npm run verify` green (557 files, 4122 tests); PR CI; independent exact-head review (Claude);
+  Gavin merges.
+- CAPTURE-PARITY-001 [#557](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/557) merged by Gavin as `b921d303`;
+  its section below is history.
+- `origin/master` `3eece4ac` (#558, #559, #560, #562) merged in normally (this checkpoint was the only conflict; all
+  sections kept, theirs are history). Renewed independent exact-head review needed after this merge; Gavin merges.
+- #561 ALFRED-MULTI-001 (now targeting master) was a separate open PR awaiting its own review; not part of this objective.
+  Exact head, checks run and CI for this PR are in the PR handoff.
+
+---
+
+# Historical — EXP-STATS-001 (honest statistics for personal experiments; merged as #559, `3eece4ac`)
 
 - Builder Grok Bot. Gavin, 2026-11-15, approved the overnight plan whose Wave 3 includes "honest statistics for
   experiments". [Brief](EXP-STATS-001.md). Branch `codex/exp-stats-001` from fetched master `abd9dc71` (#555 merged);
