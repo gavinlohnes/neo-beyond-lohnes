@@ -1,4 +1,20 @@
-# Current objective — ALFRED-MULTI-001 (several actions in one message)
+# Current objective — CAPTURE-PARITY-002 (an open capture is listed once in TODAY TOOLS)
+
+- Builder Grok Bot. Gavin, 2026-11-18 (owner session, option 2): next highest-value remaining item, preferring the
+  ranked list's capture-to-task parity. [Brief](CAPTURE-PARITY-002.md). Branch `codex/capture-parity-002` from fetched
+  master `4088b65e` (#561 merged).
+- Lane FEATURE (check:risk says PROTECTED only for the brief/checkpoint governance paths). UI composition only: no
+  Engine, schema, command, persistence, provider, notification or dependency change.
+- MORE → TODAY TOOLS listed every open capture in Attention and in the TOOLS Capture card, so → TASK opened two task
+  forms. Now each capture shows once (Attention on a work day; TOOLS on a day off, where Attention only points to the
+  sweep). TODAY and the focused COMMAND views are unchanged.
+- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
+  independent exact-head review; Gavin merges. Exact head, checks run and CI are in the PR handoff.
+- Next after merge: phone check in MORE → TODAY TOOLS with two open notes on a work day (each listed once, one form).
+
+---
+
+# Historical — ALFRED-MULTI-001 (several actions in one message; merged as #561, `4088b65e`)
 
 - Builder Grok Bot. Wave 2 of the overnight plan Gavin approved 2026-11-15. [Brief](ALFRED-MULTI-001.md). Branch
   `codex/alfred-multi-001` from `origin/codex/alfred-act-001` `365d2a45`, first stacked on #560. PR [#561](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/561).
