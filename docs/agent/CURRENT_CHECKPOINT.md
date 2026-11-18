@@ -1,4 +1,19 @@
-# Current objective — CAPTURE-PARITY-002 (an open capture is listed once in TODAY TOOLS)
+# Current objective — HABIT-QUOTA-001 ("N times a week" habits)
+
+- Builder Claude Code. Gavin, 2026-11-18 ("Approved." to the recommended objective). [Brief](HABIT-QUOTA-001.md).
+  Branch `ccr-ca6fc619-gqnj7f` from fetched master `6a359d01` (#564 merged).
+- Lane PROTECTED (a new value in the backed-up `Habit.schedule`). No Dexie version, migration, event, Engine, Alfred,
+  notification, provider or dependency change; `HABIT_SET` answers untouched.
+- A habit can be "Times a week" (1 to 6, Monday-to-Sunday lived-day weeks). It is due until the week's target is met,
+  then leaves BODY's today list; the Habits card reads "1 of 3 this week" and "Done for this week". Only Done counts.
+- Gates: focused tests under UTC and America/Chicago; local `TZ=UTC npm run verify`; PR CI on the exact head;
+  **independent exact-head review REQUIRED**; Gavin merges. Exact head, checks run and CI are in the PR handoff.
+- Next after merge: on the phone, add "Lift · 3 times a week" in MORE → LIFE → Habits, mark it Done three days, and
+  check it leaves BODY's chips on day four and comes back on Monday's lived day (after 16:30).
+
+---
+
+# Historical — CAPTURE-PARITY-002 (an open capture is listed once in TODAY TOOLS; merged as #564, `6a359d01`)
 
 - Builder Grok Bot. Gavin, 2026-11-18 (owner session, option 2): next highest-value remaining item, preferring the
   ranked list's capture-to-task parity. [Brief](CAPTURE-PARITY-002.md). Branch `codex/capture-parity-002` from fetched

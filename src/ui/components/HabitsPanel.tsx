@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createHabit, setHabitArchived, setHabitAnswer } from "../../application/habitCommands";
 import { getHabitWorkspace } from "../../application/habitQueries";
-import { HABIT_ANSWERS, HABIT_ANSWER_LABEL, type HabitAnswer, type HabitScheduleKind } from "../../domain/habits";
+import { HABIT_ANSWERS, HABIT_ANSWER_LABEL, HABIT_PER_WEEK_MAX, HABIT_PER_WEEK_MIN, type HabitAnswer, type HabitScheduleKind } from "../../domain/habits";
 import { CommandBar, Panel } from "../foundation/primitives";
 import { LogSheet } from "./LogSheet";
 import "../foundation/foundation.css";
@@ -15,6 +15,13 @@ const dateLabel = (d: Day) => new Date(d.from).toLocaleDateString("en-US", { wee
 const contextLabel = (d: Day) => d.work === "UNKNOWN" ? "Work context not recorded" : `${d.workBasis === "CONFIRMED" ? "Confirmed " : d.workPlanned ? "Planned " : ""}${d.work === "WORK" ? "work day" : "day off"}`;
 const answerLabel = (d: Day) => d.answer === "UNRECORDED" && !d.applies ? "Not scheduled · Not recorded" : HABIT_ANSWER_LABEL[d.answer];
 const MARK: Record<HabitAnswer, string> = { DONE: "✓", NOT_DONE: "×", UNRECORDED: "—" };
+const PER_WEEK = Array.from({ length: HABIT_PER_WEEK_MAX - HABIT_PER_WEEK_MIN + 1 }, (_, i) => HABIT_PER_WEEK_MIN + i);
+/** HABIT-QUOTA-001: a quota habit reads "1 of 3 this week"; once met and not done today, "Done for this week". */
+function weekLine(r: Row) {
+  if (r.perWeek === null) return `${r.thisWeek} this week · ${r.fourWeeks} in 4 weeks${!r.applies ? " · Not scheduled today" : ""}`;
+  const met = r.thisWeek >= r.perWeek;
+  return `${r.thisWeek} of ${r.perWeek} this week${met ? " · Done for this week" : ""} · ${r.fourWeeks} in 4 weeks`;
+}
 
 function DayGrid({ days, selected, onPick }: { days: Day[]; selected?: string | undefined; onPick: (d: Day) => void }) {
   return <div className="habit-calendar" role="group" aria-label={`${days.length} lived days`}>
@@ -38,6 +45,7 @@ export function HabitsPanel({ active }: { active: boolean }) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<HabitScheduleKind>("ANY_DAY");
   const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [perWeek, setPerWeek] = useState(3);
   const [error, setError] = useState("");
   const [readFailed, setReadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -88,7 +96,7 @@ export function HabitsPanel({ active }: { active: boolean }) {
     {workspace && !workspace.dayId && <p className="habit-copy">No record for this lived day yet. Return to TODAY to start it. Existing past days can still be corrected.</p>}
     <div className="habit-list">
       {workspace?.habits.map((r) => <Panel key={r.habit.id} headingId={`habit-${r.habit.id}`} label={r.habit.name} icon={null} wide>
-        <p className="habit-copy">{r.thisWeek} this week · {r.fourWeeks} in 4 weeks{!r.applies ? " · Not scheduled today" : ""}</p>
+        <p className="habit-copy">{weekLine(r)}</p>
         <p className="habit-copy"><b>Today:</b> {HABIT_ANSWER_LABEL[r.answer]}</p>
         <Answers answer={r.answer} disabled={blocked || !workspace.dayId} onAnswer={(a) => record(r, r.history.at(-1)!, a)} />
         <DayGrid days={r.history.slice(-7)} onPick={(d) => pick(r, d)} />
@@ -104,14 +112,17 @@ export function HabitsPanel({ active }: { active: boolean }) {
       <h3>Add a habit</h3>
       <label className="field"><span>Habit name</span><input className="input" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Evening walk" /></label>
       <label className="field"><span>When</span><select className="input" value={kind} onChange={(e) => setKind(e.target.value as HabitScheduleKind)}>
-        <option value="ANY_DAY">Any day</option><option value="WEEKDAYS">Chosen days</option><option value="WORK_DAYS">Work days</option><option value="DAYS_OFF">Days off</option>
+        <option value="ANY_DAY">Any day</option><option value="WEEKDAYS">Chosen days</option><option value="WORK_DAYS">Work days</option><option value="DAYS_OFF">Days off</option><option value="TIMES_A_WEEK">Times a week</option>
       </select></label>
+      {kind === "TIMES_A_WEEK" && <label className="field"><span>Times each week (Monday to Sunday)</span><select className="input" value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))}>
+        {PER_WEEK.map((n) => <option key={n} value={n}>{n} {n === 1 ? "time" : "times"} a week</option>)}
+      </select></label>}
       {kind === "WEEKDAYS" && <fieldset className="habit-days-fieldset"><legend>Days</legend><div className="habit-days">
         {DAYS.map((d, i) => <label key={d} className="habit-day-toggle"><input type="checkbox" checked={weekdays.includes(i)} onChange={() => setWeekdays((old) => old.includes(i) ? old.filter((n) => n !== i) : [...old, i])} /><span>{d}</span></label>)}
       </div></fieldset>}
       <button type="button" className="btn-primary" disabled={busy || readFailed} onClick={() => void run(async () => {
-        await createHabit({ name, kind, ...(kind === "WEEKDAYS" ? { weekdays } : {}) });
-        if (mounted.current) { setName(""); setKind("ANY_DAY"); setWeekdays([]); }
+        await createHabit({ name, kind, ...(kind === "WEEKDAYS" ? { weekdays } : {}), ...(kind === "TIMES_A_WEEK" ? { perWeek } : {}) });
+        if (mounted.current) { setName(""); setKind("ANY_DAY"); setWeekdays([]); setPerWeek(3); }
       }, "Habit saved.")}>SAVE HABIT</button>
     </div>
   </section>

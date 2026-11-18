@@ -14,7 +14,8 @@ import { getQuitSummary, type QuitSummary } from "./quitQueries";
 export interface BodyDashboardExtras {
   measured: MeasuredSnapshot | null;
   pace: PaceHistories | null;
-  habits: { name: string; done: boolean; answer?: HabitAnswer }[] | null;
+  /** `week` only for a TIMES_A_WEEK habit (HABIT-QUOTA-001); it leaves the list once its weekly target is met. */
+  habits: { name: string; done: boolean; answer?: HabitAnswer; week?: { done: number; target: number } }[] | null;
   quit: QuitSummary | null;
   schedule: SchedulePattern | null;
 }
@@ -29,6 +30,6 @@ export async function getBodyDashboardExtras(day: BeyondDay | null, now: Date = 
   ]);
   return {
     measured, pace, schedule, quit: quit ?? null,
-    habits: workspace ? workspace.filter((h) => h.applies).map((h) => ({ name: h.habit.name, done: h.done, answer: h.answer })) : null,
+    habits: workspace ? workspace.filter((h) => h.applies).map((h) => ({ name: h.habit.name, done: h.done, answer: h.answer, ...(h.week ? { week: h.week } : {}) })) : null,
   };
 }

@@ -199,7 +199,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
 
         <Card id="lifestyle" icon={<ListChecks size={18} />} label="LIFESTYLE" wide>
           <ul className="bd-chips" aria-label="Today's habits and quit tracker">
-            {(extras?.habits ?? []).map((h) => <li key={h.name} className={h.done ? "bd-chip bd-chip--done" : "bd-chip"}>{h.name}<span className="visually-hidden">{`, ${HABIT_ANSWER_LABEL[h.answer ?? (h.done ? "DONE" : "UNRECORDED")].toLowerCase()} today`}</span><span className="bd-chip__mark" aria-hidden="true">{h.done ? "✓" : h.answer === "NOT_DONE" ? "×" : "—"}</span></li>)}
+            {(extras?.habits ?? []).map((h) => <li key={h.name} className={h.done ? "bd-chip bd-chip--done" : "bd-chip"}>{h.name}{h.week ? ` · ${h.week.done} of ${h.week.target} this week` : ""}<span className="visually-hidden">{`, ${HABIT_ANSWER_LABEL[h.answer ?? (h.done ? "DONE" : "UNRECORDED")].toLowerCase()} today`}</span><span className="bd-chip__mark" aria-hidden="true">{h.done ? "✓" : h.answer === "NOT_DONE" ? "×" : "—"}</span></li>)}
             {extras?.quit && <li className={extras.quit.cleanToday ? "bd-chip bd-chip--done" : "bd-chip"}>{extras.quit.habit.name} · {extras.quit.cleanThisMonth} clean this month{extras.quit.cleanToday ? " · today ✓" : ""}</li>}
             {extras && !extras.habits?.length && !extras.quit && <li className="bd-chip bd-chip--empty">No habits or quit tracker set up</li>}
           </ul>

@@ -25,7 +25,8 @@ describe("HABITS-001", () => {
 
   it("shows only weekly and four-week counts from each day's final state", async () => {
     const habit = await createHabit({ name: "Read", kind: "ANY_DAY" });
-    const day = await startDay("2026-11-03T17:00:00.000Z");
+    // Local 17:00, after the 16:30 boundary in any time zone (a UTC instant was the previous lived day in Chicago).
+    const day = await startDay(new Date(2026, 10, 3, 17).toISOString());
     await setHabitDone(habit.id, true, day.id);
     const workspace = await getHabitWorkspace(new Date("2026-11-03T20:00:00"));
     expect(workspace.habits[0]).toMatchObject({ done: true, applies: true, thisWeek: 1, fourWeeks: 1 });
