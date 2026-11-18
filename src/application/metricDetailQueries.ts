@@ -6,6 +6,8 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { getHydrationEntries } from "./queries";
 import { getMeasuredSnapshot, MEASURED_PERIODS } from "./measuredQueries";
 import { waterByHour } from "./bodyDashboard";
+import { getBodyweightHistoryWithSources, type WeighIn } from "./bodyTrendQueries";
+import { getNutritionTargets } from "./nutritionTargetQueries";
 import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual, type SplitSide } from "./metricDetail";
 
 /**
@@ -16,6 +18,9 @@ import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual
  * - Resting heart rate is Garmin's lowest resting reading per lived day, published once a day (GARMIN-004).
  * - Calories (slice 4) are two series side by side, never combined: burned is Garmin's total estimate (resting plus
  *   active), eaten is your logged meals (the day ledger's effective totals). No net, remaining, deficit or surplus.
+ * - Weight (METRIC-PAGE-002) is what you weighed in at: each lived day's last weigh-in, corrections applied and undone
+ *   weigh-ins left out (the same history BODY's weight trend draws). Garmin weight is not imported. A day without a
+ *   weigh-in is a gap, never zero and never the day before carried forward.
  */
 export interface MetricDetail {
   metric: DetailMetric;
@@ -29,7 +34,9 @@ export interface MetricDetail {
     /** Resting heart rate: the newest reading, from this lived day or the one before (Garmin publishes it once a day). */
     | { kind: "latest"; value: number | null; from: number | null }
     /** Calories: the two running totals through the lived day, eaten stepping up at each meal. */
-    | { kind: "pair"; from: number; eaten: { t: number; total: number }[]; burned: { t: number; total: number }[] };
+    | { kind: "pair"; from: number; eaten: { t: number; total: number }[]; burned: { t: number; total: number }[] }
+    /** Weight: the newest weigh-in and the whole history BODY's weight trend uses, with the goal weight if one is set. */
+    | { kind: "weighin"; latest: WeighIn | null; history: WeighIn[]; goalWeightLbs: number | undefined };
   usual: DetailUsual & { dayKind?: "WORK" | "OFF" | null };
   split: { work: SplitSide; off: SplitSide };
   /** Garmin only: when the newest measurement was read on the phone. */
@@ -47,6 +54,19 @@ export async function getMetricDetail(metric: DetailMetric, now = Date.now()): P
   const contextOf = (dayId: string) => byDay.get(dayId)?.work.declared;
   const periods = recentPeriods(days, now, MEASURED_PERIODS);
   const current = periods.at(-1)!;
+
+  if (metric === "weight") {
+    const [history, targets] = await Promise.all([getBodyweightHistoryWithSources(), getNutritionTargets()]);
+    // Oldest first, so a lived day's last weigh-in is the one that stays.
+    const lastOfDay = new Map<string, number>();
+    for (const w of history) if (w.beyondDayId) lastOfDay.set(w.beyondDayId, w.weightLbs);
+    const series = dailySeries(periods, now, (dayId) => lastOfDay.get(dayId));
+    return {
+      metric, source: "LOGGED", series,
+      today: { kind: "weighin", latest: history.length ? { recordedAt: history.at(-1)!.recordedAt, weightLbs: history.at(-1)!.weightLbs } : null, history: history.map(({ recordedAt, weightLbs }) => ({ recordedAt, weightLbs })), goalWeightLbs: targets.goalWeightLbs },
+      usual: usualOf(series), split: workOffSplit(series, contextOf), asOf: null, unusual: null, readAt: now,
+    };
+  }
 
   if (metric === "resting") {
     const snapshot = await getMeasuredSnapshot(now);
