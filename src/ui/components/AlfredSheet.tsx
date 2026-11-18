@@ -17,7 +17,7 @@ import { deltaAnswer } from "./DeltaViews";
 import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
 import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
-import { immediateCards, pauseWindow, resumeWindow, runImmediate, undoAct, undoOpen, ACT_UNDO_MS, type UndoWindow } from "../../application/alfred/alfredAct";
+import { heldNotes, helperSummary, planAct, pauseWindow, resumeWindow, runImmediate, undoAct, undoOpen, ACT_UNDO_MS, OVER_CAP_NOTE, type UndoWindow } from "../../application/alfred/alfredAct";
 import type { ProposalSource } from "../../application/alfred/alfredTools";
 import type { ProposalContext } from "../../application/alfred/contextActions";
 import type { AlfredProposal } from "../../application/alfred/alfredActions";
@@ -165,13 +165,14 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       const context = ctx ? { recordVersion: ctx.recordVersion, personalVersion: ctx.personalVersion, actionVersion: ctx.actionVersion, taskVersions: ctx.taskVersions, routineVersions: ctx.routineVersions } : undefined;
       // ALFRED-ACT-001: clear low-risk logs run now with UNDO; the rest stay cards. Only a fully understood message.
       const acted = context ? await act(cards, context, "helper", result.unknown.length === 0) : null;
-      const ran = acted ? Object.keys(acted.done).length : 0;
+      const ran = acted?.result ? Object.keys(acted.result.done).length : 0;
       setText("");
       setTurns((all) => [...all, { role: "user", text: q }, {
         role: "alfred", free: true,
-        text: (ran && ran === cards.length ? "Logged. UNDO within 10 seconds if that's wrong." : ran ? "Logged what was clear (UNDO within 10 seconds). SAVE the others you want." : result.cards.length ? "Here's what I can do for free. SAVE the ones you want." : "Nothing to save yet.") + left,
+        // ALFRED-MULTI-001: one line for the whole message; each card says its own state (and why, if one didn't save).
+        text: (acted?.unchecked ? acted.unchecked : helperSummary(cards.length, ran, !!acted?.result?.stopped, !!acted?.overCap)) + left,
         ...(onlyFood ? { foods: foods as string[], estimate: q } : {}),
-        ...(acted ? { context: acted.context } : context ? { context } : {}),
+        ...(acted?.result ? { context: acted.result.context } : context ? { context } : {}),
         proposals: cards.map((c) => withAct(c, acted)),
       }]);
     } catch {
@@ -226,7 +227,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       const context: ProposalContext = { recordVersion: next.recordVersion, personalVersion: next.personalVersion, actionVersion: next.actionVersion, taskVersions: next.taskVersions, routineVersions: next.routineVersions };
       // ALFRED-ACT-001: his clear low-risk logs run now with UNDO, through the same guarded confirm as SAVE.
       const acted = reply.proposals.length ? await act(reply.proposals, context, "alfred", true) : null;
-      setTurns((all) => [...all, { role: "alfred", text: reply.text, sources: [...new Map([...next.sources, ...(reply.sources ?? [])].map((s) => [s.key, s])).values()], context: acted?.context ?? context, proposals: reply.proposals.map((p) => withAct(p, acted)) }]);
+      const notice = acted?.unchecked ?? (acted?.overCap ? OVER_CAP_NOTE : undefined);
+      setTurns((all) => [...all, { role: "alfred", text: reply.text, ...(notice ? { notice } : {}), sources: [...new Map([...next.sources, ...(reply.sources ?? [])].map((s) => [s.key, s])).values()], context: acted?.result?.context ?? context, proposals: reply.proposals.map((p) => withAct(p, acted)) }]);
       if (speak && reply.text && typeof speechSynthesis !== "undefined") { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(plain(reply.text))); }
     } catch (e) {
       // A failed send may leave the model session half-written, so it's dropped. Say so when earlier
@@ -245,14 +247,17 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   /**
    * ALFRED-ACT-001: run a message's clear low-risk logs now. Any that can't run (the records moved, the command refused)
    * simply stay cards. His own writes advance this conversation's context, as a SAVE does.
+   * ALFRED-MULTI-001: in the order he said them, at most MAX_AT_ONCE per message (more: none at once, and he is told);
+   * one that didn't save says why on its card, and the ones after it say they wait for SAVE. Never silent.
    */
   async function act(cards: { id: string; proposal: AlfredProposal }[], context: ProposalContext, source: ProposalSource, understoodAll: boolean) {
-    let acted: Awaited<ReturnType<typeof runImmediate>>;
+    let acted: Awaited<ReturnType<typeof runImmediate>>, ids: Set<string>;
     try {
-      const ids = await immediateCards(cards, source, { understoodAll });
-      if (!ids.size) return null;
+      const plan = await planAct(cards, source, { understoodAll });
+      if (!plan.ids.size) return plan.overCap ? { overCap: true } : null;
+      ids = plan.ids;
       acted = await runImmediate(cards, ids, context, included);
-    } catch { return null; }
+    } catch { return { unchecked: "BEYOND couldn't check these just now, so nothing was saved at once. SAVE the ones you want." }; }
     if (Object.keys(acted.done).length) {
       if (lastContext.current && lastContext.current.recordVersion === context.recordVersion && lastContext.current.personalVersion === context.personalVersion) {
         lastContext.current = { ...lastContext.current, personalVersion: acted.context.personalVersion, recordVersion: acted.context.recordVersion ?? lastContext.current.recordVersion };
@@ -261,11 +266,12 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       try { captureCommitFeedback()("LIGHT"); } catch { /* feedback is best-effort */ }
       try { onSaved(); } catch { /* the entries are saved; TODAY refreshes on its next load */ }
     }
-    return acted;
+    return { result: acted, notes: heldNotes(cards, ids, acted, describeConfirmError) };
   }
-  const withAct = <C extends { id: string; proposal: AlfredProposal }>(c: C, acted: Awaited<ReturnType<typeof act>>) => {
-    const done = acted?.done[c.id];
-    return done ? { id: c.id, proposal: c.proposal, state: "saved" as const, immediate: true, ...(done.undo ? { undo: done.undo, auto: done.window } : {}) } : { id: c.id, proposal: c.proposal, state: "pending" as const };
+  type Acted = { result?: Awaited<ReturnType<typeof runImmediate>>; notes?: Record<string, string>; overCap?: boolean; unchecked?: string } | null;
+  const withAct = <C extends { id: string; proposal: AlfredProposal }>(c: C, acted: Acted) => {
+    const done = acted?.result?.done[c.id], held = acted?.notes?.[c.id];
+    return done ? { id: c.id, proposal: c.proposal, state: "saved" as const, immediate: true, ...(done.undo ? { undo: done.undo, auto: done.window } : {}) } : { id: c.id, proposal: c.proposal, state: "pending" as const, ...(held ? { held } : {}) };
   };
   /** ALFRED-ACT-001: hold the UNDO window open while he hovers or focuses it; close it when it runs out. */
   function setWindow(turnIndex: number, id: string, change: (w: UndoWindow) => UndoWindow | undefined) {
@@ -412,6 +418,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
         {turns.map((t, i) => <div key={i} className={`alfred-turn alfred-turn--${t.role}`}>
           <p className="alfred-turn__who">{t.role === "user" ? (t.deep ? "YOU · THINK HARDER" : "YOU") : t.free ? "BEYOND · FREE" : "ALFRED"}</p>
           {t.text && <AlfredText text={t.text} sources={t.sources} onSource={setSelectedSource} />}
+          {t.notice && <p className="meta">{t.notice}</p>}
           {t.foods && <div className="alfred-card__row alfred-find">
             {t.foods.map((f) => <button key={f} type="button" className="btn-secondary" disabled={busy || !navigator.onLine} onClick={() => findFood(f)}>FIND “{f}” FREE</button>)}
             {t.estimate && key && <button type="button" className="btn-secondary" disabled={busy || capReached()} onClick={() => void sendToAlfred(t.estimate!, "everyday")}>ASK ALFRED TO ESTIMATE</button>}
@@ -419,6 +426,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
           {t.proposals?.map((p) => <div key={p.id} className="alfred-card" role="group" aria-label={describeProposal(p.proposal)}>
             <p>{describeProposal(p.proposal)}</p>
             {p.state === "pending" && describeProposalNote(p.proposal) && <p className="meta">{describeProposalNote(p.proposal)}</p>}
+            {p.state === "pending" && p.held && <p className="meta">{p.held}</p>}
             {p.state === "pending" && p.proposal.kind === "add_reminder" && p.proposal.due_date && p.proposal.when_note && <ReminderAlertLine dueAt={p.proposal.due_date} remindAt={p.proposal.when_note} title={p.proposal.title} />}
             {["remember", "person_date", "home_item"].includes(p.proposal.kind) && <p className="meta">Personal facts are available to Alfred by default. Corrections keep history. Stop using removes them from active context; it does not erase them. New exports require this build or newer.</p>}
             {p.state === "pending" ? <div className="alfred-card__row">
