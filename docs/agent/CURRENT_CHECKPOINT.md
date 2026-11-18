@@ -1,4 +1,16 @@
-# Current objective — METRIC-PAGE-002 slice 1 (weight on the shared metric page)
+# Current objective — METRIC-PAGE-002 slice 2 (protein on the shared metric page)
+
+- Builder Claude Code, same Drop and authorization as slice 1 ([brief](METRIC-PAGE-002.md)). Slice 1 merged as #566
+  (`17d0e15`). Branch `claude/metric-page-002-protein` from that master. Lane FEATURE, read side only.
+- PROTEIN joins the metric page: your logs in white, TODAY's running total, 7D/30D/1Y bars with gaps as gaps, BEYOND's
+  existing target as a target only, FOOD-SOURCES-001's sources. TODAY's PROTEIN tile opens it; records and logging keep
+  their routes. BODY's combined NUTRITION card is unchanged.
+- Gates as slice 1: Node suite under UTC and America/Chicago, architecture, typecheck, build locally; browser suite in
+  PR CI (it can't run in the builder's sandbox). Next: workouts (slice 3).
+
+---
+
+# Historical — METRIC-PAGE-002 slice 1 (weight on the shared metric page; merged as #566, `17d0e15`)
 
 - Builder Claude Code. Gavin, 2026-11-18: "2" (one look), "Let's work", "Will you give it to Claude code to do".
   [Brief](METRIC-PAGE-002.md). Branch `claude/metric-page-002-weight` from master `6a359d0` (#564 merged).

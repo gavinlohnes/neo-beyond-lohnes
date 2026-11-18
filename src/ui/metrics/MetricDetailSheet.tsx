@@ -24,22 +24,31 @@ import "./metricDetail.css";
  * - METRIC-PAGE-002 slice 1: weight, your weigh-ins. LATEST carries BODY's weight trend whole (the 60-day line,
  *   best-since, milestone, projected goal date); 30D and 1Y draw dots on an axis fitted to your weights, because bars
  *   from zero would hide every change worth seeing. Records (corrections) and logging stay on weight's own routes.
+ * - METRIC-PAGE-002 slice 2: protein, your logs (white). TODAY is the running total stepping up at each meal or quick
+ *   log; days are bars like water's; BEYOND's protein target, where it can be worked out, is a dashed line labelled
+ *   "target" and a plain figure, never a deficit or a "remaining". Where it came from reuses FoodSources.
  * Read only. Your logs are white; Garmin's measurements are Garmin blue (GARMIN-004). Nothing here changes advice.
  */
-const TITLE: Record<DetailMetric, string> = { water: "HYDRATION", steps: "STEPS", resting: "RESTING HEART RATE", calories: "CALORIES", weight: "WEIGHT" };
+const TITLE: Record<DetailMetric, string> = { water: "HYDRATION", steps: "STEPS", resting: "RESTING HEART RATE", calories: "CALORIES", weight: "WEIGHT", protein: "PROTEIN" };
 const NOUN: Record<DetailMetric, { none: string; unit: string }> = {
   water: { none: "not logged", unit: "oz" }, steps: { none: "not measured", unit: "steps" }, resting: { none: "not measured", unit: "bpm" },
-  calories: { none: "not measured", unit: "kcal" }, weight: { none: "not weighed", unit: "lb" },
+  calories: { none: "not measured", unit: "kcal" }, weight: { none: "not weighed", unit: "lb" }, protein: { none: "not logged", unit: "g" },
 };
 /** How 1Y's headline reads: a week's total, or the average of the days that have a record. */
 const YEAR_HERO: Record<DetailMetric, string> = {
   water: "oz a logged day, on average", steps: "steps a week, on average", resting: "bpm a measured day, on average", calories: "kcal a day, on average",
-  weight: "lb a weighed day, on average",
+  weight: "lb a weighed day, on average", protein: "g a logged day, on average",
 };
 /** 7D and 30D's headline: an average per day, or (weight) the average of the days you weighed in. */
 const RANGE_HERO = (metric: DetailMetric) => (metric === "weight" ? "lb a weighed day, on average" : `${NOUN[metric].unit} a day, on average`);
 /** What a week's mean is the mean of, in 1Y's readout. */
 const MEAN_DAY: Partial<Record<DetailMetric, string>> = { weight: " a weighed day" };
+/** The metrics you log yourself keep their own LOG and RECORDS routes (where corrections live). */
+const OWN_ROUTES: Partial<Record<DetailMetric, { log: string; records: string; source: string }>> = {
+  water: { log: "LOG WATER", records: "WATER RECORDS", source: "Your logs. Garmin hydration isn't imported." },
+  weight: { log: "LOG WEIGHT", records: "WEIGHT RECORDS", source: "Your weigh-ins. Garmin weight isn't imported." },
+  protein: { log: "LOG PROTEIN", records: "PROTEIN RECORDS", source: "Your logs: meal protein and quick protein logs." },
+};
 const fmt = (n: number, digits = 0) => n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const num = (metric: DetailMetric, n: number) => fmt(n, DIGITS[metric]);
 const withUnit = (metric: DetailMetric, n: number) => `${num(metric, n)} ${NOUN[metric].unit}`;
@@ -48,10 +57,10 @@ const day = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "s
 const week = (t: number) => `Week of ${new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
 /** DIRECTION-90-001: what counts as "about the same", in each metric's own unit. */
-const SAME_FLOOR: Record<DetailMetric, number> = { water: 1, steps: 100, resting: 1, calories: 25, weight: 1 };
+const SAME_FLOOR: Record<DetailMetric, number> = { water: 1, steps: 100, resting: 1, calories: 25, weight: 1, protein: 5 };
 /** Weight's "about the same" is its floor alone: 5% of a body weight would hide a change of several pounds. */
 const SAME_SHARE: Partial<Record<DetailMetric, number>> = { weight: 0 };
-const PER_DAY: Record<DetailMetric, string> = { water: "oz a day", steps: "steps a day", resting: "bpm", calories: "kcal a day", weight: "lb" };
+const PER_DAY: Record<DetailMetric, string> = { water: "oz a day", steps: "steps a day", resting: "bpm", calories: "kcal a day", weight: "lb", protein: "g a day" };
 const way = (d: Direction) => (d.way === "SAME" ? "about the same as" : d.way === "HIGHER" ? "higher than" : "lower than");
 /** One plain sentence: the last 90 days against the last year. Quiet (null) until there's enough. Never a judgement. */
 function directionLine(d: MetricDetail): string | null {
@@ -83,16 +92,19 @@ const tick = (v: number) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}K` : `${v}`);
 const W = 320, H = 150, LEFT = 32, BOTTOM = 18, TOP = 8;
 
 /** One bar per period. A missing period draws a short dashed stub at the baseline, so a gap reads as a gap. */
-function Bars({ metric, values, selected, onSelect, usual, label }: {
+function Bars({ metric, values, selected, onSelect, usual, label, target }: {
   metric: DetailMetric; values: readonly PeriodValue[]; selected: number; onSelect: (i: number) => void; usual: number | null; label: (v: PeriodValue) => string;
+  /** Protein only: BEYOND's existing target, drawn as a labelled dashed line. Never a deficit or a "remaining". */
+  target?: number | undefined;
 }) {
-  const max = niceMax(Math.max(...values.map((v) => v.value ?? 0), usual ?? 0));
+  const max = niceMax(Math.max(...values.map((v) => v.value ?? 0), usual ?? 0, target ?? 0));
   const plotW = W - LEFT, plotH = H - BOTTOM - TOP, slot = plotW / values.length, barW = Math.max(2, Math.min(22, slot - 2));
   const y = (v: number) => TOP + plotH - (v / max) * plotH;
   const recorded = values.filter((v) => v.value !== null).length;
   return <svg className={`md-chart md-chart--${metric}`} viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`${values.length} bars, ${recorded} with a record, ${values.length - recorded} ${NOUN[metric].none}.`}>
     {[0, max / 2, max].map((g) => <g key={g}><line className="md-grid" x1={LEFT} x2={W} y1={y(g)} y2={y(g)} /><text className="md-axis" x={LEFT - 4} y={y(g) + 3} textAnchor="end">{tick(g)}</text></g>)}
     {usual !== null && <line className="md-usual" x1={LEFT} x2={W} y1={y(usual)} y2={y(usual)} />}
+    {target !== undefined && <><line className="md-target" x1={LEFT} x2={W} y1={y(target)} y2={y(target)} /><text className="md-axis" x={W} y={y(target) - 4} textAnchor="end">target</text></>}
     {values.map((v, i) => {
       const x = LEFT + i * slot + (slot - barW) / 2;
       return <g key={v.from} className="md-bar" data-missing={v.value === null ? "" : undefined} role="button" tabIndex={0} aria-label={label(v)} aria-pressed={i === selected}
@@ -145,6 +157,23 @@ function WaterHours({ today }: { today: Extract<MetricDetail["today"], { kind: "
     {today.slots.map((oz, i) => oz > 0 && <rect key={i} className="md-fill" x={LEFT + i * slot + 1} width={slot - 2} y={y(oz)} height={TOP + plotH - y(oz)} />)}
     {today.nowSlot >= 0 && today.nowSlot < 24 && <line className="md-now" x1={LEFT + (today.nowSlot + 0.5) * slot} x2={LEFT + (today.nowSlot + 0.5) * slot} y1={TOP} y2={TOP + plotH} />}
     {[0, 6, 12, 18].map((h) => <text key={h} className="md-axis" x={LEFT + h * slot} y={H - 4} textAnchor={h ? "middle" : "start"}>{clock(today.from + h * 3_600_000)}</text>)}
+  </svg>;
+}
+
+/** Protein today: your running total through the lived day (white), stepping up at each meal or quick log, with the
+ *  target as a labelled dashed line where one is set. */
+function LoggedRunning({ metric, today, readAt, target }: { metric: DetailMetric; today: Extract<MetricDetail["today"], { kind: "logged" }>; readAt: number; target: number | undefined }) {
+  const points = [...today.points, { t: Math.max(readAt, today.points.at(-1)!.t), total: today.points.at(-1)!.total }];
+  const stairs = points.flatMap((p, i) => (i === 0 ? [p] : [{ t: p.t, total: points[i - 1]!.total }, p]));
+  const end = points.at(-1)!, span = 24 * 3_600_000;
+  const max = niceMax(Math.max(end.total, target ?? 0)), plotW = W - LEFT, plotH = H - BOTTOM - TOP;
+  const x = (t: number) => LEFT + ((t - today.from) / span) * plotW, y = (v: number) => TOP + plotH - (v / max) * plotH;
+  return <svg className={`md-chart md-chart--${metric}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Running ${TITLE[metric].toLowerCase()} total: ${withUnit(metric, end.total)} so far${target !== undefined ? `, target ${withUnit(metric, target)}` : ""}.`}>
+    {[0, max / 2, max].map((g) => <g key={g}><line className="md-grid" x1={LEFT} x2={W} y1={y(g)} y2={y(g)} /><text className="md-axis" x={LEFT - 4} y={y(g) + 3} textAnchor="end">{tick(g)}</text></g>)}
+    {target !== undefined && <><line className="md-target" x1={LEFT} x2={W} y1={y(target)} y2={y(target)} /><text className="md-axis" x={W} y={y(target) - 4} textAnchor="end">target</text></>}
+    <polyline className="md-line md-line--logged" points={stairs.map((p) => `${x(p.t)},${y(p.total)}`).join(" ")} />
+    <circle className="md-dot md-dot--logged" cx={x(end.t)} cy={y(end.total)} r={4} />
+    {[0, 6, 12, 18].map((h) => <text key={h} className="md-axis" x={x(today.from + h * 3_600_000)} y={H - 4} textAnchor={h ? "middle" : "start"}>{clock(today.from + h * 3_600_000)}</text>)}
   </svg>;
 }
 
@@ -300,7 +329,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         <span className="md-meta">Eaten is what you logged. Burned is Garmin's estimate, resting plus active; watch estimates can be off by 10–20%. {d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin calories yet."}</span>
       </div> : <div className="md-source">
         <SourceTag garmin={garmin}>{garmin ? (fresh?.stale ? "GARMIN · OLD" : "GARMIN") : "LOGGED"}</SourceTag>
-        <span className="md-meta">{garmin ? (d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin data yet.") : weight ? "Your weigh-ins. Garmin weight isn't imported." : "Your logs. Garmin hydration isn't imported."}</span>
+        <span className="md-meta">{garmin ? (d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin data yet.") : OWN_ROUTES[metric]?.source}</span>
       </div>}
 
       <div role="group" aria-label={`${TITLE[metric]} range`} className="md-ranges">
@@ -323,6 +352,10 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         <p className="md-hero" data-md-hero><b>{todayValue === null ? "—" : fmt(todayValue)}</b> <span>{todayValue === null ? `${NOUN[metric].none} yet this lived day` : `${NOUN[metric].unit} so far · since ${clock(d.series.at(-1)!.from)}`}</span></p>
         {d.today.kind === "hours"
           ? (d.today.entries ? <WaterHours today={d.today} /> : <p className="md-meta">No water logged yet this lived day.</p>)
+          : d.today.kind === "logged" ? <>
+            {d.target !== undefined && <p className="md-meta" data-md-target>Target {withUnit(metric, d.target)} a day, from your protein setting and latest weigh-in.</p>}
+            {d.today.points.length > 1 ? <LoggedRunning metric={metric} today={d.today} readAt={d.readAt} target={d.target} /> : <p className="md-meta">No protein logged yet this lived day.</p>}
+          </>
           : d.today.kind === "running" && (d.today.points.length > 1 ? <StepsRunning today={d.today} usual={d.usual.value} /> : <p className="md-meta">No steps measured yet this lived day. Send from the helper to update.</p>)}
       </> : <>
         <p className="md-hero" data-md-hero><b>{sum.average === null ? "—" : num(metric, sum.average)}</b> <span>{byWeek ? YEAR_HERO[metric] : RANGE_HERO(metric)}</span></p>
@@ -330,7 +363,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         {weight ? (values.some((v) => v.value !== null)
           ? <Dots values={values} selected={index} onSelect={setSelected} label={label} usual={d.usual.value} />
           : <p className="md-meta">No weigh-ins in this range.</p>)
-          : <Bars metric={metric} values={values} selected={index} onSelect={setSelected} label={label} usual={byWeek && WEEK_MODE[metric] === "sum" ? null : d.usual.value} />}
+          : <Bars metric={metric} values={values} selected={index} onSelect={setSelected} label={label} usual={byWeek && WEEK_MODE[metric] === "sum" ? null : d.usual.value} target={d.target} />}
         <p className="md-readout" aria-live="polite">{label(values[index]!)}</p>
         <details className="md-table"><summary>Show as table</summary>
           <table><tbody>{[...values].reverse().map((v) => <tr key={v.from}><th scope="row">{byWeek ? week(v.from) : day(v.from)}</th><td>{v.value === null ? (garmin ? "Not measured" : weight ? "Not weighed" : "Not logged") : withUnit(metric, v.value)}{v.partial ? " so far" : ""}</td></tr>)}</tbody></table>
@@ -338,7 +371,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
       </>}
 
       {/* FOOD-SOURCES-001: what made up the eaten side, over the range's days. */}
-      {calories && (range === "7d" || range === "30d") && <FoodSources nutrient="calories" windowDays={range === "7d" ? 7 : 30} refreshKey={refreshKey} />}
+      {(calories || metric === "protein") && (range === "7d" || range === "30d") && <FoodSources nutrient={calories ? "calories" : "protein"} windowDays={range === "7d" ? 7 : 30} refreshKey={refreshKey} />}
 
       {calories ? <section className="md-split" aria-label="Work days and days off">
         {(["work", "off"] as const).map((k) => <div key={k} className="md-split__side" data-md-split={k}>
@@ -363,8 +396,8 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
       {directionLine(d) !== null && <p className="md-meta" data-md-direction>{directionLine(d)}</p>}
 
       <div className="md-actions">
-        {(metric === "water" || weight) && onLog && <button type="button" className="md-act" onClick={go(onLog)}>{weight ? "LOG WEIGHT" : "LOG WATER"}</button>}
-        {(metric === "water" || weight) && onRecords && <button type="button" className="md-act" onClick={go(onRecords)}>{weight ? "WEIGHT RECORDS" : "WATER RECORDS"}</button>}
+        {OWN_ROUTES[metric] && onLog && <button type="button" className="md-act" onClick={go(onLog)}>{OWN_ROUTES[metric]!.log}</button>}
+        {OWN_ROUTES[metric] && onRecords && <button type="button" className="md-act" onClick={go(onRecords)}>{OWN_ROUTES[metric]!.records}</button>}
         {garmin && <SyncGarminLink />}
         <button type="button" className="md-act" onClick={() => { onClose(); askAlfred(`About my ${TITLE[metric].toLowerCase()} lately: what's the pattern against my shifts, and what would help?`); }}>ASK ALFRED</button>
       </div>
