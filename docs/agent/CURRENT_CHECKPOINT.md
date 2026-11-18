@@ -10,6 +10,26 @@
   **independent exact-head review REQUIRED**; Gavin merges. Exact head, checks run and CI are in the PR handoff.
 - Next after merge: on the phone, add "Lift · 3 times a week" in MORE → LIFE → Habits, mark it Done three days, and
   check it leaves BODY's chips on day four and comes back on Monday's lived day (after 16:30).
+- Night 2026-11-18 (PD mission): `origin/master` `17d0e15` (#566 METRIC-PAGE-002 slice 1) merged in normally; this
+  checkpoint was the only conflict (all sections kept; slice 1 is history). No code changed in the merge. Review PASS
+  was on `efbab988`; renewed exact-head review needed on the merge head.
+
+---
+
+# Historical — METRIC-PAGE-002 slice 1 (weight on the shared metric page; merged as #566, `17d0e15`)
+
+- Builder Claude Code. Gavin, 2026-11-18: "2" (one look), "Let's work", "Will you give it to Claude code to do".
+  [Brief](METRIC-PAGE-002.md). Branch `claude/metric-page-002-weight` from master `6a359d0` (#564 merged).
+- Lane FEATURE. Read side only: no Engine, schema, command, persistence, provider or dependency change.
+- WEIGHT joins the metric page: LATEST (newest weigh-in plus BODY's weight trend whole), 30D and 1Y as dots on a fitted
+  axis, gaps as gaps, a tenth of a pound kept. TODAY's WEIGHT tile and BODY's WEIGHT card open it; records and logging
+  stay on weight's existing routes.
+- Gates: Node suite under UTC and America/Chicago, architecture, typecheck, build locally. The browser suite (new
+  `MetricPage002.test.tsx`) could not run in the builder's sandbox (no browser download); PR CI runs it. Under
+  America/Chicago, `tests/integration/habits.test.ts` "shows only weekly and four-week counts" fails on master too at the
+  same clock time; not this slice.
+- Next: independent exact-head review; Gavin merges. Then slice 2 (protein), slice 3 (workouts); TODAY-SPLIT-002 only
+  after this Drop's TODAY-tile slices merge.
 
 ---
 

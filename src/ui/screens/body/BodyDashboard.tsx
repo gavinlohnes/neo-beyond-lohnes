@@ -169,7 +169,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
           </>}
         </Card>
 
-        <Card id="weight" icon={<Scale size={18} />} label="WEIGHT" source={latestWeight ? <Source>LOGGED</Source> : null} action={log("weight", "Log weight")} onOpen={() => p.onOpen("weight")} openLabel="Open weight history">
+        <Card id="weight" icon={<Scale size={18} />} label="WEIGHT" source={latestWeight ? <Source>LOGGED</Source> : null} action={log("weight", "Log weight")} onOpen={() => setDetailOpen("weight")} openLabel="Open weight">
           <p className="bf-value">{latestWeight ? <>{latestWeight.weightLbs}<small> lb</small></> : <span className="bf-none">Not logged</span>}</p>
           {change && <p className="bf-delta">{change.lbs > 0 ? "▲ +" : change.lbs < 0 ? "▼ " : ""}{change.lbs} lb · {change.days}d</p>}
           <Spark values={weightSeries} tone="own" />
@@ -211,8 +211,8 @@ export function BodyDashboard(p: BodyDashboardProps) {
         </Card>
       </div>
       <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={p.refreshKey}
-        onRecords={detailOpen === "water" ? () => p.onOpen("water") : undefined}
-        onLog={detailOpen === "water" && p.onLog ? () => p.onLog!("water") : undefined} />
+        onRecords={detailOpen === "water" || detailOpen === "weight" ? () => p.onOpen(detailOpen) : undefined}
+        onLog={(detailOpen === "water" || detailOpen === "weight") && p.onLog ? () => p.onLog!(detailOpen) : undefined} />
     </section>
   );
 }
