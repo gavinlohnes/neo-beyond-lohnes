@@ -1949,6 +1949,15 @@ export function TodayScreen({
   const endDayInAttention = isInAttention(attentionPlan, "END_DAY_SUGGESTED");
   const pendingOutcomeInAttention = isInAttention(attentionPlan, "PENDING_OUTCOME");
   const captureInAttention = isInAttention(attentionPlan, "CAPTURE_UNRESOLVED");
+  /**
+   * CAPTURE-PARITY-002: where the TOOLS Capture card leaves its open-capture rows to Attention.
+   * A focused COMMAND view (CAPTURE, DAILY CONTROLS item) shows no Attention, so the card lists them.
+   * MORE → TODAY TOOLS (`commandFocus === null`) shows Attention on the same screen, so the rows
+   * appear once: in Attention, unless that row is only the day-off pointer to the sweep.
+   */
+  const captureRowsInAttention = commandFocus == null
+    ? captureInAttention && (commandFocus === undefined || day?.workContext !== "OFF")
+    : false;
   const commitmentInAttention = isInAttention(attentionPlan, "COMMITMENT_DUE");
   const recommendationInAttention = isInAttention(attentionPlan, "RECOMMENDATION_UNRESOLVED");
   const workEndInAttention = isInAttention(attentionPlan, "WORK_END_AVAILABLE");
@@ -2239,7 +2248,7 @@ export function TodayScreen({
         return (
           <CaptureToolsCard
         openCaptureItems={openCaptureItems}
-        captureInAttention={commandFocus !== undefined ? false : captureInAttention}
+        captureInAttention={captureRowsInAttention}
         captureText={captureText}
         feedback={captureFeedback}
         setCaptureText={setCaptureText}
