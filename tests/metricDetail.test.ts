@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90 } from "../src/application/metricDetail";
+import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90, rangesFor, WEEK_MODE, DIGITS } from "../src/application/metricDetail";
 import { recentPeriods, type PeriodValue } from "../src/domain/health/measuredSeries";
 import { BASELINE_MIN_SAMPLES } from "../src/domain/health/baselines";
 
@@ -111,5 +111,35 @@ describe("DIRECTION-90-001 direction90", () => {
   it("skips missing days rather than counting them as zero", () => {
     const withGaps = direction90(days(365, (i) => (i % 3 === 0 ? null : 8000)), 100)!;
     expect(withGaps).toMatchObject({ recent: 8000, year: 8000, way: "SAME", recentDays: 60 });
+  });
+});
+
+describe("METRIC-PAGE-002 slice 1: weight keeps its own meaning", () => {
+  it("shows the latest weigh-in, then 30D and 1Y; no 7D, because a week of sparse weigh-ins is mostly gaps", () => {
+    expect(rangesFor("weight").map(([id, text]) => [id, text])).toEqual([["today", "LATEST"], ["30d", "30D"], ["1y", "1Y"]]);
+    expect(WEEK_MODE.weight).toBe("mean");
+    expect(DIGITS.weight).toBe(1);
+  });
+
+  it("a week is the mean of its weighed days, to a tenth of a pound; unweighed days are left out, never zero", () => {
+    const series = Array.from({ length: 14 }, (_, i) => pv(i, i === 1 ? 201.2 : i === 4 ? 200.5 : i === 10 ? 199.9 : null));
+    const year = rangeValues(series, "1y", WEEK_MODE.weight, DIGITS.weight);
+    expect(year.map((w) => w.value)).toEqual([200.9, 199.9]);
+    // The other metrics still round to whole numbers.
+    expect(rangeValues(series, "1y", "mean").map((w) => w.value)).toEqual([201, 200]);
+  });
+
+  it("averages keep a tenth of a pound and count only weighed days", () => {
+    const values = [pv(0, 201.2), pv(1, null), pv(2, 200.5), pv(3, null)];
+    expect(summarise(values, DIGITS.weight)).toEqual({ average: 200.9, recorded: 2, total: 4 });
+    expect(summarise(values)).toEqual({ average: 201, recorded: 2, total: 4 });
+  });
+
+  it("its 90-day direction uses a pound as 'about the same', not 5% of a body weight", () => {
+    const year = (recent: number) => Array.from({ length: 366 }, (_, i) => pv(i, i === 365 ? 150 : i >= 275 ? recent : 210, `d${i}`, i === 365));
+    // Five pounds down over 90 days is under 5% of 210, but it is a change worth naming.
+    expect(direction90(year(205), 1, 0)).toMatchObject({ recent: 205, year: 210, way: "LOWER" });
+    expect(direction90(year(205), 1)).toMatchObject({ way: "SAME" });
+    expect(direction90(year(209.5), 1, 0)).toMatchObject({ way: "SAME" });
   });
 });

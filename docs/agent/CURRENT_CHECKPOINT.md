@@ -1,4 +1,21 @@
-# Current objective — CAPTURE-PARITY-002 (an open capture is listed once in TODAY TOOLS)
+# Current objective — METRIC-PAGE-002 slice 1 (weight on the shared metric page)
+
+- Builder Claude Code. Gavin, 2026-11-18: "2" (one look), "Let's work", "Will you give it to Claude code to do".
+  [Brief](METRIC-PAGE-002.md). Branch `claude/metric-page-002-weight` from master `6a359d0` (#564 merged).
+- Lane FEATURE. Read side only: no Engine, schema, command, persistence, provider or dependency change.
+- WEIGHT joins the metric page: LATEST (newest weigh-in plus BODY's weight trend whole), 30D and 1Y as dots on a fitted
+  axis, gaps as gaps, a tenth of a pound kept. TODAY's WEIGHT tile and BODY's WEIGHT card open it; records and logging
+  stay on weight's existing routes.
+- Gates: Node suite under UTC and America/Chicago, architecture, typecheck, build locally. The browser suite (new
+  `MetricPage002.test.tsx`) could not run in the builder's sandbox (no browser download); PR CI runs it. Under
+  America/Chicago, `tests/integration/habits.test.ts` "shows only weekly and four-week counts" fails on master too at the
+  same clock time; not this slice.
+- Next: independent exact-head review; Gavin merges. Then slice 2 (protein), slice 3 (workouts); TODAY-SPLIT-002 only
+  after this Drop's TODAY-tile slices merge.
+
+---
+
+# Historical — CAPTURE-PARITY-002 (an open capture is listed once in TODAY TOOLS)
 
 - Builder Grok Bot. Gavin, 2026-11-18 (owner session, option 2): next highest-value remaining item, preferring the
   ranked list's capture-to-task parity. [Brief](CAPTURE-PARITY-002.md). Branch `codex/capture-parity-002` from fetched

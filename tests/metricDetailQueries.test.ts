@@ -123,3 +123,51 @@ it("slice 4: calories keep eaten (your logs) and burned (Garmin) as two series, 
     expect(await db.events.toArray()).toEqual(before);
   } finally { vi.useRealTimers(); }
 });
+
+it("METRIC-PAGE-002 slice 1: weight is each lived day's last weigh-in, corrected, an undone weigh-in left out, a day without one missing, read without writing", async () => {
+  const { logBodyweight, correctBodyweight, voidBodyweightLog } = await import("../src/application/commands");
+  const { getBodyweightHistory, getBodyweightHistoryWithSources } = await import("../src/application/bodyTrendQueries");
+  const { updateNutritionTargets } = await import("../src/application/nutritionTargetCommands");
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    const first = await startDay();
+    await logBodyweight(first.id, 204);
+    vi.setSystemTime(new Date(2026, 10, 10, 20));
+    await logBodyweight(first.id, 203.4); // the lived day's last weigh-in is the one that counts
+    vi.setSystemTime(new Date(2026, 10, 11, 18));
+    await startDay(); // a lived day with no weigh-in
+    vi.setSystemTime(new Date(2026, 10, 12, 18));
+    const third = await startDay();
+    await logBodyweight(third.id, 202);
+    const [, , thirdWeighIn] = await getBodyweightHistoryWithSources();
+    await correctBodyweight(third.id, thirdWeighIn!.headEventId, 202.6);
+    await updateNutritionTargets({ goalWeightLbs: 190 });
+
+    const before = await db.events.toArray();
+    const d = await getMetricDetail("weight");
+    expect(d.source).toBe("LOGGED");
+    expect(d.series.slice(-3).map((v) => v.value)).toEqual([203.4, null, 202.6]);
+    expect(d.series.at(-1)!.partial).toBe(true);
+    // The same history BODY's weight trend draws, so best-since, milestones and the goal date match it exactly.
+    expect(d.today).toEqual({ kind: "weighin", latest: { recordedAt: expect.any(String), weightLbs: 202.6 }, history: await getBodyweightHistory(), goalWeightLbs: 190 });
+    expect(await db.events.toArray()).toEqual(before);
+
+    // An undone weigh-in leaves its lived day missing, never zero and never the day before carried forward.
+    const latest = (await getBodyweightHistoryWithSources()).at(-1)!;
+    await voidBodyweightLog(third.id, latest.rootEventId);
+    const undone = await getMetricDetail("weight");
+    expect(undone.series.slice(-3).map((v) => v.value)).toEqual([203.4, null, null]);
+    expect(undone.today.kind === "weighin" && undone.today.latest?.weightLbs).toBe(203.4);
+  } finally { vi.useRealTimers(); }
+});
+
+it("METRIC-PAGE-002 slice 1: with no weigh-ins, weight has no latest, no history and no goal unless one is set", async () => {
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    await startDay();
+    const d = await getMetricDetail("weight");
+    expect(d.series.every((v) => v.value === null)).toBe(true);
+    expect(d.today).toMatchObject({ kind: "weighin", latest: null, history: [] });
+    expect(d.usual.value).toBeNull();
+  } finally { vi.useRealTimers(); }
+});
