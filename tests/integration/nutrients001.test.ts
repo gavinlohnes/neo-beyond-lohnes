@@ -43,14 +43,19 @@ describe("NUTRIENTS-001", () => {
     const diary = await getFoodDiary(day.id);
     expect(diary.fiberG).toEqual({ total: 15.2, meals: 1, ofMeals: 2 });
     expect(diary.sodiumMg).toEqual({ total: 9, meals: 1, ofMeals: 2 });
-    // A correction changes the macros; fiber and sodium stay as logged.
-    const entry = (await getDayLogEntries(day.id)).find((e) => e.name === "Oats")!;
-    await correctLogEntry(entry, { calories: 500 });
-    expect((await getMealEntries(day.id))[0]).toMatchObject({ effectiveCalories: 500, fiberG: 15.2 });
     // CSV keeps them, with an empty cell where a meal didn't record them.
     const meals = await getRecordsExport("meals");
     expect(meals.header).toContain("fiber_g");
+    expect(toCsv(meals.header, meals.rows).split("\r\n")[1]).toMatch(/,15.2,9,you$/);
     expect(toCsv(meals.header, meals.rows).split("\r\n")[2]).toMatch(/,640,48,70,14,,,you$/);
+    // Gavin, 2026-11-19 ("1A"): once corrected, the logged fiber and sodium no longer match, so they read as not recorded.
+    const entry = (await getDayLogEntries(day.id)).find((e) => e.name === "Oats")!;
+    await correctLogEntry(entry, { calories: 500 });
+    const corrected = (await getMealEntries(day.id))[0]!;
+    expect(corrected.effectiveCalories).toBe(500);
+    expect(corrected).not.toHaveProperty("fiberG");
+    expect(corrected).not.toHaveProperty("sodiumMg");
+    expect((await getFoodDiary(day.id)).fiberG).toBeNull();
   });
 
   it("a day with no meal that recorded them has no totals, never 0; a negative value is refused", async () => {

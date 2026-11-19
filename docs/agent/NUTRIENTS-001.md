@@ -17,7 +17,9 @@
   - Validation refuses negatives.
   - There is **no Dexie version or migration** (the fields aren't indexed) and **no backup format change**: the
     native backup copies records whole, and older backups restore exactly as before.
-- **Corrections** change the macros only; fiber and sodium stay as logged. Manual entry doesn't ask for them yet.
+- **Corrections:** once a meal is corrected, its fiber and sodium read as not recorded (Gavin, 2026-11-19, "1A", on the
+  review's flag that they would go stale). This is read side only; the stored values are untouched. Manual entry doesn't
+  ask for them yet.
 - **Shown:**
   - MEAL's day line: "Fiber 10.1 g · Sodium 6 mg · from 1 of 2 meals", only when a meal recorded them.
   - The CSV meals file gains `fiber_g` and `sodium_mg`, with empty cells where a meal didn't record them.

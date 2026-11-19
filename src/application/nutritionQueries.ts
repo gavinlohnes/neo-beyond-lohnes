@@ -131,7 +131,7 @@ export interface NutritionEntry {
   effectiveProteinG: number;
   effectiveCarbsG: number;
   effectiveFatG: number;
-  /** NUTRIENTS-001: as logged (corrections change the macros, not these); absent when not recorded. */
+  /** NUTRIENTS-001: as logged; absent when not recorded, or once the meal is corrected (Gavin, 2026-11-19). */
   fiberG?: number;
   sodiumMg?: number;
   correctionCount: number;
@@ -184,8 +184,10 @@ export async function getMealEntries(beyondDayId: string): Promise<NutritionEntr
         effectiveProteinG: headProteinG,
         effectiveCarbsG: headCarbsG,
         effectiveFatG: headFatG,
-        ...(root.payload.fiberG !== undefined ? { fiberG: root.payload.fiberG } : {}),
-        ...(root.payload.sodiumMg !== undefined ? { sodiumMg: root.payload.sodiumMg } : {}),
+        // Gavin, 2026-11-19 ("1A"): a correction changes the amount, so the logged fiber and sodium no longer
+        // match it; a corrected meal reads them as not recorded rather than show a stale number. Read side only.
+        ...(count === 0 && root.payload.fiberG !== undefined ? { fiberG: root.payload.fiberG } : {}),
+        ...(count === 0 && root.payload.sodiumMg !== undefined ? { sodiumMg: root.payload.sodiumMg } : {}),
         correctionCount: count,
         recordedAt: root.recordedAt,
       };
