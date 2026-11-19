@@ -158,6 +158,35 @@ visual campaign or a second reviewer solely because of this standard. Evidence s
 changed behavior and risk. One focused improvement at a time; fix in-scope quality defects before
 handoff, and record out-of-scope opportunities for later rather than expanding the objective.
 
+## Outcome-led build and use loop
+
+Owner amendment, Gavin, 2026-11-19: “Good. Make it a thing from now on” approves these working
+habits within this charter. Use the existing brief, PR and checkpoint; no additional process layer.
+
+- **Choose outcomes over feature counts.** Name the daily job and intended benefit in the brief.
+  Complete and verify that bounded experience before starting another product objective. Prefer
+  fewer parallel product efforts; independent review and disjoint verification can still run in
+  parallel, and an urgent field repair can interrupt planned work with a clear handoff.
+- **Learn from actual use.** After a meaningful release, invite a brief **keep / refine / rethink**
+  verdict and any confusing or slow moment. A short voice note or ordinary message is enough;
+  the Builder records its actionable meaning in the existing checkpoint or relevant issue.
+  Actual operator experience steers priorities over predicted benefits, with scope and Protected
+  decisions still confirmed by the owner. Do not make feedback a mandatory form, recurring nag,
+  or gate that blocks other approved work while waiting for an answer.
+- **Preview consequential visual changes.** For larger visual changes, show a quick representative
+  preview before implementation and invite direction while choices are still cheap. Reuse an
+  existing applicable preview; small fixes proceed directly to implementation and verification.
+  A preview is not implementation evidence and creates no blanket new approval stage. Explicit
+  owner design decisions and mock-first instructions remain binding.
+- **Finish the handoff as part of shipping.** Before moving on, update the existing checkpoint
+  with what shipped, what remains, verification/limitations, and the next approved action. Keep
+  exact-head final review/CI and merge evidence in the linked PR when changing the reviewed head
+  would invalidate it. Check live repository truth at every takeover; never rebuild from stale
+  notes. Capture useful out-of-scope findings for later rather than starting competing work.
+
+These habits grant no new feature, architecture, provider or merge authority. Existing risk
+lanes, independent-review requirements, scope limits and owner control remain unchanged.
+
 ## Three risk lanes and proportional evidence
 
 | Lane | Typical scope | Verification and handoff |

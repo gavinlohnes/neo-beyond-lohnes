@@ -1,10 +1,11 @@
 # Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
 
-- Builder Codex; Gavin explicitly approved the next bounded pre-check-in draft. [Brief](DRAFT-RECOMMENDATION-001.md).
-- [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583), branch `codex/draft-recommendation-001`, fresh master `3876dbd3`. PROTECTED Engine/TODAY work; independent exact-head review, green CI and owner merge required. No merge performed.
+- **Authorization:** Gavin explicitly approved the bounded pre-check-in draft and, after the original reviewed head became conflicting, authorized its reconciliation onto current master. [Brief](DRAFT-RECOMMENDATION-001.md).
+- **Builder:** Codex. **Lane:** PROTECTED (Engine/TODAY). [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583), branch `codex/draft-recommendation-001`, reconciled onto master `af2fa8e3` after OUTCOME-LOOP-001 merged as #582.
 - Provisional, read-only starting point from existing recorded post-shift or personal two-short-main-sleeps evidence. Capacity remains unknown. Opening the existing check-in writes nothing; submitting it uses unchanged canonical evaluation. No new storage, provider, command or dependency.
-- Implementation complete; focused UTC/Chicago Node tests and browser draft/sleep/accessibility/Attention regressions pass. Actual screenshot inspected. Final build, broad Node, independent exact-head review and CI results are recorded in the PR handoff. Do not infer physical-phone verification from Chromium widths.
-- QUALITY-STANDARD-001 and HARVEST-003 merged. OUTCOME-LOOP-001 remains a separate reviewed/green governance PR awaiting owner merge; it does not block this approved product work.
+- **Verification:** the original product head passed focused UTC/Chicago Node tests, browser draft/sleep/accessibility/Attention regressions, full CI and independent exact-head review; its actual screenshot was inspected. The master reconciliation changed only this checkpoint conflict, but the new head still requires green CI and renewed independent exact-head review. Do not infer physical-phone verification from Chromium widths.
+- **Shipped:** QUALITY-STANDARD-001 #581, OUTCOME-LOOP-001 #582 and HARVEST-003 #579. The earlier OUTCOME-LOOP checkpoint below is historical.
+- **Remaining / next:** verify the reconciled head, obtain renewed independent exact-head review, then Gavin merges. After merge, inspect the draft on the actual phone before an eligible check-in and give a brief keep / refine / rethink verdict.
 
 ---
 
