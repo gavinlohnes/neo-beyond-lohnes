@@ -36,6 +36,16 @@ approval; the adoption's historical brief is not the current objective.
   remaining risks, and next action. No mandatory closure PR or Factory lifecycle for new work.
 - Governance changes are Protected and require bounded owner authorization, regardless of provider.
 
+## Operating quality standard
+
+Every approved improvement follows the [product operating quality standard](docs/PRODUCT_DIRECTION.md#operating-quality-standard)
+and [DEV-FLOW-002 product quality acceptance](docs/agent/DEV-FLOW-002.md#product-quality-acceptance):
+useful, visually excellent where applicable, trustworthy, complete and verified. State the operator
+benefit in the existing brief; show implementation evidence for changed UI; independently review
+Feature/Protected work for experience quality as well as code correctness. Keep Routine work
+lightweight and evidence proportional. This standard grants no additional implementation or
+merge authority and does not authorize a redesign campaign.
+
 ## "Advance BEYOND" / "Let's work" protocol
 
 Treat "Advance BEYOND" (case-insensitive) and "Let's work" as entry points to the

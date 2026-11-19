@@ -1,3 +1,19 @@
+# Current objective — QUALITY-STANDARD-001 (2026-11-19)
+
+- **Authorization:** Gavin approved making TONIGHT'S ENERGY-level product quality the operating standard: “Make it happen in the best way you can”, following the five-dimension proposal.
+- **Builder:** Codex. **Lane:** PROTECTED (product direction and workflow governance).
+- **Starting master:** `4b1f499095f01af7197b1a421eaab3ae588fe665`; branch `codex/quality-standard-001`. PR: pending, titled “QUALITY-STANDARD-001: make product quality part of acceptance and review”. This checkpoint and the PR serve as the concise brief; no separate handbook.
+- **Scope:** existing Product Direction defines the standard; DEV-FLOW-002 defines proportional acceptance evidence and independent Feature/Protected product-quality review; AGENTS routes all builders there.
+- **Exclusions:** no app code, architecture, doctrine/locked behavior, CI/protection settings, merge delegation or new feature authorization changes. Routine work remains lightweight; device checks cannot be claimed from simulated widths.
+- **REUSE:** existing direction, workflow charter, entry-point and brief/PR handoff. **OWN:** BEYOND's five quality dimensions and experience-review expectations. **BUILD FROM SCRATCH:** none.
+- **Acceptance:** inspect links/authority consistency and diff hygiene; independent exact-head review and required CI. Final results live in the PR to preserve the reviewed head. Governance remains Protected; owner merge approval is required.
+- **Recovered truth:** TONIGHT'S ENERGY merged as #580 at `4b1f4990`, after exact-head independent PASS and green full CI on `58c079a7`, with Gavin's explicit merge instruction. The earlier checkpoint below is historical.
+- **Next product objective:** the approved pre-check-in recommendation draft, not yet implemented. The local `codex/draft-recommendation-001` branch has no commits beyond its starting master. Quality work takes priority for this owner instruction.
+
+---
+
+# Historical checkpoint (superseded live status)
+
 # Current objective — ENERGY-CURVE-001 recovery (2026-11-19)
 
 - Builder takeover: Codex, Gavin “Pick up where Claude left off”. Continue existing `claude/energy-curve-001`, PR #580; no competing branch.
