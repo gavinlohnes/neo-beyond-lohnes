@@ -1,4 +1,30 @@
-# Current objective — PROJECT-GRAYSON-BASELINE-001 (2026-11-19)
+# Current objective — LIVED-DAY-ORIENT-001 design (2026-11-19)
+
+- **Owner authorization:** documentation/design only before implementation. Brief:
+  [`LIVED-DAY-ORIENT-001.md`](LIVED-DAY-ORIENT-001.md). Starting commit
+  `b00fa77687d15b7557b04e3e0326aa511fe0906c` (merged PR #586); Builder Codex; branch
+  `codex/lived-day-orient-design`; [PR #587](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/587).
+- **Outcome:** research-backed experience contract, workday/day-off/recovery/unknown/sparse variants,
+  phone text wireframes, information/attention rules, Engine/Delta boundaries, reuse map, failure and
+  accessibility behavior, acceptance scenarios, and a proposed Protected build authorization.
+- **Core decision:** explicit START DAY anchors Orientation; an already-started day gets one optional
+  invitation. Orientation reads and routes—it does not create another plan or recommendation. It works
+  offline without an automatic AI call.
+- **Research disposition:** adapt personal-baseline explanation from Oura/WHOOP without a readiness
+  score; adapt Sunsama's visible review without automatic plan movement; keep subjective check-in
+  explicit and low-burden; treat shift fatigue as context without medical or fitness-for-duty claims.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
+- **Exclusions:** no implementation, production UI, rename, schema/event, Engine/priority, notification,
+  provider/dependency, autonomy, navigation, global redesign, evening/Shift Down, Google Drive, or
+  concurrent-PR change.
+- **Verification:** local Markdown links and diff hygiene pass. PR #587 requires green required CI and
+  independent exact-head review.
+- **Next:** resolve any review/CI findings and return the reviewed design to Gavin. Implementation
+  requires his separate explicit Protected approval.
+
+---
+
+# Historical — PROJECT-GRAYSON-BASELINE-001 (merged as PR #586, `b00fa776`)
 
 - **Owner authorization:** report-only evaluation against the Project Grayson Vision Blueprint.
   Brief: [`PROJECT-GRAYSON-BASELINE-001.md`](PROJECT-GRAYSON-BASELINE-001.md). Starting commit

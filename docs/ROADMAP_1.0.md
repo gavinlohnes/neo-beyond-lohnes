@@ -14,10 +14,12 @@ built; Project Grayson is what it is becoming; GRAYSON is the Life OS; Delta is 
 intelligence inside it. Existing work is preserved and classified **Preserve / Adapt / Connect /
 Deepen / Replace carefully / Retire / Defer**, not discarded for a rewrite.
 
-The next Project Grayson step after the vision PR merges is a separately approved, report-only current
-product baseline against the blueprint's canonical scenarios. It should recommend one bounded first
-evolution objective; the provisional Daily Life Loop is a hypothesis, not an authorized build. The
-existing queue and active PRs continue unless Gavin explicitly reprioritizes them.
+The report-only [current-product baseline](PROJECT_GRAYSON_BASELINE.md) merged as PR #586. It found
+that BEYOND already contains most of the suit and recommended orchestration around lived transitions,
+not a rewrite or a broad autonomy push. Gavin next authorized a documentation/design-only
+[`LIVED-DAY-ORIENT-001`](agent/LIVED-DAY-ORIENT-001.md) objective. It may define one optional opening
+orientation, but no implementation is authorized. The existing queue and active PRs continue unless
+Gavin explicitly reprioritizes them.
 
 ## Now — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15)
 
