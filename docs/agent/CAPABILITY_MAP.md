@@ -467,6 +467,13 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
 - Quit tracker, reminders, new schedule semantics and health correlations remain excluded.
   Integration/review status belongs in the checkpoint and PR, not this capability index.
 
+### HABIT-QUOTA-001 — "N times a week" habits (2026-11-18)
+
+- Approved scope: [brief](HABIT-QUOTA-001.md); closes HARVEST-002's "Habit quota" row.
+- `TIMES_A_WEEK` with `schedule.perWeek` (1 to 6). `habitApplies` takes the week's earlier Done count; Monday-start
+  weeks of lived days, the same week as the existing "this week" count. Only Done counts; unknown never fills a week.
+- `getHabitToday` reads this week's lived days only and returns `week: { done, target }`; BODY chips use it.
+
 ### SHIFT-CORRECT-001 — explicit work-mark corrections (2026-11-15)
 
 - Approved scope: [brief](SHIFT-CORRECT-001.md); WORK TRANSITION amended in the Decision Register.

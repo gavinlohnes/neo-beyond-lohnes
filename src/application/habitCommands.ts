@@ -1,5 +1,5 @@
 import { db } from "../persistence/db";
-import { HABIT_ANSWERS, projectHabitAnswers, type Habit, type HabitScheduleKind, type HabitAnswer } from "../domain/habits";
+import { HABIT_ANSWERS, HABIT_PER_WEEK_MAX, HABIT_PER_WEEK_MIN, HABIT_SCHEDULE_KINDS, projectHabitAnswers, type Habit, type HabitScheduleKind, type HabitAnswer } from "../domain/habits";
 import { writeAtomically } from "./atomicWrite";
 import { ensureActiveDay, logEvent, newId } from "./commands";
 
@@ -9,11 +9,17 @@ function cleanName(value: string) {
   return name;
 }
 
-export async function createHabit(input: { name: string; kind: HabitScheduleKind; weekdays?: number[] }): Promise<Habit> {
+export async function createHabit(input: { name: string; kind: HabitScheduleKind; weekdays?: number[]; perWeek?: number }): Promise<Habit> {
   const now = new Date().toISOString();
+  if (!HABIT_SCHEDULE_KINDS.includes(input.kind)) throw new Error("Choose when the habit applies.");
   const weekdays = [...new Set(input.weekdays ?? [])].filter((day) => Number.isInteger(day) && day >= 0 && day <= 6).sort();
   if (input.kind === "WEEKDAYS" && !weekdays.length) throw new Error("Choose at least one day.");
-  const habit: Habit = { id: newId(), name: cleanName(input.name), schedule: { kind: input.kind, ...(input.kind === "WEEKDAYS" ? { weekdays } : {}) }, status: "ACTIVE", createdAt: now, updatedAt: now };
+  const perWeek = input.perWeek;
+  if (input.kind === "TIMES_A_WEEK" && (perWeek === undefined || !Number.isInteger(perWeek) || perWeek < HABIT_PER_WEEK_MIN || perWeek > HABIT_PER_WEEK_MAX)) {
+    throw new Error(`Choose ${HABIT_PER_WEEK_MIN} to ${HABIT_PER_WEEK_MAX} times a week.`);
+  }
+  const schedule: Habit["schedule"] = { kind: input.kind, ...(input.kind === "WEEKDAYS" ? { weekdays } : {}), ...(input.kind === "TIMES_A_WEEK" ? { perWeek: perWeek! } : {}) };
+  const habit: Habit = { id: newId(), name: cleanName(input.name), schedule, status: "ACTIVE", createdAt: now, updatedAt: now };
   await db.habits.add(habit);
   return habit;
 }

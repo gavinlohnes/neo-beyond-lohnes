@@ -9,15 +9,25 @@ import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 const addDays = (date: Date, days: number) => { const next = new Date(date); next.setDate(next.getDate() + days); return next; };
 const mondayOf = (date: Date) => { const copy = new Date(date); copy.setHours(12, 0, 0, 0); copy.setDate(copy.getDate() - ((copy.getDay() + 6) % 7)); return copy; };
 
-export function habitApplies(habit: Habit, date: Date, scheduledWork: boolean) {
+/** The weekly target of a TIMES_A_WEEK habit, or null for every other schedule. */
+export function habitPerWeek(habit: Habit): number | null {
+  return habit.schedule.kind === "TIMES_A_WEEK" ? habit.schedule.perWeek ?? 1 : null;
+}
+
+/**
+ * HABIT-QUOTA-001: a TIMES_A_WEEK habit is due until the week's target is met (`doneEarlierThisWeek` counts Done
+ * answers on earlier lived days of the same Monday-start week). Unrecorded and "Didn't do it" days never count.
+ */
+export function habitApplies(habit: Habit, date: Date, scheduledWork: boolean, doneEarlierThisWeek = 0) {
   if (habit.schedule.kind === "ANY_DAY") return true;
+  if (habit.schedule.kind === "TIMES_A_WEEK") return doneEarlierThisWeek < (habitPerWeek(habit) ?? 1);
   if (habit.schedule.kind === "WORK_DAYS") return scheduledWork;
   if (habit.schedule.kind === "DAYS_OFF") return !scheduledWork;
   return (habit.schedule.weekdays ?? []).includes(date.getDay());
 }
 
 /** Read-only, local-calendar lived days: missing days are shown without inventing day records. */
-async function readHabitCalendar(now: Date, count: 1 | 28) {
+async function readHabitCalendar(now: Date, count: number) {
   const [habits, activeDay, schedule, days, events] = await Promise.all([
     getActiveHabits(), getActiveDay(), getSchedulePattern(), db.beyondDays.toArray(),
     db.events.where("type").equals("HABIT_SET").toArray(),
@@ -48,25 +58,38 @@ async function readHabitCalendar(now: Date, count: 1 | 28) {
     };
   });
   const weekStart = mondayOf(today);
-  const applies = (habit: Habit, window: typeof windows[number]) => {
+  const applies = (habit: Habit, window: typeof windows[number], doneEarlierThisWeek: number) => {
     if ((habit.schedule.kind === "WORK_DAYS" || habit.schedule.kind === "DAYS_OFF") && window.work === "UNKNOWN") return false;
-    return habitApplies(habit, new Date(window.from), window.work === "WORK");
+    // A quota habit done today still applies today, even past its target: it never reads "Not scheduled" once done.
+    if (habit.schedule.kind === "TIMES_A_WEEK" && window.answers.get(habit.id) === "DONE") return true;
+    return habitApplies(habit, new Date(window.from), window.work === "WORK", doneEarlierThisWeek);
   };
+  const weekOf = (from: string) => formatLocalDate(mondayOf(new Date(from)));
   const current = windows.at(-1)!;
   return {
     dayId: current.dayId === activeDay?.id ? current.dayId : null,
     date: formatLocalDate(today), from: today.toISOString(), nextBoundary: addDays(today, 1).getTime(),
     habits: habits.map((habit) => {
-      const history = windows.map(({ answers, answerDays, ...window }) => ({
-        ...window, dayId: answerDays.get(habit.id) ?? window.dayId,
-        answer: answers.get(habit.id) ?? "UNRECORDED" as const,
-        applies: applies(habit, { ...window, answers, answerDays }),
-      }));
+      // Done answers on earlier lived days of the same week, oldest first. The 28-day window can start mid-week; that
+      // first partial week only affects the "Not scheduled" label on its oldest days, never a count shown as this week.
+      let week = "", doneInWeek = 0;
+      const history = windows.map(({ answers, answerDays, ...window }) => {
+        const answer = answers.get(habit.id) ?? "UNRECORDED" as const;
+        const wk = weekOf(window.from);
+        if (wk !== week) { week = wk; doneInWeek = 0; }
+        const day = {
+          ...window, dayId: answerDays.get(habit.id) ?? window.dayId, answer,
+          applies: applies(habit, { ...window, answers, answerDays }, doneInWeek),
+        };
+        if (answer === "DONE") doneInWeek++;
+        return day;
+      });
       const answer = history.at(-1)!.answer;
       return {
         habit, answer, done: answer === "DONE", applies: history.at(-1)!.applies, history,
         thisWeek: history.filter((d) => new Date(d.from) >= weekStart && d.answer === "DONE").length,
         fourWeeks: history.filter((d) => d.answer === "DONE").length,
+        perWeek: habitPerWeek(habit),
       };
     }),
   };
@@ -77,10 +100,13 @@ export function getHabitWorkspace(now = new Date()) {
   return readHabitCalendar(now, 28);
 }
 
-/** DATA needs today's answers only: do not hold Garmin readings behind 28 days of history lookups. */
+/** DATA needs today's answers (and this week's, for quotas): do not hold Garmin readings behind 28 days of history lookups. */
 export async function getHabitToday(now = new Date()) {
-  const current = await readHabitCalendar(now, 1);
-  return current.habits.map(({ habit, answer, done, applies }) => ({ habit, answer, done, applies }));
+  // Only this week's lived days (1 to 7): a TIMES_A_WEEK habit needs them to know whether it is still due today.
+  const current = await readHabitCalendar(now, (mostRecentBoundaryAtOrBefore(now).getDay() + 6) % 7 + 1);
+  return current.habits.map(({ habit, answer, done, applies, thisWeek, perWeek }) => ({
+    habit, answer, done, applies, week: perWeek === null ? null : { done: thisWeek, target: perWeek },
+  }));
 }
 
 /** Oldest first; habits created in the same millisecond keep a fixed order (name, then id), not the store's. */
