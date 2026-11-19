@@ -37,3 +37,10 @@
    `.today-field .btn-*` sets 13 px on buttons; a sheet opened from TODAY sits inside it, so this out-ranks it. */
 dialog.log-sheet.bf .log-sheet__header button, dialog.log-sheet.bf .btn-primary, dialog.log-sheet.bf .btn-secondary,
 dialog.log-sheet.bf .alfred-link { font-size: 16px; }
+/* Controls that are meant to be larger keep their own size: the SLEEP sheet's ‹ › period arrows are 24 px
+   (measuredSheet.css), and the 16 px rule above must never shrink them (review of #571). */
+dialog.log-sheet.bf .sleep-period-navigation button { font-size: 24px; }
+/* Sentences inside a sheet are 16 px. TODAY's `.today-field > :not(...):not(...):not(...) .card-body` (five classes) sets
+   14 px on card-body sentences, and a sheet opened from TODAY sits inside it (SLEEP's rhythm lines). The repeated
+   classes rank this rule above it on purpose; it only ever raises a sheet's sentences to 16 px. */
+dialog.log-sheet.bf.bf .log-sheet__body .card-body.card-body { font-size: 16px; }

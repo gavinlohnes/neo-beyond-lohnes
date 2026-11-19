@@ -5,6 +5,8 @@ import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { startDay } from "../../src/application/commands";
+import { importSleepSnapshot } from "../../src/application/externalSleepCommands";
+import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
 import { db } from "../../src/persistence/db";
 
 /**
@@ -42,10 +44,12 @@ const shot = async (name: string) => { if (SHOTS) { await settle(); await page.s
 function expectFoundationShell(sheet: HTMLElement) {
   expect(sheet.classList.contains("bf")).toBe(true);
   const cs = getComputedStyle(sheet);
-  expect(cs.borderTopColor).toBe(RED);
+  // The palette's red (the HUD's red, or its dimmed "no day" red): the top edge and the bracket are the same red.
+  const [r, g, b] = cs.borderTopColor.match(/\d+/g)!.map(Number) as [number, number, number];
+  expect(r > 4 * g && r > 4 * b, cs.borderTopColor).toBe(true);
   expect(cs.clipPath).not.toBe("none");
   const head = sheet.querySelector(".log-sheet__header")!;
-  expect(getComputedStyle(head, "::before").borderLeftColor).toBe(RED);
+  expect(getComputedStyle(head, "::before").borderLeftColor).toBe(cs.borderTopColor);
   expect(getComputedStyle(head.querySelector("h2")!, "::before").content).toContain("///");
 }
 /** Nothing spills, sentences and controls stay 16 px, short mono labels never under 10 px, and axe passes. */
@@ -127,5 +131,24 @@ describe("SHEETS-FOUNDATION-001: the sheets on the foundation", () => {
     expect(getComputedStyle(sheet.element().querySelector(".alfred-turn__who")!, "::before").content).toContain("///");
     expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
     await expectReadable(sheet.element() as HTMLElement, "ALFRED");
+  });
+
+  it("SLEEP from TODAY: the shell, and the period arrows keep their own 24 px (the 16 px rule never shrinks a control)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const now = new Date(2026, 9, 21, 22, 10).getTime();
+      vi.setSystemTime(now);
+      const fixture = syntheticGarminMonth(new Date(2026, 8, 22, 16, 30).getTime(), 30, now);
+      await db.beyondDays.bulkAdd(fixture.days); await importSleepSnapshot(fixture.sleep);
+      const screen = await render(<App />);
+      await screen.getByRole("button", { name: /open sleep$/ }).click();
+      const sheet = screen.getByRole("dialog", { name: "SLEEP", exact: true });
+      await expect.element(sheet.getByRole("button", { name: "Earlier sleep period" })).toBeVisible();
+      expectFoundationShell(sheet.element() as HTMLElement);
+      for (const name of ["Earlier sleep period", "Later sleep period"]) {
+        expect(getComputedStyle(sheet.getByRole("button", { name }).element()).fontSize, name).toBe("24px");
+      }
+      await expectReadable(sheet.element() as HTMLElement, "SLEEP");
+    } finally { vi.useRealTimers(); }
   });
 });

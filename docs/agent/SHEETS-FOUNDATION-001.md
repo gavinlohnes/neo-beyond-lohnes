@@ -63,3 +63,20 @@ It now carries `.bf` and `sheetFoundation.css`, so every sheet gets:
 
 - REVIEW on the foundation (its screen header as a command bar).
 - On the phone: open LOG → WATER, CHECK IN, and ask Alfred something that proposes a card.
+
+## Review response (independent review of `d0cec13`: CHANGES NEEDED, one blocker)
+
+- **Blocker fixed:** the SLEEP sheet's ‹ › period arrows are 24 px again (`measuredSheet.css`).
+  - The cause: the new 16 px sheet-button rule out-ranked the arrows' own size.
+  - The fix: `dialog.log-sheet.bf .sleep-period-navigation button { font-size: 24px; }`, placed after that rule.
+  - This also fixes an older bug: opened from TODAY, the arrows were 13 px on master.
+  - A new `SheetsFoundation001` test opens SLEEP from TODAY and asserts 24 px on both arrows.
+- **Found by that test:** SLEEP's rhythm lines were 14 px. TODAY's five-class `.card-body` rule reached into the sheet.
+  `dialog.log-sheet.bf.bf .log-sheet__body .card-body.card-body` is now 16 px. It only ever raises text, because
+  `.card-body` is 16 px everywhere else.
+- **Non-blocking 1 taken:** `LogSheet.tsx` now imports `../foundation/foundation.css` itself, so the container no
+  longer depends on another component bringing in the tokens.
+- **Non-blocking 3 taken:** the SLEEP test runs the same readability sweep (spill, 16 px, axe) at 320, 412 and
+  1024 px.
+- **Non-blocking 2 left:** the repeated `position: sticky` is harmless, and the reviewer noted it makes the header the
+  bracket's containing block.

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import "../foundation/foundation.css";
 import "./logSheet.css";
 import "./sheetFoundation.css";
 
