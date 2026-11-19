@@ -1,3 +1,15 @@
+# Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
+
+- Builder Codex; Gavin explicitly approved the next bounded pre-check-in draft. [Brief](DRAFT-RECOMMENDATION-001.md).
+- Branch `codex/draft-recommendation-001`, fresh master `3876dbd3`. PROTECTED Engine/TODAY work; independent exact-head review, green CI and owner merge required. No merge performed.
+- Provisional, read-only starting point from existing recorded post-shift or personal two-short-main-sleeps evidence. Capacity remains unknown. Opening the existing check-in writes nothing; submitting it uses unchanged canonical evaluation. No new storage, provider, command or dependency.
+- Implementation and focused verification underway; final actual results and representative phone evidence will be linked from the PR. Do not infer physical-phone verification from Chromium widths.
+- QUALITY-STANDARD-001 and HARVEST-003 merged. OUTCOME-LOOP-001 remains a separate reviewed/green governance PR awaiting owner merge; it does not block this approved product work.
+
+---
+
+# Historical checkpoint (superseded live status)
+
 # Current objective — QUALITY-STANDARD-001 (2026-11-19)
 
 - **Authorization:** Gavin approved making TONIGHT'S ENERGY-level product quality the operating standard: “Make it happen in the best way you can”, following the five-dimension proposal.

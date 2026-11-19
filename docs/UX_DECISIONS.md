@@ -3494,3 +3494,11 @@ refinement). [Brief](agent/CAPTURE-PARITY-001.md).
   one tap. Example: "Renew truck registration" → MAKE IT A TASK → planned Fri, due Mon → CREATE PLAN ITEM.
 - The Capture list keeps its detected-date proposal for the due date only, still editable and clearable.
 - No schema, Engine, event or notification-kind change; every path uses the existing `convertCaptureToObligation`.
+
+## DRAFT-RECOMMENDATION-001 — provisional guidance before check-in (Gavin, 2026-11-19)
+
+Gavin approved the HARVEST-003 pre-check-in draft and explicitly approved the bounded objective again. [Brief](agent/DRAFT-RECOMMENDATION-001.md).
+
+- TODAY may replace its generic no-recommendation guidance with one clearly labelled, unsaved starting point from recorded evidence. Existing unresolved post-shift context takes precedence; otherwise the existing personal two-short-main-sleeps signal may provisionally suggest recovery. Thin evidence stays quiet. No subjective check-in answer or capacity is inferred.
+- This narrowly extends SLEEP-ENGINE-001 before check-in, not its confirmed GREEN reduced-session rule or any canonical evaluation priority. After the operator submits a real check-in, existing evaluation decides final guidance; RED still wins.
+- The draft’s action opens the existing check-in, where the operator confirms or adjusts how he feels. Viewing the draft/opening the form saves nothing. No directly executable or persisted recommendation is created. The neutral standalone check-in prompt stays hidden while the draft supplies that action; existing fallback/manual operation remains available otherwise.
