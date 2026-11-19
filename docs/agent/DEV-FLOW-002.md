@@ -105,7 +105,8 @@ as the brief; do not create duplicate authorization artifacts. Record:
 
 - Objective and authorization (the owner instruction or approved objective it implements).
 - Risk lane, scope, and exclusions.
-- Acceptance evidence appropriate to the change.
+- Operator benefit (or the behavior/invariant protected by non-UI work), and acceptance evidence
+  appropriate to the change under [Product quality acceptance](#product-quality-acceptance).
 - Exact starting commit fetched from `origin/master`.
 - REUSE / OWN / BUILD FROM SCRATCH disposition, also required in every new PR description
   (the authoritative format is in [AGENTS.md](../../AGENTS.md#the-leverage-gate)).
@@ -120,12 +121,49 @@ Before editing, read `AGENTS.md` and the current checkpoint, fetch master, inspe
 and open PRs, and check for overlapping implementation work. Preserve existing work. Use the
 existing isolated cloud checkout; do not create a Git worktree unless the owner requests one.
 
+## Product quality acceptance
+
+Owner amendment, Gavin, 2026-11-19: “Make it happen in the best way you can” approves recording
+[the operating quality standard](../PRODUCT_DIRECTION.md#operating-quality-standard) in these
+existing builder/review rules. Scope is delivery quality, not new product or architecture authority.
+
+For each approved objective, the Builder defines the useful outcome in the existing brief and
+shows how the result meets the applicable standard: usefulness, visual excellence, trustworthy
+information, a complete relevant journey, and verification. Keep this in the existing brief/PR;
+no extra quality document, score, ritual or approval stage is required.
+
+- **Operator-facing changes:** provide representative phone-width screenshots or a short
+  interaction recording of the actual implementation, with realistic synthetic data. For changed
+  flows, verify the action and result as well as the still image. Include relevant empty/sparse,
+  loading, error and recovery states; explain genuinely inapplicable states briefly rather than
+  building them for ceremony. Mockups are design evidence only, never implementation evidence.
+- **Non-UI changes:** provide focused evidence for the affected behavior, invariant or maintenance
+  benefit. Screenshots are unnecessary when appearance and interaction are unchanged.
+- **Honest coverage:** distinguish automated/browser evidence from physical-device evidence. An
+  unperformed phone check remains unperformed; simulated widths do not prove native permissions,
+  notifications, haptics or installation. Record passed, failed, skipped and unrun checks once in
+  the handoff, and identify any remaining owner judgement or device check.
+
+Feature and Protected work receive independent review of the exact proposed head before merge.
+The Reviewer judges the operator outcome and applicable quality dimensions alongside correctness,
+reuse, architecture and regression risk. Check that the evidence supports the claims, including
+uncertainty, accessibility and the relevant failure/recovery paths. Do not give PASS to an
+in-scope broken flow, materially misleading information, inaccessible primary action or visibly
+unfinished changed experience merely because tests pass. Identify concrete blocking findings;
+keep subjective preferences and unrelated improvements as non-blocking follow-ups. Any changed
+head needs renewed review. Protected and delegated-merge requirements below still apply.
+
+Routine work keeps its existing concise PR and normal review; a copy fix does not acquire a full
+visual campaign or a second reviewer solely because of this standard. Evidence scales with the
+changed behavior and risk. One focused improvement at a time; fix in-scope quality defects before
+handoff, and record out-of-scope opportunities for later rather than expanding the objective.
+
 ## Three risk lanes and proportional evidence
 
 | Lane | Typical scope | Verification and handoff |
 | --- | --- | --- |
 | ROUTINE | Small repairs, accessibility improvements, copy, isolated tests, low-risk polish within an approved objective. | Focused checks that prove the change; concise PR and checkpoint; green required CI; owner merge approval (or the owner merge delegation below). |
-| FEATURE | Owner-approved capabilities and meaningful UI improvements that do not cross Protected boundaries. | Relevant behavior/regression tests and build/type checks as warranted; acceptance evidence; green required CI; owner merge approval (or the owner merge delegation below). |
+| FEATURE | Owner-approved capabilities and meaningful UI improvements that do not cross Protected boundaries. | Relevant behavior/regression tests and build/type checks as warranted; acceptance evidence; independent exact-head review including product quality; green required CI; owner merge approval (or the owner merge delegation below). |
 | PROTECTED | Governance and authorization authority, product doctrine, Engine/recommendation authority, data schemas/migrations, privacy/security, backup integrity, primary information architecture, consequential AI autonomy, or another protected boundary. | Explicit bounded owner approval, appropriate tests and acceptance evidence, independent exact-head review, resolved findings, green required CI, and owner merge approval. |
 
 Owner clarification, 2026-10-23: keep ROUTINE work thin — copy, labels, empty states, list

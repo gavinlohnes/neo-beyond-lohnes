@@ -49,6 +49,35 @@ integration and recoverability alongside technical correctness. Use realistic en
 distinguish observed behavior from predicted benefit. Refine weak experiences without endless
 polishing. **BUILD → USE → LEARN → REFINE → BUILD AGAIN.**
 
+## Operating quality standard
+
+Owner-approved, 2026-11-19: Gavin made the usefulness, visual quality and verification of
+TONIGHT'S ENERGY the expected operating level across BEYOND, then approved recording it in
+product direction and the existing builder/review rules. Apply this standard to each approved
+improvement, one focused objective at a time; it does not authorize an app-wide redesign or
+unrelated features.
+
+- **Useful:** solve a named daily job, reduce effort, or reveal information worth knowing. State
+  the operator benefit; distinguish demonstrated improvement from a benefit still awaiting use.
+- **Visually excellent:** preserve BEYOND's identity and shared foundation. Make hierarchy,
+  typography, spacing, source distinctions and primary actions deliberate, readable and polished
+  on the phone. Impress through clarity and coherence; decoration must earn its attention cost.
+- **Trustworthy:** distinguish recorded facts, estimates, assumptions and missing information.
+  Make consequential interpretations inspectable, with sources, relevant dates and sample sizes.
+  Abstain when evidence cannot support a claim; preserve corrections and operator control.
+- **Complete:** finish the relevant journey, including loading, empty/sparse records, failure,
+  cancellation, interruption/resume and correction where the feature needs them. Do not stop at
+  the attractive populated example or invent extra surfaces to satisfy a checklist.
+- **Verified:** demonstrate the actual result with proportionate tests and visual/interaction
+  evidence for UI changes. Review experience quality alongside code correctness; green tests
+  alone do not establish usability or visual excellence. Report what was not checked.
+
+For infrastructure, refactors and documentation, apply the relevant dimensions: prove the
+protected behavior or maintenance benefit without manufacturing screenshots or new UI. The
+[existing workflow](agent/DEV-FLOW-002.md#product-quality-acceptance) defines evidence and review;
+this is one shared standard, not another delivery process. Existing working features improve
+through bounded approved work, not an unbounded retroactive cleanup campaign.
+
 ## Alfred: intelligence is part of BEYOND
 
 Owner ruling, 2026-10-31 (RULES-2026-10-31, "approve the new rules"), replacing the 2026-10-09
