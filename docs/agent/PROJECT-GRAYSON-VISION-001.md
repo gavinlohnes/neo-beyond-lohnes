@@ -1,10 +1,15 @@
 # PROJECT-GRAYSON-VISION-001 — canonical destination and evolution map
 
-**Lane:** Protected documentation-only  
-**Owner authorization:** Gavin, 2026-11-19  
-**Starting commit:** `c54c0001cb346af7d358f7d039f087b467bf78fd` (merged PR #583)  
-**Builder:** Codex  
-**Branch:** `codex/project-grayson-vision`  
+**Lane:** Protected documentation-only
+
+**Owner authorization:** Gavin, 2026-11-19
+
+**Starting commit:** `c54c0001cb346af7d358f7d039f087b467bf78fd` (merged PR #583)
+
+**Builder:** Codex
+
+**Branch:** `codex/project-grayson-vision`
+
 **Active PR:** pending
 
 ## Outcome
@@ -59,4 +64,3 @@ vision, losing shipped capability, or allowing chat history to become product au
 - **OWN:** the Project Grayson identity, whole-life synthesis, Delta relationship, canonical lived-day
   journey, and mapping of those foundations into Gavin's personal Life OS.
 - **BUILD FROM SCRATCH:** none in this documentation objective.
-

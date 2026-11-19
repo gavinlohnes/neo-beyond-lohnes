@@ -16,9 +16,12 @@ project. It summarizes routing; it does not replace repository authority.
 
 ## Identity
 
-> BEYOND is what we built.  
-> Project Grayson is what it is becoming.  
-> GRAYSON is the Life OS.  
+> BEYOND is what we built.
+>
+> Project Grayson is what it is becoming.
+>
+> GRAYSON is the Life OS.
+>
 > Delta is the companion intelligence inside it.
 
 Current runtime truth remains BEYOND and Alfred until separately approved changes ship. Do not
@@ -54,4 +57,3 @@ Send this concise instruction:
 > preserve active ownership, and recommend or continue only work authorized by the current brief.
 
 This is the canonical way to update Claude Duet Steward; do not depend on a chat-only summary.
-

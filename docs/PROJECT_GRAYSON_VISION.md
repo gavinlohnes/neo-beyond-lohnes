@@ -1,15 +1,18 @@
 # Project Grayson — GRAYSON Life OS Vision Blueprint
 
-Status: **OWNER-APPROVED PRODUCT DESTINATION** — 2026-11-19.  
+Status: **OWNER-APPROVED PRODUCT DESTINATION** — 2026-11-19.
 This document defines the destination and creative coherence of Project Grayson. It constrains and
 guides future objectives but authorizes no implementation by itself. The Operator Interface Doctrine,
 locked Decision Register, approved objective brief, and current code retain their authority order.
 
 ## Founding identity
 
-> **BEYOND is what we built.**  
-> **Project Grayson is what it is becoming.**  
-> **GRAYSON is the Life OS.**  
+> **BEYOND is what we built.**
+>
+> **Project Grayson is what it is becoming.**
+>
+> **GRAYSON is the Life OS.**
+>
 > **Delta is the companion intelligence inside it.**
 
 Grayson was Gavin's first dog. The name carries personal meaning: companionship, loyalty, protection,
@@ -434,4 +437,3 @@ Future proposals should demonstrate which scenario they improve and how:
 - Whether and how primary navigation should eventually change.
 
 These are deliberate future decisions, not gaps to fill silently.
-
