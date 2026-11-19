@@ -1,0 +1,16 @@
+/* ENERGY-CURVE-001: TONIGHT'S ENERGY on the foundation. Your estimate is a white line; the shift is a faint band, sleep
+   a darker band, the lowest stretch a quiet hatch; "now" is the red structure mark. Sentences 16 px. */
+.today-energy { margin: 12px 0; }
+.today-energy__chart { display: block; width: 100%; height: auto; margin-top: 4px; }
+.today-energy__line { fill: none; stroke: var(--p-t1, #f2f2f2); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.today-energy__shift { fill: color-mix(in srgb, var(--p-t1, #f2f2f2) 7%, transparent); }
+.today-energy__sleep { fill: color-mix(in srgb, var(--p-t2, #a8a8a8) 22%, transparent); }
+.today-energy__low { fill: color-mix(in srgb, var(--p-t1, #f2f2f2) 12%, transparent); }
+.today-energy__mark { stroke: var(--p-t2, #a8a8a8); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.today-energy__now { stroke: var(--bf-red, #D0141B); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.today-energy__axis { display: flex; justify-content: space-between; font-family: var(--font-mono, monospace); font-size: 11px; letter-spacing: .1em; color: var(--p-t2, #a8a8a8); }
+.today-energy__headline { margin: 4px 0 0; font-size: 18px; font-weight: 600; color: var(--p-t1, #f2f2f2); }
+.today-energy__drive { margin: 0; padding-left: 10px; border-left: 2px solid var(--bf-red, #D0141B); font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.today-energy__how summary { min-height: 44px; display: flex; align-items: center; font-size: 16px; cursor: pointer; }
+.today-energy__sources { margin: 6px 0 0; padding-left: 18px; font-size: 16px; }
+.today-energy__sources a { color: var(--p-t1, #f2f2f2); overflow-wrap: anywhere; }

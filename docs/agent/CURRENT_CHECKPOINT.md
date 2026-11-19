@@ -1,3 +1,18 @@
+# Current objective — ENERGY-CURVE-001 recovery (2026-11-19)
+
+- Builder takeover: Codex, Gavin “Pick up where Claude left off”. Continue existing `claude/energy-curve-001`, PR #580; no competing branch.
+- Protected TODAY panel, approved in [brief](ENERGY-CURVE-001.md). Gavin merges after independent exact-head review and green CI. No merge performed.
+- Recovered head `de11361e`: implementation and focused tests pushed by Claude. Full CI exposed two accessibility failures: the new standalone panel used h3 directly after the page h1.
+- Repair: foundation Panel accepts an optional h2 heading (h3 remains the default); Tonight’s Energy uses h2. Existing full-page accessibility assertions remain intact; focused test checks the actual h2.
+- Independent review blocked on DST endpoints and disappearing assumed sleep. Both repaired using existing rollover math and lived-day-anchored assumptions, with actual records replacing assumptions. Added query regressions; 11 focused tests pass in UTC and Chicago. Renew exact-head review.
+- Local verification and final CI/review results are recorded in the PR handoff. Do not treat the inherited brief’s checks as evidence for the repaired head.
+- Fresh master `4acbc605` includes weekly metric comparisons (#577) and fiber/sodium (#578). Prior checkpoint statuses below are historical. The earlier mock draft is no longer open; no duplicate metric work is needed.
+- Remaining: independently review the whole energy panel, resolve findings, obtain green exact-head CI, then Gavin’s protected merge. Research PR #579 remains separate; old shift-what-if draft remains parked.
+
+---
+
+# Historical checkpoint (superseded live status)
+
 # Current objective — night 2026-11-18/19: one look, then Gavin's approved list
 
 - Builder Claude Code. Gavin's mission "NIGHT 2026-11-18" (#565 merge, METRIC-PAGE-002 slices 2–3), then "1A"
