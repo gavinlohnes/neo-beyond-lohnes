@@ -58,6 +58,7 @@ import type {
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { TodayToasts } from "./TodayToasts";
+import { TodayEnergy } from "./TodayEnergy";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
@@ -2790,6 +2791,8 @@ export function TodayScreen({
       </section>}
     {/* VISUAL-FOUNDATION-003 (Gavin, 2026-11-14, Protected, approved): the numbers come right after the day's next step
         (and the after-the-run report); the preparation/life order below them is LIFE-STATE-001's, unchanged. */}
+    {/* ENERGY-CURVE-001 (Gavin, 2026-11-19, approved new TODAY panel): tonight's energy estimate, just above the numbers. */}
+    {dayRead && day && <TodayEnergy now={now.getTime()} active={active} refreshKey={refreshVersion} />}
     {/* LAUNCH-STEADY-001: no NOT LOGGED tiles before the day has been read. */}
     {dayRead && <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
