@@ -21,6 +21,9 @@ const savedMealInputFields = {
   proteinG: z.number().min(0, "Protein must be zero or more"),
   carbsG: z.number().min(0, "Carbs must be zero or more"),
   fatG: z.number().min(0, "Fat must be zero or more"),
+  // NUTRIENTS-001: optional; absent means not recorded (older meals and foods without them), never 0.
+  fiberG: z.number().min(0, "Fiber must be zero or more").optional(),
+  sodiumMg: z.number().min(0, "Sodium must be zero or more").optional(),
 };
 
 /** Input to createSavedMeal. id/createdAt/archivedAt are assigned by the command, not the caller. */
@@ -46,6 +49,8 @@ export const savedMealSchema = z.object({
   proteinG: savedMealInputFields.proteinG,
   carbsG: savedMealInputFields.carbsG,
   fatG: savedMealInputFields.fatG,
+  fiberG: savedMealInputFields.fiberG,
+  sodiumMg: savedMealInputFields.sodiumMg,
   createdAt: z.string(),
   archivedAt: z.string().optional(),
 });
