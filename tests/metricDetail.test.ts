@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90, rangesFor, WEEK_MODE, DIGITS } from "../src/application/metricDetail";
+import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90, rangesFor, WEEK_MODE, DIGITS, weekCompare } from "../src/application/metricDetail";
 import { recentPeriods, type PeriodValue } from "../src/domain/health/measuredSeries";
 import { BASELINE_MIN_SAMPLES } from "../src/domain/health/baselines";
 
@@ -141,5 +141,24 @@ describe("METRIC-PAGE-002 slice 1: weight keeps its own meaning", () => {
     expect(direction90(year(205), 1, 0)).toMatchObject({ recent: 205, year: 210, way: "LOWER" });
     expect(direction90(year(205), 1)).toMatchObject({ way: "SAME" });
     expect(direction90(year(209.5), 1, 0)).toMatchObject({ way: "SAME" });
+  });
+});
+
+describe("METRIC-CHANGE-001 weekCompare: this lived week against last week", () => {
+  // Lived days from Monday 2026-11-09 16:30; index 0..6 last week, 7.. this week; the last one is in progress.
+  const day = (i: number, value: number | null, partial = false): PeriodValue => {
+    const from = new Date(2026, 10, 9 + i, 16, 30).getTime();
+    return { dayId: `d${i}`, from, to: new Date(2026, 10, 10 + i, 16, 30).getTime(), value, partial };
+  };
+  it("averages each week's recorded, finished days; the day in progress never counts", () => {
+    const series = [day(0, 120), day(1, null), day(2, 110), day(3, 124), day(4, null), day(5, 118), day(6, null),
+      day(7, 150), day(8, 134), day(9, 142), day(10, 10, true)];
+    expect(weekCompare(series, 5)).toEqual({ thisWeek: 142, lastWeek: 118, thisDays: 3, lastDays: 4, way: "HIGHER" });
+  });
+  it("is quiet until both weeks have two recorded days, and says 'about the same' inside the floor", () => {
+    expect(weekCompare([day(0, 120), day(2, 118), day(7, 150), day(8, null, true)], 5)).toBeNull();
+    expect(weekCompare([day(0, 120), day(7, 150), day(8, 140), day(9, 1, true)], 5)).toBeNull();
+    expect(weekCompare([day(0, 120), day(1, 118), day(7, 121), day(8, 123), day(9, 1, true)], 5)?.way).toBe("SAME");
+    expect(weekCompare([day(0, 206.4), day(1, 206.0), day(7, 205.1), day(8, 204.9), day(9, null, true)], 1, 0, 1)).toMatchObject({ thisWeek: 205, lastWeek: 206.2, way: "LOWER" });
   });
 });
