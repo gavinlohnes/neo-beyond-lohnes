@@ -330,14 +330,14 @@ You have good capacity and no immediate time pressure. One home responsibility
 is due this week; the rest of the morning can remain open.
 
 RECOMMENDATION
-Decide what would make today feel well used before adding tasks.
+Decide what would make today feel well used before adding tasks. [PLAN MY DAY OFF]
 
 ALSO AVAILABLE
 Review today's workout                            [OPEN TRAIN]
 Check the smoke detectors                         [OPEN HOME]
 
 Nothing else needs a time this morning.
-                                [PLAN MY DAY OFF] [ENTER TODAY]
+                                                   [ENTER TODAY]
 ```
 
 The Home item appears only because it is already due through current records. No relationship prompt
@@ -450,7 +450,8 @@ must explicitly justify a new device-local key; it may not introduce a Dexie mig
 
 ## Accessibility
 
-- Logical heading order and named regions: Day, You, Guidance, Before Then, Release.
+- Logical heading order and named regions: Situation, You, Delta, Recommendation, Supporting actions,
+  Release.
 - Source and state never rely on color alone.
 - Minimum 44px targets; thumb-reachable primary completion on common phone sizes.
 - Focus moves into Orientation after explicit start, returns to the triggering control on exit, and
