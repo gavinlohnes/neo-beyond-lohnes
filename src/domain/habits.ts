@@ -1,9 +1,13 @@
-export const HABIT_SCHEDULE_KINDS = ["ANY_DAY", "WEEKDAYS", "WORK_DAYS", "DAYS_OFF"] as const;
+export const HABIT_SCHEDULE_KINDS = ["ANY_DAY", "WEEKDAYS", "WORK_DAYS", "DAYS_OFF", "TIMES_A_WEEK"] as const;
 export type HabitScheduleKind = (typeof HABIT_SCHEDULE_KINDS)[number];
+/** HABIT-QUOTA-001: "N times a week" (Monday-start weeks of lived days). 7 a week is ANY_DAY. */
+export const HABIT_PER_WEEK_MIN = 1;
+export const HABIT_PER_WEEK_MAX = 6;
 export type Habit = {
   id: string;
   name: string;
-  schedule: { kind: HabitScheduleKind; weekdays?: number[] };
+  /** `perWeek` is set only for TIMES_A_WEEK; `weekdays` only for WEEKDAYS. */
+  schedule: { kind: HabitScheduleKind; weekdays?: number[]; perWeek?: number };
   status: "ACTIVE" | "ARCHIVED";
   createdAt: string;
   updatedAt: string;
