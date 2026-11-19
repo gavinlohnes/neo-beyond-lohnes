@@ -7,7 +7,7 @@ import { TodayBriefingPreview } from "../../src/ui/screens/today/TodayBriefingPr
 import "../../src/ui/styles/global.css";
 
 vi.mock("../../src/application/todayBriefing", async (original) => ({ ...await original<typeof import("../../src/application/todayBriefing")>(), getTodayBriefing: vi.fn() }));
-afterEach(async () => { await cleanup(); vi.restoreAllMocks(); });
+afterEach(async () => { await cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
 const briefing: TodayBriefing = {
   started: true,
@@ -69,6 +69,10 @@ it("opens from TODAY below Engine guidance and returns without writing or replac
   const { startDay, submitCheckIn, updateSchedulePattern } = await import("../../src/application/commands");
   const { DEFAULT_SCHEDULE_PATTERN } = await import("../../src/engine/scheduledContext");
   const { db } = await import("../../src/persistence/db");
+  // The day starts at a fixed time, so TODAY is read at a fixed time too: with the real clock, which part of the lived
+  // day TODAY is in (and so where Engine guidance sits) changed with the hour the suite ran, and this failed near dawn.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-18T21:00:00"));
   const { id: _id, createdAt: _c, updatedAt: _u, ...rotation } = DEFAULT_SCHEDULE_PATTERN;
   await updateSchedulePattern(rotation);
   const day = await startDay("2026-11-18T20:00:00");
