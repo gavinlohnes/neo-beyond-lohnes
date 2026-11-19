@@ -3502,3 +3502,37 @@ Gavin approved the HARVEST-003 pre-check-in draft and explicitly approved the bo
 - TODAY may replace its generic no-recommendation guidance with one clearly labelled, unsaved starting point from recorded evidence. Existing unresolved post-shift context takes precedence; otherwise the existing personal two-short-main-sleeps signal may provisionally suggest recovery. Thin evidence stays quiet. No subjective check-in answer or capacity is inferred.
 - This narrowly extends SLEEP-ENGINE-001 before check-in, not its confirmed GREEN reduced-session rule or any canonical evaluation priority. After the operator submits a real check-in, existing evaluation decides final guidance; RED still wins.
 - The draft’s action opens the existing check-in, where the operator confirms or adjusts how he feels. Viewing the draft/opening the form saves nothing. No directly executable or persisted recommendation is created. The neutral standalone check-in prompt stays hidden while the draft supplies that action; existing fallback/manual operation remains available otherwise.
+
+## PROJECT-GRAYSON-VISION-001 — Life OS destination and companion relationship (Gavin, 2026-11-19)
+
+Gavin approved the canonical destination and exact identity structure:
+
+> **BEYOND is what we built. Project Grayson is what it is becoming. GRAYSON is the Life OS. Delta
+> is the companion intelligence inside it.**
+
+- **Current versus destination:** the functioning app remains BEYOND and its implemented intelligence
+  remains Alfred until separately approved changes ship. No piecemeal runtime rename follows from
+  this decision. Public/commercial naming receives later legal and originality review.
+- **Relationship:** Gavin is the operator; GRAYSON is the connected capability or suit; Delta
+  understands the field, remembers the mission, prepares options, helps operate approved capability,
+  and learns through corrections and outcomes. Gavin retains final authority. Delta respects an
+  override without concealing its evidence-based disagreement or material consequence.
+- **Earned challenge:** ask when context is unclear; identify repetition; challenge calmly when the
+  evidence supports avoidance; examine the plan, obstacle, priority, or goal when repeated prompting
+  fails. The strength of the challenge cannot exceed the evidence. No guilt, excessive positivity,
+  inspirational language, badges, streak pressure, nagging, or character verdicts.
+- **Difficult periods:** several days of declining mood, feeling overwhelmed, or Gavin explicitly
+  saying he cannot manage the normal plan activate a shorter reality path. Believe him in the moment;
+  study the pattern later. Mental-health capability supports reflection and appropriate help but does
+  not diagnose or replace professional care.
+- **Whole life:** work and time off, family, rest, enjoyment, health, relationships, home, maintenance,
+  growth, and difficult periods are equal parts of the Life OS. The system must not treat non-work time
+  as unused productivity capacity.
+- **Inspectable learning:** Delta states what it thinks it is learning. Gavin can confirm, correct,
+  narrow, contest, defer, or retire it. Consequential learnings retain source, evidence, recency,
+  confidence, context, and correction routes; no hidden personality model.
+- **Design freedom:** Gavin is open to a substantial redesign or reimagining when it better serves the
+  approved destination. This permits proposals and prototypes inside an approved objective, not a
+  standing primary-navigation, visual-identity, semantic, or implementation change.
+- **Authority:** [`PROJECT_GRAYSON_VISION.md`](PROJECT_GRAYSON_VISION.md) is the full destination
+  blueprint. It guides future briefs but authorizes no build by itself.

@@ -7,6 +7,18 @@ resume authorized work when ownership permits, or recommend one next objective f
 New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
+## Destination — Project Grayson (Gavin, 2026-11-19)
+
+Gavin approved [`Project Grayson`](PROJECT_GRAYSON_VISION.md) as the destination: BEYOND is what was
+built; Project Grayson is what it is becoming; GRAYSON is the Life OS; Delta is the companion
+intelligence inside it. Existing work is preserved and classified **Preserve / Adapt / Connect /
+Deepen / Replace carefully / Retire / Defer**, not discarded for a rewrite.
+
+The next Project Grayson step after the vision PR merges is a separately approved, report-only current
+product baseline against the blueprint's canonical scenarios. It should recommend one bounded first
+evolution objective; the provisional Daily Life Loop is a hypothesis, not an authorized build. The
+existing queue and active PRs continue unless Gavin explicitly reprioritizes them.
+
 ## Now — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15)
 
 Approved transformation in four releases: a foundation + zero-effort input → b coach brain → c self-running week → d

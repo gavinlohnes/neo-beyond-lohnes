@@ -1,4 +1,26 @@
-# Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
+# Current objective — PROJECT-GRAYSON-VISION-001 (2026-11-19)
+
+- **Owner authorization:** Gavin approved the exact Protected, documentation-only objective. Brief:
+  [`PROJECT-GRAYSON-VISION-001.md`](PROJECT-GRAYSON-VISION-001.md). Starting commit
+  `c54c0001cb346af7d358f7d039f087b467bf78fd` (merged PR #583); Builder Codex; branch
+  `codex/project-grayson-vision`; PR pending.
+- **Outcome:** establish the canonical Project Grayson destination, reconcile product authority,
+  preserve and classify existing capabilities, and provide one provider-neutral handoff for Claude,
+  Claude Duet Steward, Codex, and future qualified builders.
+- **Identity:** BEYOND is what was built; Project Grayson is what it is becoming; GRAYSON is the Life
+  OS; Delta is the companion intelligence inside it. Current runtime remains BEYOND + Alfred until a
+  separately approved implementation.
+- **Concurrent work checked:** PR #584 (finished workouts on the shared metric page) remains owned by
+  its Builder; draft PR #473 remains separate. This objective changes documentation only.
+- **Exclusions:** no product/UI/code/runtime rename, Engine/schema/provider/dependency/automation,
+  Google Drive change, or first implementation objective.
+- **Next:** complete documentation checks; open a PR; obtain independent exact-head review and green
+  required CI; Gavin decides merge. After merge, propose a separate report-only current-product
+  baseline against the blueprint's canonical scenarios.
+
+---
+
+# Historical — DRAFT-RECOMMENDATION-001 (merged as PR #583, `c54c0001`)
 
 - **Authorization:** Gavin explicitly approved the bounded pre-check-in draft and, after the original reviewed head became conflicting, authorized its reconciliation onto current master. [Brief](DRAFT-RECOMMENDATION-001.md).
 - **Builder:** Codex. **Lane:** PROTECTED (Engine/TODAY). [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583), branch `codex/draft-recommendation-001`, reconciled onto master `af2fa8e3` after OUTCOME-LOOP-001 merged as #582.

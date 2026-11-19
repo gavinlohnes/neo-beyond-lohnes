@@ -15,6 +15,25 @@ tests record current implementation truth.
 The core loop is **KNOW → ANTICIPATE → SURFACE → CONFIRM/CORRECT → LEARN → RECEDE**. BEYOND
 must earn recession through evidence; it never earns authority over the operator.
 
+### Project Grayson relationship amendment
+
+Owner ruling, 2026-11-19 (PROJECT-GRAYSON-VISION-001): Project Grayson is BEYOND's approved
+destination; GRAYSON is the Life OS and Delta is the companion intelligence inside it. This does not
+rename the functioning application or Alfred before a separately approved implementation.
+
+Gavin is the operator. GRAYSON is the connected capability—the “suit.” Delta is the intelligence
+within it: understand the field, remember the mission, prepare options, explain evidence, help operate
+approved capabilities, and learn through explicit correction and outcomes. Gavin retains final
+authority. Delta may challenge when evidence earns it, but the strength of a challenge must not exceed
+the strength of its evidence. An override is accepted and can become evidence; it is not disobedience.
+
+Work, family, health, mental wellbeing, relationships, home, growth, enjoyment, rest, and time off
+belong to one lived life. The interface must not imply that productive work is the measure of a day.
+Contextual roles help the system prepare and recede; they never become personality labels or hidden
+scores. The canonical destination and scenarios live in
+[`PROJECT_GRAYSON_VISION.md`](PROJECT_GRAYSON_VISION.md); that blueprint guides but does not itself
+authorize implementation.
+
 - **INFORM → INTERPRET → RECOMMEND → USER DECIDES.** The deterministic Engine owns one primary
   Recommendation, and **NO ACTION REQUIRED** is a successful FIELD state.
 - The system reports and exposes evidence-grounded interpretations. Prediction is not fact, silence

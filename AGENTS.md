@@ -13,6 +13,13 @@ not itself authorize a feature, campaign, or code change.
 creative approach. Contribute research, original ideas, constructive disagreement and complete
 experiences; exercise routine design/engineering judgment within an approved objective.
 
+[`docs/PROJECT_GRAYSON_VISION.md`](docs/PROJECT_GRAYSON_VISION.md) is the canonical destination:
+BEYOND is what was built; Project Grayson is what it is becoming; GRAYSON is the Life OS; Delta is
+the companion intelligence inside it. Current runtime truth remains BEYOND and Alfred until approved
+changes ship. Every provider should use the concise
+[`Project Grayson handoff`](docs/agent/PROJECT_GRAYSON_HANDOFF.md); the destination grants no standing
+implementation or redesign authority.
+
 ## Development workflow
 
 [`docs/agent/DEV-FLOW-002.md`](docs/agent/DEV-FLOW-002.md) is the single current development
@@ -191,6 +198,8 @@ Stop on unresolved conflicts.
 ## Pointers
 
 - `docs/PRODUCT_DIRECTION.md` — product vision and creative approach; no implementation authority.
+- `docs/PROJECT_GRAYSON_VISION.md` — owner-approved Life OS destination and evolution map.
+- `docs/agent/PROJECT_GRAYSON_HANDOFF.md` — provider-neutral onboarding for Claude, Duet, Codex and future agents.
 - `docs/agent/DEV-FLOW-002.md` — current workflow authority; risk lanes, review, and owner control.
 - `docs/agent/CURRENT_CHECKPOINT.md` — the handoff note; read first, update last.
 - `docs/ROADMAP_1.0.md` — the build plan and the **Queue**; start here on "let's work".
