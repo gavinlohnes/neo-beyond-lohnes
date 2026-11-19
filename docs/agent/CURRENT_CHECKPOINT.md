@@ -2,7 +2,7 @@
 
 - **Authorization:** Gavin approved making TONIGHT'S ENERGY-level product quality the operating standard: “Make it happen in the best way you can”, following the five-dimension proposal.
 - **Builder:** Codex. **Lane:** PROTECTED (product direction and workflow governance).
-- **Starting master:** `4b1f499095f01af7197b1a421eaab3ae588fe665`; branch `codex/quality-standard-001`. PR: pending, titled “QUALITY-STANDARD-001: make product quality part of acceptance and review”. This checkpoint and the PR serve as the concise brief; no separate handbook.
+- **Starting master:** `4b1f499095f01af7197b1a421eaab3ae588fe665`; branch `codex/quality-standard-001`. [PR #581 — QUALITY-STANDARD-001: make product quality part of acceptance and review](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/581). This checkpoint and the PR serve as the concise brief; no separate handbook.
 - **Scope:** existing Product Direction defines the standard; DEV-FLOW-002 defines proportional acceptance evidence and independent Feature/Protected product-quality review; AGENTS routes all builders there.
 - **Exclusions:** no app code, architecture, doctrine/locked behavior, CI/protection settings, merge delegation or new feature authorization changes. Routine work remains lightweight; device checks cannot be claimed from simulated widths.
 - **REUSE:** existing direction, workflow charter, entry-point and brief/PR handoff. **OWN:** BEYOND's five quality dimensions and experience-review expectations. **BUILD FROM SCRATCH:** none.
