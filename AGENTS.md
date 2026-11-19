@@ -28,8 +28,10 @@ approval; the adoption's historical brief is not the current objective.
 - Use one concise durable brief per objective with authorization, risk lane, scope/exclusions,
   acceptance evidence, starting commit, Builder, and active PR. Routine work needs no separate
   authorization PR, formal Drop, or Factory activation.
-- Every PR needs owner merge approval. Protected work also needs explicit bounded owner approval
-  and independent exact-head review. No self-review, self-merge, automatic merge, or admin bypass.
+- Every PR needs owner merge approval, except a non-Protected PR the Builder of record may merge under
+  DEV-FLOW-002's owner merge delegation (independent exact-head PASS plus green CI; Gavin, 2026-11-19).
+  Protected work also needs explicit bounded owner approval and independent exact-head review. No
+  self-review, no other self-merge, automatic merge, or admin bypass.
 - Maintain `docs/agent/CURRENT_CHECKPOINT.md` in GitHub with the objective, branch/PR, verification,
   remaining risks, and next action. No mandatory closure PR or Factory lifecycle for new work.
 - Governance changes are Protected and require bounded owner authorization, regardless of provider.

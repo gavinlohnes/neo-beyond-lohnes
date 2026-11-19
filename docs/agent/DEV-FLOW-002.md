@@ -124,8 +124,8 @@ existing isolated cloud checkout; do not create a Git worktree unless the owner 
 
 | Lane | Typical scope | Verification and handoff |
 | --- | --- | --- |
-| ROUTINE | Small repairs, accessibility improvements, copy, isolated tests, low-risk polish within an approved objective. | Focused checks that prove the change; concise PR and checkpoint; green required CI; owner merge approval. |
-| FEATURE | Owner-approved capabilities and meaningful UI improvements that do not cross Protected boundaries. | Relevant behavior/regression tests and build/type checks as warranted; acceptance evidence; green required CI; owner merge approval. |
+| ROUTINE | Small repairs, accessibility improvements, copy, isolated tests, low-risk polish within an approved objective. | Focused checks that prove the change; concise PR and checkpoint; green required CI; owner merge approval (or the owner merge delegation below). |
+| FEATURE | Owner-approved capabilities and meaningful UI improvements that do not cross Protected boundaries. | Relevant behavior/regression tests and build/type checks as warranted; acceptance evidence; green required CI; owner merge approval (or the owner merge delegation below). |
 | PROTECTED | Governance and authorization authority, product doctrine, Engine/recommendation authority, data schemas/migrations, privacy/security, backup integrity, primary information architecture, consequential AI autonomy, or another protected boundary. | Explicit bounded owner approval, appropriate tests and acceptance evidence, independent exact-head review, resolved findings, green required CI, and owner merge approval. |
 
 Owner clarification, 2026-10-23: keep ROUTINE work thin — copy, labels, empty states, list
@@ -162,17 +162,21 @@ PASS/BLOCK verdict in GitHub. Head changes require renewed exact-head review. A 
 account does not establish or defeat session independence; obey existing native review and
 branch-protection requirements. The Builder cannot supply its own independent review.
 
-Every PR, including Routine, waits for explicit owner merge approval. Preparing a PR does not
-authorize integration. No self-merge, automatic merge, admin bypass, direct-master shipping, or
-repository-protection change is permitted by this workflow. Any integration delegation must be
-explicitly owner-authorized and separate from the Builder's work.
+Every PR, including Routine, waits for explicit owner merge approval, except as the owner merge delegation below
+allows. Preparing a PR does not authorize integration. No self-merge (except under that delegation), automatic merge,
+admin bypass, direct-master shipping, or repository-protection change is permitted by this workflow. Any other
+integration delegation must be explicitly owner-authorized and separate from the Builder's work.
 
 **Owner merge delegation (amendment, Gavin, 2026-11-19).** Gavin: "You have permission to merge from now on. As long
 as it works in good to have you merge." When the conflict with the rule above was put to him, he chose to amend this
 charter. Until he revokes it, the Builder of record for a PR may merge that PR when all of these hold:
-1. The PR is not Protected. It changes no Engine, schema or migration, event or command semantics, backup contract,
-   provider or account, dependency, navigation or information architecture, or governance. Protected PRs, this
-   amendment included, still wait for Gavin.
+1. The PR is not Protected. "Protected" means the PROTECTED lane in the table above and every escalation item in
+   AGENTS.md's "Escalate before continuing", whichever is broader. Examples: governance and authorization, product
+   doctrine, Engine behaviour and recommendation priority or authority, schemas and migrations, event or command
+   semantics, the correction model, backup contract, protected fixtures, privacy or security, primary information
+   architecture or navigation, Mission/Obligation semantics, removing a user capability, consequential AI autonomy,
+   a new provider, account or dependency, and paid infrastructure. When in doubt, it is Protected. Protected PRs,
+   this amendment included, still wait for Gavin.
 2. CI is green on the exact head being merged.
 3. An independently assigned Reviewer posted PASS on that same exact head in GitHub. Any head change needs a renewed
    PASS.
