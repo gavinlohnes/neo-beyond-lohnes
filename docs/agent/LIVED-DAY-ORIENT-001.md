@@ -60,4 +60,3 @@ occupy him—without making him navigate the whole system or accept an AI-genera
 - **OWN:** the Project Grayson selection and composition of those truths into Gavin's first lived-day
   orientation.
 - **BUILD FROM SCRATCH:** none expected; the implementation brief must verify.
-

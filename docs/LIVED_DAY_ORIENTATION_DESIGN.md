@@ -156,7 +156,7 @@ is available time.
 | Question | Canonical source | Surface rule | Not allowed |
 |---|---|---|---|
 | What kind of day? | recorded/confirmed/scheduled work context; Life State | one label + source route | mode pin as canonical truth |
-| What is fixed next? | shift window, saved calendar, due/planned obligations through existing readers | earliest known fixed event; unknown remains unknown | assuming blank time is free |
+| What is fixed next? | time-fixed shift window or saved calendar event | earliest genuinely time-fixed event; unknown remains unknown | treating a planned day, flexible obligation, or date-only deadline as fixed time |
 | How was sleep? | current measured/sleep queries and corrections | duration/source; personal comparison only if current reader already supports it | new score or causal claim |
 | How does Gavin feel? | existing submitted check-in | short status or `CHECK IN` | biometric mood/capacity inference |
 | What is BEYOND recommending? | recorded Engine recommendation or approved draft | verbatim existing title/rationale and action | orientation ranking or competing advice |
@@ -471,4 +471,3 @@ If Gavin approves this design after review, the bounded instruction is:
 > exact-head review, green required CI, and my merge approval.
 
 Until Gavin gives that approval, this remains design only.
-
