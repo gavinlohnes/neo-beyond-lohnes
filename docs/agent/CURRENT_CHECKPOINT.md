@@ -1,3 +1,18 @@
+# Current objective — OUTCOME-LOOP-001 (2026-11-19)
+
+- **Authorization:** Gavin, “Good. Make it a thing from now on”, approving outcome-led missions, lightweight real-use feedback, previews for larger visual changes and current handoffs.
+- **Builder:** Codex. **Lane:** PROTECTED (workflow governance). Starting master `3876dbd30ebe1d1647626e972c4b0be35802c5a1`.
+- **Branch/brief:** `codex/outcome-loop-001`; [PR #582 — build around outcomes, real use and reliable handoffs](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/582). PR and checkpoint serve as the brief.
+- **Scope:** a short build/use-loop section in DEV-FLOW-002, plus this checkpoint. No app, product capability, architecture, CI, risk-lane or merge-authority change. Routine fixes stay lightweight; feedback is not a blocking gate or recurring nag.
+- **REUSE:** existing brief outcome, quality criteria and PR/checkpoint handoff. **OWN:** BEYOND’s real-use loop. **BUILD FROM SCRATCH:** none.
+- **Acceptance:** documentation/authority consistency and diff checks; independent exact-head review and required CI. Final results recorded in the linked PR to preserve the reviewed head. Owner merge approval required; no merge performed.
+- **Shipped:** QUALITY-STANDARD-001 merged as #581 at `3876dbd3`; HARVEST-003 research merged as #579. Prior checkpoint below is historical.
+- **Remaining / next:** finish this governance review and owner merge; then the already-approved pre-check-in recommendation draft. No draft implementation is underway. Actual release feedback should guide refinements without silently authorizing new scope.
+
+---
+
+# Historical checkpoint (superseded live status)
+
 # Current objective — QUALITY-STANDARD-001 (2026-11-19)
 
 - **Authorization:** Gavin approved making TONIGHT'S ENERGY-level product quality the operating standard: “Make it happen in the best way you can”, following the five-dimension proposal.
