@@ -431,6 +431,14 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
   explicit `[[links]]` to a record. Reuse before building another backlink or "related" view.
 
 
+### HARVEST-003 — signature features and the wiring map (2026-11-19)
+
+- [Research, wiring map and proposed plan](harvest/HARVEST-003.md): 11 apps (Rise, Timeshifter, Fitbod, WHOOP,
+  Exist.io, MacroFactor, Hevy, Gentler Streak, Oura, Garmin Connect IQ and Finch), each checked against BEYOND's code.
+  New to BEYOND: a shift energy curve with a fatigue warning, photo meals as itemised USDA foods, automatic "what moves
+  your numbers", a muscle-freshness map, and a lock-screen workout. The wiring gaps are W1–W6. Research only: the build
+  waits for Gavin's approval of section 4.
+
 ### HARVEST-002 — whole-product direction check (2026-11-15)
 
 - [Research and classification](harvest/HARVEST-002.md): current master `5d78a5dd` breadth inventory spans daily use, training, nutrition, recovery, habits, shifts, planning and review/Alfred; capture/planning received the deeper reference comparison. Raw capture, Notes Sweep, Saved sorting and search already exist. Latest primary-source licences verified: Super Productivity MIT; Vikunja AGPL; Loop GPL (latter two ideas only).
