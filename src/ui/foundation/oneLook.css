@@ -3,7 +3,8 @@
    app-wide OperatorHeader, so the header's 44 px target and every screen's rules arrive together. */
 
 /* REVIEW's head is a command bar; its title stays the screen's visible h1 ("MORE // REVIEW"). */
-.review-bar { margin: 0 0 16px; }
+/* The bar takes the old h1's inset (wholePicture.css `.picture-review>h1{margin:20px 24px}`), so REVIEW keeps its edges. */
+.picture-review > .review-bar { margin: 20px 24px 16px; }
 .review-bar__eyebrow { display: flex; align-items: baseline; gap: 6px; }
 .review-bar__eyebrow .bf-slashes { margin: 0; font: 600 12px var(--font-mono, monospace); }
 
