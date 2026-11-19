@@ -10,7 +10,7 @@
 
 **Branch:** `codex/project-grayson-baseline`
 
-**Active PR:** pending
+**Active PR:** [#586](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/586)
 
 ## Outcome
 

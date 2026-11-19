@@ -3,7 +3,7 @@
 - **Owner authorization:** report-only evaluation against the Project Grayson Vision Blueprint.
   Brief: [`PROJECT-GRAYSON-BASELINE-001.md`](PROJECT-GRAYSON-BASELINE-001.md). Starting commit
   `5f9a9a12d8a363a75eb4bcb364c02dc119d69204` (merged PR #585); Builder Codex; branch
-  `codex/project-grayson-baseline`; PR pending.
+  `codex/project-grayson-baseline`; [PR #586](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/586).
 - **Outcome:** current-product baseline, scenario assessment, Preserve/Adapt/Connect/Deepen/Replace
   carefully/Retire/Defer map, navigation assessment, and one first-objective recommendation.
 - **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate. Neither
