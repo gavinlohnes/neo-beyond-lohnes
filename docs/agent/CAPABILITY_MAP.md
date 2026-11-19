@@ -1,5 +1,23 @@
 # BEYOND Capability Map
 
+## PROJECT GRAYSON / LIFE OS DESTINATION
+
+- [`PROJECT_GRAYSON_VISION.md`](../PROJECT_GRAYSON_VISION.md) is the owner-approved destination and
+  contains the cross-domain evolution matrix. It does not authorize implementation.
+- **Preserve before invention:** the destination reuses BEYOND's Operator Model and memory, lived-day
+  records, work context, routines, Home/People facts, obligations, journal, personal experiments,
+  Whole Picture/personal ranges, training, nutrition, TODAY/FIELD, COMMAND depth, deterministic
+  Engine, and Alfred tool/action seams. Verify each in code before a brief claims reuse.
+- **Identity seam:** current runtime is BEYOND + Alfred; destination is GRAYSON + Delta. Treat identity
+  migration as behavior-, authority-, privacy-, and experience-dependent Protected work, never a
+  search-and-replace objective.
+- **Provider handoff:** [`PROJECT_GRAYSON_HANDOFF.md`](PROJECT_GRAYSON_HANDOFF.md) gives Claude, Claude
+  Duet Steward, Codex, and future agents one repository-native starting point.
+- **Next research need:** after the vision PR merges, a separately approved report-only baseline should
+  operate the current app against the canonical scenarios and identify one highest-leverage bounded
+  evolution objective. Do not assume the Daily Life Loop requires new storage or a redesign before
+  checking current composition and field evidence.
+
 Repo-native index of prior reuse findings, including archived Google Drive research. It is a
 pointer/summary, not product authority. GitHub's current owner rulings, doctrine, UX decisions
 and approved objective govern implementation under AGENTS.md / DEV-FLOW-002. Drive is a planning

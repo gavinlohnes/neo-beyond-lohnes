@@ -7,6 +7,29 @@ for product implementation, protected changes, purchases or merges.
 
 **Build boldly. Verify carefully. Let the owner judge the experience.**
 
+## Project Grayson — the approved destination
+
+Owner ruling, 2026-11-19: [`PROJECT_GRAYSON_VISION.md`](PROJECT_GRAYSON_VISION.md) is the canonical
+destination blueprint.
+
+> **BEYOND is what we built. Project Grayson is what it is becoming. GRAYSON is the Life OS. Delta
+> is the companion intelligence inside it.**
+
+Gavin is the operator; GRAYSON is the connected suit/capability; Delta understands the field,
+remembers the mission, prepares options, helps operate approved capabilities, and learns through
+explicit correction and outcomes. Gavin retains final authority. Current runtime truth remains
+BEYOND and Alfred until separately approved implementation changes ship.
+
+Build toward one private, adaptive Life OS spanning work and time off, sleep and recovery, training,
+food and health, mental wellbeing, obligations, relationships, home, projects, interests, goals,
+difficult periods, and changing priorities. Treat family, rest, enjoyment, maintenance, and open time
+as legitimate parts of life rather than unused productivity capacity. New capabilities should
+strengthen one inspectable Operator Model and lived-day system rather than form disconnected apps.
+
+Gavin is open to substantial future redesign or reimagining when a better experience serves this
+destination. That authorizes research, concepts, prototypes, constructive challenge, and proposals
+inside an approved objective—not an unbounded redesign, runtime rename, or protected change.
+
 ## Build an exceptional application for one operator
 
 BEYOND is a private, local-first, offline-first personal operating system. Connect health,
