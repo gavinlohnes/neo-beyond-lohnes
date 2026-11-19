@@ -25,6 +25,8 @@ export function toBarcodeResult(code: string, product: RawProduct): FoodSearchRe
   const n = product.nutriments ?? {};
   const read = (suffix: string) => ({
     calories: num(n[`energy-kcal${suffix}`]), proteinG: num(n[`proteins${suffix}`]), carbsG: num(n[`carbohydrates${suffix}`]), fatG: num(n[`fat${suffix}`]),
+    // NUTRIENTS-001: Open Food Facts gives sodium in grams; BEYOND keeps milligrams.
+    fiberG: num(n[`fiber${suffix}`]), sodiumG: num(n[`sodium${suffix}`]),
   });
   const serving = read("_serving");
   const per100 = read("_100g");
@@ -37,6 +39,8 @@ export function toBarcodeResult(code: string, product: RawProduct): FoodSearchRe
     description: name,
     ...(product.brands ? { brandOwner: product.brands.split(",")[0]!.trim() } : {}),
     calories: macros.calories!, proteinG: macros.proteinG!, carbsG: macros.carbsG!, fatG: macros.fatG!,
+    ...(macros.fiberG !== null ? { fiberG: macros.fiberG } : {}),
+    ...(macros.sodiumG !== null ? { sodiumMg: Math.round(macros.sodiumG * 1000) } : {}),
     servingDescription: useServing ? product.serving_size!.trim() : "100 g",
   };
 }

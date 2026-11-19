@@ -447,6 +447,9 @@ export interface MealLoggedPayload {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** NUTRIENTS-001: optional, from the food database when it has them; absent means not recorded, never 0. */
+  fiberG?: number;
+  sodiumMg?: number;
 }
 
 /**
@@ -520,6 +523,9 @@ export interface SavedMeal {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** NUTRIENTS-001: optional, from the food database when it has them; absent means not recorded, never 0. */
+  fiberG?: number;
+  sodiumMg?: number;
   createdAt: string;
   archivedAt?: string;
 }

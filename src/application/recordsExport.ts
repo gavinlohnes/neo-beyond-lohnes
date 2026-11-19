@@ -52,12 +52,12 @@ export async function getRecordsExport(area: ExportArea, now = Date.now()): Prom
     header = ["lived_day", "time", "weight", "unit", "source"];
     rows = (await getBodyweightHistoryWithSources()).map((w) => [w.beyondDayId ? livedOf.get(w.beyondDayId) ?? ymd(w.recordedAt) : ymd(w.recordedAt), clock(w.recordedAt), w.weightLbs, "lb", "you"]);
   } else if (area === "meals") {
-    header = ["lived_day", "time", "name", "calories", "protein_g", "carbs_g", "fat_g", "source"];
+    header = ["lived_day", "time", "name", "calories", "protein_g", "carbs_g", "fat_g", "fiber_g", "sodium_mg", "source"];
     rows = [];
     for (const day of sorted) {
       const lived = ymd(day.livedDayStart);
       for (const m of [...(await getMealEntries(day.beyondDayId))].sort((a, b) => a.at.localeCompare(b.at))) {
-        rows.push([lived, clock(m.at), m.name, Math.round(m.effectiveCalories), round1(m.effectiveProteinG), round1(m.effectiveCarbsG), round1(m.effectiveFatG), "you"]);
+        rows.push([lived, clock(m.at), m.name, Math.round(m.effectiveCalories), round1(m.effectiveProteinG), round1(m.effectiveCarbsG), round1(m.effectiveFatG), m.fiberG, m.sodiumMg, "you"]);
       }
     }
   } else if (area === "workouts") {

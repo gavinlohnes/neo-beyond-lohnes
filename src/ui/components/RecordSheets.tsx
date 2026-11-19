@@ -153,7 +153,9 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     const day = await ensureActiveDay();
     // Saved like MyFitnessPal's recent foods, so next time it's one tap in LIKELY NOW; an identical one is reused.
     const name = `${found.description}${found.brandOwner ? ` (${found.brandOwner})` : ""} · ${found.servingDescription}`;
-    const input = { name, calories: round1(found.calories), proteinG: round1(found.proteinG), carbsG: round1(found.carbsG), fatG: round1(found.fatG) };
+    const input = { name, calories: round1(found.calories), proteinG: round1(found.proteinG), carbsG: round1(found.carbsG), fatG: round1(found.fatG),
+      // NUTRIENTS-001: kept when the database gives them, so the log carries them, scaled by the amount.
+      ...(found.fiberG !== undefined ? { fiberG: round1(found.fiberG) } : {}), ...(found.sodiumMg !== undefined ? { sodiumMg: Math.round(found.sodiumMg) } : {}) };
     const existing = meals.find((m) => m.name === input.name && m.calories === input.calories && m.proteinG === input.proteinG);
     const meal = existing ?? await createSavedMeal(input);
     const result = await logMeal(day.id, meal.id, servingsOfFood, whenAt(day.startedAt)); setWhen({ kind: "NOW" });
@@ -305,6 +307,11 @@ function FoodDiaryHeader({ diary, onEdit }: { diary: FoodDiary; onEdit?: ((rootE
   return <section className="food-diary" aria-label="Today's food">
     <p className="food-diary__left">{left === null ? `${protein} g protein today` : left === 0 ? `Protein target met · ${protein} g` : `${left} g protein left`}</p>
     <p className="meta">{target !== undefined ? `${protein} of ${Math.round(target)} g protein · ` : ""}{Math.round(diary.calories).toLocaleString("en-US")} kcal eaten</p>
+    {/* NUTRIENTS-001: only when a meal recorded them, with how many did; a target only if one is ever set (none yet). */}
+    {(diary.fiberG || diary.sodiumMg) && <p className="meta" data-food-nutrients>{[
+      diary.fiberG && `Fiber ${round1(diary.fiberG.total)} g`,
+      diary.sodiumMg && `Sodium ${Math.round(diary.sodiumMg.total).toLocaleString("en-US")} mg`,
+    ].filter(Boolean).join(" · ")} · from {Math.max(diary.fiberG?.meals ?? 0, diary.sodiumMg?.meals ?? 0)} of {(diary.fiberG ?? diary.sodiumMg)!.ofMeals} meals</p>}
     {diary.entries.length > 0 && <details className="food-diary__list">
       <summary>TODAY'S FOOD ({diary.entries.length})</summary>
       {/* TIMELINE-EDIT-001: a row opens its fixes (change time, amount, remove). */}

@@ -43,6 +43,8 @@ export async function createSavedMeal(input: SavedMealInput): Promise<SavedMeal>
     proteinG: parsed.proteinG,
     carbsG: parsed.carbsG,
     fatG: parsed.fatG,
+    ...(parsed.fiberG !== undefined ? { fiberG: parsed.fiberG } : {}),
+    ...(parsed.sodiumMg !== undefined ? { sodiumMg: parsed.sodiumMg } : {}),
     createdAt: new Date().toISOString(),
   };
   await db.savedMeals.add(meal);
@@ -140,6 +142,9 @@ export async function logMeal(beyondDayId: string, savedMealId: string, servings
       proteinG: scaled(meal.proteinG, servings),
       carbsG: scaled(meal.carbsG, servings),
       fatG: scaled(meal.fatG, servings),
+      // NUTRIENTS-001: carried only when the saved meal has them (absent is "not recorded", never 0).
+      ...(meal.fiberG !== undefined ? { fiberG: scaled(meal.fiberG, servings) } : {}),
+      ...(meal.sodiumMg !== undefined ? { sodiumMg: Math.round(meal.sodiumMg * servings) } : {}),
     };
     const eventId = await logEvent(
       beyondDayId,

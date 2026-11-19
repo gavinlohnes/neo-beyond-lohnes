@@ -9,13 +9,19 @@ import { getEffectiveProteinTargetG } from "./nutritionTargetQueries";
  * Read only: meals and protein-only logs as they stand after corrections and deletions.
  */
 /** TIMELINE-EDIT-001: `rootEventId` names the log, so a row can open its edit sheet. */
-export interface FoodDiaryEntry { at: string; name: string; proteinG: number; calories: number | null; rootEventId: string }
-export interface FoodDiary { entries: FoodDiaryEntry[]; proteinG: number; calories: number; proteinTargetG: number | undefined }
+export interface FoodDiaryEntry { at: string; name: string; proteinG: number; calories: number | null; rootEventId: string; fiberG?: number; sodiumMg?: number }
+/**
+ * NUTRIENTS-001: fiber and sodium, summed only over the meals that recorded them, with how many did; null when none
+ * did, so a day without them reads "not recorded", never 0.
+ */
+export interface NutrientTotal { total: number; meals: number; ofMeals: number }
+export interface FoodDiary { entries: FoodDiaryEntry[]; proteinG: number; calories: number; proteinTargetG: number | undefined; fiberG: NutrientTotal | null; sodiumMg: NutrientTotal | null }
 
 export async function getFoodDiary(beyondDayId: string): Promise<FoodDiary> {
   const [meals, protein, proteinTargetG] = await Promise.all([getMealEntries(beyondDayId), getProteinEntries(beyondDayId), getEffectiveProteinTargetG()]);
   const entries: FoodDiaryEntry[] = [
-    ...meals.map((m) => ({ at: m.at, name: m.name, proteinG: m.effectiveProteinG, calories: m.effectiveCalories, rootEventId: m.rootEventId })),
+    ...meals.map((m) => ({ at: m.at, name: m.name, proteinG: m.effectiveProteinG, calories: m.effectiveCalories, rootEventId: m.rootEventId,
+      ...(m.fiberG !== undefined ? { fiberG: m.fiberG } : {}), ...(m.sodiumMg !== undefined ? { sodiumMg: m.sodiumMg } : {}) })),
     ...protein.map((p) => ({ at: p.at, name: "Protein", proteinG: p.effectiveGrams, calories: null, rootEventId: p.rootEventId })),
   ].sort((a, b) => a.at.localeCompare(b.at));
   return {
@@ -23,5 +29,12 @@ export async function getFoodDiary(beyondDayId: string): Promise<FoodDiary> {
     proteinG: entries.reduce((sum, e) => sum + e.proteinG, 0),
     calories: entries.reduce((sum, e) => sum + (e.calories ?? 0), 0),
     proteinTargetG,
+    fiberG: nutrientTotal(meals.map((m) => m.fiberG)),
+    sodiumMg: nutrientTotal(meals.map((m) => m.sodiumMg)),
   };
+}
+
+function nutrientTotal(values: readonly (number | undefined)[]): NutrientTotal | null {
+  const known = values.filter((v): v is number => v !== undefined);
+  return known.length ? { total: Math.round(known.reduce((a, b) => a + b, 0) * 10) / 10, meals: known.length, ofMeals: values.length } : null;
 }

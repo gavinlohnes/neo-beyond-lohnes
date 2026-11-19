@@ -33,6 +33,9 @@ export interface FoodSearchResult {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** NUTRIENTS-001: per the same serving, when the database gives them. */
+  fiberG?: number;
+  sodiumMg?: number;
   /** What the four macros above are measured per, e.g. "100 g" or "240 ml" — always shown, never assumed. */
   servingDescription: string;
 }
@@ -43,7 +46,7 @@ const FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search";
 // id, not name, since branded-food nutrient names vary slightly (e.g.
 // "Total lipid (fat)" vs "Total Fat") while ids stay constant across every
 // FDC data type.
-const NUTRIENT_ID = { CALORIES: 1008, PROTEIN: 1003, CARBS: 1005, FAT: 1004 } as const;
+const NUTRIENT_ID = { CALORIES: 1008, PROTEIN: 1003, CARBS: 1005, FAT: 1004, FIBER: 1079, SODIUM: 1093 } as const;
 
 interface RawFoodNutrient {
   nutrientId?: number;
@@ -87,6 +90,9 @@ function toSearchResult(raw: RawFood): FoodSearchResult | null {
   const carbsG = macroValue(nutrients, NUTRIENT_ID.CARBS, "G");
   const fatG = macroValue(nutrients, NUTRIENT_ID.FAT, "G");
   if (calories === null || proteinG === null || carbsG === null || fatG === null) return null;
+  // NUTRIENTS-001: fiber (g) and sodium (mg) only when the food lists them; a food without them still qualifies.
+  const fiberG = macroValue(nutrients, NUTRIENT_ID.FIBER, "G");
+  const sodiumMg = macroValue(nutrients, NUTRIENT_ID.SODIUM, "MG");
 
   const servingDescription =
     typeof raw.servingSize === "number" && raw.servingSizeUnit ? `${raw.servingSize} ${raw.servingSizeUnit}` : "100 g";
@@ -99,6 +105,8 @@ function toSearchResult(raw: RawFood): FoodSearchResult | null {
     proteinG,
     carbsG,
     fatG,
+    ...(fiberG !== null ? { fiberG } : {}),
+    ...(sodiumMg !== null ? { sodiumMg } : {}),
     servingDescription,
   };
 }

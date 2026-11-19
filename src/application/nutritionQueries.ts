@@ -131,6 +131,9 @@ export interface NutritionEntry {
   effectiveProteinG: number;
   effectiveCarbsG: number;
   effectiveFatG: number;
+  /** NUTRIENTS-001: as logged (corrections change the macros, not these); absent when not recorded. */
+  fiberG?: number;
+  sodiumMg?: number;
   correctionCount: number;
   recordedAt: string;
 }
@@ -181,6 +184,8 @@ export async function getMealEntries(beyondDayId: string): Promise<NutritionEntr
         effectiveProteinG: headProteinG,
         effectiveCarbsG: headCarbsG,
         effectiveFatG: headFatG,
+        ...(root.payload.fiberG !== undefined ? { fiberG: root.payload.fiberG } : {}),
+        ...(root.payload.sodiumMg !== undefined ? { sodiumMg: root.payload.sodiumMg } : {}),
         correctionCount: count,
         recordedAt: root.recordedAt,
       };
