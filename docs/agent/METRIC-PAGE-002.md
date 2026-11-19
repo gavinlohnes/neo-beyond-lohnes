@@ -72,3 +72,27 @@ queries only.
   protein sheet. `FoodSources001`'s TODAY-tile test now goes through PROTEIN RECORDS.
 - BODY has no protein-only panel: its NUTRITION card shows calories and protein together and keeps opening the
   calories history, because the protein page alone would drop the calories it shows.
+
+## Slice 3 — finished workouts (Claude Code, branch `claude/metric-page-002-workouts`)
+
+- Gavin merged slice 2 as #567 (`1f6e3d8`). Slice 3 starts from master `c54c000`, which also carries
+  METRIC-CHANGE-001's "This week" line (#577). No open PR touches the metric page, BODY's progress or workouts.
+- **What counts:** TRAIN's sessions that ended COMPLETED or PARTIAL, on the lived day they belong to. That is BEYOND's
+  existing "finished workouts" (BODY's progress, DATA's explorer, the weekly summary), now one shared helper,
+  `isFinishedWorkout`. The brief said "matching what advances the rotation", which is stricter (STANDARD advances only
+  on COMPLETED, RECOVERY never); the page keeps BEYOND's existing count, as Gavin was told on 2026-11-18. Abandoned and
+  active sessions never count.
+- **Zero and missing:** a lived day BEYOND has a record of with no finished workout is 0 (no bar); a period with no
+  BEYOND day is missing (a dashed stub), never 0.
+- **Ranges:** TODAY lists this lived day's finished sessions in TRAIN's words ("WORKOUT A · Completed · 45 min").
+  7D and 30D are a bar per lived day and the range's total, this lived day so far included, with how many lived days
+  had one. 1Y is each week's total; its headline is the average of finished weeks to a tenth (0.3 a week). Gridlines
+  stay whole numbers.
+- **Usual and split:** a day's median of a count is almost always 0 or 1, so the usual is a week's: the median total of
+  the last 8 finished weeks, once there are 4 (`weeklyUsual`), drawn on 1Y only. Work days against days off count the
+  days of each kind that had a finished workout (`trainedSplit`), never a median. No 90-day direction line (medians of
+  daily counts again); "This week so far" and last week are plain totals with no "up" or "down" (`weekTotals`).
+- **No goal, streak, pace or advice.** No TODAY tile. No LOG or RECORDS buttons: sessions and their corrections live
+  in TRAIN, and BODY's progress has no route there to reuse.
+- **Where it opens:** DATA → YOUR PROGRESS → TRAINING gains WORKOUTS OVER TIME. The TRAINING line ("2 workouts · 1 PR")
+  and DATA's Insights Explorer (which also charts finished workouts) are unchanged; nothing is removed.

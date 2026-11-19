@@ -10,7 +10,10 @@ import { getBodyweightHistoryWithSources, type WeighIn } from "./bodyTrendQuerie
 import { getEffectiveProteinTargetG, getNutritionTargets } from "./nutritionTargetQueries";
 import { getMealEntries } from "./nutritionQueries";
 import { getProteinEntries } from "./queries";
-import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual, type SplitSide } from "./metricDetail";
+import { isFinishedWorkout } from "./bodyInsightsQueries";
+import { getCustomTemplates } from "./customTemplateQueries";
+import { WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { dailySeries, trainedSplit, usualOf, weeklyUsual, workOffSplit, type DetailMetric, type DetailUsual, type SplitSide, type TrainedSide } from "./metricDetail";
 
 /**
  * METRIC-PAGE-001 (pilot): everything one metric-detail page shows, read from BEYOND's existing queries. Read only:
@@ -26,7 +29,11 @@ import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual
  * - Protein (METRIC-PAGE-002 slice 2) is what you logged: the day ledger's effective total of meal protein and quick
  *   protein logs. TODAY is its running total, stepping up at each log. The target is BEYOND's existing protein target
  *   (your multiplier times your latest weigh-in), shown as a target only: never a deficit or a "remaining".
+ * - Finished workouts (METRIC-PAGE-002 slice 3) are TRAIN's sessions that ended completed or partial, counted on the
+ *   lived day they belong to, as BODY's progress and DATA's explorer count them. Abandoned and active sessions don't
+ *   count. A lived day BEYOND has a record of with no finished workout is 0; a period with no BEYOND day is missing.
  */
+export interface FinishedWorkout { label: string; sessionType: string; status: "COMPLETED" | "PARTIAL"; startedAt: string; durationMinutes?: number | undefined }
 export interface MetricDetail {
   metric: DetailMetric;
   source: "LOGGED" | "GARMIN";
@@ -43,7 +50,9 @@ export interface MetricDetail {
     /** Weight: the newest weigh-in and the whole history BODY's weight trend uses, with the goal weight if one is set. */
     | { kind: "weighin"; latest: WeighIn | null; history: WeighIn[]; goalWeightLbs: number | undefined }
     /** Protein: your running total through the lived day, stepping up at each meal or quick log. */
-    | { kind: "logged"; from: number; points: { t: number; total: number }[] };
+    | { kind: "logged"; from: number; points: { t: number; total: number }[] }
+    /** Workouts: this lived day's finished sessions, oldest first. */
+    | { kind: "sessions"; from: number; sessions: FinishedWorkout[] };
   usual: DetailUsual & { dayKind?: "WORK" | "OFF" | null };
   split: { work: SplitSide; off: SplitSide };
   /** Garmin only: when the newest measurement was read on the phone. */
@@ -55,6 +64,8 @@ export interface MetricDetail {
   eaten?: { series: PeriodValue[]; usual: DetailUsual; split: { work: SplitSide; off: SplitSide } };
   /** Protein only: BEYOND's existing protein target in grams, when one can be worked out (it needs a weigh-in). */
   target?: number | undefined;
+  /** Workouts only: of the recent work days and days off, how many had a finished workout. */
+  trained?: { work: TrainedSide; off: TrainedSide };
 }
 
 export async function getMetricDetail(metric: DetailMetric, now = Date.now()): Promise<MetricDetail> {
@@ -88,6 +99,24 @@ export async function getMetricDetail(metric: DetailMetric, now = Date.now()): P
       metric, source: "LOGGED", series,
       today: { kind: "logged", from: current.from, points: cumulativeEaten(current, logs, now) },
       usual: usualOf(series), split: workOffSplit(series, contextOf), asOf: null, unusual: null, readAt: now, target,
+    };
+  }
+
+  if (metric === "workouts") {
+    const finished = (dayId: string) => byDay.get(dayId)?.workouts.filter(isFinishedWorkout);
+    const series = dailySeries(periods, now, (dayId) => finished(dayId)?.length);
+    const todays = current.dayId ? finished(current.dayId) ?? [] : [];
+    // Built-in templates by their letter, custom ones by their own name (TRAIN's and the ribbon's labels).
+    const names = new Map<string, string>(Object.keys(WORKOUT_TEMPLATES).map((id) => [id, id]));
+    if (todays.length) for (const t of await getCustomTemplates({ includeArchived: true })) names.set(t.id, t.name);
+    const sessions = [...todays].sort((a, b) => a.startedAt.localeCompare(b.startedAt)).map((w): FinishedWorkout => ({
+      label: names.get(w.templateId) ?? w.templateId, sessionType: w.sessionType, status: w.status as FinishedWorkout["status"], startedAt: w.startedAt, durationMinutes: w.durationMinutes,
+    }));
+    return {
+      metric, source: "LOGGED", series,
+      today: { kind: "sessions", from: current.from, sessions },
+      usual: weeklyUsual(series), split: workOffSplit(series, contextOf), trained: trainedSplit(series, contextOf),
+      asOf: null, unusual: null, readAt: now,
     };
   }
 

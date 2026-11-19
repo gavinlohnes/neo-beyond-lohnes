@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMetricDetail, type MetricDetail } from "../../application/metricDetailQueries";
-import { DIGITS, direction90, weekCompare, rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange, type Direction } from "../../application/metricDetail";
+import { DIGITS, SPLIT_MIN_DAYS, direction90, weekCompare, weekTotals, rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange, type Direction } from "../../application/metricDetail";
 import { formatShortDate } from "../../application/bodyTrendQueries";
 import type { PeriodValue } from "../../domain/health/measuredSeries";
 import { LogSheet } from "../components/LogSheet";
@@ -10,6 +10,7 @@ import { describeGarminAsOf, SyncGarminLink, UnusualNote } from "../screens/toda
 import { askAlfred } from "../components/AlfredSheet";
 import { garminFreshness } from "../../application/bodyDashboard";
 import { WeightTrend } from "../screens/body/WeightTrend";
+import { describeSessionStatusLabel } from "../screens/train/trainCopy";
 import "../foundation/foundation.css";
 import "./metricDetail.css";
 
@@ -27,17 +28,22 @@ import "./metricDetail.css";
  * - METRIC-PAGE-002 slice 2: protein, your logs (white). TODAY is the running total stepping up at each meal or quick
  *   log; days are bars like water's; BEYOND's protein target, where it can be worked out, is a dashed line labelled
  *   "target" and a plain figure, never a deficit or a "remaining". Where it came from reuses FoodSources.
+ * - METRIC-PAGE-002 slice 3: finished workouts, TRAIN's completed and partial sessions (white, your own records). A
+ *   count: TODAY lists this lived day's finished sessions; 7D and 30D are a bar per lived day and the range's total;
+ *   1Y is each week's total. Your usual is a week's (the median of 8 finished weeks); work days against days off say how
+ *   many of each had a workout. No goal, streak, pace or advice.
  * Read only. Your logs are white; Garmin's measurements are Garmin blue (GARMIN-004). Nothing here changes advice.
  */
-const TITLE: Record<DetailMetric, string> = { water: "HYDRATION", steps: "STEPS", resting: "RESTING HEART RATE", calories: "CALORIES", weight: "WEIGHT", protein: "PROTEIN" };
+const TITLE: Record<DetailMetric, string> = { water: "HYDRATION", steps: "STEPS", resting: "RESTING HEART RATE", calories: "CALORIES", weight: "WEIGHT", protein: "PROTEIN", workouts: "WORKOUTS" };
 const NOUN: Record<DetailMetric, { none: string; unit: string }> = {
   water: { none: "not logged", unit: "oz" }, steps: { none: "not measured", unit: "steps" }, resting: { none: "not measured", unit: "bpm" },
   calories: { none: "not measured", unit: "kcal" }, weight: { none: "not weighed", unit: "lb" }, protein: { none: "not logged", unit: "g" },
+  workouts: { none: "not recorded", unit: "workouts" },
 };
 /** How 1Y's headline reads: a week's total, or the average of the days that have a record. */
 const YEAR_HERO: Record<DetailMetric, string> = {
   water: "oz a logged day, on average", steps: "steps a week, on average", resting: "bpm a measured day, on average", calories: "kcal a day, on average",
-  weight: "lb a weighed day, on average", protein: "g a logged day, on average",
+  weight: "lb a weighed day, on average", protein: "g a logged day, on average", workouts: "finished workouts a week, on average",
 };
 /** 7D and 30D's headline: an average per day, or (weight) the average of the days you weighed in. */
 const RANGE_HERO = (metric: DetailMetric) => (metric === "weight" ? "lb a weighed day, on average" : `${NOUN[metric].unit} a day, on average`);
@@ -49,21 +55,26 @@ const OWN_ROUTES: Partial<Record<DetailMetric, { log: string; records: string; s
   weight: { log: "LOG WEIGHT", records: "WEIGHT RECORDS", source: "Your weigh-ins. Garmin weight isn't imported." },
   protein: { log: "LOG PROTEIN", records: "PROTEIN RECORDS", source: "Your logs: meal protein and quick protein logs." },
 };
+/** Where a logged metric without its own LOG and RECORDS routes comes from. */
+const SOURCE: Partial<Record<DetailMetric, string>> = { workouts: "Your sessions in TRAIN. Completed and partial ones count; abandoned ones don't." };
 const fmt = (n: number, digits = 0) => n.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const num = (metric: DetailMetric, n: number) => fmt(n, DIGITS[metric]);
-const withUnit = (metric: DetailMetric, n: number) => `${num(metric, n)} ${NOUN[metric].unit}`;
+const workoutCount = (n: number) => `${fmt(n)} ${n === 1 ? "workout" : "workouts"}`;
+const withUnit = (metric: DetailMetric, n: number) => (metric === "workouts" ? workoutCount(n) : `${num(metric, n)} ${NOUN[metric].unit}`);
 const clock = (t: number) => { const d = new Date(t); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 const day = (t: number) => new Date(t).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 const week = (t: number) => `Week of ${new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 
 /** DIRECTION-90-001: what counts as "about the same", in each metric's own unit. */
-const SAME_FLOOR: Record<DetailMetric, number> = { water: 1, steps: 100, resting: 1, calories: 25, weight: 1, protein: 5 };
+const SAME_FLOOR: Record<DetailMetric, number> = { water: 1, steps: 100, resting: 1, calories: 25, weight: 1, protein: 5, workouts: 1 };
 /** Weight's "about the same" is its floor alone: 5% of a body weight would hide a change of several pounds. */
 const SAME_SHARE: Partial<Record<DetailMetric, number>> = { weight: 0 };
-const PER_DAY: Record<DetailMetric, string> = { water: "oz a day", steps: "steps a day", resting: "bpm", calories: "kcal a day", weight: "lb", protein: "g a day" };
+const PER_DAY: Record<DetailMetric, string> = { water: "oz a day", steps: "steps a day", resting: "bpm", calories: "kcal a day", weight: "lb", protein: "g a day", workouts: "a day" };
 const way = (d: Direction) => (d.way === "SAME" ? "about the same as" : d.way === "HIGHER" ? "higher than" : "lower than");
 /** One plain sentence: the last 90 days against the last year. Quiet (null) until there's enough. Never a judgement. */
 function directionLine(d: MetricDetail): string | null {
+  // Medians of daily workout counts are almost always 0 or 1, which says nothing; workouts keep to weekly totals.
+  if (d.metric === "workouts") return null;
   if (d.metric === "calories") {
     const e = direction90(d.eaten!.series, SAME_FLOOR.calories), b = direction90(d.series, SAME_FLOOR.calories);
     const part = (what: string, x: Direction) => `${what} ${fmt(x.recent)} kcal a day, ${way(x)} your year's ${fmt(x.year)}`;
@@ -80,6 +91,11 @@ function directionLine(d: MetricDetail): string | null {
  */
 function weekLine(d: MetricDetail): string | null {
   if (d.metric === "calories") return null;
+  if (d.metric === "workouts") {
+    // Plain totals, no "up" or "down": a count of sessions is never a target to beat.
+    const t = weekTotals(d.series);
+    return t ? `This week so far: ${workoutCount(t.thisWeek)} finished · last week: ${fmt(t.lastWeek)}.` : null;
+  }
   const x = weekCompare(d.series, SAME_FLOOR[d.metric], SAME_SHARE[d.metric], DIGITS[d.metric]);
   if (!x) return null;
   const unit = d.metric === "weight" ? "lb on average" : PER_DAY[d.metric];
@@ -112,7 +128,9 @@ function Bars({ metric, values, selected, onSelect, usual, label, target }: {
   /** Protein only: BEYOND's existing target, drawn as a labelled dashed line. Never a deficit or a "remaining". */
   target?: number | undefined;
 }) {
-  const max = niceMax(Math.max(...values.map((v) => v.value ?? 0), usual ?? 0, target ?? 0));
+  const top = Math.max(...values.map((v) => v.value ?? 0), usual ?? 0, target ?? 0);
+  // A count (workouts) keeps whole-number gridlines: 0, half and top, all whole.
+  const max = metric === "workouts" ? Math.max(2, Math.ceil(top / 2) * 2) : niceMax(top);
   const plotW = W - LEFT, plotH = H - BOTTOM - TOP, slot = plotW / values.length, barW = Math.max(2, Math.min(22, slot - 2));
   const y = (v: number) => TOP + plotH - (v / max) * plotH;
   const recorded = values.filter((v) => v.value !== null).length;
@@ -317,8 +335,8 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
   const d = detail && detail !== "ERROR" && detail.metric === metric ? detail : null;
   const garmin = d?.source === "GARMIN", calories = metric === "calories";
   const fresh = garmin && d ? garminFreshness(d.asOf, d.readAt) : null;
-  const weight = metric === "weight";
-  const logged = weight ? "weighed" : "logged";
+  const weight = metric === "weight", workouts = metric === "workouts";
+  const logged = weight ? "weighed" : workouts ? "recorded" : "logged";
   const values = d && range !== "today" ? rangeValues(d.series, range, WEEK_MODE[metric], DIGITS[metric]) : [];
   const index = selected ?? values.length - 1;
   const byWeek = range === "1y";
@@ -327,8 +345,11 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
   // coverage; steps' year stays a weekly total.
   const dailyYear = byWeek && WEEK_MODE[metric] === "mean";
   const summaryValues = dailyYear ? d?.series.slice(-52 * 7) ?? [] : values;
-  const sum = summarise(summaryValues.filter((v) => !v.partial), DIGITS[metric]);
+  // Workouts' year is a weekly total, kept to a tenth so 2.6 a week doesn't read as 3.
+  const heroDigits = workouts && byWeek ? 1 : DIGITS[metric];
+  const sum = summarise(summaryValues.filter((v) => !v.partial), heroDigits);
   const todayValue = d?.series.at(-1)?.value ?? null;
+  const rangeTotal = values.reduce((a, v) => a + (v.value ?? 0), 0), rangeMissing = values.filter((v) => v.value === null).length;
   // Close first, then follow the route once focus is back on the tile that opened the page, so that route's BACK
   // returns there (the shell remembers the focused element as the origin).
   const go = (fn?: () => void) => (fn ? () => { onClose(); requestAnimationFrame(() => requestAnimationFrame(fn)); } : undefined);
@@ -344,7 +365,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         <span className="md-meta">Eaten is what you logged. Burned is Garmin's estimate, resting plus active; watch estimates can be off by 10–20%. {d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin calories yet."}</span>
       </div> : <div className="md-source">
         <SourceTag garmin={garmin}>{garmin ? (fresh?.stale ? "GARMIN · OLD" : "GARMIN") : "LOGGED"}</SourceTag>
-        <span className="md-meta">{garmin ? (d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin data yet.") : OWN_ROUTES[metric]?.source}</span>
+        <span className="md-meta">{garmin ? (d.asOf !== null ? describeGarminAsOf(d.asOf, d.readAt) : "No Garmin data yet.") : OWN_ROUTES[metric]?.source ?? SOURCE[metric]}</span>
       </div>}
 
       <div role="group" aria-label={`${TITLE[metric]} range`} className="md-ranges">
@@ -363,6 +384,13 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         {d.today.history.length < 2
           ? <p className="md-meta">{d.today.history.length ? "One weigh-in recorded. A trend needs more than one." : "Log a weigh-in and it shows here."}</p>
           : <WeightTrend history={d.today.history} goalWeightLbs={d.today.goalWeightLbs} />}
+      </> : range === "today" && d.today.kind === "sessions" ? <>
+        {/* Workouts: this lived day's finished sessions, as TRAIN's history words them. */}
+        <p className="md-hero" data-md-hero><b>{todayValue === null ? "—" : fmt(todayValue)}</b> <span>{todayValue === null ? "this lived day isn't recorded yet" : `finished ${todayValue === 1 ? "workout" : "workouts"} · this lived day`}</span></p>
+        {d.today.sessions.length
+          ? <ul className="md-sessions">{d.today.sessions.map((w) => <li key={w.startedAt} className="md-meta">
+            WORKOUT {w.label}{w.sessionType === "REDUCED" ? " · REDUCED" : ""} · {describeSessionStatusLabel(w.status)}{w.durationMinutes !== undefined ? ` · ${w.durationMinutes} min` : ""} · started {clock(Date.parse(w.startedAt))}</li>)}</ul>
+          : <p className="md-meta">No finished workout yet this lived day.</p>}
       </> : range === "today" ? <>
         <p className="md-hero" data-md-hero><b>{todayValue === null ? "—" : fmt(todayValue)}</b> <span>{todayValue === null ? `${NOUN[metric].none} yet this lived day` : `${NOUN[metric].unit} so far · since ${clock(d.series.at(-1)!.from)}`}</span></p>
         {d.today.kind === "hours"
@@ -373,15 +401,19 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
           </>
           : d.today.kind === "running" && (d.today.points.length > 1 ? <StepsRunning today={d.today} usual={d.usual.value} /> : <p className="md-meta">No steps measured yet this lived day. Send from the helper to update.</p>)}
       </> : <>
-        <p className="md-hero" data-md-hero><b>{sum.average === null ? "—" : num(metric, sum.average)}</b> <span>{byWeek ? YEAR_HERO[metric] : RANGE_HERO(metric)}</span></p>
-        <p className="md-meta" data-md-coverage>{sum.recorded} of {sum.total} {byWeek && !dailyYear ? "finished weeks" : "finished days"} {garmin ? "measured" : logged}{sum.total - sum.recorded ? ` · ${sum.total - sum.recorded} ${NOUN[metric].none}, left out` : ""} · {byWeek && !dailyYear ? "week in progress" : "this lived day"} not counted</p>
+        {workouts && !byWeek ? <>
+          {/* A count: the range's total, this lived day so far included, and how many lived days had one. */}
+          <p className="md-hero" data-md-hero><b>{fmt(rangeTotal)}</b> <span>finished {rangeTotal === 1 ? "workout" : "workouts"} in the last {values.length} lived days</span></p>
+          <p className="md-meta" data-md-coverage>On {values.filter((v) => (v.value ?? 0) > 0).length} of {values.length - rangeMissing} lived days BEYOND recorded{rangeMissing ? ` · ${rangeMissing} not recorded, left out` : ""} · this lived day so far included</p>
+        </> : <><p className="md-hero" data-md-hero><b>{sum.average === null ? "—" : fmt(sum.average, heroDigits)}</b> <span>{byWeek ? YEAR_HERO[metric] : RANGE_HERO(metric)}</span></p>
+        <p className="md-meta" data-md-coverage>{sum.recorded} of {sum.total} {byWeek && !dailyYear ? "finished weeks" : "finished days"} {garmin ? "measured" : logged}{sum.total - sum.recorded ? ` · ${sum.total - sum.recorded} ${NOUN[metric].none}, left out` : ""} · {byWeek && !dailyYear ? "week in progress" : "this lived day"} not counted</p></>}
         {weight ? (values.some((v) => v.value !== null)
           ? <Dots values={values} selected={index} onSelect={setSelected} label={label} usual={d.usual.value} />
           : <p className="md-meta">No weigh-ins in this range.</p>)
-          : <Bars metric={metric} values={values} selected={index} onSelect={setSelected} label={label} usual={byWeek && WEEK_MODE[metric] === "sum" ? null : d.usual.value} target={d.target} />}
+          : <Bars metric={metric} values={values} selected={index} onSelect={setSelected} label={label} usual={workouts ? (byWeek ? d.usual.value : null) : byWeek && WEEK_MODE[metric] === "sum" ? null : d.usual.value} target={d.target} />}
         <p className="md-readout" aria-live="polite">{label(values[index]!)}</p>
         <details className="md-table"><summary>Show as table</summary>
-          <table><tbody>{[...values].reverse().map((v) => <tr key={v.from}><th scope="row">{byWeek ? week(v.from) : day(v.from)}</th><td>{v.value === null ? (garmin ? "Not measured" : weight ? "Not weighed" : "Not logged") : withUnit(metric, v.value)}{v.partial ? " so far" : ""}</td></tr>)}</tbody></table>
+          <table><tbody>{[...values].reverse().map((v) => <tr key={v.from}><th scope="row">{byWeek ? week(v.from) : day(v.from)}</th><td>{v.value === null ? `${NOUN[metric].none.charAt(0).toUpperCase()}${NOUN[metric].none.slice(1)}` : withUnit(metric, v.value)}{v.partial ? " so far" : ""}</td></tr>)}</tbody></table>
         </details>
       </>}
 
@@ -395,6 +427,12 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
             {side.median === null ? <span className="md-none">{what === "eaten" ? "Eaten" : "Burned"}: not enough yet</span> : <>{fmt(side.median)}<small> {what}</small></>}</p>)}
           <p className="md-meta">{d.eaten!.split[k].days} logged · {d.split[k].days} measured · last 8 weeks</p>
         </div>)}
+      </section> : workouts && d.trained ? <section className="md-split" aria-label="Work days and days off">
+        {(["work", "off"] as const).map((k) => <div key={k} className="md-split__side" data-md-split={k}>
+          <p className="md-split__label">{k === "work" ? "WORK DAYS" : "DAYS OFF"}</p>
+          <p className="md-split__value">{d.trained![k].days < SPLIT_MIN_DAYS ? <span className="md-none">Not enough yet</span> : <>{d.trained![k].trained}<small> of {d.trained![k].days}</small></>}</p>
+          <p className="md-meta">{d.trained![k].days < SPLIT_MIN_DAYS ? `${d.trained![k].days} recorded ${d.trained![k].days === 1 ? "day" : "days"}` : "had a finished workout"} · last 8 weeks</p>
+        </div>)}
       </section> : <section className="md-split" aria-label="Work days and days off">
         {(["work", "off"] as const).map((k) => <div key={k} className="md-split__side" data-md-split={k}>
           <p className="md-split__label">{k === "work" ? "WORK DAYS" : "DAYS OFF"}</p>
@@ -403,7 +441,9 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         </div>)}
       </section>}
 
-      <p className="md-meta" data-md-usual>{calories ? caloriesUsual(d) : d.usual.value !== null
+      <p className="md-meta" data-md-usual>{calories ? caloriesUsual(d) : workouts ? (d.usual.value !== null
+        ? `Usual: ${workoutCount(d.usual.value)} a week · median of the last ${d.usual.samples} finished weeks.`
+        : `Your usual appears after ${d.usual.need} finished weeks (${d.usual.samples} so far).`) : d.usual.value !== null
         ? `Usual${metric === "steps" && d.usual.dayKind ? (d.usual.dayKind === "OFF" ? " on days off" : " on work days") : ""}: ${withUnit(metric, d.usual.value)} · median of the last 28 finished days.`
         : metric === "steps" && d.usual.dayKind === null ? "Usual steps need today set as a work day or a day off."
         : `Your usual appears after ${d.usual.need} ${garmin ? "measured" : logged} days (${d.usual.samples} so far).`}</p>
@@ -417,7 +457,8 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         {garmin && <SyncGarminLink />}
         <button type="button" className="md-act" onClick={() => { onClose(); askAlfred(`About my ${TITLE[metric].toLowerCase()} lately: what's the pattern against my shifts, and what would help?`); }}>ASK ALFRED</button>
       </div>
-      <p className="md-meta">{calories ? "A day with no meals logged, or no Garmin measurement, is missing, not zero. Eaten and burned stay separate numbers." : garmin ? "Measured by Garmin. A day with no measurement is missing, not zero." : weight ? "A day without a weigh-in is missing, not zero, and the last weigh-in isn't carried forward. Corrections live in the records." : "A day with nothing logged is missing, not zero. Corrections live in the records."} Nothing here changes BEYOND's advice.</p>
+      <p className="md-meta">{calories ? "A day with no meals logged, or no Garmin measurement, is missing, not zero. Eaten and burned stay separate numbers." : garmin ? "Measured by Garmin. A day with no measurement is missing, not zero." : weight ? "A day without a weigh-in is missing, not zero, and the last weigh-in isn't carried forward. Corrections live in the records."
+        : workouts ? "A lived day with no finished workout counts as none; a period BEYOND has no day for is missing. Sessions and their corrections live in TRAIN's history." : "A day with nothing logged is missing, not zero. Corrections live in the records."} Nothing here changes BEYOND's advice.</p>
     </div>}
   </LogSheet>;
 }

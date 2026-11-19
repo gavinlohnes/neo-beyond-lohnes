@@ -13,6 +13,7 @@ import type { SourceSelection } from "./HealthSources";
 import { getBodyInsights, INSIGHT_DAY_MS, type BodyInsights } from "../../../application/bodyInsightsQueries";
 import { InsightsExplorer, type InsightExploration } from "./InsightsExplorer";
 import { BodyComposition } from "./BodyComposition";
+import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
 
 export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request, compositionRequest, onSources, returnFocusRequest = 0, active = true }: {
   active?: boolean;
@@ -41,6 +42,8 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
   const restoreRetryFocus = useRef(false);
   const [usualOpen, setUsualOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  // METRIC-PAGE-002 slice 3: finished workouts over time open on the shared metric page.
+  const [workoutsOpen, setWorkoutsOpen] = useState(false);
   useEffect(() => {
     if (!active) return;
     let current = true;
@@ -76,6 +79,8 @@ export function BodyProgress({ refreshKey, weightHistory, goalWeightLbs, request
     <section aria-label="Training accomplishments"><h3 className="tool-label">TRAINING</h3>
       <p className="health-reading">{summary.training.workouts} {summary.training.workouts === 1 ? "workout" : "workouts"} · {summary.training.records.length} {summary.training.records.length === 1 ? "PR" : "PRs"}</p>
       {summary.training.records.map((record) => <p className="meta" key={record.exerciseName}>{record.exerciseName}: {describePersonalRecord(record.record).replace("NEW PR — ", "")}</p>)}
+      <button type="button" className="btn-secondary" onClick={() => setWorkoutsOpen(true)}>WORKOUTS OVER TIME</button>
+      <MetricDetailSheet open={workoutsOpen} metric="workouts" onClose={() => setWorkoutsOpen(false)} refreshKey={refreshKey} />
     </section>
     {summary.quit && <section aria-label="Recorded clean days"><h3 className="tool-label">{summary.quit.habitName}</h3><p className="health-reading">{summary.quit.cleanDays} clean days recorded this week</p>{summary.quit.savedUsd !== undefined && <p className="meta">{formatUsd(summary.quit.savedUsd)} saved</p>}</section>}
     <details className="insights-inspect"><summary>Recent lived days · LAST 28 DAYS</summary><section aria-label="Recent lived days"><Ribbon dayPicker days={summary.ribbon.days} templateLabels={summary.ribbon.templateLabels} proteinTargetG={summary.ribbon.proteinTargetG} /></section></details>

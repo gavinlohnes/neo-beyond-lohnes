@@ -1,3 +1,19 @@
+# Current objective — METRIC-PAGE-002 slice 3: finished workouts on the shared metric page (2026-11-19)
+
+- **Builder:** Claude Code, the same Drop and authorization as slices 1 and 2 ([brief](METRIC-PAGE-002.md)); the
+  night checkpoint below kept slice 3 with #567's builder. Branch `claude/metric-page-002-workouts` from master
+  `c54c000`. Lane FEATURE, read side only. Gavin merges.
+- Finished workouts (completed and partial, BEYOND's existing count) per lived day; weeks and 1Y as totals; a weekly
+  usual; work days against days off as days with a workout. Opens from DATA → YOUR PROGRESS → TRAINING. No goal,
+  streak, TODAY tile, Engine, schema, event, command or navigation change.
+- **Verification:** focused Node tests in UTC and Chicago; browser tests (`MetricPage002`) run in PR CI only (the
+  builder's sandbox can't download a browser). Results live in the PR.
+- DRAFT-RECOMMENDATION-001 (#583) merged; its checkpoint below is history.
+
+---
+
+# Historical checkpoint (superseded live status)
+
 # Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
 
 - **Authorization:** Gavin explicitly approved the bounded pre-check-in draft and, after the original reviewed head became conflicting, authorized its reconciliation onto current master. [Brief](DRAFT-RECOMMENDATION-001.md).
