@@ -11,7 +11,7 @@ for LIVED-DAY-ORIENT-001 before we authorize implementation.”
 
 **Branch:** `codex/lived-day-orient-design`
 
-**Active PR:** pending
+**Active PR:** [#587](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/587)
 
 ## Outcome
 

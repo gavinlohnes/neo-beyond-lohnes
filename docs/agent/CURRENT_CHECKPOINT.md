@@ -3,7 +3,7 @@
 - **Owner authorization:** documentation/design only before implementation. Brief:
   [`LIVED-DAY-ORIENT-001.md`](LIVED-DAY-ORIENT-001.md). Starting commit
   `b00fa77687d15b7557b04e3e0326aa511fe0906c` (merged PR #586); Builder Codex; branch
-  `codex/lived-day-orient-design`; PR pending.
+  `codex/lived-day-orient-design`; [PR #587](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/587).
 - **Outcome:** research-backed experience contract, workday/day-off/recovery/unknown/sparse variants,
   phone text wireframes, information/attention rules, Engine/Delta boundaries, reuse map, failure and
   accessibility behavior, acceptance scenarios, and a proposed Protected build authorization.
@@ -17,8 +17,10 @@
 - **Exclusions:** no implementation, production UI, rename, schema/event, Engine/priority, notification,
   provider/dependency, autonomy, navigation, global redesign, evening/Shift Down, Google Drive, or
   concurrent-PR change.
-- **Next:** validate the design documentation, open a PR, obtain independent exact-head review, and
-  return to Gavin. Implementation requires his separate explicit Protected approval.
+- **Verification:** local Markdown links and diff hygiene pass. PR #587 requires green required CI and
+  independent exact-head review.
+- **Next:** resolve any review/CI findings and return the reviewed design to Gavin. Implementation
+  requires his separate explicit Protected approval.
 
 ---
 
