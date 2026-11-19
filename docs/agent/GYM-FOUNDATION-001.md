@@ -79,3 +79,14 @@
 
 - SHEETS-FOUNDATION-001: LOG, check-in, REVIEW and Alfred on the foundation (the second half of "1A").
 - On the phone: start a workout, log two sets, open GYM MODE and log one more there.
+
+## Found while verifying
+
+- **`BodyDash001` "never invents" test fixed:** it failed 3 of 9 runs on this branch. Master passed 9 of 9.
+  - **Cause:** the test ran axe straight after the DATA tab opened. axe read the tab's entrance fade as low contrast.
+    This branch's extra stylesheet shifts the timing enough to expose the race.
+  - **Fix:** `aa()` now finishes running animations first (the file's own `settle()`). It then passed 6 of 6, all five
+    tests each time.
+  - The test still checks exactly the same thing.
+- **`PostShift` "after shift" failed once** in the full local run, then passed 6 of 6 on its own. Treated as load
+  timing in the local run; PR CI is the check.
