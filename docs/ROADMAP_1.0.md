@@ -284,6 +284,43 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
+_Refreshed 2026-11-19 (Gavin: "Yes, refresh the roadmap queue") from merged master `1f6e3d8`. The checkpoint holds
+the live objective; this is the order. Everything below "Earlier queue entries" is history._
+
+**In flight**
+- **METRIC-PAGE-002 slice 3 — finished workouts on the shared metric page** ([brief](agent/METRIC-PAGE-002.md)).
+  Builder: #567's builder (Gavin, 2026-11-19). Slices 1 weight (#566) and 2 protein (#567) are merged.
+
+**Next, in order**
+1. **TODAY-SPLIT-002.** Gated on this Drop's TODAY-tile slices, which are now merged. Brief not yet in the repo.
+2. **BODY protein tap.** BODY's NUTRITION card opens calories; a tap on its Protein meter opening the protein page is
+   one small objective after slice 3 (Gavin leaned yes, 2026-11-19; needs his go).
+
+**Ready, waiting for Gavin's go**
+- **EXPORT-001 — readable CSV export** ([brief](agent/EXPORT-001.md), merged #523; HARVEST-001 #5).
+
+**Harvest backlog still open** (ranked in [HARVEST-001](agent/harvest/HARVEST-001.md) and
+[HARVEST-002](agent/harvest/HARVEST-002.md); research is not approval, each needs its own go)
+- HARVEST-001 #8 **GYM-FOUNDATION-001**: the live workout on the visual foundation (bigger numerals, framed panels,
+  same flow).
+- HARVEST-001 #11 **Remaining sheets on the foundation**: LOG, check-in, REVIEW, Alfred.
+- HARVEST-001 #6 **NUTRIENTS-001**: fiber and sodium from USDA; targets only if set.
+- HARVEST-001 #9 **MONEY-DISCOVERY-001**: report only.
+- HARVEST-002: home-screen Capture entry (validate launcher limits first), manual timeboxing, micronutrients
+  (each conditional on its own owner decision).
+
+**Delivered from the harvests** (so they are not re-proposed): one metric page for water, steps, resting heart rate,
+calories, weight and protein (#1, #7 direction line, #10 food sources); set effort and warm-ups (GYM-UPGRADE-001, #2,
+#12); calorie target proposal (#3); "N times a week" habits (#4, HABIT-QUOTA-001); week planner (#529); capture
+parity (#557, #564).
+
+**Open, separate:** #473 BIG-IDEAS shift what-if (draft, last touched 2026-11-15).
+
+**Phone checks owed to Gavin:** HABIT-QUOTA-001 (three Done days, then Monday), the WEIGHT and PROTEIN pages from
+TODAY, CAPTURE-PARITY-002 (two open notes on a work day).
+
+### Earlier queue entries (history)
+
 **Owner objective, 2026-10-14 — REVIEW-001 data review.** Gavin approved the plan in
 `docs/agent/REVIEW-001.md`. Phase 1a (PROTECTED) is approved to start once that brief merges. It covers
 the Review hub, Monday weekly review, monthly review, measurements, on-device progress photos and the
