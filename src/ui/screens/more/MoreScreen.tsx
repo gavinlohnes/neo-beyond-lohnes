@@ -25,6 +25,7 @@ import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { ENGINE_VERSION } from "../../../engine/evaluate";
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../../app/buildInfo";
 import { ReviewScreen } from "../review/ReviewScreen";
+import { RecordsExportPanel } from "./RecordsExportPanel";
 import type { UnderstandingSource } from "../review/PersonalUnderstanding";
 import { SearchScreen } from "../search/SearchScreen";
 import type { SearchResult } from "../../../application/searchQueries";
@@ -804,6 +805,12 @@ export function MoreScreen({
         </div>
         <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>{describeLastBackup(daysSinceBackup)}</p>
         </div>
+
+        {/* EXPORT-001: a readable copy of one area for a spreadsheet, beside the backup it is not. */}
+        <details className="more-inspection" data-panel="records-export">
+          <summary>Readable records (CSV)</summary>
+          <RecordsExportPanel />
+        </details>
 
         <details className="more-inspection" data-panel="automatic-backups">
           <summary>Automatic backups & file check</summary>
