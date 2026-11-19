@@ -6,6 +6,7 @@ import { useMinuteClock } from "../cc/useMinuteClock";
 import { useLongPress } from "../hooks/useLongPress";
 import "./stealth.css";
 import { PresenceContext } from "../presence";
+import "../foundation/oneLook.css";
 
 /**
  * COMMAND-CENTER-001: the header glyph is the emblem — tapping it goes to

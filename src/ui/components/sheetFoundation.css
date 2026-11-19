@@ -12,7 +12,11 @@
 .log-sheet.bf .log-sheet__header::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px;
   border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
 .log-sheet.bf .log-sheet__header h2 { min-width: 0; font: 600 18px var(--font-mono, monospace); letter-spacing: .14em; overflow-wrap: anywhere; }
-.log-sheet.bf .log-sheet__header h2::before { content: "/// "; color: var(--bf-red); letter-spacing: -.05em; }
+/* The slashes are a real aria-hidden span beside the title (ONE-LOOK-002), so screen readers and accessible names
+   read "CHECK IN", never "slash slash slash CHECK IN". */
+.log-sheet__slashes { display: none; }
+.log-sheet.bf .log-sheet__slashes { display: inline; margin: 0 -4px 0 0; font: 600 18px var(--font-mono, monospace); }
+.log-sheet.bf .log-sheet__header h2 { margin-right: auto; }
 
 /* CHECK IN: each scale's name as a mono label, its numbers as foundation numerals; the chosen one is framed in white
    with the red underline (the same "chosen" mark as TRAIN's switcher). */
@@ -27,7 +31,7 @@
 
 /* ALFRED: who's speaking as a mono label with the red slashes; each proposal card a framed foundation panel. */
 .log-sheet.bf .alfred-turn__who { font: 600 12px var(--font-mono, monospace); letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
-.log-sheet.bf .alfred-turn__who::before { content: "/// "; color: var(--bf-red); letter-spacing: -.05em; }
+.log-sheet.bf .alfred-turn__who::before { content: "/// " / ""; color: var(--bf-red); letter-spacing: -.05em; }
 .log-sheet.bf .alfred-card { position: relative; margin: 8px 0; padding: 10px 10px 10px 12px; background: var(--bf-s1); border: 1px solid var(--bf-line);
   clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut))); }
 .log-sheet.bf .alfred-card::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px;
