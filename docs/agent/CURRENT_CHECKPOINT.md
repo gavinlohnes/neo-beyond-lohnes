@@ -3,7 +3,7 @@
 - **Owner authorization:** Gavin approved the exact Protected, documentation-only objective. Brief:
   [`PROJECT-GRAYSON-VISION-001.md`](PROJECT-GRAYSON-VISION-001.md). Starting commit
   `c54c0001cb346af7d358f7d039f087b467bf78fd` (merged PR #583); Builder Codex; branch
-  `codex/project-grayson-vision`; PR pending.
+  `codex/project-grayson-vision`; [PR #585](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/585).
 - **Outcome:** establish the canonical Project Grayson destination, reconcile product authority,
   preserve and classify existing capabilities, and provide one provider-neutral handoff for Claude,
   Claude Duet Steward, Codex, and future qualified builders.
