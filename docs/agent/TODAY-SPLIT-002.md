@@ -79,7 +79,7 @@ not done quietly.
   order.
 - **Kept:** the four `useUndoOpen` hooks. They now feed nothing, but removing them would change TODAY's hook order.
   That's left for the slice that moves their owners.
-- **Size:** `TodayScreen.tsx` goes from 3,482 lines to 3,478. The value is the pattern and a safe, reviewed first
+- **Size:** `TodayScreen.tsx` goes from 3,482 lines to 3,476. The value is the pattern and a safe, reviewed first
   move, not the lines.
 - **Verification:** typecheck passes, and the 6 browser files that show these confirmations pass (124 tests).
   PR CI runs the full suite.
