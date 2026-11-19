@@ -57,6 +57,7 @@ import type {
 } from "../../../domain/common/types";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
+import { TodayToasts } from "./TodayToasts";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
@@ -1661,9 +1662,6 @@ export function TodayScreen({
   }
 
   // OWNER-GO-001 (Gavin: "it says delete or undo. That can go away"): a log confirms with its message only.
-  function renderLoggedBanner(message: string, _undoOpen?: boolean, _log?: "WATER" | "SLEEP" | "PROTEIN" | "MEAL", _focus?: BodyFocus) {
-    return <ConfirmBanner message={message} />;
-  }
 
 
   /**
@@ -2824,12 +2822,8 @@ export function TodayScreen({
       onRecords={(detailOpen === "water" || detailOpen === "weight" || detailOpen === "protein") && onOpenHealthEvidence ? () => onOpenHealthEvidence(detailOpen) : undefined}
       onLog={(detailOpen === "water" || detailOpen === "weight" || detailOpen === "protein") && onOpenRecord ? () => onOpenRecord(detailOpen) : undefined} />
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
-    {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
-      {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
-      {mealConfirmation && renderLoggedBanner(mealConfirmation.message, mealUndoOpen, "MEAL", "meal")}
-      {sleepConfirmation && renderLoggedBanner(`Main sleep logged · ${formatDuration(sleepConfirmation.amount)}`, sleepUndoOpen, "SLEEP", "sleep")}
-      {proteinConfirmation && renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN", "meal")}
-    </div>}
+    {/* TODAY-SPLIT-002 slice 2: the "recorded" confirmations live in TodayToasts; TODAY still decides when they show. */}
+    <TodayToasts waterOz={hydrationConfirmation?.amount} mealMessage={mealConfirmation?.message} sleepMinutes={sleepConfirmation?.amount} proteinG={proteinConfirmation?.amount} />
   </div>;
   return (
     <div
@@ -3211,16 +3205,16 @@ export function TodayScreen({
       )}
 
       {hydrationConfirmation !== null &&
-        renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}
+        <ConfirmBanner message={`${hydrationConfirmation.amount} oz recorded.`} />}
 
       {sleepConfirmation !== null &&
-        renderLoggedBanner(`Main sleep logged · ${formatDuration(sleepConfirmation.amount)}`, sleepUndoOpen, "SLEEP", "sleep")}
+        <ConfirmBanner message={`Main sleep logged · ${formatDuration(sleepConfirmation.amount)}`} />}
 
       {proteinConfirmation !== null &&
-        renderLoggedBanner(`${proteinConfirmation.amount} g protein recorded.`, proteinUndoOpen, "PROTEIN")}
+        <ConfirmBanner message={`${proteinConfirmation.amount} g protein recorded.`} />}
 
       {mealConfirmation !== null &&
-        renderLoggedBanner(mealConfirmation.message, mealUndoOpen, "MEAL", "meal")}
+        <ConfirmBanner message={mealConfirmation.message} />}
 
       {undoFailure && (
         <Signal key={undoFailure} as="p" className="meta meta--error" role="alert" style={{ marginTop: 8 }} data-signal="save-failed">{undoFailure}</Signal>

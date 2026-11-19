@@ -67,3 +67,19 @@ not done quietly.
 
 1. Approve slices 2–5 as written, approve slice 2 only and judge it first, or don't split now.
 2. **Builder:** Claude Code, one slice per night, or all four in one night as stacked PRs.
+
+## Slice 2 as built: the confirmation toasts (Gavin, 2026-11-19, "3C")
+
+- **Why not TOOLS first:** the TOOLS block reads 141 pieces of TODAY's shared state. Moving it with explicit props
+  would mean reorganising that state, which this brief says to stop on. Gavin chose the toasts slice instead.
+- **What moved:** the "recorded" toast block → `ui/screens/today/TodayToasts.tsx`, with 4 props (water oz, meal
+  message, sleep minutes, protein g). TODAY still decides when each toast appears and clears.
+- **Removed:** `renderLoggedBanner`. Its only behaviour was drawing a `ConfirmBanner`; its other three arguments
+  were unused. The inline banners further down TODAY now draw `ConfirmBanner` directly, with the same message and
+  order.
+- **Kept:** the four `useUndoOpen` hooks. They now feed nothing, but removing them would change TODAY's hook order.
+  That's left for the slice that moves their owners.
+- **Size:** `TodayScreen.tsx` goes from 3,482 lines to 3,478. The value is the pattern and a safe, reviewed first
+  move, not the lines.
+- **Verification:** typecheck passes, and the 6 browser files that show these confirmations pass (124 tests).
+  PR CI runs the full suite.
