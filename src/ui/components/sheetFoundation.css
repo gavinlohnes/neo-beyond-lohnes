@@ -1,0 +1,46 @@
+/* SHEETS-FOUNDATION-001 (Gavin, 2026-11-19: "1A", HARVEST-001 #11): every sheet built on LogSheet (LOG, CHECK IN,
+   ALFRED, the metric pages, a log entry's fixes, shift marks, habits, the week planner) wears BEYOND's visual
+   foundation (src/ui/foundation/foundation.css, docs/agent/VISUAL-FOUNDATION-001.md). Presentation only: the same
+   controls, words, focus handling and saves. Red is structure and the one action; sentences, buttons and inputs stay
+   16 px or larger. */
+
+/* The sheet: near-black, one cut corner at the top right, a thin red edge along the top. */
+.log-sheet.bf { background: var(--bf-s1); border: 1px solid var(--bf-line); border-top: 2px solid var(--bf-red);
+  clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, 0 100%); }
+/* Its header is a command bar: red slashes before the title, the red bracket at its top left. */
+.log-sheet.bf .log-sheet__header { position: sticky; background: var(--bf-s1); border-bottom: 1px solid var(--bf-line); }
+.log-sheet.bf .log-sheet__header::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px;
+  border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+.log-sheet.bf .log-sheet__header h2 { min-width: 0; font: 600 18px var(--font-mono, monospace); letter-spacing: .14em; overflow-wrap: anywhere; }
+.log-sheet.bf .log-sheet__header h2::before { content: "/// "; color: var(--bf-red); letter-spacing: -.05em; }
+
+/* CHECK IN: each scale's name as a mono label, its numbers as foundation numerals; the chosen one is framed in white
+   with the red underline (the same "chosen" mark as TRAIN's switcher). */
+.log-sheet.bf .check-in-scale h3 { margin: 0 0 4px; font: 600 16px var(--font-mono, monospace); letter-spacing: .12em; text-transform: uppercase; }
+.log-sheet.bf .check-in-scale [role="group"] button { min-height: 52px; font-family: var(--font-display, sans-serif); font-size: 26px; font-weight: 700;
+  font-variant-numeric: tabular-nums; }
+.log-sheet.bf .check-in-scale [role="group"] button[aria-pressed="true"] { border-color: var(--p-t1, #f2f2f2); box-shadow: inset 0 -3px 0 var(--bf-red); }
+
+/* LOG: the water amounts are numerals you hit with a thumb. */
+.log-sheet.bf .cc-amounts .today-sheet__option { min-height: 56px; justify-content: center; font-family: var(--font-display, sans-serif); font-size: 24px;
+  font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+
+/* ALFRED: who's speaking as a mono label with the red slashes; each proposal card a framed foundation panel. */
+.log-sheet.bf .alfred-turn__who { font: 600 12px var(--font-mono, monospace); letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
+.log-sheet.bf .alfred-turn__who::before { content: "/// "; color: var(--bf-red); letter-spacing: -.05em; }
+.log-sheet.bf .alfred-card { position: relative; margin: 8px 0; padding: 10px 10px 10px 12px; background: var(--bf-s1); border: 1px solid var(--bf-line);
+  clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut))); }
+.log-sheet.bf .alfred-card::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px;
+  border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+
+/* The foundation's size rule inside every sheet: CLOSE, the actions and Alfred's footer links are 16 px. TODAY's
+   `.today-field .btn-*` sets 13 px on buttons; a sheet opened from TODAY sits inside it, so this out-ranks it. */
+dialog.log-sheet.bf .log-sheet__header button, dialog.log-sheet.bf .btn-primary, dialog.log-sheet.bf .btn-secondary,
+dialog.log-sheet.bf .alfred-link { font-size: 16px; }
+/* Controls that are meant to be larger keep their own size: the SLEEP sheet's ‹ › period arrows are 24 px
+   (measuredSheet.css), and the 16 px rule above must never shrink them (review of #571). */
+dialog.log-sheet.bf .sleep-period-navigation button { font-size: 24px; }
+/* Sentences inside a sheet are 16 px. TODAY's `.today-field > :not(...):not(...):not(...) .card-body` (five classes) sets
+   14 px on card-body sentences, and a sheet opened from TODAY sits inside it (SLEEP's rhythm lines). The repeated
+   classes rank this rule above it on purpose; it only ever raises a sheet's sentences to 16 px. */
+dialog.log-sheet.bf.bf .log-sheet__body .card-body.card-body { font-size: 16px; }
