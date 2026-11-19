@@ -20,18 +20,19 @@ export interface PanelAction { label: string; onClick: () => void; disabled?: bo
  * into its history. Wide panels span their grid and keep source and action in the header; narrow ones give them
  * their own line so the title never crowds.
  */
-export function Panel({ headingId, icon, label, source, wide, primary, children, onOpen, openLabel, action, data }: {
-  headingId: string; icon: ReactNode; label: string; source?: ReactNode; wide?: boolean | undefined; primary?: boolean | undefined; children: ReactNode;
+export function Panel({ headingId, headingLevel = 3, icon, label, source, wide, primary, children, onOpen, openLabel, action, data }: {
+  headingId: string; headingLevel?: 2 | 3 | undefined; icon: ReactNode; label: string; source?: ReactNode; wide?: boolean | undefined; primary?: boolean | undefined; children: ReactNode;
   onOpen?: (() => void) | undefined; openLabel?: string | undefined; action?: PanelAction | undefined;
   /** Data attributes for the screen's own hooks, e.g. { "data-dash": "water" }. */
   data?: Record<`data-${string}`, string> | undefined;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   const act = action && <button type="button" className="bf-panel__act" aria-label={action.label} disabled={action.disabled} onClick={action.onClick}><Plus size={18} aria-hidden="true" /></button>;
   return (
     <article className={`bf-panel${wide ? " bf-panel--wide" : ""}${primary ? " bf-panel--primary" : ""}`} aria-labelledby={headingId} {...data}>
       <header className="bf-panel__head">
         <span className="bf-panel__icon" aria-hidden="true">{icon}</span>
-        <h3 id={headingId} className="bf-panel__label">{label}</h3>
+        <Heading id={headingId} className="bf-panel__label">{label}</Heading>
         {wide && source}
         {wide && act}
         {onOpen && <button type="button" className="bf-panel__open" aria-label={openLabel ?? `Open ${label.toLowerCase()} history`} onClick={onOpen}><ChevronRight size={18} aria-hidden="true" /></button>}

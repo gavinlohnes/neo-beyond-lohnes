@@ -30,7 +30,7 @@ export function TodayEnergy({ now, active = true, refreshKey = 0 }: { now: numbe
   const curve = data.curve;
 
   return <section className="bf today-energy" aria-label="Tonight's energy">
-    <Panel headingId="today-energy-title" wide icon={<Activity size={18} />} label="TONIGHT'S ENERGY" source={<SourceTag>ESTIMATE</SourceTag>}>
+    <Panel headingLevel={2} headingId="today-energy-title" wide icon={<Activity size={18} />} label="TONIGHT'S ENERGY" source={<SourceTag>ESTIMATE</SourceTag>}>
       {!curve ? <p className="bf-meta">The energy estimate appears after {MIN_NIGHTS} main sleeps from Garmin in the last week ({data.nights} so far).</p> : <>
         {(() => {
           const x = (t: number) => PAD + ((t - curve.from) / (curve.to - curve.from)) * (W - 2 * PAD);

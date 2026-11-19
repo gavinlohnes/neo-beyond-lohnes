@@ -68,3 +68,7 @@ Every constant is cited in `SOURCES`, search-confirmed 2026-11-19. It never feed
 - Training load feeding the curve (part 5).
 - Alerts for the cut-off or the drive (part 5).
 - The light windows from Timeshifter.
+
+## Builder recovery — 2026-11-19
+
+Codex continues Claude’s existing PR #580 at Gavin’s takeover request, starting at `de11361e`. CI’s two failed shards both identify heading-order violations on `today-energy-title`. The repair adds an optional h2 level to the existing Panel primitive, retaining h3 for other callers, and selects h2 for this standalone TODAY section. The focused browser test asserts its semantic heading. No estimate formula or product scope changes. Final verification and independent review belong to the exact repaired head in the PR handoff.

@@ -27,6 +27,7 @@ describe("ENERGY-CURVE-001", () => {
     await expect.poll(() => panel()?.textContent ?? "").toContain("TONIGHT'S ENERGY");
     const el = panel()!;
     expect(el.textContent).toContain("ESTIMATE");
+    expect(el.querySelector("h2#today-energy-title")).not.toBeNull();
     expect(el.querySelector(".today-energy__line")).not.toBeNull();
     expect(el.querySelector(".today-energy__now")).not.toBeNull();
     expect(el.querySelector("[data-energy-low]")?.textContent).toMatch(/^Lowest stretch \d\d:\d\d–\d\d:\d\d\.$/);
