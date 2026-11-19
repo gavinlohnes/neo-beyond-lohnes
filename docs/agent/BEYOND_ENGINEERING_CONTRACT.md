@@ -65,8 +65,9 @@ expanded product behavior or Protected boundaries require an owner ruling.
 
 ## Review and integration safeguards
 
-- Every PR requires Gavin's merge approval, including Routine work. No self-merge or automatic
-  merge. Integration is a distinct, explicitly owner-authorized step after verification, resolved
+- Every PR requires Gavin's merge approval, including Routine work, except a non-Protected PR the
+  Builder of record merges under DEV-FLOW-002's owner merge delegation (Gavin, 2026-11-19). No other
+  self-merge and no automatic merge. Integration is a distinct, explicitly owner-authorized step after verification, resolved
   findings, green required CI, and independent exact-head review for Protected work. No provider
   is specifically required as Reviewer or Integrator.
 - For this personal repository, reviewer independence means a separate agent/session explicitly
