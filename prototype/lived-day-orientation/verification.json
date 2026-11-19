@@ -1,0 +1,203 @@
+{
+  "generatedAt": "2026-11-19T22:40:08.928Z",
+  "url": "http://localhost:5174/neo-beyond-lohnes/prototype/lived-day-orientation/",
+  "result": "PASS",
+  "failures": [],
+  "summary": {
+    "widths": [
+      320,
+      360,
+      412
+    ],
+    "scenes": [
+      "Workday",
+      "Day off",
+      "Difficult day",
+      "Sparse",
+      "Unknown"
+    ],
+    "checks": [
+      "horizontal overflow",
+      "recommendation abstention",
+      "supporting-action limit",
+      "touch targets",
+      "axe WCAG A/AA",
+      "page errors",
+      "external network requests",
+      "ENTER TODAY and reopen"
+    ]
+  },
+  "results": [
+    {
+      "width": 320,
+      "scene": "Workday",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 1,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 320,
+      "scene": "Day off",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 320,
+      "scene": "Difficult day",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 320,
+      "scene": "Sparse",
+      "horizontalOverflow": false,
+      "recommendationVisible": false,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 320,
+      "scene": "Unknown",
+      "horizontalOverflow": false,
+      "recommendationVisible": false,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "scene": "Workday",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 1,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "scene": "Day off",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "scene": "Difficult day",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "scene": "Sparse",
+      "horizontalOverflow": false,
+      "recommendationVisible": false,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "scene": "Unknown",
+      "horizontalOverflow": false,
+      "recommendationVisible": false,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "scene": "Workday",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 1,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "scene": "Day off",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "scene": "Difficult day",
+      "horizontalOverflow": false,
+      "recommendationVisible": true,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "scene": "Sparse",
+      "horizontalOverflow": false,
+      "recommendationVisible": false,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    },
+    {
+      "width": 412,
+      "scene": "Unknown",
+      "horizontalOverflow": false,
+      "recommendationVisible": false,
+      "supportingActions": 2,
+      "minButtonHeight": 44,
+      "axe": [],
+      "outsideRequests": [],
+      "pageErrors": []
+    }
+  ],
+  "desktopReview": {
+    "horizontalOverflow": false,
+    "axe": [],
+    "outsideRequests": [],
+    "pageErrors": []
+  }
+}

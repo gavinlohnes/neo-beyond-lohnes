@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070708">
+<title>BEYOND — Lived-Day Orientation Prototype</title>
+<style>
+:root{
+  color-scheme:dark;
+  --void:#070708;
+  --surface:#0d0d0f;
+  --raised:#131316;
+  --line:#2a2a2e;
+  --line-strong:#45454b;
+  --text:#f1eee7;
+  --muted:#99968f;
+  --quiet:#66646a;
+  --red:#d51f2f;
+  --red-deep:#72121c;
+  --yellow:#d6a623;
+  --good:#78a88b;
+  --display:"Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%;background:var(--void);color:var(--text);font-family:var(--body)}
+body{background:radial-gradient(circle at 50% 0,#17171a 0,#09090a 34rem,var(--void) 60rem)}
+button{font:inherit}
+button:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.shell{min-height:100vh;display:grid;grid-template-columns:minmax(230px,290px) minmax(320px,412px) minmax(230px,320px);gap:28px;justify-content:center;align-items:start;padding:28px}
+.rail{position:sticky;top:28px;display:grid;gap:16px}
+.plate{border:1px solid var(--line);background:rgba(13,13,15,.92);padding:16px}
+.eyebrow{font:500 10px/1.3 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.brand{font:700 29px/.9 var(--display);letter-spacing:.035em;text-transform:uppercase;margin:8px 0 5px}
+.sub{font:400 12px/1.45 var(--mono);color:var(--muted)}
+.state-list{display:grid;gap:2px;margin-top:12px}
+.state-button{min-height:46px;border:0;border-left:2px solid transparent;background:#111114;color:var(--muted);padding:9px 11px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.state-button:hover{background:#18181c;color:var(--text)}
+.state-button[aria-pressed="true"]{border-left-color:var(--red);background:#1a1a1e;color:var(--text)}
+.state-button small{font:400 9px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.legend{display:grid;gap:10px;margin-top:12px}
+.legend div{display:grid;grid-template-columns:9px 1fr;gap:9px;align-items:start;font-size:12px;color:var(--muted)}
+.legend i{display:block;width:7px;height:7px;margin-top:5px;background:var(--line-strong)}
+.legend div:nth-child(1) i{background:var(--red)}
+.legend div:nth-child(2) i{background:var(--yellow)}
+.legend div:nth-child(3) i{background:var(--good)}
+.device-wrap{display:grid;gap:12px;justify-items:center}
+.device-label{font:400 10px var(--mono);color:var(--quiet);letter-spacing:.12em;text-transform:uppercase}
+.device{width:100%;height:844px;border:9px solid #050506;border-radius:42px;background:#000;box-shadow:0 0 0 1px #2f2f34,0 34px 80px #000b;overflow:hidden;position:relative}
+.device::before{content:"";position:absolute;z-index:20;top:0;left:50%;transform:translateX(-50%);width:126px;height:23px;background:#050506;border-radius:0 0 15px 15px}
+.app{height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,#0b0b0d 0,#050506 100%)}
+.statusbar{height:38px;display:flex;justify-content:space-between;align-items:center;padding:9px 18px 0;font:500 10px var(--mono);color:#bbb8b1}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 18px 18px;overflow:auto;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.app-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:7px 0 14px;border-bottom:1px solid var(--line)}
+.wordmark{font:700 23px/.85 var(--display);letter-spacing:.06em}
+.screen-name{font:400 9px var(--mono);letter-spacing:.14em;color:var(--muted);margin-top:6px;text-transform:uppercase}
+.exit{border:0;background:transparent;color:var(--muted);min-width:44px;min-height:44px;padding:0 0 0 12px;font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.exit:hover{color:var(--text)}
+.boot{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:48px 0 8px}
+.boot-mark{border-left:3px solid var(--red);padding-left:16px}
+.boot h1{font:700 50px/.86 var(--display);text-transform:uppercase;letter-spacing:.01em;margin:8px 0 14px;max-width:260px}
+.boot p{margin:0;max-width:295px;color:var(--muted);font-size:14px;line-height:1.5}
+.primary-button,.secondary-button,.text-button{min-height:48px;border:1px solid var(--line-strong);padding:12px 14px;text-align:left;color:var(--text);background:#18181c}
+.primary-button{background:var(--red);border-color:var(--red);color:#fff;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.primary-button:hover{background:#ed2637}
+.secondary-button:hover{border-color:#77777f;background:#1d1d21}
+.text-button{border-color:transparent;background:transparent;color:var(--muted);padding-left:0}
+.orientation{display:none}
+.orientation.active{display:flex;flex-direction:column}
+.situation{padding:18px 0 15px}
+.situation .kind{font:500 10px var(--mono);letter-spacing:.15em;color:var(--yellow);text-transform:uppercase}
+.situation h1{font:700 35px/.96 var(--display);letter-spacing:.015em;text-transform:uppercase;margin:8px 0 7px}
+.situation p{font:400 12px/1.4 var(--mono);color:var(--muted);margin:0}
+.section{padding:14px 0;border-top:1px solid var(--line)}
+.section-title{font:500 9px var(--mono);letter-spacing:.16em;color:var(--quiet);text-transform:uppercase;margin:0 0 9px}
+.evidence{display:grid;gap:8px}
+.evidence-row{display:grid;grid-template-columns:72px 1fr auto;gap:8px;align-items:baseline}
+.evidence-row span{font-size:12px;color:var(--muted)}
+.evidence-row strong{font-size:13px;font-weight:500;color:var(--text)}
+.source{font:400 8px var(--mono)!important;letter-spacing:.05em;text-transform:uppercase;color:var(--quiet)!important}
+.delta{border-left:2px solid var(--red);padding:1px 0 1px 13px}
+.delta p{font-size:14px;line-height:1.5;margin:0;color:#ddd9d2}
+.delta .uncertain{color:var(--muted)}
+.recommendation{background:linear-gradient(90deg,#1a1215 0,#111114 80%);border-top:1px solid #492128;border-bottom:1px solid #492128;padding:13px 12px;margin:0 -7px}
+.recommendation .section-title{color:#c86b75}
+.recommendation strong{display:block;font:600 20px/1.05 var(--display);letter-spacing:.02em;text-transform:uppercase;margin-bottom:7px}
+.recommendation p{font-size:12px;line-height:1.4;color:var(--muted);margin:0}
+.recommendation-action{min-height:44px;border:1px solid #6b3038;background:transparent;color:var(--text);padding:9px 11px;margin-top:11px;width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.recommendation-action:hover{background:#29171b;border-color:#98505a}
+.recommendation-action small{font:400 9px var(--mono);color:#ba7780;letter-spacing:.06em}
+.actions{display:grid;gap:7px;margin-top:10px}
+.action{min-height:46px;border:1px solid var(--line);background:#111114;color:var(--text);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:12px}
+.action:hover{border-color:var(--line-strong);background:#16161a}
+.action span{font-size:13px;font-weight:500}
+.action small{font:400 9px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.release{padding:13px 0 10px;color:var(--muted);font-size:12px;line-height:1.45}
+.release strong{color:var(--text);font-weight:500}
+.release .section-title{margin-bottom:7px}
+.footer-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:auto;padding-top:8px}
+.capture{min-height:44px;border:1px solid var(--line);background:transparent;color:var(--muted);padding:10px 12px;text-align:left;font-size:12px}
+.enter{min-height:44px;border:0;background:var(--text);color:#09090a;padding:10px 15px;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.07em}
+.today{display:none;flex:1;flex-direction:column;padding-top:24px}
+.today.active{display:flex}
+.today h1{font:700 54px/.85 var(--display);margin:8px 0 18px;text-transform:uppercase}
+.today p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 16px}
+.today .summary{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0;margin-bottom:16px}
+.toast{position:absolute;left:16px;right:16px;bottom:15px;z-index:30;background:#ece8df;color:#111;padding:12px 14px;font-size:12px;line-height:1.35;box-shadow:0 10px 30px #0008;display:none}
+.toast.show{display:block}
+.notes{display:grid;gap:16px}
+.notes h2{font:600 22px/1 var(--display);text-transform:uppercase;margin:7px 0 10px}
+.notes p,.notes li{font-size:13px;line-height:1.5;color:var(--muted)}
+.notes p{margin:0}.notes ul{margin:0;padding-left:18px}.notes li+li{margin-top:7px}
+.contract{display:grid;gap:8px;margin-top:12px}
+.contract div{border-left:2px solid var(--line-strong);padding-left:10px;font-size:12px;color:var(--muted);line-height:1.4}
+.contract strong{color:var(--text);font-weight:500}
+.prototype-tag{color:var(--yellow)}
+@media(max-width:1000px){.shell{grid-template-columns:minmax(220px,280px) minmax(320px,412px);}.notes{grid-column:1/-1;grid-template-columns:1fr 1fr}.notes .plate:last-child{grid-column:1/-1}}
+@media(max-width:720px){body{background:#000}.shell{display:block;padding:0}.rail{position:static;display:block;background:#0b0b0d;border-bottom:1px solid var(--line);padding:10px 12px}.rail .plate{border:0;background:transparent;padding:0}.rail .plate:first-child,.rail .plate:last-child{display:none}.rail .eyebrow{margin-bottom:8px}.state-list{display:flex;overflow:auto;gap:6px;margin:0;padding-bottom:2px;scrollbar-width:none}.state-button{flex:0 0 auto;min-height:44px;border:1px solid var(--line);border-left-width:1px;padding:8px 10px}.state-button[aria-pressed="true"]{border-color:var(--red)}.state-button small{display:none}.device-wrap{display:block}.device-label,.notes{display:none}.device{height:calc(100dvh - 82px);width:100%;border:0;border-radius:0;box-shadow:none}.device::before{display:none}.statusbar{display:none}.screen{padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(18px,env(safe-area-inset-bottom))}}
+@media(max-width:360px){.screen{padding-left:14px;padding-right:14px}.situation h1{font-size:31px}.evidence-row{grid-template-columns:63px 1fr}.source{display:none}.delta p{font-size:13px}.recommendation strong{font-size:18px}}
+@media(prefers-reduced-motion:no-preference){.orientation.active .situation{animation:arrive .32s ease-out both}.orientation.active .section{animation:arrive .28s ease-out both}.orientation.active .section:nth-of-type(2){animation-delay:.03s}.orientation.active .section:nth-of-type(3){animation-delay:.06s}@keyframes arrive{from{transform:translateY(5px)}to{transform:none}}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <aside class="rail" aria-label="Prototype controls">
+    <section class="plate">
+      <div class="eyebrow prototype-tag">Protected prototype · no writes</div>
+      <div class="brand">Lived-Day Orientation</div>
+      <div class="sub">One coherent phone direction. Choose a realistic state, then press START DAY.</div>
+    </section>
+    <section class="plate">
+      <div class="eyebrow">Scenario</div>
+      <div class="state-list" id="state-list"></div>
+    </section>
+    <section class="plate">
+      <div class="eyebrow">Reading key</div>
+      <div class="legend">
+        <div><i></i><span>Delta interpretation and authority</span></div>
+        <div><i></i><span>Situation and time horizon</span></div>
+        <div><i></i><span>Recorded evidence and sources</span></div>
+      </div>
+    </section>
+  </aside>
+
+  <section class="device-wrap" aria-label="Phone prototype">
+    <div class="device-label">360 × 800 reference · responsive to 320 and 412</div>
+    <div class="device">
+      <div class="app">
+        <div class="statusbar"><span>09:41</span><span>LOCAL · OFFLINE READY</span></div>
+        <div class="screen">
+          <header class="app-head">
+            <div><div class="wordmark">BEYOND</div><div class="screen-name" id="screen-name">Lived day</div></div>
+            <button class="exit" id="exit" type="button" hidden>Exit</button>
+          </header>
+
+          <section class="boot" id="boot">
+            <div class="boot-mark">
+              <div class="eyebrow" id="boot-kind">Thursday · Work run</div>
+              <h1>Your day is ready to begin.</h1>
+              <p id="boot-copy">Start deliberately. BEYOND will orient you without changing the plan.</p>
+            </div>
+            <button class="primary-button" id="start-day" type="button">Start day</button>
+          </section>
+
+          <section class="orientation" id="orientation" aria-label="Lived-day orientation">
+            <div class="situation" aria-labelledby="situation-title">
+              <div class="kind" id="kind"></div>
+              <h1 id="situation-title"></h1>
+              <p id="horizon"></p>
+            </div>
+            <section class="section" aria-labelledby="you-title">
+              <h2 class="section-title" id="you-title">You</h2>
+              <div class="evidence" id="evidence"></div>
+            </section>
+            <section class="section" aria-labelledby="delta-title">
+              <h2 class="section-title" id="delta-title">Delta · prototype voice</h2>
+              <div class="delta"><p id="delta-copy"></p></div>
+            </section>
+            <section class="recommendation" id="recommendation" aria-labelledby="recommendation-title">
+              <h2 class="section-title" id="recommendation-title">Recommendation</h2>
+              <strong id="recommendation-copy"></strong>
+              <p id="recommendation-reason"></p>
+              <button class="recommendation-action" id="recommendation-action" type="button"><span></span><small></small></button>
+            </section>
+            <section class="section" aria-labelledby="actions-title">
+              <h2 class="section-title" id="actions-title">Supporting actions</h2>
+              <div class="actions" id="actions"></div>
+            </section>
+            <section class="release" aria-labelledby="release-title"><h2 class="section-title" id="release-title">Release</h2><div id="release"></div></section>
+            <div class="footer-actions">
+              <button class="capture" id="capture" type="button">Capture a thought</button>
+              <button class="enter" id="enter" type="button">Enter today</button>
+            </div>
+          </section>
+
+          <section class="today" id="today" aria-label="Today preview">
+            <div class="eyebrow">Orientation complete</div>
+            <h1>Today</h1>
+            <div class="summary"><p id="today-summary"></p></div>
+            <p>The normal TODAY workspace would continue here. This prototype does not replace it or connect to it.</p>
+            <button class="secondary-button" id="reopen" type="button">Reopen orientation</button>
+          </section>
+        </div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="notes" aria-label="Design notes">
+    <section class="plate">
+      <div class="eyebrow">What to assess</div>
+      <h2>Does this feel like your man in the chair?</h2>
+      <ul>
+        <li>Situation before interpretation.</li>
+        <li>Evidence before directness.</li>
+        <li>One recommendation, two supporting actions at most.</li>
+        <li>A clear release from everything else.</li>
+      </ul>
+    </section>
+    <section class="plate">
+      <div class="eyebrow">Protected boundaries</div>
+      <div class="contract">
+        <div><strong>Page memory only.</strong> Refresh clears every interaction.</div>
+        <div><strong>No Engine claim.</strong> Sample recommendations illustrate the unresolved composition decision.</div>
+        <div><strong>No model call.</strong> Delta language is deterministic prototype copy.</div>
+        <div><strong>No runtime rename.</strong> The suit remains BEYOND; Delta is explicitly prototype voice.</div>
+      </div>
+    </section>
+    <section class="plate">
+      <div class="eyebrow">Decision after review</div>
+      <h2>Keep, refine, or rethink.</h2>
+      <p>Judge the hierarchy and relationship first. Production architecture and recommendation authority remain separate decisions.</p>
+    </section>
+  </aside>
+</main>
+<script>
+const scenes={
+  workday:{label:"Workday",meta:"Ready",boot:"Thursday · Work run",kind:"Workday · Thursday",title:"Shift at 18:00",horizon:"Leave-ready window begins at 17:20 · saved schedule",evidence:[
+    ["Sleep","6h 42m · below your workday range","Garmin"],["Check-in","Energy 3 · Stress 2 · Mood 3","Submitted"]
+  ],delta:"Your check-in supports training, but preparation is the constraint today. Handle food and work items first. If time remains, use the shortened session.",recommendation:"Prepare for the shift first.",reason:"Food, water and work items are the only recorded time-sensitive preparation.",primary:["Open shift preparation","Open Prep"],actions:[["Review the shortened workout","Open Train"]],release:"<strong>No other recorded item requires attention before the shift.</strong> Everything else can remain where it is.",today:"Shift at 18:00. Preparation remains first; training stays optional."},
+  dayoff:{label:"Day off",meta:"Purpose-first",boot:"Friday · Day off",kind:"Day off · Friday",title:"Your time is open",horizon:"No fixed event is recorded before 15:00 tomorrow",evidence:[
+    ["Sleep","8h 06m · within your day-off range","Garmin"],["Check-in","Energy 4 · Stress 2 · Mood 4","Submitted"]
+  ],delta:"You have good capacity and no immediate time pressure. One home responsibility is due this week; the rest of the morning can remain open.",recommendation:"Decide what would make today feel well used.",reason:"Rest, family, enjoyment, maintenance, progress or an open day are all valid.",primary:["Plan my day off","Open Your Life"],actions:[["Review today's workout","Open Train"],["Smoke detectors due this week","Open Home"]],release:"<strong>Nothing else needs a time this morning.</strong> Unallocated time does not need to be filled.",today:"No immediate time pressure. The purpose of the day remains yours to choose."},
+  difficult:{label:"Difficult day",meta:"Reduced load",boot:"Thursday · Work run",kind:"Workday · Thursday",title:"Shift at 18:00",horizon:"Leave-ready window begins at 17:20 · saved schedule",evidence:[
+    ["Sleep","5h 18m","Garmin"],["Check-in","Energy 1 · Stress 4 · Mood 2","Submitted"],["Pattern","Mood declined across 3 check-ins","Recorded"]
+  ],delta:"Today's normal plan is unlikely to be useful in its current form. Protect the shift essentials and reduce everything else. The pattern deserves attention, not alarm.",recommendation:"Protect the shift essentials.",reason:"Prepare food, water and work items. Defer the full workout unless you deliberately choose otherwise.",primary:["Open shift preparation","Open Prep"],actions:[["Review a shorter training option","Open Train"],["Talk through the pattern","Talk to Delta"]],release:"<strong>No plan has been changed.</strong> You can reduce the day without losing unfinished items.",today:"Essentials are protected. The normal plan remains available, but it is not the expectation."},
+  sparse:{label:"Sparse",meta:"Abstains",boot:"New lived day",kind:"Context incomplete",title:"Start with what is known",horizon:"No fixed event can be confirmed yet",evidence:[
+    ["Sleep","No main sleep in the last 36 hours","No record"],["Check-in","Not answered","Unknown"]
+  ],delta:"I do not know how you slept, how capable you feel, or whether this is a workday. I cannot responsibly prioritize training or recovery yet.",recommendation:null,reason:null,primary:null,actions:[["Answer work or off","Set context"],["Complete a quick check-in","Check in"]],release:"<strong>No recommendation is better than a fabricated one.</strong> You can enter TODAY without answering either question.",today:"Context remains incomplete. Access is unchanged and no state was inferred."},
+  unknown:{label:"Unknown",meta:"Asks once",boot:"Schedule changed",kind:"Work context unknown",title:"What kind of day is this?",horizon:"Saved schedule predicts work · lived-day context is unconfirmed",evidence:[
+    ["Sleep","7h 11m · measured","Garmin"],["Check-in","Energy 3 · Stress 3 · Mood 3","Submitted"]
+  ],delta:"Your subjective state is recorded, but the day type is unresolved. I will not treat blank time as free time or assume the predicted shift is correct.",recommendation:null,reason:null,primary:null,actions:[["Confirm work today","Work"],["Confirm day off","Off"]],release:"<strong>One answer is enough.</strong> Until then, no workday or day-off plan is preferred.",today:"Work context remains unresolved. TODAY stays available without a forced answer."}
+};
+let current="workday";
+let view="boot";
+const $=id=>document.getElementById(id);
+const list=$("state-list"),boot=$("boot"),orientation=$("orientation"),today=$("today"),exit=$("exit"),toast=$("toast");
+
+function renderSceneButtons(){
+  list.innerHTML="";
+  Object.entries(scenes).forEach(([key,scene])=>{
+    const button=document.createElement("button");
+    button.type="button";button.className="state-button";button.dataset.scene=key;
+    button.setAttribute("aria-pressed",String(key===current));
+    button.innerHTML=`<span>${scene.label}</span><small>${scene.meta}</small>`;
+    button.addEventListener("click",()=>{current=key;view="boot";render()});
+    list.append(button);
+  });
+}
+function evidenceMarkup(rows){return rows.map(([label,value,source])=>`<div class="evidence-row"><span>${label}</span><strong>${value}</strong><span class="source">${source}</span></div>`).join("")}
+function actionMarkup(actions){return actions.map(([label,route])=>`<button class="action" type="button"><span>${label}</span><small>${route}</small></button>`).join("")}
+function showToast(message){toast.textContent=message;toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),2400)}
+function render(){
+  const scene=scenes[current];
+  renderSceneButtons();
+  boot.style.display=view==="boot"?"flex":"none";
+  orientation.classList.toggle("active",view==="orientation");
+  today.classList.toggle("active",view==="today");
+  exit.hidden=view==="boot";
+  $("screen-name").textContent=view==="orientation"?"Orientation":view==="today"?"Today":"Lived day";
+  $("boot-kind").textContent=scene.boot;
+  $("kind").textContent=scene.kind;
+  $("situation-title").textContent=scene.title;
+  $("horizon").textContent=scene.horizon;
+  $("evidence").innerHTML=evidenceMarkup(scene.evidence);
+  $("delta-copy").textContent=scene.delta;
+  $("recommendation").hidden=!scene.recommendation;
+  $("recommendation-copy").textContent=scene.recommendation||"";
+  $("recommendation-reason").textContent=scene.reason||"";
+  const primary=$("recommendation-action");
+  primary.hidden=!scene.primary;
+  primary.querySelector("span").textContent=scene.primary?.[0]||"";
+  primary.querySelector("small").textContent=scene.primary?.[1]||"";
+  primary.onclick=scene.primary?()=>showToast(`${scene.primary[0]} · prototype route only. Nothing was changed.`):null;
+  $("actions").innerHTML=actionMarkup(scene.actions);
+  $("actions").querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>showToast(`${button.textContent.trim()} · prototype route only. Nothing was changed.`)));
+  $("release").innerHTML=scene.release;
+  $("today-summary").textContent=scene.today;
+}
+$("start-day").addEventListener("click",()=>{view="orientation";render()});
+$("enter").addEventListener("click",()=>{view="today";render()});
+$("reopen").addEventListener("click",()=>{view="orientation";render()});
+exit.addEventListener("click",()=>{view="today";render()});
+$("capture").addEventListener("click",()=>showToast("Capture route only · no thought was stored or transmitted."));
+render();
+</script>
+</body>
+</html>

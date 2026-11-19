@@ -1,4 +1,28 @@
-# Current objective — LIVED-DAY-ORIENT-REFINE-001 (2026-11-19)
+# Current objective — LIVED-DAY-ORIENT-PROTOTYPE-001 (2026-11-19)
+
+- **Owner authorization:** Protected, non-production phone-first prototype across workday, day-off,
+  difficult-day, sparse, and unknown-context states. Brief:
+  [`LIVED-DAY-ORIENT-PROTOTYPE-001.md`](LIVED-DAY-ORIENT-PROTOTYPE-001.md). Starting commit
+  `29bc9efad66ff2a86836eb84394ea9be7e073f4c` (merged PR #588); Builder Codex; branch
+  `codex/lived-day-orient-prototype`; PR pending.
+- **Outcome:** one isolated, self-contained phone prototype for visual assessment of deliberate START
+  DAY, the approved six-part hierarchy, adaptive Delta voice, action limit, Release, EXIT/ENTER TODAY,
+  and reopen. It is not production UI.
+- **Boundary:** sample recommendations illustrate the unresolved Protected composition question; they
+  are not Engine output or runtime semantics. Page-memory interactions call no application command,
+  provider, storage, or network service.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
+- **Exclusions:** no `src/`, production route/import, TODAY, persistence/schema/event, Engine/priority,
+  provider/dependency, navigation, rename, crisis workflow, Google Drive, or implementation authority.
+- **Verification:** 15/15 phone state/width checks pass at 320/360/412; desktop review shell passes;
+  axe WCAG A/AA, touch targets, overflow, abstention/action limits, page errors, external requests,
+  ENTER TODAY/reopen, syntax, local links, diff hygiene, production build, and visual inspection pass.
+- **Next:** open a PR, obtain independent exact-head review, and return to Gavin for visual assessment
+  and merge approval.
+
+---
+
+# Historical — LIVED-DAY-ORIENT-REFINE-001 (merged as PR #588, `29bc9efa`)
 
 - **Owner authorization:** Protected documentation/design only; record the reviewed Orientation and
   Delta decisions, open a reviewed PR, and do not implement. Brief:
@@ -15,10 +39,9 @@
 - **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
 - **Exclusions:** no code, prototype, production UI, TODAY, Engine/priority, schema/event, provider,
   dependency, AI call, navigation, rename, crisis workflow, Google Drive, or concurrent-PR change.
-- **Verification:** local Markdown links and diff hygiene pass. PR #588 requires green required CI and
-  independent exact-head review.
-- **Next:** resolve review/CI findings and return to Gavin for merge approval. A phone-first prototype
-  remains a separate proposal.
+- **Verification:** PR #588 merged at exact head `b9dd990e` after green required CI and independent
+  exact-head PASS.
+- **Next at closure:** Gavin separately authorized the non-production phone-first prototype now active.
 
 ---
 
