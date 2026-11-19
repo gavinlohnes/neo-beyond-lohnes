@@ -18,7 +18,8 @@ the existing AGENTS.md leverage gate. No extra authorization artifacts or resear
 
 Gavin controls product direction, priorities, Protected boundaries, material costs, and every PR
 merge. Agents may implement ordinary details within an approved objective without repeatedly
-asking permission. No agent may independently expand scope, merge a PR, alter repository
+asking permission. No agent may independently expand scope, merge a PR (except under the owner merge delegation
+below), alter repository
 protections, or purchase services. An unapproved boundary or unresolved authority conflict stops
 the affected work and goes to the owner; already-approved details do not need duplicate approval.
 
@@ -72,7 +73,8 @@ required independent Reviewer is unavailable, prepare the exact-head review hand
 do not claim review completion. Fix review findings within scope, then obtain renewed review
 when required. Close with what changed, what Gavin should try, remaining limitations, and one
 recommended next step. New scope still waits for approval; do not start an unattended chain of
-objectives. Every merge remains Gavin's decision; all existing no-self-merge/no-bypass rules apply.
+objectives. Every merge remains Gavin's decision; all existing no-self-merge/no-bypass rules apply, except as the
+owner merge delegation below allows.
 
 Default progress/handoff format (brief, with evidence links where useful): **Where we are ·
 What I recommend or am doing · Why it matters · What needs your decision**. If no decision is
@@ -164,6 +166,20 @@ Every PR, including Routine, waits for explicit owner merge approval. Preparing 
 authorize integration. No self-merge, automatic merge, admin bypass, direct-master shipping, or
 repository-protection change is permitted by this workflow. Any integration delegation must be
 explicitly owner-authorized and separate from the Builder's work.
+
+**Owner merge delegation (amendment, Gavin, 2026-11-19).** Gavin: "You have permission to merge from now on. As long
+as it works in good to have you merge." When the conflict with the rule above was put to him, he chose to amend this
+charter. Until he revokes it, the Builder of record for a PR may merge that PR when all of these hold:
+1. The PR is not Protected. It changes no Engine, schema or migration, event or command semantics, backup contract,
+   provider or account, dependency, navigation or information architecture, or governance. Protected PRs, this
+   amendment included, still wait for Gavin.
+2. CI is green on the exact head being merged.
+3. An independently assigned Reviewer posted PASS on that same exact head in GitHub. Any head change needs a renewed
+   PASS.
+4. Nothing in the PR's brief or review is left marked for the owner's decision.
+
+The merge uses `expectedHeadSha` (no force, no admin bypass), and the checkpoint records each merge. Everything else
+above still applies, and Gavin can revoke this delegation at any time by saying so.
 
 ## Product identity and engineering safeguards
 
