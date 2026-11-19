@@ -3536,3 +3536,35 @@ Gavin approved the canonical destination and exact identity structure:
   standing primary-navigation, visual-identity, semantic, or implementation change.
 - **Authority:** [`PROJECT_GRAYSON_VISION.md`](PROJECT_GRAYSON_VISION.md) is the full destination
   blueprint. It guides future briefs but authorizes no build by itself.
+
+## LIVED-DAY-ORIENT-REFINE-001 — opening relationship and adaptive command (Gavin, 2026-11-19)
+
+After the first Orientation design merged as PR #587, Gavin reviewed its protected experience choices
+and approved these refinements as documentation-only:
+
+- Deliberately pressing `START DAY` opens Orientation automatically; immediate exit remains available.
+  If another action already began the day, Orientation remains an optional, non-interrupting invitation.
+- Check-in improves Orientation but never gates it. Missing subjective context reduces Delta's certainty,
+  not Gavin's access or control; mood, stress, energy, and capacity are never inferred from biometrics.
+- The opening hierarchy is **Situation → You → Delta → Recommendation → Supporting actions → Release**.
+  Show at most one primary recommendation and two supporting actions, and show fewer or none when the
+  evidence does not justify priority.
+- Delta uses adaptive analytical command: concise by default, explanatory when a tradeoff matters,
+  direct when evidence and consequence are strong, and gentler around uncertainty or vulnerability.
+  Directness may rise with evidence and consequence; certainty may not exceed the evidence. Once Gavin
+  makes an informed decision, Delta respects it unless material circumstances change.
+- Workdays protect operational readiness. Days off are purpose-first: rest, family, enjoyment,
+  maintenance, progress, or intentionally open time are valid, and unallocated time is not a problem
+  to fill. Difficult days protect essentials and reduce load without diagnosis or character judgment.
+- One difficult submitted check-in may change today's load. A supported sustained pattern may increase
+  Delta's concern. Gavin explicitly saying he cannot manage the normal plan permits immediate reduction
+  without waiting for a trend. Crisis behavior requires a separate safety-reviewed objective.
+- Orientation remains read-and-route, local-first, and usable without an automatic model call. It never
+  silently reschedules, cancels, accepts, completes, or transmits anything.
+- The new primary-recommendation destination is not current Engine behavior. A future Protected objective
+  must explicitly adjudicate its relationship to Engine guidance, the pre-check-in draft, preparation,
+  commitments, and training; no competing authoritative answers or hidden priority change.
+
+Canonical detail: [`LIVED_DAY_ORIENTATION_DESIGN.md`](LIVED_DAY_ORIENTATION_DESIGN.md). This ruling
+authorizes no implementation. The next proposed step is a separately approved phone-first prototype/
+visual checkpoint.

@@ -16,10 +16,11 @@ Deepen / Replace carefully / Retire / Defer**, not discarded for a rewrite.
 
 The report-only [current-product baseline](PROJECT_GRAYSON_BASELINE.md) merged as PR #586. It found
 that BEYOND already contains most of the suit and recommended orchestration around lived transitions,
-not a rewrite or a broad autonomy push. Gavin next authorized a documentation/design-only
-[`LIVED-DAY-ORIENT-001`](agent/LIVED-DAY-ORIENT-001.md) objective. It may define one optional opening
-orientation, but no implementation is authorized. The existing queue and active PRs continue unless
-Gavin explicitly reprioritizes them.
+not a rewrite or a broad autonomy push. The documentation/design-only
+[`LIVED-DAY-ORIENT-001`](agent/LIVED-DAY-ORIENT-001.md) objective merged as PR #587. Gavin then
+reviewed and approved a documentation-only refinement of the opening relationship, adaptive Delta
+voice, action limit, day-off philosophy, and difficult-day response. No prototype or implementation is
+authorized. The existing queue and active PRs continue unless Gavin explicitly reprioritizes them.
 
 ## Now — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15)
 

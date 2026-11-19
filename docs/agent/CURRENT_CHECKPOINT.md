@@ -1,4 +1,28 @@
-# Current objective — LIVED-DAY-ORIENT-001 design (2026-11-19)
+# Current objective — LIVED-DAY-ORIENT-REFINE-001 (2026-11-19)
+
+- **Owner authorization:** Protected documentation/design only; record the reviewed Orientation and
+  Delta decisions, open a reviewed PR, and do not implement. Brief:
+  [`LIVED-DAY-ORIENT-REFINE-001.md`](LIVED-DAY-ORIENT-REFINE-001.md). Starting commit
+  `87d35bca687934d32e31409ddd257ff93d811e39` (merged PR #587); Builder Codex; branch
+  `codex/lived-day-orient-refinement`; [PR #588](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/588).
+- **Approved refinements:** START DAY opens Orientation; check-in never gates it; hierarchy is
+  Situation → You → Delta → one recommendation → at most two supporting actions → Release; Delta uses
+  evidence-bounded adaptive analytical command; days off are purpose-first; difficult-day response
+  distinguishes one check-in, a sustained pattern, and Gavin's explicit statement.
+- **Protected boundary surfaced:** the destination primary recommendation exceeds the merged design's
+  presentation-only selection rule. This objective records that decision but does not implement or
+  silently redefine Engine/recommendation priority. A future bounded decision must adjudicate it.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
+- **Exclusions:** no code, prototype, production UI, TODAY, Engine/priority, schema/event, provider,
+  dependency, AI call, navigation, rename, crisis workflow, Google Drive, or concurrent-PR change.
+- **Verification:** local Markdown links and diff hygiene pass. PR #588 requires green required CI and
+  independent exact-head review.
+- **Next:** resolve review/CI findings and return to Gavin for merge approval. A phone-first prototype
+  remains a separate proposal.
+
+---
+
+# Historical — LIVED-DAY-ORIENT-001 design (merged as PR #587, `87d35bca`)
 
 - **Owner authorization:** documentation/design only before implementation. Brief:
   [`LIVED-DAY-ORIENT-001.md`](LIVED-DAY-ORIENT-001.md). Starting commit
@@ -17,10 +41,10 @@
 - **Exclusions:** no implementation, production UI, rename, schema/event, Engine/priority, notification,
   provider/dependency, autonomy, navigation, global redesign, evening/Shift Down, Google Drive, or
   concurrent-PR change.
-- **Verification:** local Markdown links and diff hygiene pass. PR #587 requires green required CI and
-  independent exact-head review.
-- **Next:** resolve any review/CI findings and return the reviewed design to Gavin. Implementation
-  requires his separate explicit Protected approval.
+- **Verification:** PR #587 merged at exact head `3cac9c2e` after green required CI and independent
+  exact-head PASS.
+- **Next at closure:** Gavin chose to review protected experience decisions before any prototype or
+  implementation authorization.
 
 ---
 
