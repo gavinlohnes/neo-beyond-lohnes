@@ -1,4 +1,27 @@
-# Current objective — PROJECT-GRAYSON-VISION-001 (2026-11-19)
+# Current objective — PROJECT-GRAYSON-BASELINE-001 (2026-11-19)
+
+- **Owner authorization:** report-only evaluation against the Project Grayson Vision Blueprint.
+  Brief: [`PROJECT-GRAYSON-BASELINE-001.md`](PROJECT-GRAYSON-BASELINE-001.md). Starting commit
+  `5f9a9a12d8a363a75eb4bcb364c02dc119d69204` (merged PR #585); Builder Codex; branch
+  `codex/project-grayson-baseline`; [PR #586](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/586).
+- **Outcome:** current-product baseline, scenario assessment, Preserve/Adapt/Connect/Deepen/Replace
+  carefully/Retire/Defer map, navigation assessment, and one first-objective recommendation.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate. Neither
+  is changed or taken over.
+- **Finding:** BEYOND already contains most of the suit. The primary gap is orchestration around lived
+  transitions, not missing domain breadth or insufficient AI autonomy.
+- **Recommendation:** [`LIVED-DAY-ORIENT-001`](../PROJECT_GRAYSON_BASELINE.md#recommended-first-objective)
+  — a Protected, optional, evidence-grounded opening orientation that composes existing sleep,
+  schedule, check-in, guidance, commitments, preparation, training, and capture. It is not authorized
+  by this report.
+- **Exclusions:** no implementation, redesign, rename, deletion, Google Drive, product-authority, or
+  queue change.
+- **Next:** validate report links/diff, open a documentation PR, and return to Gavin for assessment and
+  a separate decision on the recommended objective.
+
+---
+
+# Historical — PROJECT-GRAYSON-VISION-001 (merged as PR #585, `5f9a9a12`)
 
 - **Owner authorization:** Gavin approved the exact Protected, documentation-only objective. Brief:
   [`PROJECT-GRAYSON-VISION-001.md`](PROJECT-GRAYSON-VISION-001.md). Starting commit
