@@ -92,9 +92,9 @@ export function GymMode(props: GymModeProps) {
       : [];
 
   return (
-    <div ref={dialogRef} tabIndex={-1} className="gym-mode" role="dialog" aria-modal="true" aria-label="Gym mode">
+    <div ref={dialogRef} tabIndex={-1} className="bf gym-mode" role="dialog" aria-modal="true" aria-label="Gym mode">
       <div className="gym-mode__top">
-        <p className="meta" style={{ margin: 0 }}>
+        <p className="gym-mode__count">
           Exercise {props.exerciseIndex + 1} of {props.exerciseCount}
         </p>
         <button type="button" className="btn-secondary gym-mode__exit" onClick={props.onExit}>
@@ -104,7 +104,7 @@ export function GymMode(props: GymModeProps) {
 
       <h2 className="gym-mode__name">{exercise.name}</h2>
       <CueLine key={exercise.exerciseId} exerciseId={exercise.exerciseId} exerciseName={exercise.name} onSave={props.onSaveCue} />
-      <p className="meta-strong" style={{ margin: "0 0 4px" }}>
+      <p className="gym-mode__set">
         {setNumber !== null ? `Set ${setNumber} of ${exercise.sets}` : "All sets logged"} · {exercise.repRangeLow}-{exercise.repRangeHigh} reps
       </p>
       {props.ghost && (

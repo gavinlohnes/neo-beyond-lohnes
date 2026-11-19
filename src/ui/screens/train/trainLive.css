@@ -1,0 +1,59 @@
+/* GYM-FOUNDATION-001 (Gavin, 2026-11-19: "1A", HARVEST-001 #8): the live workout and gym mode on BEYOND's visual
+   foundation (src/ui/foundation/foundation.css, docs/agent/VISUAL-FOUNDATION-001.md). Presentation only: the same
+   controls, words, order and handlers. Bigger condensed numerals, framed panels with the red bracket, mono-capital
+   labels. Red stays structure and the one action (LOG); your logged numbers are white. TRAIN keeps its own stricter
+   rule (TRAIN-OPERATOR-001): every text in a live workout is 16 px or larger, labels included. */
+
+/* The command bar: TRAIN // LIVE, the workout, and GYM MODE as its one bar action. */
+.train-live-state { margin: 0 0 16px; }
+.train-live-state .bf-bar { align-items: center; }
+.train-live-state .bf-bar__eyebrow { font-size: 16px; letter-spacing: .06em; white-space: nowrap; }
+.train-live-state .bf-bar__id { flex: 1; }
+.train-live-title { margin: 0; font-size: 16px; color: var(--p-t1, #f2f2f2); overflow-wrap: anywhere; }
+.train-live-gym { width: auto; padding: 0 10px; letter-spacing: .08em; }
+
+/* Two numbers as framed foundation panels: exercises done, working sets logged. */
+.train-live-numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 6px; }
+.train-live-num { position: relative; display: grid; gap: 6px; min-width: 0; padding: 10px 10px 10px 12px; background: var(--bf-s1);
+  border: 1px solid var(--bf-line);
+  clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut))); }
+.train-live-num::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--bf-red);
+  border-top: 2px solid var(--bf-red); pointer-events: none; }
+.train-live-num__label, .train-live-eyebrow, .train-live-field, .gym-mode__count, .gym-mode__set {
+  margin: 0; font-family: var(--font-mono, monospace); font-size: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--p-t1, #f2f2f2); }
+.train-live-num .bf-value { font-size: 46px; }
+.train-live-meta { margin: 0; font-size: 16px; color: var(--bf-quiet); }
+
+/* The current exercise keeps its one dominant frame (.command-surface) and gains the foundation's language: cut
+   corners on two opposite sides, the red bracket, a red-tinted frame and a faint red wash from the top. */
+.train-operator[data-workout-active="true"] .command-surface { position: relative; border: 1px solid color-mix(in srgb, var(--bf-red) 55%, var(--bf-line));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bf-red) 9%, transparent), transparent 40%), var(--bf-s1);
+  clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut))); }
+.train-operator[data-workout-active="true"] .command-surface::before { content: ""; position: absolute; left: 0; top: 0; width: 28px; height: 28px;
+  border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+.train-operator[data-workout-active="true"] .command-surface .command-title { font-family: var(--font-display, sans-serif); font-weight: 700;
+  letter-spacing: .01em; text-transform: uppercase; }
+.train-live-eyebrow { margin-bottom: 2px; }
+.train-live-eyebrow::before, .gym-mode__count::before { content: "/// "; color: var(--bf-red); letter-spacing: -.05em; }
+/* LAST TIME and BEST: reference lines in the foundation's mono, your own numbers in white. */
+.train-live-ref { font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .02em; color: var(--bf-quiet); }
+
+/* Weight and reps: big condensed numerals you can read at arm's length. */
+.train-live-field { width: 64px; letter-spacing: .04em; }
+.train-operator .train-live-input { min-height: 52px; font-family: var(--font-display, sans-serif); font-size: 32px; font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+
+/* Gym mode: the same screen language, larger. */
+.gym-mode__name { font-size: 40px; text-transform: uppercase; letter-spacing: .01em; }
+.gym-mode__set { margin: 0 0 8px; }
+.gym-mode .gym-mode__number { font-family: var(--font-display, sans-serif); font-size: 72px; line-height: 1; font-variant-numeric: tabular-nums; }
+.gym-mode__ghost { position: relative; align-self: flex-start; padding: 8px 12px; background: var(--bf-s1); border: 1px solid var(--bf-line);
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px)); }
+.gym-mode__ghost::before { content: ""; position: absolute; left: 0; top: 0; width: 14px; height: 14px; border-left: 2px solid var(--bf-red);
+  border-top: 2px solid var(--bf-red); }
+.gym-mode__rest { font-family: var(--font-display, sans-serif); font-size: 32px; font-weight: 700; letter-spacing: .02em; }
+
+/* The rest timer: the remaining time as a foundation numeral. */
+.train-operator .train-live-rest { font-family: var(--font-display, sans-serif); font-size: 46px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums; color: var(--p-t1, #f2f2f2); }
