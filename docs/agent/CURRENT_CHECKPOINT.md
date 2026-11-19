@@ -4,7 +4,7 @@
   difficult-day, sparse, and unknown-context states. Brief:
   [`LIVED-DAY-ORIENT-PROTOTYPE-001.md`](LIVED-DAY-ORIENT-PROTOTYPE-001.md). Starting commit
   `29bc9efad66ff2a86836eb84394ea9be7e073f4c` (merged PR #588); Builder Codex; branch
-  `codex/lived-day-orient-prototype`; PR pending.
+  `codex/lived-day-orient-prototype`; [PR #589](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/589).
 - **Outcome:** one isolated, self-contained phone prototype for visual assessment of deliberate START
   DAY, the approved six-part hierarchy, adaptive Delta voice, action limit, Release, EXIT/ENTER TODAY,
   and reopen. It is not production UI.
@@ -17,8 +17,8 @@
 - **Verification:** 15/15 phone state/width checks pass at 320/360/412; desktop review shell passes;
   axe WCAG A/AA, touch targets, overflow, abstention/action limits, page errors, external requests,
   ENTER TODAY/reopen, syntax, local links, diff hygiene, production build, and visual inspection pass.
-- **Next:** open a PR, obtain independent exact-head review, and return to Gavin for visual assessment
-  and merge approval.
+- **Next:** obtain independent exact-head review and green required CI, resolve findings, and return to
+  Gavin for visual assessment and merge approval.
 
 ---
 

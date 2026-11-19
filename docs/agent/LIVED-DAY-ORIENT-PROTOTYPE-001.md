@@ -13,7 +13,7 @@ semantics, call an AI provider, rename the runtime, modify Google Drive, or auth
 
 **Branch:** `codex/lived-day-orient-prototype`
 
-**Active PR:** pending
+**Active PR:** [#589](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/589)
 
 ## Outcome
 
