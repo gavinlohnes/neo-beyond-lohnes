@@ -1,0 +1,23 @@
+/* ONE-LOOK-002 (Gavin, 2026-11-19, approved list item 1): the last screens onto BEYOND's visual foundation
+   (docs/agent/VISUAL-FOUNDATION-001.md). Presentation only: the same words, order, taps and data. Loaded once by the
+   app-wide OperatorHeader, so the header's 44 px target and every screen's rules arrive together. */
+
+/* REVIEW's head is a command bar; its title stays the screen's visible h1 ("MORE // REVIEW"). */
+/* The bar takes the old h1's inset (wholePicture.css `.picture-review>h1{margin:20px 24px}`), so REVIEW keeps its edges. */
+.picture-review > .review-bar { margin: 20px 24px 16px; }
+.review-bar__eyebrow { display: flex; align-items: baseline; gap: 6px; }
+.review-bar__eyebrow .bf-slashes { margin: 0; font: 600 12px var(--font-mono, monospace); }
+
+/* Framed panels: the red bracket on TRAIN's history and record cards, MY PROGRAMME and REVIEW's recommendation days. */
+.train-operator .record-card, .train-operator .suit-panel[aria-label="My programme"], .picture-review .card { position: relative; }
+.train-operator .record-card::before, .train-operator .suit-panel[aria-label="My programme"]::before, .picture-review .card::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--p-red, #D0141B);
+  border-top: 2px solid var(--p-red, #D0141B); pointer-events: none; z-index: 1; }
+.train-operator .suit-panel[aria-label="My programme"] {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+/* A session or record reads like a foundation panel: the title in the display face, the date in mono. */
+.train-operator .record-card .card-title { font-family: var(--font-display, sans-serif); text-transform: uppercase; letter-spacing: .01em; }
+.train-operator .record-card__date { font-family: var(--font-mono, monospace); letter-spacing: .04em; }
+
+/* The header's Ask Alfred is a 44 px target on every tab (it measured 38 × 32). */
+.cc-hdr .cc-alfred-btn { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }

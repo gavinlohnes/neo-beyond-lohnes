@@ -50,7 +50,9 @@ function expectFoundationShell(sheet: HTMLElement) {
   expect(cs.clipPath).not.toBe("none");
   const head = sheet.querySelector(".log-sheet__header")!;
   expect(getComputedStyle(head, "::before").borderLeftColor).toBe(cs.borderTopColor);
-  expect(getComputedStyle(head.querySelector("h2")!, "::before").content).toContain("///");
+  // The slashes sit beside the title, hidden from screen readers; the heading itself is just the title.
+  expect(head.querySelector('.log-sheet__slashes[aria-hidden="true"]')!.textContent).toBe("///");
+  expect(head.querySelector("h2")!.textContent).not.toContain("/");
 }
 /** Nothing spills, sentences and controls stay 16 px, short mono labels never under 10 px, and axe passes. */
 async function expectReadable(sheet: HTMLElement, label: string) {

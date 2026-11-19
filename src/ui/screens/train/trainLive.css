@@ -35,7 +35,7 @@
 .train-operator[data-workout-active="true"] .command-surface .command-title { font-family: var(--font-display, sans-serif); font-weight: 700;
   letter-spacing: .01em; text-transform: uppercase; }
 .train-live-eyebrow { margin-bottom: 2px; }
-.train-live-eyebrow::before, .gym-mode__count::before { content: "/// "; color: var(--bf-red); letter-spacing: -.05em; }
+.train-live-eyebrow::before, .gym-mode__count::before { content: "/// " / ""; color: var(--bf-red); letter-spacing: -.05em; }
 /* LAST TIME and BEST: reference lines in the foundation's mono, your own numbers in white. */
 .train-live-ref { font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .02em; color: var(--bf-quiet); }
 

@@ -39,7 +39,13 @@ export const ReviewScreen = memo(function ReviewScreen({ active = true, onOpenHi
 
   return (
     <div className="screen picture-review">
-      <h1 className="eyebrow">MORE // REVIEW</h1>
+      {/* ONE-LOOK-002: the head is a command bar; its title stays this screen's visible h1. */}
+      <header className="bf bf-bar review-bar">
+        <div className="bf-bar__id">
+          <div className="review-bar__eyebrow"><span className="bf-slashes" aria-hidden="true">///</span><h1 className="bf-bar__eyebrow">MORE // REVIEW</h1></div>
+          <p className="bf-bar__day"><span className="bf-bar__date">{new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}</span></p>
+        </div>
+      </header>
       <PersonalUnderstanding active={active} onOpenHistory={onOpenHistory} onOpenSource={onOpenUnderstandingSource} focus={understandingFocus} onOpenDailyNote={onOpenDailyNote} onOpenWeeklyInterview={onOpenWeeklyInterview} />
       <WholePicture active={active} onOpenHistory={onOpenHistory} {...(destination === undefined ? {} : { destination })} {...(onDestinationConsumed ? { onDestinationConsumed } : {})} />
       <details className="picture-legacy"><summary>Weekly, monthly & detailed reviews</summary>
