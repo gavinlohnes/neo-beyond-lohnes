@@ -171,3 +171,59 @@ it("METRIC-PAGE-002 slice 1: with no weigh-ins, weight has no latest, no history
     expect(d.usual.value).toBeNull();
   } finally { vi.useRealTimers(); }
 });
+
+it("METRIC-PAGE-002 slice 2: protein is each lived day's logged total (meals and protein entries), corrected, a deleted log left out, a day without one missing, read without writing", async () => {
+  const { logProtein, correctProtein, voidProteinLog, logBodyweight } = await import("../src/application/commands");
+  const { getProteinEntries } = await import("../src/application/queries");
+  const { createSavedMeal, logMeal } = await import("../src/application/nutritionCommands");
+  const { getDaySummaries } = await import("../src/application/dayLedgerQueries");
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    const first = await startDay();
+    await logProtein(first.id, 30);
+    const meal = await createSavedMeal({ name: "Chicken and rice", calories: 640, proteinG: 48, carbsG: 70, fatG: 14 });
+    vi.setSystemTime(new Date(2026, 10, 10, 20));
+    await logMeal(first.id, meal.id);
+    vi.setSystemTime(new Date(2026, 10, 11, 18));
+    await startDay(); // a lived day with nothing logged
+    vi.setSystemTime(new Date(2026, 10, 12, 18));
+    const third = await startDay();
+    await logProtein(third.id, 25);
+    const [entry] = await getProteinEntries(third.id);
+    await correctProtein(third.id, entry!.headEventId, 40);
+    vi.setSystemTime(new Date(2026, 10, 12, 19));
+    await logProtein(third.id, 10);
+    await logBodyweight(third.id, 200); // gives the default 1.0 g per lb target
+
+    const before = await db.events.toArray();
+    const d = await getMetricDetail("protein");
+    expect(d.source).toBe("LOGGED");
+    expect(d.series.slice(-3).map((v) => v.value)).toEqual([78, null, 50]);
+    // The same total TODAY and BODY show, from the day ledger.
+    expect(d.series.at(-1)!.value).toBe((await getDaySummaries()).find((s) => s.beyondDayId === third.id)!.proteinG);
+    expect(d.series.at(-1)!.partial).toBe(true);
+    // TODAY steps up at each log; the target is carried as a target only.
+    expect(d.today).toMatchObject({ kind: "intake", entries: 2, targetG: 200 });
+    expect(d.today.kind === "intake" && d.today.points.map((p) => p.total)).toEqual([0, 40, 50]);
+    expect(await db.events.toArray()).toEqual(before);
+
+    // A deleted log leaves the lived day's total without it; with none left the day is missing, never zero.
+    await voidProteinLog(third.id, entry!.rootEventId);
+    const [rest] = await getProteinEntries(third.id);
+    await voidProteinLog(third.id, rest!.rootEventId);
+    const undone = await getMetricDetail("protein");
+    expect(undone.series.at(-1)!.value).toBeNull();
+    expect(undone.today).toMatchObject({ kind: "intake", entries: 0, points: [{ total: 0 }] });
+  } finally { vi.useRealTimers(); }
+});
+
+it("METRIC-PAGE-002 slice 2: with no weigh-in there is no protein target, never a guessed one", async () => {
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    await startDay();
+    const d = await getMetricDetail("protein");
+    expect(d.series.every((v) => v.value === null)).toBe(true);
+    expect(d.today).toMatchObject({ kind: "intake", entries: 0, targetG: undefined });
+    expect(d.usual.value).toBeNull();
+  } finally { vi.useRealTimers(); }
+});

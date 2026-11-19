@@ -143,3 +143,13 @@ describe("METRIC-PAGE-002 slice 1: weight keeps its own meaning", () => {
     expect(direction90(year(209.5), 1, 0)).toMatchObject({ way: "SAME" });
   });
 });
+
+describe("METRIC-PAGE-002 slice 2: protein keeps its own meaning", () => {
+  it("shows TODAY, 7D, 30D and 1Y; weeks are the mean of logged days, like calories, in whole grams", () => {
+    expect(rangesFor("protein").map(([id]) => id)).toEqual(["today", "7d", "30d", "1y"]);
+    expect(WEEK_MODE.protein).toBe(WEEK_MODE.calories);
+    expect(DIGITS.protein).toBe(0);
+    const series = Array.from({ length: 7 }, (_, i) => pv(i, i === 1 ? 150 : i === 4 ? 121 : null));
+    expect(rangeValues(series, "1y", WEEK_MODE.protein, DIGITS.protein).map((w) => w.value)).toEqual([136]);
+  });
+});

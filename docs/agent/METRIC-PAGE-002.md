@@ -57,3 +57,21 @@ queries only.
 - TODAY's WEIGHT tile and BODY's WEIGHT card open the page. WEIGHT RECORDS goes to the route each tap used before
   (TODAY: DATA's weight evidence; BODY: its weight history), LOG WEIGHT to the existing weight sheet, so nothing the old
   views showed is lost.
+
+## Slice 2 — protein (Claude Code, branch `claude/metric-page-002-protein`)
+
+- Baseline master `17d0e15` (#566, slice 1, merged). Lane Feature; read side only.
+- `getMetricDetail("protein")`: each lived day's `proteinG` from the day ledger (meals plus protein-only logs, corrections
+  applied, deleted logs left out): the same total TODAY's tile and BODY's NUTRITION card show. A day with nothing logged
+  is missing, never zero. TODAY is a running total that steps up at each of the lived day's logs (`getFoodDiary`).
+- Ranges TODAY, 7D, 30D, 1Y; weeks are the mean of logged days, like calories; whole grams. 90-day direction floor 5 g
+  plus the usual 5% share.
+- The target is `getEffectiveProteinTargetG` (grams per pound × latest weigh-in), drawn as a quiet solid line labelled
+  "target" and one sentence ("Your protein target: N g a day"). No remaining, deficit or pace figure. With no weigh-in
+  it says no target yet, never a guessed one.
+- WHERE IT CAME FROM (`FoodSources nutrient="protein"`) on 7D and 30D, as on calories.
+- TODAY's PROTEIN tile opens the page. PROTEIN RECORDS goes where the tile went before (BODY's protein history, which
+  has its own sources and day links), LOG PROTEIN to the existing protein sheet. `FoodSources001`'s BODY protein test
+  now reaches that history through PROTEIN RECORDS.
+- **BODY keeps its route:** BODY has no protein-only panel; its NUTRITION card shows calories and protein together and
+  opens the calories history. Switching it to the protein page would hide calories, so it stays as it is.
