@@ -32,3 +32,8 @@
   clip-path: polygon(0 0, calc(100% - var(--bf-cut)) 0, 100% var(--bf-cut), 100% 100%, var(--bf-cut) 100%, 0 calc(100% - var(--bf-cut))); }
 .log-sheet.bf .alfred-card::before { content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px;
   border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+
+/* The foundation's size rule inside every sheet: CLOSE, the actions and Alfred's footer links are 16 px. TODAY's
+   `.today-field .btn-*` sets 13 px on buttons; a sheet opened from TODAY sits inside it, so this out-ranks it. */
+dialog.log-sheet.bf .log-sheet__header button, dialog.log-sheet.bf .btn-primary, dialog.log-sheet.bf .btn-secondary,
+dialog.log-sheet.bf .alfred-link { font-size: 16px; }

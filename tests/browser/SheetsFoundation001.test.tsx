@@ -75,18 +75,18 @@ describe("SHEETS-FOUNDATION-001: the sheets on the foundation", () => {
     await screen.getByRole("button", { name: "Open LOG" }).click();
     const sheet = screen.getByRole("dialog", { name: "LOG" });
     await expect.element(sheet).toBeVisible();
-    expectFoundationShell(sheet.element() as HTMLElement);
     await shot("log");
-    await sheet.getByRole("button", { name: /^Water/ }).click();
+    expectFoundationShell(sheet.element() as HTMLElement);
+    await sheet.getByRole("button", { name: "WATER", exact: true }).click();
     const water = screen.getByRole("dialog", { name: "WATER" });
     await expect.element(water.getByRole("button", { name: "+16 oz" })).toBeVisible();
+    await shot("water");
     const amount = water.getByRole("button", { name: "+16 oz" }).element();
     expect(getComputedStyle(amount).fontFamily).toMatch(/Chakra Petch/);
     expect(parseFloat(getComputedStyle(amount).fontSize)).toBeGreaterThanOrEqual(24);
-    await shot("water");
     await expectReadable(water.element() as HTMLElement, "WATER");
     await water.getByRole("button", { name: "+16 oz" }).click();
-    await expect.poll(async () => (await db.events.where("type").equals("HYDRATION_LOGGED").toArray()).length).toBe(1);
+    await expect.poll(async () => (await db.events.where("type").equals("WATER_LOGGED").toArray()).length).toBe(1);
   });
 
   it("CHECK IN: mono scale names, numeral choices, the chosen one marked in red, the same submit", async () => {
@@ -96,15 +96,15 @@ describe("SHEETS-FOUNDATION-001: the sheets on the foundation", () => {
     const sheet = screen.getByRole("dialog", { name: "CHECK IN", exact: true });
     await expect.element(sheet).toBeVisible();
     const el = sheet.element() as HTMLElement;
-    expectFoundationShell(el);
     const energy = sheet.getByRole("group", { name: "Energy" }).last();
     await energy.getByRole("button", { name: "4", exact: true }).click();
+    await shot("check-in");
+    expectFoundationShell(el);
     const chosen = energy.getByRole("button", { name: "4", exact: true }).element();
     expect(getComputedStyle(chosen).fontFamily).toMatch(/Chakra Petch/);
     expect(parseFloat(getComputedStyle(chosen).fontSize)).toBeGreaterThanOrEqual(24);
     expect(getComputedStyle(chosen).boxShadow).toContain(RED);
     expect(getComputedStyle(el.querySelector(".check-in-scale h3")!).fontFamily).toMatch(/mono|Mono|JetBrains|IBM Plex Mono/i);
-    await shot("check-in");
     await expectReadable(el, "CHECK IN");
   });
 
@@ -115,17 +115,17 @@ describe("SHEETS-FOUNDATION-001: the sheets on the foundation", () => {
     await screen.getByRole("button", { name: "Ask Alfred" }).first().click();
     const sheet = screen.getByRole("dialog", { name: "ALFRED" });
     await expect.element(sheet).toBeVisible();
-    expectFoundationShell(sheet.element() as HTMLElement);
     await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("I slept 7 hours");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     const card = sheet.getByRole("group", { name: "Log main sleep 7h 00m" });
     await expect.element(card).toBeVisible();
+    await shot("alfred");
+    expectFoundationShell(sheet.element() as HTMLElement);
     const cardEl = card.element();
     expect(getComputedStyle(cardEl).clipPath).not.toBe("none");
     expect(getComputedStyle(cardEl, "::before").borderTopColor).toBe(RED);
     expect(getComputedStyle(sheet.element().querySelector(".alfred-turn__who")!, "::before").content).toContain("///");
     expect(await db.events.where("type").equals("SLEEP_LOGGED").count()).toBe(0);
-    await shot("alfred");
     await expectReadable(sheet.element() as HTMLElement, "ALFRED");
   });
 });
