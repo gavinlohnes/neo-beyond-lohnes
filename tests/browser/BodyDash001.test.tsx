@@ -61,6 +61,9 @@ const settle = async () => {
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 };
 async function aa(label: string) {
+  // Finish the DATA tab's entrance fade first: axe reads colours mid-animation as low contrast (GYM-FOUNDATION-001 found
+  // the race, since any extra stylesheet shifts the timing).
+  await settle();
   const r = await axe.run(document.body, { runOnly: ["wcag2a", "wcag2aa"] });
   expect(r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`), label).toEqual([]);
 }

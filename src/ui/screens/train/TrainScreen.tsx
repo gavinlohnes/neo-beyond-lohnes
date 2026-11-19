@@ -17,6 +17,7 @@ import { QuickTags } from "../../components/QuickTags";
 import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
 import "./trainFoundation.css";
+import "./trainLive.css";
 import { CalendarDays, History as HistoryIcon, Trophy } from "lucide-react";
 import { CommandBar, Panel, SourceTag, Sparkline } from "../../foundation/primitives";
 import { getTrainHome, type TrainHome } from "../../../application/trainHomeQueries";
@@ -1050,7 +1051,7 @@ export function TrainScreen({
   const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
 
   return (
-    <div className="screen fade-in train-field train-operator" data-training-view={trainView} data-workout-active={Boolean(session)}>
+    <div className="screen fade-in train-field train-operator bf" data-training-view={trainView} data-workout-active={Boolean(session)}>
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -1479,16 +1480,21 @@ export function TrainScreen({
         <>
           {/* Canonical session orientation stays compact so recording leads.
               Gym Mode is the same optional full-screen operating shortcut. */}
-              <section className="train-session-state" aria-label="Session progress">
-                <div className="train-session-tools">
-                  <p className="meta-strong">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
-                  <button ref={gymModeButtonRef} type="button" className="btn-secondary" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
+              {/* GYM-FOUNDATION-001: the live workout's command bar (TRAIN // LIVE, the workout, GYM MODE) and its two
+                  numbers as foundation numerals. Same counts, same GYM MODE; presentation only. */}
+              <section className="bf train-session-state train-live-state" aria-label="Session progress">
+                <div className="bf-bar train-session-tools">
+                  <div className="bf-bar__id">
+                    <p className="bf-bar__eyebrow" aria-hidden="true"><span className="bf-slashes">///</span> TRAIN // LIVE</p>
+                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
+                  </div>
+                  <button ref={gymModeButtonRef} type="button" className="bf-bar__log train-live-gym" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
                 </div>
-                <ReadoutGrid className="train-session-readout">
-                  <Readout label="EXERCISES DONE" value={`${activeExercises.filter(isExerciseComplete).length} / ${activeExercises.length}`} />
-                  <Readout label="SETS LOGGED" value={sets.filter(isWorkingSet).length} />
-                </ReadoutGrid>
-                <p className="meta">{sets.filter((set) => set.skipped).length} skipped · {activeExercises.reduce((total, exercise) => total + exercise.sets, 0)} prescribed sets</p>
+                <div className="train-live-numbers">
+                  <div className="train-live-num"><p className="train-live-num__label">EXERCISES DONE</p><p className="bf-value">{activeExercises.filter(isExerciseComplete).length}<small> / {activeExercises.length}</small></p></div>
+                  <div className="train-live-num"><p className="train-live-num__label">SETS LOGGED</p><p className="bf-value">{sets.filter(isWorkingSet).length}<small> of {activeExercises.reduce((total, exercise) => total + exercise.sets, 0)}</small></p></div>
+                </div>
+                <p className="meta train-live-meta">{sets.filter((set) => set.skipped).length} skipped</p>
               </section>
 
           {/* GYM-001: a full-screen, one-handed view of the same session. */}
@@ -1547,7 +1553,7 @@ export function TrainScreen({
               now, and nothing else competing for attention. */}
           {currentExercise && (
             <CommandSurface key={currentExercise.exerciseId}>
-              <p className="meta" style={{ marginBottom: 2 }}>
+              <p className="meta train-live-eyebrow">
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
               <h2 ref={exerciseHeadingRef} tabIndex={-1} className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
@@ -1568,16 +1574,16 @@ export function TrainScreen({
                   machine/system-derived context, not prose directed at the
                   lifter — restrained mono (.meta) rather than .card-body. */}
               {lastPerformedSets[currentExercise.exerciseId] && (
-                <p className="meta" style={{ marginBottom: 4 }}>
+                <p className="meta train-live-ref" style={{ marginBottom: 4 }}>
                   LAST TIME: {lastPerformedSets[currentExercise.exerciseId]!.weight} lb x{" "}
                   {lastPerformedSets[currentExercise.exerciseId]!.reps}
                   {lastPerformedSets[currentExercise.exerciseId]!.recordedAt && ` · ${new Date(lastPerformedSets[currentExercise.exerciseId]!.recordedAt!).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`}
                 </p>
               )}
               {!lastPerformedSets[currentExercise.exerciseId] && (
-                <p className="meta" style={{ marginBottom: 4 }}>LAST TIME: no recorded set</p>
+                <p className="meta train-live-ref" style={{ marginBottom: 4 }}>LAST TIME: no recorded set</p>
               )}
-              <p className="meta" style={{ marginBottom: 8 }}>
+              <p className="meta train-live-ref" style={{ marginBottom: 8 }}>
                 BEST: {bestRecords[currentExercise.exerciseId]
                   ? `${describeRecordCard(bestRecords[currentExercise.exerciseId]!.record)} · ${new Date(bestRecords[currentExercise.exerciseId]!.recordedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
                   : "No personal record yet"}
@@ -1697,7 +1703,7 @@ export function TrainScreen({
                         adjustWeight/patchInput/handleLogSet — same calls,
                         same empty-string passthrough. */}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <span className="meta" style={{ width: 56, flexShrink: 0 }}>WEIGHT</span>
+                      <span className="meta train-live-field" style={{ flexShrink: 0 }}>WEIGHT</span>
                       <button
                         className="btn-secondary"
                         style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
@@ -1718,8 +1724,8 @@ export function TrainScreen({
                         }}
                         onBlur={(e) => { if (!e.currentTarget.value) patchInput(ex.exerciseId, setNumber, { weight: focusValues.current[`${ex.exerciseId}#${setNumber}:weight`] ?? "" }); }}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { weight: e.target.value })}
-                        className="input"
-                        style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
+                        className="input train-live-input"
+                        style={{ flex: 1, textAlign: "center" }}
                       />
                       <button
                         className="btn-secondary"
@@ -1734,7 +1740,7 @@ export function TrainScreen({
                     {usesBarbellPlates(ex.name) && describePlates(Number(display.weight)) && <p className="meta train-plates" aria-live="polite">{describePlates(Number(display.weight))}</p>}
                     {usesBarbellPlates(ex.name) && setNumber === 1 && describeWarmUpFor(Number(display.weight)) && <p className="meta train-plates">{describeWarmUpFor(Number(display.weight))} · a suggestion, not logged</p>}
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <span className="meta" style={{ width: 56, flexShrink: 0 }}>REPS</span>
+                      <span className="meta train-live-field" style={{ flexShrink: 0 }}>REPS</span>
                       <button
                         className="btn-secondary"
                         style={{ width: 44, minWidth: 44, padding: 0, flexShrink: 0 }}
@@ -1755,8 +1761,8 @@ export function TrainScreen({
                         }}
                         onBlur={(e) => { if (!e.currentTarget.value) patchInput(ex.exerciseId, setNumber, { reps: focusValues.current[`${ex.exerciseId}#${setNumber}:reps`] ?? "" }); }}
                         onChange={(e) => patchInput(ex.exerciseId, setNumber, { reps: e.target.value })}
-                        className="input"
-                        style={{ flex: 1, textAlign: "center", fontSize: 20, fontWeight: 700 }}
+                        className="input train-live-input"
+                        style={{ flex: 1, textAlign: "center" }}
                       />
                       <button
                         className="btn-secondary"
@@ -1891,7 +1897,7 @@ export function TrainScreen({
               ) : (
                 <>
                   <p className="tool-label" style={{ marginBottom: 4 }}>{restComplete ? "REST COMPLETE" : "RESTING"}</p>
-                  <p className="meta-strong" style={{ marginBottom: 8 }}>{formatRestRemaining(restRemainingMs)}</p>
+                  <p className="meta-strong train-live-rest" style={{ marginBottom: 8 }}>{formatRestRemaining(restRemainingMs)}</p>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
                       type="button"
