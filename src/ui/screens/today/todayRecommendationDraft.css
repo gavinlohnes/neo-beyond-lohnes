@@ -1,0 +1,10 @@
+/* DRAFT-RECOMMENDATION-001: existing foundation, one calm provisional guidance slot. */
+.today-rec-draft { margin: 12px 0; }
+.today-rec-draft .bf-panel { display: flex; flex-direction: column; gap: 16px; }
+.today-rec-draft__title { margin: 0; font-family: var(--font-display); font-size: 32px; line-height: 1.1; }
+.today-rec-draft__nights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.today-rec-draft__nights > div { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--bf-line); padding-top: 12px; }
+.today-rec-draft__nights span, .today-rec-draft__nights small { font-size: 16px; color: var(--bf-quiet); font-weight: 400; }
+.today-rec-draft__nights strong { font-size: 28px; }
+.today-rec-draft button { min-height: 44px; white-space: normal; }
+.today-rec-draft summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; font-size: 16px; }

@@ -1,13 +1,11 @@
-# Current objective — OUTCOME-LOOP-001 (2026-11-19)
+# Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
 
-- **Authorization:** Gavin, “Good. Make it a thing from now on”, approving outcome-led missions, lightweight real-use feedback, previews for larger visual changes and current handoffs.
-- **Builder:** Codex. **Lane:** PROTECTED (workflow governance). Starting master `3876dbd30ebe1d1647626e972c4b0be35802c5a1`.
-- **Branch/brief:** `codex/outcome-loop-001`; [PR #582 — build around outcomes, real use and reliable handoffs](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/582). PR and checkpoint serve as the brief.
-- **Scope:** a short build/use-loop section in DEV-FLOW-002, plus this checkpoint. No app, product capability, architecture, CI, risk-lane or merge-authority change. Routine fixes stay lightweight; feedback is not a blocking gate or recurring nag.
-- **REUSE:** existing brief outcome, quality criteria and PR/checkpoint handoff. **OWN:** BEYOND’s real-use loop. **BUILD FROM SCRATCH:** none.
-- **Acceptance:** documentation/authority consistency and diff checks; independent exact-head review and required CI. Final results recorded in the linked PR to preserve the reviewed head. Owner merge approval required; no merge performed.
-- **Shipped:** QUALITY-STANDARD-001 merged as #581 at `3876dbd3`; HARVEST-003 research merged as #579. Prior checkpoint below is historical.
-- **Remaining / next:** finish this governance review and owner merge; then the already-approved pre-check-in recommendation draft. No draft implementation is underway. Actual release feedback should guide refinements without silently authorizing new scope.
+- **Authorization:** Gavin explicitly approved the bounded pre-check-in draft and, after the original reviewed head became conflicting, authorized its reconciliation onto current master. [Brief](DRAFT-RECOMMENDATION-001.md).
+- **Builder:** Codex. **Lane:** PROTECTED (Engine/TODAY). [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583), branch `codex/draft-recommendation-001`, reconciled onto master `af2fa8e3` after OUTCOME-LOOP-001 merged as #582.
+- Provisional, read-only starting point from existing recorded post-shift or personal two-short-main-sleeps evidence. Capacity remains unknown. Opening the existing check-in writes nothing; submitting it uses unchanged canonical evaluation. No new storage, provider, command or dependency.
+- **Verification:** the original product head passed focused UTC/Chicago Node tests, browser draft/sleep/accessibility/Attention regressions, full CI and independent exact-head review; its actual screenshot was inspected. The master reconciliation changed only this checkpoint conflict, but the new head still requires green CI and renewed independent exact-head review. Do not infer physical-phone verification from Chromium widths.
+- **Shipped:** QUALITY-STANDARD-001 #581, OUTCOME-LOOP-001 #582 and HARVEST-003 #579. The earlier OUTCOME-LOOP checkpoint below is historical.
+- **Remaining / next:** verify the reconciled head, obtain renewed independent exact-head review, then Gavin merges. After merge, inspect the draft on the actual phone before an eligible check-in and give a brief keep / refine / rethink verdict.
 
 ---
 

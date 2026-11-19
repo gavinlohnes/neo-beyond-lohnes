@@ -58,6 +58,7 @@ import type {
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { TodayToasts } from "./TodayToasts";
+import { TodayRecommendationDraft } from "./TodayRecommendationDraft";
 import { TodayEnergy } from "./TodayEnergy";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
@@ -364,6 +365,7 @@ export function TodayScreen({
   // frame instead of "Mode not set / START DAY" flashing before the real day appears.
   const [dayRead, setDayRead] = useState(false);
   const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
+  const [recommendationDraftPresent, setRecommendationDraftPresent] = useState(false);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
   const [recommendationHandoff, setRecommendationHandoff] = useState<RecommendationHandoffTarget | null>(null);
@@ -2682,13 +2684,13 @@ export function TodayScreen({
           /></>
           // FIELD-AUTHORITY-001 (states C/D): no Engine guidance yet is not an emergency. A calm
           // line, no red; logging leads and the one check-in path sits below.
-          : <h2>{checkIn ? describeAllClearHeadline() : "Log when you want."}</h2>}
+          : <TodayRecommendationDraft dayId={day.id} now={now.getTime()} refreshKey={refreshVersion} busy={busy} onPresenceChange={setRecommendationDraftPresent} openCheckIn={() => setCheckInFormOpen(true)} fallback={<h2>{checkIn ? describeAllClearHeadline() : "Log when you want."}</h2>} />}
         {(activeWorkout || activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && recommendation && <details><summary>WHY</summary><p>{recommendation.rationale}</p><p className="meta">Recorded Engine guidance. Your call.</p></details>}
       {(activeResetId || activeShiftDownId || shiftClock.phase === "EXPECTED_POST_WORK") && <ConfirmPanel />}
       {day && recommendation && onOpenCoach && <CoachCard active={active && !busy && !activeWorkout && !activeResetId && !activeShiftDownId} refreshKey={refreshVersion} variant={suggestedVariant} onOpen={onOpenCoach} />}
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
-      {checkInOwnedHere && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
+      {checkInOwnedHere && !recommendationDraftPresent && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
       {dayRead && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setBriefingPreview(true); }}>PREVIEW BRIEFING</button></div>}
     </section>
   </>;
