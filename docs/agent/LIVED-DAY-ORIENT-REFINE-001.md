@@ -12,7 +12,7 @@ implement it yet.”
 
 **Branch:** `codex/lived-day-orient-refinement`
 
-**Active PR:** pending
+**Active PR:** [#588](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/588)
 
 ## Outcome
 

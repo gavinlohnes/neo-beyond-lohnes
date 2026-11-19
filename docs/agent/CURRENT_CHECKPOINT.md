@@ -4,7 +4,7 @@
   Delta decisions, open a reviewed PR, and do not implement. Brief:
   [`LIVED-DAY-ORIENT-REFINE-001.md`](LIVED-DAY-ORIENT-REFINE-001.md). Starting commit
   `87d35bca687934d32e31409ddd257ff93d811e39` (merged PR #587); Builder Codex; branch
-  `codex/lived-day-orient-refinement`; PR pending.
+  `codex/lived-day-orient-refinement`; [PR #588](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/588).
 - **Approved refinements:** START DAY opens Orientation; check-in never gates it; hierarchy is
   Situation → You → Delta → one recommendation → at most two supporting actions → Release; Delta uses
   evidence-bounded adaptive analytical command; days off are purpose-first; difficult-day response
@@ -15,8 +15,10 @@
 - **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
 - **Exclusions:** no code, prototype, production UI, TODAY, Engine/priority, schema/event, provider,
   dependency, AI call, navigation, rename, crisis workflow, Google Drive, or concurrent-PR change.
-- **Next:** validate docs, open the PR, obtain independent exact-head review and green required CI,
-  then return to Gavin for merge approval. A phone-first prototype remains a separate proposal.
+- **Verification:** local Markdown links and diff hygiene pass. PR #588 requires green required CI and
+  independent exact-head review.
+- **Next:** resolve review/CI findings and return to Gavin for merge approval. A phone-first prototype
+  remains a separate proposal.
 
 ---
 
