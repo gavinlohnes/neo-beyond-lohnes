@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMetricDetail, type MetricDetail } from "../../application/metricDetailQueries";
-import { DIGITS, direction90, rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange, type Direction } from "../../application/metricDetail";
+import { DIGITS, direction90, weekCompare, rangesFor, rangeValues, summarise, WEEK_MODE, type DetailMetric, type DetailRange, type Direction } from "../../application/metricDetail";
 import { formatShortDate } from "../../application/bodyTrendQueries";
 import type { PeriodValue } from "../../domain/health/measuredSeries";
 import { LogSheet } from "../components/LogSheet";
@@ -72,6 +72,21 @@ function directionLine(d: MetricDetail): string | null {
   }
   const x = direction90(d.series, SAME_FLOOR[d.metric], SAME_SHARE[d.metric]);
   return x ? `Last 90 days: ${num(d.metric, x.recent)} ${PER_DAY[d.metric]}, ${way(x)} your year's ${num(d.metric, x.year)}. Medians of ${d.source === "GARMIN" ? "measured" : d.metric === "weight" ? "weighed" : "logged"} days.` : null;
+}
+
+/**
+ * METRIC-CHANGE-001: this lived week against last week, one plain sentence, quiet until both weeks have two recorded
+ * days. Calories keeps its pair of series and its own 90-day line, so it shows none.
+ */
+function weekLine(d: MetricDetail): string | null {
+  if (d.metric === "calories") return null;
+  const x = weekCompare(d.series, SAME_FLOOR[d.metric], SAME_SHARE[d.metric], DIGITS[d.metric]);
+  if (!x) return null;
+  const unit = d.metric === "weight" ? "lb on average" : PER_DAY[d.metric];
+  const lastUnit = d.metric === "weight" ? "lb" : NOUN[d.metric].unit;
+  const kind = d.source === "GARMIN" ? "measured" : d.metric === "weight" ? "weighed" : "logged";
+  const change = x.way === "SAME" ? "about the same as" : x.way === "HIGHER" ? "up from" : "down from";
+  return `This week: ${num(d.metric, x.thisWeek)} ${unit}, ${change} ${num(d.metric, x.lastWeek)} ${lastUnit} last week · ${x.thisDays} and ${x.lastDays} ${kind} days.`;
 }
 
 /** Calories' usual, one for each series: the median of the last 28 finished days, once there are enough. */
@@ -394,6 +409,7 @@ export function MetricDetailSheet({ open, metric, onClose, onRecords, onLog, ref
         : `Your usual appears after ${d.usual.need} ${garmin ? "measured" : logged} days (${d.usual.samples} so far).`}</p>
 
       {directionLine(d) !== null && <p className="md-meta" data-md-direction>{directionLine(d)}</p>}
+      {weekLine(d) !== null && <p className="md-meta" data-md-week>{weekLine(d)}</p>}
 
       <div className="md-actions">
         {OWN_ROUTES[metric] && onLog && <button type="button" className="md-act" onClick={go(onLog)}>{OWN_ROUTES[metric]!.log}</button>}
