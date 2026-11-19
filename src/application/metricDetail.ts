@@ -100,3 +100,28 @@ export function direction90(series: readonly PeriodValue[], sameFloor = 1, sameS
   const way = Math.abs(r - y) < Math.max(sameFloor, Math.abs(y) * sameShare) ? "SAME" : r > y ? "HIGHER" : "LOWER";
   return { recent: r, year: y, way, recentDays: recent.length, yearDays: year.length };
 }
+
+/**
+ * METRIC-CHANGE-001 (Gavin, 2026-11-19, "3C"): this lived week against last week, in one plain sentence. Weeks run
+ * Monday to Sunday by lived day (Habits' convention). This week counts only its finished lived days, so the day in
+ * progress never drags it down; each side is the average of its recorded days (a day per day, for steps too, so a part
+ * week compares fairly). Quiet until both weeks have at least WEEK_MIN_DAYS recorded days. Never a score or advice:
+ * "up" and "down" are just directions, judged with the same "about the same" floors as the 90-day line.
+ */
+export const WEEK_MIN_DAYS = 2;
+export interface WeekCompare { thisWeek: number; lastWeek: number; thisDays: number; lastDays: number; way: "HIGHER" | "LOWER" | "SAME" }
+const mondayOf = (t: number) => { const d = new Date(t); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toDateString(); };
+export function weekCompare(series: readonly PeriodValue[], sameFloor = 1, sameShare = DIRECTION_SAME_SHARE, digits = 0): WeekCompare | null {
+  const last = series.at(-1);
+  if (!last) return null;
+  const thisMonday = mondayOf(last.from);
+  const p = new Date(thisMonday); p.setHours(12); p.setDate(p.getDate() - 7);
+  const prior = p.toDateString(); // by calendar date, so a daylight-saving change never shifts the week
+  const recorded = (monday: string) => series.filter((v) => !v.partial && v.value !== null && mondayOf(v.from) === monday).map((v) => v.value!);
+  const now = recorded(thisMonday), before = recorded(prior);
+  if (now.length < WEEK_MIN_DAYS || before.length < WEEK_MIN_DAYS) return null;
+  const mean = (xs: number[]) => roundTo(xs.reduce((a, b) => a + b, 0) / xs.length, digits);
+  const t = mean(now), l = mean(before);
+  const way = Math.abs(t - l) < Math.max(sameFloor, Math.abs(l) * sameShare) ? "SAME" : t > l ? "HIGHER" : "LOWER";
+  return { thisWeek: t, lastWeek: l, thisDays: now.length, lastDays: before.length, way };
+}
