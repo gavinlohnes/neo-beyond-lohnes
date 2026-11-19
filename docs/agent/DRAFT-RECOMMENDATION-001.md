@@ -1,7 +1,7 @@
 # DRAFT-RECOMMENDATION-001 — a starting point before check-in
 
 - **Authorization:** Gavin approved HARVEST-003’s Protected pre-check-in draft in “All are approved”; on 2026-11-19 he explicitly approved this bounded next objective again: a useful starting point from recorded sleep/current context, clear reasons, confirm/adjust through check-in, with subjective feeling kept distinct from evidence.
-- **Builder:** Codex. **Lane:** PROTECTED (Engine suggestion policy and TODAY presentation). **Start:** fresh master `3876dbd30ebe1d1647626e972c4b0be35802c5a1`. **Branch:** `codex/draft-recommendation-001`. Active PR linked in handoff when opened.
+- **Builder:** Codex. **Lane:** PROTECTED (Engine suggestion policy and TODAY presentation). **Start:** fresh master `3876dbd30ebe1d1647626e972c4b0be35802c5a1`. **Branch:** `codex/draft-recommendation-001`. [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583).
 - **Operator outcome:** before reporting how he feels, Gavin can see an evidence-grounded starting point and reach the existing check-in directly. Nothing is accepted or saved by viewing it or opening the form.
 
 ## Bounded policy and experience
@@ -22,3 +22,7 @@
 ## Acceptance evidence
 
 Focused pure policy tests; real-query integration proves no writes and RED override after explicit check-in; UTC/Chicago runs. Real-browser TODAY checks cover evidence, opening the existing form without writes, no-draft fallback, read failure, phone widths and accessibility; capture/inspect the actual phone presentation. Existing sleep, accessibility and Attention regressions, architecture, typecheck/build and full PR CI. Independent exact-head product/code review required. Owner merges this Protected work. Results/limitations belong in the PR handoff; physical-phone use is not claimed by simulated widths.
+
+## Builder verification
+
+Five focused Node policy/query tests pass in UTC and Chicago; 30 browser draft/sleep/accessibility/Attention checks pass, with a final three-test draft run after the refresh dependency refinement. Actual phone-width screenshot inspected in [evidence](evidence/draft-recommendation-001/README.md). Architecture passes. Final build/full local Node, independent review and exact-head CI results belong in the PR handoff; no physical-phone use claimed.

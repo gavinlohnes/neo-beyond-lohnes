@@ -1,9 +1,9 @@
 # Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
 
 - Builder Codex; Gavin explicitly approved the next bounded pre-check-in draft. [Brief](DRAFT-RECOMMENDATION-001.md).
-- Branch `codex/draft-recommendation-001`, fresh master `3876dbd3`. PROTECTED Engine/TODAY work; independent exact-head review, green CI and owner merge required. No merge performed.
+- [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583), branch `codex/draft-recommendation-001`, fresh master `3876dbd3`. PROTECTED Engine/TODAY work; independent exact-head review, green CI and owner merge required. No merge performed.
 - Provisional, read-only starting point from existing recorded post-shift or personal two-short-main-sleeps evidence. Capacity remains unknown. Opening the existing check-in writes nothing; submitting it uses unchanged canonical evaluation. No new storage, provider, command or dependency.
-- Implementation and focused verification underway; final actual results and representative phone evidence will be linked from the PR. Do not infer physical-phone verification from Chromium widths.
+- Implementation complete; focused UTC/Chicago Node tests and browser draft/sleep/accessibility/Attention regressions pass. Actual screenshot inspected. Final build, broad Node, independent exact-head review and CI results are recorded in the PR handoff. Do not infer physical-phone verification from Chromium widths.
 - QUALITY-STANDARD-001 and HARVEST-003 merged. OUTCOME-LOOP-001 remains a separate reviewed/green governance PR awaiting owner merge; it does not block this approved product work.
 
 ---

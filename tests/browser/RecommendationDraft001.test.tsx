@@ -30,7 +30,7 @@ it("TODAY offers inspectable provisional guidance, saves nothing on open, and en
   await screen.getByRole("button", { name: "CHECK IN TO CONFIRM OR ADJUST" }).click();
   await expect.element(screen.getByRole("button", { name: "SUBMIT CHECK-IN", exact: true })).toBeVisible();
   expect([await db.events.count(), await db.checkIns.count(), await db.recommendations.count()]).toEqual(before);
-  for (const [name, value] of [["Energy", "1"], ["Stress", "2"], ["Mood", "4"], ["Soreness", "0"], ["Alcohol urge", "0"]]) {
+  for (const [name, value] of [["Energy", "1"], ["Stress", "2"], ["Mood", "4"], ["Soreness", "0"], ["Alcohol urge", "0"]] as const) {
     await screen.getByRole("group", { name, exact: true }).getByRole("button", { name: value, exact: true }).click();
   }
   await screen.getByRole("button", { name: "SUBMIT CHECK-IN", exact: true }).click();
