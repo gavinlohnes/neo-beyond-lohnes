@@ -1,7 +1,7 @@
 import { getImportedSleep } from "./externalSleepQueries";
 import { getShiftSleepPlan, CAFFEINE_CUTOFF_HOURS } from "./shiftSleepPlan";
 import { energyCurve, nextUsualSleep, usualSleep, type EnergyCurve, type SleepSpan } from "./alertness";
-import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
+import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../engine/dayRollover";
 
 /**
  * ENERGY-CURVE-001: the lived day's energy estimate from your own Garmin sleep (main sleeps for the habitual wake
@@ -24,7 +24,7 @@ export async function getEnergyToday(now = new Date()): Promise<EnergyToday> {
   const spans: SleepSpan[] = revisions.map((r) => ({ start: Date.parse(r.evidence.startTime), end: Date.parse(r.evidence.endTime) }))
     .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start && s.start <= t);
   const nights = spans.filter((s) => s.start >= t - 7 * DAY && (s.end - s.start) / 60_000 >= MAIN_SLEEP_MINUTES);
-  const from = mostRecentBoundaryAtOrBefore(now).getTime(), to = from + DAY;
+  const from = mostRecentBoundaryAtOrBefore(now).getTime(), to = nextRolloverBoundaryAfter(now).getTime();
   const sleeps = spans.filter((s) => s.end >= from - 3 * DAY).map((s) => ({ start: s.start, end: Math.min(s.end, t) }));
   const shift = plan ? { start: Date.parse(plan.shift.start), end: Date.parse(plan.shift.end) } : null;
   const sleepWindow = plan?.windows.find((w) => w.kind === "SLEEP");
@@ -32,9 +32,13 @@ export async function getEnergyToday(now = new Date()): Promise<EnergyToday> {
   // Your usual post-shift sleep is expected later in the window, so the curve after it reflects waking rested.
   // The plan's window when it has one; otherwise your usual sleep from your own recent nights, next after the shift.
   const usual = usualSleep(nights);
-  const shiftEndAhead = shift && shift.end > t ? shift.end : t;
-  const planned: SleepSpan[] = sleepWindow && Date.parse(sleepWindow.start) > t ? [{ start: Date.parse(sleepWindow.start), end: Date.parse(sleepWindow.end) }]
-    : usual ? [nextUsualSleep(usual, shiftEndAhead)].filter((s) => s.start < to) : [];
+  // Anchor assumptions to this lived day, not the current clock: delayed imports must not erase sleep.
+  const plannedWindow = sleepWindow ? { start: Date.parse(sleepWindow.start), end: Date.parse(sleepWindow.end) } : null;
+  const assumed = plannedWindow && plannedWindow.start < to && plannedWindow.end > from ? plannedWindow
+    : usual ? nextUsualSleep(usual, shift && shift.end >= from && shift.end < to ? shift.end : from) : null;
+  // An overlapping actual record replaces the whole assumption, including any shorter actual duration.
+  const planned: SleepSpan[] = assumed && assumed.start < to && !spans.some((s) => s.start < assumed.end && s.end > assumed.start)
+    ? [assumed] : [];
   const shiftEnd = shift && shift.end > from && shift.end <= to ? shift.end : null;
   const cutoffBase = sleepWindow ? Date.parse(sleepWindow.start) : shift?.end ?? null;
   return {
