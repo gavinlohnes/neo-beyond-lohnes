@@ -1,0 +1,5 @@
+/* EXPORT-001: the area chips wrap; every control is a 44 px, 16 px target. */
+.records-export { display: grid; gap: 10px; padding-block: 4px 8px; }
+.records-export > * { margin: 0; }
+.records-export__areas { display: flex; flex-wrap: wrap; gap: 6px; }
+.records-export__areas .chip { min-height: 44px; padding-inline: 12px; font-size: 16px; }

@@ -1,6 +1,7 @@
 # EXPORT-001 — readable CSV export
 
-- **Status:** brief only. **No code has been written and no builder is assigned.**
+- **Status:** built by Claude Code on 2026-11-19 (Gavin: "1 through 5 are approved", item 2). Branch
+  `claude/export-001`; see "Build notes" at the end.
 - **Origin:** [HARVEST-001](harvest/HARVEST-001.md) backlog #5 and mission sequence step 2 (after METRIC-PAGE-001,
   whose hydration and steps pilot merged as #519).
 - **Authorization:** Gavin, 2026-11-14, in Claude chat, when offered "follow the harvest's order: CSV export, then
@@ -76,3 +77,23 @@ scheduled or automatic export; Drive upload; any change to the JSON backup forma
 ## Next after this
 
 HABIT-RHYTHM-001 with lifestyle-logging parity (HARVEST-001, section 6).
+
+## Build notes (2026-11-19)
+
+- **Code:** `application/recordsExport.ts` (the pure `csvCell`/`toCsv` and `getRecordsExport(area)`, built from the
+  existing corrected queries). `ui/screens/more/RecordsExportPanel.tsx` sits in MORE → Data safety as "Readable
+  records (CSV)", beside the backup row and closed by default. It reuses `deliverCalendar`.
+- **Areas:**
+  - Daily totals: work or off, water, protein, calories eaten, main sleep, steps and their source.
+  - Weight.
+  - Meals.
+  - Workouts: one row per performed set, warm-ups marked, skipped sets with empty weight and reps.
+  - Measurements.
+- **Steps** are Garmin's (`garmin` in their source column); everything else is `you`.
+- **Lived day:** the local date of the day's 16:30 lived-day start.
+- **Formula cells:** a cell starting with `=`, `+`, `-` or `@` that isn't a number is prefixed with `'`.
+- **Tests:**
+  - `tests/recordsExport.test.ts` (Node, UTC and America/Chicago): quoting, formula cells, empty-not-zero, the
+    corrected weigh-in appearing once, and nothing written.
+  - `tests/browser/Export001.test.tsx`: the preview, a real shared CSV file, cancel, the empty area, 44 px targets
+    and axe.
