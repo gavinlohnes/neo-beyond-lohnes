@@ -244,8 +244,8 @@ async function seedWorkouts() {
 const openWorkouts = async () => {
   const screen = await render(<App />);
   await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
-  // DATA's progress (where BODY already shows finished workouts over time) opens from WEIGHT HISTORY.
-  await screen.getByRole("button", { name: "WEIGHT HISTORY", exact: true }).click();
+  // DATA's progress (where BODY already shows finished workouts over time) opens from DATA's Weight shortcut.
+  await screen.getByRole("navigation", { name: "DATA shortcuts", exact: true }).getByRole("button", { name: "Weight", exact: true }).click();
   await screen.getByRole("button", { name: "WORKOUTS OVER TIME", exact: true }).click();
   await expect.element(sheet("WORKOUTS")).toBeVisible();
   return screen;
