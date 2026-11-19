@@ -94,5 +94,5 @@ queries only.
   daily counts again); "This week so far" and last week are plain totals with no "up" or "down" (`weekTotals`).
 - **No goal, streak, pace or advice.** No TODAY tile. No LOG or RECORDS buttons: sessions and their corrections live
   in TRAIN, and BODY's progress has no route there to reuse.
-- **Where it opens:** DATA → YOUR PROGRESS → TRAINING gains WORKOUTS OVER TIME. The TRAINING line ("2 workouts · 1 PR")
+- **Where it opens:** DATA's progress (reached from DATA's WEIGHT HISTORY, a dashboard card or BODY's YOUR PROGRESS) has a TRAINING section, which gains WORKOUTS OVER TIME. The TRAINING line ("2 workouts · 1 PR")
   and DATA's Insights Explorer (which also charts finished workouts) are unchanged; nothing is removed.

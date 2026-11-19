@@ -4,7 +4,7 @@
   night checkpoint below kept slice 3 with #567's builder. Branch `claude/metric-page-002-workouts` from master
   `c54c000`. Lane FEATURE, read side only. Gavin merges.
 - Finished workouts (completed and partial, BEYOND's existing count) per lived day; weeks and 1Y as totals; a weekly
-  usual; work days against days off as days with a workout. Opens from DATA → YOUR PROGRESS → TRAINING. No goal,
+  usual; work days against days off as days with a workout. Opens from DATA's progress, TRAINING section. No goal,
   streak, TODAY tile, Engine, schema, event, command or navigation change.
 - **Verification:** focused Node tests in UTC and Chicago; browser tests (`MetricPage002`) run in PR CI only (the
   builder's sandbox can't download a browser). Results live in the PR.
