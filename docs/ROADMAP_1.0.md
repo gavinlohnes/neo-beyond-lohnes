@@ -287,12 +287,26 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 _Refreshed 2026-11-19 (Gavin: "Yes, refresh the roadmap queue") from merged master `1f6e3d8`. The checkpoint holds
 the live objective; this is the order. Everything below "Earlier queue entries" is history._
 
+**Approved tonight** (Gavin, 2026-11-19: "1 through 5 are approved. You may work in whatever order is best. Keep usage
+as low as we can.")
+1. **ONE-LOOK-002:** finish the one look. REVIEW, TRAIN history/records, MY PROGRAMME, and the reviewers' TRAIN
+   header findings (13 px presence line, 38×32 Ask Alfred).
+2. **EXPORT-001:** readable CSV export ([brief](agent/EXPORT-001.md)).
+3. **NUTRIENTS-001:** fiber and sodium from the free USDA data already fetched; targets only if set.
+4. **TODAY-SPLIT-002 slice 2:** TODAY TOOLS out of `TodayScreen.tsx`, no visible change ([brief](agent/TODAY-SPLIT-002.md)).
+5. **METRIC-CHANGE-001:** "what changed" as one plain line on the metric pages, from the existing 90-day and work/off
+   comparisons; no score or advice.
+
+**Merge authority** (Gavin, 2026-11-19: "You have permission to merge from now on. As long as it works in good to have
+you merge."): Claude Code merges a PR once CI is green on its exact head and the independent review says PASS on that
+head. Anything Protected is still stopped and reported, not merged.
+
 **In flight**
 - **METRIC-PAGE-002 slice 3 — finished workouts on the shared metric page** ([brief](agent/METRIC-PAGE-002.md)).
   Builder: #567's builder (Gavin, 2026-11-19). Slices 1 weight (#566) and 2 protein (#567) are merged.
 
 **Next, in order**
-1. **TODAY-SPLIT-002.** Gated on this Drop's TODAY-tile slices, which are now merged. Brief not yet in the repo.
+1. **TODAY-SPLIT-002.** Brief approved and merged (#570); slice 2 is in tonight's approved list.
 2. **BODY protein tap.** BODY's NUTRITION card opens calories; a tap on its Protein meter opening the protein page is
    one small objective after slice 3 (Gavin leaned yes, 2026-11-19; needs his go).
 
