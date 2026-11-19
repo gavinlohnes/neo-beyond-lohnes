@@ -284,22 +284,25 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
-_Refreshed 2026-11-19 (Gavin: "Yes, refresh the roadmap queue") from merged master `1f6e3d8`. The checkpoint holds
+_Refreshed 2026-11-19 (Gavin: "Yes, refresh the roadmap queue"), last updated from master `b26c309`. The checkpoint holds
 the live objective; this is the order. Everything below "Earlier queue entries" is history._
 
 **Approved tonight** (Gavin, 2026-11-19: "1 through 5 are approved. You may work in whatever order is best. Keep usage
 as low as we can.")
-1. **ONE-LOOK-002:** finish the one look. REVIEW, TRAIN history/records, MY PROGRAMME, and the reviewers' TRAIN
-   header findings (13 px presence line, 38×32 Ask Alfred).
-2. **EXPORT-001:** readable CSV export ([brief](agent/EXPORT-001.md)).
-3. **NUTRIENTS-001:** fiber and sodium from the free USDA data already fetched; targets only if set.
-4. **TODAY-SPLIT-002 slice 2:** TODAY TOOLS out of `TodayScreen.tsx`, no visible change ([brief](agent/TODAY-SPLIT-002.md)).
-5. **METRIC-CHANGE-001:** "what changed" as one plain line on the metric pages, from the existing 90-day and work/off
-   comparisons; no score or advice.
+1. **ONE-LOOK-002:** finish the one look. REVIEW, TRAIN history/records, MY PROGRAMME, and the 44 px Ask Alfred. PR #572.
+2. **EXPORT-001:** readable CSV export ([brief](agent/EXPORT-001.md)). PR #573.
+3. **NUTRIENTS-001:** fiber and sodium. **Stopped, Protected.** It needs new stored fields on saved meals and the
+   meal-log event (schema, events, backup), which wasn't part of the approval as described. Waiting for Gavin.
+4. **TODAY-SPLIT-002 slice 2:** TODAY TOOLS out of `TodayScreen.tsx` ([brief](agent/TODAY-SPLIT-002.md)). **Stopped**
+   under the brief's own rule: the TOOLS code reads 141 pieces of TODAY's shared state, so "explicit props" means
+   reorganising that state. Waiting for Gavin.
+5. **METRIC-CHANGE-001:** "what changed" on the metric pages. **Mock first**, as promised to Gavin. The pages already
+   show the 90-day direction and work/off medians, so the mock proposes what new comparison would earn a line.
 
-**Merge authority** (Gavin, 2026-11-19: "You have permission to merge from now on. As long as it works in good to have
-you merge."): Claude Code merges a PR once CI is green on its exact head and the independent review says PASS on that
-head. Anything Protected is still stopped and reported, not merged.
+**Merge delegation** (Gavin, 2026-11-19: "You have permission to merge from now on. As long as it works in good to
+have you merge."). It conflicts with DEV-FLOW-002's "no self-merge", so Gavin chose to amend the charter. The
+amendment is [#574](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/574), which is Protected and his to merge. Until it lands,
+Builder merges are paused. Already merged under the permission: #569, #570, #571.
 
 **In flight**
 - **METRIC-PAGE-002 slice 3 — finished workouts on the shared metric page** ([brief](agent/METRIC-PAGE-002.md)).
@@ -310,15 +313,8 @@ head. Anything Protected is still stopped and reported, not merged.
 2. **BODY protein tap.** BODY's NUTRITION card opens calories; a tap on its Protein meter opening the protein page is
    one small objective after slice 3 (Gavin leaned yes, 2026-11-19; needs his go).
 
-**Ready, waiting for Gavin's go**
-- **EXPORT-001 — readable CSV export** ([brief](agent/EXPORT-001.md), merged #523; HARVEST-001 #5).
-
 **Harvest backlog still open** (ranked in [HARVEST-001](agent/harvest/HARVEST-001.md) and
 [HARVEST-002](agent/harvest/HARVEST-002.md); research is not approval, each needs its own go)
-- HARVEST-001 #8 **GYM-FOUNDATION-001**: the live workout on the visual foundation (bigger numerals, framed panels,
-  same flow).
-- HARVEST-001 #11 **Remaining sheets on the foundation**: LOG, check-in, REVIEW, Alfred.
-- HARVEST-001 #6 **NUTRIENTS-001**: fiber and sodium from USDA; targets only if set.
 - HARVEST-001 #9 **MONEY-DISCOVERY-001**: report only.
 - HARVEST-002: home-screen Capture entry (validate launcher limits first), manual timeboxing, micronutrients
   (each conditional on its own owner decision).
@@ -326,7 +322,8 @@ head. Anything Protected is still stopped and reported, not merged.
 **Delivered from the harvests** (so they are not re-proposed): one metric page for water, steps, resting heart rate,
 calories, weight and protein (#1, #7 direction line, #10 food sources); set effort and warm-ups (GYM-UPGRADE-001, #2,
 #12); calorie target proposal (#3); "N times a week" habits (#4, HABIT-QUOTA-001); week planner (#529); capture
-parity (#557, #564).
+parity (#557, #564); the live workout and gym mode (GYM-FOUNDATION-001, #569, HARVEST-001 #8); every sheet on the
+foundation (SHEETS-FOUNDATION-001, #571, HARVEST-001 #11).
 
 **Open, separate:** #473 BIG-IDEAS shift what-if (draft, last touched 2026-11-15).
 

@@ -1,18 +1,23 @@
 # Current objective — night 2026-11-18/19: one look, then Gavin's approved list
 
 - Builder Claude Code. Gavin's mission "NIGHT 2026-11-18" (#565 merge, METRIC-PAGE-002 slices 2–3), then "1A"
-  (finish the one look), then "1 through 5 are approved" and the merge authority above (roadmap Queue).
-- **Done:** #565 HABIT-QUOTA-001 merged `6212db1`. #567 protein page merged `1f6e3d8` (built by another Claude
-  session; reviewed here, PASS). #569 GYM-FOUNDATION-001 merged `ffd2166` (independent review PASS on `432e129`,
-  CI green). #570 TODAY-SPLIT-002 brief merged `cd998ab`.
-- **Open:** #571 SHEETS-FOUNDATION-001. The review of `d0cec13` found one blocker (SLEEP arrows 24 → 16 px). It's
-  fixed at `2b963c6`; renewed review requested. This PR carries the roadmap and checkpoint.
-- METRIC-PAGE-002 slice 3 (finished workouts) stays with #567's builder (Gavin, 2026-11-19).
+  (finish the one look), then "1 through 5 are approved" (roadmap Queue).
+- **Merged:**
+  - #565 HABIT-QUOTA-001 `6212db1` and #567 protein page `1f6e3d8`, both merged at Gavin's "Merge both".
+  - Under his merge permission: #569 GYM-FOUNDATION-001 `ffd2166` (PASS on `432e129`, green), #570
+    TODAY-SPLIT-002 brief `cd998ab` (docs, green), and #571 SHEETS-FOUNDATION-001 `b26c309` (renewed PASS on
+    `2b963c6`, green).
+- **Governance:** that permission conflicts with DEV-FLOW-002's "no self-merge", and Gavin chose to amend the charter.
+  The amendment, #574, is Protected and his to merge. Builder merges are paused until it lands.
+- **Open:** #572 ONE-LOOK-002 and #573 EXPORT-001, both waiting for review and CI. #568 is this roadmap/checkpoint PR.
+- **Stopped, waiting for Gavin:**
+  - NUTRIENTS-001 is Protected: new stored fields.
+  - TODAY-SPLIT-002 slice 2: TOOLS reads 141 pieces of TODAY state.
+  - METRIC-CHANGE-001: mock first.
+- METRIC-PAGE-002 slice 3 (finished workouts) stays with #567's builder.
 - **Reviewer sessions:** "Independent review: #569" and "Independent review: #571", reused per PR.
-- **Next:** the approved list in the order that keeps conflicts lowest: 1 ONE-LOOK-002, 3 NUTRIENTS-001, 2
-  EXPORT-001, 5 METRIC-CHANGE-001 (mock first), 4 TODAY-SPLIT-002 slice 2 last (it touches the most of TODAY).
-- **Phone checks owed:** the live workout and gym mode; LOG, CHECK IN and ALFRED sheets once #571 merges; the
-  earlier HABIT-QUOTA and protein checks.
+- **Phone checks owed:** the live workout and gym mode; the LOG, CHECK IN, ALFRED and SLEEP sheets; HABIT-QUOTA and
+  the protein page.
 
 ---
 
