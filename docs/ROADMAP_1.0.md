@@ -284,6 +284,55 @@ adopting a finding as an Engine rule still needs owner sign-off (ruling 2026-10-
 
 ## Queue
 
+_Refreshed 2026-11-19 (Gavin: "Yes, refresh the roadmap queue"), last updated from master `b26c309`. The checkpoint holds
+the live objective; this is the order. Everything below "Earlier queue entries" is history._
+
+**Approved tonight** (Gavin, 2026-11-19: "1 through 5 are approved. You may work in whatever order is best. Keep usage
+as low as we can.")
+1. **ONE-LOOK-002:** finish the one look. REVIEW, TRAIN history/records, MY PROGRAMME, and the 44 px Ask Alfred. PR #572.
+2. **EXPORT-001:** readable CSV export ([brief](agent/EXPORT-001.md)). PR #573.
+3. **NUTRIENTS-001:** fiber and sodium. **Stopped, Protected.** It needs new stored fields on saved meals and the
+   meal-log event (schema, events, backup), which wasn't part of the approval as described. Waiting for Gavin.
+4. **TODAY-SPLIT-002 slice 2:** TODAY TOOLS out of `TodayScreen.tsx` ([brief](agent/TODAY-SPLIT-002.md)). **Stopped**
+   under the brief's own rule: the TOOLS code reads 141 pieces of TODAY's shared state, so "explicit props" means
+   reorganising that state. Waiting for Gavin.
+5. **METRIC-CHANGE-001:** "what changed" on the metric pages. **Mock first**, as promised to Gavin. The pages already
+   show the 90-day direction and work/off medians, so the mock proposes what new comparison would earn a line.
+
+**Merge delegation** (Gavin, 2026-11-19: "You have permission to merge from now on. As long as it works in good to
+have you merge."). It conflicts with DEV-FLOW-002's "no self-merge", so Gavin chose to amend the charter. The
+amendment is [#574](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/574), which is Protected and his to merge. Until it lands,
+Builder merges are paused. Already merged under the permission: #569, #570, #571.
+
+**In flight**
+- **METRIC-PAGE-002 slice 3 — finished workouts on the shared metric page** ([brief](agent/METRIC-PAGE-002.md)).
+  Builder: #567's builder (Gavin, 2026-11-19). Slices 1 weight (#566) and 2 protein (#567) are merged.
+
+**Next, in order**
+1. **TODAY-SPLIT-002.** Brief merged (#570). Slice 2 (TOOLS) is stopped (see item 4 above); a smaller first slice
+   (the confirmation toasts, about 18 inputs) is proposed to Gavin.
+2. **BODY protein tap.** BODY's NUTRITION card opens calories; a tap on its Protein meter opening the protein page is
+   one small objective after slice 3 (Gavin leaned yes, 2026-11-19; needs his go).
+
+**Harvest backlog still open** (ranked in [HARVEST-001](agent/harvest/HARVEST-001.md) and
+[HARVEST-002](agent/harvest/HARVEST-002.md); research is not approval, each needs its own go)
+- HARVEST-001 #9 **MONEY-DISCOVERY-001**: report only.
+- HARVEST-002: home-screen Capture entry (validate launcher limits first), manual timeboxing, micronutrients
+  (each conditional on its own owner decision).
+
+**Delivered from the harvests** (so they are not re-proposed): one metric page for water, steps, resting heart rate,
+calories, weight and protein (#1, #7 direction line, #10 food sources); set effort and warm-ups (GYM-UPGRADE-001, #2,
+#12); calorie target proposal (#3); "N times a week" habits (#4, HABIT-QUOTA-001); week planner (#529); capture
+parity (#557, #564); the live workout and gym mode (GYM-FOUNDATION-001, #569, HARVEST-001 #8); every sheet on the
+foundation (SHEETS-FOUNDATION-001, #571, HARVEST-001 #11).
+
+**Open, separate:** #473 BIG-IDEAS shift what-if (draft, last touched 2026-11-15).
+
+**Phone checks owed to Gavin:** HABIT-QUOTA-001 (three Done days, then Monday), the WEIGHT and PROTEIN pages from
+TODAY, CAPTURE-PARITY-002 (two open notes on a work day).
+
+### Earlier queue entries (history)
+
 **Owner objective, 2026-10-14 — REVIEW-001 data review.** Gavin approved the plan in
 `docs/agent/REVIEW-001.md`. Phase 1a (PROTECTED) is approved to start once that brief merges. It covers
 the Review hub, Monday weekly review, monthly review, measurements, on-device progress photos and the

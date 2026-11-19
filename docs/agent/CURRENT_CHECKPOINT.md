@@ -1,4 +1,27 @@
-# Current objective — METRIC-PAGE-002 slice 2 (protein on the shared metric page)
+# Current objective — night 2026-11-18/19: one look, then Gavin's approved list
+
+- Builder Claude Code. Gavin's mission "NIGHT 2026-11-18" (#565 merge, METRIC-PAGE-002 slices 2–3), then "1A"
+  (finish the one look), then "1 through 5 are approved" (roadmap Queue).
+- **Merged:**
+  - #565 HABIT-QUOTA-001 `6212db1` and #567 protein page `1f6e3d8`, both merged at Gavin's "Merge both".
+  - Under his merge permission: #569 GYM-FOUNDATION-001 `ffd2166` (PASS on `432e129`, green), #570
+    TODAY-SPLIT-002 brief `cd998ab` (docs, green), and #571 SHEETS-FOUNDATION-001 `b26c309` (renewed PASS on
+    `2b963c6`, green).
+- **Governance:** that permission conflicts with DEV-FLOW-002's "no self-merge", and Gavin chose to amend the charter.
+  The amendment, #574, is Protected and his to merge. Builder merges are paused until it lands.
+- **Open:** #572 ONE-LOOK-002 and #573 EXPORT-001, both waiting for review and CI. #568 is this roadmap/checkpoint PR.
+- **Stopped, waiting for Gavin:**
+  - NUTRIENTS-001 is Protected: new stored fields.
+  - TODAY-SPLIT-002 slice 2: TOOLS reads 141 pieces of TODAY state.
+  - METRIC-CHANGE-001: mock first.
+- METRIC-PAGE-002 slice 3 (finished workouts) stays with #567's builder.
+- **Reviewer sessions:** "Independent review: #569" and "Independent review: #571", reused per PR.
+- **Phone checks owed:** the live workout and gym mode; the LOG, CHECK IN, ALFRED and SLEEP sheets; HABIT-QUOTA and
+  the protein page.
+
+---
+
+# Historical — METRIC-PAGE-002 slice 2 (protein on the shared metric page; merged as #567, `1f6e3d8`)
 
 - Builder Claude Code, same Drop and authorization as slice 1 ([brief](METRIC-PAGE-002.md)). Slice 1 merged as #566
   (`17d0e15`). Branch `claude/metric-page-002-protein` from that master. Lane FEATURE, read side only.
