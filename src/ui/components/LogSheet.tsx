@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import "./logSheet.css";
+import "./sheetFoundation.css";
 
 /** One native modal node: updating a value or changing its contents never reopens it. */
 export function LogSheet({ open, title, onClose, canClose, children }: {
@@ -37,7 +38,7 @@ export function LogSheet({ open, title, onClose, canClose, children }: {
     const first = controls[0]; const last = controls.at(-1);
     if (event.shiftKey && document.activeElement === first && last) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last && first) { event.preventDefault(); first.focus(); }
-  }} ref={dialog} className="log-sheet" aria-label={title} onCancel={(event) => { event.preventDefault(); close(); }}>
+  }} ref={dialog} className="bf log-sheet" aria-label={title} onCancel={(event) => { event.preventDefault(); close(); }}>
     <header className="log-sheet__header"><h2>{title}</h2><button type="button" className="btn-secondary" disabled={canClose ? !canClose() : false} onClick={close}>CLOSE</button></header>
     <div className="log-sheet__body">{children}</div>
   </dialog>;
