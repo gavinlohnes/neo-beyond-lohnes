@@ -1,3 +1,18 @@
+# Current objective — METRIC-CHANGE-001 mock first (2026-11-19)
+
+- Builder Codex; owner “Get to work” continues the approved mock-first roadmap item.
+- Branch `codex/metric-change-001-mock`; draft PR titled **METRIC-CHANGE-001: reviewable what-changed design preview**. [Brief](METRIC-CHANGE-001.md).
+- Static, synthetic-data preview only; no application code, stored data, Engine authority or production formulas changed.
+- Four scenarios: comparable water records, changed work/off mix, sparse weight records and no records. [Preview/screenshots/checks](mockups/metric-change-001/README.md).
+- Focused browser and automated accessibility checks passed at four widths; arithmetic, evidence and hide/show verified. Application suites/build not rerun for an isolated static design artifact. CI status lives on the draft PR.
+- Owner design judgement remains required before production implementation. No merge performed; no independent production review claimed.
+- Fresh master `83cbee2e`: visual foundation, CSV export, governance amendment and TODAY toast extraction have merged; the older checkpoint below is historical, not current PR status.
+- Finished-workout metric work remains with its existing builder. No competing metric-change work found. No technical blocker.
+
+---
+
+# Historical checkpoint (superseded status)
+
 # Current objective — night 2026-11-18/19: one look, then Gavin's approved list
 
 - Builder Claude Code. Gavin's mission "NIGHT 2026-11-18" (#565 merge, METRIC-PAGE-002 slices 2–3), then "1A"
