@@ -309,7 +309,8 @@ Builder merges are paused. Already merged under the permission: #569, #570, #571
   Builder: #567's builder (Gavin, 2026-11-19). Slices 1 weight (#566) and 2 protein (#567) are merged.
 
 **Next, in order**
-1. **TODAY-SPLIT-002.** Brief approved and merged (#570); slice 2 is in tonight's approved list.
+1. **TODAY-SPLIT-002.** Brief merged (#570). Slice 2 (TOOLS) is stopped (see item 4 above); a smaller first slice
+   (the confirmation toasts, about 18 inputs) is proposed to Gavin.
 2. **BODY protein tap.** BODY's NUTRITION card opens calories; a tap on its Protein meter opening the protein page is
    one small objective after slice 3 (Gavin leaned yes, 2026-11-19; needs his go).
 
