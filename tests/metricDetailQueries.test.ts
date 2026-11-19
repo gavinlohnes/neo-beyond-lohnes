@@ -171,3 +171,56 @@ it("METRIC-PAGE-002 slice 1: with no weigh-ins, weight has no latest, no history
     expect(d.usual.value).toBeNull();
   } finally { vi.useRealTimers(); }
 });
+
+it("METRIC-PAGE-002 slice 2: protein is meal protein plus quick logs per lived day, corrections applied, undone logs left out, a day without any missing, read without writing", async () => {
+  const { logProtein, correctProtein, voidProteinLog, logBodyweight } = await import("../src/application/commands");
+  const { getProteinEntries } = await import("../src/application/queries");
+  const { createSavedMeal, logMeal } = await import("../src/application/nutritionCommands");
+  const { getEffectiveProteinTargetG } = await import("../src/application/nutritionTargetQueries");
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    const first = await startDay();
+    await logProtein(first.id, 30);
+    vi.setSystemTime(new Date(2026, 10, 11, 18));
+    await startDay(); // a lived day with nothing logged
+    vi.setSystemTime(new Date(2026, 10, 12, 18));
+    const third = await startDay();
+    await logBodyweight(third.id, 200);
+    const meal = await createSavedMeal({ name: "Eggs", calories: 300, proteinG: 25, carbsG: 2, fatG: 20 });
+    vi.setSystemTime(new Date(2026, 10, 12, 19));
+    await logMeal(third.id, meal.id);
+    vi.setSystemTime(new Date(2026, 10, 12, 20));
+    await logProtein(third.id, 40);
+    const [quick] = await getProteinEntries(third.id);
+    await correctProtein(third.id, quick!.headEventId, 45);
+    vi.setSystemTime(new Date(2026, 10, 12, 21));
+
+    const before = await db.events.toArray();
+    const d = await getMetricDetail("protein");
+    expect(d.source).toBe("LOGGED");
+    expect(d.series.slice(-3).map((v) => v.value)).toEqual([30, null, 70]);
+    expect(d.series.at(-1)!.partial).toBe(true);
+    // TODAY: the running total from 16:30, stepping up at the meal (25 g) and the corrected quick log (45 g).
+    expect(d.today.kind === "logged" && d.today.points.map((p) => p.total)).toEqual([0, 25, 70]);
+    // The target is BEYOND's existing one, unchanged.
+    expect(d.target).toBe(await getEffectiveProteinTargetG());
+    expect(d.target).toBeGreaterThan(0);
+    expect(await db.events.toArray()).toEqual(before);
+
+    await voidProteinLog(third.id, quick!.rootEventId);
+    const undone = await getMetricDetail("protein");
+    expect(undone.series.at(-1)?.value).toBe(25);
+    expect(undone.today.kind === "logged" && undone.today.points.map((p) => p.total)).toEqual([0, 25]);
+  } finally { vi.useRealTimers(); }
+});
+
+it("METRIC-PAGE-002 slice 2: with no weigh-in there is no protein target, never a guessed one", async () => {
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    await startDay();
+    const d = await getMetricDetail("protein");
+    expect(d.target).toBeUndefined();
+    expect(d.series.every((v) => v.value === null)).toBe(true);
+    expect(d.today).toMatchObject({ kind: "logged", points: [{ total: 0 }] });
+  } finally { vi.useRealTimers(); }
+});

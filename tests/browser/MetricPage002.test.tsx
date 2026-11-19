@@ -5,7 +5,9 @@ import axe from "axe-core";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { db } from "../../src/persistence/db";
-import { seedLivedMonth, MONTH_NOW } from "./helpers/livedMonth";
+import { seedLivedMonth, MONTH_FIRST_DAY, MONTH_NOW } from "./helpers/livedMonth";
+import { logProtein } from "../../src/application/commands";
+import { getEffectiveProteinTargetG } from "../../src/application/nutritionTargetQueries";
 
 /**
  * METRIC-PAGE-002 slice 1 (Gavin 2026-11-18: "2", "Let's work", "Will you give it to Claude code to do"): WEIGHT
@@ -21,9 +23,9 @@ const settle = async () => {
   for (const a of document.getAnimations()) if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish();
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 };
-const sheet = () => page.getByRole("dialog", { name: "WEIGHT", exact: true });
+const sheet = (name: "WEIGHT" | "PROTEIN" = "WEIGHT") => page.getByRole("dialog", { name, exact: true });
 const text = (sel: string) => document.querySelector(`dialog[open] ${sel}`)?.textContent ?? "";
-const range = (label: string) => sheet().getByRole("button", { name: label, exact: true }).click();
+const range = (label: string, name: "WEIGHT" | "PROTEIN" = "WEIGHT") => sheet(name).getByRole("button", { name: label, exact: true }).click();
 const shot = async (name: string) => { if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/metric-weight-${name}.png`, element: document.querySelector("dialog[open]") as HTMLElement }); } };
 
 describe("METRIC-PAGE-002 slice 1: weight", () => {
@@ -131,6 +133,85 @@ describe("METRIC-PAGE-002 slice 1: weight", () => {
           if (parseFloat(cs.fontSize) < (isLabel ? 10 : 16)) small.push(`${t} (${cs.fontSize})`);
         }
         expect(small, `${r} ${width}`).toEqual([]);
+      }
+      await page.viewport(360, 900); await settle();
+      const result = await axe.run(document.querySelector("dialog[open]")!, { runOnly: ["wcag2a", "wcag2aa"] });
+      expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`), r).toEqual([]);
+    }
+  });
+});
+
+/** Two past lived days of quick protein logs, so 7D has records and gaps. */
+async function seedPastProtein() {
+  const days = (await db.beyondDays.toArray()).sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+  vi.setSystemTime(MONTH_FIRST_DAY + 27 * 86_400_000 + 2 * 3_600_000); await logProtein(days[27]!.id, 120);
+  vi.setSystemTime(MONTH_FIRST_DAY + 25 * 86_400_000 + 3 * 3_600_000); await logProtein(days[25]!.id, 80);
+  vi.setSystemTime(MONTH_NOW);
+}
+
+describe("METRIC-PAGE-002 slice 2: protein", () => {
+  it("TODAY's PROTEIN opens PROTEIN: your logs, the running total, the target as a target, honest gaps, where it came from, and its records one tap away", async () => {
+    await seedLivedMonth(); await seedPastProtein();
+    const target = await getEffectiveProteinTargetG();
+    await page.viewport(360, 800);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Protein 48 .*explore records$/ }).click();
+    await expect.element(sheet("PROTEIN")).toBeVisible();
+    await expect.poll(() => text("[data-md-hero]")).toBe("48 g so far · since 16:30");
+    expect(text(".md-source")).toContain("LOGGED");
+    expect(text(".md-source")).toContain("meal protein and quick protein logs");
+    expect(document.querySelector("dialog[open] .bf-src--garmin")).toBeNull();
+    // The target is BEYOND's own, shown as a target: never a deficit or a "remaining".
+    expect(text("[data-md-target]")).toBe(`Target ${target} g a day, from your protein setting and latest weigh-in.`);
+    expect(text(".md")).not.toMatch(/remaining|deficit|short|left to/i);
+    expect(document.querySelector('dialog[open] svg[aria-label^="Running protein total: 48 g so far"]')).not.toBeNull();
+    await shot("protein-today");
+
+    // 7D: two logged finished days and four gaps; the average of logged days only.
+    await range("Last 7 lived days", "PROTEIN");
+    await expect.poll(() => text("[data-md-coverage]")).toContain("2 of 6 finished days logged · 4 not logged, left out");
+    expect(text("[data-md-hero]")).toBe("100 g a day, on average"); // (120 + 80) / 2
+    expect(document.querySelectorAll("dialog[open] .md-chart--protein .md-bar")).toHaveLength(7);
+    expect(document.querySelectorAll("dialog[open] .md-chart--protein .md-bar[data-missing]")).toHaveLength(4);
+    expect(document.querySelector("dialog[open] .md-chart--protein .md-target")).not.toBeNull();
+    // Protein bars are your logs: white, never Garmin blue.
+    expect(getComputedStyle(document.querySelector("dialog[open] .md-chart--protein .md-fill")!).fill).not.toBe("rgb(57, 135, 229)");
+    // Where it came from (FOOD-SOURCES-001), over the same days.
+    await expect.poll(() => text(".md-source-row summary")).toContain("Protein (quick log)");
+    await shot("protein-7d");
+
+    await range("Last year, by week", "PROTEIN");
+    await expect.poll(() => text("[data-md-hero]")).toBe("100 g a logged day, on average");
+
+    await sheet("PROTEIN").getByRole("button", { name: "PROTEIN RECORDS", exact: true }).click();
+    await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("protein");
+  });
+
+  it("PROTEIN's LOG PROTEIN opens the existing protein sheet", async () => {
+    await seedLivedMonth();
+    await page.viewport(360, 800);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Protein 48 .*explore records$/ }).click();
+    await sheet("PROTEIN").getByRole("button", { name: "LOG PROTEIN", exact: true }).click();
+    await expect.poll(() => window.history.state?.recordSheet).toBe("protein");
+  });
+
+  it("nothing spills, sentences keep 16 px, and PROTEIN passes axe from 320 to 1024 px", async () => {
+    await seedLivedMonth(); await seedPastProtein();
+    await page.viewport(360, 900);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: /^Protein 48 .*explore records$/ }).click();
+    await expect.poll(() => text("[data-md-hero]")).not.toBe("");
+    for (const r of ["Today, this lived day", "Last 7 lived days", "Last 30 lived days", "Last year, by week"]) {
+      await range(r, "PROTEIN");
+      for (const width of [320, 412, 1024]) {
+        await page.viewport(width, 900); await settle();
+        const box = document.querySelector<HTMLElement>("dialog[open] .md")!;
+        expect(box.scrollWidth, `${r} ${width}`).toBeLessThanOrEqual(box.clientWidth + 1);
+        for (const button of box.querySelectorAll(".md-actions button, .md-ranges button")) {
+          expect(parseFloat(getComputedStyle(button).fontSize), `${button.textContent} at ${width}`).toBeGreaterThanOrEqual(16);
+          expect(button.getBoundingClientRect().height, `${button.textContent} at ${width}`).toBeGreaterThanOrEqual(44);
+        }
       }
       await page.viewport(360, 900); await settle();
       const result = await axe.run(document.querySelector("dialog[open]")!, { runOnly: ["wcag2a", "wcag2aa"] });

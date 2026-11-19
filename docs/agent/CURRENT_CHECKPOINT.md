@@ -1,4 +1,19 @@
-# Current objective — HABIT-QUOTA-001 ("N times a week" habits)
+# Current objective — METRIC-PAGE-002 slice 2 (protein on the shared metric page)
+
+- Builder Claude Code, same Drop and authorization as slice 1 ([brief](METRIC-PAGE-002.md)). Slice 1 merged as #566
+  (`17d0e15`). Branch `claude/metric-page-002-protein` from that master. Lane FEATURE, read side only.
+- PROTEIN joins the metric page: your logs in white, TODAY's running total, 7D/30D/1Y bars with gaps as gaps, BEYOND's
+  existing target as a target only, FOOD-SOURCES-001's sources. TODAY's PROTEIN tile opens it; records and logging keep
+  their routes. BODY's combined NUTRITION card is unchanged.
+- Gates as slice 1: Node suite under UTC and America/Chicago, architecture, typecheck, build locally; browser suite in
+  PR CI (it can't run in the builder's sandbox). Next: workouts (slice 3).
+- Night 2026-11-18 (PD mission): independent exact-head review of `3aabc73` PASS, five non-blocking notes (PR
+  comment). Gavin: "Merge both". #565 merged first as `6212db1`; `origin/master` merged in normally (this checkpoint was
+  the only conflict; HABIT-QUOTA-001 is history). No code changed in the merge. Slice 3 stays with this builder.
+
+---
+
+# Historical — HABIT-QUOTA-001 ("N times a week" habits; merged as #565, `6212db1`)
 
 - Builder Claude Code. Gavin, 2026-11-18 ("Approved." to the recommended objective). [Brief](HABIT-QUOTA-001.md).
   Branch `ccr-ca6fc619-gqnj7f` from fetched master `6a359d01` (#564 merged).
@@ -13,6 +28,8 @@
 - Night 2026-11-18 (PD mission): `origin/master` `17d0e15` (#566 METRIC-PAGE-002 slice 1) merged in normally; this
   checkpoint was the only conflict (all sections kept; slice 1 is history). No code changed in the merge. Review PASS
   was on `efbab988`; renewed exact-head review needed on the merge head.
+- Renewed check: the head's diff over `efbab988`, outside this checkpoint, was only the master merge. Gavin: "Merge
+  both"; merged as `6212db1` (2026-11-19).
 
 ---
 

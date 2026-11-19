@@ -330,7 +330,7 @@ export function TodayScreen({
   onOpenCave?: (tab: "tonight" | "route" | "brief") => void;
   onOpenHealthEvidence?: (metric: "water" | "protein" | "weight" | "sleep") => void;
   /** Existing shell-owned forms: metric LOG WATER and direct quick Note, with canonical saves. */
-  onOpenRecord?: ((target: "water" | "weight" | "note") => void) | undefined;
+  onOpenRecord?: ((target: "water" | "weight" | "protein" | "note") => void) | undefined;
   onOpenBody?: (target?: BodyFocus) => void;
   /** COMMAND-CENTER-001: COMMAND's "TODAY TOOLS" result opens TOOLS with its heading focused. */
   operationsOnly?: boolean;
@@ -2193,7 +2193,7 @@ export function TodayScreen({
       lastMainSleepFromGarmin={lastMainSleepFromGarmin} paceHistories={paceHistories} now={now} dayId={day?.id} busy={busy} fuelLine={fuelLine}
       recordsAvailable={!!onOpenHealthEvidence}
       // METRIC-PAGE-001: WATER opens its metric page (records one tap further); sleep keeps its own page.
-      onOpenTile={(metric) => { if (!busyRef.current) { if (metric === "sleep") setMeasuredOpen("sleep"); else if (metric === "water" || metric === "weight") setDetailOpen(metric); else onOpenHealthEvidence?.(metric); } }}
+      onOpenTile={(metric) => { if (!busyRef.current) { if (metric === "sleep") setMeasuredOpen("sleep"); else setDetailOpen(metric); } }}
       // METRIC-PAGE-001: steps, resting heart rate and calories open the shared metric page; sleep keeps its own page.
       onOpenMeasured={(metric) => { if (busyRef.current) return; if (metric === "steps" || metric === "resting" || metric === "calories") setDetailOpen(metric); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); }}
       onOpenBody={onOpenBody ? () => onOpenBody() : undefined} />;
@@ -2821,8 +2821,8 @@ export function TodayScreen({
     <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={() => refresh()} />
     <ShiftMarkSheet target={shiftTarget} onClose={() => setShiftTarget(null)} onChanged={() => refresh()} />
     <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={refreshVersion}
-      onRecords={(detailOpen === "water" || detailOpen === "weight") && onOpenHealthEvidence ? () => onOpenHealthEvidence(detailOpen) : undefined}
-      onLog={(detailOpen === "water" || detailOpen === "weight") && onOpenRecord ? () => onOpenRecord(detailOpen) : undefined} />
+      onRecords={(detailOpen === "water" || detailOpen === "weight" || detailOpen === "protein") && onOpenHealthEvidence ? () => onOpenHealthEvidence(detailOpen) : undefined}
+      onLog={(detailOpen === "water" || detailOpen === "weight" || detailOpen === "protein") && onOpenRecord ? () => onOpenRecord(detailOpen) : undefined} />
     <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
     {(hydrationConfirmation || mealConfirmation || sleepConfirmation || proteinConfirmation) && <div className="redesign-toast" role="status">
       {hydrationConfirmation && renderLoggedBanner(`${hydrationConfirmation.amount} oz recorded.`, hydrationUndoOpen, "WATER", "water")}

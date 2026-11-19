@@ -1,5 +1,5 @@
 import { db } from "../persistence/db";
-import { recentPeriods, type PeriodValue } from "../domain/health/measuredSeries";
+import { cumulativeEaten, recentPeriods, type PeriodValue } from "../domain/health/measuredSeries";
 import type { UnusualReading } from "../domain/health/unusual";
 import { BASELINE_MIN_SAMPLES } from "../domain/health/baselines";
 import { getDaySummaries } from "./dayLedgerQueries";
@@ -7,7 +7,9 @@ import { getHydrationEntries } from "./queries";
 import { getMeasuredSnapshot, MEASURED_PERIODS } from "./measuredQueries";
 import { waterByHour } from "./bodyDashboard";
 import { getBodyweightHistoryWithSources, type WeighIn } from "./bodyTrendQueries";
-import { getNutritionTargets } from "./nutritionTargetQueries";
+import { getEffectiveProteinTargetG, getNutritionTargets } from "./nutritionTargetQueries";
+import { getMealEntries } from "./nutritionQueries";
+import { getProteinEntries } from "./queries";
 import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual, type SplitSide } from "./metricDetail";
 
 /**
@@ -21,6 +23,9 @@ import { dailySeries, usualOf, workOffSplit, type DetailMetric, type DetailUsual
  * - Weight (METRIC-PAGE-002) is what you weighed in at: each lived day's last weigh-in, corrections applied and undone
  *   weigh-ins left out (the same history BODY's weight trend draws). Garmin weight is not imported. A day without a
  *   weigh-in is a gap, never zero and never the day before carried forward.
+ * - Protein (METRIC-PAGE-002 slice 2) is what you logged: the day ledger's effective total of meal protein and quick
+ *   protein logs. TODAY is its running total, stepping up at each log. The target is BEYOND's existing protein target
+ *   (your multiplier times your latest weigh-in), shown as a target only: never a deficit or a "remaining".
  */
 export interface MetricDetail {
   metric: DetailMetric;
@@ -36,7 +41,9 @@ export interface MetricDetail {
     /** Calories: the two running totals through the lived day, eaten stepping up at each meal. */
     | { kind: "pair"; from: number; eaten: { t: number; total: number }[]; burned: { t: number; total: number }[] }
     /** Weight: the newest weigh-in and the whole history BODY's weight trend uses, with the goal weight if one is set. */
-    | { kind: "weighin"; latest: WeighIn | null; history: WeighIn[]; goalWeightLbs: number | undefined };
+    | { kind: "weighin"; latest: WeighIn | null; history: WeighIn[]; goalWeightLbs: number | undefined }
+    /** Protein: your running total through the lived day, stepping up at each meal or quick log. */
+    | { kind: "logged"; from: number; points: { t: number; total: number }[] };
   usual: DetailUsual & { dayKind?: "WORK" | "OFF" | null };
   split: { work: SplitSide; off: SplitSide };
   /** Garmin only: when the newest measurement was read on the phone. */
@@ -46,6 +53,8 @@ export interface MetricDetail {
   readAt: number;
   /** Calories only: the eaten series (your logs) beside `series`, which is burned (Garmin). */
   eaten?: { series: PeriodValue[]; usual: DetailUsual; split: { work: SplitSide; off: SplitSide } };
+  /** Protein only: BEYOND's existing protein target in grams, when one can be worked out (it needs a weigh-in). */
+  target?: number | undefined;
 }
 
 export async function getMetricDetail(metric: DetailMetric, now = Date.now()): Promise<MetricDetail> {
@@ -65,6 +74,20 @@ export async function getMetricDetail(metric: DetailMetric, now = Date.now()): P
       metric, source: "LOGGED", series,
       today: { kind: "weighin", latest: history.length ? { recordedAt: history.at(-1)!.recordedAt, weightLbs: history.at(-1)!.weightLbs } : null, history: history.map(({ recordedAt, weightLbs }) => ({ recordedAt, weightLbs })), goalWeightLbs: targets.goalWeightLbs },
       usual: usualOf(series), split: workOffSplit(series, contextOf), asOf: null, unusual: null, readAt: now,
+    };
+  }
+
+  if (metric === "protein") {
+    const series = dailySeries(periods, now, (dayId) => byDay.get(dayId)?.proteinG);
+    const [meals, quick, target] = current.dayId
+      ? await Promise.all([getMealEntries(current.dayId), getProteinEntries(current.dayId), getEffectiveProteinTargetG()])
+      : [[], [], await getEffectiveProteinTargetG()];
+    // The domain's stepped running total, fed with each meal's and quick log's protein at the time it was eaten.
+    const logs = [...meals.map((m) => ({ recordedAt: m.at, calories: m.effectiveProteinG })), ...quick.map((p) => ({ recordedAt: p.at, calories: p.effectiveGrams }))];
+    return {
+      metric, source: "LOGGED", series,
+      today: { kind: "logged", from: current.from, points: cumulativeEaten(current, logs, now) },
+      usual: usualOf(series), split: workOffSplit(series, contextOf), asOf: null, unusual: null, readAt: now, target,
     };
   }
 

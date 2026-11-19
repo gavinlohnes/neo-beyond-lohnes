@@ -76,6 +76,8 @@ describe("FOOD-SOURCES-001", () => {
     await page.viewport(360, 900);
     const screen = await render(<App />);
     await screen.getByRole("button", { name: /^Protein .*explore records$/ }).click();
+    // METRIC-PAGE-002 slice 2: TODAY's PROTEIN opens the protein page; its records (and this history) are one tap further.
+    await page.getByRole("dialog", { name: "PROTEIN", exact: true }).getByRole("button", { name: "PROTEIN RECORDS", exact: true }).click();
     await expect.element(screen.getByRole("combobox", { name: "EXPLORE A MEASURE", exact: true })).toHaveValue("protein");
     await screen.getByRole("button", { name: "7 DAYS", exact: true }).click();
     await expect.poll(() => [...(box()?.querySelectorAll(".md-source-row summary") ?? [])].map((s) => s.textContent)).toEqual([

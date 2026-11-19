@@ -57,3 +57,18 @@ queries only.
 - TODAY's WEIGHT tile and BODY's WEIGHT card open the page. WEIGHT RECORDS goes to the route each tap used before
   (TODAY: DATA's weight evidence; BODY: its weight history), LOG WEIGHT to the existing weight sheet, so nothing the old
   views showed is lost.
+
+## Slice 2 — protein (Claude Code, branch `claude/metric-page-002-protein`)
+
+- Gavin merged slice 1 as #566 (`17d0e15`). Slice 2 starts from that master.
+- `getMetricDetail("protein")`: the day ledger's effective `proteinG` per lived day (meal protein plus quick protein
+  logs, corrections applied, undone logs left out). TODAY is the running total from 16:30, stepping up at each meal
+  or quick log (the domain's `cumulativeEaten`, fed protein grams). Weeks are the mean of logged days, like calories.
+- The target is BEYOND's existing `getEffectiveProteinTargetG` (multiplier times latest weigh-in): a dashed line
+  labelled "target" and one plain sentence. Never a deficit, a "remaining" or a pace judgement. No weigh-in, no target.
+- 7D and 30D show FOOD-SOURCES-001's protein sources, as the calories page shows calories'.
+- TODAY's PROTEIN tile opens the page. PROTEIN RECORDS goes to the route the tile used before (DATA's protein
+  history, where FOOD-SOURCES-001's day links to that day's records still live); LOG PROTEIN opens the existing
+  protein sheet. `FoodSources001`'s TODAY-tile test now goes through PROTEIN RECORDS.
+- BODY has no protein-only panel: its NUTRITION card shows calories and protein together and keeps opening the
+  calories history, because the protein page alone would drop the calories it shows.
