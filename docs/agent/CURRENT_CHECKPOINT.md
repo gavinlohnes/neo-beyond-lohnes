@@ -26,7 +26,9 @@
   untouched; draft PR #473 is unrelated and untouched.
 - **Recommended future slice:** `GRAYSON-TRAIN-PLAN-DRAFT-001`, a read-mostly guided three-session
   plan and fallback preview inside TRAIN, stopping before any template/programme write. It is not
-  authorized and does not silently displace Guided Start priority.
+  authorized and does not silently displace Guided Start priority. Current programme assignments are
+  information only; later activation/template-selection authority is an explicit separate Protected
+  step, not implied by the preview or template creation.
 - **Verification:** PDF chart visually inspected; repository/code/decision audit and primary/first-
   party research complete. Markdown/diff/risk checks, required CI and independent review remain.
 - **Next:** finish documentation checks, open a PR, obtain green required CI and independent

@@ -73,7 +73,8 @@ nutrition diary, an opaque readiness score or a replacement application.
 
 The owner outcome is broader than “lose weight.” The Mission is:
 
-> **STRONGER, HEALTHIER, CAPABLE**  
+> **STRONGER, HEALTHIER, CAPABLE**
+>
 > Reduce body weight at a sustainable clinician-compatible pace, preserve or build useful strength,
 > improve the four performance standards, eat and recover better, and reach 170 as a required review
 > point rather than an automatic command to continue toward 150.
@@ -154,6 +155,12 @@ hypertrophy, and equipment type itself is not consistently decisive.
 The plan is a **sequence**, not Monday/Wednesday/Friday. GRAYSON places A, B and C in the lived schedule
 with recovery between them where practical. A missed day moves the opportunity; it does not cause a
 failed week or demand two sessions close together to “catch up.”
+
+That is the desired Mission behavior, not current Engine truth. Today, programme assignments are
+information only and custom templates never enter the locked built-in A → B → C suggestion. A future
+Protected objective must explicitly adjudicate Mission-plan activation/template selection before a
+custom Mission session can become TRAIN’s recommendation. Until then it remains an inspectable plan
+and an owner-selected custom template.
 
 ### Balance contract
 
@@ -396,15 +403,21 @@ Delta example:
 
 ### Journey B - Today’s training
 
-TRAIN opens on one recommendation:
+After the separately approved Mission-plan activation/template-selection boundary ships, TRAIN may
+open on one Mission recommendation:
 
-> **SESSION B - PULL AND HINGE**  
-> 45-55 min · Planet Fitness · normal version  
-> Your last lower-body session was two days ago. Main sleep was within your recent range.  
+> **SESSION B - PULL AND HINGE**
+>
+> 45-55 min · Planet Fitness · normal version
+>
+> Your last lower-body session was two days ago. Main sleep was within your recent range.
+>
 > **START** · **CHANGE** · **HOME INSTEAD**
 
 WHY contains schedule, capacity, last relevant training and evidence gaps. It does not display a
-fabricated recovery percentage.
+fabricated recovery percentage. This candidate does not grant that authority: programme assignment
+alone cannot change the current built-in A → B → C recommendation, and the first implementation
+preview stops before any selection or write.
 
 ### Journey C - Difficult day
 
@@ -417,12 +430,18 @@ reduces the plan without guilt.
 
 ### Journey D - Benchmark review
 
-> **30-39 STANDARD · 2 OF 4 OBSERVED**  
-> Sit and reach: not tested  
-> Sit-ups: 27 practice / target 30  
-> Bench: estimate only; correct test equipment not recorded  
-> 1.5 mile: 15:22 observed / target 14:34  
-> **NEXT:** keep the plan; add one easy run interval next week.  
+> **30-39 STANDARD · 2 OF 4 OBSERVED**
+>
+> Sit and reach: not tested
+>
+> Sit-ups: 27 practice / target 30
+>
+> Bench: estimate only; correct test equipment not recorded
+>
+> 1.5 mile: 15:22 observed / target 14:34
+>
+> **NEXT:** keep the plan; add one easy run interval next week.
+>
 > **WHY:** run evidence is comparable; bench evidence is not.
 
 ### Journey E - Phase review
@@ -496,7 +515,7 @@ change it.
 | --- | --- | --- | --- |
 | Fixed A/B/C templates | Locked content and history continuity | Remain available; Mission uses owner-approved custom templates rather than rewriting them | Preserve + route around carefully |
 | Custom exercises/templates | Local records, edit/archive and TRAIN execution | Guided three-session draft and explicit creation | Connect + deepen |
-| Training programme | Weekday/rotation assignment | Mission-aware proposal with schedule preview | Connect |
+| Training programme | Weekday/rotation assignment; information only | Mission-aware proposal with schedule preview; does not change current suggestion | Connect |
 | Progression/re-entry/deload | Existing deterministic advisory rules | Explain within the Mission; no hidden application | Preserve |
 | TRAIN home/live workout | One recommendation, CHANGE, one-set-at-a-time | Normal/home/minimum entry and Mission context | Deepen carefully |
 | Training history/records | Canonical performed evidence | Mission trend and comparable-evidence labels | Connect |
@@ -519,19 +538,23 @@ Every implementation requires separate approval.
    home/minimum previews. Do not write until Gavin confirms the exact templates and assignments.
 2. **Approved plan creation and programme assignment - Protected, M.** Reuse existing custom-template
    and programme commands with a multi-write preview, conflict handling and repair/undo strategy.
-   Preserve fixed A/B/C and all history.
-3. **Exercise teaching and equipment profile - Protected, M.** Owner-confirmed club equipment,
+   Preserve fixed A/B/C and all history. Programme assignment remains information only.
+3. **Mission-plan activation/template-selection authority - Protected, L.** Explicitly adjudicate
+   whether and how an approved custom Mission sequence may participate in TRAIN’s one recommendation,
+   how it coexists with the locked built-in A → B → C rule, and how owner override/history continuity
+   are preserved. Do not infer this authority from custom-template creation or programme assignment.
+4. **Exercise teaching and equipment profile - Protected, M.** Owner-confirmed club equipment,
    movement-pattern/secondary-muscle metadata, concise cues and official-instruction links. No copied
    proprietary media or unreviewed bulk dataset.
-4. **Home/minimum execution - Protected, M.** First-class bodyweight alternatives whose records remain
+5. **Home/minimum execution - Protected, M.** First-class bodyweight alternatives whose records remain
    honest and do not contaminate weighted-lift progression.
-5. **Performance Standards - Protected, L.** Protocol/versioned benchmark definitions, observed/
+6. **Performance Standards - Protected, L.** Protocol/versioned benchmark definitions, observed/
    practice/estimate evidence and four-track planning. Actual 1RM safety/protocol needs explicit owner
    and clinical/professional review where warranted.
-6. **Health Mission phase and cross-domain review - Protected, L.** Weight phase, record coverage,
+7. **Health Mission phase and cross-domain review - Protected, L.** Weight phase, record coverage,
    training, food, sleep and standards; one explicit proposed adjustment. Reconcile C4.5 and Mission
    semantics rather than introducing a second review system.
-7. **Personal learning - Protected, L.** Only after real use generates corrections and outcomes;
+8. **Personal learning - Protected, L.** Only after real use generates corrections and outcomes;
    inspectable, provenance-retaining and never a hidden recommendation model.
 
 ### Recommended first implementation objective
@@ -614,4 +637,3 @@ Primary and first-party sources inspected 2026-11-20:
 
 Owner-supplied external evidence inspected but not committed: “Appendix A - Physical Fitness
 Standards,” dated row 12-15-22, containing the four male/female age-category tables summarized above.
-

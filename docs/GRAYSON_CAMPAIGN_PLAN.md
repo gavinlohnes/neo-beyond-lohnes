@@ -622,7 +622,9 @@ competing campaign or change C4 priorities by itself.
   second review system.
 - Existing fixed A/B/C and progression remain available. The first recommended health slice is an
   inspectable three-session custom-template draft with no writes; plan creation, programme assignment,
-  Mission linkage and recommendation changes remain later Protected decisions.
+  Mission linkage and recommendation changes remain later Protected decisions. Programme assignment
+  is information only today; a separate Protected Mission-plan activation/template-selection ruling
+  is required before a custom plan can become TRAIN’s recommendation.
 - Performance standards are four provenance-labeled tracks, not a new readiness score or a shortcut
   from machine/Smith pressing to a free-weight bench pass.
 

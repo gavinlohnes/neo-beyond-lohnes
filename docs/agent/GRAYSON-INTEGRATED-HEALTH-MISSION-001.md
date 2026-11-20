@@ -61,4 +61,3 @@ raw backup data and personal symptom history stay outside source control.
 Complete repository reconciliation and documentation checks, open the PR, obtain green required CI
 and independent exact-head review, then return to Gavin. Do not implement
 `GRAYSON-TRAIN-PLAN-DRAFT-001` or any later slice.
-
