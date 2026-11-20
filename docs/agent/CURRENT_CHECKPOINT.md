@@ -3,12 +3,13 @@
 - **Owner ruling (Gavin, 2026-11-20):** approve C1.2 with no Orientation-invented day-off advice and with the mood
   trend as a factual line ("Include the trend"). [Brief](GRAYSON-C1.2-001.md); Decision Register GRAYSON-C1.2.
 - **Builder:** Claude Code; branch `ccr-380c4225-1es42i`, restarted from master after #597 merged; starting commit
-  `4883c62`. PROTECTED: independent exact-head review, green CI and Gavin's merge. No self-review or merge.
+  `4883c62`; [PR #598](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/598). PROTECTED: independent exact-head review, green CI and Gavin's merge. No self-review or merge.
 - **Verification (local):** typecheck, architecture; pure and integration tests (UTC and America/Chicago); browser
   states at 320/360/412 px and START DAY on the Monday after a run through TODAY. Screenshots in
-  `docs/screenshots/grayson-c1.2/`. Full suite recorded in the PR. No phone check yet.
+  `docs/screenshots/grayson-c1.2/`. Full suite 4,328 passed. No phone check yet.
 - **Previous:** C1.0 (#596) and C1.1 (#597) merged.
-- **Next:** PR, independent review, CI, Gavin's phone look and merge. Then C1.3 Close ritual needs its own go.
+- **Next:** independent review of #598, CI, Gavin's phone look and merge. C1.3 + C1.4 approved 2026-11-20: the close
+  follows SHIFT DOWN (his getting-home ritual: Deputy Lohnes → Gavin, 5–15 min), not END DAY; built after #598.
 
 ---
 
