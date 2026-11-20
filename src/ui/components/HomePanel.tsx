@@ -102,9 +102,9 @@ export function HomePanel({ active }: { active: boolean }) {
       <label className="field">Unit<select className="input" value={unit} disabled={busy} onChange={(e) => setUnit(e.target.value as RepeatUnit)}>{REPEAT_UNITS.map((u) => <option key={u} value={u}>{UNIT_LABEL[u]}</option>)}</select></label>
     </div>
     {repeats && <label className="field">Next due<input className="input" type="date" min={formatLocalDate(new Date())} value={firstDue} disabled={busy} onChange={(e) => setFirstDue(e.target.value)} /></label>}
-    {/* GRAYSON-Q2: the alert time each time it comes round (REMIND-AT-001); left empty, the phone alert stays at 16:00. */}
+    {/* GRAYSON-C3.4a: optional repeat alert time (REMIND-AT-001); the default time is not a delivery guarantee. */}
     {repeats && <label className="field">Alert time (optional)<input className="input" type="time" value={remindAt} disabled={busy} onChange={(e) => setRemindAt(e.target.value)} /></label>}
-    {repeats && !remindAt && <p className="meta">No time set: the phone alert comes at 16:00 on the due day.</p>}
+    {repeats && !remindAt && <p className="meta">No time set: default alert time 16:00 on the due day. Phone delivery depends on notification settings, quiet hours, the daily cap and the synced alert-plan window. Use SYNC GARMIN to refresh the phone’s plan.</p>}
     {repeats && firstDue && remindAt && <ReminderAlertLine dueAt={firstDue} remindAt={remindAt} title={`Home: ${item.trim()}`} />}
     <button type="button" className="btn-primary" disabled={busy || !canSave} onClick={() => void save()}>SAVE</button>
     {saved && <p role="status" className="meta">{saved}</p>}

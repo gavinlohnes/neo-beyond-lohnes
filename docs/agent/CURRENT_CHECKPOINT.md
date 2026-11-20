@@ -1,3 +1,15 @@
+# Current objective — PR #594 review repair (2026-11-20)
+
+- **Builder:** Codex, explicitly assigned by Gavin to continue Claude Code's existing `claude/project-thread-s69muv` branch. [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594); [durable C3.4/C3.4a brief](GRAYSON-C3.4-001.md).
+- **Recovery:** blocked head `1a43648f0ea4b087faba6811b666ed554dbcaf35`; original start `211ccf4d`, master `a857f285` already merged. Working tree was clean; existing work preserved. Lane FEATURE; no scope expansion.
+- **Repair:** add accurate bounded brief; replace the default 16:00 delivery promise with conditional delivery language; cover default/unset behavior in the Home browser tests; correct the GRAYSON-Q2 labels/comments to C3.4a. Save, recurrence and notification logic otherwise unchanged.
+- **Verification:** Home browser suite passes 6/6; Home integration passes 9/9 in UTC and Chicago; architecture and production build (including TypeScript/PWA) pass; diff hygiene passes. No fresh full local suite or physical-phone delivery test claimed. Required CI and exact repaired head recorded in the PR handoff. Prior BLOCK is on the old head; a fresh independent exact-head review is required. No self-review or merge.
+- **Owner sequence:** repair/review #594, then merge only after independent PASS and Gavin's approval; rigorously review #595 for evidence/causal overreach; reconcile #592 as supporting research, not a roadmap; preserve useful #589 evidence and resolve it; C1.1 Production Orientation is the next major objective. Continue the lived-day loop before deeper domain expansion. None of the later objectives is started in this repair.
+
+---
+
+# Historical checkpoint — original implementation (superseded handoff status)
+
 # Current objective — GRAYSON-Q1 / C3.4 dog care and CO presets, plus Home alert time (2026-11-20)
 
 - **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) and its progress
@@ -19,8 +31,7 @@
   separate PR for Gavin's merge.
 - **Verification:** typecheck, architecture check and the full Node suite pass locally; browser tests
   in `tests/browser/Home.test.tsx` run in required CI (no Chromium in the Builder container).
-- **Next:** green CI and independent exact-head PASS, then merge under the owner merge delegation;
-  then open C3.4b.
+- **Historical next action (superseded):** the original Builder proposed C3.4b after merge. Gavin’s newer sequence above controls; do not start it here.
 
 ---
 

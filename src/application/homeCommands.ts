@@ -23,7 +23,7 @@ export interface HomeItemInput {
   item: string;
   details?: string | undefined;
   repeat?: { every: number; unit: RepeatUnit; firstDue: string } | undefined;
-  /** GRAYSON-Q2: HH:MM on the due day (REMIND-AT-001's remindAt). Only with a repeat; without one the alert stays at 16:00. */
+  /** GRAYSON-C3.4a: HH:MM on the due day (REMIND-AT-001's remindAt). Only with a repeat; an omitted time uses the existing 16:00 default. */
   remindAt?: string | undefined;
 }
 
