@@ -109,6 +109,7 @@ export function RecurrencePicker({
         <option value="DAILY">Daily</option>
         <option value="WEEKLY">Weekly</option>
         <option value="MONTHLY">Monthly</option>
+        <option value="YEARLY">Yearly</option>
       </select>
       {form.freq && (
         <>
@@ -125,7 +126,7 @@ export function RecurrencePicker({
               onChange={(e) => onChange({ ...form, interval: e.target.value })}
             />
             <span className="meta">
-              {form.freq === "DAILY" ? "day(s)" : form.freq === "WEEKLY" ? "week(s)" : "month(s)"}
+              {form.freq === "DAILY" ? "day(s)" : form.freq === "WEEKLY" ? "week(s)" : form.freq === "MONTHLY" ? "month(s)" : "year(s)"}
             </span>
           </div>
           {form.freq === "WEEKLY" && (

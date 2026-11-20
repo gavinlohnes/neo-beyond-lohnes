@@ -9,7 +9,7 @@ import { RRule, Weekday } from "rrule";
  * outputs, same as every other engine/* module.
  */
 
-export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY";
+export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
 const WEEKDAY_CODES: Record<string, Weekday> = {
   MO: RRule.MO,
@@ -23,9 +23,9 @@ const WEEKDAY_CODES: Record<string, Weekday> = {
 
 export interface RecurrencePreset {
   freq: RecurrenceFreq;
-  /** Every N days/weeks/months. Always >= 1. */
+  /** Every N days/weeks/months/years. Always >= 1. */
   interval: number;
-  /** WEEKLY only — RFC 5545 two-letter weekday codes, e.g. ["MO","WE","FR"]. Ignored for DAILY/MONTHLY. */
+  /** WEEKLY only — RFC 5545 two-letter weekday codes, e.g. ["MO","WE","FR"]. Ignored for DAILY/MONTHLY/YEARLY. */
   byDay?: string[];
   /** YYYY-MM-DD — the schedule's anchor date. rrule.js computes every occurrence relative to this, never to "now". */
   anchor: string;
@@ -43,7 +43,7 @@ export interface RecurrencePreset {
  * module was written — see tests/engine/recurrence.test.ts).
  */
 export function buildRecurrenceRule(preset: RecurrencePreset): string {
-  const freq = { DAILY: RRule.DAILY, WEEKLY: RRule.WEEKLY, MONTHLY: RRule.MONTHLY }[preset.freq];
+  const freq = { DAILY: RRule.DAILY, WEEKLY: RRule.WEEKLY, MONTHLY: RRule.MONTHLY, YEARLY: RRule.YEARLY }[preset.freq];
   const byweekday =
     preset.freq === "WEEKLY" && preset.byDay && preset.byDay.length > 0
       ? preset.byDay.map((code) => WEEKDAY_CODES[code]).filter((w): w is Weekday => w !== undefined)
@@ -76,14 +76,16 @@ export function describeRecurrence(rrule: string): string {
 }
 
 const WEEKDAY_NUMS: Record<number, string> = { 0: "MO", 1: "TU", 2: "WE", 3: "TH", 4: "FR", 5: "SA", 6: "SU" };
-const FREQ_NUMS: Record<number, RecurrenceFreq> = { [RRule.DAILY]: "DAILY", [RRule.WEEKLY]: "WEEKLY", [RRule.MONTHLY]: "MONTHLY" };
+// GRAYSON-Q2: YEARLY joins the picker, so the yearly rules Home and People already write
+// (homeCommands.repeatRule, peopleCommands) can be read back and edited in Plans.
+const FREQ_NUMS: Record<number, RecurrenceFreq> = { [RRule.DAILY]: "DAILY", [RRule.WEEKLY]: "WEEKLY", [RRule.MONTHLY]: "MONTHLY", [RRule.YEARLY]: "YEARLY" };
 
 /**
  * The inverse of buildRecurrenceRule — lets an edit form re-populate its
  * frequency/interval/weekday picker from an already-stored rule, instead
  * of only ever being able to set recurrence once and never adjust it.
  * Returns `null` for a frequency this repo's picker doesn't offer
- * (rrule.js supports far more than DAILY/WEEKLY/MONTHLY; a rule built
+ * (rrule.js supports far more than DAILY/WEEKLY/MONTHLY/YEARLY; a rule built
  * by anything other than buildRecurrenceRule is out of scope here).
  */
 export function parseRecurrencePreset(rrule: string): RecurrencePreset | null {

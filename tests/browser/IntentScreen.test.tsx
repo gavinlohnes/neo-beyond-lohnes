@@ -10,6 +10,7 @@ import {
   markObligationWaiting,
   satisfyObligation,
 } from "../../src/application/intentCommands";
+import { addHomeItem } from "../../src/application/homeCommands";
 
 /**
  * Intent & Commitment Spine — Drop 01 (2026-08-22, approved). Real-browser
@@ -253,5 +254,19 @@ describe("IntentScreen (real browser) — recurrence (INTENT-002)", () => {
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("WEEKLY");
     await expect.element(screen.getByRole("button", { name: "Mon", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("GRAYSON-Q2: a yearly Home job opens as Yearly in the picker and its repeat can be changed", async () => {
+    await addHomeItem({ item: "Smoke alarm batteries", repeat: { every: 1, unit: "YEARS", firstDue: "2027-01-01" } });
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "Open Home: Smoke alarm batteries" }).click();
+    await expect.element(screen.getByText("Repeats: every year", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "EDIT", exact: true }).click();
+    await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("YEARLY");
+    await expect.element(screen.getByText("year(s)", { exact: true })).toBeVisible();
+    await screen.getByRole("spinbutton", { name: "Recurrence interval" }).fill("2");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Repeats: every 2 years", { exact: true })).toBeVisible();
+    expect((await axe.run(screen.container)).violations).toEqual([]);
   });
 });

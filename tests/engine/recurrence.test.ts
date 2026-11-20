@@ -95,9 +95,17 @@ describe("parseRecurrencePreset — round-trips buildRecurrenceRule's own output
     expect(parseRecurrencePreset(rrule)).toEqual({ freq: "MONTHLY", interval: 1, anchor: "2026-09-14" });
   });
 
-  it("returns null for a frequency this repo's picker doesn't offer", () => {
+  it("reads back a yearly rule, including the hand-built form Home and People write", () => {
     const yearly = "DTSTART:20260914T000000Z\nRRULE:FREQ=YEARLY;INTERVAL=1";
-    expect(parseRecurrencePreset(yearly)).toBeNull();
+    expect(parseRecurrencePreset(yearly)).toEqual({ freq: "YEARLY", interval: 1, anchor: "2026-09-14" });
+    const built = buildRecurrenceRule({ freq: "YEARLY", interval: 2, anchor: "2026-09-14" });
+    expect(parseRecurrencePreset(built)).toEqual({ freq: "YEARLY", interval: 2, anchor: "2026-09-14" });
+    expect(deriveNextOccurrenceDate(built, "2026-09-14")).toBe("2028-09-14");
+  });
+
+  it("returns null for a frequency this repo's picker doesn't offer", () => {
+    const hourly = "DTSTART:20260914T000000Z\nRRULE:FREQ=HOURLY;INTERVAL=1";
+    expect(parseRecurrencePreset(hourly)).toBeNull();
   });
 });
 
