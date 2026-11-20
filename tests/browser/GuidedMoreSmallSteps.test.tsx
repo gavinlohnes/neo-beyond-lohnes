@@ -20,9 +20,20 @@ import { IntentScreen } from "../../src/ui/screens/more/IntentScreen";
 import { getDecisionJournalEntries } from "../../src/application/journalQueries";
 import { createDecisionJournalEntry } from "../../src/application/journalCommands";
 import { getMissions } from "../../src/application/intentQueries";
+import { getMemoryFacts } from "../../src/application/memory";
 import { App } from "../../src/app/App";
 import { mealButton } from "./helpers/mealSheet";
 import { searchCommand } from "./helpers/todayTools";
+
+const GUIDED_SHOTS = import.meta.env.VITE_GUIDED_START_SHOTS as string | undefined;
+async function guidedShot(name: string) {
+  if (!GUIDED_SHOTS) return;
+  await page.viewport(360, 1200);
+  document.querySelector(".guided-teaching")?.scrollIntoView({ block: "start" });
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  await page.screenshot({ path: `${GUIDED_SHOTS}/${name}.png`, element: document.querySelector(".guided-teaching") as HTMLElement });
+  await page.viewport(360, 800);
+}
 
 vi.mock("../../src/application/guidedMoreQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/guidedMoreQueries")>();
@@ -48,6 +59,52 @@ beforeEach(() => { vi.mocked(getGuidedMoreStarts).mockReset(); vi.mocked(getDeci
 afterEach(async () => { await cleanup(); await page.viewport(1280, 800); await cdp().send("Emulation.setEmulatedMedia", { features: [] }); });
 
 describe("Guided MORE + Low-Energy TODAY", () => {
+  it.each([320, 360, 412])("guides one explicit understanding, resumes its draft and saves only after confirmation at %ipx", async (width) => {
+    await page.viewport(width, 800);
+    const beforeRecommendations = await db.recommendations.toArray();
+    const screen = await render(<MoreScreen />);
+    await openCommandPanel(screen, "settings");
+    await screen.getByText("A place to start", { exact: true }).first().click();
+    if (width === 360) await guidedShot("01-choose-subject");
+    await screen.getByRole("button", { name: "TRAINING", exact: true }).click();
+    const answer = screen.getByRole("textbox", { name: "Your answer", exact: true });
+    await answer.fill("Long workouts feel impossible after a difficult shift.");
+    expect(await getMemoryFacts()).toEqual([]);
+    await screen.getByRole("button", { name: "NOT NOW", exact: true }).click();
+    await screen.getByRole("button", { name: "TRAINING · NOT NOW", exact: true }).click();
+    await expect.element(answer).toHaveValue("Long workouts feel impossible after a difficult shift.");
+    await screen.getByRole("button", { name: "REVIEW UNDERSTANDING", exact: true }).click();
+    const proposal = screen.getByRole("textbox", { name: "These are the exact words Delta will remember", exact: true });
+    await expect.element(proposal).toHaveValue("Long workouts feel impossible after a difficult shift.");
+    await proposal.fill("After a difficult shift, offer a shorter workout before skipping it.");
+    if (width === 360) await guidedShot("02-review-understanding");
+    expect(await getMemoryFacts()).toEqual([]);
+    await screen.getByRole("button", { name: "CONFIRM & REMEMBER", exact: true }).click();
+    await expect.element(screen.getByText("CONFIRMED UNDERSTANDING", { exact: true })).toBeVisible();
+    if (width === 360) await guidedShot("03-confirmed-understanding");
+    const facts = await getMemoryFacts();
+    expect(facts).toHaveLength(1);
+    expect(facts[0]).toMatchObject({ kind: "PERSONAL_FACT", topic: "HEALTH", source: "OPERATOR", action: "CREATED", statement: "After a difficult shift, offer a shorter workout before skipping it." });
+    expect(await db.recommendations.toArray()).toEqual(beforeRecommendations);
+    await screen.getByRole("button", { name: "REVIEW ALL MEMORY", exact: true }).click();
+    await expect.element(screen.getByText("After a difficult shift, offer a shorter workout before skipping it.", { exact: true }).first()).toBeVisible();
+    await expect.element(screen.getByText(/Personal fact.*OPERATOR.*confirmed/).first()).toBeVisible();
+    const fact = screen.getByRole("article").filter({ hasText: "After a difficult shift" });
+    await fact.getByText("Inspect or fix this memory", { exact: true }).click();
+    await fact.getByRole("button", { name: "CORRECT MEMORY", exact: true }).click();
+    await screen.getByRole("textbox", { name: "What should BEYOND remember?", exact: true }).fill("When work is difficult, begin with a 12-minute workout option.");
+    await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true }).click();
+    await screen.getByRole("button", { name: "TEACH DELTA A LITTLE", exact: true }).click();
+    await screen.getByRole("button", { name: "TEACH DELTA ANOTHER THING", exact: true }).click();
+    await screen.getByRole("button", { name: "TRAINING · NOT NOW", exact: true }).click();
+    const guide = screen.container.querySelector(".guided-teaching")!;
+    await screen.getByText("You already confirmed something related", { exact: true }).click();
+    expect(guide.textContent).toContain("When work is difficult, begin with a 12-minute workout option.");
+    expect(guide.textContent).not.toContain("After a difficult shift, offer a shorter workout before skipping it.");
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    expect((await axe.run(screen.container)).violations).toEqual([]);
+  });
+
   it("Capture navigation retains an unsaved MORE writing draft without a discard dialog", async () => {
     const onCapture = vi.fn();
     const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
