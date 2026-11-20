@@ -73,3 +73,20 @@ it("GRAYSON-Q1: CO detector and dog presets fill the form, then SAVE makes an or
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   expect((await axe.run(screen.container)).violations).toEqual([]);
 });
+
+it("GRAYSON-Q2: an alert time saves with the repeating job and shows when it comes round", async () => {
+  const screen = await render(<HomePanel active />);
+  await screen.getByRole("textbox", { name: "What" }).fill("Dog heartworm");
+  await screen.getByRole("spinbutton", { name: "Repeat every (optional)" }).fill("1");
+  await expect.element(screen.getByText("No time set: the phone alert comes at 16:00 on the due day.")).toBeVisible();
+  const next = new Date(); next.setDate(next.getDate() + 5);
+  const iso = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+  await screen.getByLabelText("Next due").fill(iso);
+  await screen.getByLabelText("Alert time (optional)").fill("08:30");
+  await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+  await expect.element(screen.getByText("alert at 08:30", { exact: false })).toBeVisible();
+  await expect.element(screen.getByText("at 08:30 · in 5 days", { exact: false })).toBeVisible();
+  expect((await db.obligations.toArray())[0]).toMatchObject({ title: "Home: Dog heartworm", remindAt: "08:30" });
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+});

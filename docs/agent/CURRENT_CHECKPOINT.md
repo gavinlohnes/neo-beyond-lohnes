@@ -1,17 +1,45 @@
-# Current objective — GRAYSON-Q1 / C3.4 dog care and CO detector presets (2026-11-20)
+# Current objective — GRAYSON-Q1 / C3.4 dog care and CO presets, plus Home alert time (2026-11-20)
 
-- **Owner authorization:** Gavin, 2026-11-20: start the Grayson campaign plan's quick wins with
-  Claude Code ("start with the quick wins and stuff I will feel immediately"). Lane FEATURE (no
-  Protected boundary: no new data kind, schema, event, Engine or navigation change). Starting commit
-  `211ccf4`; Builder Claude Code; branch `claude/project-thread-s69muv`; [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594).
+- **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) and its progress
+  tracker are the record of what is done and left; this PR marks C3.4 and C3.4a done.
+- **Owner authorization:** Gavin, 2026-11-20: start the campaign plan's quick wins with Claude Code
+  ("start with the quick wins and stuff I will feel immediately"), then, on the gaps found (Home jobs
+  always alert at 16:00; yearly repeats can't be edited in Plans): "I'm fine with who ever would be most
+  efficient at building this do the work." Lane FEATURE (no schema, event, Engine, notification-rule or
+  navigation change). Starting commit `211ccf4`, master merged in at `a857f28`; Builder Claude Code;
+  branch `claude/project-thread-s69muv`; [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594).
 - **Change:** Home's preset list (HOME-SCHEDULE-001) gains CO detectors (monthly), dog flea and tick
   (monthly), dog heartworm (monthly), vet checkup (yearly) and dog food (every 4 weeks, editable).
   Presets still only fill the form; SAVE writes the ordinary "Home: …" repeat through `addHomeItem`.
-  Summary reads "Common house and dog jobs"; the hint now names the real SAVE button (was "ADD").
-- **Exclusions:** no pet profiles, vet records, notifications, TODAY layout, counts or streaks.
-- **Verification:** typecheck and architecture check pass locally; browser test added in
-  `tests/browser/Home.test.tsx` runs in required CI (no Chromium in the Builder container).
-- **Next:** green CI and independent exact-head PASS, then merge under the owner merge delegation.
+  Summary reads "Common house and dog jobs"; the hint names the real SAVE button (was "ADD").
+  C3.4a: a repeating Home job takes an optional alert time, stored as REMIND-AT-001's existing
+  `remindAt` and carried to each next occurrence by the existing satisfy path; empty keeps 16:00.
+- **Exclusions:** no pet profiles, vet records, notification rules, early warning (C3.2), TODAY
+  layout, counts or streaks. Yearly repeats in Plans (C3.4b) touch `engine/recurrence.ts` and go in a
+  separate PR for Gavin's merge.
+- **Verification:** typecheck, architecture check and the full Node suite pass locally; browser tests
+  in `tests/browser/Home.test.tsx` run in required CI (no Chromium in the Builder container).
+- **Next:** green CI and independent exact-head PASS, then merge under the owner merge delegation;
+  then open C3.4b.
+
+---
+
+# Historical — GRAYSON-CAMPAIGN-PLAN-001 (merged as PR #593, `a857f28`)
+
+- **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) is the campaign plan
+  toward Project Grayson and its **progress tracker** is the one record of what is done, in progress
+  and left. Every Builder names the plan item ID in its PR and updates that row in the same PR.
+- **Owner authorization:** Gavin asked for a structured campaign plan (2026-11-20) and for every agent
+  to see what is done and what is left. Protected (governance pointers in `AGENTS.md` and this file);
+  waits on independent exact-head review and Gavin's merge. Builder Claude Code; branch
+  `claude/project-thread-4rj0y9`; [PR #593](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/593).
+  Starting commit `211ccf4`.
+- **In flight:** Q1 / C3.4 dog care and CO presets ([PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594));
+  Q3 workouts on the metric page ([PR #584](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/584),
+  conflicts on this file). Everything else in the tracker is not started.
+- **Exclusions:** no product code, Engine, schema, dependency or concurrent-PR change. The plan
+  authorizes no item.
+- **Next:** Gavin picks the next item; first big objective proposed is C1.1 Orientation slice 1.
 
 ---
 
