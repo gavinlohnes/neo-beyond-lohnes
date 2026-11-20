@@ -8,7 +8,8 @@ with existing doctrine, Product Direction, the Decision Register, and builder gu
 reviewed PR; and make no product-code, runtime, architecture, or Google Drive change.
 
 Starting commit: `29bc9efad66ff2a86836eb84394ea9be7e073f4c` (`origin/master`, freshly fetched).
-Builder: Codex. Branch: `codex/grayson-evolution-rule`. Active PR: pending.
+Builder: Codex. Branch: `codex/grayson-evolution-rule`. Active PR:
+[#590](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/590).
 
 ## Owner-approved rule
 
