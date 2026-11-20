@@ -259,16 +259,37 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   personal preset, same treatment as `SavedMeal`. Wired into a new standalone MORE sub-screen
   (`src/ui/screens/more/ExerciseLibraryScreen.tsx`): search the reference list or hand-type a
   fully custom entry, list/edit/archive the personal library. Deliberately not wired into TRAIN's
-  execution surface and does not touch `WorkoutTemplateId`/`WORKOUT_TEMPLATES` — see
-  `docs/agent/drops/TRAIN-CREATE-001.md`'s exclusions. Still open: nothing yet lets the operator
-  assemble saved exercises into a new selectable workout template/program — that is the next,
-  larger, separately-scoped Drop this one is designed to feed.
+  substitution field or set logging directly and does not alter the built-in
+  `WORKOUT_TEMPLATES` — see `docs/agent/drops/TRAIN-CREATE-001.md`'s exclusions.
+- **Built after that original entry:** `CustomWorkoutTemplate`, its validation/commands/queries and
+  `CustomTemplateScreen` now assemble exercises into selectable owner-created templates. TRAIN,
+  history, programme assignments, Weekly and Week Planner resolve them through
+  `application/customTemplateQueries.ts`. They deliberately do not enter the Engine's locked
+  built-in A → B → C suggestion. The remaining gap is guided, goal-aware composition and explicit
+  plan approval—not a missing custom-template primitive.
 - **Ruling on file**: schema addition — owner sign-off obtained 2026-09-12 (direct chat ruling,
   see `docs/UX_DECISIONS.md`'s WORKOUT LIBRARY entry).
 
 ## TRAIN experience
 
-- **In flight — GYM-UPGRADE-001 (owner approved):** reuse the existing TRAIN/Gym command path and HARVEST-001 effort/live-workout patterns. `PerformedSet` adds optional warm-up kind and reps-in-reserve; absent legacy kind remains working. Shared `isWorkingSet` bounds statistics; effort never enters recommendation rules. `SetDetails` shares normal/Gym controls; `getWorkoutRecap` compares actual matching lifts in the same template/variant, also available in training history. Native backup stays generic; no new table, provider or dependency. [Brief](GYM-UPGRADE-001.md). BUILD OWNED mapping, not a second workout store.
+### GRAYSON integrated health mission design (2026-11-20 candidate)
+
+- [`GRAYSON_INTEGRATED_HEALTH_MISSION.md`](../GRAYSON_INTEGRATED_HEALTH_MISSION.md) audits the current
+  TRAIN/Body/Food/Recovery foundation and proposes connected phased health planning, a guided
+  three-session full-body draft, Planet Fitness equipment awareness, bodyweight home/minimum
+  fallbacks, physical-standard provenance and evidence-bounded review.
+- Preserve fixed A/B/C, progression/re-entry/deload, custom templates, programme assignments, live
+  execution and history. The recommended first future slice is a read-mostly confirmation preview
+  built from those primitives; it does not authorize writes, Engine changes or Mission semantics.
+- Donor ruling: adapt equipment/feedback patterns from Fitbod and observed muscle distribution from
+  Hevy; ideas only from MIT GainPath/Workout Planner; no wger AGPL code; free-exercise-db bulk reuse
+  stays deferred under the existing owner ruling.
+
+- **Built — GYM-UPGRADE-001:** the existing TRAIN/Gym command path includes optional warm-up kind
+  and reps-in-reserve; absent legacy kind remains working. Shared `isWorkingSet` bounds statistics;
+  effort does not enter recommendation rules. `SetDetails` shares normal/Gym controls and
+  `getWorkoutRecap` compares matching lifts in the same template/variant. Native backup stays
+  generic; no second workout store. [Brief](GYM-UPGRADE-001.md).
 
 - **Existing primitive**: `src/engine/progression.ts` (per-exercise INCREASE/HOLD/REDUCE,
   locked doctrine), `TrainScreen.tsx`.

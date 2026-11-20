@@ -1,4 +1,39 @@
-# Current objective — GRAYSON-GUIDED-OPERATING-LOOP-001 owner-discovery follow-up (2026-11-20)
+# Current objective — GRAYSON-INTEGRATED-HEALTH-MISSION-001 (2026-11-20)
+
+- **Owner authorization / lane:** Gavin approved a Protected documentation/design-only objective for
+  one connected health Mission spanning phased weight loss, strength/muscle, physical standards,
+  Planet Fitness, bodyweight home fallbacks, food, hydration, sleep/recovery and clinician-led
+  medication context. No implementation, navigation, Engine/data semantics, treatment, private
+  health record or Google Drive change is authorized.
+- **Starting master / Builder:** `f81f1ed66c35c0cd0f02dbf7cf02474bd58fbc46` after PR #603;
+  Builder Codex; branch `codex/grayson-integrated-health-mission-001`; active PR pending.
+- **Canonical candidate:**
+  [`GRAYSON_INTEGRATED_HEALTH_MISSION.md`](../GRAYSON_INTEGRATED_HEALTH_MISSION.md);
+  [brief](GRAYSON-INTEGRATED-HEALTH-MISSION-001.md).
+- **Repository truth:** fixed A/B/C, custom exercises/templates, programme assignment, live
+  STANDARD/REDUCED/RECOVERY execution, advisory progression/re-entry/deload, history/records,
+  bodyweight/targets, Food Week, Eating Window, lived context and Review already exist. The gap is
+  guided composition, balance/teaching, reality variants and one evidence-bounded Mission review.
+- **Design direction:** a sequence of three balanced full-body sessions with bounded emphasis;
+  Planet Fitness equipment confirmed rather than assumed; bodyweight home/minimum variants that do
+  not fabricate loaded-pull or weighted-progression evidence; phased weight review with 170 as a
+  required decision point; four provenance-labeled performance tracks.
+- **Evidence boundary:** machine/Smith pressing is not a free-weight 1RM pass; practice/estimate is
+  not observed testing; missing food is not low intake; one result is not a trend; treatment remains
+  clinician-led. Raw backup, medication/dose and symptom history stay out of Git.
+- **Concurrent work:** PR #584's finished-workout metric is supporting existing work and remains
+  untouched; draft PR #473 is unrelated and untouched.
+- **Recommended future slice:** `GRAYSON-TRAIN-PLAN-DRAFT-001`, a read-mostly guided three-session
+  plan and fallback preview inside TRAIN, stopping before any template/programme write. It is not
+  authorized and does not silently displace Guided Start priority.
+- **Verification:** PDF chart visually inspected; repository/code/decision audit and primary/first-
+  party research complete. Markdown/diff/risk checks, required CI and independent review remain.
+- **Next:** finish documentation checks, open a PR, obtain green required CI and independent
+  exact-head review, then return to Gavin. Do not implement the recommended slice.
+
+---
+
+# Historical — GRAYSON-GUIDED-OPERATING-LOOP-001 owner-discovery follow-up (merged as PR #603)
 
 - **Owner authorization:** Gavin approved a Protected documentation/design-only objective to preserve
   and develop his guided-experience, connected-goal and intelligent-food ideas into a canonical
