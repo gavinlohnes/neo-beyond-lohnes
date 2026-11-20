@@ -83,7 +83,7 @@ it("Alfred's cards add the year only when it isn't this year (review of #362)", 
   expect(describeProposal(toProposal("add_reminder", { title: "Call", due_date: "2026-11-20" })!)).toBe("Remind: Call · Fri, Nov 20");
 });
 
-it("GRAYSON-Q2: a home job's alert time is kept on every occurrence, and needs a repeat", async () => {
+it("GRAYSON-C3.4a: a home job's alert time is kept on every occurrence, and needs a repeat", async () => {
   const { reminder } = await addHomeItem({ item: "Dog heartworm", repeat: { every: 1, unit: "MONTHS", firstDue: "2026-11-15" }, remindAt: "08:30" });
   expect(reminder).toMatchObject({ title: "Home: Dog heartworm", dueAt: "2026-11-15", remindAt: "08:30" });
   await satisfyObligation(reminder!.id);
