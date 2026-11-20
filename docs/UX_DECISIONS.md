@@ -12,6 +12,16 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C1.1 — Orientation opens the work day (owner go 2026-11-20)
+
+Gavin approved Orientation slice 1 after its proposal page: "I'd rather hit a button to start my day ... Approved."
+[Brief](agent/GRAYSON-C1.1-001.md). A deliberate START DAY on a work (or unconfirmed) day opens one read-and-route
+screen: Situation → You → Delta → at most one recommendation → the runway to the shift → at most two actions →
+ENTER TODAY. **Recommendation authority is unchanged (Option A):** only the Engine's recorded recommendation, or
+else the approved pre-check-in draft, is shown, with its own kind and rationale; Orientation has no arbitration
+rule of its own, and Delta's deterministic sentence explains and never advises. Viewing writes nothing; a
+reviewed marker is device-local. It replaces BEYOND 4.0-d's opt-in briefing preview. Day-off grammar is C1.2.
+
 ## EARLY-DAY-START-001 — an afternoon START DAY opens tonight's day (owner go 2026-11-20; amends DAY-ROLLOVER-001)
 
 Gavin, 2026-11-20 (Protected, approved): "A START DAY tap in the afternoon before 16:30 should open the day that

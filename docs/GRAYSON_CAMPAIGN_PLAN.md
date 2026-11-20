@@ -50,7 +50,7 @@ status of its own.
 |---|---|---|---|
 | **Campaign 1 — Daily Loop** | | | |
 | C1.0 | Early START DAY: an afternoon tap opens tonight's day (added 2026-11-20, Gavin's go) | Done (#596) | Prerequisite found in C1.1 discovery; [brief](agent/GRAYSON-C1.0-001.md) |
-| C1.1 | Orientation slice 1: work-night wake | Not started | Approved 2026-11-20 (START DAY trigger, Engine keeps sole recommendation authority, runway layout); starts after C1.0. Prototype evidence in #589 (not production) |
+| C1.1 | Orientation slice 1: work-night wake | Done (#597) | Approved 2026-11-20 (START DAY trigger, Engine keeps sole recommendation authority, runway layout); built on C1.0, [brief](agent/GRAYSON-C1.1-001.md). Prototype evidence in #589 (not production) |
 | C1.2 | Orientation slice 2: day-off, recovery and difficult-day grammar | Not started |  |
 | C1.3 | Close ritual | Not started |  |
 | C1.4 (Q4) | "Tomorrow differs" line | Not started |  |

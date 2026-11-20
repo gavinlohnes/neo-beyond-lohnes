@@ -15,7 +15,8 @@ import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
-import { TodayBriefingPreview } from "./TodayBriefingPreview";
+import { Orientation } from "./Orientation";
+import { markOrientationSeen, orientationSeen } from "./orientationStore";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
@@ -716,8 +717,10 @@ export function TodayScreen({
   const lookBaseRef = useRef<LookSnapshot | null>(null);
   // DAY-MAP-001: map marks new since the last look on this device, outlined for this visit.
   const [freshMarks, setFreshMarks] = useState<ReadonlySet<string>>(() => new Set());
-  const [briefingPreview, setBriefingPreview] = useState(false);
-  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); setBriefingPreview(false); } }, [active]);
+  // GRAYSON C1.1: Orientation, opened by START DAY on a work day and reopenable from TODAY.
+  const [orientationOpen, setOrientationOpen] = useState(false);
+  const [orientationSeenTick, setOrientationSeenTick] = useState(0);
+  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
@@ -1091,7 +1094,7 @@ export function TodayScreen({
     setBusy(true);
     try {
       // EARLY-DAY-START-001: in the afternoon window the tap opens tonight's 16:30 day early.
-      await startDayFromTap();
+      const started = await startDayFromTap();
       acknowledge("LIGHT");
       // TODAY-008 (residual TODAY-R01, flagged in TODAY-006): every other
       // mutating handler in this component calls refresh() afterward so
@@ -1104,6 +1107,9 @@ export function TodayScreen({
       // getActiveDay() read, so the separate setDay() call above is gone.
       await refresh();
       setJustStartedDay(true);
+      // GRAYSON C1.1: a deliberate START DAY on a work day (or an unconfirmed one) opens Orientation; a day off keeps
+      // today's TODAY until C1.2. Never over an operation already in progress.
+      if (started.workContext !== "OFF" && !operationsOnly) setOrientationOpen(true);
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -2700,7 +2706,9 @@ export function TodayScreen({
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
       {checkInOwnedHere && !recommendationDraftPresent && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
-      {dayRead && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setBriefingPreview(true); }}>PREVIEW BRIEFING</button></div>}
+      {/* GRAYSON C1.1: Orientation stays one quiet tap away (FIELD-AUTHORITY-001: no red, nothing above the day). A day
+          started by the roll or a log reads ORIENT TODAY until it's been seen on this device. */}
+      {dayRead && day && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setOrientationOpen(true); }}>{orientationSeenTick >= 0 && !orientationSeen(day.id) && day.workContext === "WORK" ? "ORIENT TODAY" : "ORIENTATION"}</button></div>}
     </section>
   </>;
 
@@ -2709,11 +2717,21 @@ export function TodayScreen({
   // steps aside (an operation, the late sleep prompt) or NEXT couldn't be read, the hero keeps it.
   const bandHidden = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep;
   const bandCarriesRun = !!day && !!lifeReading && !!ahead && !bandHidden;
-  if (!operationsOnly && briefingPreview) return <TodayBriefingPreview active={active} onBack={() => setBriefingPreview(false)} onOpen={(destination) => {
-    if (destination === "PLAN") onOpenPlan?.();
-    else if (onOpenBody) onOpenBody("sleep");
-    else onOpenHealthEvidence?.("sleep");
-  }} />;
+  // GRAYSON C1.1: Orientation owns the screen until ENTER TODAY; it steps aside for an operation in progress.
+  const closeOrientation = () => { if (day) markOrientationSeen(day.id); setOrientationOpen(false); setOrientationSeenTick((n) => n + 1); };
+  if (!operationsOnly && orientationOpen && day && !activeWorkout && !activeResetId && !activeShiftDownId) return <>
+    <Orientation active={active} busy={busy} refreshKey={refreshVersion} routes={{
+      onEnter: closeOrientation,
+      onCheckIn: () => { if (!busyRef.current) setCheckInFormOpen(true); },
+      onPrep: () => { closeOrientation(); requestAnimationFrame(() => document.querySelector(".work-preparation")?.scrollIntoView({ block: "start" })); },
+      onCapture: () => { if (onOpenRecord) onOpenRecord("note"); else { closeOrientation(); openFastCapture(); } },
+      onTrain: onOpenTrain ? () => { closeOrientation(); onOpenTrain("WORKOUT"); } : undefined,
+      onSleep: onOpenBody ? () => onOpenBody("sleep") : onOpenHealthEvidence ? () => onOpenHealthEvidence("sleep") : undefined,
+      onCommitment: onOpenPlan ? () => { closeOrientation(); onOpenPlan(); } : undefined,
+      onSetContext: (value) => handleSetWorkContext(value),
+    }} />
+    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
+  </>;
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>

@@ -9,6 +9,9 @@
   is **connect before expanding**: most donor value is pattern-level adaptation, not subsystem import.
   It recommends production Lived-Day Orientation as the first bounded evolution objective; the
   report itself authorizes no implementation.
+- **Shipped composition seam (C1.1):** `application/orientation.ts` composes the work-day wake (shift, own-range
+  sleep, check-in, Engine/draft guidance, runway of known times, ≤ 2 actions) read-only; it replaced the 4.0-d
+  briefing preview. Extend it for C1.2's day-off grammar rather than adding another briefing.
 - **Preserve before invention:** the destination reuses BEYOND's Operator Model and memory, lived-day
   records, work context, routines, Home/People facts, obligations, journal, personal experiments,
   Whole Picture/personal ranges, training, nutrition, TODAY/FIELD, COMMAND depth, deterministic
