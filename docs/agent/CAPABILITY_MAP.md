@@ -466,6 +466,16 @@ inspection, physical deletion of unconverted rows and individually confirmed con
 migration; both stores still exist while originals remain. BUILD OWNED integration using existing
 atomic writes, proposal cards, common context projection and native backups; no new dependency.
 
+### GRAYSON-GUIDED-START-001 — guided confirmed understanding (candidate)
+
+`ui/screens/more/GuidedOverview.tsx` now composes the existing optional starting paths with a small
+one-question teaching journey. Draft answers remain mounted UI state; related established context is
+read through `getMemoryFacts`; only **CONFIRM & REMEMBER** calls the existing `recordMemory` command
+to create an operator-authored `PERSONAL_FACT`. `MemoryPanel` remains the canonical inspection,
+correction and retirement surface. Reuse this composition for later guided subjects; do not add a
+parallel profile, session store or memory command. Status and exact boundaries:
+[`GRAYSON-GUIDED-START-001.md`](GRAYSON-GUIDED-START-001.md).
+
 ### ATTENTION-001 — connected TODAY/LIFE presentation (2026-11-01)
 
 Approved bounded objective: [#370](https://github.com/gavinlohnes/neo-beyond-lohnes/issues/370).

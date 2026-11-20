@@ -3650,3 +3650,17 @@ and approved these refinements as documentation-only:
 Canonical detail: [`LIVED_DAY_ORIENTATION_DESIGN.md`](LIVED_DAY_ORIENTATION_DESIGN.md). This ruling
 authorizes no implementation. The next proposed step is a separately approved phone-first prototype/
 visual checkpoint.
+## 2026-11-20 — GRAYSON-GUIDED-START-001: guided understanding is optional and explicitly confirmed
+
+**Protected owner authorization.** **A PLACE TO START** and **What BEYOND should remember** evolve
+into one optional phone-first teaching journey. It begins from a small useful subject, asks one
+question at a time, exposes related confirmed memory, and shows the exact proposed understanding
+before retention. Gavin may change it, postpone it or leave; direct tools and the existing memory
+editor remain available.
+
+Only **CONFIRM & REMEMBER** may use the existing confirmed-memory command. Draft answers and proposed
+words are not records. Confirmed understandings retain operator provenance, correction/retirement
+history and existing sharing boundaries; they do not automatically alter Engine guidance, plans,
+recommendation semantics or Mission authority. This slice adds no provider, autonomous inference,
+hidden profile, schema or primary-navigation change. Mounted-session resumption does not establish a
+new persisted guided-session contract.

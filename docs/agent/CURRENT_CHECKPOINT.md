@@ -1,4 +1,33 @@
-# Current objective — GRAYSON-INTEGRATED-HEALTH-MISSION-001 (2026-11-20)
+# Current objective — GRAYSON-GUIDED-START-001 (2026-11-20)
+
+- **Owner authorization / lane:** Gavin approved a Protected implementation objective evolving
+  **A PLACE TO START** and **What BEYOND should remember** into an optional, resumable, phone-first
+  guided conversation. No provider, primary-navigation, Engine/recommendation, autonomous memory,
+  health-plan, schema or Google Drive change is authorized.
+- **Starting master / Builder:** `84afb8cc810bba2cbed307082aa7fb992debcb15` after PR #604;
+  Builder Codex; branch `codex/grayson-guided-start-001`; PR pending.
+- **Brief:** [`GRAYSON-GUIDED-START-001.md`](GRAYSON-GUIDED-START-001.md).
+- **Repository truth reused:** `GuidedOverview` already provides optional Journal/Plans/Capture paths;
+  `MEMORY_RECORDED` already provides explicit operator confirmation, causal history, correction,
+  retirement and provenance. No second memory store or guided-session schema is needed.
+- **Candidate outcome:** six useful subjects, one question at a time, related confirmed context,
+  editable proposed words, CONFIRM / CHANGE / NOT NOW, mounted-session draft resumption, and direct
+  access to full memory. Confirmed words use the existing personal-memory command and do not change
+  plans or recommendations.
+- **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
+  unrelated. The root checkout contains unrelated user/research work and remains untouched.
+- **Verification so far:** typecheck/build and architecture pass. Guided Chromium passes 21/21 at
+  320/360/412 px including confirmation, provenance, no-recommendation-change and accessibility;
+  adjacent Memory/MORE/LIFE Chromium passes 60/60; memory/guided integration passes 10/10. Real
+  Chromium evidence is in `docs/screenshots/grayson-guided-start-001`. Full `npm run verify` reached
+  4349 passing / 2 skipped but failed four unrelated timing cases; isolated reruns passed 3/4, while
+  the unchanged `Habits001` Done control remained disabled. Required exact-head CI remains decisive.
+- **Remaining:** complete documentation/risk/build checks, capture realistic phone evidence, open the
+  PR, obtain green required CI and independent exact-head review, then return for Gavin's merge.
+
+---
+
+# Historical — GRAYSON-INTEGRATED-HEALTH-MISSION-001 (merged as PR #604)
 
 - **Owner authorization / lane:** Gavin approved a Protected documentation/design-only objective for
   one connected health Mission spanning phased weight loss, strength/muscle, physical standards,
