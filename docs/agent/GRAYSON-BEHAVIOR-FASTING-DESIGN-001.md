@@ -27,4 +27,3 @@
   map; work/off/recovery/flip scenarios; phone wireframes; safety and failure behavior; proposed data provenance;
   acceptance scenarios; ranked bounded build sequence and one next objective. Markdown links and diff hygiene pass;
   independent exact-head review and Gavin's merge approval are required.
-

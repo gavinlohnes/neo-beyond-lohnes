@@ -1,6 +1,6 @@
 # Project Grayson — Daily Signals and Eating Window
 
-Status: **OWNER-AUTHORIZED DESIGN, NOT IMPLEMENTATION** — 2026-11-20  
+Status: **OWNER-AUTHORIZED DESIGN, NOT IMPLEMENTATION** — 2026-11-20
 Objective: `GRAYSON-BEHAVIOR-FASTING-DESIGN-001`
 
 This document designs two connected capabilities:
@@ -506,4 +506,3 @@ medical support. The answer is not needed to merge this design and should not be
 - Cochrane, [intermittent fasting for adults with overweight or obesity](https://pmc.ncbi.nlm.nih.gov/articles/PMC10485895/) — outcome uncertainty and reported adverse effects.
 - Ali et al., [TRE with resistance training meta-analysis](https://pubmed.ncbi.nlm.nih.gov/41687432/) — modest fat-mass finding with limited trials and certainty.
 - Tinsley et al., [TRE during a bulking phase](https://jn.nutrition.org/article/S0022-3166%2826%2900371-8/fulltext) — restricted-window feasibility and intake/adherence tradeoff in resistance-trained adults.
-
