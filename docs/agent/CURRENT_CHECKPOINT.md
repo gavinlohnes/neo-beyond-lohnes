@@ -1,4 +1,41 @@
-# Current objective — GRAYSON-CAMPAIGN-PLAN-001 (2026-11-20)
+# Current objective — PR #594 review repair (2026-11-20)
+
+- **Builder:** Codex, explicitly assigned by Gavin to continue Claude Code's existing `claude/project-thread-s69muv` branch. [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594); [durable C3.4/C3.4a brief](GRAYSON-C3.4-001.md).
+- **Recovery:** blocked head `1a43648f0ea4b087faba6811b666ed554dbcaf35`; original start `211ccf4d`, master `a857f285` already merged. Working tree was clean; existing work preserved. Lane FEATURE; no scope expansion.
+- **Repair:** add accurate bounded brief; replace the default 16:00 delivery promise with conditional delivery language; cover default/unset behavior in the Home browser tests; correct the GRAYSON-Q2 labels/comments to C3.4a. Save, recurrence and notification logic otherwise unchanged.
+- **Verification:** Home browser suite passes 6/6; Home integration passes 9/9 in UTC and Chicago; architecture and production build (including TypeScript/PWA) pass; diff hygiene passes. No fresh full local suite or physical-phone delivery test claimed. Required CI and exact repaired head recorded in the PR handoff. Prior BLOCK is on the old head; a fresh independent exact-head review is required. No self-review or merge.
+- **Owner sequence:** repair/review #594, then merge only after independent PASS and Gavin's approval; rigorously review #595 for evidence/causal overreach; reconcile #592 as supporting research, not a roadmap; preserve useful #589 evidence and resolve it; C1.1 Production Orientation is the next major objective. Continue the lived-day loop before deeper domain expansion. None of the later objectives is started in this repair.
+
+---
+
+# Historical checkpoint — original implementation (superseded handoff status)
+
+# Current objective — GRAYSON-Q1 / C3.4 dog care and CO presets, plus Home alert time (2026-11-20)
+
+- **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) and its progress
+  tracker are the record of what is done and left; this PR marks C3.4 and C3.4a done.
+- **Owner authorization:** Gavin, 2026-11-20: start the campaign plan's quick wins with Claude Code
+  ("start with the quick wins and stuff I will feel immediately"), then, on the gaps found (Home jobs
+  always alert at 16:00; yearly repeats can't be edited in Plans): "I'm fine with who ever would be most
+  efficient at building this do the work." Lane FEATURE (no schema, event, Engine, notification-rule or
+  navigation change). Starting commit `211ccf4`, master merged in at `a857f28`; Builder Claude Code;
+  branch `claude/project-thread-s69muv`; [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594).
+- **Change:** Home's preset list (HOME-SCHEDULE-001) gains CO detectors (monthly), dog flea and tick
+  (monthly), dog heartworm (monthly), vet checkup (yearly) and dog food (every 4 weeks, editable).
+  Presets still only fill the form; SAVE writes the ordinary "Home: …" repeat through `addHomeItem`.
+  Summary reads "Common house and dog jobs"; the hint names the real SAVE button (was "ADD").
+  C3.4a: a repeating Home job takes an optional alert time, stored as REMIND-AT-001's existing
+  `remindAt` and carried to each next occurrence by the existing satisfy path; empty keeps 16:00.
+- **Exclusions:** no pet profiles, vet records, notification rules, early warning (C3.2), TODAY
+  layout, counts or streaks. Yearly repeats in Plans (C3.4b) touch `engine/recurrence.ts` and go in a
+  separate PR for Gavin's merge.
+- **Verification:** typecheck, architecture check and the full Node suite pass locally; browser tests
+  in `tests/browser/Home.test.tsx` run in required CI (no Chromium in the Builder container).
+- **Historical next action (superseded):** the original Builder proposed C3.4b after merge. Gavin’s newer sequence above controls; do not start it here.
+
+---
+
+# Historical — GRAYSON-CAMPAIGN-PLAN-001 (merged as PR #593, `a857f28`)
 
 - **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) is the campaign plan
   toward Project Grayson and its **progress tracker** is the one record of what is done, in progress
@@ -17,7 +54,7 @@
 
 ---
 
-# Historical — GRAYSON-RESEARCH-SYNTHESIS-001 (merged as PR #591)
+# Historical — GRAYSON-RESEARCH-SYNTHESIS-001 (merged as PR #591, `211ccf4`)
 
 - **Owner authorization:** report only; compare commercial/open-source donor patterns against current
   BEYOND repository truth and canonical scenarios under the Project Grayson baseline and Evolution

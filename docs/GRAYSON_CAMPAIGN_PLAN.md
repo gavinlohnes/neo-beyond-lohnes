@@ -66,7 +66,9 @@ status of its own.
 | C3.1 (Q7) | Last done and evidence | Not started |  |
 | C3.2 | Lead time and "coming up" | Not started |  |
 | C3.3 | Day-off shape | Not started |  |
-| C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | In progress (#594) |  |
+| C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
+| C3.4a | Alert time on repeating Home jobs | Done (#594) | Added 2026-11-20 on Gavin's go; Home jobs alerted only at 16:00 |
+| C3.4b | Yearly repeats editable in Plans | Not started | Added 2026-11-20 on Gavin's go; touches `engine/recurrence.ts`, so his merge |
 | C3.5 | Seasonal packs | Not started |  |
 | C3.6 | Home inventory light | Not started |  |
 | **Campaign 4 — Body Engine** | | | |
