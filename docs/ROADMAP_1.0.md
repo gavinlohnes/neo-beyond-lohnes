@@ -7,6 +7,25 @@ resume authorized work when ownership permits, or recommend one next objective f
 New work follows [`DEV-FLOW-002`](agent/DEV-FLOW-002.md); every merge needs owner approval. Historical Drop names,
 feature history, and product rulings below are preserved.
 
+## Destination — Project Grayson (Gavin, 2026-11-19)
+
+Gavin approved [`Project Grayson`](PROJECT_GRAYSON_VISION.md) as the destination: BEYOND is what was
+built; Project Grayson is what it is becoming; GRAYSON is the Life OS; Delta is the companion
+intelligence inside it. Existing work is preserved and classified **Preserve / Adapt / Connect /
+Deepen / Replace carefully / Retire / Defer**, not discarded for a rewrite.
+
+The report-only [current-product baseline](PROJECT_GRAYSON_BASELINE.md) merged as PR #586. It found
+that BEYOND already contains most of the suit and recommended orchestration around lived transitions,
+not a rewrite or a broad autonomy push. The documentation/design-only
+[`LIVED-DAY-ORIENT-001`](agent/LIVED-DAY-ORIENT-001.md) objective merged as PR #587. Gavin then
+reviewed and approved a documentation-only refinement of the opening relationship, adaptive Delta
+voice, action limit, day-off philosophy, and difficult-day response. The isolated phone-first
+prototype remains open as PR #589 and authorizes no implementation. The report-only
+[Research-to-Evolution Synthesis](GRAYSON_RESEARCH_SYNTHESIS.md) compares commercial/open-source
+donors with verified BEYOND capability and recommends `LIVED-DAY-ORIENT-PRODUCTION-001` as the first
+bounded production evolution. That recommendation is not implementation authority. The existing
+queue and active PRs continue unless Gavin explicitly reprioritizes them.
+
 ## Now — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15)
 
 Approved transformation in four releases: a foundation + zero-effort input → b coach brain → c self-running week → d

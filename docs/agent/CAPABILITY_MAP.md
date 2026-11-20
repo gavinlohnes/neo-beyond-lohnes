@@ -1,5 +1,31 @@
 # BEYOND Capability Map
 
+## PROJECT GRAYSON / LIFE OS DESTINATION
+
+- [`PROJECT_GRAYSON_VISION.md`](../PROJECT_GRAYSON_VISION.md) is the owner-approved destination and
+  contains the cross-domain evolution matrix. It does not authorize implementation.
+- [`GRAYSON_RESEARCH_SYNTHESIS.md`](../GRAYSON_RESEARCH_SYNTHESIS.md) maps verified BEYOND capability
+  to commercial and open-source donor patterns under the GRAYSON Evolution Rule. Its primary ruling
+  is **connect before expanding**: most donor value is pattern-level adaptation, not subsystem import.
+  It recommends production Lived-Day Orientation as the first bounded evolution objective; the
+  report itself authorizes no implementation.
+- **Shipped composition seam (C1.1):** `application/orientation.ts` composes the work-day wake (shift, own-range
+  sleep, check-in, Engine/draft guidance, runway of known times, ≤ 2 actions) read-only; it replaced the 4.0-d
+  briefing preview. C1.2 added day-purpose grammar (recovery/off/flip), the hard-day rule and `moodTrend`; extend
+  it rather than adding another briefing.
+- **Preserve before invention:** the destination reuses BEYOND's Operator Model and memory, lived-day
+  records, work context, routines, Home/People facts, obligations, journal, personal experiments,
+  Whole Picture/personal ranges, training, nutrition, TODAY/FIELD, COMMAND depth, deterministic
+  Engine, and Alfred tool/action seams. Verify each in code before a brief claims reuse.
+- **Identity seam:** current runtime is BEYOND + Alfred; destination is GRAYSON + Delta. Treat identity
+  migration as behavior-, authority-, privacy-, and experience-dependent Protected work, never a
+  search-and-replace objective.
+- **Provider handoff:** [`PROJECT_GRAYSON_HANDOFF.md`](PROJECT_GRAYSON_HANDOFF.md) gives Claude, Claude
+  Duet Steward, Codex, and future agents one repository-native starting point.
+- **Current research disposition:** the baseline and donor synthesis are complete. Continue external
+  research only for a concrete need inside a bounded objective; do not restart broad product hunting
+  or assume the Daily Life Loop requires new storage, a new subsystem, or a rewrite.
+
 Repo-native index of prior reuse findings, including archived Google Drive research. It is a
 pointer/summary, not product authority. GitHub's current owner rulings, doctrine, UX decisions
 and approved objective govern implementation under AGENTS.md / DEV-FLOW-002. Drive is a planning
@@ -176,6 +202,13 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 - `application/dayContext.ts`'s `describeDayContext` is the command bar's day line (BODY, TRAIN); reuse it for any screen.
 
 ## NUTRITION
+
+- **Guided Operating Loop finding (design only, 2026-11-20):** BEYOND's nutrition capability is
+  broad but fragmented across LOG, DATA, MY MEALS, targets, meal planning and review. Preserve the
+  canonical records and providers. Evolve them as one Food Week journey—plan, shop, prepare, log,
+  review—with unified search, serving-first amounts, visible store/price uncertainty and Mission
+  context. Do not import a pantry ERP, proprietary database or commercial recommendation algorithm.
+  See [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md).
 
 - **Existing primitive**: `SavedMeal` (`src/domain/common/types.ts`) — fully manual, no food
   data behind it.
@@ -491,3 +524,10 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
 - `application/shiftMarks.ts` (sheet view + automation note), `ui/components/ShiftMarkSheet.tsx`; `LogTimeEditor`
   takes an optional `retime` for anything that isn't a log. The free helper exposes `parseClock`/`clockOf`.
 - Alfred cards: the registry (`application/alfred/alfredTools.ts`, ALFRED-TOOLS-001) now has an optional `note` line.
+
+## C4.2a — owner-editable caffeine cutoff (PR #595; pending review/merge)
+
+- [Narrowed brief](GRAYSON-C4.2a-001.md): reuse existing ROUTE card, schedule-row configuration, validation, native backup, explicit save and guarded undo. `sleepPlanSettings.ts` stores owner-set hours/time; `shiftSleepPlan.ts` and TODAY use that setting.
+- No automated Delta suggestion, short-sleep trigger, confidence, decline timer or personalized-benefit claim remains. The removed `cutoffProposal.ts` is not an available primitive.
+- General caffeine research does not demonstrate Gavin's caffeine exposure, adherence or cause of poor sleep. The 6 h value is an app default, not a proven safe personal cutoff.
+- Future caffeine experimentation is deferred to a separately authorized objective using the existing experiment lifecycle, with exposure/adherence context, duration, outcome measures, stopping conditions, provenance and owner consent. No new caffeine tracker or experiment is built here.

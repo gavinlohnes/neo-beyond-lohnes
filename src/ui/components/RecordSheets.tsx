@@ -62,7 +62,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   const [busy, setBusyState] = useState(false); const busyRef = useRef(false);
   // LOG-TIME-001: when the drink or meal happened; NOW unless the operator says otherwise.
   const [when, setWhen] = useState<WhenChoice>({ kind: "NOW" });
-  const whenAt = (dayStartedAt: string) => resolveWhen(when, dayStartedAt, new Date());
+  const whenAt = (dayStartedAt: string, dayCreatedAt?: string) => resolveWhen(when, dayStartedAt, new Date(), dayCreatedAt);
   function setBusy(next: boolean) { busyRef.current = next; setBusyState(next); onBusy(next); }
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState(""); const [meals, setMeals] = useState<SavedMeal[]>([]);
@@ -158,7 +158,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       ...(found.fiberG !== undefined ? { fiberG: round1(found.fiberG) } : {}), ...(found.sodiumMg !== undefined ? { sodiumMg: Math.round(found.sodiumMg) } : {}) };
     const existing = meals.find((m) => m.name === input.name && m.calories === input.calories && m.proteinG === input.proteinG);
     const meal = existing ?? await createSavedMeal(input);
-    const result = await logMeal(day.id, meal.id, servingsOfFood, whenAt(day.startedAt)); setWhen({ kind: "NOW" });
+    const result = await logMeal(day.id, meal.id, servingsOfFood, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" });
     return mealReceipt(day.id, result.eventId, found.description);
   }
   function chooseMeal(meal: SavedMeal) { setMealId(meal.id); setServings(1); setPage("portion"); }
@@ -178,8 +178,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       {error && <p role="alert">{error}</p>}
       {target === "water" && page !== "waterDetails" && <>
         <WhenRow when={when} onChange={setWhen} disabled={busy} />
-        <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const at = whenAt(day.startedAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
-        <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await ensureActiveDay(); const amount = lastWater; const at = whenAt(day.startedAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
+        <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const at = whenAt(day.startedAt, day.createdAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
+        <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await ensureActiveDay(); const amount = lastWater; const at = whenAt(day.startedAt, day.createdAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
         <button type="button" className="btn-secondary" onClick={() => { setBodyFocus("water"); setBodyRequest((key) => key + 1); setPage("waterDetails"); }}>Custom amount & entries</button>
         <button type="button" className="btn-secondary" onClick={() => onHistory("water")}>WATER HISTORY</button>
       </>}
@@ -200,7 +200,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
             <h3>{target === "myMeals" ? "MY MEALS" : query.trim() ? "MATCHES" : "LIKELY NOW"}</h3>
             {(target === "myMeals" && !query.trim() ? meals : displayed).map((meal) => <div className="record-meal-row" key={meal.id}>
               <button type="button" className="btn-secondary" disabled={busy} aria-label={`Servings for ${meal.name}`} onClick={() => chooseMeal(meal)}><strong>{meal.name}</strong><span className="meta">{meal.calories} kcal · {meal.proteinG} g protein · 1 serving</span></button>
-              <button type="button" className="btn-secondary" disabled={busy} aria-label={`Log ${meal.name}`} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, meal.id, 1, whenAt(day.startedAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
+              <button type="button" className="btn-secondary" disabled={busy} aria-label={`Log ${meal.name}`} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, meal.id, 1, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
             </div>)}
             {!displayed.length && <p>No matching meals.</p>}
             {/* FOOD-001: MyFitnessPal's "search all foods" — online only when asked, so nothing leaves the phone by typing. */}
@@ -226,7 +226,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
           {page === "new" && <label className="save-meal-choice"><input type="checkbox" disabled={busy} checked={saveNext} onChange={(event) => setSaveNext(event.target.checked)} />Save for next time</label>}
           <button type="button" className="btn-primary" disabled={busy} onClick={() => void commit(async () => {
             const input = parse(page === "quick" ? quick : form); const day = await ensureActiveDay();
-            const result = await logManualMeal(day.id, input, page === "new" && saveNext, whenAt(day.startedAt)); setWhen({ kind: "NOW" });
+            const result = await logManualMeal(day.id, input, page === "new" && saveNext, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" });
             if (page === "quick") setQuick({ ...EMPTY, name: "Quick add" }); else { setForm(EMPTY); setSaveNext(false); }
             return mealReceipt(day.id, result.eventId, result.name);
           })}>LOG</button>
@@ -249,7 +249,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
           {/* FOOD-001: any number of servings, as MyFitnessPal allows. */}
           <label className="field">Servings<input className="input" type="number" inputMode="decimal" min="0" step="any" aria-label="Number of servings" value={servings} onChange={(event) => setServings(Number(event.target.value))} /></label>
           <p>{Math.round(selected.calories * servings)} kcal · {round1(selected.proteinG * servings)} g protein</p>
-          <button type="button" className="btn-primary" disabled={busy || !(servings > 0 && servings <= MAX_SERVINGS)} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, selected.id, servings, whenAt(day.startedAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
+          <button type="button" className="btn-primary" disabled={busy || !(servings > 0 && servings <= MAX_SERVINGS)} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, selected.id, servings, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
           <button type="button" className="btn-secondary" onClick={() => { setEdit({ name: selected.name, calories: String(selected.calories), proteinG: String(selected.proteinG), carbsG: String(selected.carbsG), fatG: String(selected.fatG) }); setPage("edit"); }}>EDIT SAVED MEAL</button>
         </>}
         {page === "edit" && selected && <>

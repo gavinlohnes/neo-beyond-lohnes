@@ -13,6 +13,25 @@ not itself authorize a feature, campaign, or code change.
 creative approach. Contribute research, original ideas, constructive disagreement and complete
 experiences; exercise routine design/engineering judgment within an approved objective.
 
+[`docs/PROJECT_GRAYSON_VISION.md`](docs/PROJECT_GRAYSON_VISION.md) is the canonical destination:
+BEYOND is what was built; Project Grayson is what it is becoming; GRAYSON is the Life OS; Delta is
+the companion intelligence inside it. Current runtime truth remains BEYOND and Alfred until approved
+changes ship. Every provider should use the concise
+[`Project Grayson handoff`](docs/agent/PROJECT_GRAYSON_HANDOFF.md); the destination grants no standing
+implementation or redesign authority.
+
+The owner-approved [GRAYSON Evolution Rule](docs/PROJECT_GRAYSON_VISION.md#grayson-evolution-rule)
+governs every proposal: BEYOND is the functioning foundation, no proposal begins from a blank canvas,
+and external products or open-source systems are research donors rather than replacement templates.
+Establish repository truth, identify what survives, and prefer connection, deepening, reframing, or
+careful adaptation. A proposed replacement must prove evolution insufficient, preserve capability and
+data through a migration plan, and obtain every applicable Protected approval.
+
+[`docs/GRAYSON_CAMPAIGN_PLAN.md`](docs/GRAYSON_CAMPAIGN_PLAN.md) breaks the road to Project Grayson into
+bounded campaigns and holds the shared progress tracker. Before starting Grayson work, find the item
+there and check open PRs for its ID; name the item ID in your PR and update its tracker row in the same
+PR. The plan grants no authority: each item still needs owner approval and its lane under DEV-FLOW-002.
+
 ## Development workflow
 
 [`docs/agent/DEV-FLOW-002.md`](docs/agent/DEV-FLOW-002.md) is the single current development
@@ -191,6 +210,9 @@ Stop on unresolved conflicts.
 ## Pointers
 
 - `docs/PRODUCT_DIRECTION.md` — product vision and creative approach; no implementation authority.
+- `docs/PROJECT_GRAYSON_VISION.md` — owner-approved Life OS destination and evolution map.
+- `docs/GRAYSON_CAMPAIGN_PLAN.md` — Grayson campaigns and the shared progress tracker (done / in progress / left).
+- `docs/agent/PROJECT_GRAYSON_HANDOFF.md` — provider-neutral onboarding for Claude, Duet, Codex and future agents.
 - `docs/agent/DEV-FLOW-002.md` — current workflow authority; risk lanes, review, and owner control.
 - `docs/agent/CURRENT_CHECKPOINT.md` — the handoff note; read first, update last.
 - `docs/ROADMAP_1.0.md` — the build plan and the **Queue**; start here on "let's work".

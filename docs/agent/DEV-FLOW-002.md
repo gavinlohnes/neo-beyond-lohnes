@@ -265,8 +265,11 @@ and architecture checks. In particular:
 - Existing architecture-layer boundaries and protected compatibility checks remain.
 - BEYOND's distinctive futuristic black/red command-center direction remains; accessibility,
   readable text, adequate controls, contrast, and reduced motion remain binding.
-- Smart by design, AI optional: no required Delta assistant or standing AI implementation objective.
-  Preserve deterministic intelligence and user authority; future AI needs a new owner decision.
+- Project Grayson destination (owner ruling, 2026-11-19): GRAYSON is the Life OS and Delta is its
+  companion intelligence. Current runtime truth remains BEYOND and Alfred until separately approved
+  changes ship. Delta is core to the destination, but this creates no standing AI implementation,
+  provider, autonomy, or rename objective. Preserve deterministic Engine authority and user control;
+  each consequential expansion still needs its own bounded owner decision.
 
 The charter neither changes product functionality nor approves future provider/backend, schema,
 Engine, primary-navigation, or AI-autonomy work. Google Drive is a planning archive, not a

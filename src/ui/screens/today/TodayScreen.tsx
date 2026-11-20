@@ -15,7 +15,10 @@ import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
-import { TodayBriefingPreview } from "./TodayBriefingPreview";
+import { Orientation } from "./Orientation";
+import { CloseCard } from "./CloseCard";
+import { closeDone } from "./closeStore";
+import { markOrientationSeen, orientationSeen } from "./orientationStore";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
@@ -44,6 +47,7 @@ import { Signal } from "../../components/Signal";
 import { useOnline } from "../../hooks/useOnline";
 import { getBackupPrompt } from "../../../application/autoBackupQueries";
 import { performDueDayRollover } from "../../../application/commands";
+import { getEarlyDayStart, livedReadAt, type EarlyDayStart } from "../../../application/earlyDayStart";
 import { describeSystemStatus } from "./statusCopy";
 import { describePlainRecommendationTitle, describeRecommendationReason } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
@@ -119,6 +123,7 @@ import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application
 import { SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
 import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
+import { EarlyStartRow } from "./EarlyStartRow";
 import { SmallSteps } from "./SmallSteps";
 import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
 import { LogEntrySheet, type LogEntryTarget } from "../../components/LogEntrySheet";
@@ -128,7 +133,7 @@ import "./smallSteps.css";
 import "../../foundation/foundation.css";
 import "./todayFoundation.css";
 import {
-  startDay,
+  startDayFromTap,
   ensureActiveDay,
   submitCheckIn,
   recordRecommendation,
@@ -447,6 +452,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
+  const [earlyStart, setEarlyStart] = useState<EarlyDayStart | null>(null);
   const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF">; week: WeekAhead | null; map: MapMark[]; sleepPlan: ShiftSleepPlan | null } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
@@ -713,8 +719,11 @@ export function TodayScreen({
   const lookBaseRef = useRef<LookSnapshot | null>(null);
   // DAY-MAP-001: map marks new since the last look on this device, outlined for this visit.
   const [freshMarks, setFreshMarks] = useState<ReadonlySet<string>>(() => new Set());
-  const [briefingPreview, setBriefingPreview] = useState(false);
-  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); setBriefingPreview(false); } }, [active]);
+  // GRAYSON C1.1: Orientation, opened by START DAY on a work day and reopenable from TODAY.
+  const [orientationOpen, setOrientationOpen] = useState(false);
+  const [orientationSeenTick, setOrientationSeenTick] = useState(0);
+  const [closeSeenTick, setCloseSeenTick] = useState(0);
+  useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 30_000);
@@ -944,7 +953,9 @@ export function TodayScreen({
     // same render as the rest of TODAY (no layout jump after load).
     // The schedule too (loadShiftClockSetup also reads it), so the band never appears after the tiles. Yesterday is
     // kept with the lived day it was read for (review of #494), so after 16:30 a stale read is ignored, not used.
-    const readAt = new Date();
+    // EARLY-DAY-START-001: a day opened early is read as the 16:30 day it is.
+    const readAt = livedReadAt(activeDay, new Date());
+    const nextEarlyStart = await getEarlyDayStart(new Date()).catch(() => null);
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
@@ -981,6 +992,7 @@ export function TodayScreen({
       setDayRead(true);
       setActiveWorkout(activeWorkoutSession);
       setYesterdayRecorded(nextYesterday);
+      setEarlyStart(nextEarlyStart);
       if (nextSchedule) setSchedulePattern(nextSchedule);
     }
     setOpenCaptureItems(openCaptureItems);
@@ -1084,7 +1096,8 @@ export function TodayScreen({
     busyRef.current = true;
     setBusy(true);
     try {
-      await startDay();
+      // EARLY-DAY-START-001: in the afternoon window the tap opens tonight's 16:30 day early.
+      const started = await startDayFromTap();
       acknowledge("LIGHT");
       // TODAY-008 (residual TODAY-R01, flagged in TODAY-006): every other
       // mutating handler in this component calls refresh() afterward so
@@ -1097,6 +1110,9 @@ export function TodayScreen({
       // getActiveDay() read, so the separate setDay() call above is gone.
       await refresh();
       setJustStartedDay(true);
+      // GRAYSON C1.1/C1.2: a deliberate START DAY opens Orientation on any kind of day (work, recovery, day off,
+      // unconfirmed). Never over an operation already in progress.
+      if (!operationsOnly && started) setOrientationOpen(true);
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1813,12 +1829,14 @@ export function TodayScreen({
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
   // SHIFT-RUN-001 on TODAY: where today sits in the saved rotation, unless he declared the day otherwise.
   // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
-  const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(now).getTime() ? yesterdayRecorded : null;
-  const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern, 21, recordedNow?.confirmed) : null;
-  const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
+  // EARLY-DAY-START-001: lived-day reads follow a day opened early; clocks and countdowns still use `now`.
+  const livedNow = livedReadAt(day, now);
+  const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(livedNow).getTime() ? yesterdayRecorded : null;
+  const scheduledRun = schedulePattern ? shiftRun(livedNow, schedulePattern, 21, recordedNow?.confirmed) : null;
+  const lifeInput = day && schedulePattern ? lifeStateInput(livedNow, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
   // OPERATOR-EXPERIENCE-001: NEXT, from Week Ahead's days and what today is (recorded, else planned).
-  const ahead = lifeInput && recordedNow?.week ? deriveAhead(now, lifeInput.today.recorded ?? lifeInput.today.scheduled, recordedNow.week.days) : null;
+  const ahead = lifeInput && recordedNow?.week ? deriveAhead(livedNow, lifeInput.today.recorded ?? lifeInput.today.scheduled, recordedNow.week.days) : null;
   // Slice 3: what TODAY shows now, for "since you last looked". A field is null until it has loaded.
   const lookNow: Omit<LookSnapshot, "at"> | null = day && recordedNow ? {
     state: lifeReading?.label ?? null, next: ahead?.line ?? null, confirmed: ahead ? ahead.confirmed : null,
@@ -2651,7 +2669,8 @@ export function TodayScreen({
         />
       )}</>
           : lateRecoverWithoutSleep ? renderRecoverSleepPrompt()
-          : shiftClock.phase === "EXPECTED_POST_WORK" ? renderPhaseRow("SHIFT_DOWN")
+          // GRAYSON C1.3: once SHIFT DOWN is done it steps aside (it was offered again, in red, until sleep or 16:30).
+          : shiftClock.phase === "EXPECTED_POST_WORK" && !shiftClockInput.shiftDownDone ? renderPhaseRow("SHIFT_DOWN")
           : recommendation ? <>          <RecommendationCard
             nextAction
             // FIELD-AUTHORITY-001: this TODAY renders no question below the card, so never claim one.
@@ -2691,7 +2710,9 @@ export function TodayScreen({
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
       {checkInOwnedHere && !recommendationDraftPresent && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
-      {dayRead && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setBriefingPreview(true); }}>PREVIEW BRIEFING</button></div>}
+      {/* GRAYSON C1.1: Orientation stays one quiet tap away (FIELD-AUTHORITY-001: no red, nothing above the day). A day
+          started by the roll or a log reads ORIENT TODAY until it's been seen on this device. */}
+      {dayRead && day && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setOrientationOpen(true); }}>{orientationSeenTick >= 0 && !orientationSeen(day.id) ? "ORIENT TODAY" : "ORIENTATION"}</button></div>}
     </section>
   </>;
 
@@ -2700,14 +2721,25 @@ export function TodayScreen({
   // steps aside (an operation, the late sleep prompt) or NEXT couldn't be read, the hero keeps it.
   const bandHidden = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep;
   const bandCarriesRun = !!day && !!lifeReading && !!ahead && !bandHidden;
-  if (!operationsOnly && briefingPreview) return <TodayBriefingPreview active={active} onBack={() => setBriefingPreview(false)} onOpen={(destination) => {
-    if (destination === "PLAN") onOpenPlan?.();
-    else if (onOpenBody) onOpenBody("sleep");
-    else onOpenHealthEvidence?.("sleep");
-  }} />;
+  // GRAYSON C1.1: Orientation owns the screen until ENTER TODAY; it steps aside for an operation in progress.
+  const closeOrientation = () => { if (day) markOrientationSeen(day.id); setOrientationOpen(false); setOrientationSeenTick((n) => n + 1); };
+  if (!operationsOnly && orientationOpen && day && !activeWorkout && !activeResetId && !activeShiftDownId) return <>
+    <Orientation active={active} busy={busy} refreshKey={refreshVersion} routes={{
+      onEnter: closeOrientation,
+      onCheckIn: () => { if (!busyRef.current) setCheckInFormOpen(true); },
+      onPrep: () => { closeOrientation(); requestAnimationFrame(() => document.querySelector(".work-preparation")?.scrollIntoView({ block: "start" })); },
+      onCapture: () => { if (onOpenRecord) onOpenRecord("note"); else { closeOrientation(); openFastCapture(); } },
+      onTrain: onOpenTrain ? () => { closeOrientation(); onOpenTrain("WORKOUT"); } : undefined,
+      onSleep: onOpenBody ? () => onOpenBody("sleep") : onOpenHealthEvidence ? () => onOpenHealthEvidence("sleep") : undefined,
+      onCommitment: onOpenPlan ? () => { closeOrientation(); onOpenPlan(); } : undefined,
+      onSetContext: (value) => handleSetWorkContext(value),
+    }} />
+    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
+  </>;
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
+    {day && earlyStart && !bandHidden && <EarlyStartRow early={earlyStart} busy={busy} onStart={() => void handleStartDay()} />}
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
             eyebrow={now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}
             run={bandCarriesRun ? null : todayRun}
@@ -2783,6 +2815,11 @@ export function TodayScreen({
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
+    {/* GRAYSON C1.3: after SHIFT DOWN (his getting-home ritual), a quiet, optional close, below the next card. */}
+    {day && shiftDownCompletedAt && (!shiftWindow || Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime()) && closeSeenTick >= 0 && !closeDone(day.id)
+      && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId) && (
+      <CloseCard dayId={day.id} busy={busy} onClosed={() => setCloseSeenTick((n) => n + 1)} />
+    )}
     {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
     {day && lifeMoment?.moment === "RUN_OVER" && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId || lateRecoverWithoutSleep) && <section className="today-run-over" aria-label="After the run">
         {/* LIFE-STATE-003: the run that just ended, and an optional recovery contract for the first full day off. */}

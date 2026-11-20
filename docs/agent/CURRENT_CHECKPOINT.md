@@ -1,20 +1,389 @@
-# Current objective — METRIC-PAGE-002 slice 3: finished workouts on the shared metric page (2026-11-19)
+# Current objective — GRAYSON-GUIDED-OPERATING-LOOP-001 (2026-11-20)
 
-- **Builder:** Claude Code, the same Drop and authorization as slices 1 and 2 ([brief](METRIC-PAGE-002.md)); the
-  night checkpoint below kept slice 3 with #567's builder. Branch `claude/metric-page-002-workouts` from master
-  `c54c000`. Lane FEATURE, read side only. Gavin merges.
-- Finished workouts (completed and partial, BEYOND's existing count) per lived day; weeks and 1Y as totals; a weekly
-  usual; work days against days off as days with a workout. Opens from DATA's progress, TRAINING section. No goal,
-  streak, TODAY tile, Engine, schema, event, command or navigation change.
-- **Verification:** focused Node tests in UTC and Chicago; browser tests (`MetricPage002`) run in PR CI only (the
-  builder's sandbox can't download a browser). Results live in the PR.
-- DRAFT-RECOMMENDATION-001 (#583) merged; its checkpoint below is history.
+- **Owner authorization:** Gavin approved a Protected documentation/design-only objective to preserve
+  and develop his guided-experience, connected-goal and intelligent-food ideas into a canonical
+  GRAYSON design grounded in current BEYOND truth. No product implementation, navigation, Engine/data
+  semantics, Google Drive or additional Protected boundary is authorized.
+- **Starting master / Builder:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` after PR #601 merged;
+  Builder Codex; branch `codex/grayson-guided-operating-loop-001`;
+  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+- **Canonical design:** [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md);
+  [brief](GRAYSON-GUIDED-OPERATING-LOOP-001.md).
+- **What it establishes:** the Guided Operating Principle; Express → Understand → Propose → Approve
+  → Operate → Record → Review → Adapt; Teach Delta, a connected Mission and Food Week; detailed phone
+  journeys and Delta language; repository evolution matrix; ranked implementation sequence.
+- **Repository finding:** memory/Personal Understanding, Missions, targets/proposals, saved meals,
+  USDA/barcode logging, meal planning, TRAIN and evidence already exist. The principal gap is guided
+  orchestration and cross-domain composition, with narrower missing primitives for resumable guided
+  drafts, ingredient/store-aware plans and Mission-to-plan association.
+- **Workout ruling:** this design connects TRAIN at the system level but does not pretend to finish
+  training design. A dedicated owner conversation follows this design and precedes connected Mission
+  implementation.
+- **Exclusions:** no product code, runtime behavior, prototype, primary navigation, Engine,
+  recommendation priority, command/event/schema semantics, provider/dependency, runtime rename,
+  concurrent PR, Google Drive or merge.
+- **Verification at blocked head `4f8da2dadb58794b13a4ca386bc21090b230c46f`:** local Markdown
+  links and `git diff --check` passed; risk classification returned PROTECTED as expected; required
+  docs-only PR CI passed. Independent review BLOCKED only documentation authority/handoff wording:
+  the candidate overstated exact-design approval, one conflict rule crossed the unresolved Delta
+  recommendation boundary, and this checkpoint had not recorded the completed PR/CI/review state.
+  The reviewer found the capability claims and remaining design coherent. These findings are repaired
+  on the next head and the old BLOCK remains historical evidence, not approval.
+- **Remaining risks / owner decisions:** exact visible name and composition of Teach Delta; whether
+  Food earns a persistent workspace; deterministic/AI/hybrid guided-session method; the dedicated
+  training philosophy and experience; future data/event semantics; and any future Delta recommendation
+  authority. None is silently decided here.
+- **Next:** verify and push only the three scoped review repairs, obtain green required CI and renewed
+  independent exact-head PASS, then return to Gavin for merge approval. Do not implement the
+  recommended Guided Start slice.
 
 ---
 
-# Historical checkpoint (superseded live status)
+# Historical — GRAYSON-BEHAVIOR-FASTING-DESIGN-001 (merged as PR #601)
 
-# Current objective — DRAFT-RECOMMENDATION-001 (2026-11-19)
+- **Owner authorization:** Protected documentation/design-and-evidence objective approved by Gavin after he supplied
+  lifestyle-logging and nutrition references and asked for alcohol-stop support plus a highly customizable fasting
+  programme. [Brief](GRAYSON-BEHAVIOR-FASTING-DESIGN-001.md). Starting master
+  `e7482a459d9b596007577c35768401129fe1c976`; Builder Codex; branch
+  `codex/grayson-behavior-fasting-design`; [PR #601](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/601).
+- **Scope:** repository-first design of Daily Signals, alcohol integration with the existing Quit system and a
+  shift-aware Eating Window programme; evidence/uncertainty, safety, phone flows, data provenance, acceptance
+  scenarios and bounded future slices. Canonical design: [`GRAYSON_BEHAVIOR_FASTING_DESIGN.md`](../GRAYSON_BEHAVIOR_FASTING_DESIGN.md).
+- **Exclusions:** no product code, prototype, event/schema, Engine/recommendation, notification, provider/dependency,
+  navigation, runtime identity, Google Drive or concurrent-PR change. C1.5 and Campaign 2 remain unstarted.
+- **REUSE:** Quit/check-in/urge/clean-day, meals, lived context, training/protein, Whole Picture, Try and correction
+  conventions. **OWN:** Gavin's rotation, abstinence mission, strength safeguards and evidence-bounded Delta behavior.
+  **BUILD FROM SCRATCH:** none in this objective.
+- **Candidate:** PR #601 head `a95f87dcb2ac76152d0e9fa6d4b2ee571570c20b`; docs-only required CI green.
+  The three prior review findings are resolved: the Cochrane source is accurately a review protocol, programme names
+  are neutral durations rather than a progression ladder, and the PR handoff carries the correct master SHA. The
+  renewed review passed all design/evidence content and requested only this checkpoint refresh.
+- **Next:** renew independent exact-head review and docs-only CI after this checkpoint-only correction, then return
+  to Gavin for Protected merge approval and a separate decision on the recommended C4.8a build.
+
+---
+
+# Historical — PR #600 exact-head review repair (merged as `e7482a45`)
+
+Gavin explicitly handed Builder ownership from Claude Code to Codex for the bounded review follow-up on
+`ccr-380c4225-1es42i`. Starting master after #599: `e51671b99759e9383f0f3c523097762ad9d675ee`.
+
+- **#599** (C1.3 + C1.4, close after SHIFT DOWN): independent review PASS, merged by Gavin 2026-11-20.
+- **C1.6 + review follow-ups:** rebased onto master after #599 merged and opened as a PR from `ccr-380c4225-1es42i`
+  as [PR #600](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/600). Contents:
+  1. Review follow-ups from the PASS reviews of #598/#599 (non-blocking findings): "one bad day" (Gavin kept "worth
+     deliberate attention"), recovery-day sleep wording, unreadable Minimum Day reported in `unread`, close label and
+     "next" line anchored to the day's own lived start. Briefs GRAYSON-C1.2-001 / C1.3-001 record them.
+  2. C1.6 Delta's voice ([brief](GRAYSON-C1.6-001.md), approved: "Bruce → Terry by default, with Delta and Droid as
+     switchable voices"): `application/deltaVoice.ts` copy library (PLAIN/MENTOR/DELTA/DROID), hard days always PLAIN,
+     device-local switch under Delta's line on Orientation. Screenshots `docs/screenshots/grayson-c1.6/`.
+  - Local result at candidate `7a5fa6892005f778d424749ca167c329f23efab7`: typecheck and architecture pass;
+    full suite 4,349 passed, one unrelated MealRoundTrip parallel-run timeout, two skipped; the isolated meal test
+    passed 21/21. Orientation/close/voice Node tests pass in UTC and Chicago; Orientation and DayClose browser files
+    pass. Required CI is fully green on that exact head.
+- **Independent review:** BLOCK at `7a5fa6892005f778d424749ca167c329f23efab7` on documentation handoff only:
+  add the exact starting commit and active PR to the C1.6 brief, and refresh this checkpoint. Product and code review
+  otherwise passed.
+- **Next:** push only the documentation repair, renew independent exact-head review, then return to Gavin for merge.
+  Do not start C1.5 or Campaign 2 without his go-ahead.
+
+---
+
+# Current objective — C1.3 close after SHIFT DOWN (C1.2 merged as #598) (2026-11-20)
+
+- **Owner ruling (Gavin, 2026-11-20):** approve C1.2 with no Orientation-invented day-off advice and with the mood
+  trend as a factual line ("Include the trend"). [Brief](GRAYSON-C1.2-001.md); Decision Register GRAYSON-C1.2.
+- **Builder:** Claude Code; branch `ccr-380c4225-1es42i`, restarted from master after #597 merged; starting commit
+  `4883c62`; [PR #598](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/598). PROTECTED: independent exact-head review, green CI and Gavin's merge. No self-review or merge.
+- **Verification (local):** typecheck, architecture; pure and integration tests (UTC and America/Chicago); browser
+  states at 320/360/412 px and START DAY on the Monday after a run through TODAY. Screenshots in
+  `docs/screenshots/grayson-c1.2/`. Full suite 4,328 passed. No phone check yet.
+- **Previous:** C1.0 (#596) and C1.1 (#597) merged.
+- **C1.3 + C1.4:** approved 2026-11-20; the close follows SHIFT DOWN (his getting-home ritual: Deputy Lohnes → Gavin,
+  5–15 min), not END DAY. [Brief](GRAYSON-C1.3-001.md). On `ccr-380c4225-1es42i`, restarted from master after #598 merged. Also fixes SHIFT DOWN being offered again (red) after it was done.
+- **#598:** merged by Gavin; an independent reviewer session (requested by Gavin) is reviewing its exact head
+  `4533184` post-merge; any finding becomes a follow-up.
+- **C1.3 PR:** [#599](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/599).
+- **Queued after #599 merges (one PR):** the C1.2/C1.3 review follow-ups and C1.6 Delta's voice (Mentor default,
+  Delta and Droid switchable; [brief](GRAYSON-C1.6-001.md)), built locally and verified.
+- **Next:** independent review of #599, CI, Gavin's phone look (a timed close under 60 s) and merge.
+
+---
+
+# Historical — C1.0 / C1.1 (merged as #596, #597)
+
+# Current objective — C1.1 Orientation (C1.0 merged as #596) (2026-11-20)
+
+- **Owner rulings (Gavin, 2026-11-20):** C1.1 approved: Orientation opens from a deliberate START DAY tap,
+  the Engine keeps sole recommendation authority (Option A), runway-to-shift layout. Discovery then showed a
+  15:05 START DAY made a mislabelled stub day that the 16:30 roll replaced; Gavin approved fixing that first as
+  its own Protected item, amending DAY-ROLLOVER-001. He leaves the day running after a shift.
+- **C1.0:** [brief](GRAYSON-C1.0-001.md); Decision Register EARLY-DAY-START-001. Builder Claude Code; branch
+  `ccr-380c4225-1es42i`; [PR #596](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/596), merged by Gavin 2026-11-20 (`74978a8`).
+- **Verification (local):** typecheck, architecture; full Node suite (2,548 passed); new engine and
+  integration tests in UTC and America/Chicago; full browser suite (1,731 passed) including new tests at 320/360/412 px; real-app replay of his
+  morning (15:05 tap opens Sat 16:30 WORK day, shift 2 of 3; check-in and advice survive 16:45). No phone check yet.
+- **Previous state:** #594, #595 and #592 merged; #589 closed; #584 and draft #473 untouched.
+- **C1.1:** [brief](GRAYSON-C1.1-001.md); Decision Register GRAYSON-C1.1; [PR #597](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/597). Branch `ccr-380c4225-1es42i`, restarted
+  from master after #596 merged. PROTECTED: independent exact-head review, green CI and Gavin's merge. Retires the BEYOND 4.0-d briefing preview (its entry becomes ORIENTATION).
+  Local: pure, integration and browser tests (states at 320/360/412 px, flow through TODAY); real-app run with six
+  weeks of seeded sleep (own range, RECOVER draft, runway, prep). Screenshots in `docs/screenshots/grayson-c1.1/`.
+- **Next:** independent exact-head review of the C1.1 PR, CI, Gavin's phone check and merge. Then C1.2
+  (day-off, recovery and difficult-day grammar) needs its own go.
+
+---
+
+# Historical — C4.2a (merged as PR #595)
+
+# Current objective — C4.2a owner-editable caffeine cutoff (2026-11-20)
+
+- Gavin explicitly narrowed PR #595 to owner editing, source explanation, SAVE and UNDO. Automated DELTA suggestions, confidence, personalized-benefit claims and suppression are removed. No experiment implementation is authorized.
+- Builder Codex continues Claude Code’s existing `claude/project-thread-iopp5i` branch from `f79c8f23839307770bf8c41f9b33878a08968e19`; reconciled only the checkpoint conflict onto approved master `2e53d10a7240a25e53d46c468bd2c4fc5052dbff`.
+- PROTECTED stored setting / locked cutoff amendment. [PR #595](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/595); [brief](GRAYSON-C4.2a-001.md). Fresh independent exact-head review and Gavin’s merge approval required. No merge.
+- Local verification: 35 focused UTC Node checks, 18 Chicago checks and 3 browser checks pass; architecture, TypeScript/production build and diff hygiene pass. Actual 360 px editor screenshot inspected. No full local suite or physical-phone test claimed. Required CI and exact candidate head recorded in the PR handoff; old CI does not verify this narrowed head.
+- Deferred: separately authorized caffeine experiment through the existing experiment lifecycle, with exposure/adherence context, duration, outcomes, stopping conditions, provenance and owner consent. It is not started here.
+- Owner sequence remains: resolve this bounded PR, reconcile research #592 as supporting evidence, preserve/resolve #589; C1.1 Production Orientation next major objective, lived-day loop before deeper domain expansion. No other objective begun.
+
+---
+
+# Historical — original broader PR proposal (superseded by narrowing above)
+
+# Current objective — C4.2a DELTA-suggested, editable caffeine cut-off (2026-11-20)
+
+- **Owner authorization:** Gavin, 2026-11-20 04:40 UTC: "Start it", answering the proposed first build of DELTA
+  suggestions (editable cut-off from today's 6 h with where it comes from; DELTA offers a better value from his
+  nights; changes only on his tap; undo). Protected: amends locked SHIFT-SLEEP-PLAN-001, adds a stored setting,
+  widens what DELTA may propose. Builder Claude Code; branch `claude/project-thread-iopp5i`; starting commit
+  `a857f28`; [PR #595](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/595). Plan item C4.2a (tracker row added on his go).
+- **Operator benefit:** the cut-off is his number, not a hidden constant, and DELTA can point to his own short
+  post-shift sleeps and offer a longer gap he approves or undoes.
+- **REUSE:** TARGET-PROPOSAL-001's propose/SAVE/KEEP/UNDO shape; BRIDGE-NOTIFY-001's settings-on-the-schedule-row
+  storage (native backup, no schema change); SLEEP-RHYTHM-001's work-day nights. **OWN:** the suggestion rule and
+  copy. **BUILD FROM SCRATCH:** none.
+- **Exclusions:** no other plan numbers, no automatic change, no score, no caffeine log, no per-drink lines (C4.2),
+  no notification, Engine, provider or dependency change.
+- **Verification (local):** node suite 2,540 passed; typecheck; architecture; production build. The new browser
+  test (`tests/browser/CaffeineCutoff.test.tsx`) could not run here (no Chromium in this container); CI runs it.
+  No phone check yet.
+- **Next:** green CI and independent exact-head review, then Gavin's merge. After a real night, KEEP / REFINE /
+  RETHINK.
+
+
+---
+
+# Historical — master handoff preserved
+
+# Current objective — PR #594 review repair (2026-11-20)
+
+- **Builder:** Codex, explicitly assigned by Gavin to continue Claude Code's existing `claude/project-thread-s69muv` branch. [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594); [durable C3.4/C3.4a brief](GRAYSON-C3.4-001.md).
+- **Recovery:** blocked head `1a43648f0ea4b087faba6811b666ed554dbcaf35`; original start `211ccf4d`, master `a857f285` already merged. Working tree was clean; existing work preserved. Lane FEATURE; no scope expansion.
+- **Repair:** add accurate bounded brief; replace the default 16:00 delivery promise with conditional delivery language; cover default/unset behavior in the Home browser tests; correct the GRAYSON-Q2 labels/comments to C3.4a. Save, recurrence and notification logic otherwise unchanged.
+- **Verification:** Home browser suite passes 6/6; Home integration passes 9/9 in UTC and Chicago; architecture and production build (including TypeScript/PWA) pass; diff hygiene passes. No fresh full local suite or physical-phone delivery test claimed. Required CI and exact repaired head recorded in the PR handoff. Prior BLOCK is on the old head; a fresh independent exact-head review is required. No self-review or merge.
+- **Owner sequence:** repair/review #594, then merge only after independent PASS and Gavin's approval; rigorously review #595 for evidence/causal overreach; reconcile #592 as supporting research, not a roadmap; preserve useful #589 evidence and resolve it; C1.1 Production Orientation is the next major objective. Continue the lived-day loop before deeper domain expansion. None of the later objectives is started in this repair.
+
+---
+
+# Historical checkpoint — original implementation (superseded handoff status)
+
+# Current objective — GRAYSON-Q1 / C3.4 dog care and CO presets, plus Home alert time (2026-11-20)
+
+- **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) and its progress
+  tracker are the record of what is done and left; this PR marks C3.4 and C3.4a done.
+- **Owner authorization:** Gavin, 2026-11-20: start the campaign plan's quick wins with Claude Code
+  ("start with the quick wins and stuff I will feel immediately"), then, on the gaps found (Home jobs
+  always alert at 16:00; yearly repeats can't be edited in Plans): "I'm fine with who ever would be most
+  efficient at building this do the work." Lane FEATURE (no schema, event, Engine, notification-rule or
+  navigation change). Starting commit `211ccf4`, master merged in at `a857f28`; Builder Claude Code;
+  branch `claude/project-thread-s69muv`; [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594).
+- **Change:** Home's preset list (HOME-SCHEDULE-001) gains CO detectors (monthly), dog flea and tick
+  (monthly), dog heartworm (monthly), vet checkup (yearly) and dog food (every 4 weeks, editable).
+  Presets still only fill the form; SAVE writes the ordinary "Home: …" repeat through `addHomeItem`.
+  Summary reads "Common house and dog jobs"; the hint names the real SAVE button (was "ADD").
+  C3.4a: a repeating Home job takes an optional alert time, stored as REMIND-AT-001's existing
+  `remindAt` and carried to each next occurrence by the existing satisfy path; empty keeps 16:00.
+- **Exclusions:** no pet profiles, vet records, notification rules, early warning (C3.2), TODAY
+  layout, counts or streaks. Yearly repeats in Plans (C3.4b) touch `engine/recurrence.ts` and go in a
+  separate PR for Gavin's merge.
+- **Verification:** typecheck, architecture check and the full Node suite pass locally; browser tests
+  in `tests/browser/Home.test.tsx` run in required CI (no Chromium in the Builder container).
+- **Historical next action (superseded):** the original Builder proposed C3.4b after merge. Gavin’s newer sequence above controls; do not start it here.
+
+---
+
+# Historical — GRAYSON-CAMPAIGN-PLAN-001 (merged as PR #593, `a857f28`)
+
+- **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) is the campaign plan
+  toward Project Grayson and its **progress tracker** is the one record of what is done, in progress
+  and left. Every Builder names the plan item ID in its PR and updates that row in the same PR.
+- **Owner authorization:** Gavin asked for a structured campaign plan (2026-11-20) and for every agent
+  to see what is done and what is left. Protected (governance pointers in `AGENTS.md` and this file);
+  waits on independent exact-head review and Gavin's merge. Builder Claude Code; branch
+  `claude/project-thread-4rj0y9`; [PR #593](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/593).
+  Starting commit `211ccf4`.
+- **In flight:** Q1 / C3.4 dog care and CO presets ([PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594));
+  Q3 workouts on the metric page ([PR #584](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/584),
+  conflicts on this file). Everything else in the tracker is not started.
+- **Exclusions:** no product code, Engine, schema, dependency or concurrent-PR change. The plan
+  authorizes no item.
+- **Next:** Gavin picks the next item; first big objective proposed is C1.1 Orientation slice 1.
+
+---
+
+# Historical — GRAYSON-RESEARCH-SYNTHESIS-001 (merged as PR #591, `211ccf4`)
+
+- **Owner authorization:** report only; compare commercial/open-source donor patterns against current
+  BEYOND repository truth and canonical scenarios under the Project Grayson baseline and Evolution
+  Rule; classify dispositions and licensing/reuse; reconcile PR #589 without modifying it; recommend
+  a ranked sequence and one next objective. Brief:
+  [`GRAYSON-RESEARCH-SYNTHESIS-001.md`](GRAYSON-RESEARCH-SYNTHESIS-001.md). Starting commit
+  `ac858def37523b06b06556b22d9f817b56a36210`; Builder Codex; branch
+  `codex/grayson-research-synthesis`; [PR #591](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/591).
+- **Finding:** BEYOND already contains most of the suit. Donors mostly improve composition, timing,
+  evidence hierarchy, and interaction; they do not justify importing parallel planners, trackers,
+  notes stores, home ERPs, or agent platforms.
+- **Recommendation:** [`LIVED-DAY-ORIENT-PRODUCTION-001`](../GRAYSON_RESEARCH_SYNTHESIS.md#recommended-next-objective)
+  — one bounded Protected implementation of Quiet Command Orientation using existing BEYOND truth,
+  actions, visual foundation, and canonical recommendation authority. It is not authorized by this
+  report.
+- **PR #589:** unchanged. Preserve it as reviewed responsive/state evidence, not production code or
+  final visual truth. Its merge/close remains Gavin's separate decision.
+- **Concurrent work:** PR #589, PR #584, and draft PR #473 remain separate and untouched.
+- **Exclusions:** no implementation, redesign, rename, replacement, product-authority, Engine/
+  recommendation, schema/event, provider/dependency, product code, prototype, Google Drive, merge, or
+  concurrent-PR change.
+- **Verification:** current master/open PRs and representative code/tests inspected; first-party donor
+  sources and official repositories used; local Markdown links and diff hygiene pass; risk classifier
+  reports the expected Protected governance triggers. Required CI and independent exact-head review
+  remain pending.
+- **Next:** obtain independent exact-head review and green required CI, then return to Gavin for merge
+  approval.
+
+---
+
+# Historical — GRAYSON-EVOLUTION-RULE-001 (merged as PR #590, `ac858def`)
+
+- **Owner authorization:** Protected documentation only; record the GRAYSON Evolution Rule in the
+  canonical Project Grayson and product-governance sources, reconcile it with doctrine, Product
+  Direction, the Decision Register and builder guidance, open a reviewed PR, and make no product-code,
+  runtime, architecture, or Google Drive change. Brief:
+  [`GRAYSON-EVOLUTION-RULE-001.md`](GRAYSON-EVOLUTION-RULE-001.md). Starting commit
+  `29bc9efad66ff2a86836eb84394ea9be7e073f4c`; Builder Codex; branch
+  `codex/grayson-evolution-rule`; [PR #590](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/590).
+- **Ruling:** BEYOND is the functioning foundation of GRAYSON; no proposal begins from a blank canvas.
+  Establish repository truth and preservation first. External products and open source are research
+  donors, not replacement templates. Replacement requires evidence, preservation/migration planning,
+  and every applicable owner approval.
+- **Reconciliation:** preserve the existing permission to challenge historical choices and propose
+  substantial evidence-backed redesign. The rule requires explicit continuity and places the burden
+  of proof on replacement; it does not freeze the current interface.
+- **Concurrent work:** PR #589 remains the isolated phone-first Orientation prototype; PR #584 remains
+  owned by its Builder; draft PR #473 remains separate. This objective changes none of them.
+- **Exclusions:** no product code, runtime behavior, UI, identity, navigation, architecture, Engine,
+  recommendation, schema/event, provider, dependency, data, test fixture, Google Drive, implementation
+  objective, redesign approval, replacement decision, merge, or concurrent-PR change.
+- **Verification:** exact-head independent review passed at `fbeb36f7`; required CI was green; risk
+  classifier reported the expected Protected governance lane; canonical documentation targets and
+  diff hygiene passed.
+- **Next at closure:** apply the rule to the approved donor-research synthesis rather than restart from
+  a blank canvas.
+
+---
+
+# Historical — LIVED-DAY-ORIENT-REFINE-001 (merged as PR #588, `29bc9efa`)
+
+- **Owner authorization:** Protected documentation/design only; record the reviewed Orientation and
+  Delta decisions, open a reviewed PR, and do not implement. Brief:
+  [`LIVED-DAY-ORIENT-REFINE-001.md`](LIVED-DAY-ORIENT-REFINE-001.md). Starting commit
+  `87d35bca687934d32e31409ddd257ff93d811e39` (merged PR #587); Builder Codex; branch
+  `codex/lived-day-orient-refinement`; [PR #588](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/588).
+- **Approved refinements:** START DAY opens Orientation; check-in never gates it; hierarchy is
+  Situation → You → Delta → one recommendation → at most two supporting actions → Release; Delta uses
+  evidence-bounded adaptive analytical command; days off are purpose-first; difficult-day response
+  distinguishes one check-in, a sustained pattern, and Gavin's explicit statement.
+- **Protected boundary surfaced:** the destination primary recommendation exceeds the merged design's
+  presentation-only selection rule. This objective records that decision but does not implement or
+  silently redefine Engine/recommendation priority. A future bounded decision must adjudicate it.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
+- **Exclusions:** no code, prototype, production UI, TODAY, Engine/priority, schema/event, provider,
+  dependency, AI call, navigation, rename, crisis workflow, Google Drive, or concurrent-PR change.
+- **Verification:** PR #588 merged after local Markdown links and diff hygiene passed, required CI was
+  green, and independent exact-head review passed.
+- **Next at closure:** a phone-first prototype remained a separate proposal and is now open as PR #589.
+
+---
+
+# Historical — LIVED-DAY-ORIENT-001 design (merged as PR #587, `87d35bca`)
+
+- **Owner authorization:** documentation/design only before implementation. Brief:
+  [`LIVED-DAY-ORIENT-001.md`](LIVED-DAY-ORIENT-001.md). Starting commit
+  `b00fa77687d15b7557b04e3e0326aa511fe0906c` (merged PR #586); Builder Codex; branch
+  `codex/lived-day-orient-design`; [PR #587](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/587).
+- **Outcome:** research-backed experience contract, workday/day-off/recovery/unknown/sparse variants,
+  phone text wireframes, information/attention rules, Engine/Delta boundaries, reuse map, failure and
+  accessibility behavior, acceptance scenarios, and a proposed Protected build authorization.
+- **Core decision:** explicit START DAY anchors Orientation; an already-started day gets one optional
+  invitation. Orientation reads and routes—it does not create another plan or recommendation. It works
+  offline without an automatic AI call.
+- **Research disposition:** adapt personal-baseline explanation from Oura/WHOOP without a readiness
+  score; adapt Sunsama's visible review without automatic plan movement; keep subjective check-in
+  explicit and low-burden; treat shift fatigue as context without medical or fitness-for-duty claims.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
+- **Exclusions:** no implementation, production UI, rename, schema/event, Engine/priority, notification,
+  provider/dependency, autonomy, navigation, global redesign, evening/Shift Down, Google Drive, or
+  concurrent-PR change.
+- **Verification:** PR #587 merged at exact head `3cac9c2e` after green required CI and independent
+  exact-head PASS.
+- **Next at closure:** Gavin chose to review protected experience decisions before any prototype or
+  implementation authorization.
+
+---
+
+# Historical — PROJECT-GRAYSON-BASELINE-001 (merged as PR #586, `b00fa776`)
+
+- **Owner authorization:** report-only evaluation against the Project Grayson Vision Blueprint.
+  Brief: [`PROJECT-GRAYSON-BASELINE-001.md`](PROJECT-GRAYSON-BASELINE-001.md). Starting commit
+  `5f9a9a12d8a363a75eb4bcb364c02dc119d69204` (merged PR #585); Builder Codex; branch
+  `codex/project-grayson-baseline`; [PR #586](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/586).
+- **Outcome:** current-product baseline, scenario assessment, Preserve/Adapt/Connect/Deepen/Replace
+  carefully/Retire/Defer map, navigation assessment, and one first-objective recommendation.
+- **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate. Neither
+  is changed or taken over.
+- **Finding:** BEYOND already contains most of the suit. The primary gap is orchestration around lived
+  transitions, not missing domain breadth or insufficient AI autonomy.
+- **Recommendation:** [`LIVED-DAY-ORIENT-001`](../PROJECT_GRAYSON_BASELINE.md#recommended-first-objective)
+  — a Protected, optional, evidence-grounded opening orientation that composes existing sleep,
+  schedule, check-in, guidance, commitments, preparation, training, and capture. It is not authorized
+  by this report.
+- **Exclusions:** no implementation, redesign, rename, deletion, Google Drive, product-authority, or
+  queue change.
+- **Next:** validate report links/diff, open a documentation PR, and return to Gavin for assessment and
+  a separate decision on the recommended objective.
+
+---
+
+# Historical — PROJECT-GRAYSON-VISION-001 (merged as PR #585, `5f9a9a12`)
+
+- **Owner authorization:** Gavin approved the exact Protected, documentation-only objective. Brief:
+  [`PROJECT-GRAYSON-VISION-001.md`](PROJECT-GRAYSON-VISION-001.md). Starting commit
+  `c54c0001cb346af7d358f7d039f087b467bf78fd` (merged PR #583); Builder Codex; branch
+  `codex/project-grayson-vision`; [PR #585](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/585).
+- **Outcome:** establish the canonical Project Grayson destination, reconcile product authority,
+  preserve and classify existing capabilities, and provide one provider-neutral handoff for Claude,
+  Claude Duet Steward, Codex, and future qualified builders.
+- **Identity:** BEYOND is what was built; Project Grayson is what it is becoming; GRAYSON is the Life
+  OS; Delta is the companion intelligence inside it. Current runtime remains BEYOND + Alfred until a
+  separately approved implementation.
+- **Concurrent work checked:** PR #584 (finished workouts on the shared metric page) remains owned by
+  its Builder; draft PR #473 remains separate. This objective changes documentation only.
+- **Exclusions:** no product/UI/code/runtime rename, Engine/schema/provider/dependency/automation,
+  Google Drive change, or first implementation objective.
+- **Next:** complete documentation checks; open a PR; obtain independent exact-head review and green
+  required CI; Gavin decides merge. After merge, propose a separate report-only current-product
+  baseline against the blueprint's canonical scenarios.
+
+---
+
+# Historical — DRAFT-RECOMMENDATION-001 (merged as PR #583, `c54c0001`)
 
 - **Authorization:** Gavin explicitly approved the bounded pre-check-in draft and, after the original reviewed head became conflicting, authorized its reconciliation onto current master. [Brief](DRAFT-RECOMMENDATION-001.md).
 - **Builder:** Codex. **Lane:** PROTECTED (Engine/TODAY). [PR #583](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/583), branch `codex/draft-recommendation-001`, reconciled onto master `af2fa8e3` after OUTCOME-LOOP-001 merged as #582.

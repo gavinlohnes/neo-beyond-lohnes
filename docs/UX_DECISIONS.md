@@ -12,6 +12,52 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C1.6 — Delta's voice: Mentor by default, Delta and Droid switchable (owner go 2026-11-20)
+
+"Bruce → Terry by default, with Delta and Droid as switchable voices." [Brief](agent/GRAYSON-C1.6-001.md). One copy
+library holds every Delta sentence in each voice; a voice changes words only, never facts, advice or certainty.
+Hard days (Minimum Day, STABILIZE, the sustained-mood sentence) are always plain. No character names or signature
+lines are copied. The choice is a device-local preference.
+
+## GRAYSON-C1.3 — the close follows SHIFT DOWN (owner go 2026-11-20)
+
+Gavin leaves the day running and crashes at home; SHIFT DOWN is his getting-home ritual ("from Deputy Lohnes to just
+Gavin at home", 5–15 minutes). The optional close follows it, not END DAY. [Brief](agent/GRAYSON-C1.3-001.md).
+After SHIFT DOWN, TODAY offers once, with no red: a "next" line only when tomorrow differs (C1.4), up to two
+questions he picked, SAVE TO NOTE (a `#close` block appended to that day's Daily Note) or SKIP. END DAY is unchanged.
+Once SHIFT DOWN is done, TODAY no longer offers it again before sleep.
+
+## GRAYSON-C1.2 — Orientation follows what the day is for (owner go 2026-11-20)
+
+Gavin approved slice 2 with both recommendations' boundaries: only the Engine's recommendation ever appears (no
+invented day-off advice), and Delta may name a sustained mood drop ("Include the trend"). [Brief](agent/GRAYSON-C1.2-001.md).
+START DAY opens Orientation on any day. Recovery, free and last-day-off compositions show when he's back, no
+shift countdown and no work preparation; open time is named as open. A hard day (Minimum Day, or the Engine's
+STABILIZE after check-in) shows one action at most. A strict mood drop across his last three submitted
+check-ins is shown as a fact, never a diagnosis, and never feeds the Engine or any score.
+
+## GRAYSON-C1.1 — Orientation opens the work day (owner go 2026-11-20)
+
+Gavin approved Orientation slice 1 after its proposal page: "I'd rather hit a button to start my day ... Approved."
+[Brief](agent/GRAYSON-C1.1-001.md). A deliberate START DAY on a work (or unconfirmed) day opens one read-and-route
+screen: Situation → You → Delta → at most one recommendation → the runway to the shift → at most two actions →
+ENTER TODAY. **Recommendation authority is unchanged (Option A):** only the Engine's recorded recommendation, or
+else the approved pre-check-in draft, is shown, with its own kind and rationale; Orientation has no arbitration
+rule of its own, and Delta's deterministic sentence explains and never advises. Viewing writes nothing; a
+reviewed marker is device-local. It replaces BEYOND 4.0-d's opt-in briefing preview. Day-off grammar is C1.2.
+
+## EARLY-DAY-START-001 — an afternoon START DAY opens tonight's day (owner go 2026-11-20; amends DAY-ROLLOVER-001)
+
+Gavin, 2026-11-20 (Protected, approved): "A START DAY tap in the afternoon before 16:30 should open the day that
+owns tonight's shift, so your check-in, your recommendation and the 'work day' label survive past 16:30 ... It
+amends that September 16:30 rule and I'm okay with that." [Brief](agent/GRAYSON-C1.0-001.md).
+A deliberate START DAY tap between the schedule's post-shift tail (shift end + post-work tail; 12:00 on
+18:00–06:00) and 16:30 opens the lived day that begins at 16:30, stamped at that boundary the way the roll stamps
+its days, closing any running day through the existing new-day path. The 16:30 roll then has nothing to do for it.
+Lazy day creation and the automatic roll are unchanged. TODAY offers the tap in that window even while yesterday's
+day still runs (he leaves it running), after last night's wake card is answered. Pure rule:
+`engine/scheduledContext.ts`'s `earlyDayStartBoundary`. No schema or event change.
+
 ## OPERATOR-CONTEXT-002A — one inspectable context projection (owner approval 2026-11-01)
 
 Gavin approved the advancement design's first implementation after its owner-visible walkthrough:
@@ -2921,6 +2967,19 @@ on TODAY's lived-day bar, under these conditions:
 Everything else in this entry is unchanged.
 - **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
   Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
+  **Amended and narrowed (Gavin, 2026-11-20, C4.2a / PR #595):** owner-editable cutoff only: 6 h remains
+  BEYOND's starting default, CHANGE selects whole hours 3–12, SAVE is explicit, and UNDO restores the prior
+  setting unless a later change replaced it. The source explanation identifies Drake et al.'s 400 mg study
+  at bedtime/3 h/6 h and its general guidance; neither a safe personal threshold nor a personalized benefit
+  is established. Values below 6 are described as below the app's default, not below a proven safety boundary.
+  Only OWNER provenance and the setting timestamp are stored on the schedule row; native backups retain them,
+  with no Dexie version change. ROUTE and TODAY's cutoff marker use the same hours; no Engine input changes.
+  The earlier proposed automated DELTA suggestion, short-sleep trigger, count-based confidence, approval path
+  and NOT NOW/suppression state are removed from this objective. BEYOND has no actual caffeine exposure or
+  adherence evidence; short sleep alone does not identify caffeine as a cause.
+  **Deferred, not authorized:** a future separate caffeine experiment may use BEYOND's existing experiment
+  lifecycle, with exposure/adherence context, duration, outcome measures, stopping conditions, provenance and
+  owner consent. No experiment implementation, caffeine log or generalized Delta plan-number authority follows.
 - **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake
   time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
   parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
@@ -3502,3 +3561,92 @@ Gavin approved the HARVEST-003 pre-check-in draft and explicitly approved the bo
 - TODAY may replace its generic no-recommendation guidance with one clearly labelled, unsaved starting point from recorded evidence. Existing unresolved post-shift context takes precedence; otherwise the existing personal two-short-main-sleeps signal may provisionally suggest recovery. Thin evidence stays quiet. No subjective check-in answer or capacity is inferred.
 - This narrowly extends SLEEP-ENGINE-001 before check-in, not its confirmed GREEN reduced-session rule or any canonical evaluation priority. After the operator submits a real check-in, existing evaluation decides final guidance; RED still wins.
 - The draft’s action opens the existing check-in, where the operator confirms or adjusts how he feels. Viewing the draft/opening the form saves nothing. No directly executable or persisted recommendation is created. The neutral standalone check-in prompt stays hidden while the draft supplies that action; existing fallback/manual operation remains available otherwise.
+
+## PROJECT-GRAYSON-VISION-001 — Life OS destination and companion relationship (Gavin, 2026-11-19)
+
+Gavin approved the canonical destination and exact identity structure:
+
+> **BEYOND is what we built. Project Grayson is what it is becoming. GRAYSON is the Life OS. Delta
+> is the companion intelligence inside it.**
+
+- **Current versus destination:** the functioning app remains BEYOND and its implemented intelligence
+  remains Alfred until separately approved changes ship. No piecemeal runtime rename follows from
+  this decision. Public/commercial naming receives later legal and originality review.
+- **Relationship:** Gavin is the operator; GRAYSON is the connected capability or suit; Delta
+  understands the field, remembers the mission, prepares options, helps operate approved capability,
+  and learns through corrections and outcomes. Gavin retains final authority. Delta respects an
+  override without concealing its evidence-based disagreement or material consequence.
+- **Earned challenge:** ask when context is unclear; identify repetition; challenge calmly when the
+  evidence supports avoidance; examine the plan, obstacle, priority, or goal when repeated prompting
+  fails. The strength of the challenge cannot exceed the evidence. No guilt, excessive positivity,
+  inspirational language, badges, streak pressure, nagging, or character verdicts.
+- **Difficult periods:** several days of declining mood, feeling overwhelmed, or Gavin explicitly
+  saying he cannot manage the normal plan activate a shorter reality path. Believe him in the moment;
+  study the pattern later. Mental-health capability supports reflection and appropriate help but does
+  not diagnose or replace professional care.
+- **Whole life:** work and time off, family, rest, enjoyment, health, relationships, home, maintenance,
+  growth, and difficult periods are equal parts of the Life OS. The system must not treat non-work time
+  as unused productivity capacity.
+- **Inspectable learning:** Delta states what it thinks it is learning. Gavin can confirm, correct,
+  narrow, contest, defer, or retire it. Consequential learnings retain source, evidence, recency,
+  confidence, context, and correction routes; no hidden personality model.
+- **Design freedom:** Gavin is open to a substantial redesign or reimagining when it better serves the
+  approved destination. This permits proposals and prototypes inside an approved objective, not a
+  standing primary-navigation, visual-identity, semantic, or implementation change.
+- **Authority:** [`PROJECT_GRAYSON_VISION.md`](PROJECT_GRAYSON_VISION.md) is the full destination
+  blueprint. It guides future briefs but authorizes no build by itself.
+
+## GRAYSON-EVOLUTION-RULE-001 — BEYOND is the functioning foundation (Gavin, 2026-11-19)
+
+Gavin approved the following permanent evolution rule:
+
+> **BEYOND is the functioning foundation of GRAYSON, not disposable scaffolding. No proposal begins
+> from a blank canvas. Every proposed change must first establish repository truth, identify what
+> should be preserved, and explain how the existing system can be connected, deepened, reframed or
+> carefully adapted toward the approved Project Grayson vision. External products and open-source
+> systems are research donors, not replacement templates. Replacement requires evidence that
+> evolution is insufficient, a preservation and migration plan, and Gavin’s approval wherever a
+> protected boundary is involved.**
+
+- **Proposal standard:** every GRAYSON proposal begins with verified current capability and states
+  the continuity from BEYOND foundation to proposed evolution and operator benefit.
+- **Research boundary:** external products and open-source systems may supply proven patterns,
+  architecture, or legally reusable primitives; they do not supply product authority or justify
+  inheriting another product's assumptions.
+- **Replacement burden:** replacement is not forbidden, including substantial redesign when it is
+  better. It must show why connection, deepening, reframing, or careful adaptation is insufficient,
+  what capability and data survive, how migration remains safe, and which Protected approvals apply.
+- **No implementation authority:** this ruling governs future proposals and objectives. It does not
+  authorize a redesign, runtime rename, replacement, migration, or product-code change.
+
+## LIVED-DAY-ORIENT-REFINE-001 — opening relationship and adaptive command (Gavin, 2026-11-19)
+
+After the first Orientation design merged as PR #587, Gavin reviewed its protected experience choices
+and approved these refinements as documentation-only:
+
+- Deliberately pressing `START DAY` opens Orientation automatically; immediate exit remains available.
+  If another action already began the day, Orientation remains an optional, non-interrupting invitation.
+- Check-in improves Orientation but never gates it. Missing subjective context reduces Delta's certainty,
+  not Gavin's access or control; mood, stress, energy, and capacity are never inferred from biometrics.
+- The opening hierarchy is **Situation → You → Delta → Recommendation → Supporting actions → Release**.
+  Show at most one primary recommendation and two supporting actions, and show fewer or none when the
+  evidence does not justify priority.
+- Delta uses adaptive analytical command: concise by default, explanatory when a tradeoff matters,
+  direct when evidence and consequence are strong, and gentler around uncertainty or vulnerability.
+  Directness may rise with evidence and consequence; certainty may not exceed the evidence. Once Gavin
+  makes an informed decision, Delta respects it unless material circumstances change.
+- Workdays protect operational readiness. Days off are purpose-first: rest, family, enjoyment,
+  maintenance, progress, or intentionally open time are valid, and unallocated time is not a problem
+  to fill. Difficult days protect essentials and reduce load without diagnosis or character judgment.
+- One difficult submitted check-in may change today's load. A supported sustained pattern may increase
+  Delta's concern. Gavin explicitly saying he cannot manage the normal plan permits immediate reduction
+  without waiting for a trend. Crisis behavior requires a separate safety-reviewed objective.
+- Orientation remains read-and-route, local-first, and usable without an automatic model call. It never
+  silently reschedules, cancels, accepts, completes, or transmits anything.
+- The new primary-recommendation destination is not current Engine behavior. A future Protected objective
+  must explicitly adjudicate its relationship to Engine guidance, the pre-check-in draft, preparation,
+  commitments, and training; no competing authoritative answers or hidden priority change.
+
+Canonical detail: [`LIVED_DAY_ORIENTATION_DESIGN.md`](LIVED_DAY_ORIENTATION_DESIGN.md). This ruling
+authorizes no implementation. The next proposed step is a separately approved phone-first prototype/
+visual checkpoint.

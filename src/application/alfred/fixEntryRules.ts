@@ -51,11 +51,11 @@ export function cleanValues(kind: LogKind, values: FixValues | undefined, curren
 }
 
 /** "HH:MM" inside the entry's lived day (16:30 to 16:30, so later than now is allowed, as LOG-TIME-001), or null. */
-export function placeTime(time: string, dayStartedAt: string, now = new Date()): string | null {
+export function placeTime(time: string, dayStartedAt: string, now = new Date(), dayCreatedAt?: string): string | null {
   // A real clock time only: "25:00" must be refused, not rolled over to 01:00.
   const m = time.match(/^(\d{2}):(\d{2})$/);
   if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return null;
-  return resolveWhen({ kind: "AT", hhmm: time }, dayStartedAt, now) ?? null;
+  return resolveWhen({ kind: "AT", hhmm: time }, dayStartedAt, now, dayCreatedAt) ?? null;
 }
 
 const LABELS: Record<keyof FixValues, [string, string]> = { calories: ["", " kcal"], protein_g: ["protein ", " g"], carbs_g: ["carbs ", " g"], fat_g: ["fat ", " g"], oz: ["", " oz"], grams: ["", " g protein"] };

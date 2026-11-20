@@ -9,6 +9,7 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { flips, flipSummary, RUN_MEAN_FLOOR } from "./rotationProjection";
 import { getWholePicture } from "./wholePictureQueries";
 import type { PictureRow } from "./wholePictureProjection";
+import { getSleepPlanSettings } from "./sleepPlanSettings";
 
 /**
  * CIRCADIAN-SPIKE-001's first slice (BIG-IDEAS-001 item 3, Protected; Gavin, 2026-11-11 "Approved"). For the next
@@ -45,7 +46,12 @@ export interface ShiftSleepPlan {
    * new rule: these are the cards' own numbers.
    */
   windows: { kind: "NAP" | "SLEEP"; start: string; end: string; basis: "RHYTHM" | "PAST_RUNS" }[];
+  /** C4.2a: the cut-off the CAFFEINE card used, and whose number it is (the default or his own). */
+  caffeine: { hours: number; setBy: CutoffSetBy };
+  /** C1.1: the CAFFEINE card's cut-off instant, for Orientation's runway. Same number the card states. */
+  caffeineAt: string;
 }
+export type CutoffSetBy = "DEFAULT" | "OWNER";
 
 /** Cited constants: each rule number lives here with the source sentence it comes from (quoted from the full text). */
 export const SOURCES = {
@@ -77,7 +83,10 @@ export const SOURCES = {
   },
 } as const satisfies Record<string, PlanSource>;
 
-/** No substantial caffeine for at least this long before sleep (SOURCES.CAFFEINE). */
+/**
+ * Default gap before sleep, based on general guidance (SOURCES.CAFFEINE). C4.2a: the owner can change
+ * it explicitly (sleepPlanSettings.ts); this is general guidance, not a learned personal threshold.
+ */
 export const CAFFEINE_CUTOFF_HOURS = 6;
 /** Wake at least this long before the shift: sleep inertia takes at least an hour to clear (SOURCES.WAKE_MARGIN). */
 export const WAKE_MARGIN_MINUTES = 60;
@@ -100,9 +109,22 @@ function lastAtClock(to: Date, m: number): Date {
   return at.getTime() <= to.getTime() ? at : new Date(at.getFullYear(), at.getMonth(), at.getDate() - 1, at.getHours(), at.getMinutes());
 }
 
-export interface ShiftSleepPlanInput { now: Date; pattern: SchedulePattern; rhythm: SleepRhythm | null; rows: readonly PictureRow[] }
+export interface ShiftSleepPlanInput {
+  now: Date; pattern: SchedulePattern; rhythm: SleepRhythm | null; rows: readonly PictureRow[];
+  /** C4.2a: his own cut-off, when he set one; otherwise CAFFEINE_CUTOFF_HOURS. */
+  caffeineCutoff?: { hours: number; setBy: "OWNER" } | undefined;
+}
 
-export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepPlanInput): ShiftSleepPlan | null {
+/** C4.2a: where the cut-off's number comes from, said on the card. */
+function cutoffWords(hours: number, setBy: CutoffSetBy): string {
+  if (setBy === "DEFAULT") return `${hours} h`;
+  const below = hours < CAFFEINE_CUTOFF_HOURS ? `, below BEYOND's ${CAFFEINE_CUTOFF_HOURS} h default` : "";
+  return `${hours} h (your setting${below})`;
+}
+
+export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutoff }: ShiftSleepPlanInput): ShiftSleepPlan | null {
+  const cutoffHours = caffeineCutoff?.hours ?? CAFFEINE_CUTOFF_HOURS;
+  const cutoffSetBy: CutoffSetBy = caffeineCutoff?.setBy ?? "DEFAULT";
   if (!isOperatorSavedSchedule(pattern)) return null;
   let found: { offset: number; start: Date; end: Date } | null = null;
   for (let offset = -1; offset <= 1 && !found; offset++) {
@@ -119,7 +141,7 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
   const cards: PlanCard[] = [];
   const windows: ShiftSleepPlan["windows"] = [];
 
-  // 1. Caffeine: 6 h before your usual post-shift main sleep (work days), or the shift's end with too little history.
+  // 1. Caffeine: the cut-off (6 h unless he set his own) before your usual post-shift main sleep (work days), or the shift's end with too little history.
   let sleepStart: Date | null = null;
   if (work) {
     const s = nextAtClock(end, work.start);
@@ -129,13 +151,13 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
   // Review of #507: on the last shift of a run the FIRST SLEEP card's own times (past runs) are the sleep window, so
   // TODAY and ROUTE never disagree; the work-day rhythm is used otherwise.
   if (sleepStart && work && !lastOfRun) windows.push({ kind: "SLEEP", start: sleepStart.toISOString(), end: nextAtClock(sleepStart, work.end).toISOString(), basis: "RHYTHM" });
-  const cutoff = new Date((sleepStart ?? end).getTime() - CAFFEINE_CUTOFF_HOURS * 60 * MIN);
+  const cutoff = new Date((sleepStart ?? end).getTime() - cutoffHours * 60 * MIN);
   cards.push({
     kind: "CAFFEINE", title: "Caffeine cutoff",
     detail: `No substantial caffeine after ${weekday(cutoff)} ${clock(cutoff)}${cutoff <= now ? " (already passed)" : ""}.`,
     basis: sleepStart
-      ? `${CAFFEINE_CUTOFF_HOURS} h before your usual post-shift sleep at ${clock(sleepStart)} (Garmin, ${work!.nights} work days).`
-      : `${CAFFEINE_CUTOFF_HOURS} h before the shift ends at ${clock(end)}, the earliest you'd sleep. Your own sleep time is used after ${RHYTHM_MIN_NIGHTS} Garmin-timed work days.`,
+      ? `${cutoffWords(cutoffHours, cutoffSetBy)} before your usual post-shift sleep at ${clock(sleepStart)} (Garmin, ${work!.nights} work days).`
+      : `${cutoffWords(cutoffHours, cutoffSetBy)} before the shift ends at ${clock(end)}, the earliest you'd sleep. Your own sleep time is used after ${RHYTHM_MIN_NIGHTS} Garmin-timed work days.`,
     source: SOURCES.CAFFEINE,
     plan: { title: `No caffeine after ${clock(cutoff)}`, plannedAt: formatLocalDate(cutoff) },
   });
@@ -190,12 +212,19 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows }: ShiftSleepP
       plan: { title: `Sunglasses for the way home, ${clock(end)}`, plannedAt: formatLocalDate(end) },
     });
   }
-  return { shift: { date: formatLocalDate(livedStart(now, offset)), start: start.toISOString(), end: end.toISOString(), overnight, firstOfRun, lastOfRun }, cards, windows };
+  return { shift: { date: formatLocalDate(livedStart(now, offset)), start: start.toISOString(), end: end.toISOString(), overnight, firstOfRun, lastOfRun }, cards, windows, caffeine: { hours: cutoffHours, setBy: cutoffSetBy }, caffeineAt: cutoff.toISOString() };
 }
 
 export async function getShiftSleepPlan(now: Date = new Date()): Promise<ShiftSleepPlan | null> {
-  const [pattern, records, summaries, picture] = await Promise.all([getSchedulePattern(), getImportedSleep(), getDaySummaries(), getWholePicture(now)]);
-  return deriveShiftSleepPlan({ now, pattern, rhythm: deriveSleepRhythm(records.map((r) => r.evidence), summaries, now), rows: picture.rows });
+  const [pattern, records, summaries, picture, settings] = await Promise.all([getSchedulePattern(), getImportedSleep(), getDaySummaries(), getWholePicture(now), getSleepPlanSettings()]);
+  return deriveShiftSleepPlan({ now, pattern, rhythm: deriveSleepRhythm(records.map((r) => r.evidence), summaries, now), rows: picture.rows, caffeineCutoff: settings.caffeineCutoff });
+}
+
+/** C4.2a: owner-controlled cutoff configuration. No sleep-outcome inference or proposal. */
+export interface CaffeineCutoffView { hours: number; setBy: CutoffSetBy; setAt?: string }
+export async function getCaffeineCutoffView(): Promise<CaffeineCutoffView> {
+  const own = (await getSleepPlanSettings()).caffeineCutoff;
+  return { hours: own?.hours ?? CAFFEINE_CUTOFF_HOURS, setBy: own ? "OWNER" : "DEFAULT", ...(own ? { setAt: own.setAt } : {}) };
 }
 
 /** SAVE, after the preview: a plan item with plannedAt only. Never dueAt, so it stays advisory (PLANNED_TODAY at most). */

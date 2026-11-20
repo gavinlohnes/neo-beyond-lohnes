@@ -82,3 +82,14 @@ it("Alfred's cards add the year only when it isn't this year (review of #362)", 
   expect(describeProposal(toProposal("add_reminder", { title: "Renew plates", due_date: "2027-01-05" })!)).toBe("Remind: Renew plates · Tue, Jan 5, 2027");
   expect(describeProposal(toProposal("add_reminder", { title: "Call", due_date: "2026-11-20" })!)).toBe("Remind: Call · Fri, Nov 20");
 });
+
+it("GRAYSON-C3.4a: a home job's alert time is kept on every occurrence, and needs a repeat", async () => {
+  const { reminder } = await addHomeItem({ item: "Dog heartworm", repeat: { every: 1, unit: "MONTHS", firstDue: "2026-11-15" }, remindAt: "08:30" });
+  expect(reminder).toMatchObject({ title: "Home: Dog heartworm", dueAt: "2026-11-15", remindAt: "08:30" });
+  await satisfyObligation(reminder!.id);
+  const next = (await db.obligations.toArray()).find((o) => o.status === "OPEN")!;
+  expect(next).toMatchObject({ title: "Home: Dog heartworm", dueAt: "2026-12-15", remindAt: "08:30" });
+  await expect(addHomeItem({ item: "Plumber", details: "Ace", remindAt: "08:30" })).rejects.toThrow("REMIND_AT_NEEDS_REPEAT");
+  await expect(addHomeItem({ item: "Gutters", repeat: { every: 6, unit: "MONTHS", firstDue: "2026-11-15" }, remindAt: "8am" })).rejects.toThrow("INVALID_TIME");
+  expect(await db.obligations.count()).toBe(2);
+});
