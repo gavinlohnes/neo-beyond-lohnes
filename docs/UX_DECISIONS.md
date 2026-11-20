@@ -3537,6 +3537,29 @@ Gavin approved the canonical destination and exact identity structure:
 - **Authority:** [`PROJECT_GRAYSON_VISION.md`](PROJECT_GRAYSON_VISION.md) is the full destination
   blueprint. It guides future briefs but authorizes no build by itself.
 
+## GRAYSON-EVOLUTION-RULE-001 — BEYOND is the functioning foundation (Gavin, 2026-11-19)
+
+Gavin approved the following permanent evolution rule:
+
+> **BEYOND is the functioning foundation of GRAYSON, not disposable scaffolding. No proposal begins
+> from a blank canvas. Every proposed change must first establish repository truth, identify what
+> should be preserved, and explain how the existing system can be connected, deepened, reframed or
+> carefully adapted toward the approved Project Grayson vision. External products and open-source
+> systems are research donors, not replacement templates. Replacement requires evidence that
+> evolution is insufficient, a preservation and migration plan, and Gavin’s approval wherever a
+> protected boundary is involved.**
+
+- **Proposal standard:** every GRAYSON proposal begins with verified current capability and states
+  the continuity from BEYOND foundation to proposed evolution and operator benefit.
+- **Research boundary:** external products and open-source systems may supply proven patterns,
+  architecture, or legally reusable primitives; they do not supply product authority or justify
+  inheriting another product's assumptions.
+- **Replacement burden:** replacement is not forbidden, including substantial redesign when it is
+  better. It must show why connection, deepening, reframing, or careful adaptation is insufficient,
+  what capability and data survive, how migration remains safe, and which Protected approvals apply.
+- **No implementation authority:** this ruling governs future proposals and objectives. It does not
+  authorize a redesign, runtime rename, replacement, migration, or product-code change.
+
 ## LIVED-DAY-ORIENT-REFINE-001 — opening relationship and adaptive command (Gavin, 2026-11-19)
 
 After the first Orientation design merged as PR #587, Gavin reviewed its protected experience choices

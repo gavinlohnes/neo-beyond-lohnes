@@ -1,4 +1,33 @@
-# Current objective — LIVED-DAY-ORIENT-REFINE-001 (2026-11-19)
+# Current objective — GRAYSON-EVOLUTION-RULE-001 (2026-11-19)
+
+- **Owner authorization:** Protected documentation only; record the GRAYSON Evolution Rule in the
+  canonical Project Grayson and product-governance sources, reconcile it with doctrine, Product
+  Direction, the Decision Register and builder guidance, open a reviewed PR, and make no product-code,
+  runtime, architecture, or Google Drive change. Brief:
+  [`GRAYSON-EVOLUTION-RULE-001.md`](GRAYSON-EVOLUTION-RULE-001.md). Starting commit
+  `29bc9efad66ff2a86836eb84394ea9be7e073f4c`; Builder Codex; branch
+  `codex/grayson-evolution-rule`; [PR #590](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/590).
+- **Ruling:** BEYOND is the functioning foundation of GRAYSON; no proposal begins from a blank canvas.
+  Establish repository truth and preservation first. External products and open source are research
+  donors, not replacement templates. Replacement requires evidence, preservation/migration planning,
+  and every applicable owner approval.
+- **Reconciliation:** preserve the existing permission to challenge historical choices and propose
+  substantial evidence-backed redesign. The rule requires explicit continuity and places the burden
+  of proof on replacement; it does not freeze the current interface.
+- **Concurrent work:** PR #589 remains the isolated phone-first Orientation prototype; PR #584 remains
+  owned by its Builder; draft PR #473 remains separate. This objective changes none of them.
+- **Exclusions:** no product code, runtime behavior, UI, identity, navigation, architecture, Engine,
+  recommendation, schema/event, provider, dependency, data, test fixture, Google Drive, implementation
+  objective, redesign approval, replacement decision, merge, or concurrent-PR change.
+- **Verification:** risk classifier reports the expected Protected governance lane; canonical relative
+  documentation targets are present; diff hygiene passes. Required CI and independent exact-head
+  review remain pending.
+- **Next:** obtain independent exact-head review and green required CI, then return to Gavin for merge
+  approval.
+
+---
+
+# Historical — LIVED-DAY-ORIENT-REFINE-001 (merged as PR #588, `29bc9efa`)
 
 - **Owner authorization:** Protected documentation/design only; record the reviewed Orientation and
   Delta decisions, open a reviewed PR, and do not implement. Brief:
@@ -15,10 +44,9 @@
 - **Concurrent work:** PR #584 remains owned by its Builder; draft PR #473 remains separate.
 - **Exclusions:** no code, prototype, production UI, TODAY, Engine/priority, schema/event, provider,
   dependency, AI call, navigation, rename, crisis workflow, Google Drive, or concurrent-PR change.
-- **Verification:** local Markdown links and diff hygiene pass. PR #588 requires green required CI and
-  independent exact-head review.
-- **Next:** resolve review/CI findings and return to Gavin for merge approval. A phone-first prototype
-  remains a separate proposal.
+- **Verification:** PR #588 merged after local Markdown links and diff hygiene passed, required CI was
+  green, and independent exact-head review passed.
+- **Next at closure:** a phone-first prototype remained a separate proposal and is now open as PR #589.
 
 ---
 

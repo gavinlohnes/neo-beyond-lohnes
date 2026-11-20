@@ -36,7 +36,13 @@ challenge; it never earns control.
 
 ## Working standard
 
+- Apply the [GRAYSON Evolution Rule](../PROJECT_GRAYSON_VISION.md#grayson-evolution-rule): begin from
+  repository truth, not a blank canvas. State what existing BEYOND capability is preserved and how it
+  is connected, deepened, reframed, or carefully adapted before proposing replacement.
 - Preserve existing capability before inventing or rewriting.
+- Treat commercial products and open-source systems as research donors, not replacement templates.
+  Replacement must show why evolution is insufficient and include a preservation and migration plan
+  plus every applicable owner approval.
 - Treat work, family, rest, health, home, relationships, interests, and time off as parts of one life.
 - Build complete lived experiences, not disconnected feature tiles.
 - Facts, inference, recommendations, and decisions remain distinct and inspectable.
@@ -54,6 +60,7 @@ Send this concise instruction:
 > Read `AGENTS.md`, `docs/agent/CURRENT_CHECKPOINT.md`, and
 > `docs/agent/PROJECT_GRAYSON_HANDOFF.md`, then follow their linked authorities. Project Grayson is
 > the approved destination, not standing implementation permission. Establish fresh repository truth,
-> preserve active ownership, and recommend or continue only work authorized by the current brief.
+> preserve active ownership, apply the GRAYSON Evolution Rule, and recommend or continue only work
+> authorized by the current brief.
 
 This is the canonical way to update Claude Duet Steward; do not depend on a chat-only summary.

@@ -373,6 +373,22 @@ This blueprint does not select or authorize that build.
 The repository already contains much of the suit. Project Grayson should evolve it rather than start
 over.
 
+### GRAYSON Evolution Rule
+
+Owner ruling, 2026-11-19 (GRAYSON-EVOLUTION-RULE-001):
+
+> **BEYOND is the functioning foundation of GRAYSON, not disposable scaffolding. No proposal begins
+> from a blank canvas. Every proposed change must first establish repository truth, identify what
+> should be preserved, and explain how the existing system can be connected, deepened, reframed or
+> carefully adapted toward the approved Project Grayson vision. External products and open-source
+> systems are research donors, not replacement templates. Replacement requires evidence that
+> evolution is insufficient, a preservation and migration plan, and Gavin’s approval wherever a
+> protected boundary is involved.**
+
+This rule does not freeze the current interface or prohibit evidence-backed redesign. It requires
+continuity to be explicit: preserve proven capability and data, use research to improve BEYOND rather
+than substitute another product's assumptions, and place the burden of proof on replacement.
+
 | Destination capability | Existing BEYOND foundation | Disposition | Principal gap or caution |
 |---|---|---|---|
 | Living Operator Model | Operator context, personal facts, memory lifecycle, provenance | **Connect + deepen** | One inspectable learning dialogue and explicit confidence/context lifecycle |

@@ -30,6 +30,16 @@ Gavin is open to substantial future redesign or reimagining when a better experi
 destination. That authorizes research, concepts, prototypes, constructive challenge, and proposals
 inside an approved objective—not an unbounded redesign, runtime rename, or protected change.
 
+### Evolve the functioning foundation
+
+The owner-approved [GRAYSON Evolution Rule](PROJECT_GRAYSON_VISION.md#grayson-evolution-rule)
+governs every proposal: BEYOND is the functioning foundation, no proposal begins from a blank canvas,
+and current repository truth and preservation opportunities come before invention or replacement.
+Commercial products and open-source systems are research donors rather than replacement templates.
+Substantial redesign may still be proposed when evidence supports it, but replacement must explain
+why connection, deepening, reframing, or careful adaptation is insufficient and must carry a
+preservation and migration plan plus any required owner approval.
+
 ## Build an exceptional application for one operator
 
 BEYOND is a private, local-first, offline-first personal operating system. Connect health,
@@ -61,6 +71,8 @@ before custom code. Learn from excellent commercial applications without copying
 source, assets or identity. Check applicable laws, licensing, attribution, access restrictions, privacy, security,
 compatibility, performance and total maintenance cost. Prefer a small original implementation
 when it serves the outcome better than a dependency. Build custom work where it adds BEYOND value.
+Research findings must be translated through verified BEYOND capability and Project Grayson doctrine;
+they do not establish a blank-slate product direction or erase existing investment.
 
 ## Deliver complete experiences
 
