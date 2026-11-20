@@ -33,3 +33,7 @@
   320/360/412 px and START DAY on the Monday opening the recovery screen through TODAY; full suite; Gavin's phone.
 - **Known limits:** check-in history groups by BeyondDay, so a day opened early and the day it replaced count as
   two entries only if both had check-ins; the trend reads mood only.
+- **Review follow-up (independent PASS on `4533184`, non-blocking findings):** "one bad morning" → "one bad day"
+  (Gavin kept "worth deliberate attention", 2026-11-20); on a recovery day the sleep fact reads "Your sleep after the
+  last shift was under your usual"; an unreadable Minimum Day is reported in `unread` instead of treated as off.
+  Loading all check-ins for the trend is left as is at current volumes.

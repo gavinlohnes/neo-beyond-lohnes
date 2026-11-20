@@ -6,7 +6,7 @@ import { saveDailyNote } from "./dailyNoteCommands";
 import { getActiveDay, getSchedulePattern } from "./queries";
 import { getConfirmedKinds } from "./scheduleExceptions";
 import { shiftRun } from "./shiftRun";
-import { livedReadAt } from "./earlyDayStart";
+import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 
 /**
  * GRAYSON C1.3 + C1.4 (Gavin, 2026-11-20): the close. It follows SHIFT DOWN, his getting-home ritual ("shifting down
@@ -38,9 +38,8 @@ const sameDate = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.
 export function tomorrowDiffers(input: { now: Date; dayStartedAt: string; today: "WORK" | "OFF" | "UNKNOWN"; pattern: SchedulePattern; confirmed?: ReadonlyMap<string, "WORK" | "OFF"> }): string | null {
   const { now, pattern, confirmed } = input;
   if (input.today === "UNKNOWN") return null;
-  const start = livedReadAt({ startedAt: input.dayStartedAt }, now);
-  const current = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 16, 30);
-  const anchor = start.getTime() >= current.getTime() ? current : new Date(current.getFullYear(), current.getMonth(), current.getDate() - 1, 16, 30);
+  // Review of #599: anchored to this day's own lived start (a day opened early starts at its 16:30), not the clock.
+  const anchor = mostRecentBoundaryAtOrBefore(new Date(input.dayStartedAt));
   const nextStart = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + 1, 16, 30);
   const next = shiftRun(nextStart, pattern, 21, confirmed);
   if (!next) return null;
@@ -78,6 +77,7 @@ export async function getDayClose(now: Date = new Date()): Promise<{ dayId: stri
   if (!day) return null;
   const [pattern, confirmed] = await Promise.all([getSchedulePattern(), getConfirmedKinds().catch(() => new Map<string, "WORK" | "OFF">())]);
   // Named for the lived day it closes (it began at its 16:30 start), not the morning it's written.
-  const label = new Date(day.startedAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  // Review of #599: the lived day's own date, even for a day started after midnight.
+  const label = mostRecentBoundaryAtOrBefore(new Date(day.startedAt)).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   return { dayId: day.id, label, next: tomorrowDiffers({ now, dayStartedAt: day.startedAt, today: day.workContext, pattern, confirmed }) };
 }
