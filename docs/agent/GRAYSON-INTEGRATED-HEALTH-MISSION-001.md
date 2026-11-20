@@ -4,7 +4,7 @@
 - **Starting commit:** `f81f1ed66c35c0cd0f02dbf7cf02474bd58fbc46` (master after PR #603).
 - **Builder:** Codex.
 - **Branch:** `codex/grayson-integrated-health-mission-001`.
-- **Active PR:** pending.
+- **Active PR:** [#604](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/604).
 
 ## Operator benefit
 

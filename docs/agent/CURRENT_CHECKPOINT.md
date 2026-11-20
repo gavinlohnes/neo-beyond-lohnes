@@ -6,7 +6,8 @@
   medication context. No implementation, navigation, Engine/data semantics, treatment, private
   health record or Google Drive change is authorized.
 - **Starting master / Builder:** `f81f1ed66c35c0cd0f02dbf7cf02474bd58fbc46` after PR #603;
-  Builder Codex; branch `codex/grayson-integrated-health-mission-001`; active PR pending.
+  Builder Codex; branch `codex/grayson-integrated-health-mission-001`;
+  [PR #604](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/604).
 - **Canonical candidate:**
   [`GRAYSON_INTEGRATED_HEALTH_MISSION.md`](../GRAYSON_INTEGRATED_HEALTH_MISSION.md);
   [brief](GRAYSON-INTEGRATED-HEALTH-MISSION-001.md).
