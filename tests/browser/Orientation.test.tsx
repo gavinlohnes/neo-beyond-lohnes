@@ -38,6 +38,23 @@ const STATES: Record<string, OrientationInput> = {
   "after-check-in": input({ checkIn: { energy: 4, stress: 2, mood: 4 }, draft: null, recommendation: { kind: "EXECUTE_PLANNED_WORK", title: "Proceed with planned work — reduced session", rationale: "Capacity is good and there is planned work for today. Your last two main sleeps were below your usual range, so the reduced session is suggested.", suggestedCommand: "START_WORKOUT" } }),
   "unknown-sparse": input({ day: { id: "d", startedAt: at(14, 16, 30).toISOString(), workContext: "UNKNOWN" }, picture: { now: null, next: null }, sleep: null, draft: null, plan: null, obligations: [] }),
   "source-failed": input({ sleep: "ERROR", draft: null, prep: "ERROR" }),
+  // GRAYSON C1.2: the first day off after the run, a free day off with one thing due, and a hard day with a mood drop.
+  "recovery-day": input({
+    now: at(16, 14, 10), day: { id: "mon", startedAt: at(16, 16, 30).toISOString(), workContext: "OFF" }, scheduled: "OFF",
+    picture: { now: { state: "RECOVERY", label: "RECOVERY", line: "The first day off after the run. Sleep usually comes first. Back on Wed.", why: [] }, next: null },
+    shift: null, run: null, plan: null, draft: null, obligations: [], sleep: { minutes: 350, fromGarmin: true, band: { low: 415, high: 470, kind: "WORK" } },
+    recoveryPlan: ["Sleep first", "Easy training or rest", "Keep the day light"], recentMoods: [], backOn: at(18, 18),
+  }),
+  "day-off": input({
+    now: at(21, 9, 30), day: { id: "sat", startedAt: at(20, 16, 30).toISOString(), workContext: "OFF" }, scheduled: "OFF",
+    picture: { now: { state: "FREE", label: "FREE", line: "A day off with no shift on either side. Your time for plans, people and training. Back on Mon.", why: [] }, next: null },
+    shift: null, run: null, plan: null, draft: null, sleep: { minutes: 475, fromGarmin: true, band: { low: 450, high: 520, kind: "OFF" } },
+    obligations: [{ id: "vet", title: "Home: vet checkup", dueAt: "2026-11-21", status: "OPEN" }], recentMoods: [], backOn: at(23, 18),
+  }),
+  "hard-day-trend": input({
+    draft: null, checkIn: { energy: 1, stress: 4, mood: 2 }, recentMoods: [4, 3, 2],
+    recommendation: { kind: "STABILIZE", title: "Stabilize first", rationale: "Capacity is low. Protect the basics before anything else.", suggestedCommand: null },
+  }),
 };
 type MockRoutes = { [K in keyof OrientationRoutes]-?: Mock<NonNullable<OrientationRoutes[K]>> };
 const routes = (): MockRoutes => ({
@@ -92,6 +109,27 @@ describe("Orientation states", () => {
     expect(document.querySelector("[aria-labelledby='orient-delta']")).toBeNull();
     await screen.getByRole("button", { name: "WORK", exact: true }).click();
     expect(r.onSetContext).toHaveBeenCalledWith("WORK");
+  });
+
+  it("C1.2: a recovery day shows when he's back and his recovery plan, with no work prep", async () => {
+    await page.viewport(360, 900);
+    vi.mocked(getOrientation).mockResolvedValue(deriveOrientation(STATES["recovery-day"]!));
+    const screen = await render(<Orientation active busy={false} refreshKey={0} routes={routes()} />);
+    await expect.element(screen.getByText("Back on Wed", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("18:00 · saved schedule")).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "YOUR RECOVERY PLAN" })).toBeVisible();
+    await expect.element(screen.getByText("Easy training or rest")).toBeVisible();
+    expect(screen.getByRole("button", { name: "OPEN PREP" }).elements()).toHaveLength(0);
+    await expect.element(screen.getByText("Nothing is recorded as due today.")).toBeVisible();
+  });
+
+  it("C1.2: a hard day names the mood drop as a fact and offers one action", async () => {
+    await page.viewport(360, 900);
+    vi.mocked(getOrientation).mockResolvedValue(deriveOrientation(STATES["hard-day-trend"]!));
+    const screen = await render(<Orientation active busy={false} refreshKey={0} routes={routes()} />);
+    await expect.element(screen.getByText("Mood has dropped across your last three check-ins (4 → 3 → 2).")).toBeVisible();
+    await expect.element(screen.getByText("1 OF 1")).toBeVisible();
+    expect(document.querySelectorAll(".orientation__row--action")).toHaveLength(1);
   });
 
   it("a failed read says so and offers RETRY; the rest still works", async () => {
@@ -151,5 +189,31 @@ describe("Orientation through TODAY with real records", () => {
     await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
     await screen.getByRole("button", { name: "ENTER TODAY" }).click();
     await expect.element(screen.getByRole("button", { name: "ORIENTATION" })).toBeVisible();
+  });
+});
+
+describe("C1.2 · Orientation on a recovery day through TODAY", () => {
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(at(15, 16, 31));
+    const { id: _id, createdAt: _c, updatedAt: _u, ...schedule } = DEFAULT_SCHEDULE_PATTERN;
+    await updateSchedulePattern(schedule);
+    await startDay(at(15, 16, 30).toISOString()); // Sunday: night 3 of 3
+    vi.setSystemTime(at(16, 13, 50));
+    await logSleep((await getActiveDay())!.id, 350, "PRIMARY");
+    vi.setSystemTime(at(16, 14, 10));
+  });
+  afterEach(async () => { await cleanup(); vi.useRealTimers(); });
+
+  it("START DAY on the Monday after the run opens the recovery Orientation, with no shift countdown or work prep", async () => {
+    await page.viewport(360, 900);
+    const screen = await render(<TodayScreen onOpenLife={() => {}} />);
+    await screen.getByRole("region", { name: "Start your day" }).getByRole("button", { name: "START DAY" }).click();
+    await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
+    await expect.element(screen.getByText("Back on Wed", { exact: true })).toBeVisible();
+    expect(document.querySelector("[data-orientation-purpose='RECOVERY']")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "OPEN PREP" }).elements()).toHaveLength(0);
+    await screen.getByRole("button", { name: "ENTER TODAY" }).click();
+    await expect.element(screen.getByText("BEYOND // TODAY")).toBeVisible();
   });
 });

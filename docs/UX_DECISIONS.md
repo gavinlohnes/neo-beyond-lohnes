@@ -12,6 +12,15 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C1.2 — Orientation follows what the day is for (owner go 2026-11-20)
+
+Gavin approved slice 2 with both recommendations' boundaries: only the Engine's recommendation ever appears (no
+invented day-off advice), and Delta may name a sustained mood drop ("Include the trend"). [Brief](agent/GRAYSON-C1.2-001.md).
+START DAY opens Orientation on any day. Recovery, free and last-day-off compositions show when he's back, no
+shift countdown and no work preparation; open time is named as open. A hard day (Minimum Day, or the Engine's
+STABILIZE after check-in) shows one action at most. A strict mood drop across his last three submitted
+check-ins is shown as a fact, never a diagnosis, and never feeds the Engine or any score.
+
 ## GRAYSON-C1.1 — Orientation opens the work day (owner go 2026-11-20)
 
 Gavin approved Orientation slice 1 after its proposal page: "I'd rather hit a button to start my day ... Approved."
