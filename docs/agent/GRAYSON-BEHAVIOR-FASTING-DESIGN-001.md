@@ -6,7 +6,8 @@
 - **Lane:** PROTECTED documentation/design. The work defines proposed health behavior, safety, future event and
   recommendation boundaries. It authorizes no runtime implementation.
 - **Starting commit:** `e7482a459d9b596007577c35768401129fe1c976` (master after PR #600).
-- **Builder:** Codex. **Branch:** `codex/grayson-behavior-fasting-design`. **Active PR:** pending.
+- **Builder:** Codex. **Branch:** `codex/grayson-behavior-fasting-design`.
+  **Active PR:** [#601](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/601).
 - **Operator benefit:** make alcohol reduction and time-restricted eating easy to record and useful to evaluate
   against Gavin's real shifts, protein, training, sleep and mood—without guilt, duration contests or invented
   physiology.

@@ -4,7 +4,7 @@
   lifestyle-logging and nutrition references and asked for alcohol-stop support plus a highly customizable fasting
   programme. [Brief](GRAYSON-BEHAVIOR-FASTING-DESIGN-001.md). Starting master
   `e7482a459d9b596007577c35768401129fe1c976`; Builder Codex; branch
-  `codex/grayson-behavior-fasting-design`; PR pending.
+  `codex/grayson-behavior-fasting-design`; [PR #601](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/601).
 - **Scope:** repository-first design of Daily Signals, alcohol integration with the existing Quit system and a
   shift-aware Eating Window programme; evidence/uncertainty, safety, phone flows, data provenance, acceptance
   scenarios and bounded future slices. Canonical design: [`GRAYSON_BEHAVIOR_FASTING_DESIGN.md`](../GRAYSON_BEHAVIOR_FASTING_DESIGN.md).
