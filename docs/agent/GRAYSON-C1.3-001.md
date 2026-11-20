@@ -33,3 +33,5 @@
 - **Acceptance:** pure tests for every "next" case and the note block; browser tests at 320/360/412 px (shown only
   after SHIFT DOWN, SHIFT DOWN no longer offered again, no red, axe, SAVE writes the exact block, SKIP writes nothing,
   an existing note is kept, chosen questions persist); full suite; a timed phone run under 60 s by Gavin.
+- **Review follow-up (independent PASS on `4e0842f`, non-blocking findings):** the close note's label and the "next"
+  line now anchor to the day's own lived start, so a day started after midnight or held open past 16:30 reads right.

@@ -57,7 +57,7 @@ export interface OrientationInput {
   prep: Read<PreparationState | null>;
   obligations: Read<readonly Pick<Obligation, "id" | "title" | "dueAt" | "plannedAt" | "remindAt" | "status">[]>;
   /** C1.2: Minimum Day switched on for this day (his own switch). */
-  minimumDay?: boolean | undefined;
+  minimumDay?: Read<boolean> | undefined;
   /** C1.2: recovery-contract items he planned for this lived day, by title. */
   recoveryPlan?: Read<readonly string[]> | undefined;
   /** C1.2: the latest submitted mood per lived day, oldest first, recent days only. */
@@ -153,7 +153,7 @@ const ENGINE_READ: Partial<Record<RecommendationKind, string>> = {
   POST_SHIFT_TRANSITION: "Last shift isn't shifted down from yet. That comes before anything new.",
   OBLIGATION_DUE: "Something you committed to is due. The advice puts it first.",
 };
-const SUSTAINED = " This has gone on for a few days, so it's worth deliberate attention, not just one bad morning.";
+const SUSTAINED = " This has gone on for a few days, so it's worth deliberate attention, not just one bad day.";
 const kindWords = (kind: "WORK" | "OFF") => (kind === "WORK" ? "a work day" : "a day off");
 
 /** C1.2: mood strictly lower on each of the last three submitted check-ins (one per lived day). Pure. */
@@ -179,7 +179,10 @@ export function deltaLine(input: {
   const work = purpose === "WORK";
   const night = run && run.length > 1 ? ` going into night ${run.position} of ${run.length}` : "";
   const sustained = input.trend ? SUSTAINED : "";
-  const short = sleep.state === "KNOWN" && sleep.under && sleep.band ? ` Last night was under your usual for ${kindWords(sleep.band.kind)}.` : "";
+  // Review of #598: on a recovery day the sleep followed the last shift, so say that rather than "a work day".
+  const short = sleep.state === "KNOWN" && sleep.under && sleep.band
+    ? purpose === "RECOVERY" && sleep.band.kind === "WORK" ? " Your sleep after the last shift was under your usual." : ` Last night was under your usual for ${kindWords(sleep.band.kind)}.`
+    : "";
   if (input.minimumDay) return `Minimum Day is on. Today is about the basics; nothing else is asked of you.${sustained}`;
   if (checkIn.state === "DONE" && rec?.source === "ENGINE") {
     if (rec.kind === "EXECUTE_PLANNED_WORK") {
@@ -276,7 +279,9 @@ export function deriveOrientation(input: OrientationInput): Orientation {
   if (input.recentMoods === "ERROR") unread.push("check-in history");
   const drop = moods ? moodTrend(moods) : null;
   const trend = drop ? `Mood has dropped across your last three check-ins (${drop.join(" → ")}).` : null;
-  const minimumDay = !!input.minimumDay;
+  // Review of #598: an unreadable Minimum Day is reported like every other source, never silently "off".
+  const minimumDay = input.minimumDay === true;
+  if (input.minimumDay === "ERROR") unread.push("Minimum Day");
   const hard = minimumDay || (checkIn.state === "DONE" && recommendation?.source === "ENGINE" && recommendation.kind === "STABILIZE");
   const shortNights = input.draft !== "ERROR" && input.draft?.kind === "RECOVER" ? input.draft.nights.length
     : input.recommendation !== "ERROR" && input.recommendation?.kind === "EXECUTE_PLANNED_WORK" && /two main sleeps/.test(input.recommendation.rationale) ? 2 : 0;
@@ -359,7 +364,7 @@ export async function getOrientation(now: Date = new Date()): Promise<Orientatio
     settle(getPreparation(day.id)), settle(getCurrentlyEligibleUnresolvedObligations()),
   ]);
   const [minimum, recoveryPlan, recentMoods] = await Promise.all([
-    getMinimumDayStatus(day.id).then((m) => m.enabled, () => false),
+    settle(getMinimumDayStatus(day.id).then((m) => m.enabled)),
     settle(plannedRecovery(at)),
     settle(latestMoods(at)),
   ]);
