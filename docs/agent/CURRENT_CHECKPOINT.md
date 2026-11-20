@@ -1,4 +1,21 @@
-# Current objective — GRAYSON-RESEARCH-SYNTHESIS-001 (2026-11-19)
+# Current objective — GRAYSON-Q1 / C3.4 dog care and CO detector presets (2026-11-20)
+
+- **Owner authorization:** Gavin, 2026-11-20: start the Grayson campaign plan's quick wins with
+  Claude Code ("start with the quick wins and stuff I will feel immediately"). Lane FEATURE (no
+  Protected boundary: no new data kind, schema, event, Engine or navigation change). Starting commit
+  `211ccf4`; Builder Claude Code; branch `claude/project-thread-s69muv`; PR to follow on that branch.
+- **Change:** Home's preset list (HOME-SCHEDULE-001) gains CO detectors (monthly), dog flea and tick
+  (monthly), dog heartworm (monthly), vet checkup (yearly) and dog food (every 4 weeks, editable).
+  Presets still only fill the form; SAVE writes the ordinary "Home: …" repeat through `addHomeItem`.
+  Summary reads "Common house and dog jobs"; the hint now names the real SAVE button (was "ADD").
+- **Exclusions:** no pet profiles, vet records, notifications, TODAY layout, counts or streaks.
+- **Verification:** typecheck and architecture check pass locally; browser test added in
+  `tests/browser/Home.test.tsx` runs in required CI (no Chromium in the Builder container).
+- **Next:** green CI and independent exact-head PASS, then merge under the owner merge delegation.
+
+---
+
+# Historical — GRAYSON-RESEARCH-SYNTHESIS-001 (merged as PR #591, `211ccf4`)
 
 - **Owner authorization:** report only; compare commercial/open-source donor patterns against current
   BEYOND repository truth and canonical scenarios under the Project Grayson baseline and Evolution

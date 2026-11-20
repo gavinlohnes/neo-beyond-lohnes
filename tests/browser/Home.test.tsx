@@ -39,11 +39,37 @@ it("HOME-SCHEDULE-001: a common house job fills the form and saves nothing until
   await page.viewport(360, 800);
   const screen = await render(<HomePanel active />);
   const before = await db.events.count();
-  await screen.getByText("Common house jobs", { exact: true }).click();
+  await screen.getByText("Common house and dog jobs", { exact: true }).click();
   await screen.getByRole("button", { name: "Furnace filter", exact: true }).click();
   await expect.element(screen.getByRole("textbox", { name: "What" })).toHaveValue("Furnace filter");
   await expect.element(screen.getByRole("spinbutton", { name: /Repeat every/ })).toHaveValue(3);
   expect(await db.events.count()).toBe(before);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+  expect((await axe.run(screen.container)).violations).toEqual([]);
+});
+
+it("GRAYSON-Q1: CO detector and dog presets fill the form, then SAVE makes an ordinary Home repeat", async () => {
+  const screen = await render(<HomePanel active />);
+  await screen.getByText("Common house and dog jobs", { exact: true }).click();
+  const presets: [string, number, string][] = [
+    ["CO detectors", 1, "months"], ["Dog flea and tick", 1, "months"], ["Dog heartworm", 1, "months"],
+    ["Vet checkup", 1, "years"], ["Dog food", 4, "weeks"],
+  ];
+  for (const [name, every, unit] of presets) {
+    await screen.getByRole("button", { name, exact: true }).click();
+    await expect.element(screen.getByRole("textbox", { name: "What" })).toHaveValue(name);
+    await expect.element(screen.getByRole("spinbutton", { name: /Repeat every/ })).toHaveValue(every);
+    await expect.element(screen.getByRole("combobox", { name: "Unit" })).toHaveDisplayValue(unit);
+  }
+  expect(await db.obligations.count()).toBe(0);
+  const next = new Date(); next.setDate(next.getDate() + 7);
+  const iso = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+  await screen.getByLabelText("Next due").fill(iso);
+  await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+  await expect.element(screen.getByText("Saved: Dog food, every 4 weeks", { exact: false })).toBeVisible();
+  const saved = await db.obligations.toArray();
+  expect(saved.map((o) => o.title)).toEqual(["Home: Dog food"]);
+  expect(saved[0]?.recurrence?.rrule).toContain("FREQ=WEEKLY;INTERVAL=4");
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
   expect((await axe.run(screen.container)).violations).toEqual([]);
 });
