@@ -7,7 +7,10 @@ import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { groupLivedDays } from "../engine/livedDaySeries";
 import { projectPersonalBaselines } from "../engine/personalBaselines";
 import { formatLocalDate, isOperatorSavedSchedule, livedDayShiftWindow } from "../engine/scheduledContext";
-import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getSchedulePattern, getWorkContextSource } from "./queries";
+import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getMinimumDayStatus, getSchedulePattern, getWorkContextSource } from "./queries";
+import { RECOVERY_CONTRACT } from "./recoveryContract";
+import { hasPlanItem, livedDayDates } from "./lifeTransition";
+import { db } from "../persistence/db";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getRecommendationDraft } from "./recommendationDraftQueries";
 import { getPreparation } from "./preparation";
@@ -53,7 +56,18 @@ export interface OrientationInput {
   draft: Read<Pick<RecommendationDraft, "kind" | "title" | "reason" | "nights"> | null>;
   prep: Read<PreparationState | null>;
   obligations: Read<readonly Pick<Obligation, "id" | "title" | "dueAt" | "plannedAt" | "remindAt" | "status">[]>;
+  /** C1.2: Minimum Day switched on for this day (his own switch). */
+  minimumDay?: boolean | undefined;
+  /** C1.2: recovery-contract items he planned for this lived day, by title. */
+  recoveryPlan?: Read<readonly string[]> | undefined;
+  /** C1.2: the latest submitted mood per lived day, oldest first, recent days only. */
+  recentMoods?: Read<readonly number[]> | undefined;
+  /** C1.2: on a day off, when the next shift starts. */
+  backOn?: Date | null | undefined;
 }
+
+/** C1.2: what the day is for, from the life state TODAY already names. */
+export type DayPurpose = "WORK" | "RECOVERY" | "OFF" | "FLIP" | "UNKNOWN";
 
 export type SleepLine =
   | { state: "KNOWN"; minutes: number; source: "GARMIN" | "LOGGED"; band: { low: number; high: number; kind: "WORK" | "OFF" } | null; under: boolean }
@@ -79,14 +93,23 @@ export type OrientationAction =
   | { kind: "COMMITMENT"; obligationId: string; line: string; detail: string };
 
 export interface Orientation {
-  /** WORK: the full work-day composition. UNKNOWN: ask first. OFF: C1.2's grammar; this slice doesn't open itself. */
+  /** The recorded work context: WORK, OFF, or UNKNOWN (ask first). */
   mode: "WORK" | "UNKNOWN" | "OFF";
+  /** C1.2: what the day is for; the composition follows it. */
+  purpose: DayPurpose;
+  /** C1.2: a hard day (Minimum Day, or the Engine's STABILIZE after his check-in): one action at most, gentler words. */
+  hard: boolean;
+  /** C1.2: a factual line when mood has dropped across his last three submitted check-ins. Never a diagnosis. */
+  trend: string | null;
+  /** C1.2: on the first day after a run, the recovery plan items he set. */
+  recoveryPlan: string[];
   date: string;
   stateLabel: string;
   situation:
     | { kind: "SHIFT"; time: string; sub: string; line: string; source: string }
     | { kind: "ASK"; line: string; predicted: "WORK" | "OFF" | null }
     | { kind: "PLAIN"; line: string; source: string }
+    | { kind: "OFF"; headline: string; sub: string; line: string; source: string }
     | { kind: "ERROR" };
   sleep: SleepLine;
   checkIn: CheckInLine;
@@ -129,47 +152,71 @@ const ENGINE_READ: Partial<Record<RecommendationKind, string>> = {
   RECOVER: "Your check-in points to recovery, so the advice is a lighter evening.",
   POST_SHIFT_TRANSITION: "Last shift isn't shifted down from yet. That comes before anything new.",
   OBLIGATION_DUE: "Something you committed to is due. The advice puts it first.",
-  NO_ACTION_REQUIRED: "Nothing in your records asks for more than the basics before the shift.",
 };
+const SUSTAINED = " This has gone on for a few days, so it's worth deliberate attention, not just one bad morning.";
+const kindWords = (kind: "WORK" | "OFF") => (kind === "WORK" ? "a work day" : "a day off");
+
+/** C1.2: mood strictly lower on each of the last three submitted check-ins (one per lived day). Pure. */
+export function moodTrend(moods: readonly number[]): readonly [number, number, number] | null {
+  if (moods.length < 3) return null;
+  const [a, b, c] = moods.slice(-3) as [number, number, number];
+  return a > b && b > c ? [a, b, c] : null;
+}
 
 /**
- * Delta's one or two sentences. Deterministic, from the facts on screen only; restates or explains the Engine's
+ * Delta's one to three sentences. Deterministic, from the facts on screen only; restates or explains the Engine's
  * advice and never adds its own. Certainty never exceeds the evidence: no band means no comparison, no sleep
- * record means no reading of rest, and nothing is inferred about mood or capacity without a check-in.
+ * record means no reading of rest, and nothing is inferred about mood or capacity without a check-in. C1.2: the
+ * day's purpose sets the framing, a hard day is gentler, and a sustained mood drop is named only on a hard day.
  */
 export function deltaLine(input: {
   sleep: SleepLine; checkIn: CheckInLine; recommendation: OrientationRecommendation | null; shortNights: number;
   run: { position: number; length: number } | null;
+  purpose?: DayPurpose | undefined; minimumDay?: boolean | undefined; trend?: boolean | undefined; dueCount?: number | undefined;
 }): string | null {
   const { sleep, checkIn, recommendation: rec, run } = input;
+  const purpose = input.purpose ?? "WORK";
+  const work = purpose === "WORK";
   const night = run && run.length > 1 ? ` going into night ${run.position} of ${run.length}` : "";
+  const sustained = input.trend ? SUSTAINED : "";
+  const short = sleep.state === "KNOWN" && sleep.under && sleep.band ? ` Last night was under your usual for ${kindWords(sleep.band.kind)}.` : "";
+  if (input.minimumDay) return `Minimum Day is on. Today is about the basics; nothing else is asked of you.${sustained}`;
   if (checkIn.state === "DONE" && rec?.source === "ENGINE") {
     if (rec.kind === "EXECUTE_PLANNED_WORK") {
       return input.shortNights >= 2
         ? "You feel up for it. The last two sleeps were short, so the session is scaled down rather than skipped."
         : "You feel up for it, and there's planned work. The advice is to do it.";
     }
+    if (rec.kind === "NO_ACTION_REQUIRED") {
+      // A fact, not advice: a short night stays visible even when the Engine asks for nothing more.
+      return `Nothing in your records asks for more than the basics ${work ? "before the shift" : "today"}.${short}`;
+    }
     const read = ENGINE_READ[rec.kind as RecommendationKind] ?? null;
-    // A fact, not advice: a short night stays visible even when the Engine asks for nothing more.
-    const short = sleep.state === "KNOWN" && sleep.under && sleep.band ? ` Last night was under your usual for ${sleep.band.kind === "WORK" ? "a work day" : "a day off"}.` : "";
-    return read ? read + short : null;
+    // Kept short: on a sustained drop, that sentence replaces the sleep fact (YOU still shows the sleep).
+    return read ? read + (rec.kind === "STABILIZE" && sustained ? sustained : short) : null;
   }
   const askCheckIn = checkIn.state === "NONE" ? " Your check-in sets today's advice." : "";
   if (sleep.state === "ERROR") return `I can't see last night's sleep, so I'm not reading anything into today.${askCheckIn}`;
-  if (sleep.state === "NONE") return `No main sleep is recorded since the shift, so I can't say how rested you are.${askCheckIn}`;
+  if (sleep.state === "NONE") {
+    return `No main sleep is recorded ${work || purpose === "RECOVERY" ? "since the shift" : "recently"}, so I can't say how rested you are.${askCheckIn}`;
+  }
   if (rec?.source === "DRAFT" && rec.kind === "RECOVER") {
-    return `Two short sleeps${night}. Your check-in sets today's advice; until you answer, the draft below is the cautious read.`;
+    return `Two short sleeps${work ? night : ""}. Your check-in sets today's advice; until you answer, the draft below is the cautious read.`;
   }
   if (rec?.source === "DRAFT" && rec.kind === "POST_SHIFT_TRANSITION") {
     return `Last shift isn't shifted down from yet, so that's the draft below.${askCheckIn}`;
   }
+  const due = input.dueCount ?? 0;
+  const open = due === 0 ? "Nothing is due today. The day is open." : due === 1 ? "One thing is due today; the rest of the day is open." : `${due} things are due today; the rest of the day is open.`;
+  if (purpose === "RECOVERY") return `The first day off after the run; sleep usually comes first.${short}${askCheckIn}`;
+  if (purpose === "OFF") return `${open}${short}${askCheckIn}`;
+  if (purpose === "FLIP") return `Your last day off before the run; you're back on shift tomorrow.${short}${askCheckIn}`;
   if (!sleep.band) return `Slept ${hm(sleep.minutes)}. BEYOND is still learning your usual, so there's no comparison yet.${askCheckIn}`;
-  const kind = sleep.band.kind === "WORK" ? "a work day" : "a day off";
-  if (sleep.under) return `Last night was under your usual for ${kind}.${askCheckIn}`;
-  return `Sleep is in your usual range for ${kind}.${askCheckIn}`;
+  if (sleep.under) return `Last night was under your usual for ${kindWords(sleep.band.kind)}.${askCheckIn}`;
+  return `Sleep is in your usual range for ${kindWords(sleep.band.kind)}.${askCheckIn}`;
 }
 
-/** Pure. The work-day Orientation from already-read records. Never writes, never ranks a second recommendation. */
+/** Pure. The day's Orientation from already-read records. Never writes, never ranks a second recommendation. */
 export function deriveOrientation(input: OrientationInput): Orientation {
   const { now, day } = input;
   const unread: string[] = [];
@@ -179,6 +226,10 @@ export function deriveOrientation(input: OrientationInput): Orientation {
   const dateAt = livedReadAt(day, now);
   const date = dateAt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
   const source = input.contextBySchedule ? "SAVED SCHEDULE" : "RECORDED BY YOU";
+  const life = picture?.now?.state;
+  const purpose: DayPurpose = mode === "UNKNOWN" ? "UNKNOWN"
+    : life === "WORK_RUN" ? "WORK" : life === "RECOVERY" ? "RECOVERY" : life === "FLIP" ? "FLIP" : life === "FREE" ? "OFF"
+    : mode === "WORK" ? "WORK" : "OFF";
 
   let situation: Orientation["situation"];
   if (input.picture === "ERROR") situation = { kind: "ERROR" };
@@ -196,7 +247,16 @@ export function deriveOrientation(input: OrientationInput): Orientation {
       sub: started ? `on shift · ends ${clock(input.shift.end)}` : `on shift · in ${span(input.shift.start.getTime() - now.getTime())}`,
       line: picture?.now?.line ?? "A work day.",
     };
-  } else situation = { kind: "PLAIN", line: picture?.now?.line ?? (mode === "WORK" ? "A work day with no scheduled shift time." : "A day off."), source };
+  } else if (mode === "OFF") {
+    const back = input.backOn ?? null;
+    const tomorrow = back && formatLocalDate(back) === formatLocalDate(new Date(dateAt.getFullYear(), dateAt.getMonth(), dateAt.getDate() + 1, 12));
+    situation = {
+      // The headline says when he's back, so the state line doesn't repeat it.
+      kind: "OFF", source, line: (picture?.now?.line ?? "A day off.").replace(/\s*Back on [^.]+\.$/, ""),
+      headline: back ? (tomorrow ? "Back on tomorrow" : `Back on ${back.toLocaleDateString("en-US", { weekday: "short" })}`) : "Day off",
+      sub: back ? `${clock(back)} · ${source.toLowerCase()}` : "no shift on your saved schedule ahead",
+    };
+  } else situation = { kind: "PLAIN", line: picture?.now?.line ?? "A work day with no scheduled shift time.", source };
 
   const sleep = sleepLine(input.sleep);
   if (sleep.state === "ERROR") unread.push("sleep");
@@ -206,10 +266,22 @@ export function deriveOrientation(input: OrientationInput): Orientation {
   const guidanceUnread = input.recommendation === "ERROR" || (input.recommendation === null && input.draft === "ERROR");
   if (guidanceUnread) unread.push("advice");
   const recommendation = recommendationOf(input);
+  const obligations = input.obligations === "ERROR" ? [] : input.obligations;
+  if (input.obligations === "ERROR") unread.push("commitments");
+  const today = formatLocalDate(now);
+  const due = obligations
+    .map((o) => ({ o, tier: classifyObligation(o as Obligation, today) }))
+    .filter(({ tier }) => tier === "OVERDUE" || tier === "DUE_TODAY");
+  const moods = input.recentMoods === undefined || input.recentMoods === "ERROR" ? null : input.recentMoods;
+  if (input.recentMoods === "ERROR") unread.push("check-in history");
+  const drop = moods ? moodTrend(moods) : null;
+  const trend = drop ? `Mood has dropped across your last three check-ins (${drop.join(" → ")}).` : null;
+  const minimumDay = !!input.minimumDay;
+  const hard = minimumDay || (checkIn.state === "DONE" && recommendation?.source === "ENGINE" && recommendation.kind === "STABILIZE");
   const shortNights = input.draft !== "ERROR" && input.draft?.kind === "RECOVER" ? input.draft.nights.length
     : input.recommendation !== "ERROR" && input.recommendation?.kind === "EXECUTE_PLANNED_WORK" && /two main sleeps/.test(input.recommendation.rationale) ? 2 : 0;
   const delta = mode === "UNKNOWN" && sleep.state === "NONE" && checkIn.state !== "DONE" ? null
-    : deltaLine({ sleep, checkIn, recommendation, shortNights, run: mode === "WORK" ? input.run : null });
+    : deltaLine({ sleep, checkIn, recommendation, shortNights, run: mode === "WORK" ? input.run : null, purpose, minimumDay, trend: !!trend && hard, dueCount: due.length });
 
   // The runway: only times BEYOND already has, from now to the shift, then the night's caffeine cut-off.
   const runway: RunwayRow[] = [{ kind: "NOW", at: now.toISOString(), time: clock(now), label: "Now", detail: "" }];
@@ -223,12 +295,6 @@ export function deriveOrientation(input: OrientationInput): Orientation {
       runway.push({ kind: "NAP", at: from.toISOString(), time: clock(from), label: "Nap window", detail: `until ${clock(new Date(nap.end))} · from your usual wake time` });
     }
   }
-  const obligations = input.obligations === "ERROR" ? [] : input.obligations;
-  if (input.obligations === "ERROR") unread.push("commitments");
-  const today = formatLocalDate(now);
-  const due = obligations
-    .map((o) => ({ o, tier: classifyObligation(o as Obligation, today) }))
-    .filter(({ tier }) => tier === "OVERDUE" || tier === "DUE_TODAY");
   const timed = new Set<string>();
   for (const { o, tier } of due) {
     if (tier !== "DUE_TODAY" || !o.remindAt || !o.dueAt) continue;
@@ -247,7 +313,9 @@ export function deriveOrientation(input: OrientationInput): Orientation {
   }
   runway.sort((a, b) => (a.kind === "NOW" ? -1 : b.kind === "NOW" ? 1 : Date.parse(a.at) - Date.parse(b.at)));
 
-  // At most two actions, in the design's presentation order: preparation, then a due commitment.
+  // At most two actions (one on a hard day), in the design's presentation order: preparation, then a due commitment.
+  // C1.2: work preparation belongs to work days only.
+  const limit = hard ? 1 : MAX_ACTIONS;
   const actions: OrientationAction[] = [];
   const prep = input.prep === "ERROR" ? null : input.prep;
   if (input.prep === "ERROR") unread.push("preparation");
@@ -258,20 +326,22 @@ export function deriveOrientation(input: OrientationInput): Orientation {
     }
   }
   for (const { o, tier } of due) {
-    if (actions.length >= MAX_ACTIONS) break;
+    if (actions.length >= limit) break;
     if (timed.has(o.id)) continue;
     actions.push({ kind: "COMMITMENT", obligationId: o.id, line: o.title, detail: tier === "OVERDUE" ? "Overdue." : "Due today." });
   }
 
   const before = horizon ? ` before ${clock(horizon)}` : " today";
+  const recoveryPlan = purpose === "RECOVERY" && input.recoveryPlan && input.recoveryPlan !== "ERROR" ? [...input.recoveryPlan] : [];
+  if (input.recoveryPlan === "ERROR") unread.push("recovery plan");
   const release = unread.length > 0
     ? `Some records couldn't be read (${unread.join(", ")}). Your records are unchanged.`
-    : recommendation || actions.length > 0 || runway.length > 1
-      ? `No other recorded item is due${before}.`
+    : recommendation || actions.length > 0 || runway.length > 1 || purpose === "OFF" || purpose === "RECOVERY" || purpose === "FLIP"
+      ? actions.length === 0 && runway.length <= 1 && !horizon ? "Nothing is recorded as due today." : `No other recorded item is due${before}.`
       : "Not enough is recorded yet for a recommendation. Nothing here is assumed.";
 
-  return { mode, date, stateLabel: picture?.now?.label ?? (mode === "UNKNOWN" ? "NOT CONFIRMED" : mode === "WORK" ? "WORK" : "DAY OFF"),
-    situation, sleep, checkIn, delta, recommendation, guidanceUnread, runway, actions: actions.slice(0, MAX_ACTIONS), unread, release };
+  return { mode, purpose, hard, trend, recoveryPlan, date, stateLabel: picture?.now?.label ?? (mode === "UNKNOWN" ? "NOT CONFIRMED" : mode === "WORK" ? "WORK" : "DAY OFF"),
+    situation, sleep, checkIn, delta, recommendation, guidanceUnread, runway, actions: actions.slice(0, limit), unread, release };
 }
 
 const settle = async <T>(p: Promise<T>): Promise<Read<T>> => p.catch(() => "ERROR" as const);
@@ -288,6 +358,11 @@ export async function getOrientation(now: Date = new Date()): Promise<Orientatio
     settle(getLatestRecommendation(day.id).then((r) => r ?? null)), settle(getRecommendationDraft(day.id, now)),
     settle(getPreparation(day.id)), settle(getCurrentlyEligibleUnresolvedObligations()),
   ]);
+  const [minimum, recoveryPlan, recentMoods] = await Promise.all([
+    getMinimumDayStatus(day.id).then((m) => m.enabled, () => false),
+    settle(plannedRecovery(at)),
+    settle(latestMoods(at)),
+  ]);
   let sleep: OrientationInput["sleep"] = last === "ERROR" ? "ERROR" : null;
   if (last !== "ERROR" && last) {
     let band: { low: number; high: number; kind: "WORK" | "OFF" } | null = null;
@@ -301,9 +376,32 @@ export async function getOrientation(now: Date = new Date()): Promise<Orientatio
   }
   const run = shiftRun(at, pattern);
   const shift = livedDayShiftWindow(new Date(day.startedAt), pattern);
+  const backOn = run && run.kind === "OFF" ? livedDayShiftWindow(run.next, pattern)?.start ?? null : null;
   return deriveOrientation({
     now, day, contextBySchedule: source === "SCHEDULE_STANDING", scheduled: isOperatorSavedSchedule(pattern) ? (shift ? "WORK" : "OFF") : null,
     picture, shift, run: run && run.kind === "WORK" ? { position: run.position, length: run.length } : null,
     plan, sleep, checkIn, recommendation, draft, prep, obligations,
+    minimumDay: minimum, recoveryPlan, recentMoods, backOn,
   });
+}
+
+/** C1.2: the recovery-contract items he planned for this lived day (LIFE-STATE-003), by title. */
+async function plannedRecovery(at: Date): Promise<string[]> {
+  const dates = livedDayDates(at);
+  const planned: string[] = [];
+  for (const item of RECOVERY_CONTRACT) if (await hasPlanItem(item.title, dates)) planned.push(item.title);
+  return planned;
+}
+
+/** C1.2: the latest submitted mood for each of the recent lived days (7), oldest first. Read only. */
+async function latestMoods(at: Date): Promise<number[]> {
+  const since = new Date(mostRecentBoundaryAtOrBefore(at).getTime() - 7 * 24 * 3_600_000).toISOString();
+  const rows = (await db.checkIns.toArray()).filter((c) => c.recordedAt >= since);
+  const byDay = new Map<string, { at: string; mood: number }>();
+  for (const c of rows) {
+    const key = c.beyondDayId;
+    const prev = byDay.get(key);
+    if (!prev || c.recordedAt > prev.at) byDay.set(key, { at: c.recordedAt, mood: c.mood });
+  }
+  return [...byDay.values()].sort((a, b) => a.at.localeCompare(b.at)).map((v) => v.mood);
 }

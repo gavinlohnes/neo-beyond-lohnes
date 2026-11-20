@@ -44,3 +44,8 @@
 .orientation__capture { justify-self: center; min-height: 44px; padding: 0 12px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8);
   font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
 .orientation button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
+
+/* C1.2: the recovery plan he set, and the factual mood-trend line. */
+.orientation__plan { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.orientation__trend { padding-left: 10px; border-left: 2px solid var(--p-amber, #c8901e); }
+.orientation__sub { margin: -2px 0 2px; font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .08em; color: var(--p-t2, #a8a8a8); }

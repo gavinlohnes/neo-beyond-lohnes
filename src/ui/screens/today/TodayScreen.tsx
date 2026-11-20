@@ -1107,9 +1107,9 @@ export function TodayScreen({
       // getActiveDay() read, so the separate setDay() call above is gone.
       await refresh();
       setJustStartedDay(true);
-      // GRAYSON C1.1: a deliberate START DAY on a work day (or an unconfirmed one) opens Orientation; a day off keeps
-      // today's TODAY until C1.2. Never over an operation already in progress.
-      if (started.workContext !== "OFF" && !operationsOnly) setOrientationOpen(true);
+      // GRAYSON C1.1/C1.2: a deliberate START DAY opens Orientation on any kind of day (work, recovery, day off,
+      // unconfirmed). Never over an operation already in progress.
+      if (!operationsOnly && started) setOrientationOpen(true);
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -2708,7 +2708,7 @@ export function TodayScreen({
       {checkInOwnedHere && !recommendationDraftPresent && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
       {/* GRAYSON C1.1: Orientation stays one quiet tap away (FIELD-AUTHORITY-001: no red, nothing above the day). A day
           started by the roll or a log reads ORIENT TODAY until it's been seen on this device. */}
-      {dayRead && day && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setOrientationOpen(true); }}>{orientationSeenTick >= 0 && !orientationSeen(day.id) && day.workContext === "WORK" ? "ORIENT TODAY" : "ORIENTATION"}</button></div>}
+      {dayRead && day && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setOrientationOpen(true); }}>{orientationSeenTick >= 0 && !orientationSeen(day.id) ? "ORIENT TODAY" : "ORIENTATION"}</button></div>}
     </section>
   </>;
 

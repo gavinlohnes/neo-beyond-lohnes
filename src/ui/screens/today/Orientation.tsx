@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crosshair, ListChecks, MessageSquareText, Moon, Route, Target } from "lucide-react";
+import { BedDouble, Crosshair, ListChecks, MessageSquareText, Moon, Route, Target } from "lucide-react";
 import { getOrientation, hm, type Orientation as OrientationModel } from "../../../application/orientation";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { Panel, SourceTag } from "../../foundation/primitives";
@@ -60,7 +60,7 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
   const o = model;
   const until = o.runway.find((r) => r.kind === "SHIFT")?.time;
   return (
-    <div className="screen command-console today-field orientation bf" data-orientation-mode={o.mode}>
+    <div className="screen command-console today-field orientation bf" data-orientation-mode={o.mode} data-orientation-purpose={o.purpose} data-orientation-hard={o.hard ? "true" : undefined}>
       <OperatorHeader destination="mission">BEYOND // ORIENT</OperatorHeader>
       <header className="bf-bar orientation__bar">
         <div className="bf-bar__id">
@@ -85,6 +85,10 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
             {o.situation.kind === "SHIFT" ? <>
               <p className="bf-value bf-value--xl">{o.situation.time}<small> {o.situation.sub}</small></p>
               <p className="bf-meta">{o.situation.line}</p>
+            </> : o.situation.kind === "OFF" ? <>
+              <p className="bf-value">{o.situation.headline}</p>
+              <p className="orientation__sub">{o.situation.sub}</p>
+              <p className="bf-meta">{o.situation.line}</p>
             </> : o.situation.kind === "PLAIN" ? <p className="bf-meta">{o.situation.line}</p>
               : <p className="bf-meta" role="alert">Today's state couldn't be read. Your records are unchanged.</p>}
           </Panel>
@@ -102,6 +106,7 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
             {o.sleep.state === "ERROR" ? <button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY</button>
               : routes.onSleep && <button type="button" className="btn-secondary" onClick={routes.onSleep}>LOG SLEEP</button>}
           </div>}
+          {o.trend && <p className="bf-meta orientation__trend">{o.trend}</p>}
           <div className="orientation__row orientation__row--rule">
             <span className="orientation__key">CHECK-IN</span>
             {o.checkIn.state === "DONE" ? <span className="orientation__value">Energy {o.checkIn.energy} · Stress {o.checkIn.stress} · Mood {o.checkIn.mood}</span>
@@ -125,6 +130,12 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
           </Panel>
         ) : o.guidanceUnread ? <p className="bf-meta" role="alert">Today's advice couldn't be read. Your records are unchanged.</p> : null}
 
+        {o.recoveryPlan.length > 0 && (
+          <Panel headingLevel={2} headingId="orient-recovery" icon={<BedDouble size={18} />} label="YOUR RECOVERY PLAN" wide source={<SourceTag>YOU SET IT</SourceTag>}>
+            <ul className="orientation__plan">{o.recoveryPlan.map((item) => <li key={item}>{item}</li>)}</ul>
+          </Panel>
+        )}
+
         {o.runway.length > 1 && (
           <Panel headingLevel={2} headingId="orient-runway" icon={<Route size={18} />} label={until ? `UNTIL ${until}` : "TODAY"} wide>
             <ol className="orientation__runway">
@@ -139,7 +150,7 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
         )}
 
         {o.actions.length > 0 && (
-          <Panel headingLevel={2} headingId="orient-actions" icon={<ListChecks size={18} />} label={until ? `BEFORE ${until}` : "WORTH DOING"} wide source={<SourceTag>{o.actions.length} OF 2</SourceTag>}>
+          <Panel headingLevel={2} headingId="orient-actions" icon={<ListChecks size={18} />} label={until ? `BEFORE ${until}` : "DUE TODAY"} wide source={<SourceTag>{o.actions.length} OF {o.hard ? 1 : 2}</SourceTag>}>
             {o.actions.map((a) => (
               <div key={a.kind === "COMMITMENT" ? a.obligationId : a.kind} className="orientation__row orientation__row--action">
                 <p className="orientation__act">{a.line}<small>{a.detail}</small></p>
