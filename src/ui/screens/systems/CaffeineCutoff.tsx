@@ -89,7 +89,7 @@ export function CaffeineCutoff({ now, mode, onChanged }: { now?: Date | undefine
             </div>
           </div>}
     </>}
-    {suggestion && editing === null && !outcome && <div data-cutoff-suggestion role="group" aria-label="DELTA's suggestion" className={mode === "delta" ? "equipment-row" : undefined} style={{ marginTop: 8, ...(mode === "delta" ? { padding: "10px 12px" } : {}) }}>
+    {suggestion && editing === null && (!outcome || outcome.kind === "UNDONE") && <div data-cutoff-suggestion role="group" aria-label="DELTA's suggestion" className={mode === "delta" ? "equipment-row" : undefined} style={{ marginTop: 8, ...(mode === "delta" ? { padding: "10px 12px" } : {}) }}>
       <p className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>DELTA SUGGESTS · caffeine cut-off {suggestion.hours} h before sleep (now {suggestion.currentHours} h)</p>
       <p className="meta" style={{ margin: "2px 0 0" }}>{describeSuggestion(suggestion)}</p>
       <p className="meta" style={{ margin: "2px 0 0" }}>{describeConfidence(suggestion)}</p>
