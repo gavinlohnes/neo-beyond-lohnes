@@ -627,6 +627,9 @@ competing campaign or change C4 priorities by itself.
   is required before a custom plan can become TRAIN’s recommendation.
 - Performance standards are four provenance-labeled tracks, not a new readiness score or a shortcut
   from machine/Smith pressing to a free-weight bench pass.
+- The run track uses NHS Couch to 5K as a shift-aware endurance foundation, then transitions to a
+  separate 1.5-mile-specific phase. The generic nine-week calendar and three-run load are adjustable
+  around the concurrent three-session strength plan; no missed-run catch-up or universal 10% rule.
 
 Also considered: free-exercise-db (Unlicense, verified; [repo](https://github.com/yuhonas/free-exercise-db),
 `dist/exercises.json` + images) REUSE THE CODE (data) to enrich the 60-entry exercise library and a

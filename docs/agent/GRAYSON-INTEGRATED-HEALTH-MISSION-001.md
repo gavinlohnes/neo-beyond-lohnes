@@ -19,7 +19,8 @@ He should not need to design a training system or interpret disconnected metrics
 - Design phased weight loss with a required review at 170 rather than an assumed push toward 150.
 - Define a default three-session full-body Planet Fitness plan with bounded emphasis areas, progression,
   recovery, equipment uncertainty and bodyweight home/minimum fallbacks.
-- Integrate the owner-supplied physical standards with protocol/provenance distinctions.
+- Integrate the owner-supplied physical standards with protocol/provenance distinctions, using Couch
+  to 5K as the running foundation followed by a separate 1.5-mile-specific phase.
 - Define guided setup, Delta language, phone journeys, evidence floors and outcome-review rules.
 - Research current primary health/training evidence plus commercial and legally reusable OSS donors.
 - Reconcile the Guided Operating Loop, Eating Window, campaign plan, capability map and concurrent
@@ -51,6 +52,8 @@ raw backup data and personal symptom history stay outside source control.
 - Weight, food, sleep, performance and treatment context remain evidence-bounded and clinician-led.
 - The physical-standard chart’s current/future age categories and test-specific limitations are
   accurately represented without committing the external artifact.
+- Running guidance preserves the NHS Couch to 5K structure without forcing its calendar, coordinates
+  with strength/shift recovery and does not encode an unsupported universal injury threshold.
 - Donor patterns, licenses, rejection/defer rulings and sources are explicit.
 - Campaign/capability/checkpoint reconciliation changes only where warranted.
 - Markdown links, diff hygiene, expected Protected classification, docs-only CI and independent

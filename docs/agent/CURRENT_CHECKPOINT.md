@@ -18,7 +18,9 @@
 - **Design direction:** a sequence of three balanced full-body sessions with bounded emphasis;
   Planet Fitness equipment confirmed rather than assumed; bodyweight home/minimum variants that do
   not fabricate loaded-pull or weighted-progression evidence; phased weight review with 170 as a
-  required decision point; four provenance-labeled performance tracks.
+  required decision point; four provenance-labeled performance tracks. Gavin delegated the running
+  choice: use NHS Couch to 5K as a shift-aware foundation, initially two required plus one optional
+  opportunity alongside strength, then transition to 1.5-mile-specific work.
 - **Evidence boundary:** machine/Smith pressing is not a free-weight 1RM pass; practice/estimate is
   not observed testing; missing food is not low intake; one result is not a trend; treatment remains
   clinician-led. Raw backup, medication/dose and symptom history stay out of Git.
@@ -29,10 +31,13 @@
   authorized and does not silently displace Guided Start priority. Current programme assignments are
   information only; later activation/template-selection authority is an explicit separate Protected
   step, not implied by the preview or template creation.
+- **Review history:** exact-head review passed at `4b231e00275380f0df37d1df9d668d6fb482057c`
+  after two documentation repairs, but the later owner-delegated running refinement supersedes that
+  head. Renewed exact-head CI/review are required.
 - **Verification:** PDF chart visually inspected; repository/code/decision audit and primary/first-
-  party research complete. Markdown/diff/risk checks, required CI and independent review remain.
-- **Next:** finish documentation checks, open a PR, obtain green required CI and independent
-  exact-head review, then return to Gavin. Do not implement the recommended slice.
+  party research complete. Re-run Markdown/diff/risk checks, required CI and independent review.
+- **Next:** finish documentation checks, push the PR refinement, obtain green required CI and renewed
+  independent exact-head review, then return to Gavin. Do not implement the recommended slice.
 
 ---
 

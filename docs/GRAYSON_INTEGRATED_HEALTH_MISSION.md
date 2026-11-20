@@ -309,6 +309,42 @@ target reference**. It must not quietly use the easier category early.
    speed. Strength and aerobic training can coexist; the system avoids stacking the hardest run and
    hardest lower-body session when schedule allows.
 
+### Running programme: Couch to 5K, then 1.5-mile specificity
+
+GRAYSON adopts the NHS Couch to 5K pattern as the endurance foundation rather than inventing a novel
+beginner-running progression. Its useful primitives are time-based walk/run intervals, gradual
+increases, three opportunities per week, recovery between runs and explicit permission to repeat a
+week. The programme is a donor structure, not a claim that nine calendar weeks is correct for every
+operator.
+
+The owner’s plan has two phases:
+
+1. **Foundation - Couch to 5K.** Build from short run/walk intervals toward approximately 30 minutes
+   of comfortable continuous running. During the first strength/weight-loss block, two runs are the
+   required default and the third is an optional opportunity until recorded recovery shows that three
+   strength sessions plus three runs are sustainable. The plan may therefore take longer than the
+   generic nine-week calendar.
+2. **Specificity - 1.5-mile standard.** After continuous running is established, transition to one
+   comfortable continuous run, one controlled pace/interval session and one easy run/walk or aerobic
+   recovery opportunity. Occasional comparable 1.5-mile tests measure progress toward the applicable
+   standard; they do not replace ordinary training.
+
+The sequence is shift-aware rather than Monday/Wednesday/Friday. Delta places sessions around actual
+sleep, work and strength plans, pairing sessions on one day when that creates better recovery than six
+separate training days. When same-day work is appropriate, strength normally precedes the run unless
+the current phase explicitly prioritizes the running test. The hardest run and hardest lower-body
+session are separated when practical.
+
+Advancement is never a streak or calendar entitlement. A future implementation advances after the
+prescribed intervals are completed without a material symptom/recovery concern and Gavin agrees. It
+may repeat, reduce or pause. Missed sessions do not create catch-up volume.
+
+No universal “10% rule” is encoded. Evidence connecting specific weekly distance, duration,
+frequency, intensity or change thresholds to injury is inconsistent. GRAYSON uses the conservative
+published progression as a starting structure, observes the operator’s response and escalates pain or
+concerning symptoms to appropriate professional assessment rather than diagnosing or optimizing
+through them.
+
 ### Evidence labels
 
 - **OBSERVED TEST:** completed using the named protocol, equipment, date and result.
@@ -499,6 +535,7 @@ change it.
 | **Planet Fitness** | Club equipment categories, machine QR instruction, trainer support and no-equipment workouts | **INTEGRATE AS A USER-CONFIRMED PRESET.** Club inventory varies; link/encourage official instruction rather than copying proprietary media. |
 | **GainPath** (MIT) | Equipment increments, owner-applied progression, re-entry/deload, local-first repair | **COPY IDEAS / CONSIDER SMALL PRIMITIVES.** BEYOND already owns most of this; do not replace TRAIN. |
 | **Workout Planner** (MIT) | Direct/secondary muscle accounting, plan preview, offline/mobile cycle calibration | **COPY IDEAS ONLY.** Its volume tiers are not imported as scientific truth. |
+| **NHS Couch to 5K** | Time-based run/walk progression, recovery between sessions and repeatable weeks | **ADAPT AS FOUNDATION.** Make it shift-aware, initially compatible with three strength sessions, then hand off to 1.5-mile-specific work. |
 | **wger** | Connected routines/exercises/nutrition/weight and flexible progression | **REJECT CODE INTEGRATION.** AGPL application code; separately licensed content requires item-level diligence. |
 | **free-exercise-db** | Public-domain exercise schema with muscles/equipment/instructions | **DEFER BULK REUSE.** Existing owner ruling prohibits bulk import; hand-authored library remains until separately amended. |
 
@@ -549,8 +586,9 @@ Every implementation requires separate approval.
 5. **Home/minimum execution - Protected, M.** First-class bodyweight alternatives whose records remain
    honest and do not contaminate weighted-lift progression.
 6. **Performance Standards - Protected, L.** Protocol/versioned benchmark definitions, observed/
-   practice/estimate evidence and four-track planning. Actual 1RM safety/protocol needs explicit owner
-   and clinical/professional review where warranted.
+   practice/estimate evidence and four-track planning. The run track uses Couch to 5K as its
+   foundation, then a distinct 1.5-mile-specific phase. Actual 1RM safety/protocol needs explicit
+   owner and clinical/professional review where warranted.
 7. **Health Mission phase and cross-domain review - Protected, L.** Weight phase, record coverage,
    training, food, sleep and standards; one explicit proposed adjustment. Reconcile C4.5 and Mission
    semantics rather than introducing a second review system.
@@ -586,6 +624,9 @@ Operating Loop’s broader Guided Start priority; Gavin decides their order.
 - **Weight trend down, performance declining:** inspect fueling, recovery, symptoms and comparability;
   propose one reviewable change or clinician discussion, not a causal verdict.
 - **Benchmark:** Smith press is labeled estimate/practice and never satisfies free-weight bench.
+- **Running foundation:** a missed or difficult Couch to 5K session repeats/reduces the step without
+  catch-up volume; completing the base transitions to 1.5-mile-specific work rather than pretending
+  that 30 continuous minutes proves the time standard.
 - **Missed week:** resume with existing re-entry behavior; no streak loss, guilt or catch-up overload.
 - **Owner override:** Gavin’s informed choice is respected until new evidence changes the situation.
 
@@ -608,6 +649,13 @@ Primary and first-party sources inspected 2026-11-20:
 - Schumann et al., 2022 meta-analysis: concurrent aerobic and strength training did not compromise
   maximal strength or hypertrophy overall; same-session work was more relevant to explosive strength.
   <https://pubmed.ncbi.nlm.nih.gov/34757594/>
+- NHS Couch to 5K: nine-week donor plan with three run/walk sessions per week, recovery between runs,
+  repeatable weeks and progression toward 30 continuous minutes.
+  <https://www.nhs.uk/better-health/get-active/get-running-with-couch-to-5k/couch-to-5k-running-plan/>
+- Fredette et al., 2022 systematic review: running-related injury rates are meaningful, but evidence
+  linking specific distance, duration, frequency, intensity or change thresholds to injury was
+  conflicting; no universal progression threshold is treated as established.
+  <https://pubmed.ncbi.nlm.nih.gov/34478518/>
 - Binmahfoz et al., 2025 systematic review/meta-analysis: adding resistance exercise during dietary
   weight loss protected fat-free mass and improved fat loss/strength relative to diet-only groups,
   with outcome-specific certainty. <https://pubmed.ncbi.nlm.nih.gov/40909191/>
