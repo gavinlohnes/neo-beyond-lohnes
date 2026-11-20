@@ -55,7 +55,7 @@ status of its own.
 | C1.3 | Close ritual | Done (#599) | Approved 2026-11-20: follows SHIFT DOWN, not END DAY; [brief](agent/GRAYSON-C1.3-001.md) |
 | C1.4 (Q4) | "Tomorrow differs" line | Done (#599) | Ships inside C1.3's close |
 | C1.5 | Re-entry thread | Not started |  |
-| C1.6 | Delta voice pass on the loop | Not started |  |
+| C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
 | **Campaign 2 — Shift Transitions** | | | |
 | C2.1 | Arrival in two taps | Not started |  |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |

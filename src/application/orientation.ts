@@ -7,6 +7,7 @@ import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { groupLivedDays } from "../engine/livedDaySeries";
 import { projectPersonalBaselines } from "../engine/personalBaselines";
 import { formatLocalDate, isOperatorSavedSchedule, livedDayShiftWindow } from "../engine/scheduledContext";
+import { say, type DeltaLineKey, type DeltaVoice } from "./deltaVoice";
 import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getMinimumDayStatus, getSchedulePattern, getWorkContextSource } from "./queries";
 import { RECOVERY_CONTRACT } from "./recoveryContract";
 import { hasPlanItem, livedDayDates } from "./lifeTransition";
@@ -57,13 +58,15 @@ export interface OrientationInput {
   prep: Read<PreparationState | null>;
   obligations: Read<readonly Pick<Obligation, "id" | "title" | "dueAt" | "plannedAt" | "remindAt" | "status">[]>;
   /** C1.2: Minimum Day switched on for this day (his own switch). */
-  minimumDay?: boolean | undefined;
+  minimumDay?: Read<boolean> | undefined;
   /** C1.2: recovery-contract items he planned for this lived day, by title. */
   recoveryPlan?: Read<readonly string[]> | undefined;
   /** C1.2: the latest submitted mood per lived day, oldest first, recent days only. */
   recentMoods?: Read<readonly number[]> | undefined;
   /** C1.2: on a day off, when the next shift starts. */
   backOn?: Date | null | undefined;
+  /** C1.6: Delta's voice (words only). PLAIN when absent. */
+  voice?: DeltaVoice | undefined;
 }
 
 /** C1.2: what the day is for, from the life state TODAY already names. */
@@ -147,14 +150,6 @@ function recommendationOf(input: OrientationInput): OrientationRecommendation | 
   return null;
 }
 
-const ENGINE_READ: Partial<Record<RecommendationKind, string>> = {
-  STABILIZE: "Your check-in says today is heavy. The advice is to protect the basics and nothing more.",
-  RECOVER: "Your check-in points to recovery, so the advice is a lighter evening.",
-  POST_SHIFT_TRANSITION: "Last shift isn't shifted down from yet. That comes before anything new.",
-  OBLIGATION_DUE: "Something you committed to is due. The advice puts it first.",
-};
-const SUSTAINED = " This has gone on for a few days, so it's worth deliberate attention, not just one bad morning.";
-const kindWords = (kind: "WORK" | "OFF") => (kind === "WORK" ? "a work day" : "a day off");
 
 /** C1.2: mood strictly lower on each of the last three submitted check-ins (one per lived day). Pure. */
 export function moodTrend(moods: readonly number[]): readonly [number, number, number] | null {
@@ -173,47 +168,45 @@ export function deltaLine(input: {
   sleep: SleepLine; checkIn: CheckInLine; recommendation: OrientationRecommendation | null; shortNights: number;
   run: { position: number; length: number } | null;
   purpose?: DayPurpose | undefined; minimumDay?: boolean | undefined; trend?: boolean | undefined; dueCount?: number | undefined;
+  /** C1.6: the voice Delta speaks in. Words only; hard days are always PLAIN. */
+  voice?: DeltaVoice | undefined;
 }): string | null {
   const { sleep, checkIn, recommendation: rec, run } = input;
+  const voice = input.voice ?? "PLAIN";
+  const v = (key: DeltaLineKey, vars?: Parameters<typeof say>[2]) => say(voice, key, vars);
   const purpose = input.purpose ?? "WORK";
   const work = purpose === "WORK";
   const night = run && run.length > 1 ? ` going into night ${run.position} of ${run.length}` : "";
-  const sustained = input.trend ? SUSTAINED : "";
-  const short = sleep.state === "KNOWN" && sleep.under && sleep.band ? ` Last night was under your usual for ${kindWords(sleep.band.kind)}.` : "";
-  if (input.minimumDay) return `Minimum Day is on. Today is about the basics; nothing else is asked of you.${sustained}`;
+  const sustained = input.trend ? say("PLAIN", "SUSTAINED") : "";
+  // Review of #598: on a recovery day the sleep followed the last shift, so say that rather than "a work day".
+  const shortIn = (tone: DeltaVoice) => sleep.state === "KNOWN" && sleep.under && sleep.band
+    ? purpose === "RECOVERY" && sleep.band.kind === "WORK" ? say(tone, "SHORT_FACT_RECOVERY") : say(tone, "SHORT_FACT", { kind: sleep.band.kind })
+    : "";
+  const short = shortIn(voice);
+  // Hard days drop the act: plain words in every voice.
+  if (input.minimumDay) return say("PLAIN", "MINIMUM") + sustained;
   if (checkIn.state === "DONE" && rec?.source === "ENGINE") {
-    if (rec.kind === "EXECUTE_PLANNED_WORK") {
-      return input.shortNights >= 2
-        ? "You feel up for it. The last two sleeps were short, so the session is scaled down rather than skipped."
-        : "You feel up for it, and there's planned work. The advice is to do it.";
-    }
-    if (rec.kind === "NO_ACTION_REQUIRED") {
-      // A fact, not advice: a short night stays visible even when the Engine asks for nothing more.
-      return `Nothing in your records asks for more than the basics ${work ? "before the shift" : "today"}.${short}`;
-    }
-    const read = ENGINE_READ[rec.kind as RecommendationKind] ?? null;
+    if (rec.kind === "EXECUTE_PLANNED_WORK") return v(input.shortNights >= 2 ? "EXEC_SHORT" : "EXEC_OK");
+    // A fact, not advice: a short night stays visible even when the Engine asks for nothing more.
+    if (rec.kind === "NO_ACTION_REQUIRED") return v("NO_ACTION", { where: work ? "before the shift" : "today" }) + short;
     // Kept short: on a sustained drop, that sentence replaces the sleep fact (YOU still shows the sleep).
-    return read ? read + (rec.kind === "STABILIZE" && sustained ? sustained : short) : null;
+    if (rec.kind === "STABILIZE") return say("PLAIN", "STABILIZE") + (sustained || shortIn("PLAIN"));
+    const key: DeltaLineKey | null = rec.kind === "RECOVER" ? "ENGINE_RECOVER" : rec.kind === "POST_SHIFT_TRANSITION" ? "ENGINE_POST_SHIFT"
+      : rec.kind === "OBLIGATION_DUE" ? "ENGINE_OBLIGATION" : null;
+    return key ? v(key) + short : null;
   }
-  const askCheckIn = checkIn.state === "NONE" ? " Your check-in sets today's advice." : "";
-  if (sleep.state === "ERROR") return `I can't see last night's sleep, so I'm not reading anything into today.${askCheckIn}`;
-  if (sleep.state === "NONE") {
-    return `No main sleep is recorded ${work || purpose === "RECOVERY" ? "since the shift" : "recently"}, so I can't say how rested you are.${askCheckIn}`;
-  }
-  if (rec?.source === "DRAFT" && rec.kind === "RECOVER") {
-    return `Two short sleeps${work ? night : ""}. Your check-in sets today's advice; until you answer, the draft below is the cautious read.`;
-  }
-  if (rec?.source === "DRAFT" && rec.kind === "POST_SHIFT_TRANSITION") {
-    return `Last shift isn't shifted down from yet, so that's the draft below.${askCheckIn}`;
-  }
+  const askCheckIn = checkIn.state === "NONE" ? v("ASK_CHECKIN") : "";
+  if (sleep.state === "ERROR") return v("SLEEP_ERROR") + askCheckIn;
+  if (sleep.state === "NONE") return v("SLEEP_NONE", { since: work || purpose === "RECOVERY" ? "since the shift" : "recently" }) + askCheckIn;
+  if (rec?.source === "DRAFT" && rec.kind === "RECOVER") return v("DRAFT_RECOVER", { night: work ? night : "" });
+  if (rec?.source === "DRAFT" && rec.kind === "POST_SHIFT_TRANSITION") return v("DRAFT_POST_SHIFT") + askCheckIn;
   const due = input.dueCount ?? 0;
-  const open = due === 0 ? "Nothing is due today. The day is open." : due === 1 ? "One thing is due today; the rest of the day is open." : `${due} things are due today; the rest of the day is open.`;
-  if (purpose === "RECOVERY") return `The first day off after the run; sleep usually comes first.${short}${askCheckIn}`;
-  if (purpose === "OFF") return `${open}${short}${askCheckIn}`;
-  if (purpose === "FLIP") return `Your last day off before the run; you're back on shift tomorrow.${short}${askCheckIn}`;
-  if (!sleep.band) return `Slept ${hm(sleep.minutes)}. BEYOND is still learning your usual, so there's no comparison yet.${askCheckIn}`;
-  if (sleep.under) return `Last night was under your usual for ${kindWords(sleep.band.kind)}.${askCheckIn}`;
-  return `Sleep is in your usual range for ${kindWords(sleep.band.kind)}.${askCheckIn}`;
+  if (purpose === "RECOVERY") return v("RECOVERY") + short + askCheckIn;
+  if (purpose === "OFF") return v(due === 0 ? "OFF_NONE" : due === 1 ? "OFF_ONE" : "OFF_MANY", { n: due }) + short + askCheckIn;
+  if (purpose === "FLIP") return v("FLIP") + short + askCheckIn;
+  if (!sleep.band) return v("SLEEP_LEARNING", { hm: hm(sleep.minutes) }) + askCheckIn;
+  if (sleep.under) return v("SLEEP_UNDER", { kind: sleep.band.kind }) + askCheckIn;
+  return v("SLEEP_IN", { kind: sleep.band.kind }) + askCheckIn;
 }
 
 /** Pure. The day's Orientation from already-read records. Never writes, never ranks a second recommendation. */
@@ -276,12 +269,14 @@ export function deriveOrientation(input: OrientationInput): Orientation {
   if (input.recentMoods === "ERROR") unread.push("check-in history");
   const drop = moods ? moodTrend(moods) : null;
   const trend = drop ? `Mood has dropped across your last three check-ins (${drop.join(" → ")}).` : null;
-  const minimumDay = !!input.minimumDay;
+  // Review of #598: an unreadable Minimum Day is reported like every other source, never silently "off".
+  const minimumDay = input.minimumDay === true;
+  if (input.minimumDay === "ERROR") unread.push("Minimum Day");
   const hard = minimumDay || (checkIn.state === "DONE" && recommendation?.source === "ENGINE" && recommendation.kind === "STABILIZE");
   const shortNights = input.draft !== "ERROR" && input.draft?.kind === "RECOVER" ? input.draft.nights.length
     : input.recommendation !== "ERROR" && input.recommendation?.kind === "EXECUTE_PLANNED_WORK" && /two main sleeps/.test(input.recommendation.rationale) ? 2 : 0;
   const delta = mode === "UNKNOWN" && sleep.state === "NONE" && checkIn.state !== "DONE" ? null
-    : deltaLine({ sleep, checkIn, recommendation, shortNights, run: mode === "WORK" ? input.run : null, purpose, minimumDay, trend: !!trend && hard, dueCount: due.length });
+    : deltaLine({ sleep, checkIn, recommendation, shortNights, run: mode === "WORK" ? input.run : null, purpose, minimumDay, trend: !!trend && hard, dueCount: due.length, voice: input.voice });
 
   // The runway: only times BEYOND already has, from now to the shift, then the night's caffeine cut-off.
   const runway: RunwayRow[] = [{ kind: "NOW", at: now.toISOString(), time: clock(now), label: "Now", detail: "" }];
@@ -347,7 +342,7 @@ export function deriveOrientation(input: OrientationInput): Orientation {
 const settle = async <T>(p: Promise<T>): Promise<Read<T>> => p.catch(() => "ERROR" as const);
 
 /** Read only. The active day's Orientation, or null with no lived day started. */
-export async function getOrientation(now: Date = new Date()): Promise<Orientation | null> {
+export async function getOrientation(now: Date = new Date(), voice: DeltaVoice = "PLAIN"): Promise<Orientation | null> {
   const day = await getActiveDay();
   if (!day) return null;
   const at = livedReadAt(day, now);
@@ -359,7 +354,7 @@ export async function getOrientation(now: Date = new Date()): Promise<Orientatio
     settle(getPreparation(day.id)), settle(getCurrentlyEligibleUnresolvedObligations()),
   ]);
   const [minimum, recoveryPlan, recentMoods] = await Promise.all([
-    getMinimumDayStatus(day.id).then((m) => m.enabled, () => false),
+    settle(getMinimumDayStatus(day.id).then((m) => m.enabled)),
     settle(plannedRecovery(at)),
     settle(latestMoods(at)),
   ]);
@@ -381,7 +376,7 @@ export async function getOrientation(now: Date = new Date()): Promise<Orientatio
     now, day, contextBySchedule: source === "SCHEDULE_STANDING", scheduled: isOperatorSavedSchedule(pattern) ? (shift ? "WORK" : "OFF") : null,
     picture, shift, run: run && run.kind === "WORK" ? { position: run.position, length: run.length } : null,
     plan, sleep, checkIn, recommendation, draft, prep, obligations,
-    minimumDay: minimum, recoveryPlan, recentMoods, backOn,
+    minimumDay: minimum, recoveryPlan, recentMoods, backOn, voice,
   });
 }
 

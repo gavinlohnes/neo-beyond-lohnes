@@ -30,6 +30,11 @@ describe("tomorrowDiffers", () => {
     expect(tomorrowDiffers({ now: at(15, 6, 45), dayStartedAt: day(14), today: "WORK", pattern: DEFAULT_SCHEDULE_PATTERN })).toBeNull();
     expect(tomorrowDiffers({ now: at(15, 6, 45), dayStartedAt: day(14), today: "UNKNOWN", pattern })).toBeNull();
   });
+  it("anchors to the day's own lived start, not the clock (review of #599)", () => {
+    // A day started after midnight still belongs to the evening before; one held open past 16:30 still reads as itself.
+    expect(tomorrowDiffers({ now: at(15, 6, 45), dayStartedAt: at(15, 2, 0).toISOString(), today: "WORK", pattern })).toBe("Next: tonight's shift is the last of the run.");
+    expect(tomorrowDiffers({ now: at(15, 17, 0), dayStartedAt: day(14), today: "WORK", pattern })).toBe("Next: tonight's shift is the last of the run.");
+  });
   it("a confirmed schedule change wins over the rotation", () => {
     const confirmed = new Map([["2026-11-15", "OFF" as const]]);
     expect(tomorrowDiffers({ now: at(15, 6, 45), dayStartedAt: day(14), today: "WORK", pattern, confirmed })).toMatch(/^Next: the run is done\./);

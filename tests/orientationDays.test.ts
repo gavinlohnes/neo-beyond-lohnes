@@ -23,7 +23,7 @@ describe("C1.2 · recovery day", () => {
     const o = deriveOrientation(off());
     expect(o.purpose).toBe("RECOVERY");
     expect(o.situation).toEqual({ kind: "OFF", headline: "Back on Wed", sub: "18:00 · saved schedule", line: "The first day off after the run. Sleep usually comes first.", source: "SAVED SCHEDULE" });
-    expect(o.delta).toBe("The first day off after the run; sleep usually comes first. Last night was under your usual for a work day. Your check-in sets today's advice.");
+    expect(o.delta).toBe("The first day off after the run; sleep usually comes first. Your sleep after the last shift was under your usual. Your check-in sets today's advice.");
     expect(o.recoveryPlan).toEqual(["Sleep first", "Keep the day light"]);
     expect(o.actions).toEqual([]);
     expect(o.runway.map((r) => r.kind)).toEqual(["NOW"]);
@@ -84,7 +84,7 @@ describe("C1.2 · hard day and the mood trend", () => {
   it("names a sustained drop as a fact, and only on a hard day does Delta add that it has gone on for days", () => {
     const hard = deriveOrientation(work({ checkIn: { energy: 1, stress: 4, mood: 2 }, recommendation: STABILIZE, recentMoods: [4, 3, 2] }));
     expect(hard.trend).toBe("Mood has dropped across your last three check-ins (4 → 3 → 2).");
-    expect(hard.delta).toMatch(/This has gone on for a few days, so it's worth deliberate attention, not just one bad morning\.$/);
+    expect(hard.delta).toMatch(/This has gone on for a few days, so it's worth deliberate attention, not just one bad day\.$/);
     const fine = deriveOrientation(work({ recentMoods: [4, 3, 2] }));
     expect(fine.trend).toBe("Mood has dropped across your last three check-ins (4 → 3 → 2).");
     expect(fine.delta).not.toMatch(/gone on for a few days/);
@@ -97,6 +97,12 @@ describe("C1.2 · hard day and the mood trend", () => {
     expect(o.hard).toBe(true);
     expect(o.delta).toBe("Minimum Day is on. Today is about the basics; nothing else is asked of you.");
     expect(o.actions).toHaveLength(1);
+  });
+
+  it("an unreadable Minimum Day is reported, not silently treated as off (review of #598)", () => {
+    const o = deriveOrientation(off({ minimumDay: "ERROR" }));
+    expect(o.hard).toBe(false);
+    expect(o.unread).toContain("Minimum Day");
   });
 
   it("an unread check-in history is reported, not treated as no trend", () => {

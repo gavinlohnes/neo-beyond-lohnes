@@ -1,3 +1,29 @@
+# Current objective — PR #600 exact-head review repair (2026-11-20)
+
+Gavin explicitly handed Builder ownership from Claude Code to Codex for the bounded review follow-up on
+`ccr-380c4225-1es42i`. Starting master after #599: `e51671b99759e9383f0f3c523097762ad9d675ee`.
+
+- **#599** (C1.3 + C1.4, close after SHIFT DOWN): independent review PASS, merged by Gavin 2026-11-20.
+- **C1.6 + review follow-ups:** rebased onto master after #599 merged and opened as a PR from `ccr-380c4225-1es42i`
+  as [PR #600](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/600). Contents:
+  1. Review follow-ups from the PASS reviews of #598/#599 (non-blocking findings): "one bad day" (Gavin kept "worth
+     deliberate attention"), recovery-day sleep wording, unreadable Minimum Day reported in `unread`, close label and
+     "next" line anchored to the day's own lived start. Briefs GRAYSON-C1.2-001 / C1.3-001 record them.
+  2. C1.6 Delta's voice ([brief](GRAYSON-C1.6-001.md), approved: "Bruce → Terry by default, with Delta and Droid as
+     switchable voices"): `application/deltaVoice.ts` copy library (PLAIN/MENTOR/DELTA/DROID), hard days always PLAIN,
+     device-local switch under Delta's line on Orientation. Screenshots `docs/screenshots/grayson-c1.6/`.
+  - Local result at candidate `7a5fa6892005f778d424749ca167c329f23efab7`: typecheck and architecture pass;
+    full suite 4,349 passed, one unrelated MealRoundTrip parallel-run timeout, two skipped; the isolated meal test
+    passed 21/21. Orientation/close/voice Node tests pass in UTC and Chicago; Orientation and DayClose browser files
+    pass. Required CI is fully green on that exact head.
+- **Independent review:** BLOCK at `7a5fa6892005f778d424749ca167c329f23efab7` on documentation handoff only:
+  add the exact starting commit and active PR to the C1.6 brief, and refresh this checkpoint. Product and code review
+  otherwise passed.
+- **Next:** push only the documentation repair, renew independent exact-head review, then return to Gavin for merge.
+  Do not start C1.5 or Campaign 2 without his go-ahead.
+
+---
+
 # Current objective — C1.3 close after SHIFT DOWN (C1.2 merged as #598) (2026-11-20)
 
 - **Owner ruling (Gavin, 2026-11-20):** approve C1.2 with no Orientation-invented day-off advice and with the mood
@@ -13,6 +39,8 @@
 - **#598:** merged by Gavin; an independent reviewer session (requested by Gavin) is reviewing its exact head
   `4533184` post-merge; any finding becomes a follow-up.
 - **C1.3 PR:** [#599](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/599).
+- **Queued after #599 merges (one PR):** the C1.2/C1.3 review follow-ups and C1.6 Delta's voice (Mentor default,
+  Delta and Droid switchable; [brief](GRAYSON-C1.6-001.md)), built locally and verified.
 - **Next:** independent review of #599, CI, Gavin's phone look (a timed close under 60 s) and merge.
 
 ---
