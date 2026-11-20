@@ -21,6 +21,8 @@ application's internal structure first.
 - Define the Guided Operating Principle and the Express → Understand → Propose → Approve → Operate →
   Record → Review → Adapt loop.
 - Define phone journeys and Delta language for Teach Delta, a strength/170 Mission and Food Week.
+- Record the plan-first/default-plan contract: Delta reduces decision load, asks only material
+  questions, proposes editable defaults and supplies realistic fallbacks.
 - Reconcile Product Direction, Vision, Doctrine, decisions, capability map, campaign plan, fasting
   design and prior donor synthesis.
 - Produce an evolution matrix, ranked sequence and one bounded recommended next objective.
@@ -53,6 +55,8 @@ connects TRAIN at the system level and schedules a dedicated owner conversation 
 - Food design covers plan/shop/prep/log/review, budget/store uncertainty and serving-first logging.
 - Mission design connects goals, training, food, recovery, operation and outcome review without
   silently changing canonical plans.
+- Sensitive owner data and raw backup contents are not copied into source control; the design records
+  reusable product behavior while private personal facts remain future operator data.
 - Protected choices are explicit rather than silently decided.
 - Documentation links, Markdown hygiene, risk classification and required docs-only CI pass.
 - Independent exact-head review is recorded before Gavin's merge decision.
