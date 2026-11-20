@@ -641,4 +641,6 @@ teach an inexperienced but willing operator; connect whole-body strength, select
 performance standards, food, sleep and recovery; use available gym equipment; and always preserve a
 credible bodyweight-at-home or reduced-day fallback. Exact programming, progression, testing and
 medical/medication-aware safeguards remain for the dedicated design and evidence review rather than
-being silently locked here.
+being silently locked here. The owner-authorized candidate for that work is
+[`GRAYSON_INTEGRATED_HEALTH_MISSION.md`](GRAYSON_INTEGRATED_HEALTH_MISSION.md); it gains canonical
+authority only after its own review and owner-approved merge.
