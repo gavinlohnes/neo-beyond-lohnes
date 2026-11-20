@@ -12,7 +12,8 @@
   5–15 min), not END DAY. [Brief](GRAYSON-C1.3-001.md). On `ccr-380c4225-1es42i`, restarted from master after #598 merged. Also fixes SHIFT DOWN being offered again (red) after it was done.
 - **#598:** merged by Gavin; an independent reviewer session (requested by Gavin) is reviewing its exact head
   `4533184` post-merge; any finding becomes a follow-up.
-- **Next:** C1.3 PR, independent review, CI, Gavin's phone look (a timed close under 60 s) and merge.
+- **C1.3 PR:** [#599](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/599).
+- **Next:** independent review of #599, CI, Gavin's phone look (a timed close under 60 s) and merge.
 
 ---
 
