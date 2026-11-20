@@ -4,7 +4,10 @@
 - **Starting commit:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` (master after PR #601).
 - **Builder:** Codex.
 - **Branch:** `codex/grayson-guided-operating-loop-001`.
-- **Active PR:** [#602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+- **Merged objective PR:** [#602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+- **Protected documentation-only owner-discovery follow-up:**
+  [#603](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/603), branch
+  `codex/grayson-guided-owner-discovery`, starting master `c2bfd78ca11ff6a26a8a66c7cbe6c774cffc4e62`.
 
 ## Operator benefit
 
@@ -63,5 +66,5 @@ connects TRAIN at the system level and schedules a dedicated owner conversation 
 
 ## Next action
 
-Finish documentation checks, open the PR, obtain independent exact-head review and green required CI,
-then return to Gavin. Do not implement `GRAYSON-GUIDED-START-001` or any later slice.
+Obtain green required CI and fresh independent exact-head review for follow-up PR #603, then return
+to Gavin for merge approval. Do not implement `GRAYSON-GUIDED-START-001` or any later slice.

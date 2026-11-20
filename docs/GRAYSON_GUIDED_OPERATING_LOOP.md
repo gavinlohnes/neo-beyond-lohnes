@@ -1,10 +1,11 @@
 # GRAYSON Guided Operating Loop
 
-Status: **OWNER-AUTHORIZED DESIGN CANDIDATE, NOT IMPLEMENTATION** — objective
-`GRAYSON-GUIDED-OPERATING-LOOP-001`, 2026-11-20. This document defines a canonical experience
-direction. It authorizes no product code, navigation change, Engine or event-semantic change,
-provider, dependency, runtime rename, or Google Drive change. Each implementation slice requires
-its own bounded authorization.
+Status: **OWNER-APPROVED CANONICAL DESIGN, NOT IMPLEMENTATION** — objective
+`GRAYSON-GUIDED-OPERATING-LOOP-001`, merged as PR #602 on 2026-11-20. The later plan-first owner
+discovery is a Protected documentation-only follow-up in PR #603 until separately reviewed and
+merged. This document authorizes no product code, navigation change, Engine or event-semantic
+change, provider, dependency, runtime rename, or Google Drive change. Each implementation slice
+requires its own bounded authorization.
 
 ## 1. The product correction
 

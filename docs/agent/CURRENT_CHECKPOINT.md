@@ -1,4 +1,4 @@
-# Current objective — GRAYSON-GUIDED-OPERATING-LOOP-001 (2026-11-20)
+# Current objective — GRAYSON-GUIDED-OPERATING-LOOP-001 owner-discovery follow-up (2026-11-20)
 
 - **Owner authorization:** Gavin approved a Protected documentation/design-only objective to preserve
   and develop his guided-experience, connected-goal and intelligent-food ideas into a canonical
@@ -6,7 +6,10 @@
   semantics, Google Drive or additional Protected boundary is authorized.
 - **Starting master / Builder:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` after PR #601 merged;
   Builder Codex; branch `codex/grayson-guided-operating-loop-001`;
-  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602), now merged at
+  `c2bfd78ca11ff6a26a8a66c7cbe6c774cffc4e62`. Later owner discovery is preserved in Protected
+  documentation-only follow-up [PR #603](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/603),
+  branch `codex/grayson-guided-owner-discovery`, from that exact master.
 - **Canonical design:** [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md);
   [brief](GRAYSON-GUIDED-OPERATING-LOOP-001.md).
 - **What it establishes:** the Guided Operating Principle; Express → Understand → Propose → Approve
