@@ -20,6 +20,13 @@ changes ship. Every provider should use the concise
 [`Project Grayson handoff`](docs/agent/PROJECT_GRAYSON_HANDOFF.md); the destination grants no standing
 implementation or redesign authority.
 
+The owner-approved [GRAYSON Evolution Rule](docs/PROJECT_GRAYSON_VISION.md#grayson-evolution-rule)
+governs every proposal: BEYOND is the functioning foundation, no proposal begins from a blank canvas,
+and external products or open-source systems are research donors rather than replacement templates.
+Establish repository truth, identify what survives, and prefer connection, deepening, reframing, or
+careful adaptation. A proposed replacement must prove evolution insufficient, preserve capability and
+data through a migration plan, and obtain every applicable Protected approval.
+
 ## Development workflow
 
 [`docs/agent/DEV-FLOW-002.md`](docs/agent/DEV-FLOW-002.md) is the single current development
