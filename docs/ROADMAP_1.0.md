@@ -19,8 +19,12 @@ that BEYOND already contains most of the suit and recommended orchestration arou
 not a rewrite or a broad autonomy push. The documentation/design-only
 [`LIVED-DAY-ORIENT-001`](agent/LIVED-DAY-ORIENT-001.md) objective merged as PR #587. Gavin then
 reviewed and approved a documentation-only refinement of the opening relationship, adaptive Delta
-voice, action limit, day-off philosophy, and difficult-day response. No prototype or implementation is
-authorized. The existing queue and active PRs continue unless Gavin explicitly reprioritizes them.
+voice, action limit, day-off philosophy, and difficult-day response. The isolated phone-first
+prototype remains open as PR #589 and authorizes no implementation. The report-only
+[Research-to-Evolution Synthesis](GRAYSON_RESEARCH_SYNTHESIS.md) compares commercial/open-source
+donors with verified BEYOND capability and recommends `LIVED-DAY-ORIENT-PRODUCTION-001` as the first
+bounded production evolution. That recommendation is not implementation authority. The existing
+queue and active PRs continue unless Gavin explicitly reprioritizes them.
 
 ## Now — BEYOND 4.0 "The Chief of Staff" (Gavin, 2026-11-15)
 
