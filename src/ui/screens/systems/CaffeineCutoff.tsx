@@ -63,8 +63,10 @@ export function CaffeineCutoff({ now, mode, onChanged }: { now?: Date | undefine
 
   const status = outcome && outcome.kind !== "ERROR" && <div role="status" style={{ marginTop: 6 }}>
     {outcome.kind === "SAVED"
-      ? <p className="meta" style={{ margin: 0 }}>{outcome.by === "DELTA" ? "Approved." : "Saved."} No substantial caffeine for {outcome.hours} h before sleep.{" "}
-          <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undo(outcome.undo)}>UNDO</button></p>
+      ? <>
+          <p className="meta" style={{ margin: 0 }}>{`${outcome.by === "DELTA" ? "Approved." : "Saved."} No substantial caffeine for ${outcome.hours} h before sleep.`}</p>
+          <button type="button" className="btn-secondary" style={{ marginTop: 6 }} disabled={busy} onClick={() => void undo(outcome.undo)}>UNDO</button>
+        </>
       : outcome.kind === "UNDONE" ? <p className="meta" style={{ margin: 0 }}>Undone. Your cut-off is back as it was.</p>
       : <p className="meta" style={{ margin: 0 }}>Kept {view.hours} h. DELTA won't suggest this again for two weeks.</p>}
   </div>;
