@@ -3,7 +3,7 @@
 - **Owner authorization:** Gavin, 2026-11-20: start the Grayson campaign plan's quick wins with
   Claude Code ("start with the quick wins and stuff I will feel immediately"). Lane FEATURE (no
   Protected boundary: no new data kind, schema, event, Engine or navigation change). Starting commit
-  `211ccf4`; Builder Claude Code; branch `claude/project-thread-s69muv`; PR to follow on that branch.
+  `211ccf4`; Builder Claude Code; branch `claude/project-thread-s69muv`; [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594).
 - **Change:** Home's preset list (HOME-SCHEDULE-001) gains CO detectors (monthly), dog flea and tick
   (monthly), dog heartworm (monthly), vet checkup (yearly) and dog food (every 4 weeks, editable).
   Presets still only fill the form; SAVE writes the ordinary "Home: …" repeat through `addHomeItem`.
