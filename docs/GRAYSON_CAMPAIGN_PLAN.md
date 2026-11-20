@@ -1,6 +1,6 @@
 # Project Grayson — Campaign Plan (BEYOND → GRAYSON)
 
-Status: **REPORT-ONLY PLAN** — 2026-11-20. Mission GRAYSON-CAMPAIGN-PLAN-001.
+Status: **REPORT-ONLY PLAN with a live progress tracker** — 2026-11-20. Mission GRAYSON-CAMPAIGN-PLAN-001.
 Baseline: master `211ccf4` (PR #591 merged). Builder: Claude Code (Duet thread).
 
 This plan authorizes nothing. Every objective in it still needs its own brief, Gavin's go, the lane's
@@ -25,6 +25,99 @@ locked [decisions](UX_DECISIONS.md)), the higher authority wins and the conflict
 
 ---
 
+## Progress tracker and how to use this plan
+
+This table is the one place every Builder (Claude Code, Codex or another agent) reads and writes to see
+what is done and what is left. It is the plan's only status record; the item text in section 4 carries no
+status of its own.
+
+**Status words:** `Not started` · `In progress (#PR)` · `Done (#PR)` · `Dropped (reason, date)`.
+
+**Rules for every Builder**
+
+1. Before starting, find the item here and search open PRs for its ID (for example `C3.4`), so two
+   Builders never take the same item. One Builder per item.
+2. Name the item ID in the PR title or the PR's objective line (for example `GRAYSON-Q1 · C3.4`).
+3. Update the item's row in the **same PR**: `Done (#PR)` when the PR finishes the item, so it reads true
+   the moment the PR merges; `In progress (#PR)` with what's left in Notes when it finishes only part.
+   If a PR closes unmerged, the next Builder sets the row back to `Not started`.
+4. Status updates need no separate approval. Adding, killing, reordering or rewording an item is a plan
+   change: it needs Gavin's OK and is recorded here with the date.
+5. This plan authorizes nothing. Each item still needs Gavin's go, its own brief and its lane's review and
+   merge rules under [DEV-FLOW-002](agent/DEV-FLOW-002.md).
+
+| Item | What | Status | Notes |
+|---|---|---|---|
+| **Campaign 1 — Daily Loop** | | | |
+| C1.1 | Orientation slice 1: work-night wake | Not started | Prototype evidence in #589 (not production) |
+| C1.2 | Orientation slice 2: day-off, recovery and difficult-day grammar | Not started |  |
+| C1.3 | Close ritual | Not started |  |
+| C1.4 (Q4) | "Tomorrow differs" line | Not started |  |
+| C1.5 | Re-entry thread | Not started |  |
+| C1.6 | Delta voice pass on the loop | Not started |  |
+| **Campaign 2 — Shift Transitions** | | | |
+| C2.1 | Arrival in two taps | Not started |  |
+| C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |
+| C2.3 | Home moment | Not started |  |
+| C2.4 | Flip-day plan | Not started |  |
+| C2.5 (Q8) | Two-tap run debrief | Not started |  |
+| C2.6 | Work boundary guard | Not started |  |
+| **Campaign 3 — Home and Family** | | | |
+| C3.1 (Q7) | Last done and evidence | Not started |  |
+| C3.2 | Lead time and "coming up" | Not started |  |
+| C3.3 | Day-off shape | Not started |  |
+| C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | In progress (#594) |  |
+| C3.5 | Seasonal packs | Not started |  |
+| C3.6 | Home inventory light | Not started |  |
+| **Campaign 4 — Body Engine** | | | |
+| C4.1 | Energy curve body-clock fix | Not started |  |
+| C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
+| C4.3 | Optional one-tap caffeine log | Not started |  |
+| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started |  |
+| C4.5 | Mission review (monthly) | Not started |  |
+| C4.6 | Water target | Not started |  |
+| C4.7 | Watch workouts and weight from Health Connect | Not started |  |
+| C4.8 | Optional fasting window | Not started |  |
+| **Campaign 5 — Inner Day** | | | |
+| C5.1 | Feeling word (optional) | Not started |  |
+| C5.2 | Help mode | Not started |  |
+| C5.3 | Shorter reality path | Not started |  |
+| C5.4 | Pattern review (monthly, private) | Not started |  |
+| C5.5 | Sensitive-data controls | Not started |  |
+| **Campaign 6 — Delta** | | | |
+| C6.1 | Learning lifecycle | Not started |  |
+| C6.2 | "What I think I'm learning" weekly | Not started |  |
+| C6.3 | What moves your numbers | Not started |  |
+| C6.4 | "Why am I seeing this?" everywhere | Not started |  |
+| C6.5 | Override as evidence | Not started |  |
+| C6.6 | Earned challenge ladder | Not started |  |
+| C6.7 | One memory store | Not started |  |
+| **Campaign 7 — Capture and Attention** | | | |
+| C7.1 | Voice into capture everywhere | Not started |  |
+| C7.2 | Plan stays fresh | Not started |  |
+| C7.3 | New moment kinds | Not started |  |
+| C7.4 | Widget quick actions | Not started |  |
+| C7.5 | Lock-screen workout (HARVEST-003 later) | Not started |  |
+| C7.6 | Search on MiniSearch | Not started |  |
+| **Campaign 8 — Data You Own** | | | |
+| C8.1 (Q6) | Settings travel with the backup | Not started |  |
+| C8.2 | Restore drill | Not started |  |
+| C8.3 | Export everything readable | Not started |  |
+| C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
+| **Campaign 9 — Craft and Identity** | | | |
+| C9.1 | TodayScreen split (TODAY-SPLIT-002) | Not started |  |
+| C9.2 | Quiet Command finish | Not started |  |
+| C9.3 | Navigation study | Not started |  |
+| C9.4 | Accessibility and motion pass | Not started |  |
+| C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
+| **Quick wins outside the campaigns** | | | |
+| Q3 | Finish workouts on the metric page | In progress (#584) | Conflicts with master on the checkpoint file; no review yet |
+| Q5 | BODY protein tap (roadmap Next #2) | Not started | |
+
+Last status update: 2026-11-20.
+
+---
+
 ## 1. One-screen summary
 
 **Where BEYOND stands.** BEYOND already holds most of the suit. It has a lived day that follows the
@@ -41,7 +134,7 @@ that reaches him with the app closed).
 | # | Campaign | One line | Builds |
 |---|---|---|---|
 | 1 | **Daily Loop** | One calm wake screen and one closing ritual, made from what TODAY already knows | 6 (1 S, 3 M, 2 L) |
-| 2 | **Shift Transitions** | Deputy Lohnes in and out: arrival, shift-down, the drive, coming home, flip days | 6 (2 S, 4 M) |
+| 2 | **Shift Transitions** | Deputy Lohnes in and out: arrival, shift-down, coming home, flip days | 6 (2 S, 4 M) |
 | 3 | **Home and Family Stewardship** | Smoke detectors, dogs, Elle's dates and days off that feel like life | 6 (3 S, 3 M) |
 | 4 | **Body Engine** | Sleep, training, food and caffeine feeding one plan and one honest review | 8 (3 S, 4 M, 1 L) |
 | 5 | **Inner Day** | Feelings in words, a help mode, and a shorter path on hard stretches | 5 (1 S, 3 M, 1 L) |
@@ -237,7 +330,7 @@ one question, tomorrow's difference, everything else parked.
 (`ui/screens/more/DailyNoteScreen.tsx`), Orientation design ([LIVED_DAY_ORIENTATION_DESIGN.md](LIVED_DAY_ORIENTATION_DESIGN.md)),
 prototype PR #589.
 
-- [ ] **C1.1 EXPAND · Orientation slice 1: work-night wake.** The first deliberate START DAY on a
+- **C1.1 EXPAND · Orientation slice 1: work-night wake.** The first deliberate START DAY on a
   workday opens Orientation: Situation → You → Delta → zero or one recommendation → at most two actions
   → Release. Sparse, unknown and source-failure states included.
   - Done when: workday, sparse, unknown-context and failed-source states each render at 320/360/412 px;
@@ -249,7 +342,7 @@ prototype PR #589.
     sleep, night 2 of 3: lighter session"), each with a source tag from `ui/foundation/primitives.tsx`.
     Apple Weather "conclusion → timeline → detail" (COPY THE IDEA). Our way: the energy curve and
     lived-day bar become the one tap deeper, not more cards.
-- [ ] **C1.2 EXPAND · Orientation slice 2: day-off, recovery and difficult-day grammar.** Same screen,
+- **C1.2 EXPAND · Orientation slice 2: day-off, recovery and difficult-day grammar.** Same screen,
   purpose-first: rest, family, one due thing, open time named as open.
   - Done when: OFF, RECOVERY (first day after a run) and Minimum Day variants render; no work prep shows
     under OFF (fixes the baseline's PREPARE FOR WORK under a pin); tests cover each.
@@ -257,7 +350,7 @@ prototype PR #589.
   - Lane, size: **Protected** (TODAY composition) · **M**.
   - Borrow: Gentler Streak's explicit "status" changes the tone (COPY THE IDEA). Our way: the day type
     comes from life state and Minimum Day he already sets; Delta's tone and the action cap change with it.
-- [ ] **C1.3 ADD · Close ritual.** END DAY becomes optional: up to two reflection prompts from a short
+- **C1.3 ADD · Close ritual.** END DAY becomes optional: up to two reflection prompts from a short
   list he picks once (went well / could improve / thankful / what Delta should learn), "tomorrow
   differs" line, and "park the rest". Answers save as the existing Daily Note.
   - Done when: close completes in under 60 s in a timed walkthrough; answers land in
@@ -267,13 +360,13 @@ prototype PR #589.
   - Borrow: Sunsama's evening shutdown (COPY THE IDEA). Our way: no task review marathon; the only
     list is what's open today, each with do / move / wait / release, using `modifyObligation` and the
     release command that already exist.
-- [ ] **C1.4 ADD · "Tomorrow differs" line.** One sentence on the close and in Orientation: the next
+- **C1.4 ADD · "Tomorrow differs" line.** One sentence on the close and in Orientation: the next
   shift, a flip, a first day off, a due date. Abstains when nothing differs.
   - Done when: derives only from `ahead.ts` + Week Ahead; abstains with no saved schedule; tests for
     run-end, flip, day off.
   - Builds on: `ahead.ts`, `weekAheadQueries.ts`, `lifeTransition.ts`.
   - Lane, size: **Feature** inside C1.3 (application read + copy) · **S**. Quick win Q4.
-- [ ] **C1.5 DEEPEN · Re-entry thread.** When he comes back mid-day, Orientation's top line says what
+- **C1.5 DEEPEN · Re-entry thread.** When he comes back mid-day, Orientation's top line says what
   changed since the last look (a new sleep import, a reply needed, a done task) and returns him to
   what he was doing.
   - Done when: `sinceLastLook.ts` diff covers sleep import, obligations and active workout; one line,
@@ -282,7 +375,7 @@ prototype PR #589.
   - Lane, size: **Protected** (TODAY composition) · **L** (state across interruptions).
   - Borrow: Linear Mobile's inbox-on-return (COPY THE IDEA). Our way: no inbox; one line from the
     existing device-local snapshot.
-- [ ] **C1.6 DEEPEN · Delta voice pass on the loop.** Rewrite Orientation, close and recommendation
+- **C1.6 DEEPEN · Delta voice pass on the loop.** Rewrite Orientation, close and recommendation
   copy into Quiet Command (concise, evidence-scaled directness).
   - Done when: copy library in one file, reviewed against Doctrine language rules; no score words.
   - Builds on: `recommendationCopy.ts`, `statusCopy.ts`, `capacityCopy.ts`.
@@ -302,7 +395,7 @@ says when to sleep and when to get light.
 `shiftChange.ts` (PREFLIGHT / LANDING / SECURED), `caveBrief.ts`, `postRunReport.ts`,
 `recoveryContract.ts`, `shiftSleepPlan.ts` (CAFFEINE / NAP / FIRST_SLEEP / LIGHT), routines by moment.
 
-- [ ] **C2.1 EXPAND · Arrival in two taps.** At PREFLIGHT, one card: work started, last shift's
+- **C2.1 EXPAND · Arrival in two taps.** At PREFLIGHT, one card: work started, last shift's
   handoff read, the one unusual item from his routine (the item he unticked most often lately).
   - Done when: card appears only in PREFLIGHT; "unusual item" is the routine step skipped most in the
     last 14 lived days, or nothing; marks go through existing commands.
@@ -311,7 +404,7 @@ says when to sleep and when to get light.
     missed"; this reads skips to pick an item but never shows a count. Needs Gavin's OK on that reading.
   - Borrow: Things' "This Evening" grouping (COPY THE IDEA). Our way: the existing BEFORE SHIFT
     routine shows only the item that is easy to forget, not the whole list.
-- [ ] **C2.2 DEEPEN · Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001).** Three optional taps:
+- **C2.2 DEEPEN · Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001).** Three optional taps:
   park unfinished (to capture), one minute of cyclic sighing, pick what's first at home.
   - Done when: under 2 minutes timed at 360 px; parked items land in capture with their time; the home
     pick lives only for the lived day and is never an Engine input; timer and MARK WORK ENDED remain;
@@ -320,12 +413,12 @@ says when to sleep and when to get light.
   - Lane, size: **Feature** (inside an existing card) · **M**.
   - Borrow: Headspace/Calm-style breathing cue (COPY THE IDEA). Our way: one 60-second animated ring in
     the foundation palette, no audio, no streak, skippable.
-- [ ] **C2.3 ADD · Home moment.** After SHIFT DOWN completes, TODAY drops work items and shows only the
+- **C2.3 ADD · Home moment.** After SHIFT DOWN completes, TODAY drops work items and shows only the
   home pick, today's family/home item if due, and sleep timing.
   - Done when: after completion, work-only sections hide until the next PREFLIGHT; tests per phase.
   - Builds on: `lifeState.ts`, `attentionPolicy.ts`, `hasUnresolvedPostShift` in `application/queries.ts`.
   - Lane, size: **Protected** (TODAY composition) · **M**.
-- [ ] **C2.4 DEEPEN · Flip-day plan.** On the last shift of a run and the first day off, a short plan:
+- **C2.4 DEEPEN · Flip-day plan.** On the last shift of a run and the first day off, a short plan:
   sleep soon (his own past-run time), daylight after waking, a normal night. Light card extends to
   day-off mornings.
   - Done when: card set changes on LAST_SHIFT / RUN_OVER; every timing cites its source; no light
@@ -337,12 +430,12 @@ says when to sleep and when to get light.
     [repo](https://github.com/Arcascope/circadian), `circadian/models.py` Forger99) for the model
     (COPY THE IDEA). Our way: keep the existing rule-and-citation cards; port one light-driven model to
     a pure Engine module only if the rule cards prove too coarse on his real flips.
-- [ ] **C2.5 DEEPEN · Two-tap run debrief.** On RUN OVER, "How did the run go? Rough / OK / Good" and
+- **C2.5 DEEPEN · Two-tap run debrief.** On RUN OVER, "How did the run go? Rough / OK / Good" and
   one optional line, saved as the existing shift-debrief journal entry.
   - Done when: reuses `reflect.ts` shift-debrief; shows once per run; never asks about calls or people.
   - Builds on: `reflect.ts`, `postRunReport.ts`.
   - Lane, size: **Feature** · **S**.
-- [ ] **C2.6 DEEPEN · Work boundary guard.** A one-time note on capture and journal while on shift:
+- **C2.6 DEEPEN · Work boundary guard.** A one-time note on capture and journal while on shift:
   "Keep case details out of BEYOND." No blocking, no scanning.
   - Done when: shows once per run in on-shift capture; dismissible.
   - Builds on: `FastCapture.tsx`, `shiftChange.ts`.
@@ -363,7 +456,7 @@ evidence kept. The dogs' monthly meds are never a surprise.
 `familyCalendar.ts`, Whole Life (`ui/screens/more/WholeLifeHome.tsx`), HOME-001 and RELATIONSHIPS-001
 rulings (no scores, no overdue alarms, no cadence prompts).
 
-- [ ] **C3.1 DEEPEN · Last done and evidence.** Each Home item shows "last done Mar 3 (you), next Jun 3"
+- **C3.1 DEEPEN · Last done and evidence.** Each Home item shows "last done Mar 3 (you), next Jun 3"
   and an optional note or photo when he marks it done.
   - Done when: "last done" derives from the previous instance's resolvedAt; note uses the existing
     resolutionNote; history list per item; no new table.
@@ -373,7 +466,7 @@ rulings (no scores, no overdue alarms, no cadence prompts).
     `services/ChoresService.php` period types incl. "adaptive"). Verdict COPY THE IDEA (PHP).
     Our way: port Grocy's "adaptive" period idea later as an option on the existing rrule: next date
     from his actual average gap, shown as a proposal he confirms.
-- [ ] **C3.2 ADD · Lead time and "coming up".** Per item, a lead time (gifts 14 days, filters 7,
+- **C3.2 ADD · Lead time and "coming up".** Per item, a lead time (gifts 14 days, filters 7,
   smoke alarm 0). Inside the window, one line in Orientation's day-off view and Week Ahead with what he
   saved (gift ideas for that person).
   - Done when: lead time stored on the obligation (new optional field); at most one stewardship line a
@@ -383,7 +476,7 @@ rulings (no scores, no overdue alarms, no cadence prompts).
   - Borrow: Monica's reminders before a date (AGPL-3.0, verified; [repo](https://github.com/monicahq/monica))
     COPY THE IDEA. Our way: no contact cadence or "last talked to" (rejected by RELATIONSHIPS-001); only
     the dates and ideas he saved, surfaced early enough to act.
-- [ ] **C3.3 ADD · Day-off shape.** On RUN OVER and day-off Orientation, a rough shape he accepts,
+- **C3.3 ADD · Day-off shape.** On RUN OVER and day-off Orientation, a rough shape he accepts,
   edits or ignores: recovery, one due house thing, an optional "something with Elle" (off by default),
   open time. Saves as plan items with plannedAt only.
   - Done when: nothing written without CONFIRM; Engine eligibility unchanged (test like
@@ -393,17 +486,17 @@ rulings (no scores, no overdue alarms, no cadence prompts).
   - Lane, size: **Protected** (TODAY composition) · **M**.
   - Borrow: Sunsama's capacity line (COPY THE IDEA). Our way: show "open time" as a real block, never
     a gap to fill.
-- [ ] **C3.4 EXPAND · Dog care and CO presets (Quick win Q1).** Add presets: dog flea/tick and
+- **C3.4 EXPAND · Dog care and CO presets (Quick win Q1).** Add presets: dog flea/tick and
   heartworm monthly, vet checkup yearly, dog food reorder (his interval), CO detector test monthly.
   - Done when: presets appear in HomePanel; save as normal "Home:" recurring items.
   - Builds on: `HomePanel.tsx` HOME_PRESETS.
   - Lane, size: **Feature** · **S**.
-- [ ] **C3.5 EXPAND · Seasonal packs.** Spring and fall lists (gutters, hoses, furnace start-up,
+- **C3.5 EXPAND · Seasonal packs.** Spring and fall lists (gutters, hoses, furnace start-up,
   winter car kit), added as a batch he picks from.
   - Done when: a pack offers its items with checkboxes; only ticked ones save.
   - Builds on: `HomePanel.tsx`, `homeCommands.ts`.
   - Lane, size: **Feature** · **S**.
-- [ ] **C3.6 ADD · Home inventory light.** For the few things with a model, size or part number
+- **C3.6 ADD · Home inventory light.** For the few things with a model, size or part number
   (filter size, detector model, battery type), a fact attached to the Home item.
   - Done when: details live in the existing HOME fact; shown on the item; searchable.
   - Builds on: HOME facts (`alfredMemory.ts` / MEMORY_RECORDED).
@@ -426,14 +519,14 @@ and sleep did to his numbers, with how sure it is, and suggests at most one chan
 `targetProposal.ts`, `foodSources.ts`, `pace.ts`, metric pages (`ui/metrics/MetricDetailSheet.tsx`),
 Health Bridge.
 
-- [ ] **C4.1 DEEPEN · Energy curve body-clock fix.** Place the circadian low from his actual sleep
+- **C4.1 DEEPEN · Energy curve body-clock fix.** Place the circadian low from his actual sleep
   pattern on steady night runs (#592 finding C1; its simulation put the low at 12:30, inside day sleep).
   - Done when: a property test with a 3-night synthetic run puts the low inside the waking night
     window; existing curve tests pass; copy unchanged.
   - Builds on: `application/alertness.ts` (circadian low 1.5 h before habitual wake).
-  - Lane, size: **Protected** (TODAY panel guidance) · **S**. Gavin said the drive-home warning itself
-    isn't a concern; this fixes the curve's shape for everything else that reads it.
-- [ ] **C4.2 DEEPEN · Caffeine cut-off by what he drinks (Quick win Q2).** "Coffee by 23:00;
+  - Lane, size: **Protected** (TODAY panel guidance) · **S**. No drive-home warning: Gavin dropped it
+    (2026-11-19). This only fixes the curve's shape for what already reads it.
+- **C4.2 DEEPEN · Caffeine cut-off by what he drinks (Quick win Q2).** "Coffee by 23:00;
   5-hour Energy or pre-workout by 19:30" for his usual sleep, each with its source.
   - Done when: two lines replace one; the 5-hour Energy line uses the stimulant-drink evidence; tests
     cover overnight wrap; UX_DECISIONS entry amended in place.
@@ -441,7 +534,7 @@ Health Bridge.
   - Lane, size: **Protected** (amends locked SHIFT-SLEEP-PLAN-001) · **S**.
   - Borrow: jnaskali/caffeine-tracker (MIT, verified; [repo](https://github.com/jnaskali/caffeine-tracker))
     half-life decay. Verdict REUSE THE CODE is allowed, but it is ~10 lines; own it in the Engine.
-- [ ] **C4.3 ADD · Optional one-tap caffeine log.** Log "5-hour Energy" or "coffee" in one tap; the
+- **C4.3 ADD · Optional one-tap caffeine log.** Log "5-hour Energy" or "coffee" in one tap; the
   cut-off and the curve show what's still in his system; a monthly "caffeine vs your day sleep" line
   once there are 10 days with and without. This is how a healthier habit gets evidence.
   - Done when: new CAFFEINE_LOGGED event with correct/void like water; never an Engine recommendation
@@ -449,14 +542,14 @@ Health Bridge.
   - Builds on: water log pattern (`commands.ts`), `tagPatterns.ts`/`tryExperiment.ts` for the comparison.
   - Lane, size: **Protected** (new event + backup; amends the locked "caffeine never recorded") · **M**.
   - Borrow: same half-life code as C4.2. **Needs Gavin's answer (Q2 in section 7).**
-- [ ] **C4.4 EXPAND · Training feeds the night (HARVEST-003 W2) and a train window.** A hard or late
+- **C4.4 EXPAND · Training feeds the night (HARVEST-003 W2) and a train window.** A hard or late
   session adds "protect sleep tonight" to the plan; TRAIN shows when to train today from shift and
   sleep windows (#592's TRAIN-WINDOW-001).
   - Done when: hard = his own top-third session volume; window derives from existing windows and
     abstains without a schedule; Engine variant choice unchanged (tests).
   - Builds on: `trainHome.ts`, `shiftSleepPlan.ts`, `alertness.ts`, `performedSets`.
   - Lane, size: **Protected** (sleep-plan guidance) · **M**.
-- [ ] **C4.5 ADD · Mission review (monthly).** One page: goal, what he did (training sessions, protein
+- **C4.5 ADD · Mission review (monthly).** One page: goal, what he did (training sessions, protein
   days, sleep), what moved (weight trend, strength, resting HR), how sure, and at most one change he can
   accept or skip. Excludes partly logged days from burn (#592's HONEST-BURN-001).
   - Done when: every number links to its metric page; abstains under the evidence floors; the one
@@ -469,11 +562,11 @@ Health Bridge.
     outcome when evidence is thin, and the proposal is the existing TARGET-PROPOSAL card.
     simple-statistics (ISC, verified; [repo](https://github.com/simple-statistics/simple-statistics))
     REUSE THE CODE optional; the Welch helpers in `tryExperiment.ts` may already suffice.
-- [ ] **C4.6 ADD · Water target.** An owner-set daily target with the existing pace line.
+- **C4.6 ADD · Water target.** An owner-set daily target with the existing pace line.
   - Done when: target in `nutritionTargets`; pace reads it; no default nag.
   - Builds on: `pace.ts`, `nutritionTargetCommands.ts`.
   - Lane, size: **Protected** (schema) · **S**.
-- [ ] **C4.7 EXPAND · Watch workouts and weight from Health Connect.** Read ExerciseSessionRecord
+- **C4.7 EXPAND · Watch workouts and weight from Health Connect.** Read ExerciseSessionRecord
   and WeightRecord so watch-recorded walks and scale weights arrive with source tags; owner entries win.
   - Done when: Bridge requests two more read permissions; imports follow GARMIN-003 owner-wins; no
     Body Battery/HRV/sleep score.
@@ -483,7 +576,7 @@ Health Bridge.
   - Borrow: Health Connect record types (official,
     [docs](https://developer.android.com/health-and-fitness/health-connect/data-types)) REUSE THE
     SCHEMA as the field map. Gadgetbridge (AGPL-3.0, verified) COPY THE IDEA only.
-- [ ] **C4.8 ADD · Optional fasting window.** A start/stop eating window evaluated against protein,
+- **C4.8 ADD · Optional fasting window.** A start/stop eating window evaluated against protein,
   mood and training, never as a duration contest.
   - Done when: off by default; window events; review shows protein and training on fasting days vs not.
   - Builds on: meal events, `tryExperiment.ts`.
@@ -507,7 +600,7 @@ calmly, and never diagnoses.
 **Exists now.** Check-in (`CheckInSheet.tsx`, `checkInFields.ts`, `engine/capacity.ts` locked),
 Minimum Day, journal, Daily Note, quit tracker, personal context, difficult-day doctrine.
 
-- [ ] **C5.1 ADD · Feeling word (optional).** After the numbers, one optional word from a short grid
+- **C5.1 ADD · Feeling word (optional).** After the numbers, one optional word from a short grid
   (calm, flat, wired, irritable, heavy, good, proud…) and "what's behind it" chips (sleep, work,
   home, body, nothing).
   - Done when: stored on the check-in as optional fields; never read by `capacity.ts`; skipping keeps
@@ -516,27 +609,27 @@ Minimum Day, journal, Daily Note, quit tracker, personal context, difficult-day 
   - Lane, size: **Protected** (check-in event shape, backup, sensitive data) · **M**.
   - Borrow: How We Feel's mood meter vocabulary (COPY THE IDEA). Our way: a small word list sized for a
     tired thumb, in BEYOND's palette, not colour-coded quadrants.
-- [ ] **C5.2 ADD · Help mode.** "Just listen / Help me understand / Help me decide / Minimum version"
+- **C5.2 ADD · Help mode.** "Just listen / Help me understand / Help me decide / Minimum version"
   on the check-in and in Alfred; it sets Delta's response style for that day.
   - Done when: choice changes Alfred's system prompt for the day and Orientation's tone; no write
     beyond the check-in field.
   - Builds on: `alfredClient.ts` PERSONA, `operatorContext.ts`.
   - Lane, size: **Protected** (Alfred behaviour) · **S**.
-- [ ] **C5.3 ADD · Shorter reality path.** When several recent check-ins are hard (rule in the brief,
+- **C5.3 ADD · Shorter reality path.** When several recent check-ins are hard (rule in the brief,
   his own range), Orientation offers Minimum Day once with "this is a pattern, not a verdict". Saying
   "I can't manage the plan" reduces at once.
   - Done when: deterministic rule with a floor; offered at most once per stretch; never an Engine
     priority change without approval; copy reviewed against wellbeing rules.
   - Builds on: `MinimumDaySection.tsx`, `needle.ts`, check-in history.
   - Lane, size: **Protected** (recommendation-adjacent, sensitive) · **M**.
-- [ ] **C5.4 ADD · Pattern review (monthly, private).** Words and contexts over the month, with sleep
+- **C5.4 ADD · Pattern review (monthly, private).** Words and contexts over the month, with sleep
   and run position, only when there are enough entries.
   - Done when: abstains under a floor; never names a condition; Alfred sees it only with personal opt-in.
   - Builds on: `wholePictureQueries.ts`, `tagPatterns.ts`, `deltaFacts.ts` opt-in.
   - Lane, size: **Protected** (sensitive data use) · **M**.
   - Borrow: Daylio/Bearable "mood vs factors" (COPY THE IDEA). Our way: counts with sample sizes from
     Whole Picture rows, "can't tell yet" when thin.
-- [ ] **C5.5 ADD · Sensitive-data controls.** One screen: which inner-day data Alfred may read, which
+- **C5.5 ADD · Sensitive-data controls.** One screen: which inner-day data Alfred may read, which
   stays out of backups-to-cloud, and delete-all for a category.
   - Done when: per-category switches enforced in `operatorContext.ts`; Drive backup option to exclude.
   - Builds on: `operatorContext.ts`, `driveBackupService.ts`.
@@ -555,14 +648,14 @@ overrides a suggestion, Delta asks once what it missed, and remembers.
 IRRELEVANT), `alfredMemory.ts` (legacy store), `remember.ts`, `reflect.ts`, `tagPatterns.ts`,
 `tryExperiment.ts`, `askProjection.ts`, `coachCards.ts`, `PersonalUnderstanding.tsx`.
 
-- [ ] **C6.1 DEEPEN · Learning lifecycle.** Give learnings the vision's states: observed, hypothesized,
+- **C6.1 DEEPEN · Learning lifecycle.** Give learnings the vision's states: observed, hypothesized,
   provisional, confirmed, context-specific, contested, outdated, retired, each with source, dates,
   confidence and sample size.
   - Done when: states are MEMORY_RECORDED actions (no new table); `delta.ts` learnings map onto them;
     retired never reaches Alfred context; tests per transition.
   - Builds on: `memory.ts`, `delta.ts`, `MemoryPanel.tsx`.
   - Lane, size: **Protected** (correction model, event semantics) · **L**.
-- [ ] **C6.2 ADD · "What I think I'm learning" weekly.** Up to three learnings with Keep / Narrow /
+- **C6.2 ADD · "What I think I'm learning" weekly.** Up to three learnings with Keep / Narrow /
   Drop, surfaced in the weekly interview.
   - Done when: each tap is a lifecycle action; at most three a week; nothing shown under the floor.
   - Builds on: C6.1, `weeklyInterview.ts`.
@@ -570,7 +663,7 @@ IRRELEVANT), `alfredMemory.ts` (legacy store), `remember.ts`, `reflect.ts`, `tag
   - Borrow: ts-fsrs (MIT, verified; [repo](https://github.com/open-spaced-repetition/ts-fsrs),
     `fsrs()`, `scheduler.next`) REUSE THE CODE to space when a confirmed learning is re-checked, so
     stable ones come up rarely. Pure TS; fits the Engine. New dependency.
-- [ ] **C6.3 EXPAND · What moves your numbers.** Extend tag patterns to habits, workouts, caffeine and
+- **C6.3 EXPAND · What moves your numbers.** Extend tag patterns to habits, workouts, caffeine and
   check-in words against next main sleep, energy and resting HR, after 5 days with and 5 without.
   - Done when: reads Whole Picture rows; Welch interval from `tryExperiment.ts`; "can't tell yet";
     read-only, never advice.
@@ -578,23 +671,23 @@ IRRELEVANT), `alfredMemory.ts` (legacy store), `remember.ts`, `reflect.ts`, `tag
   - Lane, size: **Feature** (read-only; HARVEST-003 S3 said no approval needed if read-only) · **M**.
   - Borrow: WHOOP Journal Impacts and Exist.io correlations (COPY THE IDEA). Our way: same 5/5 floor,
     next-day effects, sample sizes visible, appears in DATA and in C6.2.
-- [ ] **C6.4 EXPAND · "Why am I seeing this?" everywhere.** One shared disclosure on every Delta line:
+- **C6.4 EXPAND · "Why am I seeing this?" everywhere.** One shared disclosure on every Delta line:
   the rule, the records, the dates.
   - Done when: `WhyDisclosure.tsx` used by Orientation, advisory, coach cards; links to records.
   - Builds on: `ui/components/WhyDisclosure.tsx`, DecisionTrace.
   - Lane, size: **Feature** · **S**.
-- [ ] **C6.5 ADD · Override as evidence.** When he declines, one optional "what did I miss?" chip set;
+- **C6.5 ADD · Override as evidence.** When he declines, one optional "what did I miss?" chip set;
   repeated reasons become an observed learning he can confirm.
   - Done when: reasons already saved by `reflect.ts` feed C6.1 as observed; nothing changes the Engine.
   - Builds on: `reflect.ts`, C6.1.
   - Lane, size: **Protected** (learning semantics) · **M**.
-- [ ] **C6.6 ADD · Earned challenge ladder.** For a repeated miss: ask → name the pattern → challenge
+- **C6.6 ADD · Earned challenge ladder.** For a repeated miss: ask → name the pattern → challenge
   with evidence → examine the plan. Never more than the evidence allows.
   - Done when: deterministic stages with floors; copy reviewed against "challenge the plan before the
     person"; off switch.
   - Builds on: `continuity.ts`, `coachCards.ts`, journal follow-ups.
   - Lane, size: **Protected** (recommendation priority, user wellbeing) · **L**.
-- [ ] **C6.7 DEEPEN · One memory store.** Finish moving legacy `alfredMemories` into MEMORY_RECORDED,
+- **C6.7 DEEPEN · One memory store.** Finish moving legacy `alfredMemories` into MEMORY_RECORDED,
   each conversion confirmed, so Delta has one memory.
   - Done when: no unconverted rows after his review; backup round-trip test.
   - Builds on: `alfredMemory.ts`, `AlfredMemoryList.tsx`.
@@ -616,7 +709,7 @@ without him tapping SYNC GARMIN.
 `DriveHome.tsx` and `AlfredSheet.tsx`, `bridgePlan.ts` (3/day, quiet hours), `keyMomentAlerts.ts`,
 `MomentAlerts.kt`, `BackgroundSync.kt` (every 3 h), MiniSearch installed.
 
-- [ ] **C7.1 EXPAND · Voice into capture everywhere.** A mic on FastCapture and the check-in that
+- **C7.1 EXPAND · Voice into capture everywhere.** A mic on FastCapture and the check-in that
   feeds the free helper's cards.
   - Done when: same Web Speech path as DriveHome; falls back to typing; nothing saves without confirm
     unless it's an immediate-undo kind.
@@ -626,13 +719,13 @@ without him tapping SYNC GARMIN.
     [repo](https://github.com/huggingface/transformers.js), `pipeline('automatic-speech-recognition')`)
     REUSE THE CODE if Web Speech fails offline on his phone; model weights checked per model; new
     dependency and large download, so Protected.
-- [ ] **C7.2 DEEPEN · Plan stays fresh.** The bridge's 3-hour background job re-arms moments from the
+- **C7.2 DEEPEN · Plan stays fresh.** The bridge's 3-hour background job re-arms moments from the
   last plan BEYOND sent whenever BEYOND opens, not only on SYNC GARMIN.
   - Done when: opening BEYOND hands the plan to the Bridge silently where Android allows; stale plan
     age shown in KEY MOMENT ALERTS.
   - Builds on: `bridgePlan.ts` helperSyncUrl, `MomentAlerts.kt`, `ReminderAlertLine.tsx`.
   - Lane, size: **Protected** (notification delivery) · **M** (A: Android intent limits need a spike).
-- [ ] **C7.3 ADD · New moment kinds.** Caffeine cut-off, plan to confirm, and stewardship lead time,
+- **C7.3 ADD · New moment kinds.** Caffeine cut-off, plan to confirm, and stewardship lead time,
   inside the 3-a-day cap and its priority order.
   - Done when: each kind has an off switch; cap and quiet hours unchanged; tests for priority.
   - Builds on: `bridgePlan.ts`, `keyMomentAlerts.ts`.
@@ -640,18 +733,18 @@ without him tapping SYNC GARMIN.
   - Borrow: Capacitor local-notifications (MIT, verified;
     [repo](https://github.com/ionic-team/capacitor-local-notifications)) REUSE THE CODE only if the
     Bridge path can't deliver; a native shell is a large Protected change. Prefer the Bridge.
-- [ ] **C7.4 EXPAND · Widget quick actions.** The Bridge widget adds CAPTURE and WATER buttons that open
+- **C7.4 EXPAND · Widget quick actions.** The Bridge widget adds CAPTURE and WATER buttons that open
   BEYOND at the right sheet.
   - Done when: two buttons deep-link to existing `beyond:open-record` routes.
   - Builds on: Bridge widget, App shortcuts.
   - Lane, size: **Feature** (Android) · **M**.
-- [ ] **C7.5 ADD · Lock-screen workout (HARVEST-003 later).** Ongoing notification with current set and
+- **C7.5 ADD · Lock-screen workout (HARVEST-003 later).** Ongoing notification with current set and
   rest timer during a live workout.
   - Done when: starts and ends with the workout; set done from the notification logs through the
     existing command.
   - Builds on: `GymMode.tsx`, Bridge.
   - Lane, size: **Protected** (new notification, two-way) · **L**.
-- [ ] **C7.6 DEEPEN · Search on MiniSearch.** Use the approved MiniSearch for ranked, fuzzy search with
+- **C7.6 DEEPEN · Search on MiniSearch.** Use the approved MiniSearch for ranked, fuzzy search with
   tap-to-open.
   - Done when: index derives from Dexie, never canonical; tap opens the record.
   - Builds on: `searchQueries.ts`, `SearchScreen.tsx`.
@@ -670,23 +763,23 @@ monthly restore check says so in a line.
 **Exists now.** `persistence/backup.ts`, `restore.ts`, `autoBackup.ts`, `driveBackup/*` (AES-GCM),
 `recordsExport.ts`, monthly restore check.
 
-- [ ] **C8.1 DEEPEN · Settings travel with the backup.** Non-secret preferences (Alfred monthly cap,
+- **C8.1 DEEPEN · Settings travel with the backup.** Non-secret preferences (Alfred monthly cap,
   automatic Alfred, reminders, rest timers, hidden features, vision mode) export and restore; keys and
   tokens stay out.
   - Done when: an allowlist of keys round-trips in a test; secrets list stays phone-local.
   - Builds on: `backup.ts`, `restore.ts`.
   - Lane, size: **Protected** (backup contract) · **S**. Quick win Q6.
-- [ ] **C8.2 DEEPEN · Restore drill.** A guided "would a new phone get it all?" check that restores into a
+- **C8.2 DEEPEN · Restore drill.** A guided "would a new phone get it all?" check that restores into a
   scratch database and compares counts.
   - Done when: runs offline; reports per-table counts; deletes the scratch copy.
   - Builds on: monthly restore check (`autoBackupQueries.ts`).
   - Lane, size: **Feature** · **S**.
-- [ ] **C8.3 EXPAND · Export everything readable.** CSV export adds sleep, check-ins, journal, home and
+- **C8.3 EXPAND · Export everything readable.** CSV export adds sleep, check-ins, journal, home and
   people.
   - Done when: each new file opens in Sheets; corrections applied; sensitive categories opt-in.
   - Builds on: `recordsExport.ts`.
   - Lane, size: **Feature** · **M**.
-- [ ] **C8.4 ADD (deferred) · Second-device sync.** Only if he gets a tablet or wants Elle-shared lists:
+- **C8.4 ADD (deferred) · Second-device sync.** Only if he gets a tablet or wants Elle-shared lists:
   row-level sync through his own Drive.
   - Done when: (later) conflicts resolve last-write-wins per field with history kept.
   - Builds on: Dexie events, Drive backup.
@@ -705,25 +798,25 @@ lives. Then, and only then, it says GRAYSON and Delta speaks.
 **Exists now.** `ui/foundation/*`, `Section.tsx`, sheets foundation, Quiet Command direction (#591),
 vision modes (`ui/vision/`), Emblem, TODAY-SPLIT-002 brief.
 
-- [ ] **C9.1 DEEPEN · TodayScreen split (TODAY-SPLIT-002).** Finish the smaller first slice (toasts),
+- **C9.1 DEEPEN · TodayScreen split (TODAY-SPLIT-002).** Finish the smaller first slice (toasts),
   then the rest, so Orientation and close can grow safely.
   - Done when: per the existing brief; no behaviour change.
   - Lane, size: **Feature** · **M**.
-- [ ] **C9.2 DEEPEN · Quiet Command finish.** Apply the Orientation visual grammar to TRAIN home and
+- **C9.2 DEEPEN · Quiet Command finish.** Apply the Orientation visual grammar to TRAIN home and
   DATA home.
   - Done when: per-screen visual review at 360 px; tokens only.
   - Lane, size: **Protected** (locked visual identity) · **M** per screen.
-- [ ] **C9.3 ADD · Navigation study.** After C1 and C2 ship, compare today's tabs with the lived journeys.
+- **C9.3 ADD · Navigation study.** After C1 and C2 ship, compare today's tabs with the lived journeys.
   Report only.
   - Lane, size: **Feature** (report) · **S**.
   - Borrow: Things and Linear Mobile hierarchy (COPY THE IDEA). Our way: test the journeys on his phone
     against today's tabs before proposing any change.
-- [ ] **C9.4 ADD · Accessibility and motion pass.** axe checks on new screens; reduced motion; large text.
+- **C9.4 ADD · Accessibility and motion pass.** axe checks on new screens; reduced motion; large text.
   - Builds on: axe-core (already a dev dependency).
   - Lane, size: **Feature** · **L** across the app.
   - Borrow: Radix Dialog (MIT, verified) REUSE THE CODE only if a sheet's focus handling fails review;
     Motion (MIT) and Vaul (unmaintained per its README) not needed.
-- [ ] **C9.5 ADD · BEYOND → GRAYSON, Alfred → Delta.** Rename in the running app once Delta's behaviour
+- **C9.5 ADD · BEYOND → GRAYSON, Alfred → Delta.** Rename in the running app once Delta's behaviour
   (C6.1–C6.2) earns it. Legal/trademark check first.
   - Lane, size: **Protected** (identity, governance) · **L**.
 
@@ -749,6 +842,8 @@ Yes = KEEP.
 9. **Craft and Identity** — C9.1 early as enabling work; rename last.
 
 ### Quick wins (each one S build, visible value)
+
+Status for each quick win lives in the progress tracker.
 
 | # | Item | Why it's worth it now | Lane |
 |---|---|---|---|
@@ -849,6 +944,7 @@ whether the layout is right before anything is built.
 | Yjs / Automerge document sync | Document model fights Dexie's row-and-event model |
 | Embedding Gadgetbridge or copying AGPL code (wger, Monica, Homebox, Logseq) | License |
 | Finance as a campaign | Decision Register 2026-10-27: finances tracked outside BEYOND. **Conflict noted:** the vision says finances "may join later". Kept out until Gavin decides. |
+| A drive-home drowsiness warning | Gavin isn't concerned with it (2026-11-19); Drive Home stays as the existing voice log |
 | Vector/RAG memory | CAPABILITY_MAP: rejected until lexical search fails |
 
 ---

@@ -1,4 +1,23 @@
-# Current objective — GRAYSON-RESEARCH-SYNTHESIS-001 (2026-11-19)
+# Current objective — GRAYSON-CAMPAIGN-PLAN-001 (2026-11-20)
+
+- **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) is the campaign plan
+  toward Project Grayson and its **progress tracker** is the one record of what is done, in progress
+  and left. Every Builder names the plan item ID in its PR and updates that row in the same PR.
+- **Owner authorization:** Gavin asked for a structured campaign plan (2026-11-20) and for every agent
+  to see what is done and what is left. Protected (governance pointers in `AGENTS.md` and this file);
+  waits on independent exact-head review and Gavin's merge. Builder Claude Code; branch
+  `claude/project-thread-4rj0y9`; [PR #593](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/593).
+  Starting commit `211ccf4`.
+- **In flight:** Q1 / C3.4 dog care and CO presets ([PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594));
+  Q3 workouts on the metric page ([PR #584](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/584),
+  conflicts on this file). Everything else in the tracker is not started.
+- **Exclusions:** no product code, Engine, schema, dependency or concurrent-PR change. The plan
+  authorizes no item.
+- **Next:** Gavin picks the next item; first big objective proposed is C1.1 Orientation slice 1.
+
+---
+
+# Historical — GRAYSON-RESEARCH-SYNTHESIS-001 (merged as PR #591)
 
 - **Owner authorization:** report only; compare commercial/open-source donor patterns against current
   BEYOND repository truth and canonical scenarios under the Project Grayson baseline and Evolution
