@@ -1,4 +1,4 @@
-# Current objective — C1.0 Early START DAY, then C1.1 Orientation (2026-11-20)
+# Current objective — C1.0 Early START DAY (#596) and C1.1 Orientation (2026-11-20)
 
 - **Owner rulings (Gavin, 2026-11-20):** C1.1 approved: Orientation opens from a deliberate START DAY tap,
   the Engine keeps sole recommendation authority (Option A), runway-to-shift layout. Discovery then showed a
@@ -11,7 +11,12 @@
   integration tests in UTC and America/Chicago; full browser suite (1,731 passed) including new tests at 320/360/412 px; real-app replay of his
   morning (15:05 tap opens Sat 16:30 WORK day, shift 2 of 3; check-in and advice survive 16:45). No phone check yet.
 - **Previous state:** #594, #595 and #592 merged; #589 closed; #584 and draft #473 untouched.
-- **Next:** independent exact-head review of #596, CI, Gavin's phone check and merge. C1.1 (Gavin: "C1.1 next") builds on C1.0 in its own branch and PR.
+- **C1.1:** [brief](GRAYSON-C1.1-001.md); Decision Register GRAYSON-C1.1. Branch `ccr-380c4225-c1-1`, stacked on
+  C1.0; its PR merges after #596. PROTECTED. Retires the BEYOND 4.0-d briefing preview (its entry becomes ORIENTATION).
+  Local: pure, integration and browser tests (states at 320/360/412 px, flow through TODAY); real-app run with six
+  weeks of seeded sleep (own range, RECOVER draft, runway, prep). Screenshots in `docs/screenshots/grayson-c1.1/`.
+- **Next:** independent exact-head reviews of #596 then C1.1, CI, Gavin's phone check and merges. Then C1.2
+  (day-off, recovery and difficult-day grammar) needs its own go.
 
 ---
 

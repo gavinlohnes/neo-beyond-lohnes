@@ -41,6 +41,9 @@ for (const width of [320, 360, 412]) {
     await screen.getByRole("region", { name: "Start your day" }).getByRole("button", { name: "START DAY" }).click();
     await expect.poll(async () => (await getActiveDay())?.startedAt).toBe(at(14, 16, 30).toISOString());
     expect((await getActiveDay())!.workContext).toBe("WORK");
+    // GRAYSON C1.1: the tap opens Orientation on a work day; ENTER TODAY returns to TODAY.
+    await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
+    await screen.getByRole("button", { name: "ENTER TODAY" }).click();
     await expect.poll(() => row()).toBeNull();
     await expect.poll(() => document.querySelector("[aria-label='Operating state'] .today-life-state__line")?.textContent ?? "").toMatch(/Shift 2 of 3\./);
   });

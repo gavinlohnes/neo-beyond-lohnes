@@ -1,0 +1,46 @@
+/* GRAYSON C1.1 · Orientation slice 1: BEYOND's visual foundation (VISUAL-FOUNDATION-001) on one screen. Panels,
+   source tags and numerals are the foundation's; this file only lays them out and adds the runway. */
+.orientation { padding-bottom: 32px; }
+.orientation__bar { margin: 8px 0 10px; }
+.orientation__state { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--p-t2, #a8a8a8); text-align: right; }
+.orientation__stack { display: grid; gap: 10px; }
+.orientation .bf-value small { display: inline-block; margin-left: 6px; white-space: nowrap; }
+.orientation__garmin { color: var(--bf-garmin); }
+.orientation__delta { margin: 0; font-size: 17px; line-height: 1.45; color: var(--p-t1, #f2f2f2); }
+.orientation__title { margin: 0; font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 22px; line-height: 1.2; color: var(--p-t1, #f2f2f2); }
+.orientation__tag { font-family: var(--font-mono, monospace); font-size: 10px; letter-spacing: .12em; padding: 2px 6px; border: 1px solid var(--bf-line); color: var(--p-t2, #a8a8a8); white-space: nowrap; }
+.orientation__tag--draft { border-color: var(--p-amber, #c8901e); color: var(--p-amber, #c8901e); }
+.orientation__tag--engine { border-color: var(--bf-red); color: var(--p-t1, #f2f2f2); }
+
+.orientation__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-width: 0; }
+.orientation__row > p { flex: 1 1 180px; min-width: 0; }
+.orientation__row--rule { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--bf-line); }
+.orientation__row--action + .orientation__row--action { padding-top: 8px; border-top: 1px solid var(--bf-line); }
+.orientation__key { font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); }
+.orientation__value { font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.orientation__act { margin: 0; font-size: 16px; line-height: 1.35; color: var(--p-t1, #f2f2f2); }
+.orientation__act small { display: block; font-size: 14px; color: var(--bf-quiet); }
+.orientation__choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.orientation .btn-primary, .orientation .btn-secondary { width: auto; min-height: 44px; }
+
+/* The runway: one vertical line from now to the shift, each stop at its own time. */
+.orientation__runway { list-style: none; margin: 2px 0 0; padding: 0; display: grid; }
+.orientation__step { position: relative; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 6px 0 6px; }
+.orientation__step::before { content: ""; position: absolute; left: 63px; top: 0; bottom: 0; width: 1px; background: var(--bf-line); }
+.orientation__step:first-child::before { top: 14px; }
+.orientation__step:last-child::before { bottom: calc(100% - 14px); }
+.orientation__step::after { content: ""; position: absolute; left: 60px; top: 11px; width: 7px; height: 7px; background: var(--bf-s1); border: 1px solid var(--p-t2, #a8a8a8); }
+.orientation__step--now::after { background: var(--p-t1, #f2f2f2); border-color: var(--p-t1, #f2f2f2); }
+.orientation__step--shift::after { background: var(--bf-red); border-color: var(--bf-red); }
+.orientation__time { font-family: var(--font-mono, monospace); font-size: 14px; color: var(--p-t1, #f2f2f2); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.orientation__what { display: grid; gap: 1px; padding-left: 12px; min-width: 0; }
+.orientation__what b { font-weight: 600; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.orientation__what small { font-size: 14px; color: var(--bf-quiet); }
+.orientation__step--now .orientation__what b { color: var(--p-t2, #a8a8a8); font-weight: 400; }
+.orientation__step--caffeine { margin-top: 4px; }
+
+.orientation__release { display: grid; gap: 10px; margin-top: 16px; }
+.orientation__enter { width: 100% !important; min-height: 52px; }
+.orientation__capture { justify-self: center; min-height: 44px; padding: 0 12px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8);
+  font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
+.orientation button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }

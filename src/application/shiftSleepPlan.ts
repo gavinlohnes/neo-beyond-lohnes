@@ -48,6 +48,8 @@ export interface ShiftSleepPlan {
   windows: { kind: "NAP" | "SLEEP"; start: string; end: string; basis: "RHYTHM" | "PAST_RUNS" }[];
   /** C4.2a: the cut-off the CAFFEINE card used, and whose number it is (the default or his own). */
   caffeine: { hours: number; setBy: CutoffSetBy };
+  /** C1.1: the CAFFEINE card's cut-off instant, for Orientation's runway. Same number the card states. */
+  caffeineAt: string;
 }
 export type CutoffSetBy = "DEFAULT" | "OWNER";
 
@@ -210,7 +212,7 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutof
       plan: { title: `Sunglasses for the way home, ${clock(end)}`, plannedAt: formatLocalDate(end) },
     });
   }
-  return { shift: { date: formatLocalDate(livedStart(now, offset)), start: start.toISOString(), end: end.toISOString(), overnight, firstOfRun, lastOfRun }, cards, windows, caffeine: { hours: cutoffHours, setBy: cutoffSetBy } };
+  return { shift: { date: formatLocalDate(livedStart(now, offset)), start: start.toISOString(), end: end.toISOString(), overnight, firstOfRun, lastOfRun }, cards, windows, caffeine: { hours: cutoffHours, setBy: cutoffSetBy }, caffeineAt: cutoff.toISOString() };
 }
 
 export async function getShiftSleepPlan(now: Date = new Date()): Promise<ShiftSleepPlan | null> {
