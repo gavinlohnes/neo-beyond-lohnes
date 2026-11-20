@@ -81,7 +81,7 @@ status of its own.
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
-| C4.8 | Optional fasting window | Not started |  |
+| C4.8 | Optional fasting window | Not started | Design in #601; no implementation authorized |
 | **Campaign 5 — Inner Day** | | | |
 | C5.1 | Feeling word (optional) | Not started |  |
 | C5.2 | Help mode | Not started |  |

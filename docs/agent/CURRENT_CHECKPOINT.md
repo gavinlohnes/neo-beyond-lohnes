@@ -1,4 +1,28 @@
-# Current objective — PR #600 exact-head review repair (2026-11-20)
+# Current objective — GRAYSON-BEHAVIOR-FASTING-DESIGN-001 (2026-11-20)
+
+- **Owner authorization:** Protected documentation/design-and-evidence objective approved by Gavin after he supplied
+  lifestyle-logging and nutrition references and asked for alcohol-stop support plus a highly customizable fasting
+  programme. [Brief](GRAYSON-BEHAVIOR-FASTING-DESIGN-001.md). Starting master
+  `e7482a459d9b596007577c35768401129fe1c976`; Builder Codex; branch
+  `codex/grayson-behavior-fasting-design`; [PR #601](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/601).
+- **Scope:** repository-first design of Daily Signals, alcohol integration with the existing Quit system and a
+  shift-aware Eating Window programme; evidence/uncertainty, safety, phone flows, data provenance, acceptance
+  scenarios and bounded future slices. Canonical design: [`GRAYSON_BEHAVIOR_FASTING_DESIGN.md`](../GRAYSON_BEHAVIOR_FASTING_DESIGN.md).
+- **Exclusions:** no product code, prototype, event/schema, Engine/recommendation, notification, provider/dependency,
+  navigation, runtime identity, Google Drive or concurrent-PR change. C1.5 and Campaign 2 remain unstarted.
+- **REUSE:** Quit/check-in/urge/clean-day, meals, lived context, training/protein, Whole Picture, Try and correction
+  conventions. **OWN:** Gavin's rotation, abstinence mission, strength safeguards and evidence-bounded Delta behavior.
+  **BUILD FROM SCRATCH:** none in this objective.
+- **Candidate:** PR #601 head `a95f87dcb2ac76152d0e9fa6d4b2ee571570c20b`; docs-only required CI green.
+  The three prior review findings are resolved: the Cochrane source is accurately a review protocol, programme names
+  are neutral durations rather than a progression ladder, and the PR handoff carries the correct master SHA. The
+  renewed review passed all design/evidence content and requested only this checkpoint refresh.
+- **Next:** renew independent exact-head review and docs-only CI after this checkpoint-only correction, then return
+  to Gavin for Protected merge approval and a separate decision on the recommended C4.8a build.
+
+---
+
+# Historical — PR #600 exact-head review repair (merged as `e7482a45`)
 
 Gavin explicitly handed Builder ownership from Claude Code to Codex for the bounded review follow-up on
 `ccr-380c4225-1es42i`. Starting master after #599: `e51671b99759e9383f0f3c523097762ad9d675ee`.
