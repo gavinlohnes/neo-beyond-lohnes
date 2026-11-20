@@ -1,7 +1,7 @@
-# Handoff to the next Builder (Codex) — 2026-11-20
+# Current objective — PR #600 exact-head review repair (2026-11-20)
 
-Gavin is switching from Claude Code to Codex when Claude's usage runs out. Builder of record for the items below
-was Claude Code; Gavin's switch is the explicit handoff.
+Gavin explicitly handed Builder ownership from Claude Code to Codex for the bounded review follow-up on
+`ccr-380c4225-1es42i`. Starting master after #599: `e51671b99759e9383f0f3c523097762ad9d675ee`.
 
 - **#599** (C1.3 + C1.4, close after SHIFT DOWN): independent review PASS, merged by Gavin 2026-11-20.
 - **C1.6 + review follow-ups:** rebased onto master after #599 merged and opened as a PR from `ccr-380c4225-1es42i`
@@ -12,15 +12,15 @@ was Claude Code; Gavin's switch is the explicit handoff.
   2. C1.6 Delta's voice ([brief](GRAYSON-C1.6-001.md), approved: "Bruce → Terry by default, with Delta and Droid as
      switchable voices"): `application/deltaVoice.ts` copy library (PLAIN/MENTOR/DELTA/DROID), hard days always PLAIN,
      device-local switch under Delta's line on Orientation. Screenshots `docs/screenshots/grayson-c1.6/`.
-  - Verified locally: typecheck, architecture, all Orientation/close/voice node tests (UTC and Chicago) and the
-    Orientation + DayClose browser files. A full-suite run was in progress at handoff; re-run before the PR.
-- **Next steps for Codex:**
-  1. After Gavin merges #599: `git fetch && git checkout ccr-380c4225-c1-6 && git rebase origin/master` (or merge
-     master in), run `npm run verify`, push, and open one PR titled "GRAYSON C1.6 · Delta's voice + C1.2/C1.3 review
-     follow-ups". Lane PROTECTED (TODAY wording, source-error reporting). Update the tracker row C1.6 to Done (#PR).
-  2. Get an independent exact-head review (a separate session; not the Builder), green CI, Gavin's merge.
-  3. Then Campaign 1 is done except C1.5 (re-entry "since you last looked" line, Protected, L). Recommend Gavin uses
-     Orientation, the close and the voices on real shifts before starting C1.5 or Campaign 2.
+  - Local result at candidate `7a5fa6892005f778d424749ca167c329f23efab7`: typecheck and architecture pass;
+    full suite 4,349 passed, one unrelated MealRoundTrip parallel-run timeout, two skipped; the isolated meal test
+    passed 21/21. Orientation/close/voice Node tests pass in UTC and Chicago; Orientation and DayClose browser files
+    pass. Required CI is fully green on that exact head.
+- **Independent review:** BLOCK at `7a5fa6892005f778d424749ca167c329f23efab7` on documentation handoff only:
+  add the exact starting commit and active PR to the C1.6 brief, and refresh this checkpoint. Product and code review
+  otherwise passed.
+- **Next:** push only the documentation repair, renew independent exact-head review, then return to Gavin for merge.
+  Do not start C1.5 or Campaign 2 without his go-ahead.
 
 ---
 

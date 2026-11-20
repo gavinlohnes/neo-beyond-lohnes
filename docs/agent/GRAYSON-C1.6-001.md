@@ -6,7 +6,9 @@
   and Droid as switchable voices." Earlier ruling kept: "worth deliberate attention".
 - **Lane:** PROTECTED for this PR as a whole (it ships with the review follow-ups to C1.2/C1.3 on TODAY's composition);
   the voice itself is a copy change (the plan's Feature lane). Independent exact-head review, green CI, Gavin's merge.
-- **Builder:** Claude Code. **Branch:** `ccr-380c4225-1es42i` after #599 merges.
+- **Starting commit:** `e51671b99759e9383f0f3c523097762ad9d675ee` (master after #599). **Builder:** Claude Code,
+  handed to Codex by Gavin for review follow-ups. **Branch:** `ccr-380c4225-1es42i`.
+  **Active PR:** [#600](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/600).
 - **Operator benefit:** Orientation's Delta line sounds like a partner in his ear, not app text, in the voice he picks.
 - **Rules:** one copy library (`application/deltaVoice.ts`) holds every Delta sentence in PLAIN (the calm house voice,
   unchanged wording), MENTOR (Bruce → Terry; the on-screen default), DELTA (precise AI) and DROID ("Observation: /
