@@ -171,6 +171,28 @@ describe("Orientation through TODAY with real records", () => {
     await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
   });
 
+  it("C1.6: Delta speaks as MENTOR by default; DELTA and DROID switch the words only, and the choice stays", async () => {
+    localStorage.removeItem("beyond.delta.voice.v1");
+    await page.viewport(360, 900);
+    const screen = await render(<TodayScreen onOpenLife={() => {}} />);
+    await screen.getByRole("region", { name: "Start your day" }).getByRole("button", { name: "START DAY" }).click();
+    const delta = () => document.querySelector(".orientation__delta")?.textContent ?? "";
+    await expect.poll(delta).toBe("Slept 6:40. Still learning your normal, so no comparison yet. Check in and I'll give you the call.");
+    const voices = screen.getByRole("group", { name: "Delta's voice" });
+    for (const [name, line] of [
+      ["DELTA", "You slept 6:40. I don't yet have enough history for a comparison. Your check-in will determine today's guidance."],
+      ["DROID", "Observation: 6:40 of sleep. Insufficient data for comparison. I am still learning you. Query: will you check in? The guidance depends on it."],
+    ] as const) {
+      await voices.getByRole("button", { name }).click();
+      await expect.poll(delta).toBe(line);
+      await expect.element(voices.getByRole("button", { name })).toHaveAttribute("aria-pressed", "true");
+      if (SHOTS) { await page.viewport(360, Math.ceil(document.documentElement.scrollHeight)); await new Promise((r) => setTimeout(r, 200)); await page.screenshot({ path: `${SHOTS}/360-voice-${name.toLowerCase()}.png` }); await page.viewport(360, 900); }
+    }
+    expect(localStorage.getItem("beyond.delta.voice.v1")).toBe("DROID");
+    await voices.getByRole("button", { name: "MENTOR" }).click();
+    if (SHOTS) { await page.viewport(360, Math.ceil(document.documentElement.scrollHeight)); await new Promise((r) => setTimeout(r, 200)); await page.screenshot({ path: `${SHOTS}/360-voice-mentor.png` }); }
+  });
+
   it("CHECK IN from Orientation opens the existing check-in over it", async () => {
     await page.viewport(360, 900);
     const screen = await render(<TodayScreen onOpenLife={() => {}} />);
