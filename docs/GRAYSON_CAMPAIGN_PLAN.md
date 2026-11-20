@@ -52,8 +52,8 @@ status of its own.
 | C1.0 | Early START DAY: an afternoon tap opens tonight's day (added 2026-11-20, Gavin's go) | Done (#596) | Prerequisite found in C1.1 discovery; [brief](agent/GRAYSON-C1.0-001.md) |
 | C1.1 | Orientation slice 1: work-night wake | Done (#597) | Approved 2026-11-20 (START DAY trigger, Engine keeps sole recommendation authority, runway layout); built on C1.0, [brief](agent/GRAYSON-C1.1-001.md). Prototype evidence in #589 (not production) |
 | C1.2 | Orientation slice 2: day-off, recovery and difficult-day grammar | Done (#598) | Approved 2026-11-20 (no invented day-off advice; mood trend as a fact); [brief](agent/GRAYSON-C1.2-001.md) |
-| C1.3 | Close ritual | Not started |  |
-| C1.4 (Q4) | "Tomorrow differs" line | Not started |  |
+| C1.3 | Close ritual | Done (#599) | Approved 2026-11-20: follows SHIFT DOWN, not END DAY; [brief](agent/GRAYSON-C1.3-001.md) |
+| C1.4 (Q4) | "Tomorrow differs" line | Done (#599) | Ships inside C1.3's close |
 | C1.5 | Re-entry thread | Not started |  |
 | C1.6 | Delta voice pass on the loop | Not started |  |
 | **Campaign 2 — Shift Transitions** | | | |
