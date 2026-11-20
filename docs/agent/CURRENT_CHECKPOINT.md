@@ -6,7 +6,7 @@
   runtime, architecture, or Google Drive change. Brief:
   [`GRAYSON-EVOLUTION-RULE-001.md`](GRAYSON-EVOLUTION-RULE-001.md). Starting commit
   `29bc9efad66ff2a86836eb84394ea9be7e073f4c`; Builder Codex; branch
-  `codex/grayson-evolution-rule`; PR pending.
+  `codex/grayson-evolution-rule`; [PR #590](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/590).
 - **Ruling:** BEYOND is the functioning foundation of GRAYSON; no proposal begins from a blank canvas.
   Establish repository truth and preservation first. External products and open source are research
   donors, not replacement templates. Replacement requires evidence, preservation/migration planning,
@@ -19,10 +19,11 @@
 - **Exclusions:** no product code, runtime behavior, UI, identity, navigation, architecture, Engine,
   recommendation, schema/event, provider, dependency, data, test fixture, Google Drive, implementation
   objective, redesign approval, replacement decision, merge, or concurrent-PR change.
-- **Verification:** pending documentation links, diff hygiene, required CI, and independent exact-head
-  review.
-- **Next:** complete documentation checks, open a PR, obtain independent exact-head review and green
-  required CI, then return to Gavin for merge approval.
+- **Verification:** risk classifier reports the expected Protected governance lane; canonical relative
+  documentation targets are present; diff hygiene passes. Required CI and independent exact-head
+  review remain pending.
+- **Next:** obtain independent exact-head review and green required CI, then return to Gavin for merge
+  approval.
 
 ---
 
