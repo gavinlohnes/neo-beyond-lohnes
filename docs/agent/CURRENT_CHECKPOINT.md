@@ -1,4 +1,26 @@
-# Current objective — GRAYSON-CAMPAIGN-PLAN-001 (2026-11-20)
+# Current objective — C4.2a DELTA-suggested, editable caffeine cut-off (2026-11-20)
+
+- **Owner authorization:** Gavin, 2026-11-20 04:40 UTC: "Start it", answering the proposed first build of DELTA
+  suggestions (editable cut-off from today's 6 h with where it comes from; DELTA offers a better value from his
+  nights; changes only on his tap; undo). Protected: amends locked SHIFT-SLEEP-PLAN-001, adds a stored setting,
+  widens what DELTA may propose. Builder Claude Code; branch `claude/project-thread-iopp5i`; starting commit
+  `a857f28`; PR #PR. Plan item C4.2a (tracker row added on his go).
+- **Operator benefit:** the cut-off is his number, not a hidden constant, and DELTA can point to his own short
+  post-shift sleeps and offer a longer gap he approves or undoes.
+- **REUSE:** TARGET-PROPOSAL-001's propose/SAVE/KEEP/UNDO shape; BRIDGE-NOTIFY-001's settings-on-the-schedule-row
+  storage (native backup, no schema change); SLEEP-RHYTHM-001's work-day nights. **OWN:** the suggestion rule and
+  copy. **BUILD FROM SCRATCH:** none.
+- **Exclusions:** no other plan numbers, no automatic change, no score, no caffeine log, no per-drink lines (C4.2),
+  no notification, Engine, provider or dependency change.
+- **Verification (local):** node suite 2,540 passed; typecheck; architecture; production build. The new browser
+  test (`tests/browser/CaffeineCutoff.test.tsx`) could not run here (no Chromium in this container); CI runs it.
+  No phone check yet.
+- **Next:** green CI and independent exact-head review, then Gavin's merge. After a real night, KEEP / REFINE /
+  RETHINK.
+
+---
+
+# Historical — GRAYSON-CAMPAIGN-PLAN-001 (merged as PR #593)
 
 - **Shared plan:** [`docs/GRAYSON_CAMPAIGN_PLAN.md`](../GRAYSON_CAMPAIGN_PLAN.md) is the campaign plan
   toward Project Grayson and its **progress tracker** is the one record of what is done, in progress

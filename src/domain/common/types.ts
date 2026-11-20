@@ -915,6 +915,23 @@ export interface SchedulePattern {
    * (application/keyMomentAlerts.ts), never by the schedule's own parser.
    */
   keyMomentAlerts?: KeyMomentAlertSettings;
+  /**
+   * C4.2a (Gavin, 2026-11-20, "Start it"): the shift sleep plan's own numbers he can change, kept on the same row so
+   * native backups carry them with no schema change. Optional and unindexed; read and validated on its own
+   * (application/sleepPlanSettings.ts), never by the schedule's own parser. Absent means the cited defaults.
+   */
+  sleepPlanSettings?: SleepPlanSettings;
+}
+
+/**
+ * C4.2a: the caffeine cut-off he set (whole hours before sleep, when, and whether he typed it or approved DELTA's
+ * suggestion), and when he last said NOT NOW to DELTA's suggestion, so it stays quiet for a while. Configuration, not
+ * history: no DomainEvent.
+ */
+export interface SleepPlanSettings {
+  caffeineCutoff?: { hours: number; setAt: string; setBy: "OWNER" | "DELTA" };
+  /** ISO; when he last said NOT NOW to DELTA's suggestion. */
+  declinedAt?: string;
 }
 
 /** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */

@@ -2921,6 +2921,15 @@ on TODAY's lived-day bar, under these conditions:
 Everything else in this entry is unchanged.
 - **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
   Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
+  **Amended (Gavin, 2026-11-20, "Start it", C4.2a):** the 6 h is the default, not fixed. He can CHANGE it on the
+  card (whole hours, 3 to 12; under 6 says it's under the study's minimum), and the card says whose number it is.
+  DELTA may suggest one 2-hour step longer, never past 8 h, when at least 2 of 3 of his recent Garmin sleeps after
+  a shift (7 to 14 of them, counted since the cut-off was last set) are under 7 h (Watson et al. 2015, AASM/SRS)
+  and their median is too; it shows those nights, a confidence that is never "high" (BEYOND records no caffeine,
+  so it's a pattern in his sleep, not proof), and its sources. Nothing changes until APPROVE; UNDO puts it back;
+  NOT NOW keeps the number and quiets DELTA for 14 days. Stored on the schedule's "current" row like the
+  key-moment alerts (native backups carry it; no schema change). TODAY's energy curve uses the same hours. Still
+  never an Engine input, and DELTA never changes it on its own.
 - **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake
   time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
   parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
