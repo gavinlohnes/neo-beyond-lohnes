@@ -13,6 +13,8 @@
 - **#598:** merged by Gavin; an independent reviewer session (requested by Gavin) is reviewing its exact head
   `4533184` post-merge; any finding becomes a follow-up.
 - **C1.3 PR:** [#599](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/599).
+- **Queued after #599 merges (one PR):** the C1.2/C1.3 review follow-ups and C1.6 Delta's voice (Mentor default,
+  Delta and Droid switchable; [brief](GRAYSON-C1.6-001.md)), built locally and verified.
 - **Next:** independent review of #599, CI, Gavin's phone look (a timed close under 60 s) and merge.
 
 ---

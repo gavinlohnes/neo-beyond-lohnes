@@ -12,6 +12,13 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C1.6 — Delta's voice: Mentor by default, Delta and Droid switchable (owner go 2026-11-20)
+
+"Bruce → Terry by default, with Delta and Droid as switchable voices." [Brief](agent/GRAYSON-C1.6-001.md). One copy
+library holds every Delta sentence in each voice; a voice changes words only, never facts, advice or certainty.
+Hard days (Minimum Day, STABILIZE, the sustained-mood sentence) are always plain. No character names or signature
+lines are copied. The choice is a device-local preference.
+
 ## GRAYSON-C1.3 — the close follows SHIFT DOWN (owner go 2026-11-20)
 
 Gavin leaves the day running and crashes at home; SHIFT DOWN is his getting-home ritual ("from Deputy Lohnes to just

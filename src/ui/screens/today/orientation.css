@@ -49,3 +49,9 @@
 .orientation__plan { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 16px; color: var(--p-t1, #f2f2f2); }
 .orientation__trend { padding-left: 10px; border-left: 2px solid var(--p-amber, #c8901e); }
 .orientation__sub { margin: -2px 0 2px; font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .08em; color: var(--p-t2, #a8a8a8); }
+
+/* C1.6: Delta's voice switch. Quiet: small mono labels, the chosen one underlined, never red. */
+.orientation__voices { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 2px; }
+.orientation__voice { min-height: 36px; padding: 0 8px; background: transparent; border: 1px solid transparent; color: var(--p-t2, #a8a8a8);
+  font-family: var(--font-mono, monospace); font-size: 11px; letter-spacing: .12em; cursor: pointer; }
+.orientation__voice[aria-pressed="true"] { color: var(--p-t1, #f2f2f2); border-color: var(--bf-line); }

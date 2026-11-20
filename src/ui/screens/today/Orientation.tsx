@@ -5,6 +5,8 @@ import { OperatorHeader } from "../../components/OperatorHeader";
 import { Panel, SourceTag } from "../../foundation/primitives";
 import "../../foundation/foundation.css";
 import "./orientation.css";
+import { VOICES, type DeltaVoice } from "../../../application/deltaVoice";
+import { readVoice, writeVoice } from "./voiceStore";
 
 export interface OrientationRoutes {
   onEnter: () => void;
@@ -27,13 +29,16 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
   const [model, setModel] = useState<OrientationModel | null | "ERROR" | undefined>(undefined);
   const [retry, setRetry] = useState(0);
   const [answering, setAnswering] = useState(false);
+  // GRAYSON C1.6: Delta's voice, MENTOR (Bruce → Terry) unless he picked DELTA or DROID on this device.
+  const [voice, setVoice] = useState<DeltaVoice>(() => readVoice());
+  const pickVoice = (next: DeltaVoice) => { writeVoice(next); setVoice(next); };
 
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    void getOrientation().then((next) => { if (!cancelled) setModel(next); }, () => { if (!cancelled) setModel("ERROR"); });
+    void getOrientation(undefined, voice).then((next) => { if (!cancelled) setModel(next); }, () => { if (!cancelled) setModel("ERROR"); });
     return () => { cancelled = true; };
-  }, [active, refreshKey, retry]);
+  }, [active, refreshKey, retry, voice]);
 
   const answer = async (value: "WORK" | "OFF") => {
     if (answering) return;
@@ -118,6 +123,11 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
         {o.delta && (
           <Panel headingLevel={2} headingId="orient-delta" icon={<MessageSquareText size={18} />} label="DELTA" wide source={<SourceTag>FROM YOUR RECORDS</SourceTag>}>
             <p className="orientation__delta">{o.delta}</p>
+            <div className="orientation__voices" role="group" aria-label="Delta's voice">
+              {VOICES.map((x) => (
+                <button key={x.id} type="button" className="orientation__voice" aria-pressed={voice === x.id} title={x.hint} onClick={() => pickVoice(x.id)}>{x.label}</button>
+              ))}
+            </div>
           </Panel>
         )}
 
