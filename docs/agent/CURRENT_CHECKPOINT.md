@@ -4,7 +4,7 @@
   suggestions (editable cut-off from today's 6 h with where it comes from; DELTA offers a better value from his
   nights; changes only on his tap; undo). Protected: amends locked SHIFT-SLEEP-PLAN-001, adds a stored setting,
   widens what DELTA may propose. Builder Claude Code; branch `claude/project-thread-iopp5i`; starting commit
-  `a857f28`; PR #PR. Plan item C4.2a (tracker row added on his go).
+  `a857f28`; [PR #595](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/595). Plan item C4.2a (tracker row added on his go).
 - **Operator benefit:** the cut-off is his number, not a hidden constant, and DELTA can point to his own short
   post-shift sleeps and offer a longer gap he approves or undoes.
 - **REUSE:** TARGET-PROPOSAL-001's propose/SAVE/KEEP/UNDO shape; BRIDGE-NOTIFY-001's settings-on-the-schedule-row

@@ -72,7 +72,7 @@ status of its own.
 | **Campaign 4 — Body Engine** | | | |
 | C4.1 | Energy curve body-clock fix | Not started |  |
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
-| C4.2a | DELTA-suggested, editable caffeine cut-off | Done (#PR) | Added 2026-11-20 on Gavin's "Start it". First plan number DELTA may suggest; others later |
+| C4.2a | DELTA-suggested, editable caffeine cut-off | Done (#595) | Added 2026-11-20 on Gavin's "Start it". First plan number DELTA may suggest; others later |
 | C4.3 | Optional one-tap caffeine log | Not started |  |
 | C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started |  |
 | C4.5 | Mission review (monthly) | Not started |  |
