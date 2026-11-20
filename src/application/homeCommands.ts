@@ -2,6 +2,7 @@ import { RRule } from "rrule";
 import { INTENT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { createObligation } from "./intentCommands";
 import { getUnresolvedObligations } from "./intentQueries";
+import { isClockTime } from "./bridgePlan";
 import { getMemories, rememberFact } from "./alfred/alfredMemory";
 import { formatLocalDate } from "../engine/scheduledContext";
 import type { AlfredMemory } from "../domain/alfred/types";
@@ -22,6 +23,8 @@ export interface HomeItemInput {
   item: string;
   details?: string | undefined;
   repeat?: { every: number; unit: RepeatUnit; firstDue: string } | undefined;
+  /** GRAYSON-C3.4a: HH:MM on the due day (REMIND-AT-001's remindAt). Only with a repeat; an omitted time uses the existing 16:00 default. */
+  remindAt?: string | undefined;
 }
 
 /**
@@ -50,17 +53,21 @@ function validate(input: HomeItemInput) {
   const r = input.repeat;
   if (r && (!Number.isInteger(r.every) || r.every < 1 || r.every > 60)) throw new Error("INVALID_REPEAT: repeat every 1 to 60.");
   if (r && !isRealDate(r.firstDue)) throw new Error("INVALID_DATE: give a real next due date.");
-  return { item, details, repeat: r };
+  const remindAt = input.remindAt?.trim() || undefined;
+  if (remindAt && !r) throw new Error("REMIND_AT_NEEDS_REPEAT: an alert time goes with a repeating job.");
+  if (remindAt && !isClockTime(remindAt)) throw new Error("INVALID_TIME: give the alert time as HH:MM.");
+  return { item, details, repeat: r, remindAt };
 }
 
 /** The fact (if any) and the repeating reminder (if any), together or not at all. */
 export async function addHomeItem(input: HomeItemInput): Promise<{ memory: AlfredMemory | null; reminder: Obligation | null }> {
-  const { item, details, repeat } = validate(input);
+  const { item, details, repeat, remindAt } = validate(input);
   return writeAtomically(["alfredMemories", "beyondDays", ...INTENT_WRITE_TABLES], async () => {
     const memory = details ? await rememberFact(`${item}: ${details}`, "HOME") : null;
     const reminder = repeat ? await createObligation({
       title: `${HOME_PREFIX}${item}`,
       dueAt: repeat.firstDue,
+      ...(remindAt ? { remindAt } : {}),
       recurrence: { rrule: repeatRule(repeat.every, repeat.unit, repeat.firstDue) },
       ...(details ? { description: details } : {}),
     }) : null;

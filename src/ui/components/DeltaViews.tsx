@@ -8,7 +8,6 @@ import { openRecord } from "../openRecordEvent";
 import { askAlfred } from "./AlfredSheet";
 import { describeGroup } from "../screens/today/SleepRhythm";
 import { describeComparison } from "../screens/more/TagPatternsSection";
-import { CaffeineCutoff } from "../screens/systems/CaffeineCutoff";
 
 /**
  * DELTA-GROWS-001: DELTA's notebook (what it learned, and when) and its map (what it knows, what it is still
@@ -52,8 +51,6 @@ export function DeltaPanel({ active }: { active: boolean }) {
       {knowledge.topics.map((t) => <li key={t.id} data-state={t.state}><strong>{t.label}</strong><span className="meta"> · {describeTopic(t)}</span></li>)}
     </ul>
     {knowledge.suggestion && <ExperimentOffer suggestion={knowledge.suggestion} />}
-    {/* C4.2a: DELTA's suggestion for the caffeine cut-off, from his own work-day sleeps. Silent when there is none. */}
-    <CaffeineCutoff mode="delta" />
     <DeltaAhead active={active} />
     {knowledge.needle.ready && <section className="delta-needle" aria-label="What lines up with your good weeks">
       <h2 className="tool-label">DELTA · WHAT LINES UP WITH YOUR GOOD WEEKS</h2>

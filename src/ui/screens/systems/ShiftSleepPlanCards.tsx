@@ -6,7 +6,7 @@ import { CaffeineCutoff } from "./CaffeineCutoff";
  * CIRCADIAN-SPIKE-001: the next shift transition's cards, in ROUTE. Shift-work guidance, not a decision. SAVE shows
  * a preview first and then adds one plan item (planned, never due); SKIP hides that card for that shift on this
  * device. Nothing else is written, and the Engine never sees the cards. C4.2a: the CAFFEINE card also shows where its
- * number comes from, lets him CHANGE it, and carries DELTA's suggestion when there is one; a change redraws the cards.
+ * number comes from, lets him CHANGE it explicitly; a change redraws the cards.
  */
 const skipKey = (date: string, kind: PlanCardKind) => `beyond.shiftSleepPlan.skip.${date}.${kind}`;
 const readSkip = (key: string) => { try { return localStorage.getItem(key) === "1"; } catch { return false; } };
@@ -49,7 +49,7 @@ export function ShiftSleepPlanCards({ now }: { now?: Date | undefined }) {
           <p className="meta" style={{ margin: "2px 0 0" }}>{card.detail}</p>
           <p className="meta" style={{ margin: "2px 0 0" }}>{card.basis}</p>
           {card.source && <p className="meta" style={{ margin: "2px 0 0" }}>Source: <a href={card.source.url} target="_blank" rel="noreferrer">{card.source.label}</a>{card.source.checked ? ` · ${card.source.checked}` : ""}</p>}
-          {card.kind === "CAFFEINE" && <CaffeineCutoff now={now} mode="card" onChanged={() => setReload((r) => r + 1)} />}
+          {card.kind === "CAFFEINE" && <CaffeineCutoff onChanged={() => setReload((r) => r + 1)} />}
           {saved[card.kind]
             ? <p className="meta" role="status" style={{ margin: "6px 0 0" }}>Saved as a plan item: {card.plan.title}.</p>
             : preview === card.kind

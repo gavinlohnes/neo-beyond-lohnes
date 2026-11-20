@@ -10,7 +10,6 @@ import { flips, flipSummary, RUN_MEAN_FLOOR } from "./rotationProjection";
 import { getWholePicture } from "./wholePictureQueries";
 import type { PictureRow } from "./wholePictureProjection";
 import { getSleepPlanSettings } from "./sleepPlanSettings";
-import { suggestCaffeineCutoff, type CutoffSuggestion } from "./cutoffProposal";
 
 /**
  * CIRCADIAN-SPIKE-001's first slice (BIG-IDEAS-001 item 3, Protected; Gavin, 2026-11-11 "Approved"). For the next
@@ -47,10 +46,10 @@ export interface ShiftSleepPlan {
    * new rule: these are the cards' own numbers.
    */
   windows: { kind: "NAP" | "SLEEP"; start: string; end: string; basis: "RHYTHM" | "PAST_RUNS" }[];
-  /** C4.2a: the cut-off the CAFFEINE card used, and whose number it is (the cited default, his own, or DELTA's he approved). */
+  /** C4.2a: the cut-off the CAFFEINE card used, and whose number it is (the default or his own). */
   caffeine: { hours: number; setBy: CutoffSetBy };
 }
-export type CutoffSetBy = "DEFAULT" | "OWNER" | "DELTA";
+export type CutoffSetBy = "DEFAULT" | "OWNER";
 
 /** Cited constants: each rule number lives here with the source sentence it comes from (quoted from the full text). */
 export const SOURCES = {
@@ -83,8 +82,8 @@ export const SOURCES = {
 } as const satisfies Record<string, PlanSource>;
 
 /**
- * No substantial caffeine for at least this long before sleep (SOURCES.CAFFEINE). C4.2a: the default; he can change
- * it, and DELTA can suggest a longer one he approves (sleepPlanSettings.ts, cutoffProposal.ts).
+ * Default gap before sleep, based on general guidance (SOURCES.CAFFEINE). C4.2a: the owner can change
+ * it explicitly (sleepPlanSettings.ts); this is general guidance, not a learned personal threshold.
  */
 export const CAFFEINE_CUTOFF_HOURS = 6;
 /** Wake at least this long before the shift: sleep inertia takes at least an hour to clear (SOURCES.WAKE_MARGIN). */
@@ -111,15 +110,14 @@ function lastAtClock(to: Date, m: number): Date {
 export interface ShiftSleepPlanInput {
   now: Date; pattern: SchedulePattern; rhythm: SleepRhythm | null; rows: readonly PictureRow[];
   /** C4.2a: his own cut-off, when he set one; otherwise CAFFEINE_CUTOFF_HOURS. */
-  caffeineCutoff?: { hours: number; setBy: "OWNER" | "DELTA" } | undefined;
+  caffeineCutoff?: { hours: number; setBy: "OWNER" } | undefined;
 }
 
 /** C4.2a: where the cut-off's number comes from, said on the card. */
 function cutoffWords(hours: number, setBy: CutoffSetBy): string {
   if (setBy === "DEFAULT") return `${hours} h`;
-  const whose = setBy === "DELTA" ? "DELTA's suggestion you approved" : "your setting";
-  const below = hours < CAFFEINE_CUTOFF_HOURS ? `, under the study's ${CAFFEINE_CUTOFF_HOURS} h minimum` : "";
-  return `${hours} h (${whose}${below})`;
+  const below = hours < CAFFEINE_CUTOFF_HOURS ? `, below BEYOND's ${CAFFEINE_CUTOFF_HOURS} h default` : "";
+  return `${hours} h (your setting${below})`;
 }
 
 export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutoff }: ShiftSleepPlanInput): ShiftSleepPlan | null {
@@ -220,17 +218,11 @@ export async function getShiftSleepPlan(now: Date = new Date()): Promise<ShiftSl
   return deriveShiftSleepPlan({ now, pattern, rhythm: deriveSleepRhythm(records.map((r) => r.evidence), summaries, now), rows: picture.rows, caffeineCutoff: settings.caffeineCutoff });
 }
 
-/** C4.2a: the cut-off in use and DELTA's suggestion for it, from his own Garmin work-day sleeps. Read only. */
-export interface CaffeineCutoffView { hours: number; setBy: CutoffSetBy; setAt?: string; suggestion: CutoffSuggestion }
-export async function getCaffeineCutoffView(now: Date = new Date()): Promise<CaffeineCutoffView> {
-  const [records, summaries, settings] = await Promise.all([getImportedSleep(), getDaySummaries(), getSleepPlanSettings()]);
-  const own = settings.caffeineCutoff;
-  const hours = own?.hours ?? CAFFEINE_CUTOFF_HOURS;
-  const rhythm = deriveSleepRhythm(records.map((r) => r.evidence), summaries, now);
-  return {
-    hours, setBy: own?.setBy ?? "DEFAULT", ...(own ? { setAt: own.setAt } : {}),
-    suggestion: suggestCaffeineCutoff({ nights: rhythm.nights, currentHours: hours, setAt: own?.setAt, declinedAt: settings.declinedAt, now }),
-  };
+/** C4.2a: owner-controlled cutoff configuration. No sleep-outcome inference or proposal. */
+export interface CaffeineCutoffView { hours: number; setBy: CutoffSetBy; setAt?: string }
+export async function getCaffeineCutoffView(): Promise<CaffeineCutoffView> {
+  const own = (await getSleepPlanSettings()).caffeineCutoff;
+  return { hours: own?.hours ?? CAFFEINE_CUTOFF_HOURS, setBy: own ? "OWNER" : "DEFAULT", ...(own ? { setAt: own.setAt } : {}) };
 }
 
 /** SAVE, after the preview: a plan item with plannedAt only. Never dueAt, so it stays advisory (PLANNED_TODAY at most). */

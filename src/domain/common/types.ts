@@ -923,15 +923,9 @@ export interface SchedulePattern {
   sleepPlanSettings?: SleepPlanSettings;
 }
 
-/**
- * C4.2a: the caffeine cut-off he set (whole hours before sleep, when, and whether he typed it or approved DELTA's
- * suggestion), and when he last said NOT NOW to DELTA's suggestion, so it stays quiet for a while. Configuration, not
- * history: no DomainEvent.
- */
+/** C4.2a: owner-set caffeine cutoff configuration and its timestamp. No automated proposal or experiment. */
 export interface SleepPlanSettings {
-  caffeineCutoff?: { hours: number; setAt: string; setBy: "OWNER" | "DELTA" };
-  /** ISO; when he last said NOT NOW to DELTA's suggestion. */
-  declinedAt?: string;
+  caffeineCutoff?: { hours: number; setAt: string; setBy: "OWNER" };
 }
 
 /** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */

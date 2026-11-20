@@ -2921,15 +2921,19 @@ on TODAY's lived-day bar, under these conditions:
 Everything else in this entry is unchanged.
 - **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
   Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
-  **Amended (Gavin, 2026-11-20, "Start it", C4.2a):** the 6 h is the default, not fixed. He can CHANGE it on the
-  card (whole hours, 3 to 12; under 6 says it's under the study's minimum), and the card says whose number it is.
-  DELTA may suggest one 2-hour step longer, never past 8 h, when at least 2 of 3 of his recent Garmin sleeps after
-  a shift (7 to 14 of them, counted since the cut-off was last set) are under 7 h (Watson et al. 2015, AASM/SRS)
-  and their median is too; it shows those nights, a confidence that is never "high" (BEYOND records no caffeine,
-  so it's a pattern in his sleep, not proof), and its sources. Nothing changes until APPROVE; UNDO puts it back;
-  NOT NOW keeps the number and quiets DELTA for 14 days. Stored on the schedule's "current" row like the
-  key-moment alerts (native backups carry it; no schema change). TODAY's energy curve uses the same hours. Still
-  never an Engine input, and DELTA never changes it on its own.
+  **Amended and narrowed (Gavin, 2026-11-20, C4.2a / PR #595):** owner-editable cutoff only: 6 h remains
+  BEYOND's starting default, CHANGE selects whole hours 3–12, SAVE is explicit, and UNDO restores the prior
+  setting unless a later change replaced it. The source explanation identifies Drake et al.'s 400 mg study
+  at bedtime/3 h/6 h and its general guidance; neither a safe personal threshold nor a personalized benefit
+  is established. Values below 6 are described as below the app's default, not below a proven safety boundary.
+  Only OWNER provenance and the setting timestamp are stored on the schedule row; native backups retain them,
+  with no Dexie version change. ROUTE and TODAY's cutoff marker use the same hours; no Engine input changes.
+  The earlier proposed automated DELTA suggestion, short-sleep trigger, count-based confidence, approval path
+  and NOT NOW/suppression state are removed from this objective. BEYOND has no actual caffeine exposure or
+  adherence evidence; short sleep alone does not identify caffeine as a cause.
+  **Deferred, not authorized:** a future separate caffeine experiment may use BEYOND's existing experiment
+  lifecycle, with exposure/adherence context, duration, outcome measures, stopping conditions, provenance and
+  owner consent. No experiment implementation, caffeine log or generalized Delta plan-number authority follows.
 - **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake
   time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
   parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
