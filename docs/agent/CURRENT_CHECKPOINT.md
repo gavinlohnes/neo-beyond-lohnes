@@ -22,8 +22,20 @@
 - **Exclusions:** no product code, runtime behavior, prototype, primary navigation, Engine,
   recommendation priority, command/event/schema semantics, provider/dependency, runtime rename,
   concurrent PR, Google Drive or merge.
-- **Next:** verify documentation, open the PR, obtain independent exact-head review and green required
-  CI, then return to Gavin for merge approval. Do not implement the recommended Guided Start slice.
+- **Verification at blocked head `4f8da2dadb58794b13a4ca386bc21090b230c46f`:** local Markdown
+  links and `git diff --check` passed; risk classification returned PROTECTED as expected; required
+  docs-only PR CI passed. Independent review BLOCKED only documentation authority/handoff wording:
+  the candidate overstated exact-design approval, one conflict rule crossed the unresolved Delta
+  recommendation boundary, and this checkpoint had not recorded the completed PR/CI/review state.
+  The reviewer found the capability claims and remaining design coherent. These findings are repaired
+  on the next head and the old BLOCK remains historical evidence, not approval.
+- **Remaining risks / owner decisions:** exact visible name and composition of Teach Delta; whether
+  Food earns a persistent workspace; deterministic/AI/hybrid guided-session method; the dedicated
+  training philosophy and experience; future data/event semantics; and any future Delta recommendation
+  authority. None is silently decided here.
+- **Next:** verify and push only the three scoped review repairs, obtain green required CI and renewed
+  independent exact-head PASS, then return to Gavin for merge approval. Do not implement the
+  recommended Guided Start slice.
 
 ---
 

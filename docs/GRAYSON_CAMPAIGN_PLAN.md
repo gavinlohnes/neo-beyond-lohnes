@@ -123,7 +123,7 @@ Last status update: 2026-11-20.
 
 ### Guided Operating Loop overlay
 
-The owner-approved [`GRAYSON Guided Operating Loop`](GRAYSON_GUIDED_OPERATING_LOOP.md) does not add a
+The owner-authorized [`GRAYSON Guided Operating Loop`](GRAYSON_GUIDED_OPERATING_LOOP.md) design candidate does not add a
 parallel campaign or authorize implementation. It changes how existing campaign work should compose:
 begin from Gavin's outcome, reuse current context, ask only material questions, propose an editable
 cross-domain plan, carry approved operations into the lived day, and review recorded outcomes. Its

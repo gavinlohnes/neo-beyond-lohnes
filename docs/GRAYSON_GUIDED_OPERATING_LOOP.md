@@ -1,6 +1,6 @@
 # GRAYSON Guided Operating Loop
 
-Status: **OWNER-APPROVED DESIGN DIRECTION** — objective
+Status: **OWNER-AUTHORIZED DESIGN CANDIDATE, NOT IMPLEMENTATION** — objective
 `GRAYSON-GUIDED-OPERATING-LOOP-001`, 2026-11-20. This document defines a canonical experience
 direction. It authorizes no product code, navigation change, Engine or event-semantic change,
 provider, dependency, runtime rename, or Google Drive change. Each implementation slice requires
@@ -390,7 +390,9 @@ Delta responds in this order:
 2. Show what is known, assumed and missing.
 3. Protect safety and explicit owner constraints.
 4. Offer two or three meaningful choices, including doing nothing.
-5. Recommend one option only when evidence and owner direction support it.
+5. Preserve and explain any applicable deterministic Engine Recommendation. Otherwise Delta may
+   present planning options and tradeoffs, but does not turn its preference into BEYOND's canonical
+   Recommendation.
 6. Apply nothing until Gavin confirms.
 
 ## 6. Phone journeys and Delta language
@@ -581,5 +583,7 @@ This design recommends but does not lock:
    should use. This receives a dedicated owner design conversation before Mission implementation.
 5. Exact data/event semantics for sessions, ingredient plans, owner-defined servings and Mission
    associations.
+6. Whether and under what evidence/consent rules Delta may ever make recommendations rather than
+   explain the deterministic Engine Recommendation and assist with owner-directed planning.
 
 These decisions should be made with phone-first designs and repository truth, not abstract labels.
