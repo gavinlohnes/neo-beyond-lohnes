@@ -11,7 +11,7 @@ without modifying it; and recommend a ranked evolution sequence plus one bounded
 
 Starting commit: `ac858def37523b06b06556b22d9f817b56a36210` (`origin/master`, freshly
 fetched after merged PR #590). Builder: Codex. Branch: `codex/grayson-research-synthesis`.
-Active PR: pending.
+Active PR: [#591](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/591).
 
 ## Scope
 

@@ -6,7 +6,7 @@
   a ranked sequence and one next objective. Brief:
   [`GRAYSON-RESEARCH-SYNTHESIS-001.md`](GRAYSON-RESEARCH-SYNTHESIS-001.md). Starting commit
   `ac858def37523b06b06556b22d9f817b56a36210`; Builder Codex; branch
-  `codex/grayson-research-synthesis`; PR pending.
+  `codex/grayson-research-synthesis`; [PR #591](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/591).
 - **Finding:** BEYOND already contains most of the suit. Donors mostly improve composition, timing,
   evidence hierarchy, and interaction; they do not justify importing parallel planners, trackers,
   notes stores, home ERPs, or agent platforms.
@@ -20,10 +20,12 @@
 - **Exclusions:** no implementation, redesign, rename, replacement, product-authority, Engine/
   recommendation, schema/event, provider/dependency, product code, prototype, Google Drive, merge, or
   concurrent-PR change.
-- **Verification:** pending documentation links, diff hygiene, required CI, and independent exact-head
-  review.
-- **Next:** complete documentation checks, open a PR, obtain independent exact-head review and green
-  required CI, then return to Gavin for merge approval.
+- **Verification:** current master/open PRs and representative code/tests inspected; first-party donor
+  sources and official repositories used; local Markdown links and diff hygiene pass; risk classifier
+  reports the expected Protected governance triggers. Required CI and independent exact-head review
+  remain pending.
+- **Next:** obtain independent exact-head review and green required CI, then return to Gavin for merge
+  approval.
 
 ---
 
