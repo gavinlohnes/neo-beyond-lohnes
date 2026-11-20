@@ -7,9 +7,9 @@
   recommendation authority (Option A: the recorded Engine recommendation, else the approved pre-check-in draft;
   no Orientation arbitration rule); runway-to-shift layout built only from times BEYOND already has.
 - **Lane:** PROTECTED (TODAY composition; how recommendation authority is presented). Independent exact-head
-  review, green CI and Gavin's merge required. Builds on C1.0 (#596); this PR merges after it.
-- **Builder:** Claude Code. **Branch:** `ccr-380c4225-c1-1` (stacked on C1.0's `ccr-380c4225-1es42i`).
-  **Starting commit:** `4f3d183`.
+  review, green CI and Gavin's merge required. Builds on C1.0 (#596, merged).
+- **Builder:** Claude Code. **Branch:** `ccr-380c4225-1es42i` (restarted from master after C1.0 merged).
+  **Starting commit:** `74978a8` (master with C1.0).
 - **Operator benefit:** at 15:05 on night 2 one tap gives him, on one screen: tonight's shift and how long until
   it, last night's sleep against his own work-day range, Delta's one- or two-sentence read, the one
   recommendation with its source (DRAFT or ENGINE), the runway (nap window, timed commitments, shift, caffeine

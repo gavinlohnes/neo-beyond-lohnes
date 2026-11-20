@@ -1,21 +1,20 @@
-# Current objective — C1.0 Early START DAY (#596) and C1.1 Orientation (2026-11-20)
+# Current objective — C1.1 Orientation (C1.0 merged as #596) (2026-11-20)
 
 - **Owner rulings (Gavin, 2026-11-20):** C1.1 approved: Orientation opens from a deliberate START DAY tap,
   the Engine keeps sole recommendation authority (Option A), runway-to-shift layout. Discovery then showed a
   15:05 START DAY made a mislabelled stub day that the 16:30 roll replaced; Gavin approved fixing that first as
   its own Protected item, amending DAY-ROLLOVER-001. He leaves the day running after a shift.
 - **C1.0:** [brief](GRAYSON-C1.0-001.md); Decision Register EARLY-DAY-START-001. Builder Claude Code; branch
-  `ccr-380c4225-1es42i`; [PR #596](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/596); starting commit `83c3482`. PROTECTED: independent exact-head review, green CI and
-  Gavin's merge required. No self-review or merge.
+  `ccr-380c4225-1es42i`; [PR #596](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/596), merged by Gavin 2026-11-20 (`74978a8`).
 - **Verification (local):** typecheck, architecture; full Node suite (2,548 passed); new engine and
   integration tests in UTC and America/Chicago; full browser suite (1,731 passed) including new tests at 320/360/412 px; real-app replay of his
   morning (15:05 tap opens Sat 16:30 WORK day, shift 2 of 3; check-in and advice survive 16:45). No phone check yet.
 - **Previous state:** #594, #595 and #592 merged; #589 closed; #584 and draft #473 untouched.
-- **C1.1:** [brief](GRAYSON-C1.1-001.md); Decision Register GRAYSON-C1.1. Branch `ccr-380c4225-c1-1`, stacked on
-  C1.0; its PR merges after #596. PROTECTED. Retires the BEYOND 4.0-d briefing preview (its entry becomes ORIENTATION).
+- **C1.1:** [brief](GRAYSON-C1.1-001.md); Decision Register GRAYSON-C1.1. Branch `ccr-380c4225-1es42i`, restarted
+  from master after #596 merged. PROTECTED: independent exact-head review, green CI and Gavin's merge. Retires the BEYOND 4.0-d briefing preview (its entry becomes ORIENTATION).
   Local: pure, integration and browser tests (states at 320/360/412 px, flow through TODAY); real-app run with six
   weeks of seeded sleep (own range, RECOVER draft, runway, prep). Screenshots in `docs/screenshots/grayson-c1.1/`.
-- **Next:** independent exact-head reviews of #596 then C1.1, CI, Gavin's phone check and merges. Then C1.2
+- **Next:** independent exact-head review of the C1.1 PR, CI, Gavin's phone check and merge. Then C1.2
   (day-off, recovery and difficult-day grammar) needs its own go.
 
 ---
