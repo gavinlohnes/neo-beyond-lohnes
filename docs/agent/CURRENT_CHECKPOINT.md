@@ -27,8 +27,8 @@
   from canonical memory, missing C6.8 campaign reconciliation and stale checkpoint actions. The
   bounded repair re-reads memory on every guide re-entry, adds a correction/re-entry browser proof,
   reconciles C6.8 and fixes this handoff. Renewed CI and exact-head review are required.
-- **Remaining:** push the repair, obtain green required CI and renewed independent exact-head PASS,
-  then return for Gavin's Protected merge approval.
+- **Remaining:** obtain green required CI and renewed independent exact-head PASS, then return for
+  Gavin's Protected merge approval.
 
 ---
 
