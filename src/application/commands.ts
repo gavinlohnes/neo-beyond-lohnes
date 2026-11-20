@@ -964,6 +964,8 @@ export async function updateSchedulePattern(input: SchedulePatternInput): Promis
     updatedAt: now,
     // BRIDGE-NOTIFY-001: the key-moment alert settings share this row; a schedule save keeps them.
     ...(existing?.keyMomentAlerts ? { keyMomentAlerts: existing.keyMomentAlerts } : {}),
+    // C4.2a: so do the sleep plan's settings (the caffeine cut-off).
+    ...(existing?.sleepPlanSettings ? { sleepPlanSettings: existing.sleepPlanSettings } : {}),
   };
   await db.schedulePatterns.put(record);
   return record;

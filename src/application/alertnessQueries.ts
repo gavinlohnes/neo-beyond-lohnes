@@ -1,5 +1,5 @@
 import { getImportedSleep } from "./externalSleepQueries";
-import { getShiftSleepPlan, CAFFEINE_CUTOFF_HOURS } from "./shiftSleepPlan";
+import { getShiftSleepPlan } from "./shiftSleepPlan";
 import { energyCurve, nextUsualSleep, usualSleep, type EnergyCurve, type SleepSpan } from "./alertness";
 import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../engine/dayRollover";
 
@@ -44,7 +44,8 @@ export async function getEnergyToday(now = new Date()): Promise<EnergyToday> {
   return {
     curve: energyCurve({ from, to, sleeps, planned, nights, shiftEnd }),
     shift: shift && shift.end > from && shift.start < to ? shift : null,
-    caffeineCutoff: cutoffBase === null ? null : cutoffBase - CAFFEINE_CUTOFF_HOURS * 3_600_000,
+    // C4.2a: the plan's own cut-off (his setting when he set one), so TODAY and ROUTE never disagree.
+    caffeineCutoff: cutoffBase === null || !plan ? null : cutoffBase - plan.caffeine.hours * 3_600_000,
     nap: napWindow ? { start: Date.parse(napWindow.start), end: Date.parse(napWindow.end) } : null,
     nights: nights.length,
   };

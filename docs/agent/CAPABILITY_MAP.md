@@ -513,3 +513,10 @@ policy, library, database or provider. Separate COMMAND operating surfaces retai
 - `application/shiftMarks.ts` (sheet view + automation note), `ui/components/ShiftMarkSheet.tsx`; `LogTimeEditor`
   takes an optional `retime` for anything that isn't a log. The free helper exposes `parseClock`/`clockOf`.
 - Alfred cards: the registry (`application/alfred/alfredTools.ts`, ALFRED-TOOLS-001) now has an optional `note` line.
+
+## C4.2a — owner-editable caffeine cutoff (PR #595; pending review/merge)
+
+- [Narrowed brief](GRAYSON-C4.2a-001.md): reuse existing ROUTE card, schedule-row configuration, validation, native backup, explicit save and guarded undo. `sleepPlanSettings.ts` stores owner-set hours/time; `shiftSleepPlan.ts` and TODAY use that setting.
+- No automated Delta suggestion, short-sleep trigger, confidence, decline timer or personalized-benefit claim remains. The removed `cutoffProposal.ts` is not an available primitive.
+- General caffeine research does not demonstrate Gavin's caffeine exposure, adherence or cause of poor sleep. The 6 h value is an app default, not a proven safe personal cutoff.
+- Future caffeine experimentation is deferred to a separately authorized objective using the existing experiment lifecycle, with exposure/adherence context, duration, outcome measures, stopping conditions, provenance and owner consent. No new caffeine tracker or experiment is built here.

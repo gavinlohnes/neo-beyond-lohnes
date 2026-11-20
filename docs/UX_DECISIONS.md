@@ -2921,6 +2921,19 @@ on TODAY's lived-day bar, under these conditions:
 Everything else in this entry is unchanged.
 - **Caffeine cutoff:** no substantial caffeine for 6 h before your usual post-shift sleep (SLEEP-RHYTHM-001, 3+
   Garmin-timed work days), otherwise before the shift's end, and the card says so. Drake et al. 2013.
+  **Amended and narrowed (Gavin, 2026-11-20, C4.2a / PR #595):** owner-editable cutoff only: 6 h remains
+  BEYOND's starting default, CHANGE selects whole hours 3–12, SAVE is explicit, and UNDO restores the prior
+  setting unless a later change replaced it. The source explanation identifies Drake et al.'s 400 mg study
+  at bedtime/3 h/6 h and its general guidance; neither a safe personal threshold nor a personalized benefit
+  is established. Values below 6 are described as below the app's default, not below a proven safety boundary.
+  Only OWNER provenance and the setting timestamp are stored on the schedule row; native backups retain them,
+  with no Dexie version change. ROUTE and TODAY's cutoff marker use the same hours; no Engine input changes.
+  The earlier proposed automated DELTA suggestion, short-sleep trigger, count-based confidence, approval path
+  and NOT NOW/suppression state are removed from this objective. BEYOND has no actual caffeine exposure or
+  adherence evidence; short sleep alone does not identify caffeine as a cause.
+  **Deferred, not authorized:** a future separate caffeine experiment may use BEYOND's existing experiment
+  lifecycle, with exposure/adherence context, duration, outcome measures, stopping conditions, provenance and
+  owner consent. No experiment implementation, caffeine log or generalized Delta plan-number authority follows.
 - **Pre-shift nap window** (night shifts not yet started; marked on the first night of a run): from your usual wake
   time on the day before to 60 minutes before the shift. Planned napping before a night shift: AASM practice
   parameters 2007 (Standard). The 60 minutes: sleep inertia takes at least an hour to clear (Hilditch & McHill
