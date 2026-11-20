@@ -5,13 +5,13 @@
   15:05 START DAY made a mislabelled stub day that the 16:30 roll replaced; Gavin approved fixing that first as
   its own Protected item, amending DAY-ROLLOVER-001. He leaves the day running after a shift.
 - **C1.0:** [brief](GRAYSON-C1.0-001.md); Decision Register EARLY-DAY-START-001. Builder Claude Code; branch
-  `ccr-380c4225-1es42i`; starting commit `83c3482`. PROTECTED: independent exact-head review, green CI and
+  `ccr-380c4225-1es42i`; [PR #596](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/596); starting commit `83c3482`. PROTECTED: independent exact-head review, green CI and
   Gavin's merge required. No self-review or merge.
 - **Verification (local):** typecheck, architecture; full Node suite (2,548 passed); new engine and
-  integration tests in UTC and America/Chicago; new browser tests at 320/360/412 px; real-app replay of his
+  integration tests in UTC and America/Chicago; full browser suite (1,731 passed) including new tests at 320/360/412 px; real-app replay of his
   morning (15:05 tap opens Sat 16:30 WORK day, shift 2 of 3; check-in and advice survive 16:45). No phone check yet.
 - **Previous state:** #594, #595 and #592 merged; #589 closed; #584 and draft #473 untouched.
-- **Next:** PR for C1.0 and independent review; then C1.1 on top (its brief is written when it starts).
+- **Next:** independent exact-head review of #596, CI, Gavin's phone check and merge. C1.1 (Gavin: "C1.1 next") builds on C1.0 in its own branch and PR.
 
 ---
 
