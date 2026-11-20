@@ -1,4 +1,4 @@
-# Current objective — C1.2 Orientation slice 2 (#598), then C1.3 close (2026-11-20)
+# Current objective — C1.3 close after SHIFT DOWN (C1.2 merged as #598) (2026-11-20)
 
 - **Owner ruling (Gavin, 2026-11-20):** approve C1.2 with no Orientation-invented day-off advice and with the mood
   trend as a factual line ("Include the trend"). [Brief](GRAYSON-C1.2-001.md); Decision Register GRAYSON-C1.2.
@@ -9,9 +9,10 @@
   `docs/screenshots/grayson-c1.2/`. Full suite 4,328 passed. No phone check yet.
 - **Previous:** C1.0 (#596) and C1.1 (#597) merged.
 - **C1.3 + C1.4:** approved 2026-11-20; the close follows SHIFT DOWN (his getting-home ritual: Deputy Lohnes → Gavin,
-  5–15 min), not END DAY. [Brief](GRAYSON-C1.3-001.md). Built locally on top of C1.2; it goes up on this branch after
-  #598 merges. Also fixes SHIFT DOWN being offered again (red) after it was done.
-- **Next:** independent review of #598, CI, Gavin's phone look and merge; then the C1.3 PR.
+  5–15 min), not END DAY. [Brief](GRAYSON-C1.3-001.md). On `ccr-380c4225-1es42i`, restarted from master after #598 merged. Also fixes SHIFT DOWN being offered again (red) after it was done.
+- **#598:** merged by Gavin; an independent reviewer session (requested by Gavin) is reviewing its exact head
+  `4533184` post-merge; any finding becomes a follow-up.
+- **Next:** C1.3 PR, independent review, CI, Gavin's phone look (a timed close under 60 s) and merge.
 
 ---
 

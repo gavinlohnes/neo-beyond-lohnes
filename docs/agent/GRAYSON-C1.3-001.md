@@ -6,7 +6,7 @@
   changed out of my work uniform, drink a glass of water and take the medication for my night time ... doing after
   my shift down is a good idea." The plan's C1.4 "tomorrow differs" line ships inside it (Feature inside C1.3).
 - **Lane:** PROTECTED (TODAY composition). Independent exact-head review, green CI and Gavin's merge required.
-- **Builder:** Claude Code. **Branch:** `ccr-380c4225-1es42i` after C1.2 (#598) merges. **Starting commit:** C1.2's head.
+- **Builder:** Claude Code. **Branch:** `ccr-380c4225-1es42i`, restarted from master after #598 merged. **Starting commit:** master with C1.2.
 - **Operator benefit:** once he's home and SHIFT DOWN is done, TODAY offers an optional close that takes under a
   minute: one line on what's next when it differs ("Next: tonight's shift is the last of the run."), up to two short
   questions he picked once, SAVE TO NOTE or SKIP. His answers land in that day's Daily Note. It never turns his
