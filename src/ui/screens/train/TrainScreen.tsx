@@ -18,6 +18,7 @@ import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import "./operator.css";
 import "./trainFoundation.css";
 import "./trainLive.css";
+import { PreCheckInPreview } from "../../components/PreCheckInPreview";
 import { CalendarDays, History as HistoryIcon, Trophy } from "lucide-react";
 import { CommandBar, Panel, SourceTag, Sparkline } from "../../foundation/primitives";
 import { getTrainHome, type TrainHome } from "../../../application/trainHomeQueries";
@@ -1191,6 +1192,8 @@ export function TrainScreen({
           </button>
         </p>
       )}
+      {/* DRAFT-REC-001: what's already certain before the check-in (the Engine's own short-sleep rule). */}
+      {!session && !completionSummary && noCheckIn && <PreCheckInPreview />}
 
       {/* FIELD ALPHA Phase 2B: the pre-session picker IS the one decision
           on screen right now (what to train) — TRAIN's own PRIMARY

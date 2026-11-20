@@ -60,6 +60,7 @@ import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { TodayToasts } from "./TodayToasts";
 import { TodayRecommendationDraft } from "./TodayRecommendationDraft";
 import { TodayEnergy } from "./TodayEnergy";
+import { PreCheckInPreview } from "../../components/PreCheckInPreview";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
@@ -2691,6 +2692,8 @@ export function TodayScreen({
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
       {checkInOwnedHere && !recommendationDraftPresent && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
+      {/* DRAFT-REC-001 (Gavin, 2026-11-19, "Honest preview"): what's already certain before the check-in. */}
+      {checkInOwnedHere && !recommendationDraftPresent && <PreCheckInPreview refreshKey={refreshVersion} />}
       {dayRead && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setBriefingPreview(true); }}>PREVIEW BRIEFING</button></div>}
     </section>
   </>;
