@@ -3,9 +3,9 @@
 Gavin is switching from Claude Code to Codex when Claude's usage runs out. Builder of record for the items below
 was Claude Code; Gavin's switch is the explicit handoff.
 
-- **Open PR #599** (C1.3 + C1.4, close after SHIFT DOWN; branch `ccr-380c4225-1es42i`, head `4e0842f`): independent
-  exact-head review **PASS** posted, CI green. Waiting only on Gavin's phone look and merge. Do not add commits to it.
-- **Ready branch `ccr-380c4225-c1-6`** (stacked on #599's head; NOT yet a PR): two commits.
+- **#599** (C1.3 + C1.4, close after SHIFT DOWN): independent review PASS, merged by Gavin 2026-11-20.
+- **C1.6 + review follow-ups:** rebased onto master after #599 merged and opened as a PR from `ccr-380c4225-1es42i`
+  (the PR number is in the tracker row C1.6). Contents:
   1. Review follow-ups from the PASS reviews of #598/#599 (non-blocking findings): "one bad day" (Gavin kept "worth
      deliberate attention"), recovery-day sleep wording, unreadable Minimum Day reported in `unread`, close label and
      "next" line anchored to the day's own lived start. Briefs GRAYSON-C1.2-001 / C1.3-001 record them.
