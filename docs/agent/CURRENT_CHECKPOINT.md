@@ -1,3 +1,41 @@
+# Current objective — C4.2a owner-editable caffeine cutoff (2026-11-20)
+
+- Gavin explicitly narrowed PR #595 to owner editing, source explanation, SAVE and UNDO. Automated DELTA suggestions, confidence, personalized-benefit claims and suppression are removed. No experiment implementation is authorized.
+- Builder Codex continues Claude Code’s existing `claude/project-thread-iopp5i` branch from `f79c8f23839307770bf8c41f9b33878a08968e19`; reconciled only the checkpoint conflict onto approved master `2e53d10a7240a25e53d46c468bd2c4fc5052dbff`.
+- PROTECTED stored setting / locked cutoff amendment. [PR #595](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/595); [brief](GRAYSON-C4.2a-001.md). Fresh independent exact-head review and Gavin’s merge approval required. No merge.
+- Local verification: 35 focused UTC Node checks, 18 Chicago checks and 3 browser checks pass; architecture, TypeScript/production build and diff hygiene pass. Actual 360 px editor screenshot inspected. No full local suite or physical-phone test claimed. Required CI and exact candidate head recorded in the PR handoff; old CI does not verify this narrowed head.
+- Deferred: separately authorized caffeine experiment through the existing experiment lifecycle, with exposure/adherence context, duration, outcomes, stopping conditions, provenance and owner consent. It is not started here.
+- Owner sequence remains: resolve this bounded PR, reconcile research #592 as supporting evidence, preserve/resolve #589; C1.1 Production Orientation next major objective, lived-day loop before deeper domain expansion. No other objective begun.
+
+---
+
+# Historical — original broader PR proposal (superseded by narrowing above)
+
+# Current objective — C4.2a DELTA-suggested, editable caffeine cut-off (2026-11-20)
+
+- **Owner authorization:** Gavin, 2026-11-20 04:40 UTC: "Start it", answering the proposed first build of DELTA
+  suggestions (editable cut-off from today's 6 h with where it comes from; DELTA offers a better value from his
+  nights; changes only on his tap; undo). Protected: amends locked SHIFT-SLEEP-PLAN-001, adds a stored setting,
+  widens what DELTA may propose. Builder Claude Code; branch `claude/project-thread-iopp5i`; starting commit
+  `a857f28`; [PR #595](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/595). Plan item C4.2a (tracker row added on his go).
+- **Operator benefit:** the cut-off is his number, not a hidden constant, and DELTA can point to his own short
+  post-shift sleeps and offer a longer gap he approves or undoes.
+- **REUSE:** TARGET-PROPOSAL-001's propose/SAVE/KEEP/UNDO shape; BRIDGE-NOTIFY-001's settings-on-the-schedule-row
+  storage (native backup, no schema change); SLEEP-RHYTHM-001's work-day nights. **OWN:** the suggestion rule and
+  copy. **BUILD FROM SCRATCH:** none.
+- **Exclusions:** no other plan numbers, no automatic change, no score, no caffeine log, no per-drink lines (C4.2),
+  no notification, Engine, provider or dependency change.
+- **Verification (local):** node suite 2,540 passed; typecheck; architecture; production build. The new browser
+  test (`tests/browser/CaffeineCutoff.test.tsx`) could not run here (no Chromium in this container); CI runs it.
+  No phone check yet.
+- **Next:** green CI and independent exact-head review, then Gavin's merge. After a real night, KEEP / REFINE /
+  RETHINK.
+
+
+---
+
+# Historical — master handoff preserved
+
 # Current objective — PR #594 review repair (2026-11-20)
 
 - **Builder:** Codex, explicitly assigned by Gavin to continue Claude Code's existing `claude/project-thread-s69muv` branch. [PR #594](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/594); [durable C3.4/C3.4a brief](GRAYSON-C3.4-001.md).

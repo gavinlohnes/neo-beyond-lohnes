@@ -74,6 +74,7 @@ status of its own.
 | **Campaign 4 — Body Engine** | | | |
 | C4.1 | Energy curve body-clock fix | Not started |  |
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
+| C4.2a | Owner-editable caffeine cut-off, source, SAVE / UNDO | Done (#595) | Narrowed by Gavin 2026-11-20: no automated suggestion, confidence or suppression. Explicit experiment deferred to separate authorization |
 | C4.3 | Optional one-tap caffeine log | Not started |  |
 | C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started |  |
 | C4.5 | Mission review (monthly) | Not started |  |
@@ -229,7 +230,7 @@ partial, **M** missing. Paths are under `src/` unless shown. Campaign column say
 | Personal baselines and "unusual for you" | **B** | `engine/personalBaselines.ts`, `domain/health/unusual.ts` | V | — |
 | Sleep owed vs his own usual | **B** | `application/sleepDebt.ts` | V | — |
 | Night energy curve | **P** | `application/alertness.ts`; #592 reports the circadian low lands too early on steady nights | V / A | C4.1 |
-| Caffeine timing | **P** | Fixed 6 h cut-off `application/shiftSleepPlan.ts:81`; caffeine "never recorded" (locked) | V | C4.2–C4.3 |
+| Caffeine timing | **P** | Owner-editable cutoff, default 6 h (`application/sleepPlanSettings.ts`, C4.2a); no automated proposal or exposure/adherence measurement | V | C4.2–C4.3 |
 | Light timing | **P** | LIGHT card on night shifts only (`shiftSleepPlan.ts`) | V | C2.4 |
 | Meals, protein, water, barcode, USDA | **B** | `nutritionCommands.ts`, `foodLookupQueries.ts`, `barcodeLookup.ts`, `ui/components/BarcodeScanner.tsx` | V | — |
 | Water target | **M** | No target field found | V | C4.6 |
@@ -536,6 +537,15 @@ Health Bridge.
   - Lane, size: **Protected** (amends locked SHIFT-SLEEP-PLAN-001) · **S**.
   - Borrow: jnaskali/caffeine-tracker (MIT, verified; [repo](https://github.com/jnaskali/caffeine-tracker))
     half-life decay. Verdict REUSE THE CODE is allowed, but it is ~10 lines; own it in the Engine.
+- **C4.2a DEEPEN · Owner-editable caffeine cut-off** (added and narrowed 2026-11-20 by Gavin).
+  ROUTE's CAFFEINE card retains the 6 h starting default, source explanation, CHANGE (3–12 whole hours),
+  explicit SAVE and guarded UNDO. The setting and owner provenance survive native backup and schedule edits;
+  TODAY's cutoff marker agrees with ROUTE. The study is general evidence, not a safe personal threshold.
+  - Removed: automated DELTA suggestion, sleep-count confidence, personalized-benefit implication and suppression.
+  - Deferred, separately authorized only: an explicit caffeine experiment through the existing experiment
+    lifecycle, with exposure/adherence context, duration, outcomes, stopping conditions, provenance and consent.
+    No larger experiment implementation starts in this PR. No generalized plan-number authority is granted.
+  - Lane: **Protected** (amends SHIFT-SLEEP-PLAN-001; new stored setting). [Brief](agent/GRAYSON-C4.2a-001.md).
 - **C4.3 ADD · Optional one-tap caffeine log.** Log "5-hour Energy" or "coffee" in one tap; the
   cut-off and the curve show what's still in his system; a monthly "caffeine vs your day sleep" line
   once there are 10 days with and without. This is how a healthier habit gets evidence.
