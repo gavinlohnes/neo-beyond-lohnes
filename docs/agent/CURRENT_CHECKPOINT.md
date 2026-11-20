@@ -1,4 +1,33 @@
-# Current objective — GRAYSON-EVOLUTION-RULE-001 (2026-11-19)
+# Current objective — GRAYSON-RESEARCH-SYNTHESIS-001 (2026-11-19)
+
+- **Owner authorization:** report only; compare commercial/open-source donor patterns against current
+  BEYOND repository truth and canonical scenarios under the Project Grayson baseline and Evolution
+  Rule; classify dispositions and licensing/reuse; reconcile PR #589 without modifying it; recommend
+  a ranked sequence and one next objective. Brief:
+  [`GRAYSON-RESEARCH-SYNTHESIS-001.md`](GRAYSON-RESEARCH-SYNTHESIS-001.md). Starting commit
+  `ac858def37523b06b06556b22d9f817b56a36210`; Builder Codex; branch
+  `codex/grayson-research-synthesis`; PR pending.
+- **Finding:** BEYOND already contains most of the suit. Donors mostly improve composition, timing,
+  evidence hierarchy, and interaction; they do not justify importing parallel planners, trackers,
+  notes stores, home ERPs, or agent platforms.
+- **Recommendation:** [`LIVED-DAY-ORIENT-PRODUCTION-001`](../GRAYSON_RESEARCH_SYNTHESIS.md#recommended-next-objective)
+  — one bounded Protected implementation of Quiet Command Orientation using existing BEYOND truth,
+  actions, visual foundation, and canonical recommendation authority. It is not authorized by this
+  report.
+- **PR #589:** unchanged. Preserve it as reviewed responsive/state evidence, not production code or
+  final visual truth. Its merge/close remains Gavin's separate decision.
+- **Concurrent work:** PR #589, PR #584, and draft PR #473 remain separate and untouched.
+- **Exclusions:** no implementation, redesign, rename, replacement, product-authority, Engine/
+  recommendation, schema/event, provider/dependency, product code, prototype, Google Drive, merge, or
+  concurrent-PR change.
+- **Verification:** pending documentation links, diff hygiene, required CI, and independent exact-head
+  review.
+- **Next:** complete documentation checks, open a PR, obtain independent exact-head review and green
+  required CI, then return to Gavin for merge approval.
+
+---
+
+# Historical — GRAYSON-EVOLUTION-RULE-001 (merged as PR #590, `ac858def`)
 
 - **Owner authorization:** Protected documentation only; record the GRAYSON Evolution Rule in the
   canonical Project Grayson and product-governance sources, reconcile it with doctrine, Product
@@ -19,11 +48,11 @@
 - **Exclusions:** no product code, runtime behavior, UI, identity, navigation, architecture, Engine,
   recommendation, schema/event, provider, dependency, data, test fixture, Google Drive, implementation
   objective, redesign approval, replacement decision, merge, or concurrent-PR change.
-- **Verification:** risk classifier reports the expected Protected governance lane; canonical relative
-  documentation targets are present; diff hygiene passes. Required CI and independent exact-head
-  review remain pending.
-- **Next:** obtain independent exact-head review and green required CI, then return to Gavin for merge
-  approval.
+- **Verification:** exact-head independent review passed at `fbeb36f7`; required CI was green; risk
+  classifier reported the expected Protected governance lane; canonical documentation targets and
+  diff hygiene passed.
+- **Next at closure:** apply the rule to the approved donor-research synthesis rather than restart from
+  a blank canvas.
 
 ---
 

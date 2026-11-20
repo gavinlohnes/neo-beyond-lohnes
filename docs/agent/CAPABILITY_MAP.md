@@ -4,6 +4,11 @@
 
 - [`PROJECT_GRAYSON_VISION.md`](../PROJECT_GRAYSON_VISION.md) is the owner-approved destination and
   contains the cross-domain evolution matrix. It does not authorize implementation.
+- [`GRAYSON_RESEARCH_SYNTHESIS.md`](../GRAYSON_RESEARCH_SYNTHESIS.md) maps verified BEYOND capability
+  to commercial and open-source donor patterns under the GRAYSON Evolution Rule. Its primary ruling
+  is **connect before expanding**: most donor value is pattern-level adaptation, not subsystem import.
+  It recommends production Lived-Day Orientation as the first bounded evolution objective; the
+  report itself authorizes no implementation.
 - **Preserve before invention:** the destination reuses BEYOND's Operator Model and memory, lived-day
   records, work context, routines, Home/People facts, obligations, journal, personal experiments,
   Whole Picture/personal ranges, training, nutrition, TODAY/FIELD, COMMAND depth, deterministic
@@ -13,10 +18,9 @@
   search-and-replace objective.
 - **Provider handoff:** [`PROJECT_GRAYSON_HANDOFF.md`](PROJECT_GRAYSON_HANDOFF.md) gives Claude, Claude
   Duet Steward, Codex, and future agents one repository-native starting point.
-- **Next research need:** after the vision PR merges, a separately approved report-only baseline should
-  operate the current app against the canonical scenarios and identify one highest-leverage bounded
-  evolution objective. Do not assume the Daily Life Loop requires new storage or a redesign before
-  checking current composition and field evidence.
+- **Current research disposition:** the baseline and donor synthesis are complete. Continue external
+  research only for a concrete need inside a bounded objective; do not restart broad product hunting
+  or assume the Daily Life Loop requires new storage, a new subsystem, or a rewrite.
 
 Repo-native index of prior reuse findings, including archived Google Drive research. It is a
 pointer/summary, not product authority. GitHub's current owner rulings, doctrine, UX decisions
