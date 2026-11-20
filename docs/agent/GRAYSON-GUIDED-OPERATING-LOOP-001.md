@@ -4,7 +4,7 @@
 - **Starting commit:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` (master after PR #601).
 - **Builder:** Codex.
 - **Branch:** `codex/grayson-guided-operating-loop-001`.
-- **Active PR:** to be recorded after opening.
+- **Active PR:** [#602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
 
 ## Operator benefit
 

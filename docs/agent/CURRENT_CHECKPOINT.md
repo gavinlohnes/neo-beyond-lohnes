@@ -5,7 +5,8 @@
   GRAYSON design grounded in current BEYOND truth. No product implementation, navigation, Engine/data
   semantics, Google Drive or additional Protected boundary is authorized.
 - **Starting master / Builder:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` after PR #601 merged;
-  Builder Codex; branch `codex/grayson-guided-operating-loop-001`; PR to be recorded after opening.
+  Builder Codex; branch `codex/grayson-guided-operating-loop-001`;
+  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
 - **Canonical design:** [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md);
   [brief](GRAYSON-GUIDED-OPERATING-LOOP-001.md).
 - **What it establishes:** the Guided Operating Principle; Express → Understand → Propose → Approve
