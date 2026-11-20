@@ -203,6 +203,13 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 ## NUTRITION
 
+- **Guided Operating Loop finding (design only, 2026-11-20):** BEYOND's nutrition capability is
+  broad but fragmented across LOG, DATA, MY MEALS, targets, meal planning and review. Preserve the
+  canonical records and providers. Evolve them as one Food Week journey—plan, shop, prepare, log,
+  review—with unified search, serving-first amounts, visible store/price uncertainty and Mission
+  context. Do not import a pantry ERP, proprietary database or commercial recommendation algorithm.
+  See [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md).
+
 - **Existing primitive**: `SavedMeal` (`src/domain/common/types.ts`) — fully manual, no food
   data behind it.
 - **Approved donor direction**: **USDA FoodData Central** as the preferred food-lookup data

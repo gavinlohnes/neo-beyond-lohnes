@@ -40,6 +40,16 @@ Substantial redesign may still be proposed when evidence supports it, but replac
 why connection, deepening, reframing, or careful adaptation is insufficient and must carry a
 preservation and migration plan plus any required owner approval.
 
+### Guide outcomes, not internal machinery
+
+Owner direction, 2026-11-20: Gavin should not need to understand BEYOND's internal structure before
+it can help him. GRAYSON begins from an outcome, problem or real situation; Delta gathers only the
+missing context, prepares an inspectable and editable proposal, and connects approved capabilities
+through the lived day and outcome review. Direct tools remain available for familiar actions, and
+guided setup never gates access. The canonical experience design is the
+[`GRAYSON Guided Operating Loop`](GRAYSON_GUIDED_OPERATING_LOOP.md); it authorizes no implementation
+by itself.
+
 ## Build an exceptional application for one operator
 
 BEYOND is a private, local-first, offline-first personal operating system. Connect health,
