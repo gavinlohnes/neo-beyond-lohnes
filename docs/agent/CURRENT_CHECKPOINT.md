@@ -1,4 +1,45 @@
-# Current objective — GRAYSON-BEHAVIOR-FASTING-DESIGN-001 (2026-11-20)
+# Current objective — GRAYSON-GUIDED-OPERATING-LOOP-001 (2026-11-20)
+
+- **Owner authorization:** Gavin approved a Protected documentation/design-only objective to preserve
+  and develop his guided-experience, connected-goal and intelligent-food ideas into a canonical
+  GRAYSON design grounded in current BEYOND truth. No product implementation, navigation, Engine/data
+  semantics, Google Drive or additional Protected boundary is authorized.
+- **Starting master / Builder:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` after PR #601 merged;
+  Builder Codex; branch `codex/grayson-guided-operating-loop-001`;
+  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+- **Canonical design:** [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md);
+  [brief](GRAYSON-GUIDED-OPERATING-LOOP-001.md).
+- **What it establishes:** the Guided Operating Principle; Express → Understand → Propose → Approve
+  → Operate → Record → Review → Adapt; Teach Delta, a connected Mission and Food Week; detailed phone
+  journeys and Delta language; repository evolution matrix; ranked implementation sequence.
+- **Repository finding:** memory/Personal Understanding, Missions, targets/proposals, saved meals,
+  USDA/barcode logging, meal planning, TRAIN and evidence already exist. The principal gap is guided
+  orchestration and cross-domain composition, with narrower missing primitives for resumable guided
+  drafts, ingredient/store-aware plans and Mission-to-plan association.
+- **Workout ruling:** this design connects TRAIN at the system level but does not pretend to finish
+  training design. A dedicated owner conversation follows this design and precedes connected Mission
+  implementation.
+- **Exclusions:** no product code, runtime behavior, prototype, primary navigation, Engine,
+  recommendation priority, command/event/schema semantics, provider/dependency, runtime rename,
+  concurrent PR, Google Drive or merge.
+- **Verification at blocked head `4f8da2dadb58794b13a4ca386bc21090b230c46f`:** local Markdown
+  links and `git diff --check` passed; risk classification returned PROTECTED as expected; required
+  docs-only PR CI passed. Independent review BLOCKED only documentation authority/handoff wording:
+  the candidate overstated exact-design approval, one conflict rule crossed the unresolved Delta
+  recommendation boundary, and this checkpoint had not recorded the completed PR/CI/review state.
+  The reviewer found the capability claims and remaining design coherent. These findings are repaired
+  on the next head and the old BLOCK remains historical evidence, not approval.
+- **Remaining risks / owner decisions:** exact visible name and composition of Teach Delta; whether
+  Food earns a persistent workspace; deterministic/AI/hybrid guided-session method; the dedicated
+  training philosophy and experience; future data/event semantics; and any future Delta recommendation
+  authority. None is silently decided here.
+- **Next:** verify and push only the three scoped review repairs, obtain green required CI and renewed
+  independent exact-head PASS, then return to Gavin for merge approval. Do not implement the
+  recommended Guided Start slice.
+
+---
+
+# Historical — GRAYSON-BEHAVIOR-FASTING-DESIGN-001 (merged as PR #601)
 
 - **Owner authorization:** Protected documentation/design-and-evidence objective approved by Gavin after he supplied
   lifestyle-logging and nutrition references and asked for alcohol-stop support plus a highly customizable fasting

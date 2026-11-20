@@ -96,6 +96,7 @@ status of its own.
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |
+| C6.8 | Guided Start + Teach Delta, slice 1 | Not started | Guided Operating Loop design; recommended next implementation after its merge and the workout design conversation |
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Not started |  |
 | C7.2 | Plan stays fresh | Not started |  |
@@ -119,6 +120,16 @@ status of its own.
 | Q5 | BODY protein tap (roadmap Next #2) | Not started | |
 
 Last status update: 2026-11-20.
+
+### Guided Operating Loop overlay
+
+The owner-authorized [`GRAYSON Guided Operating Loop`](GRAYSON_GUIDED_OPERATING_LOOP.md) design candidate does not add a
+parallel campaign or authorize implementation. It changes how existing campaign work should compose:
+begin from Gavin's outcome, reuse current context, ask only material questions, propose an editable
+cross-domain plan, carry approved operations into the lived day, and review recorded outcomes. Its
+first recommended build is C6.8, followed by meal-logging usability, Food Week, a Mission brief after
+the dedicated workout design conversation, and the existing C4.5 outcome review. Existing campaign
+IDs remain authoritative for their domain semantics; no row is marked started by the design.
 
 ---
 
