@@ -5,6 +5,9 @@ against master `421bbb89722c43ba7ea2f28972b13b77e5262592`, including merged Home
 owner-editable caffeine PR #595. The original report used `211ccf4`; its implementation-gap and
 priority claims must not be carried forward without the corrections below.
 
+**Risk lane: PROTECTED** — report-only research affecting Project Grayson planning evidence;
+requires independent exact-head review and Gavin’s merge approval (explicit owner ruling, 2026-11-20).
+
 ## Mandate, authority and method
 
 Gavin authorized the original focused research run and now explicitly rules that this PR is supporting
