@@ -12,6 +12,14 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C1.3 — the close follows SHIFT DOWN (owner go 2026-11-20)
+
+Gavin leaves the day running and crashes at home; SHIFT DOWN is his getting-home ritual ("from Deputy Lohnes to just
+Gavin at home", 5–15 minutes). The optional close follows it, not END DAY. [Brief](agent/GRAYSON-C1.3-001.md).
+After SHIFT DOWN, TODAY offers once, with no red: a "next" line only when tomorrow differs (C1.4), up to two
+questions he picked, SAVE TO NOTE (a `#close` block appended to that day's Daily Note) or SKIP. END DAY is unchanged.
+Once SHIFT DOWN is done, TODAY no longer offers it again before sleep.
+
 ## GRAYSON-C1.2 — Orientation follows what the day is for (owner go 2026-11-20)
 
 Gavin approved slice 2 with both recommendations' boundaries: only the Engine's recommendation ever appears (no

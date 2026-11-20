@@ -90,3 +90,21 @@
 .today-field.redesign-today .today-early-start__label { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
 .today-field.redesign-today .today-early-start__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--tf-quiet); }
 .today-field.redesign-today .today-early-start__go { flex: 0 0 auto; min-height: 44px; width: auto; }
+
+/* GRAYSON C1.3: the close after SHIFT DOWN. Framed like the band; no red, so it never outranks the day's next step. */
+.today-field.redesign-today .today-close {
+  position: relative; display: grid; gap: 10px; margin: 8px 0 0; padding: 12px 12px 12px 14px; background: var(--tf-s1); border: 1px solid var(--tf-line);
+  clip-path: polygon(0 0, calc(100% - var(--tf-cut)) 0, 100% var(--tf-cut), 100% 100%, var(--tf-cut) 100%, 0 calc(100% - var(--tf-cut)));
+}
+.today-field.redesign-today .today-close__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.today-field.redesign-today .today-close__label { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-close__hint { font-size: 14px; color: var(--tf-quiet); }
+.today-field.redesign-today .today-close__next { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-close__field { display: grid; gap: 4px; font-size: 16px; color: var(--tf-quiet); }
+.today-field.redesign-today .today-close__field textarea { width: 100%; min-height: 56px; font: inherit; font-size: 16px; color: var(--p-t1, #f2f2f2); background: var(--p-s2, #0f0f0f); border: 1px solid var(--tf-line); padding: 8px; resize: vertical; }
+.today-field.redesign-today .today-close__choose { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-close__choose legend { margin-bottom: 4px; font-size: 14px; color: var(--tf-quiet); }
+.today-field.redesign-today .today-close__choose label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.today-field.redesign-today .today-close__acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.today-field.redesign-today .today-close__acts .btn-secondary { width: auto; min-height: 44px; }
+.today-field.redesign-today .today-close__change { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }

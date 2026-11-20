@@ -16,6 +16,8 @@ import { DeltaNewsLine } from "../../components/DeltaViews";
 import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
 import { Orientation } from "./Orientation";
+import { CloseCard } from "./CloseCard";
+import { closeDone } from "./closeStore";
 import { markOrientationSeen, orientationSeen } from "./orientationStore";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
@@ -720,6 +722,7 @@ export function TodayScreen({
   // GRAYSON C1.1: Orientation, opened by START DAY on a work day and reopenable from TODAY.
   const [orientationOpen, setOrientationOpen] = useState(false);
   const [orientationSeenTick, setOrientationSeenTick] = useState(0);
+  const [closeSeenTick, setCloseSeenTick] = useState(0);
   useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
 
   useEffect(() => {
@@ -2666,7 +2669,8 @@ export function TodayScreen({
         />
       )}</>
           : lateRecoverWithoutSleep ? renderRecoverSleepPrompt()
-          : shiftClock.phase === "EXPECTED_POST_WORK" ? renderPhaseRow("SHIFT_DOWN")
+          // GRAYSON C1.3: once SHIFT DOWN is done it steps aside (it was offered again, in red, until sleep or 16:30).
+          : shiftClock.phase === "EXPECTED_POST_WORK" && !shiftClockInput.shiftDownDone ? renderPhaseRow("SHIFT_DOWN")
           : recommendation ? <>          <RecommendationCard
             nextAction
             // FIELD-AUTHORITY-001: this TODAY renders no question below the card, so never claim one.
@@ -2811,6 +2815,11 @@ export function TodayScreen({
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
+    {/* GRAYSON C1.3: after SHIFT DOWN (his getting-home ritual), a quiet, optional close, below the next card. */}
+    {day && shiftDownCompletedAt && (!shiftWindow || Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime()) && closeSeenTick >= 0 && !closeDone(day.id)
+      && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId) && (
+      <CloseCard dayId={day.id} busy={busy} onClosed={() => setCloseSeenTick((n) => n + 1)} />
+    )}
     {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
     {day && lifeMoment?.moment === "RUN_OVER" && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId || lateRecoverWithoutSleep) && <section className="today-run-over" aria-label="After the run">
         {/* LIFE-STATE-003: the run that just ended, and an optional recovery contract for the first full day off. */}
