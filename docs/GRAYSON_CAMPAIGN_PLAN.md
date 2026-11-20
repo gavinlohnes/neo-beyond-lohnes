@@ -96,7 +96,7 @@ status of its own.
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |
-| C6.8 | Guided Start + Teach Delta, slice 1 | Not started | Guided Operating Loop design; recommended next implementation after its merge and the workout design conversation |
+| C6.8 | Guided Start + Teach Delta, slice 1 | In PR #605 | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Not started |  |
 | C7.2 | Plan stays fresh | Not started |  |

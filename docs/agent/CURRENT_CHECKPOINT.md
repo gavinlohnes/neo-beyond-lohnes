@@ -23,8 +23,12 @@
   Chromium evidence is in `docs/screenshots/grayson-guided-start-001`. Full `npm run verify` reached
   4349 passing / 2 skipped but failed four unrelated timing cases; isolated reruns passed 3/4, while
   the unchanged `Habits001` Done control remained disabled. Required exact-head CI remains decisive.
-- **Remaining:** complete documentation/risk/build checks, capture realistic phone evidence, open the
-  PR, obtain green required CI and independent exact-head review, then return for Gavin's merge.
+- **Review status:** first independent exact-head review BLOCKED stale guided context after returning
+  from canonical memory, missing C6.8 campaign reconciliation and stale checkpoint actions. The
+  bounded repair re-reads memory on every guide re-entry, adds a correction/re-entry browser proof,
+  reconciles C6.8 and fixes this handoff. Renewed CI and exact-head review are required.
+- **Remaining:** push the repair, obtain green required CI and renewed independent exact-head PASS,
+  then return for Gavin's Protected merge approval.
 
 ---
 

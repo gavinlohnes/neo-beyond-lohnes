@@ -90,7 +90,12 @@ function GuidedTeaching({ active, onOpenMemory }: { active: boolean; onOpenMemor
       setError(describeError(cause, "Confirmed memory could not be read.")); setState("error");
     }
   }
-  useEffect(() => { if (active && state === "loading") void readFacts(); }, [active]);
+  // Returning from the canonical memory editor must re-read corrections,
+  // retirements and additions; a prior successful read is never a cache contract.
+  useEffect(() => {
+    if (active) void readFacts();
+    return () => { sequence.current++; };
+  }, [active]);
   function choose(next: Subject) {
     setSubjectId(next.id); setProposal(""); setError(""); setStage("answer");
   }

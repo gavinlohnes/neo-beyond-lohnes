@@ -89,6 +89,18 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByRole("button", { name: "REVIEW ALL MEMORY", exact: true }).click();
     await expect.element(screen.getByText("After a difficult shift, offer a shorter workout before skipping it.", { exact: true }).first()).toBeVisible();
     await expect.element(screen.getByText(/Personal fact.*OPERATOR.*confirmed/).first()).toBeVisible();
+    const fact = screen.getByRole("article").filter({ hasText: "After a difficult shift" });
+    await fact.getByText("Inspect or fix this memory", { exact: true }).click();
+    await fact.getByRole("button", { name: "CORRECT MEMORY", exact: true }).click();
+    await screen.getByRole("textbox", { name: "What should BEYOND remember?", exact: true }).fill("When work is difficult, begin with a 12-minute workout option.");
+    await screen.getByRole("button", { name: "SAVE & CONFIRM MEMORY", exact: true }).click();
+    await screen.getByRole("button", { name: "TEACH DELTA A LITTLE", exact: true }).click();
+    await screen.getByRole("button", { name: "TEACH DELTA ANOTHER THING", exact: true }).click();
+    await screen.getByRole("button", { name: "TRAINING · NOT NOW", exact: true }).click();
+    const guide = screen.container.querySelector(".guided-teaching")!;
+    await screen.getByText("You already confirmed something related", { exact: true }).click();
+    expect(guide.textContent).toContain("When work is difficult, begin with a 12-minute workout option.");
+    expect(guide.textContent).not.toContain("After a difficult shift, offer a shorter workout before skipping it.");
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     expect((await axe.run(screen.container)).violations).toEqual([]);
   });
