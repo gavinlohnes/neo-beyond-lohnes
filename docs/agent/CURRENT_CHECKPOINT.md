@@ -13,8 +13,12 @@
 - **REUSE:** Quit/check-in/urge/clean-day, meals, lived context, training/protein, Whole Picture, Try and correction
   conventions. **OWN:** Gavin's rotation, abstinence mission, strength safeguards and evidence-bounded Delta behavior.
   **BUILD FROM SCRATCH:** none in this objective.
-- **Next:** validate links and diff hygiene; open a Protected documentation PR; obtain independent exact-head review
-  and green required CI; return to Gavin for merge approval and a separate decision on the recommended C4.8a build.
+- **Candidate:** PR #601 head `5e4cc0318c003fd7fb02c0e6d5fefbc47ac68482`; docs-only required CI green.
+  Independent exact-head review BLOCKED on three documentation/design corrections only: describe the Cochrane source
+  as a protocol rather than completed evidence; replace the implied longer-is-advanced preset ladder with neutral
+  duration names; refresh this handoff and the malformed PR-body master SHA. All other product/evidence review passed.
+- **Next:** push only those bounded corrections, repair the PR handoff, renew independent exact-head review and CI,
+  then return to Gavin for merge approval and a separate decision on the recommended C4.8a build.
 
 ---
 

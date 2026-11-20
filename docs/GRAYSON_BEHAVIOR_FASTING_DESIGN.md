@@ -103,7 +103,7 @@ Alcohol                                             —
 Not recorded                         [NO ALCOHOL] [DRANK]
 
 Eating window                              12 h 18 m
-Foundation · planned 14:10                    [OPEN]
+14:10 plan · 10-hour eating window            [OPEN]
 
 Training                                     KNOWN
 Strength B completed 17:12                    [VIEW]
@@ -196,15 +196,15 @@ safe functioning is not working even if every timer reaches its target.
 
 ### 5.2 Programme levels
 
-| Programme | Fast : eat | Role |
+| Programme | Eating window | Burden and use |
 |---|---:|---|
-| Familiarization | 12:12 | Learn actual timing and close late grazing without aggressive restriction |
-| Foundation | 14:10 | Recommended first experiment for Gavin unless safety/context says otherwise |
-| Standard | 16:8 | Optional progression after Foundation is workable |
-| Advanced | 18:6 | Requires explicit acknowledgement of fueling and training constraints |
-| Custom | 8–18 h fast in v1 design | Owner-defined within the supported daily TRE range |
+| 12:12 | 12 hours | Widest preset; learn actual timing and close late grazing without aggressive restriction |
+| 14:10 | 10 hours | Moderate preset; recommended first experiment for Gavin unless safety/context says otherwise |
+| 16:8 | 8 hours | Narrow preset; less time to meet energy and protein needs |
+| 18:6 | 6 hours | Narrowest supported preset; explicit fueling and training acknowledgement required |
+| Custom | 6–16 hours | Owner-defined within the supported daily TRE range |
 
-The labels describe programme burden, not virtue or biological rank. One-meal-a-day, 20:4, alternate-day and
+The duration is the name: there is no beginner-to-advanced ladder and no implied destination. One-meal-a-day, 20:4, alternate-day and
 multi-day fasting are outside the first product. They are not hidden “expert levels.”
 
 ### 5.3 Schedule follows life, not weekdays
@@ -224,7 +224,8 @@ Each template has planned eating-open and eating-close times, target duration, a
 active. Times are attached to the applicable lived day and may cross midnight. A temporary adjustment changes only
 that occurrence unless Gavin explicitly changes the template.
 
-The initial recommendation is **Foundation 14:10 as a bounded experiment**, not an automatic prescription. A
+The initial candidate is **14:10 as a bounded experiment**, not an automatic prescription or a step toward a longer
+fast. A
 12-week randomized trial found a self-selected 10-hour eating window feasible in 24-hour shift workers, but evidence
 specific to shift workers remains sparse and does not establish Gavin's ideal window:
 [Healthy Heroes trial](https://pmc.ncbi.nlm.nih.gov/articles/PMC9536325/) and
@@ -257,7 +258,7 @@ Medication directions override programme rules.
 EATING WINDOW
 
 FAST IN PROGRESS                                  11:42
-Foundation · target 14:00
+14:10 plan · target 14:00
 Eating planned to open at 14:00
 
 Estimated from your last recorded calories at 00:00.
@@ -338,9 +339,10 @@ requires food, a history of disordered eating, recurrent fainting/hypoglycemia, 
 which fasting advice belongs with a clinician. Positive answers do not erase data or shame the choice; they route to
 professional guidance before an active plan.
 
-Potential adverse effects reported in fasting research include hypoglycemia, dehydration, dizziness, weakness,
-hypotension, headache, nausea and excessive hunger. See the
-[Cochrane review](https://pmc.ncbi.nlm.nih.gov/articles/PMC10485895/). GRAYSON does not diagnose these states from
+Potential risks described in the fasting literature include hypoglycemia, dehydration, dizziness, weakness,
+hypotension, headache, nausea and excessive hunger. These appear in the background and planned adverse-outcome
+assessment of a [Cochrane review protocol](https://pmc.ncbi.nlm.nih.gov/articles/PMC10485895/), not as synthesized
+effect estimates from a completed review. GRAYSON does not diagnose these states from
 other data and does not encourage continuing through unsafe symptoms.
 
 ---
@@ -353,7 +355,7 @@ science system.
 The experiment records:
 
 - **purpose:** for example, reduce late-shift eating while supporting fat loss;
-- **change:** Foundation 14:10 on named day types;
+- **change:** 14:10 on named day types;
 - **duration:** normally 14 or 28 lived days;
 - **primary feasibility measure:** recorded adherence with unknown days kept unknown;
 - **protected outcomes:** protein, training completion/performance context, energy, mood, main sleep and safety;
@@ -468,8 +470,8 @@ No event is authorized by this design.
 
 Each slice requires separate authorization.
 
-1. **C4.8a — Eating Window foundation (Protected, M).** Programme setup; Familiarization/Foundation/Standard/
-   Advanced/Custom; lived-context templates; explicit start/end/adjust/correct; local timer; TODAY/BODY entry;
+1. **C4.8a — Eating Window foundation (Protected, M).** Programme setup; neutral 12:12/14:10/16:8/18:6/Custom
+   durations; lived-context templates; explicit start/end/adjust/correct; local timer; TODAY/BODY entry;
    deterministic educational context; no outcome recommendation.
 2. **Alcohol truth deepening (Protected, M).** Extend—not replace—the Quit tracker with explicit DRANK records,
    standard-drink education, context, correction/undo and neutral Daily Signals presentation.
@@ -503,6 +505,6 @@ medical support. The answer is not needed to merge this design and should not be
 - Wang et al., [shift-worker meal-timing systematic review](https://pubmed.ncbi.nlm.nih.gov/42383913/) — sparse trial base and limited generalizability.
 - Centofanti et al., [simulated night-shift fasting trial](https://pmc.ncbi.nlm.nih.gov/articles/PMC11663163/) — meal timing affects glucose response under controlled simulated conditions; not a personal prescription.
 - Dote-Montero et al., [fasting physiology review](https://pmc.ncbi.nlm.nih.gov/articles/PMC12455479/) — mechanistic context and limits of human ketone/adaptation evidence.
-- Cochrane, [intermittent fasting for adults with overweight or obesity](https://pmc.ncbi.nlm.nih.gov/articles/PMC10485895/) — outcome uncertainty and reported adverse effects.
+- Cochrane review protocol, [intermittent fasting for adults with overweight or obesity](https://pmc.ncbi.nlm.nih.gov/articles/PMC10485895/) — potential adverse effects considered in the planned review; not synthesized outcome-effect evidence.
 - Ali et al., [TRE with resistance training meta-analysis](https://pubmed.ncbi.nlm.nih.gov/41687432/) — modest fat-mass finding with limited trials and certainty.
 - Tinsley et al., [TRE during a bulking phase](https://jn.nutrition.org/article/S0022-3166%2826%2900371-8/fulltext) — restricted-window feasibility and intake/adherence tradeoff in resistance-trained adults.
