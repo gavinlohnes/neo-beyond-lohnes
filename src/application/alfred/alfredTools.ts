@@ -109,7 +109,7 @@ function anchoredRepeat(rule: string, due: string | undefined): string {
 async function placeAt<P extends { at?: string | undefined; time?: string | undefined }>(p: P, now: Date): Promise<P | string> {
   if (!p.time) return p;
   const day = await getActiveDay();
-  const placed = day ? placeTime(p.time, day.startedAt, now) : null;
+  const placed = day ? placeTime(p.time, day.startedAt, now, day.createdAt) : null;
   if (!placed) return "That time can't be placed in the current lived day. Give a real time as HH:MM, 24-hour, or leave it out for now.";
   const { time: _time, ...rest } = p;
   return { ...rest, at: placed } as P;
@@ -421,7 +421,7 @@ export const REGISTRY: Registry = {
       }
       const target = p.action === "move_end" ? marks.ended : marks.started;
       if (!target) return p.action === "move_end" ? "No shift end is recorded today. If he's off now, propose work_ended; it records now." : "No shift start is recorded today. If he's at work, propose work_started; it records now.";
-      const to = p.time ? placeTime(p.time, day.startedAt, now) : null;
+      const to = p.time ? placeTime(p.time, day.startedAt, now, day.createdAt) : null;
       if (!to) return "That time can't be placed in today's lived day. Give a real time as HH:MM, 24-hour.";
       if (Date.parse(to) > now.getTime()) return p.action === "move_end" ? "That end time hasn't happened yet. If he's still working, propose reopen (with until), and he marks WORK ENDED when he's off." : "A shift start can't be later than now.";
       if (Date.parse(to) === Date.parse(target.occurredAt)) return `The shift ${p.action === "move_end" ? "end" : "start"} is already ${hhmm(to)}.`;

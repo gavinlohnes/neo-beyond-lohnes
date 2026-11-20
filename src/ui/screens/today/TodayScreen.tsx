@@ -44,6 +44,7 @@ import { Signal } from "../../components/Signal";
 import { useOnline } from "../../hooks/useOnline";
 import { getBackupPrompt } from "../../../application/autoBackupQueries";
 import { performDueDayRollover } from "../../../application/commands";
+import { getEarlyDayStart, livedReadAt, type EarlyDayStart } from "../../../application/earlyDayStart";
 import { describeSystemStatus } from "./statusCopy";
 import { describePlainRecommendationTitle, describeRecommendationReason } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
@@ -119,6 +120,7 @@ import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application
 import { SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
 import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
+import { EarlyStartRow } from "./EarlyStartRow";
 import { SmallSteps } from "./SmallSteps";
 import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
 import { LogEntrySheet, type LogEntryTarget } from "../../components/LogEntrySheet";
@@ -128,7 +130,7 @@ import "./smallSteps.css";
 import "../../foundation/foundation.css";
 import "./todayFoundation.css";
 import {
-  startDay,
+  startDayFromTap,
   ensureActiveDay,
   submitCheckIn,
   recordRecommendation,
@@ -447,6 +449,7 @@ export function TodayScreen({
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
   // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
+  const [earlyStart, setEarlyStart] = useState<EarlyDayStart | null>(null);
   const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF">; week: WeekAhead | null; map: MapMark[]; sleepPlan: ShiftSleepPlan | null } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
@@ -944,7 +947,9 @@ export function TodayScreen({
     // same render as the rest of TODAY (no layout jump after load).
     // The schedule too (loadShiftClockSetup also reads it), so the band never appears after the tiles. Yesterday is
     // kept with the lived day it was read for (review of #494), so after 16:30 a stale read is ignored, not used.
-    const readAt = new Date();
+    // EARLY-DAY-START-001: a day opened early is read as the 16:30 day it is.
+    const readAt = livedReadAt(activeDay, new Date());
+    const nextEarlyStart = await getEarlyDayStart(new Date()).catch(() => null);
     // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
     // whether the run-over follow-up is already planned, so it isn't offered twice.
     const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
@@ -981,6 +986,7 @@ export function TodayScreen({
       setDayRead(true);
       setActiveWorkout(activeWorkoutSession);
       setYesterdayRecorded(nextYesterday);
+      setEarlyStart(nextEarlyStart);
       if (nextSchedule) setSchedulePattern(nextSchedule);
     }
     setOpenCaptureItems(openCaptureItems);
@@ -1084,7 +1090,8 @@ export function TodayScreen({
     busyRef.current = true;
     setBusy(true);
     try {
-      await startDay();
+      // EARLY-DAY-START-001: in the afternoon window the tap opens tonight's 16:30 day early.
+      await startDayFromTap();
       acknowledge("LIGHT");
       // TODAY-008 (residual TODAY-R01, flagged in TODAY-006): every other
       // mutating handler in this component calls refresh() afterward so
@@ -1813,12 +1820,14 @@ export function TodayScreen({
   // SHIFT CLOCK (Drop 2): which rows this part of the shift shows; the rest go behind TOOLS.
   // SHIFT-RUN-001 on TODAY: where today sits in the saved rotation, unless he declared the day otherwise.
   // LIFE-STATE-001: derived in render from the saved schedule, today's recorded context and yesterday's record.
-  const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(now).getTime() ? yesterdayRecorded : null;
-  const scheduledRun = schedulePattern ? shiftRun(now, schedulePattern, 21, recordedNow?.confirmed) : null;
-  const lifeInput = day && schedulePattern ? lifeStateInput(now, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
+  // EARLY-DAY-START-001: lived-day reads follow a day opened early; clocks and countdowns still use `now`.
+  const livedNow = livedReadAt(day, now);
+  const recordedNow = yesterdayRecorded && yesterdayRecorded.livedDay === livedDayStartOf(livedNow).getTime() ? yesterdayRecorded : null;
+  const scheduledRun = schedulePattern ? shiftRun(livedNow, schedulePattern, 21, recordedNow?.confirmed) : null;
+  const lifeInput = day && schedulePattern ? lifeStateInput(livedNow, schedulePattern, day.workContext === "UNKNOWN" ? null : day.workContext, recordedNow?.kind ?? null, workContextSource ? recordedBy(workContextSource) : undefined, recordedNow?.confirmed) : null;
   const lifeReading = lifeInput ? deriveLifeState(lifeInput) : null;
   // OPERATOR-EXPERIENCE-001: NEXT, from Week Ahead's days and what today is (recorded, else planned).
-  const ahead = lifeInput && recordedNow?.week ? deriveAhead(now, lifeInput.today.recorded ?? lifeInput.today.scheduled, recordedNow.week.days) : null;
+  const ahead = lifeInput && recordedNow?.week ? deriveAhead(livedNow, lifeInput.today.recorded ?? lifeInput.today.scheduled, recordedNow.week.days) : null;
   // Slice 3: what TODAY shows now, for "since you last looked". A field is null until it has loaded.
   const lookNow: Omit<LookSnapshot, "at"> | null = day && recordedNow ? {
     state: lifeReading?.label ?? null, next: ahead?.line ?? null, confirmed: ahead ? ahead.confirmed : null,
@@ -2708,6 +2717,7 @@ export function TodayScreen({
   if (!operationsOnly) return <div className="screen command-console today-field redesign-today">
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
+    {day && earlyStart && !bandHidden && <EarlyStartRow early={earlyStart} busy={busy} onStart={() => void handleStartDay()} />}
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
             eyebrow={now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}
             run={bandCarriesRun ? null : todayRun}

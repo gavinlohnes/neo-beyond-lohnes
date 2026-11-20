@@ -35,6 +35,7 @@ import { effectiveWorkMarks } from "../engine/workMarks";
 import { getStandingWorkContext, getWorkPeriodEnded, getWorkPeriodStarted, hasActivePlannedWork, hasUnresolvedPostShift } from "./queries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
 import { emitAutomationEvent } from "./iftttAutomations";
+import { getEarlyDayStart } from "./earlyDayStart";
 
 /**
  * Deterministic tie-break for "most recent X" queries — redesigned after
@@ -158,6 +159,19 @@ export async function startDay(startedAtOverride?: string): Promise<BeyondDay> {
   });
   emitAutomationEvent("day_started");
   return day;
+}
+
+/**
+ * EARLY-DAY-START-001: what a deliberate START DAY tap does. Inside the afternoon window it opens the 16:30 day
+ * early (closing the running day through startDay's existing AUTO_CLOSED_ON_NEW_DAY_START path); outside it, it
+ * starts a day exactly as before when none is active and leaves an active day alone. Lazy day creation
+ * (ensureActiveDay) and the automatic roll do not use this, so logging never opens a day early.
+ */
+export async function startDayFromTap(now: Date = new Date()): Promise<BeyondDay> {
+  const early = await getEarlyDayStart(now);
+  if (early) return startDay(early.boundary.toISOString());
+  const active = await db.beyondDays.filter((d) => d.status === "ACTIVE").last();
+  return active ?? startDay();
 }
 
 /**
@@ -1124,7 +1138,7 @@ export async function logWater(
 export async function placeInDay(beyondDayId: string, at: string): Promise<string> {
   const day = await db.beyondDays.get(beyondDayId);
   if (!day) throw new Error("DAY_NOT_FOUND");
-  return checkLogTime(day.startedAt, at);
+  return checkLogTime(day.startedAt, at, day.createdAt);
 }
 
 /**

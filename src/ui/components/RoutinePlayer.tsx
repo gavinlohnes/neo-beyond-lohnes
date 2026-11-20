@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { completePlayedRoutineStep, getRoutinePlayback, routineEstimate, type RoutinePlayback } from "../../application/routinePlayer";
-import { ensureActiveDay, subscribeToDayRollover } from "../../application/commands";
+import { startDayFromTap, subscribeToDayRollover } from "../../application/commands";
 import { stepKey } from "../../application/routineCommands";
 import type { Routine } from "../../domain/routines";
 import { describeError } from "../errorMessage";
@@ -65,7 +65,8 @@ export function RoutinePlayer({ routines, onClose }: { routines: readonly Routin
     if (saving.current) return;
     saving.current = true; setBusy(true); setError(null);
     try {
-      await ensureActiveDay();
+      // EARLY-DAY-START-001: the same deliberate START DAY as TODAY's (opens the 16:30 day early in the afternoon).
+      await startDayFromTap();
       if (selected && alive.current) {
         const next = await getRoutinePlayback(selected);
         if (alive.current) {

@@ -207,6 +207,28 @@ export function scheduledWorkContextForLivedDay(dayStartedAt: Date, pattern: Sch
 }
 
 /**
+ * EARLY-DAY-START-001 (Gavin, 2026-11-20; amends DAY-ROLLOVER-001): he wakes before the 16:30 boundary on
+ * work days, often around 15:00, and wants to start his day with a tap. A START DAY tap in the afternoon
+ * opens the lived day that begins at today's 16:30, ahead of the roll, so its check-in, recommendation and
+ * work-day label are the evening's and survive 16:30.
+ *
+ * Pure: the 16:30 boundary such a tap opens, or null outside the window. The window comes from his own
+ * schedule rather than a new constant: it opens once a night shift's end plus its post-work tail has passed
+ * (18:00-06:00 with a 6 h tail: 12:00) and closes at 16:30. A schedule whose tail runs to 16:30 or later
+ * (a day shift) has no window, so its START DAY behaves exactly as before.
+ */
+export function earlyDayStartBoundary(now: Date, pattern: SchedulePattern): Date | null {
+  const boundary = nextRolloverBoundaryAfter(now);
+  const today = midnightOf(now);
+  if (midnightOf(boundary).getTime() !== today.getTime()) return null;
+  const opensAfterMinutes = Math.round((pattern.shiftEndHour + pattern.postWorkTailHours) * 60);
+  if (!Number.isFinite(opensAfterMinutes) || opensAfterMinutes < 0) return null;
+  const opens = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, opensAfterMinutes, 0, 0);
+  if (midnightOf(opens).getTime() !== today.getTime() || opens.getTime() >= boundary.getTime()) return null;
+  return now.getTime() >= opens.getTime() ? boundary : null;
+}
+
+/**
  * The scheduled shift a lived day owns — the first one overlapping its
  * start → next 16:30 window — or null on a scheduled day off. Shift Clock
  * (Drop 2) times its countdowns against this; scheduledWorkContextForLivedDay
