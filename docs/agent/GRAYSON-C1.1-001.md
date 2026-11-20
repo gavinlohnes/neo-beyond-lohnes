@@ -17,8 +17,9 @@
 - **Composition:** Situation → You → Delta → 0 or 1 recommendation → runway → ≤ 2 actions → Release. Unknown
   work context asks WORK/OFF first; no sleep record says so ("No main sleep is recorded since the shift", never
   "poor sleep"); a failed read is shown as unread with RETRY, never as empty; no check-in narrows Delta and never
-  gates the screen. A day off keeps today's TODAY (C1.2). A work day started by the roll or a log offers one
-  quiet ORIENT TODAY row (OPEN / NOT NOW); ORIENTATION reopens it from TODAY. Reviewed/set-aside is a
+  gates the screen. A day off keeps today's TODAY (C1.2). A work day started by the roll or a log offers it
+  through TODAY's quiet entry button, which reads ORIENT TODAY until seen and ORIENTATION after (no red, nothing
+  above the day: FIELD-AUTHORITY-001 / TODAY-FOLD-001). Reviewed/set-aside is a
   device-local marker for that day only (`orientationStore.ts`), not a record.
 - **Delta:** deterministic sentences from the facts on screen (`deltaLine`); it restates or explains the
   Engine's advice and never adds its own; certainty is capped by evidence (no range → no comparison). No AI call.
@@ -38,7 +39,9 @@
   no sleep, failed reads, Delta wording); integration against real records (writes nothing, tonight's shift 2 of
   3, Engine after check-in); browser states at 320/360/412 px (≤ 1 recommendation, ≤ 2 actions, no overflow,
   axe), routing, WORK/OFF answer, RETRY; the flow through TODAY (START DAY opens it, ENTER TODAY returns with no
-  write, ORIENTATION reopens, CHECK IN opens over it, ORIENT TODAY / NOT NOW); full Node and browser suites;
+  write, ORIENTATION reopens, CHECK IN opens over it, ORIENT TODAY after a rolled-in day; full-shift walkthrough with PREFLIGHT after ENTER TODAY); full Node and browser suites;
   Gavin's phone look.
+- **Handover:** a START DAY close to the shift (PRE_WORK) shows Orientation, then ENTER TODAY hands over to the
+  existing PREFLIGHT once. Two screens in a row on a late start; worth Gavin's look on the phone.
 - **Known limits:** after ENTER TODAY, a check-in made from TODAY doesn't reopen Orientation (ORIENTATION does);
   BODY sleep and TRAIN leave Orientation for their own screens; the runway has no leave time (BEYOND records none).

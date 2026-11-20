@@ -2706,7 +2706,9 @@ export function TodayScreen({
       {/* FIELD-AUTHORITY-001: TODAY's single "not checked in" surface — quiet, never red, and
           absent while an operation or the late sleep prompt owns the card. */}
       {checkInOwnedHere && !recommendationDraftPresent && <p className="today-check-in"><span><span>Not checked in.</span> <span>Check in for today's recommendation.</span></span><button type="button" className="btn-secondary" onClick={() => setCheckInFormOpen(true)}>CHECK IN</button></p>}
-      {dayRead && day && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setOrientationOpen(true); }}>ORIENTATION</button></div>}
+      {/* GRAYSON C1.1: Orientation stays one quiet tap away (FIELD-AUTHORITY-001: no red, nothing above the day). A day
+          started by the roll or a log reads ORIENT TODAY until it's been seen on this device. */}
+      {dayRead && day && <div className="today-briefing-entry"><button type="button" className="btn-secondary" disabled={busy} onClick={() => { if (!busyRef.current) setOrientationOpen(true); }}>{orientationSeenTick >= 0 && !orientationSeen(day.id) && day.workContext === "WORK" ? "ORIENT TODAY" : "ORIENTATION"}</button></div>}
     </section>
   </>;
 
@@ -2734,19 +2736,6 @@ export function TodayScreen({
     <SuitMode mode={pinnedPhase ?? scheduledClock.phase} />
     <OperatorHeader destination="mission">BEYOND // TODAY</OperatorHeader>
     {day && earlyStart && !bandHidden && <EarlyStartRow early={earlyStart} busy={busy} onStart={() => void handleStartDay()} />}
-    {/* GRAYSON C1.1: a work day started some other way (the 16:30 roll, a log) offers Orientation once, quietly. */}
-    {day && !earlyStart && !bandHidden && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && orientationSeenTick >= 0 && !orientationSeen(day.id) && (
-      <section className="today-early-start" aria-label="Orient today">
-        <div className="today-early-start__text">
-          <p className="today-early-start__label">ORIENT TODAY</p>
-          <p className="today-early-start__line">Sleep, advice and what's before your shift, on one screen.</p>
-        </div>
-        <div className="today-orient-invite__acts">
-          <button type="button" className="btn-primary today-early-start__go" disabled={busy} onClick={() => setOrientationOpen(true)}>OPEN</button>
-          <button type="button" className="btn-secondary today-early-start__go" disabled={busy} onClick={() => { markOrientationSeen(day.id); setOrientationSeenTick((n) => n + 1); }}>NOT NOW</button>
-        </div>
-      </section>
-    )}
     {day ? <section className="today-situation cc-hero-wrap" aria-label="Day mode">          <ModeHeader
             eyebrow={now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}
             run={bandCarriesRun ? null : todayRun}

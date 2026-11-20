@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
@@ -39,9 +39,10 @@ const STATES: Record<string, OrientationInput> = {
   "unknown-sparse": input({ day: { id: "d", startedAt: at(14, 16, 30).toISOString(), workContext: "UNKNOWN" }, picture: { now: null, next: null }, sleep: null, draft: null, plan: null, obligations: [] }),
   "source-failed": input({ sleep: "ERROR", draft: null, prep: "ERROR" }),
 };
-const routes = (): OrientationRoutes & Record<string, ReturnType<typeof vi.fn>> => ({
-  onEnter: vi.fn(), onCheckIn: vi.fn(), onPrep: vi.fn(), onCapture: vi.fn(), onTrain: vi.fn(), onSleep: vi.fn(), onCommitment: vi.fn(), onSetContext: vi.fn(async () => {}),
-}) as never;
+type MockRoutes = { [K in keyof OrientationRoutes]-?: Mock<NonNullable<OrientationRoutes[K]>> };
+const routes = (): MockRoutes => ({
+  onEnter: vi.fn(), onCheckIn: vi.fn(), onPrep: vi.fn(), onCapture: vi.fn(), onTrain: vi.fn(), onSleep: vi.fn(), onCommitment: vi.fn(), onSetContext: vi.fn(async (_value: "WORK" | "OFF") => {}),
+});
 const settle = async () => { await document.fonts.ready; await new Promise((r) => setTimeout(r, 150)); };
 
 describe("Orientation states", () => {
@@ -127,8 +128,7 @@ describe("Orientation through TODAY with real records", () => {
     await screen.getByRole("button", { name: "ENTER TODAY" }).click();
     await expect.element(screen.getByText("BEYOND // TODAY")).toBeVisible();
     expect(await db.events.count()).toBe(events);
-    // Reviewed on this device: no ORIENT TODAY invitation; the entry reopens it.
-    expect(document.querySelector("[aria-label='Orient today']")).toBeNull();
+    // Reviewed on this device: the entry reads ORIENTATION and reopens it.
     await screen.getByRole("button", { name: "ORIENTATION" }).click();
     await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
   });
@@ -142,13 +142,14 @@ describe("Orientation through TODAY with real records", () => {
     await expect.element(screen.getByRole("dialog")).toBeVisible();
   });
 
-  it("a work day started by the 16:30 roll offers ORIENT TODAY once; NOT NOW sets it aside", async () => {
+  it("a work day started by the 16:30 roll offers ORIENT TODAY quietly, and it reads ORIENTATION once seen", async () => {
     localStorage.removeItem("beyond.orientation.v1");
     vi.setSystemTime(at(14, 16, 31));
     await startDay(at(14, 16, 30).toISOString());
     const screen = await render(<TodayScreen onOpenLife={() => {}} />);
-    await expect.element(screen.getByRole("region", { name: "Orient today" })).toBeVisible();
-    await screen.getByRole("button", { name: "NOT NOW" }).click();
-    await expect.poll(() => document.querySelector("[aria-label='Orient today']")).toBeNull();
+    await screen.getByRole("button", { name: "ORIENT TODAY" }).click();
+    await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
+    await screen.getByRole("button", { name: "ENTER TODAY" }).click();
+    await expect.element(screen.getByRole("button", { name: "ORIENTATION" })).toBeVisible();
   });
 });

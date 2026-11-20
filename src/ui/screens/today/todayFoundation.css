@@ -90,4 +90,3 @@
 .today-field.redesign-today .today-early-start__label { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
 .today-field.redesign-today .today-early-start__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--tf-quiet); }
 .today-field.redesign-today .today-early-start__go { flex: 0 0 auto; min-height: 44px; width: auto; }
-.today-field.redesign-today .today-orient-invite__acts { display: flex; flex-wrap: wrap; gap: 8px; }

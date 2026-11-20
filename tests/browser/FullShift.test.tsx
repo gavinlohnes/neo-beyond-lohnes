@@ -47,6 +47,9 @@ it("walks one whole shift through the screens: preflight, a late-logged meal, a 
   // 16:45 — the day starts with one tap; PREFLIGHT then takes the screen once; STARTED WORK in it.
   let screen = await open(t(27, 16, 45), "1-start-day");
   await screen.getByRole("button", { name: "START DAY", exact: true }).click();
+  // GRAYSON C1.1: START DAY on a work day opens Orientation first; ENTER TODAY hands over to PREFLIGHT.
+  await expect.element(screen.getByText("BEYOND // ORIENT")).toBeVisible();
+  await screen.getByRole("button", { name: "ENTER TODAY" }).click();
   const preflight = screen.getByRole("dialog", { name: /^Preflight\./ });
   await expect.element(preflight).toBeVisible();
   await settle(); await check("1-preflight");
