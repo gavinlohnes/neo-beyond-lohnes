@@ -4,7 +4,10 @@
 - **Starting commit:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` (master after PR #601).
 - **Builder:** Codex.
 - **Branch:** `codex/grayson-guided-operating-loop-001`.
-- **Active PR:** [#602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+- **Merged objective PR:** [#602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+- **Protected documentation-only owner-discovery follow-up:**
+  [#603](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/603), branch
+  `codex/grayson-guided-owner-discovery`, starting master `c2bfd78ca11ff6a26a8a66c7cbe6c774cffc4e62`.
 
 ## Operator benefit
 
@@ -21,6 +24,8 @@ application's internal structure first.
 - Define the Guided Operating Principle and the Express → Understand → Propose → Approve → Operate →
   Record → Review → Adapt loop.
 - Define phone journeys and Delta language for Teach Delta, a strength/170 Mission and Food Week.
+- Record the plan-first/default-plan contract: Delta reduces decision load, asks only material
+  questions, proposes editable defaults and supplies realistic fallbacks.
 - Reconcile Product Direction, Vision, Doctrine, decisions, capability map, campaign plan, fasting
   design and prior donor synthesis.
 - Produce an evolution matrix, ranked sequence and one bounded recommended next objective.
@@ -53,11 +58,13 @@ connects TRAIN at the system level and schedules a dedicated owner conversation 
 - Food design covers plan/shop/prep/log/review, budget/store uncertainty and serving-first logging.
 - Mission design connects goals, training, food, recovery, operation and outcome review without
   silently changing canonical plans.
+- Sensitive owner data and raw backup contents are not copied into source control; the design records
+  reusable product behavior while private personal facts remain future operator data.
 - Protected choices are explicit rather than silently decided.
 - Documentation links, Markdown hygiene, risk classification and required docs-only CI pass.
 - Independent exact-head review is recorded before Gavin's merge decision.
 
 ## Next action
 
-Finish documentation checks, open the PR, obtain independent exact-head review and green required CI,
-then return to Gavin. Do not implement `GRAYSON-GUIDED-START-001` or any later slice.
+Obtain green required CI and fresh independent exact-head review for follow-up PR #603, then return
+to Gavin for merge approval. Do not implement `GRAYSON-GUIDED-START-001` or any later slice.
