@@ -1,3 +1,29 @@
+# Handoff to the next Builder (Codex) — 2026-11-20
+
+Gavin is switching from Claude Code to Codex when Claude's usage runs out. Builder of record for the items below
+was Claude Code; Gavin's switch is the explicit handoff.
+
+- **Open PR #599** (C1.3 + C1.4, close after SHIFT DOWN; branch `ccr-380c4225-1es42i`, head `4e0842f`): independent
+  exact-head review **PASS** posted, CI green. Waiting only on Gavin's phone look and merge. Do not add commits to it.
+- **Ready branch `ccr-380c4225-c1-6`** (stacked on #599's head; NOT yet a PR): two commits.
+  1. Review follow-ups from the PASS reviews of #598/#599 (non-blocking findings): "one bad day" (Gavin kept "worth
+     deliberate attention"), recovery-day sleep wording, unreadable Minimum Day reported in `unread`, close label and
+     "next" line anchored to the day's own lived start. Briefs GRAYSON-C1.2-001 / C1.3-001 record them.
+  2. C1.6 Delta's voice ([brief](GRAYSON-C1.6-001.md), approved: "Bruce → Terry by default, with Delta and Droid as
+     switchable voices"): `application/deltaVoice.ts` copy library (PLAIN/MENTOR/DELTA/DROID), hard days always PLAIN,
+     device-local switch under Delta's line on Orientation. Screenshots `docs/screenshots/grayson-c1.6/`.
+  - Verified locally: typecheck, architecture, all Orientation/close/voice node tests (UTC and Chicago) and the
+    Orientation + DayClose browser files. A full-suite run was in progress at handoff; re-run before the PR.
+- **Next steps for Codex:**
+  1. After Gavin merges #599: `git fetch && git checkout ccr-380c4225-c1-6 && git rebase origin/master` (or merge
+     master in), run `npm run verify`, push, and open one PR titled "GRAYSON C1.6 · Delta's voice + C1.2/C1.3 review
+     follow-ups". Lane PROTECTED (TODAY wording, source-error reporting). Update the tracker row C1.6 to Done (#PR).
+  2. Get an independent exact-head review (a separate session; not the Builder), green CI, Gavin's merge.
+  3. Then Campaign 1 is done except C1.5 (re-entry "since you last looked" line, Protected, L). Recommend Gavin uses
+     Orientation, the close and the voices on real shifts before starting C1.5 or Campaign 2.
+
+---
+
 # Current objective — C1.3 close after SHIFT DOWN (C1.2 merged as #598) (2026-11-20)
 
 - **Owner ruling (Gavin, 2026-11-20):** approve C1.2 with no Orientation-invented day-off advice and with the mood
