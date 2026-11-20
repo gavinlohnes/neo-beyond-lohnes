@@ -28,6 +28,35 @@ This is not a conversational skin over every screen. Conversation is used where 
 personal context matter. Direct controls remain faster for familiar actions such as logging water,
 repeating a meal, recording a set, correcting an entry or ending a timer.
 
+### Plan-first assistance and decision load
+
+Gavin's recurring problem is not a shortage of options. It is having to repeatedly decide what a
+reasonable plan should be and assemble it himself. GRAYSON therefore does not respond to a clear
+outcome with a catalogue, a blank configuration form or a long preference interview.
+
+When existing evidence and low-risk defaults are sufficient, Delta should:
+
+1. propose one coherent default plan;
+2. name the few assumptions that materially affect it;
+3. explain important reasoning briefly and in ordinary language;
+4. provide a reduced or situational fallback where real life is likely to interrupt it;
+5. let Gavin change, reject or replace any part without losing the rest of the work; and
+6. learn only from explicit correction or later outcomes, with visible provenance.
+
+Delta asks a question only when the answer would materially change safety, feasibility, cost,
+meaning or the selected plan. Harmless preferences may be inferred as editable defaults and refined
+through use. Missing information reduces confidence and personalization; it does not force Gavin to
+design the system or block useful help.
+
+> **Default-plan contract:** GRAYSON turns an intention into an informed plan Gavin can follow.
+> Delta reduces decision load, exposes consequential assumptions, watches recorded outcomes and
+> proposes adjustments. Gavin remains the final authority.
+
+This contract applies across domains. “Drink more” becomes a shift-aware bottle plan; “eat better”
+becomes meals, portions, shopping and preparation; “train” becomes the appropriate session plus a
+home or reduced fallback; and “reach a healthy weight” becomes a phased, reviewable strategy rather
+than a single unexplained target.
+
 ## 2. Definition of done
 
 The Guided Operating Loop is successful when Gavin can begin with an ordinary statement such as:
@@ -192,7 +221,8 @@ Canonical example:
 
 Delta first identifies ambiguity and potential conflict. It does not assume that “low calorie,”
 “gain muscle” and “reach 170” are mutually compatible without knowing current weight, trend and
-intent.
+intent. It should use current records and propose a conservative starting interpretation rather than
+make Gavin select a technical strategy he does not yet understand.
 
 The shortest useful clarification covers:
 
@@ -204,10 +234,13 @@ The shortest useful clarification covers:
 - food budget, appetite, preferences and preparation capacity;
 - sleep, shifts, recovery and injury/medical constraints;
 - what counts as success beyond scale weight;
-- which assumptions Gavin wants Delta to make versus discuss.
+- which remaining assumption would materially change the plan.
 
 Existing records answer questions before Delta asks them. Old, sparse or conflicting records are
-shown as such.
+shown as such. Routine choices—such as an initial weekly structure or a reasonable default beverage
+for an ordinary shift—are proposed, not returned as homework. Medical treatment remains clinician-led:
+GRAYSON may account for explicitly recorded treatment context and symptoms, but does not change a
+prescription, infer safety from silence or present product guidance as medical advice.
 
 #### Proposed mission brief
 
@@ -274,7 +307,8 @@ Gavin may state:
 > “I want lunches for work this week and a few dinners. Make them good for me, lower calorie and
 > high protein. I am shopping at Aldi and want to spend about $80.”
 
-Delta extracts the known constraints and asks only the missing material questions, one at a time:
+Delta extracts the known constraints, builds a useful draft from evidence and safe editable defaults,
+and asks only missing questions that would materially change the result, one at a time:
 
 1. How many work lunches?
 2. How many dinners and how many people per dinner?
@@ -283,6 +317,10 @@ Delta extracts the known constraints and asks only the missing material question
 5. Dislikes, allergies, exclusions and foods the household will actually eat?
 6. Available equipment, preparation time and storage/reheating conditions?
 7. Which active Mission and nutrition targets should shape the proposal?
+
+This list is a reasoning checklist, not a mandatory interview. If Gavin has already supplied enough
+information—such as who the meals serve, cooking equipment, dislikes and the desired work-meal
+shape—Delta proceeds and marks any remaining assumptions for easy correction.
 
 “Good for me” is never silently translated into a diet ideology. Delta states the chosen working
 meaning—such as protein, energy, produce, fiber, budget and practicality—and lets Gavin change it.
@@ -370,6 +408,14 @@ Food review is adherence-neutral. It distinguishes:
 Useful outputs include: which prepared meals were actually eaten, which were inconvenient, whether
 protein or energy was repeatedly difficult to reach, what was wasted, and what should be repeated or
 changed next week. Any inferred preference returns through **What I understood**, not hidden learning.
+
+Hydration follows the same pattern without becoming a separate burden. An ordinary plan may default
+to water, sparkling water or water with lemon; a zero-sugar flavored mix can be an interchangeable
+routine option. Caloric sports drink is proposed only when recorded context makes carbohydrate and
+sweat replacement relevant, not as a universal hydration requirement. A protein shake is treated as
+nutrition that may close a practical protein gap, not as water. Familiar owner-defined units such as
+**my bottle** or **one scoop** should carry their known volume and nutrition so logging does not require
+grams or repeated calculation.
 
 ## 5. Cross-domain conflict handling
 
@@ -521,6 +567,7 @@ composition study. This design does not decide them silently.
 | Weekly/Review/metric pages | Existing evidence | Mission-level outcome review and one justified change | Connect + deepen |
 | Orientation/TODAY | Lived-day authority and Quiet Command | Carry only approved relevant mission operations | Connect |
 | Fasting design | Optional experiment and fueling safeguards | Conflict-aware Food Week integration | Connect later |
+| Hydration and drink logging | Existing water and nutrition records | Contextual default plan, familiar containers and honest sports-drink use | Connect + deepen |
 
 ## 10. Ranked implementation sequence
 
@@ -587,3 +634,10 @@ This design recommends but does not lock:
    explain the deterministic Engine Recommendation and assist with owner-directed planning.
 
 These decisions should be made with phone-first designs and repository truth, not abstract labels.
+
+The completed owner discovery for that later training decision already establishes the direction:
+teach an inexperienced but willing operator; connect whole-body strength, selected emphasis areas,
+performance standards, food, sleep and recovery; use available gym equipment; and always preserve a
+credible bodyweight-at-home or reduced-day fallback. Exact programming, progression, testing and
+medical/medication-aware safeguards remain for the dedicated design and evidence review rather than
+being silently locked here.

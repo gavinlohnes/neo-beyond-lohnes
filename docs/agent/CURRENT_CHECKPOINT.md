@@ -11,14 +11,20 @@
   [brief](GRAYSON-GUIDED-OPERATING-LOOP-001.md).
 - **What it establishes:** the Guided Operating Principle; Express → Understand → Propose → Approve
   → Operate → Record → Review → Adapt; Teach Delta, a connected Mission and Food Week; detailed phone
-  journeys and Delta language; repository evolution matrix; ranked implementation sequence.
+  journeys and Delta language; repository evolution matrix; ranked implementation sequence. Later
+  owner discovery adds the Default-plan contract: Delta makes a defensible editable plan, asks only
+  questions that materially change it, reduces decision load and provides real-life fallbacks.
 - **Repository finding:** memory/Personal Understanding, Missions, targets/proposals, saved meals,
   USDA/barcode logging, meal planning, TRAIN and evidence already exist. The principal gap is guided
   orchestration and cross-domain composition, with narrower missing primitives for resumable guided
   drafts, ingredient/store-aware plans and Mission-to-plan association.
 - **Workout ruling:** this design connects TRAIN at the system level but does not pretend to finish
-  training design. A dedicated owner conversation follows this design and precedes connected Mission
-  implementation.
+  training design. Owner discovery now establishes guided whole-body strength, selectable emphasis,
+  available-equipment awareness, connected food/sleep/recovery evidence and home/reduced fallbacks.
+  Exact programming remains a dedicated design before connected Mission implementation.
+- **Privacy ruling:** product rules and non-sensitive design preferences belong in the repository;
+  raw backup contents, exact medication details and personal health history do not. Those remain
+  private operator data for a future authorized path.
 - **Exclusions:** no product code, runtime behavior, prototype, primary navigation, Engine,
   recommendation priority, command/event/schema semantics, provider/dependency, runtime rename,
   concurrent PR, Google Drive or merge.
@@ -33,9 +39,9 @@
   Food earns a persistent workspace; deterministic/AI/hybrid guided-session method; the dedicated
   training philosophy and experience; future data/event semantics; and any future Delta recommendation
   authority. None is silently decided here.
-- **Next:** verify and push only the three scoped review repairs, obtain green required CI and renewed
-  independent exact-head PASS, then return to Gavin for merge approval. Do not implement the
-  recommended Guided Start slice.
+- **Next:** verify and push the owner-discovery reconciliation, obtain green required CI and renewed
+  independent exact-head review for the new head, then return to Gavin for merge approval. Do not
+  implement the recommended Guided Start slice or silently complete the dedicated training design.
 
 ---
 
