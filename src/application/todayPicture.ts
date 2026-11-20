@@ -4,6 +4,7 @@ import { getActiveDay, getSchedulePattern, getWorkContextSource } from "./querie
 import { getConfirmedKinds } from "./scheduleExceptions";
 import { getWeekAhead } from "./weekAheadQueries";
 import { recordedBy } from "./workContextResolution";
+import { livedReadAt } from "./earlyDayStart";
 
 /**
  * OPERATOR-EXPERIENCE-001 slice 2: TODAY's NOW and NEXT, read the same way TODAY's band reads them, for Alfred's context
@@ -15,12 +16,14 @@ export interface TodayPicture { now: LifeStateReading | null; next: AheadReading
 export async function getTodayPicture(now: Date = new Date()): Promise<TodayPicture | null> {
   const day = await getActiveDay();
   if (!day) return null;
+  // EARLY-DAY-START-001: a day opened early reads as the 16:30 day it is, not the one it replaced.
+  const at = livedReadAt(day, now);
   const [pattern, source, yesterday, confirmed, week] = await Promise.all([
-    getSchedulePattern(), getWorkContextSource(day.id), getRecordedYesterday(now), getConfirmedKinds(), getWeekAhead(now),
+    getSchedulePattern(), getWorkContextSource(day.id), getRecordedYesterday(at), getConfirmedKinds(), getWeekAhead(at),
   ]);
   const recorded = day.workContext === "UNKNOWN" ? null : day.workContext;
-  const input = lifeStateInput(now, pattern, recorded, yesterday, source ? recordedBy(source) : undefined, confirmed);
-  return { now: deriveLifeState(input), next: deriveAhead(now, input.today.recorded ?? input.today.scheduled, week.days) };
+  const input = lifeStateInput(at, pattern, recorded, yesterday, source ? recordedBy(source) : undefined, confirmed);
+  return { now: deriveLifeState(input), next: deriveAhead(at, input.today.recorded ?? input.today.scheduled, week.days) };
 }
 
 /** Plain words for Alfred's context and the free helper. */

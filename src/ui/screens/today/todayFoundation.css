@@ -75,3 +75,18 @@
 /* SPEED-UNDER-FATIGUE-001: the existing Note form, one tap from TODAY's logging area. */
 .today-note-shortcut { margin-block: 8px; }
 .today-note-shortcut .btn-secondary { width: auto; min-height: 44px; font-size: 16px; padding: 8px 16px; }
+
+/* EARLY-DAY-START-001: the afternoon START DAY row, framed like the band beneath it. */
+.today-field.redesign-today .today-early-start {
+  position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px;
+  margin: 8px 0 16px; padding: 12px 12px 12px 14px; background: var(--tf-s1);
+  border: 1px solid color-mix(in srgb, var(--tf-red) 55%, var(--tf-line));
+  clip-path: polygon(0 0, calc(100% - var(--tf-cut)) 0, 100% var(--tf-cut), 100% 100%, var(--tf-cut) 100%, 0 calc(100% - var(--tf-cut)));
+}
+.today-field.redesign-today .today-early-start::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-left: 2px solid var(--tf-red); border-top: 2px solid var(--tf-red); pointer-events: none;
+}
+.today-field.redesign-today .today-early-start__text { flex: 1 1 200px; min-width: 0; display: grid; gap: 4px; }
+.today-field.redesign-today .today-early-start__label { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-early-start__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--tf-quiet); }
+.today-field.redesign-today .today-early-start__go { flex: 0 0 auto; min-height: 44px; width: auto; }

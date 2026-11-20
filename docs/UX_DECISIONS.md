@@ -12,6 +12,18 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## EARLY-DAY-START-001 — an afternoon START DAY opens tonight's day (owner go 2026-11-20; amends DAY-ROLLOVER-001)
+
+Gavin, 2026-11-20 (Protected, approved): "A START DAY tap in the afternoon before 16:30 should open the day that
+owns tonight's shift, so your check-in, your recommendation and the 'work day' label survive past 16:30 ... It
+amends that September 16:30 rule and I'm okay with that." [Brief](agent/GRAYSON-C1.0-001.md).
+A deliberate START DAY tap between the schedule's post-shift tail (shift end + post-work tail; 12:00 on
+18:00–06:00) and 16:30 opens the lived day that begins at 16:30, stamped at that boundary the way the roll stamps
+its days, closing any running day through the existing new-day path. The 16:30 roll then has nothing to do for it.
+Lazy day creation and the automatic roll are unchanged. TODAY offers the tap in that window even while yesterday's
+day still runs (he leaves it running), after last night's wake card is answered. Pure rule:
+`engine/scheduledContext.ts`'s `earlyDayStartBoundary`. No schema or event change.
+
 ## OPERATOR-CONTEXT-002A — one inspectable context projection (owner approval 2026-11-01)
 
 Gavin approved the advancement design's first implementation after its owner-visible walkthrough:
