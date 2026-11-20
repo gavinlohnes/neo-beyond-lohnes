@@ -5,7 +5,8 @@
   guided conversation. No provider, primary-navigation, Engine/recommendation, autonomous memory,
   health-plan, schema or Google Drive change is authorized.
 - **Starting master / Builder:** `84afb8cc810bba2cbed307082aa7fb992debcb15` after PR #604;
-  Builder Codex; branch `codex/grayson-guided-start-001`; PR pending.
+  Builder Codex; branch `codex/grayson-guided-start-001`;
+  [PR #605](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/605).
 - **Brief:** [`GRAYSON-GUIDED-START-001.md`](GRAYSON-GUIDED-START-001.md).
 - **Repository truth reused:** `GuidedOverview` already provides optional Journal/Plans/Capture paths;
   `MEMORY_RECORDED` already provides explicit operator confirmation, causal history, correction,

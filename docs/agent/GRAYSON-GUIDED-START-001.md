@@ -4,7 +4,7 @@
 
 Gavin approved this **Protected implementation objective** on 2026-11-20. Starting master:
 `84afb8cc810bba2cbed307082aa7fb992debcb15` (PR #604 merged). Builder: Codex. Branch:
-`codex/grayson-guided-start-001`. PR: pending.
+`codex/grayson-guided-start-001`. PR: [#605](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/605).
 
 ## Operator outcome
 
