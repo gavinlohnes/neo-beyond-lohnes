@@ -4,7 +4,7 @@
   three custom templates together; **PROTECTED**. No programme activation/assignment, recommendation,
   sequence, Engine/progression/recovery, schema, dependency or primary-navigation change.
 - **Starting master / Builder:** `623e876a` after #609; Builder Codex; branch
-  `codex/grayson-train-plan-save-001`; PR pending.
+  `codex/grayson-train-plan-save-001`; [PR #610](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/610).
 - **Brief:** [`GRAYSON-TRAIN-PLAN-SAVE-001.md`](GRAYSON-TRAIN-PLAN-SAVE-001.md).
 - **Candidate outcome:** the merged draft exposes the exact three full-session records, then one
   owner confirmation creates all three custom templates atomically with duplicate protection and a

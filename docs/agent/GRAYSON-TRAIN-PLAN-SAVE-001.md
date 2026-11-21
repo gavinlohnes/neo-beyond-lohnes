@@ -3,7 +3,7 @@
 - **Authorization / lane:** Gavin, 2026-11-21, approved the bounded wording verbatim; **PROTECTED**.
 - **Starting commit:** `623e876a` (master after PR #609).
 - **Builder / branch:** Codex; `codex/grayson-train-plan-save-001`.
-- **Active PR:** pending.
+- **Active PR:** [#610](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/610).
 
 ## Operator benefit
 
