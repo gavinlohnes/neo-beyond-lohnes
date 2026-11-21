@@ -103,6 +103,12 @@ describe("parseRecurrencePreset — round-trips buildRecurrenceRule's own output
     expect(deriveNextOccurrenceDate(built, "2026-09-14")).toBe("2028-09-14");
   });
 
+  it("returns null for a yearly rule the picker can't express, so an edit keeps it", () => {
+    expect(parseRecurrencePreset("DTSTART:20261126T000000Z\nRRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=4TH")).toBeNull();
+    expect(parseRecurrencePreset("DTSTART:20260914T000000Z\nRRULE:FREQ=YEARLY;BYMONTHDAY=14")).toBeNull();
+    expect(parseRecurrencePreset("DTSTART:20260914T000000Z\nRRULE:FREQ=YEARLY;INTERVAL=2")).toEqual({ freq: "YEARLY", interval: 2, anchor: "2026-09-14" });
+  });
+
   it("returns null for a frequency this repo's picker doesn't offer", () => {
     const hourly = "DTSTART:20260914T000000Z\nRRULE:FREQ=HOURLY;INTERVAL=1";
     expect(parseRecurrencePreset(hourly)).toBeNull();

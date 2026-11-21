@@ -92,6 +92,15 @@ export function parseRecurrencePreset(rrule: string): RecurrencePreset | null {
   const rule = RRule.fromString(rrule);
   const freq = FREQ_NUMS[rule.options.freq];
   if (!freq || !rule.options.dtstart) return null;
+  // C3.4b review: the picker only expresses "every N years" for YEARLY. A yearly rule with any other
+  // part (Alfred can store "the 4th Thursday of November") must read as not-editable, so saving the
+  // edit form keeps the stored rule instead of flattening it to a plain anniversary.
+  if (freq === "YEARLY") {
+    const o = rule.origOptions;
+    const extra = [o.bymonth, o.bymonthday, o.bysetpos, o.byyearday, o.byweekno, o.byweekday, o.byeaster]
+      .some((v) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0));
+    if (extra) return null;
+  }
   const byDay = Array.isArray(rule.options.byweekday)
     ? rule.options.byweekday.map((n: number) => WEEKDAY_NUMS[n]).filter((c): c is string => c !== undefined)
     : undefined;
