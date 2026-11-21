@@ -3,11 +3,12 @@
 - **Brief:** [`GRAYSON-C3.4c-001.md`](GRAYSON-C3.4c-001.md). Plan item C3.4c; Gavin's go 2026-11-21
   ("Fix those two next").
 - **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); edit picker read-back only.
-  Builder Claude Code; branch `claude/project-thread-s69muv`; built on #606's head `8c0d37db`.
+  Builder Claude Code; branch `claude/project-thread-s69muv`; folded into
+  [PR #606](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/606) on Gavin's word ("Fold them in").
 - **Change:** clearing a due date no longer re-anchors a repeat on today, and the rule is rebuilt only
   when its repeat or due date changed; rules with parts the picker can't express (a monthly first
   Monday, an end date, a count) open as "Does not repeat" with a "Keeps its repeat" line and are kept.
-- **Next:** green CI and independent exact-head PASS, then Gavin's merge.
+- **Next:** green CI and independent exact-head PASS on #606 (C3.4b + C3.4c), then Gavin's merge.
 
 ---
 

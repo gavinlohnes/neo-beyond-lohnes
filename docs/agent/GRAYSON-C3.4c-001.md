@@ -9,8 +9,8 @@
   not apply. Semantically it touches only the edit picker's read-back: no recommendation, arbitration,
   capacity, notification, schema, event or next-occurrence change. Waits for independent exact-head
   review, green CI and Gavin's merge.
-- **Starting point / Builder:** built on #606's head `8c0d37db` (not yet merged when work began);
-  Builder Claude Code; branch `claude/project-thread-s69muv`.
+- **Starting point / Builder:** built on #606's head `8c0d37db`; folded into PR #606 on Gavin's word
+  ("Fold them in", 2026-11-21). Builder Claude Code; branch `claude/project-thread-s69muv`.
 
 ## Operator outcome
 
