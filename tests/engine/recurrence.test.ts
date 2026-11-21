@@ -4,6 +4,7 @@ import {
   deriveNextOccurrenceDate,
   describeRecurrence,
   parseRecurrencePreset,
+  type RecurrencePreset,
 } from "../../src/engine/recurrence";
 
 /**
@@ -107,6 +108,32 @@ describe("parseRecurrencePreset — round-trips buildRecurrenceRule's own output
     expect(parseRecurrencePreset("DTSTART:20261126T000000Z\nRRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=4TH")).toBeNull();
     expect(parseRecurrencePreset("DTSTART:20260914T000000Z\nRRULE:FREQ=YEARLY;BYMONTHDAY=14")).toBeNull();
     expect(parseRecurrencePreset("DTSTART:20260914T000000Z\nRRULE:FREQ=YEARLY;INTERVAL=2")).toEqual({ freq: "YEARLY", interval: 2, anchor: "2026-09-14" });
+  });
+
+  it("C3.4c: returns null for any rule with parts the picker can't express, so an edit keeps it", () => {
+    const at = "DTSTART:20270104T000000Z\nRRULE:";
+    // The first Monday of every month, the 15th of every month, a weekly "first Monday", an end, a count.
+    for (const body of [
+      "FREQ=MONTHLY;BYDAY=1MO", "FREQ=MONTHLY;BYDAY=-1FR", "FREQ=MONTHLY;BYMONTHDAY=15", "FREQ=MONTHLY;BYSETPOS=1;BYDAY=MO",
+      "FREQ=WEEKLY;BYDAY=+1MO", "FREQ=DAILY;BYDAY=MO", "FREQ=WEEKLY;BYDAY=MO;UNTIL=20271231T000000Z", "FREQ=DAILY;COUNT=5",
+      "FREQ=WEEKLY;INTERVAL=2;WKST=SU;BYDAY=MO",
+    ]) expect(parseRecurrencePreset(at + body), body).toBeNull();
+  });
+
+  it("C3.4c: still reads back every rule the picker itself builds, unchanged by a rebuild", () => {
+    const presets: RecurrencePreset[] = [
+      { freq: "DAILY", interval: 3, anchor: "2027-01-04" },
+      { freq: "WEEKLY", interval: 1, byDay: ["MO", "WE", "FR"], anchor: "2027-01-04" },
+      { freq: "WEEKLY", interval: 2, byDay: ["MO"], anchor: "2027-01-04" },
+      { freq: "MONTHLY", interval: 1, anchor: "2027-01-31" },
+      { freq: "YEARLY", interval: 1, anchor: "2028-02-29" },
+    ];
+    for (const preset of presets) {
+      const built = buildRecurrenceRule(preset);
+      const parsed = parseRecurrencePreset(built);
+      expect(parsed, built).toEqual(preset);
+      expect(buildRecurrenceRule(parsed!)).toBe(built);
+    }
   });
 
   it("returns null for a frequency this repo's picker doesn't offer", () => {

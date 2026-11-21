@@ -1,4 +1,17 @@
-# Current objective — GRAYSON-C3.4b-001 yearly repeats editable in Plans (2026-11-21)
+# Current objective — GRAYSON-C3.4c-001 repeat edits keep their pattern and anchor (2026-11-21)
+
+- **Brief:** [`GRAYSON-C3.4c-001.md`](GRAYSON-C3.4c-001.md). Plan item C3.4c; Gavin's go 2026-11-21
+  ("Fix those two next").
+- **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); edit picker read-back only.
+  Builder Claude Code; branch `claude/project-thread-s69muv`; built on #606's head `8c0d37db`.
+- **Change:** clearing a due date no longer re-anchors a repeat on today, and the rule is rebuilt only
+  when its repeat or due date changed; rules with parts the picker can't express (a monthly first
+  Monday, an end date, a count) open as "Does not repeat" with a "Keeps its repeat" line and are kept.
+- **Next:** green CI and independent exact-head PASS, then Gavin's merge.
+
+---
+
+# Previous objective — GRAYSON-C3.4b-001 yearly repeats editable in Plans (2026-11-21)
 
 - **Brief:** [`GRAYSON-C3.4b-001.md`](GRAYSON-C3.4b-001.md). Plan item C3.4b; Gavin's go 2026-11-20.
 - **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); recurrence picker wrapper only, no

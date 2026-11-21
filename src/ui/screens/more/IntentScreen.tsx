@@ -775,8 +775,13 @@ function ObligationDetail({
       // unchanged (modifyObligation's own `undefined` = "leave unchanged"
       // convention, same limitation dueAt/plannedAt/description already
       // have here — no clear-to-unset path yet for any of these fields).
-      const anchor = dueAt || formatLocalDate(new Date());
-      const recurrence = recurrenceInputFor(recurrenceForm, anchor);
+      // C3.4c: a cleared due date is "leave unchanged" (above), so the rule anchors on the due date
+      // that stays, never on today. And the rule is only rebuilt when its repeat or the due date
+      // actually changed, so editing a title never re-anchors a repeat.
+      const anchor = dueAt || obligation?.dueAt || formatLocalDate(new Date());
+      const repeatChanged = !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation?.recurrence));
+      const dueChanged = dueAt !== "" && dueAt !== (obligation?.dueAt ?? "");
+      const recurrence = repeatChanged || dueChanged ? recurrenceInputFor(recurrenceForm, anchor) : undefined;
       await saveObligationEdits(obligationId, {
         title: title.trim() || undefined,
         description: description.trim() || undefined,
@@ -904,6 +909,9 @@ function ObligationDetail({
                 {!dueAt && remindAt && <p className="meta">A reminder time needs a due date.</p>}
                 <ReminderAlertLine dueAt={dueAt} remindAt={remindAt} title={title.trim()} obligationId={obligationId} />
                 <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix={`obligation-recurrence-${obligationId}`} disabled={busy} />
+                {obligation.recurrence && !recurrenceForm.freq && (
+                  <p className="meta">Keeps its repeat: {describeRecurrence(obligation.recurrence.rrule)}. Pick a new repeat to replace it.</p>
+                )}
                 <select className="input" style={{ marginBottom: 8 }} aria-label="Project" value={projectId} disabled={busy} onChange={(e) => setProjectId(e.target.value)}>
                   <option value="">No project</option>
                   {openProjects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
