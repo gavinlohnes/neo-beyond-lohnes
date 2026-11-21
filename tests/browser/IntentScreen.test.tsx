@@ -10,6 +10,8 @@ import {
   markObligationWaiting,
   satisfyObligation,
 } from "../../src/application/intentCommands";
+import { addHomeItem } from "../../src/application/homeCommands";
+import { getObligations } from "../../src/application/intentQueries";
 
 /**
  * Intent & Commitment Spine — Drop 01 (2026-08-22, approved). Real-browser
@@ -253,5 +255,48 @@ describe("IntentScreen (real browser) — recurrence (INTENT-002)", () => {
     await screen.getByRole("button", { name: "EDIT", exact: true }).click();
     await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("WEEKLY");
     await expect.element(screen.getByRole("button", { name: "Mon", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("GRAYSON-Q2: a yearly Home job opens as Yearly in the picker and its repeat can be changed", async () => {
+    await addHomeItem({ item: "Smoke alarm batteries", repeat: { every: 1, unit: "YEARS", firstDue: "2027-01-01" } });
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "Open Home: Smoke alarm batteries" }).click();
+    await expect.element(screen.getByText("Repeats: every year", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "EDIT", exact: true }).click();
+    await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("YEARLY");
+    await expect.element(screen.getByText("year(s)", { exact: true })).toBeVisible();
+    await screen.getByRole("spinbutton", { name: "Recurrence interval" }).fill("2");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Repeats: every 2 years", { exact: true })).toBeVisible();
+    expect((await axe.run(screen.container)).violations).toEqual([]);
+  });
+  it("C3.4c: editing a first-Monday monthly item keeps its pattern", async () => {
+    await createObligation({ title: "Pay the vet plan", dueAt: "2027-01-04", recurrence: { rrule: "DTSTART:20270104T000000Z\nRRULE:FREQ=MONTHLY;BYDAY=1MO" } });
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "Open Pay the vet plan" }).click();
+    await expect.element(screen.getByText("Repeats: every month on the 1st Monday", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "EDIT", exact: true }).click();
+    await expect.element(screen.getByRole("combobox", { name: "Repeats" })).toHaveValue("");
+    await expect.element(screen.getByText("Keeps its repeat: every month on the 1st Monday. Pick a new repeat to replace it.", { exact: true })).toBeVisible();
+    await screen.getByRole("textbox", { name: "Obligation title" }).fill("Pay the vet care plan");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Repeats: every month on the 1st Monday", { exact: true })).toBeVisible();
+    const saved = (await getObligations()).find((o) => o.title === "Pay the vet care plan");
+    expect(saved?.recurrence?.rrule).toBe("DTSTART:20270104T000000Z\nRRULE:FREQ=MONTHLY;BYDAY=1MO");
+    expect((await axe.run(screen.container)).violations).toEqual([]);
+  });
+
+  it("C3.4c: clearing the due date and changing the repeat anchors on the due date that stays, not today", async () => {
+    await addHomeItem({ item: "Smoke alarm batteries", repeat: { every: 1, unit: "YEARS", firstDue: "2027-03-14" } });
+    const screen = await render(<IntentScreen />);
+    await screen.getByRole("button", { name: "Open Home: Smoke alarm batteries" }).click();
+    await screen.getByRole("button", { name: "EDIT", exact: true }).click();
+    await screen.getByLabelText("Due", { exact: true }).fill("");
+    await screen.getByRole("spinbutton", { name: "Recurrence interval" }).fill("2");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByText("Repeats: every 2 years", { exact: true })).toBeVisible();
+    const saved = (await getObligations()).find((o) => o.title === "Home: Smoke alarm batteries");
+    expect(saved?.dueAt).toBe("2027-03-14");
+    expect(saved?.recurrence?.rrule).toBe("DTSTART:20270314T000000Z\nRRULE:FREQ=YEARLY;INTERVAL=2");
   });
 });

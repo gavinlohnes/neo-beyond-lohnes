@@ -1,4 +1,33 @@
-# Current objective — GRAYSON-GUIDED-START-001 (2026-11-20)
+# Current objective — GRAYSON-C3.4c-001 repeat edits keep their pattern and anchor (2026-11-21)
+
+- **Brief:** [`GRAYSON-C3.4c-001.md`](GRAYSON-C3.4c-001.md). Plan item C3.4c; Gavin's go 2026-11-21
+  ("Fix those two next").
+- **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); edit picker read-back only.
+  Builder Claude Code; branch `claude/project-thread-s69muv`; folded into
+  [PR #606](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/606) on Gavin's word ("Fold them in").
+- **Change:** clearing a due date no longer re-anchors a repeat on today, and the rule is rebuilt only
+  when its repeat or due date changed; rules with parts the picker can't express (a monthly first
+  Monday, an end date, a count) open as "Does not repeat" with a "Keeps its repeat" line and are kept.
+- **Next:** green CI and independent exact-head PASS on #606 (C3.4b + C3.4c), then Gavin's merge.
+
+---
+
+# Previous objective — GRAYSON-C3.4b-001 yearly repeats editable in Plans (2026-11-21)
+
+- **Brief:** [`GRAYSON-C3.4b-001.md`](GRAYSON-C3.4b-001.md). Plan item C3.4b; Gavin's go 2026-11-20.
+- **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); recurrence picker wrapper only, no
+  recommendation, notification, schema or event change. Builder Claude Code; branch
+  `claude/project-thread-s69muv`; [PR #606](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/606). Starting master `1ee25794`.
+- **Change:** Plans' Repeats picker offers Yearly; yearly Home and People items open as Yearly and
+  can be edited.
+- **Verification:** typecheck, architecture and Node engine/integration tests pass locally; the
+  browser test in `tests/browser/IntentScreen.test.tsx` runs in required CI (no local Chromium).
+- **Concurrent work:** PR #584 (TRAIN, not touched). No TRAIN files changed.
+- **Next:** green CI and independent exact-head PASS, then Gavin's merge.
+
+---
+
+# Historical — GRAYSON-GUIDED-START-001 (merged as PR #605)
 
 - **Owner authorization / lane:** Gavin approved a Protected implementation objective evolving
   **A PLACE TO START** and **What BEYOND should remember** into an optional, resumable, phone-first
