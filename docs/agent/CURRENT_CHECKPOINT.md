@@ -5,7 +5,8 @@
   command/event/schema, provider/dependency, demonstration media, Google Drive or implementation is
   authorized.
 - **Starting master / Builder:** `1ee257941cd3700faaa7e0c0e472d8986f6c772f` after PR #605;
-  Builder Codex; branch `codex/grayson-train-intelligence-001`; PR pending.
+  Builder Codex; branch `codex/grayson-train-intelligence-001`;
+  [PR #607](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/607).
 - **Brief:** [`GRAYSON-TRAIN-INTELLIGENCE-001.md`](GRAYSON-TRAIN-INTELLIGENCE-001.md).
 - **Canonical candidate:**
   [`GRAYSON_TRAIN_INTELLIGENCE.md`](../GRAYSON_TRAIN_INTELLIGENCE.md).
@@ -23,10 +24,10 @@
   recommendation change. It is not authorized. The prior Mission plan draft remains ranked second.
 - **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
   unrelated. The root checkout and its user/research changes remain untouched.
-- **Verification / review:** documentation reconciliation, local checks, PR, CI and independent
-  exact-head review remain pending.
-- **Next:** complete docs checks, push/open PR, obtain green required CI and independent Protected
-  review, then return for Gavin's merge approval.
+- **Verification / review:** `git diff --check` passes and risk classification is PROTECTED as
+  expected. Required docs-only CI and independent exact-head review remain pending.
+- **Next:** obtain green required CI and independent Protected exact-head review, resolve any
+  in-scope findings, then return for Gavin's merge approval.
 
 ---
 

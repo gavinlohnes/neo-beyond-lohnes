@@ -4,7 +4,7 @@
 - **Starting commit:** `1ee257941cd3700faaa7e0c0e472d8986f6c772f` (master after PR #605).
 - **Builder:** Codex.
 - **Branch:** `codex/grayson-train-intelligence-001`.
-- **Active PR:** pending.
+- **Active PR:** [#607](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/607).
 
 ## Operator benefit
 
