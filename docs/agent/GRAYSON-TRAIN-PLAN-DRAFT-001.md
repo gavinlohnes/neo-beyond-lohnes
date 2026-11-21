@@ -5,7 +5,7 @@
   template, Engine/recommendation, command/event/schema or Mission semantic change.
 - **Starting commit:** `2747049e41165b879e927aa48b22bb3b1272ea6c` (master after PR #608).
 - **Builder / branch:** Codex; `codex/grayson-train-plan-draft-001`.
-- **Active PR:** pending.
+- **Active PR:** [#609](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/609).
 
 ## Outcome
 

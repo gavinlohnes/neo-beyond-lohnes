@@ -4,7 +4,8 @@
   three-session plan preview was identified as next. FEATURE; no save/activation or protected
   programme/Engine/data semantics.
 - **Starting master / Builder:** `2747049e41165b879e927aa48b22bb3b1272ea6c` after #608;
-  Builder Codex; branch `codex/grayson-train-plan-draft-001`; PR pending.
+  Builder Codex; branch `codex/grayson-train-plan-draft-001`;
+  [PR #609](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/609).
 - **Brief:** [`GRAYSON-TRAIN-PLAN-DRAFT-001.md`](GRAYSON-TRAIN-PLAN-DRAFT-001.md).
 - **Outcome:** optional phone-first ephemeral setup for emphasis and time, then a balanced A/B/C
   draft with full/short/minimum/home forms and explicit unsaved status.
@@ -13,7 +14,7 @@
   passes 2/2; broader TRAIN Chromium passes 100/100 across plan draft, TRAIN home/no-write,
   calibration, execution/operator and redesign regressions. Built-PWA evidence at 320/360/412 px has no overflow or page errors; screenshots are
   in `docs/screenshots/grayson-train-plan-draft-001/`. No physical-phone check yet.
-- **Next:** broader TRAIN regression, commit/push, PR, required CI and independent exact-head review,
+- **Next:** required CI and independent exact-head review,
   then integration under DEV-FLOW-002.
 
 ---
