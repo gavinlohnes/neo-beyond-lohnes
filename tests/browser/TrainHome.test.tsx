@@ -51,12 +51,24 @@ describe("TRAIN-HOME-001", () => {
     await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
     const beforeEvents = await db.events.count();
     const beforeSessions = await db.workoutSessions.count();
-    await screen.getByRole("button", { name: "PREVIEW CALIBRATION" }).click();
+    const trigger = screen.getByRole("button", { name: "PREVIEW CALIBRATION" });
+    await trigger.click();
     await expect.element(screen.getByRole("dialog", { name: "Machine Chest Press" })).toBeVisible();
+    expect([...document.querySelector(".calibration-preview")!.parentElement!.children]
+      .filter((element) => !element.classList.contains("calibration-preview"))
+      .every((element) => (element as HTMLElement).inert)).toBe(true);
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+    await expect.element(screen.getByRole("button", { name: "CLOSE" })).toHaveFocus();
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }));
+    await expect.element(screen.getByRole("button", { name: "CONTINUE" })).toHaveFocus();
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await expect.element(trigger).toHaveFocus();
+    await trigger.click();
     await screen.getByRole("button", { name: "CONTINUE" }).click();
     await screen.getByRole("button", { name: "CONTINUE" }).click();
     await expect.element(screen.getByText(/No comparable performance found/)).toBeVisible();
     await screen.getByRole("button", { name: "CLOSE" }).click();
+    await expect.element(trigger).toHaveFocus();
     await expect.element(screen.getByRole("button", { name: /^START WORKOUT/ }).first()).toBeVisible();
     expect(await db.events.count()).toBe(beforeEvents);
     expect(await db.workoutSessions.count()).toBe(beforeSessions);

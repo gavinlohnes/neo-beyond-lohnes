@@ -17,6 +17,11 @@
   `npm run verify` was stopped after the affected suites passed because the full parallel browser run
   hit unchanged MetricPage/MealRoundTrip timing failures and emitted continuous shared-worktree font
   allow-list warnings; required clean CI remains decisive. No physical-phone check yet.
+- **Independent review:** BLOCK at `616a9bc11df53000dcc709516a3811fbf752ead8` on two bounded
+  findings: the modal needed background inertness/focus containment plus Escape/focus-return proof,
+  and the campaign tracker needed this slice recorded without starting C4.4. Both are repaired;
+  focused Chromium again passes 4/4. The old BLOCK remains historical and renewed exact-head review
+  is required.
 - **Next:** obtain green required CI and independent exact-head review,
   resolve in-scope findings, then integrate under DEV-FLOW-002.
 

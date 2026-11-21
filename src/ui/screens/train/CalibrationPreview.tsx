@@ -46,9 +46,29 @@ export function CalibrationPreview({ exercise, templateLabel, lastSet, personalC
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
+    const parent = root.current?.parentElement;
+    const siblings = parent ? [...parent.children].filter((element): element is HTMLElement => element instanceof HTMLElement && element !== root.current) : [];
+    const prior = siblings.map((element) => ({ element, inert: element.inert, ariaHidden: element.getAttribute("aria-hidden") }));
+    for (const element of siblings) { element.inert = true; element.setAttribute("aria-hidden", "true"); }
     root.current?.focus();
-    return () => previous?.focus();
+    return () => {
+      for (const item of prior) {
+        item.element.inert = item.inert;
+        if (item.ariaHidden === null) item.element.removeAttribute("aria-hidden"); else item.element.setAttribute("aria-hidden", item.ariaHidden);
+      }
+      previous?.focus();
+    };
   }, []);
+
+  function containFocus(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") { event.preventDefault(); onClose(); return; }
+    if (event.key !== "Tab") return;
+    const focusable = [...(root.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])];
+    if (!focusable.length) { event.preventDefault(); root.current?.focus(); return; }
+    const first = focusable[0]!, last = focusable.at(-1)!;
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === root.current)) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && (document.activeElement === last || document.activeElement === root.current)) { event.preventDefault(); first.focus(); }
+  }
 
   const response = feedback === "LIGHT"
     ? "Preview only: a later calibrated session could propose a small increase, then ask you to approve it."
@@ -58,7 +78,7 @@ export function CalibrationPreview({ exercise, templateLabel, lastSet, personalC
         ? "Preview only: repeatable, controlled work is enough. Calibration does not require proving a maximum."
         : "Choose an example response to see how Delta would react. Nothing is saved.";
 
-  return <div ref={root} tabIndex={-1} className="calibration-preview" role="dialog" aria-modal="true" aria-labelledby="calibration-title" onKeyDown={(event) => { if (event.key === "Escape") onClose(); }}>
+  return <div ref={root} tabIndex={-1} className="calibration-preview" role="dialog" aria-modal="true" aria-labelledby="calibration-title" onKeyDown={containFocus}>
     <header className="calibration-preview__head">
       <div><p className="tool-label">CALIBRATION PREVIEW · {step + 1} OF 4</p><h2 id="calibration-title">{exercise.name}</h2></div>
       <button type="button" className="btn-secondary" onClick={onClose}>CLOSE</button>
