@@ -6,7 +6,7 @@ import { BASELINE_MIN_SAMPLES, median } from "../domain/health/baselines";
  * Lived days are BEYOND's 16:30 periods (`recentPeriods`); a period with no record stays `null` (missing, never 0).
  * Each metric keeps its own semantics: how a week is summarised, what its source is, what "usual" means.
  */
-export type DetailMetric = "water" | "steps" | "resting" | "calories" | "weight" | "protein";
+export type DetailMetric = "water" | "steps" | "resting" | "calories" | "weight" | "protein" | "workouts";
 export type DetailRange = "today" | "7d" | "30d" | "1y";
 export const DETAIL_RANGES: readonly [DetailRange, string, string][] = [
   ["today", "TODAY", "Today, this lived day"], ["7d", "7D", "Last 7 lived days"], ["30d", "30D", "Last 30 lived days"], ["1y", "1Y", "Last year, by week"],
@@ -23,11 +23,12 @@ export function rangesFor(metric: DetailMetric): readonly [DetailRange, string, 
 /**
  * How a week is summarised: water as the average of its logged days, steps as the week's measured total, resting heart
  * rate as the average of its measured days (as MeasuredSheet); calories, eaten and burned alike, as the average of the
- * days that have a record (as GARMIN-005); weight and protein (METRIC-PAGE-002) as the average of their logged days.
+ * days that have a record (as GARMIN-005); weight and protein (METRIC-PAGE-002) as the average of their logged days;
+ * finished workouts (METRIC-PAGE-002 slice 3) as the week's total.
  */
-export const WEEK_MODE: Record<DetailMetric, "mean" | "sum"> = { water: "mean", steps: "sum", resting: "mean", calories: "mean", weight: "mean", protein: "mean" };
+export const WEEK_MODE: Record<DetailMetric, "mean" | "sum"> = { water: "mean", steps: "sum", resting: "mean", calories: "mean", weight: "mean", protein: "mean", workouts: "sum" };
 /** Decimal places a metric's averages keep: weight keeps a tenth of a pound, everything else is whole. */
-export const DIGITS: Record<DetailMetric, number> = { water: 0, steps: 0, resting: 0, calories: 0, weight: 1, protein: 0 };
+export const DIGITS: Record<DetailMetric, number> = { water: 0, steps: 0, resting: 0, calories: 0, weight: 1, protein: 0, workouts: 0 };
 const roundTo = (n: number, digits: number) => Math.round(n * 10 ** digits) / 10 ** digits;
 
 /** One value per lived period: `valueOf(dayId)` gives the record; periods without a BEYOND day have none. */
@@ -124,4 +125,45 @@ export function weekCompare(series: readonly PeriodValue[], sameFloor = 1, sameS
   const t = mean(now), l = mean(before);
   const way = Math.abs(t - l) < Math.max(sameFloor, Math.abs(l) * sameShare) ? "SAME" : t > l ? "HIGHER" : "LOWER";
   return { thisWeek: t, lastWeek: l, thisDays: now.length, lastDays: before.length, way };
+}
+
+/**
+ * METRIC-PAGE-002 slice 3: finished workouts are a count, mostly 0 or 1 a day, so a day's median says nothing. Their
+ * usual is a week's: the median total of the last 8 finished weeks (1Y's own 7-day groups), once there are 4 of them.
+ */
+export const WORKOUT_USUAL_WEEKS = 8, WORKOUT_USUAL_MIN_WEEKS = 4;
+export function weeklyUsual(series: readonly PeriodValue[]): DetailUsual {
+  const weeks = weekly(series.slice(-52 * 7), "sum").filter((w) => !w.partial).slice(-WORKOUT_USUAL_WEEKS).flatMap((w) => (w.value === null ? [] : [w.value]));
+  return { value: weeks.length >= WORKOUT_USUAL_MIN_WEEKS ? median(weeks) : null, samples: weeks.length, need: WORKOUT_USUAL_MIN_WEEKS };
+}
+
+/**
+ * Finished workouts, work days against days off: of the last 56 finished lived days BEYOND has a record of, how many
+ * of each kind had at least one finished workout. A count of days, never a score.
+ */
+export interface TrainedSide { days: number; trained: number }
+export function trainedSplit(series: readonly PeriodValue[], contextOf: (dayId: string) => "WORK" | "OFF" | "UNKNOWN" | undefined): { work: TrainedSide; off: TrainedSide } {
+  const recent = series.filter((v) => !v.partial).slice(-56);
+  const side = (kind: "WORK" | "OFF"): TrainedSide => {
+    const values = recent.flatMap((v) => (v.value !== null && v.dayId && contextOf(v.dayId) === kind ? [v.value] : []));
+    return { days: values.length, trained: values.filter((n) => n > 0).length };
+  };
+  return { work: side("WORK"), off: side("OFF") };
+}
+
+/**
+ * This lived week so far and last week, as plain totals (Monday to Sunday by lived day, METRIC-CHANGE-001's weeks).
+ * A count, so the day in progress is included ("so far"). Quiet until last week has a lived day BEYOND recorded.
+ */
+export function weekTotals(series: readonly PeriodValue[]): { thisWeek: number; lastWeek: number } | null {
+  const last = series.at(-1);
+  if (!last) return null;
+  const thisMonday = mondayOf(last.from);
+  const p = new Date(thisMonday); p.setHours(12); p.setDate(p.getDate() - 7);
+  const prior = p.toDateString();
+  const of = (monday: string) => series.filter((v) => v.value !== null && mondayOf(v.from) === monday).map((v) => v.value!);
+  const now = of(thisMonday), before = of(prior);
+  if (!now.length || !before.length) return null;
+  const total = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+  return { thisWeek: total(now), lastWeek: total(before) };
 }
