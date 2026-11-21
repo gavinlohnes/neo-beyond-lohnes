@@ -3664,3 +3664,32 @@ history and existing sharing boundaries; they do not automatically alter Engine 
 recommendation semantics or Mission authority. This slice adds no provider, autonomous inference,
 hidden profile, schema or primary-navigation change. Mounted-session resumption does not establish a
 new persisted guided-session contract.
+
+## 2026-11-20 — GRAYSON-TRAIN-INTELLIGENCE-001: guided training with restrained adaptation
+
+**Protected documentation/design-only owner authorization.** The canonical design is
+[`GRAYSON_TRAIN_INTELLIGENCE.md`](GRAYSON_TRAIN_INTELLIGENCE.md). It refines, rather than replaces,
+the merged Integrated Health Mission and current TRAIN implementation.
+
+- **Programme identity:** a sequenced three-day full-body A/B/C Mission, not fixed weekdays. A
+  permanent balanced foundation remains beneath zero-to-three owner-selected emphasis areas.
+- **Training Emphasis Rule:** focus runs in four-to-six-week blocks. Weekly flexibility may move,
+  reduce or temporarily substitute work; it changes dosage, not programme identity. Gavin chooses a
+  new emphasis.
+- **Calibration:** the first exposures learn conservative working loads through preparation sets and
+  explicit feedback, not guessed loads or a forced maximum test. Proposed understandings remain
+  inspectable and owner-controlled.
+- **Delta Training Intervention Rule:** Delta stays quiet after normal sets; speaks briefly when
+  recorded evidence justifies an adjustment; responds immediately to reported pain or safety; gives
+  detail on request; and consolidates proposed learnings after the workout. It never claims to have
+  observed technique without an authorized observation source and never diagnoses pain.
+- **Adaptation:** change the smallest supported variable. One poor session ordinarily holds. Stalls
+  require multiple comparable exposures and context; associations do not become causes. Current
+  Engine progression, REDUCED/RECOVERY and programme-selection semantics remain authoritative until
+  separately amended.
+- **Progress:** TRAIN Progress and Direction composes the Mission, current emphasis, four performance
+  tracks, strength/coverage, consistency/recovery and one inspectable Delta assessment. A muscle map
+  navigates anatomy and planned/completed coverage; it does not claim hypertrophy. Estimated 1RM is
+  never presented as an observed test.
+- **Scope boundary:** exercise demonstrations are deferred. This ruling authorizes no code,
+  navigation, schema, provider, dependency, programme activation or recommendation change.
