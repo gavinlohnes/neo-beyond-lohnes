@@ -73,4 +73,25 @@ describe("TRAIN-HOME-001", () => {
     expect(await db.events.count()).toBe(beforeEvents);
     expect(await db.workoutSessions.count()).toBe(beforeSessions);
   });
+
+  it("builds and discards a three-day plan draft without canonical writes", async () => {
+    await page.viewport(360, 780);
+    await startDay();
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+    const beforeEvents = await db.events.count(), beforeSessions = await db.workoutSessions.count();
+    const trigger = screen.getByRole("button", { name: "DRAFT MY 3-DAY PLAN" });
+    await trigger.click();
+    const dialog = screen.getByRole("dialog", { name: "Your three-day plan" });
+    await expect.element(dialog).toBeVisible();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await screen.getByRole("button", { name: "MINIMUM" }).click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await expect.element(screen.getByText(/Nothing has been activated/i)).toBeVisible();
+    await screen.getByRole("button", { name: "RETURN TO TRAIN" }).click();
+    await expect.element(trigger).toHaveFocus();
+    expect(await db.events.count()).toBe(beforeEvents);
+    expect(await db.workoutSessions.count()).toBe(beforeSessions);
+  });
 });

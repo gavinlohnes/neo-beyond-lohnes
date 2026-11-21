@@ -79,6 +79,7 @@ status of its own.
 | C4.3 | Optional one-tap caffeine log | Not started |  |
 | C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started | Training Intelligence design defines programme/calibration/progress boundaries; it does not authorize C4.4 |
 | C4.4p | Guided exercise/calibration preview | In PR #608 | Read-only first Training Intelligence slice; no programme, Engine or C4.4 training-to-sleep/window behavior |
+| C4.4d | Guided three-session plan draft | In progress | Ephemeral A/B/C and reality-form preview; no save/activation and does not start C4.4 |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
