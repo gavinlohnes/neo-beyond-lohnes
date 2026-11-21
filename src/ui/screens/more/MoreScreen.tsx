@@ -697,7 +697,7 @@ export function MoreScreen({
           <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} dayId={dailyNoteDayId} onOpenWeeklyInterview={() => openReflect("INTERVIEW")} onOpenPatterns={() => openReflect("PATTERNS")} onOpenDelta={() => openReflect("DELTA")} /></>}</div>
           <div hidden={view !== "COLLECTIONS"}>{visited.has("COLLECTIONS") && <><OperatorHeader destination="command">MORE // COLLECTIONS</OperatorHeader><CollectionsScreen active={active && view === "COLLECTIONS"} /></>}</div>
           <div hidden={view !== "HIGHLIGHTS"}>{visited.has("HIGHLIGHTS") && <><OperatorHeader destination="command">MORE // HIGHLIGHTS</OperatorHeader><HighlightsScreen active={active && view === "HIGHLIGHTS"} /></>}</div>
-          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
+          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><section className="memory-guided-entry" aria-labelledby="memory-guided-heading"><p className="section-label">NOT SURE WHAT TO ADD?</p><h2 id="memory-guided-heading">Let Delta ask one useful question.</h2><p className="meta">Answer one subject, review the exact understanding, then decide whether to save it.</p><button type="button" className="btn-secondary" onClick={() => { setView("MENU"); revealSection("GUIDE"); }}>TEACH DELTA A LITTLE</button></section><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
           {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>
@@ -965,7 +965,7 @@ export function MoreScreen({
       <h2 id="settings-heading" className="section-label">Settings</h2>
       <details id="command-guide" className="more-inspection more-help">
         <summary>A place to start</summary>
-        <GuidedOverview active={active && view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpen={(destination) => {
+        <GuidedOverview active={active && view === "MENU"} canOpenCapture={onOpenCapture !== undefined} onOpenMemory={() => setView("MEMORY")} onOpen={(destination) => {
           if (destination === "CAPTURE") openGuidedCapture();
           else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
         }} />

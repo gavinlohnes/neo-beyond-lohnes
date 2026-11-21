@@ -1,4 +1,81 @@
-# Current objective — GRAYSON-GUIDED-OPERATING-LOOP-001 (2026-11-20)
+# Current objective — GRAYSON-GUIDED-START-001 (2026-11-20)
+
+- **Owner authorization / lane:** Gavin approved a Protected implementation objective evolving
+  **A PLACE TO START** and **What BEYOND should remember** into an optional, resumable, phone-first
+  guided conversation. No provider, primary-navigation, Engine/recommendation, autonomous memory,
+  health-plan, schema or Google Drive change is authorized.
+- **Starting master / Builder:** `84afb8cc810bba2cbed307082aa7fb992debcb15` after PR #604;
+  Builder Codex; branch `codex/grayson-guided-start-001`;
+  [PR #605](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/605).
+- **Brief:** [`GRAYSON-GUIDED-START-001.md`](GRAYSON-GUIDED-START-001.md).
+- **Repository truth reused:** `GuidedOverview` already provides optional Journal/Plans/Capture paths;
+  `MEMORY_RECORDED` already provides explicit operator confirmation, causal history, correction,
+  retirement and provenance. No second memory store or guided-session schema is needed.
+- **Candidate outcome:** six useful subjects, one question at a time, related confirmed context,
+  editable proposed words, CONFIRM / CHANGE / NOT NOW, mounted-session draft resumption, and direct
+  access to full memory. Confirmed words use the existing personal-memory command and do not change
+  plans or recommendations.
+- **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
+  unrelated. The root checkout contains unrelated user/research work and remains untouched.
+- **Verification so far:** typecheck/build and architecture pass. Guided Chromium passes 21/21 at
+  320/360/412 px including confirmation, provenance, no-recommendation-change and accessibility;
+  adjacent Memory/MORE/LIFE Chromium passes 60/60; memory/guided integration passes 10/10. Real
+  Chromium evidence is in `docs/screenshots/grayson-guided-start-001`. Full `npm run verify` reached
+  4349 passing / 2 skipped but failed four unrelated timing cases; isolated reruns passed 3/4, while
+  the unchanged `Habits001` Done control remained disabled. Required exact-head CI remains decisive.
+- **Review status:** first independent exact-head review BLOCKED stale guided context after returning
+  from canonical memory, missing C6.8 campaign reconciliation and stale checkpoint actions. The
+  bounded repair re-reads memory on every guide re-entry, adds a correction/re-entry browser proof,
+  reconciles C6.8 and fixes this handoff. Renewed CI and exact-head review are required.
+- **Remaining:** obtain green required CI and renewed independent exact-head PASS, then return for
+  Gavin's Protected merge approval.
+
+---
+
+# Historical — GRAYSON-INTEGRATED-HEALTH-MISSION-001 (merged as PR #604)
+
+- **Owner authorization / lane:** Gavin approved a Protected documentation/design-only objective for
+  one connected health Mission spanning phased weight loss, strength/muscle, physical standards,
+  Planet Fitness, bodyweight home fallbacks, food, hydration, sleep/recovery and clinician-led
+  medication context. No implementation, navigation, Engine/data semantics, treatment, private
+  health record or Google Drive change is authorized.
+- **Starting master / Builder:** `f81f1ed66c35c0cd0f02dbf7cf02474bd58fbc46` after PR #603;
+  Builder Codex; branch `codex/grayson-integrated-health-mission-001`;
+  [PR #604](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/604).
+- **Canonical candidate:**
+  [`GRAYSON_INTEGRATED_HEALTH_MISSION.md`](../GRAYSON_INTEGRATED_HEALTH_MISSION.md);
+  [brief](GRAYSON-INTEGRATED-HEALTH-MISSION-001.md).
+- **Repository truth:** fixed A/B/C, custom exercises/templates, programme assignment, live
+  STANDARD/REDUCED/RECOVERY execution, advisory progression/re-entry/deload, history/records,
+  bodyweight/targets, Food Week, Eating Window, lived context and Review already exist. The gap is
+  guided composition, balance/teaching, reality variants and one evidence-bounded Mission review.
+- **Design direction:** a sequence of three balanced full-body sessions with bounded emphasis;
+  Planet Fitness equipment confirmed rather than assumed; bodyweight home/minimum variants that do
+  not fabricate loaded-pull or weighted-progression evidence; phased weight review with 170 as a
+  required decision point; four provenance-labeled performance tracks. Gavin delegated the running
+  choice: use NHS Couch to 5K as a shift-aware foundation, initially two required plus one optional
+  opportunity alongside strength, then transition to 1.5-mile-specific work.
+- **Evidence boundary:** machine/Smith pressing is not a free-weight 1RM pass; practice/estimate is
+  not observed testing; missing food is not low intake; one result is not a trend; treatment remains
+  clinician-led. Raw backup, medication/dose and symptom history stay out of Git.
+- **Concurrent work:** PR #584's finished-workout metric is supporting existing work and remains
+  untouched; draft PR #473 is unrelated and untouched.
+- **Recommended future slice:** `GRAYSON-TRAIN-PLAN-DRAFT-001`, a read-mostly guided three-session
+  plan and fallback preview inside TRAIN, stopping before any template/programme write. It is not
+  authorized and does not silently displace Guided Start priority. Current programme assignments are
+  information only; later activation/template-selection authority is an explicit separate Protected
+  step, not implied by the preview or template creation.
+- **Review history:** exact-head review passed at `4b231e00275380f0df37d1df9d668d6fb482057c`
+  after two documentation repairs, but the later owner-delegated running refinement supersedes that
+  head. Renewed exact-head CI/review are required.
+- **Verification:** PDF chart visually inspected; repository/code/decision audit and primary/first-
+  party research complete. Re-run Markdown/diff/risk checks, required CI and independent review.
+- **Next:** finish documentation checks, push the PR refinement, obtain green required CI and renewed
+  independent exact-head review, then return to Gavin. Do not implement the recommended slice.
+
+---
+
+# Historical — GRAYSON-GUIDED-OPERATING-LOOP-001 owner-discovery follow-up (merged as PR #603)
 
 - **Owner authorization:** Gavin approved a Protected documentation/design-only objective to preserve
   and develop his guided-experience, connected-goal and intelligent-food ideas into a canonical
@@ -6,19 +83,28 @@
   semantics, Google Drive or additional Protected boundary is authorized.
 - **Starting master / Builder:** `c6fa0fd760105f6b6127f44599be2925b530f2d7` after PR #601 merged;
   Builder Codex; branch `codex/grayson-guided-operating-loop-001`;
-  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602).
+  [PR #602](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/602), now merged at
+  `c2bfd78ca11ff6a26a8a66c7cbe6c774cffc4e62`. Later owner discovery is preserved in Protected
+  documentation-only follow-up [PR #603](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/603),
+  branch `codex/grayson-guided-owner-discovery`, from that exact master.
 - **Canonical design:** [`GRAYSON_GUIDED_OPERATING_LOOP.md`](../GRAYSON_GUIDED_OPERATING_LOOP.md);
   [brief](GRAYSON-GUIDED-OPERATING-LOOP-001.md).
 - **What it establishes:** the Guided Operating Principle; Express → Understand → Propose → Approve
   → Operate → Record → Review → Adapt; Teach Delta, a connected Mission and Food Week; detailed phone
-  journeys and Delta language; repository evolution matrix; ranked implementation sequence.
+  journeys and Delta language; repository evolution matrix; ranked implementation sequence. Later
+  owner discovery adds the Default-plan contract: Delta makes a defensible editable plan, asks only
+  questions that materially change it, reduces decision load and provides real-life fallbacks.
 - **Repository finding:** memory/Personal Understanding, Missions, targets/proposals, saved meals,
   USDA/barcode logging, meal planning, TRAIN and evidence already exist. The principal gap is guided
   orchestration and cross-domain composition, with narrower missing primitives for resumable guided
   drafts, ingredient/store-aware plans and Mission-to-plan association.
 - **Workout ruling:** this design connects TRAIN at the system level but does not pretend to finish
-  training design. A dedicated owner conversation follows this design and precedes connected Mission
-  implementation.
+  training design. Owner discovery now establishes guided whole-body strength, selectable emphasis,
+  available-equipment awareness, connected food/sleep/recovery evidence and home/reduced fallbacks.
+  Exact programming remains a dedicated design before connected Mission implementation.
+- **Privacy ruling:** product rules and non-sensitive design preferences belong in the repository;
+  raw backup contents, exact medication details and personal health history do not. Those remain
+  private operator data for a future authorized path.
 - **Exclusions:** no product code, runtime behavior, prototype, primary navigation, Engine,
   recommendation priority, command/event/schema semantics, provider/dependency, runtime rename,
   concurrent PR, Google Drive or merge.
@@ -33,9 +119,9 @@
   Food earns a persistent workspace; deterministic/AI/hybrid guided-session method; the dedicated
   training philosophy and experience; future data/event semantics; and any future Delta recommendation
   authority. None is silently decided here.
-- **Next:** verify and push only the three scoped review repairs, obtain green required CI and renewed
-  independent exact-head PASS, then return to Gavin for merge approval. Do not implement the
-  recommended Guided Start slice.
+- **Next:** verify and push the owner-discovery reconciliation, obtain green required CI and renewed
+  independent exact-head review for the new head, then return to Gavin for merge approval. Do not
+  implement the recommended Guided Start slice or silently complete the dedicated training design.
 
 ---
 

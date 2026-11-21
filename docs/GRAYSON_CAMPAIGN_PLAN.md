@@ -96,7 +96,7 @@ status of its own.
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |
-| C6.8 | Guided Start + Teach Delta, slice 1 | Not started | Guided Operating Loop design; recommended next implementation after its merge and the workout design conversation |
+| C6.8 | Guided Start + Teach Delta, slice 1 | In PR #605 | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Not started |  |
 | C7.2 | Plan stays fresh | Not started |  |
@@ -607,6 +607,29 @@ Health Bridge.
   - Lane, size: **Protected** (new event; vision says fasting needs separate approval) · **M**.
   - Borrow: Zero/Fastic window timers (COPY THE IDEA). Our way: no streaks, no "longest fast"; it's an
     experiment in the existing Try loop. **Needs Gavin's answer (Q3).**
+
+#### Integrated Health Mission overlay
+
+The owner-authorized design candidate
+[`GRAYSON_INTEGRATED_HEALTH_MISSION.md`](GRAYSON_INTEGRATED_HEALTH_MISSION.md) composes this campaign
+with current TRAIN, Body, Food Week, Eating Window, Missions and lived context. It does not create a
+competing campaign or change C4 priorities by itself.
+
+- **C4.4** remains the boundary for training effects on night guidance. The Mission design may select
+  normal/reduced/home/minimum/recovery variants, but it cannot add sleep-plan guidance silently.
+- **C4.5** remains the future cross-domain review authority. The Mission design supplies its health
+  phase, evidence coverage, performance-standard and one-change contract rather than proposing a
+  second review system.
+- Existing fixed A/B/C and progression remain available. The first recommended health slice is an
+  inspectable three-session custom-template draft with no writes; plan creation, programme assignment,
+  Mission linkage and recommendation changes remain later Protected decisions. Programme assignment
+  is information only today; a separate Protected Mission-plan activation/template-selection ruling
+  is required before a custom plan can become TRAIN’s recommendation.
+- Performance standards are four provenance-labeled tracks, not a new readiness score or a shortcut
+  from machine/Smith pressing to a free-weight bench pass.
+- The run track uses NHS Couch to 5K as a shift-aware endurance foundation, then transitions to a
+  separate 1.5-mile-specific phase. The generic nine-week calendar and three-run load are adjustable
+  around the concurrent three-session strength plan; no missed-run catch-up or universal 10% rule.
 
 Also considered: free-exercise-db (Unlicense, verified; [repo](https://github.com/yuhonas/free-exercise-db),
 `dist/exercises.json` + images) REUSE THE CODE (data) to enrich the 60-entry exercise library and a
