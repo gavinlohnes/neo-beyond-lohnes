@@ -3,7 +3,7 @@
 - **Brief:** [`GRAYSON-C3.4b-001.md`](GRAYSON-C3.4b-001.md). Plan item C3.4b; Gavin's go 2026-11-20.
 - **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); recurrence picker wrapper only, no
   recommendation, notification, schema or event change. Builder Claude Code; branch
-  `claude/project-thread-s69muv`. Starting master `1ee25794`.
+  `claude/project-thread-s69muv`; [PR #606](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/606). Starting master `1ee25794`.
 - **Change:** Plans' Repeats picker offers Yearly; yearly Home and People items open as Yearly and
   can be edited.
 - **Verification:** typecheck, architecture and Node engine/integration tests pass locally; the
