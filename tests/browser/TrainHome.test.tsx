@@ -5,6 +5,7 @@ import { page } from "vitest/browser";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { startDay } from "../../src/application/commands";
+import { db } from "../../src/persistence/db";
 
 /**
  * TRAIN-HOME-001: TRAIN opens like the other screens, compactly: START WORKOUT stays on the first phone screen.
@@ -41,5 +42,23 @@ describe("TRAIN-HOME-001", () => {
     }
     expect(small).toEqual([]);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(w);
+  });
+
+  it("opens and closes the calibration preview without starting or writing a workout", async () => {
+    await page.viewport(360, 780);
+    await startDay();
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+    const beforeEvents = await db.events.count();
+    const beforeSessions = await db.workoutSessions.count();
+    await screen.getByRole("button", { name: "PREVIEW CALIBRATION" }).click();
+    await expect.element(screen.getByRole("dialog", { name: "Machine Chest Press" })).toBeVisible();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await expect.element(screen.getByText(/No comparable performance found/)).toBeVisible();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
+    await expect.element(screen.getByRole("button", { name: /^START WORKOUT/ }).first()).toBeVisible();
+    expect(await db.events.count()).toBe(beforeEvents);
+    expect(await db.workoutSessions.count()).toBe(beforeSessions);
   });
 });

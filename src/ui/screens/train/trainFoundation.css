@@ -18,3 +18,30 @@
 /* WORKOUT / HISTORY / RECORDS in the foundation's mono capitals; the chosen view carries the red. */
 .train-operator .train-switcher .btn-secondary { font-family: var(--font-mono, monospace); letter-spacing: .14em; }
 .train-operator .train-switcher .btn-secondary[aria-pressed="true"] { border-bottom-color: var(--p-red, #D0141B); }
+.calibration-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow-y: auto;
+  background: var(--color-bg, #050505);
+  color: var(--color-text, #f4f4f4);
+  padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+}
+
+.calibration-preview__head,
+.calibration-preview__actions,
+.calibration-preview__choices {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calibration-preview__head { justify-content: space-between; margin-bottom: 18px; }
+.calibration-preview__head h2 { margin: 4px 0 0; }
+.calibration-preview .suit-panel { max-width: 680px; margin: 0 auto; padding: 18px; }
+.calibration-preview .suit-panel p,
+.calibration-preview .suit-panel li { font-size: 16px; line-height: 1.5; }
+.calibration-preview .suit-panel h3 { margin: 18px 0 6px; }
+.calibration-preview__own { border-left: 3px solid var(--color-accent, #e32636); padding-left: 12px; }
+.calibration-preview__choices { flex-wrap: wrap; margin: 14px 0; }
+.calibration-preview__actions { justify-content: flex-end; max-width: 680px; margin: 18px auto 0; }
