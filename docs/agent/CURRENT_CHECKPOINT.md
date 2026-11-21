@@ -1,4 +1,19 @@
-# Current objective — GRAYSON-GUIDED-START-001 (2026-11-20)
+# Current objective — GRAYSON-C3.4b-001 yearly repeats editable in Plans (2026-11-21)
+
+- **Brief:** [`GRAYSON-C3.4b-001.md`](GRAYSON-C3.4b-001.md). Plan item C3.4b; Gavin's go 2026-11-20.
+- **Lane:** PROTECTED by doubt (`src/engine/recurrence.ts` path); recurrence picker wrapper only, no
+  recommendation, notification, schema or event change. Builder Claude Code; branch
+  `claude/project-thread-s69muv`. Starting master `1ee25794`.
+- **Change:** Plans' Repeats picker offers Yearly; yearly Home and People items open as Yearly and
+  can be edited.
+- **Verification:** typecheck, architecture and Node engine/integration tests pass locally; the
+  browser test in `tests/browser/IntentScreen.test.tsx` runs in required CI (no local Chromium).
+- **Concurrent work:** PR #584 (TRAIN, not touched). No TRAIN files changed.
+- **Next:** green CI and independent exact-head PASS, then Gavin's merge.
+
+---
+
+# Historical — GRAYSON-GUIDED-START-001 (merged as PR #605)
 
 - **Owner authorization / lane:** Gavin approved a Protected implementation objective evolving
   **A PLACE TO START** and **What BEYOND should remember** into an optional, resumable, phone-first
