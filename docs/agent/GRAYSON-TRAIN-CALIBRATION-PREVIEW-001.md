@@ -5,7 +5,7 @@
   schema or authority expansion stops for a new ruling.
 - **Starting commit:** `760d9fca1e93512779ae105a2cd1592f3a7dd84a` (master after PR #607).
 - **Builder / branch:** Codex; `codex/grayson-train-calibration-preview-001`.
-- **Active PR:** pending.
+- **Active PR:** [#608](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/608).
 
 ## Outcome
 

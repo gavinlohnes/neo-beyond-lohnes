@@ -4,7 +4,8 @@
   the merged Training Intelligence design. FEATURE lane; stop before any programme, set, memory,
   schema, Engine or recommendation semantic change.
 - **Starting master / Builder:** `760d9fca1e93512779ae105a2cd1592f3a7dd84a` after #607;
-  Builder Codex; branch `codex/grayson-train-calibration-preview-001`; PR pending.
+  Builder Codex; branch `codex/grayson-train-calibration-preview-001`;
+  [PR #608](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/608).
 - **Brief:** [`GRAYSON-TRAIN-CALIBRATION-PREVIEW-001.md`](GRAYSON-TRAIN-CALIBRATION-PREVIEW-001.md).
 - **Outcome:** optional read-only preview from the existing suggested workout; first-exercise role,
   setup/cues/mistakes/alternatives, comparable prior set and personal cue, plus ephemeral conservative
@@ -16,7 +17,7 @@
   `npm run verify` was stopped after the affected suites passed because the full parallel browser run
   hit unchanged MetricPage/MealRoundTrip timing failures and emitted continuous shared-worktree font
   allow-list warnings; required clean CI remains decisive. No physical-phone check yet.
-- **Next:** commit/push, open the PR, obtain green required CI and independent exact-head review,
+- **Next:** obtain green required CI and independent exact-head review,
   resolve in-scope findings, then integrate under DEV-FLOW-002.
 
 ---
