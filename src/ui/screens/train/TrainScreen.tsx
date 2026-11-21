@@ -31,6 +31,7 @@ import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
 import { GymMode } from "./GymMode";
 import { CalibrationPreview } from "./CalibrationPreview";
+import { TrainPlanDraft } from "./TrainPlanDraft";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -244,6 +245,7 @@ export function TrainScreen({
     cue?: string;
     readError?: string;
   } | null>(null);
+  const [planDraftOpen, setPlanDraftOpen] = useState(false);
   const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS">(recordsFocus ? "RECORDS" : "WORKOUT");
   const [visitedRecords, setVisitedRecords] = useState(recordsFocus !== null);
   const [visitedHistory, setVisitedHistory] = useState(false);
@@ -1087,6 +1089,7 @@ export function TrainScreen({
         {...(calibrationPreview.readError ? { readError: calibrationPreview.readError } : {})}
         onClose={() => setCalibrationPreview(null)}
       />}
+      {planDraftOpen && <TrainPlanDraft onClose={() => setPlanDraftOpen(false)} />}
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -1332,6 +1335,9 @@ export function TrainScreen({
               </ol>
               <button type="button" className="btn-secondary" style={{ marginTop: 12 }} onClick={() => void openCalibrationPreview()}>
                 PREVIEW CALIBRATION
+              </button>
+              <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setPlanDraftOpen(true)}>
+                DRAFT MY 3-DAY PLAN
               </button>
             </>
           )}

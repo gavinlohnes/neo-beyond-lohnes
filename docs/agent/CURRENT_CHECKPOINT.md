@@ -1,4 +1,24 @@
-# Current objective — GRAYSON-TRAIN-CALIBRATION-PREVIEW-001 (2026-11-20)
+# Current objective — GRAYSON-TRAIN-PLAN-DRAFT-001 (2026-11-20)
+
+- **Owner authorization / lane:** Gavin said "Merged. Start next work" after the bounded guided
+  three-session plan preview was identified as next. FEATURE; no save/activation or protected
+  programme/Engine/data semantics.
+- **Starting master / Builder:** `2747049e41165b879e927aa48b22bb3b1272ea6c` after #608;
+  Builder Codex; branch `codex/grayson-train-plan-draft-001`; PR pending.
+- **Brief:** [`GRAYSON-TRAIN-PLAN-DRAFT-001.md`](GRAYSON-TRAIN-PLAN-DRAFT-001.md).
+- **Outcome:** optional phone-first ephemeral setup for emphasis and time, then a balanced A/B/C
+  draft with full/short/minimum/home forms and explicit unsaved status.
+- **Concurrent work:** #584 and #606 remain separate and untouched.
+- **Verification:** typecheck, architecture and production/PWA build pass. Pure plan composition
+  passes 2/2; broader TRAIN Chromium passes 100/100 across plan draft, TRAIN home/no-write,
+  calibration, execution/operator and redesign regressions. Built-PWA evidence at 320/360/412 px has no overflow or page errors; screenshots are
+  in `docs/screenshots/grayson-train-plan-draft-001/`. No physical-phone check yet.
+- **Next:** broader TRAIN regression, commit/push, PR, required CI and independent exact-head review,
+  then integration under DEV-FLOW-002.
+
+---
+
+# Historical — GRAYSON-TRAIN-CALIBRATION-PREVIEW-001 (merged as PR #608)
 
 - **Owner authorization / lane:** Gavin authorized the first bounded implementation recommended by
   the merged Training Intelligence design. FEATURE lane; stop before any programme, set, memory,
