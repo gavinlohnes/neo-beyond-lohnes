@@ -96,7 +96,7 @@ export function parseRecurrencePreset(rrule: string): RecurrencePreset | null {
   // WEEKLY. A rule with any other part (Alfred can store "the 4th Thursday of November", "the first
   // Monday of every month", an end date or a count) must read as not-editable, so saving the edit
   // form keeps the stored rule instead of flattening it to a plain repeat.
-  if (hasPartsThePickerCannotExpress(rule.origOptions, freq)) return null;
+  if (hasPartsThePickerCannotExpress(rule.origOptions, freq, rule.options.dtstart)) return null;
   const byDay = Array.isArray(rule.options.byweekday)
     ? rule.options.byweekday.map((n: number) => WEEKDAY_NUMS[n]).filter((c): c is string => c !== undefined)
     : undefined;
@@ -117,8 +117,12 @@ function present(v: unknown): boolean {
   return v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0);
 }
 
-function hasPartsThePickerCannotExpress(o: Partial<Options>, freq: RecurrenceFreq): boolean {
-  if (PICKER_BLIND_PARTS.some((key) => present(o[key]))) return true;
+function hasPartsThePickerCannotExpress(o: Partial<Options>, freq: RecurrenceFreq, dtstart: Date): boolean {
+  // "Every 15th" (Plans quick add, Alfred) anchored on the 15th is the same dates as plain monthly from
+  // that anchor, so it stays editable; any other month day is a pattern the picker can't show.
+  const monthDay = Array.isArray(o.bymonthday) && o.bymonthday.length === 1 ? o.bymonthday[0] : o.bymonthday;
+  const plainMonthDay = freq === "MONTHLY" && typeof monthDay === "number" && monthDay === dtstart.getUTCDate();
+  if (PICKER_BLIND_PARTS.some((key) => present(o[key]) && !(key === "bymonthday" && plainMonthDay))) return true;
   if (!present(o.byweekday)) return false;
   // Weekdays are the picker's own only for WEEKLY, and only plain ones: "1MO" (first Monday) is not.
   if (freq !== "WEEKLY") return true;

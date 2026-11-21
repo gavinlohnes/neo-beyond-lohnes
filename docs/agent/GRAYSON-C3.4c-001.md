@@ -22,7 +22,8 @@
    can't express: month day, set position, nth weekday, end date, count, week start) opened as plain
    "every month", and saving flattened it. Now it opens as "Does not repeat" with the line "Keeps its
    repeat: every month on the 1st Monday. Pick a new repeat to replace it.", and saving keeps the
-   stored rule. This generalises #606's yearly-only guard.
+   stored rule. This generalises #606's yearly-only guard. "Every 15th" (Plans quick add, Alfred)
+   anchored on the 15th is the same dates as plain monthly, so it still opens as Monthly.
 
 ## Scope and exclusions
 
@@ -43,7 +44,7 @@
 ## Acceptance
 
 Engine tests: monthly `1MO`, `-1FR`, `BYMONTHDAY`, `BYSETPOS`, weekly `+1MO`, `UNTIL`, `COUNT` and
-`WKST` rules read as null; every rule the picker builds still round-trips byte-identical. Browser
+`WKST` rules read as null; "every 15th" anchored on the 15th reads as monthly with the same dates; every rule the picker builds still round-trips byte-identical. Browser
 tests: a first-Monday item keeps its exact rule after a title edit, with the kept-repeat line and axe
 clean; clearing the due date while changing a yearly repeat to every 2 years anchors on the kept due
 date. Typecheck, architecture and the Node suite locally; browser tests in required CI.

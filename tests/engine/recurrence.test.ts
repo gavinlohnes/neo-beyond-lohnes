@@ -114,10 +114,20 @@ describe("parseRecurrencePreset — round-trips buildRecurrenceRule's own output
     const at = "DTSTART:20270104T000000Z\nRRULE:";
     // The first Monday of every month, the 15th of every month, a weekly "first Monday", an end, a count.
     for (const body of [
-      "FREQ=MONTHLY;BYDAY=1MO", "FREQ=MONTHLY;BYDAY=-1FR", "FREQ=MONTHLY;BYMONTHDAY=15", "FREQ=MONTHLY;BYSETPOS=1;BYDAY=MO",
+      "FREQ=MONTHLY;BYDAY=1MO", "FREQ=MONTHLY;BYDAY=-1FR", "FREQ=MONTHLY;BYMONTHDAY=15", "FREQ=MONTHLY;BYMONTHDAY=4,18", "FREQ=MONTHLY;BYSETPOS=1;BYDAY=MO",
       "FREQ=WEEKLY;BYDAY=+1MO", "FREQ=DAILY;BYDAY=MO", "FREQ=WEEKLY;BYDAY=MO;UNTIL=20271231T000000Z", "FREQ=DAILY;COUNT=5",
       "FREQ=WEEKLY;INTERVAL=2;WKST=SU;BYDAY=MO",
     ]) expect(parseRecurrencePreset(at + body), body).toBeNull();
+  });
+
+  it("C3.4c: reads \"every 15th\" anchored on the 15th as plain monthly, with the same dates", () => {
+    const fifteenth = "DTSTART:20270115T000000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=15";
+    const parsed = parseRecurrencePreset(fifteenth);
+    expect(parsed).toEqual({ freq: "MONTHLY", interval: 1, anchor: "2027-01-15" });
+    expect(deriveNextOccurrenceDate(buildRecurrenceRule(parsed!), "2027-01-15")).toBe(deriveNextOccurrenceDate(fifteenth, "2027-01-15"));
+    expect(deriveNextOccurrenceDate(buildRecurrenceRule(parsed!), "2027-02-15")).toBe("2027-03-15");
+    // On another anchor day, the 15th is a pattern the picker can't show.
+    expect(parseRecurrencePreset("DTSTART:20270104T000000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=15")).toBeNull();
   });
 
   it("C3.4c: still reads back every rule the picker itself builds, unchanged by a rebuild", () => {
