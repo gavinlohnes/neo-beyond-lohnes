@@ -118,6 +118,18 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 - **Week planning (WEEK-PLANNER-002, owner selected):** `application/weekPlannerQueries.ts` composes existing Week Ahead work provenance, training-programme assignments or labelled existing workout suggestions, canonical eligible tasks and local cached calendar events. `ui/screens/more/WeekPlanner.tsx` lives inside Plan Today with a Week Ahead link. `moveWeekTask` wraps existing `modifyObligation` atomically with stale-plan and current-date guards; only planned attention moves, never deadlines/recurrence/status. No parallel plan store, auto allocation or invented free-time score. Native controls support touch/keyboard; draft intended dates survive midnight and open-sheet retry retains its choice. [Brief](WEEK-PLANNER-002.md). Reuse this rather than building a second week calendar.
 
+- **Training intelligence design (not implemented):** BEYOND already owns exercise references and
+  custom exercises/templates, A/B/C and assigned programmes, live STANDARD/REDUCED/RECOVERY set
+  recording, effort/warm-up/substitution, advisory progression/re-entry/deload, history, records and
+  metric views. [`GRAYSON_TRAIN_INTELLIGENCE.md`](../GRAYSON_TRAIN_INTELLIGENCE.md) connects these
+  into a proposed guided calibration, curated exercise understanding, four-to-six-week emphasis
+  blocks and evidence-bounded Progress/Direction surface. Preserve current Engine/programme
+  authority: the Mission A/B/C, short/minimum/home variants and programme-level adaptation are
+  designs only. Muscle coverage is a proxy, never proof of growth; estimated strength is not an
+  observed test. Prior free-exercise-db research remains a field-shape donor, not a bulk-import or
+  content license. Recommended first future slice is a read-only calibration/exercise-understanding
+  preview; it is not authorized.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,

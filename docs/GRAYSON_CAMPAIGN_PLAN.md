@@ -77,7 +77,7 @@ status of its own.
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
 | C4.2a | Owner-editable caffeine cut-off, source, SAVE / UNDO | Done (#595) | Narrowed by Gavin 2026-11-20: no automated suggestion, confidence or suppression. Explicit experiment deferred to separate authorization |
 | C4.3 | Optional one-tap caffeine log | Not started |  |
-| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started |  |
+| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started | Training Intelligence design defines programme/calibration/progress boundaries; it does not authorize C4.4 |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
@@ -96,7 +96,7 @@ status of its own.
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |
-| C6.8 | Guided Start + Teach Delta, slice 1 | In PR #605 | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
+| C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Not started |  |
 | C7.2 | Plan stays fresh | Not started |  |
@@ -573,6 +573,11 @@ Health Bridge.
     abstains without a schedule; Engine variant choice unchanged (tests).
   - Builds on: `trainHome.ts`, `shiftSleepPlan.ts`, `alertness.ts`, `performedSets`.
   - Lane, size: **Protected** (sleep-plan guidance) · **M**.
+  - **Training-intelligence boundary (design only, 2026-11-20):**
+    [`GRAYSON_TRAIN_INTELLIGENCE.md`](GRAYSON_TRAIN_INTELLIGENCE.md) defines the sequenced A/B/C
+    Mission, calibration, exercise understanding, emphasis blocks and Progress/Direction. C4.4
+    remains only the separately authorized training-to-sleep/window connection. Neither design
+    silently changes Engine variant selection, programme activation or recommendation priority.
 - **C4.5 ADD · Mission review (monthly).** One page: goal, what he did (training sessions, protein
   days, sleep), what moved (weight trend, strength, resting HR), how sure, and at most one change he can
   accept or skip. Excludes partly logged days from burn (#592's HONEST-BURN-001).

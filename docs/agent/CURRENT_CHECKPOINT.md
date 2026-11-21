@@ -1,4 +1,37 @@
-# Current objective — GRAYSON-GUIDED-START-001 (2026-11-20)
+# Current objective — GRAYSON-TRAIN-INTELLIGENCE-001 (2026-11-20)
+
+- **Owner authorization / lane:** Gavin approved a Protected documentation/design-only objective to
+  establish the canonical training-intelligence experience. No product code, navigation, Engine,
+  command/event/schema, provider/dependency, demonstration media, Google Drive or implementation is
+  authorized.
+- **Starting master / Builder:** `1ee257941cd3700faaa7e0c0e472d8986f6c772f` after PR #605;
+  Builder Codex; branch `codex/grayson-train-intelligence-001`;
+  [PR #607](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/607).
+- **Brief:** [`GRAYSON-TRAIN-INTELLIGENCE-001.md`](GRAYSON-TRAIN-INTELLIGENCE-001.md).
+- **Canonical candidate:**
+  [`GRAYSON_TRAIN_INTELLIGENCE.md`](../GRAYSON_TRAIN_INTELLIGENCE.md).
+- **Repository truth reused:** current exercise/custom libraries, templates, programme resolver,
+  live workout, warm-ups/effort/substitution, progression/re-entry/deload, history/records/metrics,
+  Body, Food, recovery, Missions and the merged Guided/Health designs. Current semantics remain
+  authoritative.
+- **Design direction:** sequenced full-body A/B/C; conservative guided calibration; layered exercise
+  cards without demonstrations; restrained in-workout Delta; smallest-supported adaptation;
+  four-to-six-week emphasis blocks; Planet Fitness/home variants; and evidence-bounded TRAIN
+  Progress and Direction. Coverage is not muscle growth, estimates are not tests and associations
+  are not causes.
+- **Recommended future slice:** `GRAYSON-TRAIN-CALIBRATION-PREVIEW-001`, an optional read-only
+  exercise-understanding/calibration preview using existing records and stopping before any write or
+  recommendation change. It is not authorized. The prior Mission plan draft remains ranked second.
+- **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
+  unrelated. The root checkout and its user/research changes remain untouched.
+- **Verification / review:** `git diff --check` passes and risk classification is PROTECTED as
+  expected. Required docs-only CI and independent exact-head review remain pending.
+- **Next:** obtain green required CI and independent Protected exact-head review, resolve any
+  in-scope findings, then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-GUIDED-START-001 (merged as PR #605)
 
 - **Owner authorization / lane:** Gavin approved a Protected implementation objective evolving
   **A PLACE TO START** and **What BEYOND should remember** into an optional, resumable, phone-first
@@ -17,18 +50,19 @@
   plans or recommendations.
 - **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
   unrelated. The root checkout contains unrelated user/research work and remains untouched.
-- **Verification so far:** typecheck/build and architecture pass. Guided Chromium passes 21/21 at
+- **Merged result:** PR #605 merged into master at `1ee257941cd3700faaa7e0c0e472d8986f6c772f`.
+  The final result included the exact-head review repair and required green CI. Prior candidate
+  evidence is retained below as historical context.
+- **Verification at candidate:** typecheck/build and architecture pass. Guided Chromium passes 21/21 at
   320/360/412 px including confirmation, provenance, no-recommendation-change and accessibility;
   adjacent Memory/MORE/LIFE Chromium passes 60/60; memory/guided integration passes 10/10. Real
   Chromium evidence is in `docs/screenshots/grayson-guided-start-001`. Full `npm run verify` reached
   4349 passing / 2 skipped but failed four unrelated timing cases; isolated reruns passed 3/4, while
   the unchanged `Habits001` Done control remained disabled. Required exact-head CI remains decisive.
-- **Review status:** first independent exact-head review BLOCKED stale guided context after returning
+- **Historical review:** first independent exact-head review BLOCKED stale guided context after returning
   from canonical memory, missing C6.8 campaign reconciliation and stale checkpoint actions. The
   bounded repair re-reads memory on every guide re-entry, adds a correction/re-entry browser proof,
-  reconciles C6.8 and fixes this handoff. Renewed CI and exact-head review are required.
-- **Remaining:** obtain green required CI and renewed independent exact-head PASS, then return for
-  Gavin's Protected merge approval.
+  reconciled C6.8 and fixed the handoff before the final reviewed merge.
 
 ---
 
