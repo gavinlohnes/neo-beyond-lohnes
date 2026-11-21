@@ -1,4 +1,33 @@
-# Current objective — GRAYSON-TRAIN-INTELLIGENCE-001 (2026-11-20)
+# Current objective — GRAYSON-TRAIN-CALIBRATION-PREVIEW-001 (2026-11-20)
+
+- **Owner authorization / lane:** Gavin authorized the first bounded implementation recommended by
+  the merged Training Intelligence design. FEATURE lane; stop before any programme, set, memory,
+  schema, Engine or recommendation semantic change.
+- **Starting master / Builder:** `760d9fca1e93512779ae105a2cd1592f3a7dd84a` after #607;
+  Builder Codex; branch `codex/grayson-train-calibration-preview-001`;
+  [PR #608](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/608).
+- **Brief:** [`GRAYSON-TRAIN-CALIBRATION-PREVIEW-001.md`](GRAYSON-TRAIN-CALIBRATION-PREVIEW-001.md).
+- **Outcome:** optional read-only preview from the existing suggested workout; first-exercise role,
+  setup/cues/mistakes/alternatives, comparable prior set and personal cue, plus ephemeral conservative
+  calibration feedback. START WORKOUT and existing authority remain unchanged.
+- **Concurrent work:** #584 and #606 remain separate and untouched.
+- **Verification:** typecheck, architecture and production/PWA build pass. Focused Chromium passes
+  4/4; broader TRAIN Chromium passes 97/97. Built-PWA evidence at 320/360/412 px has no overflow or
+  page errors; screenshots are in `docs/screenshots/grayson-train-calibration-preview-001/`.
+  `npm run verify` was stopped after the affected suites passed because the full parallel browser run
+  hit unchanged MetricPage/MealRoundTrip timing failures and emitted continuous shared-worktree font
+  allow-list warnings; required clean CI remains decisive. No physical-phone check yet.
+- **Independent review:** BLOCK at `616a9bc11df53000dcc709516a3811fbf752ead8` on two bounded
+  findings: the modal needed background inertness/focus containment plus Escape/focus-return proof,
+  and the campaign tracker needed this slice recorded without starting C4.4. Both are repaired;
+  focused Chromium again passes 4/4. The old BLOCK remains historical and renewed exact-head review
+  is required.
+- **Next:** obtain green required CI and independent exact-head review,
+  resolve in-scope findings, then integrate under DEV-FLOW-002.
+
+---
+
+# Historical — GRAYSON-TRAIN-INTELLIGENCE-001 (merged as PR #607)
 
 - **Owner authorization / lane:** Gavin approved a Protected documentation/design-only objective to
   establish the canonical training-intelligence experience. No product code, navigation, Engine,

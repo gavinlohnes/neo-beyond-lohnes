@@ -30,6 +30,7 @@ import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
 import { GymMode } from "./GymMode";
+import { CalibrationPreview } from "./CalibrationPreview";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -51,6 +52,7 @@ import { PlannedWorkCard } from "../today/PlannedWorkCard";
 import {
   getActiveWorkoutSession,
   getCurrentProgressionSuggestions,
+  getExerciseCues,
   getLastAdvancingTemplate,
   getLastPerformedSetForExercise,
   getLastStrengthSession,
@@ -236,6 +238,12 @@ export function TrainScreen({
   // when they aren't the prominent tool, so it structurally recedes
   // instead of consuming full footprint before any decision is made.
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
+  const [calibrationPreview, setCalibrationPreview] = useState<{
+    exercise: ExercisePrescription;
+    lastSet?: LastSetInfo;
+    cue?: string;
+    readError?: string;
+  } | null>(null);
   const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS">(recordsFocus ? "RECORDS" : "WORKOUT");
   const [visitedRecords, setVisitedRecords] = useState(recordsFocus !== null);
   const [visitedHistory, setVisitedHistory] = useState(false);
@@ -957,6 +965,25 @@ export function TrainScreen({
     customTemplates,
   );
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
+
+  async function openCalibrationPreview() {
+    const exercise = suggestedExercises[0];
+    if (!exercise || chosenVariant === "RECOVERY") return;
+    setCalibrationPreview({ exercise });
+    try {
+      const [lastSet, cues] = await Promise.all([
+        getLastPerformedSetForExercise(chosenTemplate, chosenVariant, exercise.exerciseId),
+        getExerciseCues(),
+      ]);
+      setCalibrationPreview((current) => current?.exercise.exerciseId === exercise.exerciseId
+        ? { exercise, ...(lastSet ? { lastSet } : {}), ...(cues.get(exercise.exerciseId) ? { cue: cues.get(exercise.exerciseId)! } : {}) }
+        : current);
+    } catch (error) {
+      setCalibrationPreview((current) => current?.exercise.exerciseId === exercise.exerciseId
+        ? { exercise, readError: describeError(error, "Could not read prior performance.") }
+        : current);
+    }
+  }
   // TRAIN-003 (Performance Brief): pure aggregation of already-fetched
   // state, recomputed on every render — no separate query/state needed.
   const progressionCounts = summarizeProgressionSuggestions(currentProgressionSuggestions);
@@ -1052,6 +1079,14 @@ export function TrainScreen({
 
   return (
     <div className="screen fade-in train-field train-operator bf" data-training-view={trainView} data-workout-active={Boolean(session)}>
+      {calibrationPreview && <CalibrationPreview
+        exercise={calibrationPreview.exercise}
+        templateLabel={templateLabel(chosenTemplate, customTemplates)}
+        {...(calibrationPreview.lastSet ? { lastSet: calibrationPreview.lastSet } : {})}
+        {...(calibrationPreview.cue ? { personalCue: calibrationPreview.cue } : {})}
+        {...(calibrationPreview.readError ? { readError: calibrationPreview.readError } : {})}
+        onClose={() => setCalibrationPreview(null)}
+      />}
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -1285,15 +1320,20 @@ export function TrainScreen({
           {/* REAL-DATA-001: see the workout before starting it. The owner's real backup had 10 of 12
               workouts abandoned within seconds; looking should never cost an abandoned session. */}
           {chosenVariant !== "RECOVERY" && (
-            <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
-              {suggestedExercises.map((exercise, index) => (
-                <li key={exercise.exerciseId}>
-                  <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                  <span>{exercise.name}</span>
-                  <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
-                </li>
-              ))}
-            </ol>
+            <>
+              <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
+                {suggestedExercises.map((exercise, index) => (
+                  <li key={exercise.exerciseId}>
+                    <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <span>{exercise.name}</span>
+                    <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
+                  </li>
+                ))}
+              </ol>
+              <button type="button" className="btn-secondary" style={{ marginTop: 12 }} onClick={() => void openCalibrationPreview()}>
+                PREVIEW CALIBRATION
+              </button>
+            </>
           )}
 
 
