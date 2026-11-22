@@ -5,7 +5,8 @@
   fixed-date assignment, catch-up debt, time advancement, capacity/recovery, Engine/recommendation,
   command/event/schema, navigation, dependency/provider or Drive change.
 - **Starting master / Builder:** `c881ac1e3789d64c6dd505a4deb2c3cd09627900` after merged #584;
-  Builder Codex; branch `codex/grayson-train-planning-connection-001`; PR pending.
+  Builder Codex; branch `codex/grayson-train-planning-connection-001`;
+  [PR #613](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/613).
 - **Brief / campaign:** [`GRAYSON-TRAIN-PLANNING-CONNECTION-001.md`](GRAYSON-TRAIN-PLANNING-CONNECTION-001.md), C4.4t.
 - **Candidate:** one read-only connection projects TRAIN's same authoritative next member and WHY
   onto every already-eligible planning opportunity. Dates never select or advance it; missing an

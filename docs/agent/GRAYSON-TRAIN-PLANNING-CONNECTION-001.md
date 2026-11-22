@@ -7,7 +7,8 @@
 - **Campaign item:** C4.4t.
 - **Starting commit:** `c881ac1e3789d64c6dd505a4deb2c3cd09627900` (fresh `origin/master`, including
   merged workout-metric PR #584 and sequence activation PR #612).
-- **Builder / branch / PR:** Codex; `codex/grayson-train-planning-connection-001`; PR pending.
+- **Builder / branch / PR:** Codex; `codex/grayson-train-planning-connection-001`;
+  [PR #613](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/613).
 - **Operator benefit:** Gavin can see what his active programme says is next while looking at his
   real week, without remembering two disconnected systems or being told that a possible day is a
   booking, deadline or missed workout.
