@@ -4,7 +4,8 @@
   for explicit activation of saved A/B/C templates as one ordered programme. No runtime, programme,
   Engine/recommendation/command/event/schema, navigation, dependency, provider or Drive change.
 - **Starting master / Builder:** `b5eeead9` after #610; Builder Codex; branch
-  `codex/grayson-train-sequence-activation-design-001`; PR pending.
+  `codex/grayson-train-sequence-activation-design-001`;
+  [PR #611](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/611).
 - **Brief:** [`GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001.md`](GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001.md).
 - **Canonical candidate:**
   [`GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md`](../GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md).
@@ -19,8 +20,9 @@
   authorized and excludes planning, linked short/home variants and adaptation.
 - **Concurrent work:** #584 and #606 remain separate and untouched. Root research changes remain
   untouched.
-- **Verification / review:** docs diff/link/risk checks, required CI and independent exact-head
-  review pending.
+- **Verification / review:** whitespace/diff checks pass; all referenced local repository paths
+  exist; committed risk classification is PROTECTED documentation/governance only. Required docs CI
+  and independent exact-head review remain pending.
 - **Next:** finish docs checks, open the PR, obtain green required CI and independent review, then
   return for Gavin's merge approval.
 

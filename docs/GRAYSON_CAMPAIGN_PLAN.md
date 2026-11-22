@@ -81,7 +81,7 @@ status of its own.
 | C4.4p | Guided exercise/calibration preview | Done (#608) | Read-only first Training Intelligence slice; no programme, Engine or C4.4 training-to-sleep/window behavior |
 | C4.4d | Guided three-session plan draft | Done (#609) | Ephemeral A/B/C and reality-form preview; no save/activation and does not start C4.4 |
 | C4.4s | Owner-confirmed A/B/C template save | Done (#610) | Exact review plus atomic custom-template creation; no programme activation, assignment or C4.4 behavior |
-| C4.4q | Ordered sequence activation design | In progress | Protected design only: date-independent next-member, recovery and failure semantics; no runtime change or C4.4 behavior |
+| C4.4q | Ordered sequence activation design | In PR #611 | Protected design only: date-independent next-member, recovery and failure semantics; no runtime change or C4.4 behavior |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |

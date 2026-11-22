@@ -4,7 +4,7 @@
   **PROTECTED documentation/design-only**.
 - **Starting commit:** `b5eeead9` (master after PR #610).
 - **Builder / branch:** Codex; `codex/grayson-train-sequence-activation-design-001`.
-- **Active PR:** pending.
+- **Active PR:** [#611](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/611).
 
 ## Outcome
 
