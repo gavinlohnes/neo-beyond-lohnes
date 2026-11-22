@@ -3,6 +3,8 @@ import { db } from "../src/persistence/db";
 import { startDay, logWater, correctWater, voidWaterLog } from "../src/application/commands";
 import { getHydrationEntries } from "../src/application/queries";
 import { getMetricDetail } from "../src/application/metricDetailQueries";
+import { archiveCustomTemplate, createCustomTemplate } from "../src/application/customTemplateCommands";
+import { WORKOUT_TEMPLATES } from "../src/domain/workout/types";
 
 beforeEach(async () => { await db.delete(); await db.open(); vi.useFakeTimers({ toFake: ["Date"] }); });
 
@@ -240,16 +242,18 @@ it("METRIC-PAGE-002 slice 3: workouts count completed and partial sessions per l
     await abandonWorkout(second.id, gone.id, "STANDARD", 5);
     vi.setSystemTime(new Date(2026, 10, 13, 18)); // Nov 12 never opened: a gap
     const third = await startDay();
-    const c = await startWorkout(third.id, "A", "STANDARD");
+    const custom = await createCustomTemplate({ name: "Grayson archived session", exercises: WORKOUT_TEMPLATES.A!.exercises });
+    const c = await startWorkout(third.id, custom.id, "STANDARD");
     vi.setSystemTime(new Date(2026, 10, 13, 19));
     await completeWorkout(third.id, c.id, "STANDARD", "COMPLETED", 45);
+    await archiveCustomTemplate(custom.id);
     await startWorkout(third.id, "B", "STANDARD"); // still active: not finished, not counted
     vi.setSystemTime(new Date(2026, 10, 13, 20));
     const before = await db.events.toArray();
     const d = await getMetricDetail("workouts");
     expect(d.source).toBe("LOGGED");
     expect(d.series.slice(-4).map((v) => v.value)).toEqual([2, 0, null, 1]); // the unopened day is missing, never 0
-    expect(d.today).toMatchObject({ kind: "sessions", sessions: [{ label: "A", sessionType: "STANDARD", status: "COMPLETED", durationMinutes: 60 }] });
+    expect(d.today).toMatchObject({ kind: "sessions", sessions: [{ label: "Grayson archived session", sessionType: "STANDARD", status: "COMPLETED", durationMinutes: 60 }] });
     expect(d.usual).toMatchObject({ value: null, need: 4 });
     expect(await db.events.toArray()).toEqual(before);
   } finally { vi.useRealTimers(); }

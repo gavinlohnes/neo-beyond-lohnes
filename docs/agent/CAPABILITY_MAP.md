@@ -128,8 +128,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   designs only. Muscle coverage is a proxy, never proof of growth; estimated strength is not an
   observed test. Prior free-exercise-db research remains a field-shape donor, not a bulk-import or
   content license. The read-only calibration preview (#608), ephemeral A/B/C draft (#609) and atomic
-  owner-confirmed three-template save (#610) are now built. The current #612 candidate adds explicit
-  ordered sequence activation; linked short/home variants and programme-level adaptation remain
+  owner-confirmed three-template save (#610) and explicit ordered sequence activation (#612) are
+  now built; linked short/home variants and programme-level adaptation remain
   unimplemented.
 
 - **Sequence activation design (design only, 2026-11-21):**
@@ -137,11 +137,17 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   merged guided draft/template-save work with current custom templates, `TRAIN_PROGRAM_SET`, workout
   outcomes, capacity/recovery and planning. Current weekday/WORK-OFF assignments and the built-in
   Engine A/B/C selector are different systems; neither represents Gavin's approved date-independent
-  custom-template sequence. The `GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001` candidate deepens the existing
+  custom-template sequence. `GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001` (#612) deepens the existing
   causal programme revision with an explicit SEQUENCE mode and derives next-member state from qualifying outcomes,
   rather than add a mutable cursor/table or infer by names/dates. Existing capacity/recovery,
   working-set, RED-override and progression semantics are unchanged;
   linked short/home variants and planning connection remain separately Protected.
+
+- **Finished-workout metric candidate (PR #584):** reuses the shared metric page and existing
+  completed-or-partial “finished workout” definition to show lived-day counts, weekly totals,
+  work/day-off coverage and today's recorded session labels. This is descriptive DATA evidence only:
+  it is not sequence advancement, adherence, TRAIN Progress and Direction, a goal or advice. The
+  stricter qualifying-outcome rule remains owned by the active programme projection.
 
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /

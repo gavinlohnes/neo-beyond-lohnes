@@ -4,12 +4,16 @@
   build it", then handed the build to Claude Code: "Will you give it to Claude code to do". His 14 November direction:
   he loves the shared metric page and wants that look everywhere it's needed, without remaking anything BEYOND has.
   This Drop authorizes building and opening PRs. It does not authorize a merge: Gavin merges.
-- **Builder:** Claude Code, one builder for the whole Drop. Before starting, open PRs and branches were checked: no
+- **Builder:** Claude Code originally; Gavin explicitly transferred PR #584 to Codex on 2026-11-22 for current-master
+  reconciliation, verification and review. Before starting, open PRs and branches were checked: no
   other builder's work on the metric page, weight, protein or workouts. Open #565 (HABIT-QUOTA-001) touches
   `BodyDashboard.tsx` in the LIFESTYLE card only; this Drop's edits there are in other hunks.
 - **Lane:** Feature, with independent exact-head review, as METRIC-PAGE-001's slices were. An Engine, schema, event,
   command, backup, provider, dependency or navigation change would be Protected: stop and report instead.
 - **Baseline:** master `6a359d0` (#564 CAPTURE-PARITY-002).
+- **Current reconciliation baseline:** master `57290a0094d74987b6d0a05efd81b571b8732742`
+  through GRAYSON sequence activation #612; active PR remains
+  [#584](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/584).
 
 ## What to build, one slice per measurement, in this order
 
@@ -20,8 +24,9 @@
    the existing sample floors. Corrections stay on the existing weight records route.
 2. **Protein.** Owner-logged, white. Daily total per lived day; weeks as the mean of logged days, like calories. His
    protein target where one is set, as a target, never a deficit or remaining figure. Reuse `FoodSources`.
-3. **Finished workouts.** Count per lived day; weeks and 1Y as weekly totals. Only finished workouts count, matching
-   what advances the rotation. No new goal, streak, pressure or advice.
+3. **Finished workouts.** Count per lived day; weeks and 1Y as weekly totals. Completed and partial sessions use
+   BEYOND's established descriptive “finished workout” count. This is not the stricter qualifying-outcome rule that
+   advances an active A → B → C sequence. No new goal, streak, pressure or advice.
 
 **Where each opens from:** TODAY's PROTEIN and WEIGHT tiles and BODY's matching panels. Switch a tap only when the new
 page shows everything the old view did; otherwise keep the old route and say so in the PR. Workouts open from wherever
@@ -96,3 +101,8 @@ queries only.
   in TRAIN, and BODY's progress has no route there to reuse.
 - **Where it opens:** DATA's progress (reached from DATA's Weight shortcut, a dashboard card's history or BODY's YOUR PROGRESS) has a TRAINING section, which gains WORKOUTS OVER TIME. The TRAINING line ("2 workouts · 1 PR")
   and DATA's Insights Explorer (which also charts finished workouts) are unchanged; nothing is removed.
+- **Project Grayson reconciliation:** this is supporting descriptive evidence, not TRAIN Progress and Direction,
+  programme progress, adherence, a recommendation or proof that training is working. “Finished” retains BEYOND's
+  established completed-or-partial count. It is deliberately distinct from the stricter qualifying outcome that
+  advances the owner-confirmed A → B → C sequence. Custom-template names, including archived templates, remain
+  inspectable for today's recorded sessions; no programme or workout history is rewritten.
