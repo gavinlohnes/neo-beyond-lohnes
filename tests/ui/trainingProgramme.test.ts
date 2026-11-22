@@ -3,9 +3,10 @@ import { expect, it } from "vitest";
 import { resolveProgrammeSlot } from "../../src/engine/trainingProgrammeResolution";
 import { DEFAULT_SCHEDULE_PATTERN, scheduledWorkContextForLivedDay } from "../../src/engine/scheduledContext";
 import { getTrainingProgramme, saveTrainingProgramme, projectTrainingProgramme } from "../../src/application/trainingProgramme";
-import { createCustomTemplate, archiveCustomTemplate } from "../../src/application/customTemplateCommands";
+import { createCustomTemplate, archiveCustomTemplate, updateCustomTemplate } from "../../src/application/customTemplateCommands";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
-import { getProgrammeView } from "../../src/application/trainingProgrammeQueries";
+import { buildSequenceProgramme, getProgrammeView } from "../../src/application/trainingProgrammeQueries";
+import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { previewAnyRestore, applyAnyRestore } from "../../src/persistence/restore";
 import "dexie-export-import";
@@ -92,4 +93,82 @@ it("programme edits leave canonical check-ins, recommendations and decision trac
   await saveTrainingProgramme(null, revision.id);
   expect(await db.recommendations.toArray()).toEqual(recommendations);
   expect(await db.checkIns.toArray()).toEqual(checkIns);
+});
+
+async function threeCustomTemplates() {
+  return Promise.all((["Foundation A", "Foundation B", "Foundation C"] as const).map((name, index) => createCustomTemplate({
+    name,
+    exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+}
+
+it("activates an exact three-template sequence and derives advancement from qualifying outcomes", async () => {
+  const templates = await threeCustomTemplates();
+  const sequence = buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates);
+  const activation = await saveTrainingProgramme(sequence, null);
+  let view = await getProgrammeView();
+  expect(view.sequence).toMatchObject({ status: "READY", nextMember: { key: "A", templateId: templates[0]!.id } });
+  expect(view.planned.templateId).toBeNull();
+
+  const day = await startDay();
+  const partial = await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true });
+  await logSet(day.id, partial.id, templates[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, partial.id, "STANDARD", "PARTIAL");
+  view = await getProgrammeView();
+  expect(view.sequence?.nextMember?.key).toBe("A");
+
+  const reduced = await startWorkout(day.id, templates[0]!.id, "REDUCED", { overrideConfirmed: true });
+  await logSet(day.id, reduced.id, templates[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, reduced.id, "REDUCED", "PARTIAL");
+  view = await getProgrammeView();
+  expect(view.sequence?.nextMember?.key).toBe("B");
+  expect(view.sequence?.why).toContain("reduced partial");
+
+  const emptyMember = await startWorkout(day.id, templates[1]!.id, "STANDARD", { overrideConfirmed: true });
+  await completeWorkout(day.id, emptyMember.id, "STANDARD", "COMPLETED");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+
+  const nonMember = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
+  await logSet(day.id, nonMember.id, WORKOUT_TEMPLATES.A!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, nonMember.id, "STANDARD", "COMPLETED");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+
+  const outOfOrder = await startWorkout(day.id, templates[2]!.id, "STANDARD", { overrideConfirmed: true });
+  await logSet(day.id, outOfOrder.id, templates[2]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, outOfOrder.id, "STANDARD", "COMPLETED");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("A");
+
+  await expect(saveTrainingProgramme(null, null)).rejects.toThrow("Programme changed");
+  const cleared = await saveTrainingProgramme(null, activation.id);
+  expect(cleared.programme).toBeNull();
+});
+
+it("abstains when an activated member changes or is archived and preserves the prior programme for undo", async () => {
+  const prior = await saveTrainingProgramme(programme, null);
+  const templates = await threeCustomTemplates();
+  const sequence = buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates);
+  const activation = await saveTrainingProgramme(sequence, prior.id);
+  let view = await getProgrammeView();
+  expect(view.sequence?.previousProgramme).toEqual(programme);
+  await updateCustomTemplate(templates[1]!.id, { name: "Changed after review" });
+  view = await getProgrammeView();
+  expect(view.sequence?.status).toBe("REVIEW_REQUIRED");
+  expect(view.sequence?.members[1]?.issue).toBe("CHANGED");
+  await archiveCustomTemplate(templates[2]!.id);
+  view = await getProgrammeView();
+  expect(view.sequence?.members[2]?.issue).toBe("ARCHIVED");
+  await saveTrainingProgramme(view.sequence!.previousProgramme, activation.id);
+  expect((await getTrainingProgramme()).programme).toEqual(programme);
+});
+
+it("round-trips a sequence and its snapshots through the existing backup contract", async () => {
+  const templates = await threeCustomTemplates();
+  const sequence = buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates);
+  await saveTrainingProgramme(sequence, null);
+  const backup = new File([await db.export()], "synthetic-sequence.json", { type: "application/json" });
+  await db.events.clear(); await db.customWorkoutTemplates.clear();
+  await previewAnyRestore(backup); await applyAnyRestore(backup);
+  const restored = await getProgrammeView();
+  expect(restored.sequence?.status).toBe("READY");
+  expect(restored.sequence?.members.map((member) => member.name)).toEqual(["Foundation A", "Foundation B", "Foundation C"]);
 });

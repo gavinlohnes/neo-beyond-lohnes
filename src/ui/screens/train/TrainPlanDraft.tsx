@@ -14,7 +14,7 @@ function ExerciseList({ exercises, focus }: { exercises: DraftExercise[]; focus:
   </li>)}</ol>;
 }
 
-export function TrainPlanDraft({ onClose, saveTemplates = createCustomTemplateSet }: { onClose: () => void; saveTemplates?: typeof createCustomTemplateSet }) {
+export function TrainPlanDraft({ onClose, onSaved, saveTemplates = createCustomTemplateSet }: { onClose: () => void; onSaved?: () => void; saveTemplates?: typeof createCustomTemplateSet }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [step, setStep] = useState(0);
   const [focus, setFocus] = useState<TrainingFocus[]>(["Chest", "Triceps", "Traps"]);
@@ -38,6 +38,7 @@ export function TrainPlanDraft({ onClose, saveTemplates = createCustomTemplateSe
     setError(null);
     try {
       setSaved(await saveTemplates(templateDrafts));
+      onSaved?.();
     } catch (reason) {
       setError(describeError(reason, "The plan was not saved. Nothing changed."));
     } finally {

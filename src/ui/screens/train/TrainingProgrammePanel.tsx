@@ -1,52 +1,149 @@
-import { mostRecentBoundaryAtOrBefore } from "../../../engine/dayRollover";
-import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { useEffect, useRef, useState } from "react";
-import { getProgrammeView } from "../../../application/trainingProgrammeQueries";
+import { buildSequenceProgramme, getProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { saveTrainingProgramme } from "../../../application/trainingProgramme";
+import { mostRecentBoundaryAtOrBefore } from "../../../engine/dayRollover";
+import { ROTATION_SLOTS, WEEKDAY_SLOTS, type AssignedTrainingProgramme, type TrainingProgramme } from "../../../domain/workout/trainingProgramme";
+import type { SessionType } from "../../../domain/workout/types";
+import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import "../../components/section.css";
-import { WEEKDAY_SLOTS, ROTATION_SLOTS, type TrainingProgramme } from "../../../domain/workout/trainingProgramme";
+
 const WEEKDAYS: Record<string, string> = { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "0": "Sunday" };
 const slotLabel = (slot: string) => WEEKDAYS[slot] ?? slot.replace("WORK", "Work day ").replace("OFF", "Day off ");
-export function TrainingProgrammePanel({ onStart, disabled = false, startDisabled = false, active = true, refreshKey = 0, now }: { onStart: (templateId: string) => void; disabled?: boolean; startDisabled?: boolean; active?: boolean; refreshKey?: number; now?: Date | undefined }) {
-  const [data, setData] = useState<Awaited<ReturnType<typeof getProgrammeView>> | null>(null), [error, setError] = useState<string | null>(null), [key, setKey] = useState(0);
-  const [editing, setEditing] = useState(false), [draft, setDraft] = useState<TrainingProgramme>({ mode: "ROTATION", slots: {} }), [busy, setBusy] = useState(false), [receipt, setReceipt] = useState<string | null>(null);
+const emptyAssigned = (): AssignedTrainingProgramme => ({ mode: "ROTATION", slots: {} });
+
+export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityForm, disabled = false, startDisabled = false, active = true, refreshKey = 0, now }: {
+  onStart: (templateId: string, capacityForm?: SessionType) => void;
+  onProgrammeChanged?: () => void;
+  capacityForm: SessionType;
+  disabled?: boolean;
+  startDisabled?: boolean;
+  active?: boolean;
+  refreshKey?: number;
+  now?: Date;
+}) {
+  const [data, setData] = useState<Awaited<ReturnType<typeof getProgrammeView>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [key, setKey] = useState(0);
+  const [editing, setEditing] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [draft, setDraft] = useState<AssignedTrainingProgramme>(emptyAssigned());
+  const [memberIds, setMemberIds] = useState<[string, string, string]>(["", "", ""]);
+  const [startId, setStartId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [receipt, setReceipt] = useState<string | null>(null);
   const saving = useRef(false);
   const editingVersion = useRef<string | null>(null);
   const boundaryKey = mostRecentBoundaryAtOrBefore(now ?? new Date()).getTime();
-  useDayRolloverRefresh(() => setKey((n) => n + 1));
+  useDayRolloverRefresh(() => setKey((value) => value + 1));
+
   useEffect(() => {
     if (!active) return;
-    let current = true; setData(null); setError(null);
-    void getProgrammeView(now).then((v) => { if (current) setData(v); }).catch((e: unknown) => { if (current) setError(e instanceof Error ? e.message : "Programme couldn't be read."); });
+    let current = true;
+    setData(null);
+    setError(null);
+    void getProgrammeView(now).then((value) => { if (current) setData(value); }).catch((cause: unknown) => {
+      if (current) setError(cause instanceof Error ? cause.message : "Programme couldn't be read.");
+    });
     return () => { current = false; };
-  }, [key, refreshKey, now, active, boundaryKey]);
-  async function save(value: TrainingProgramme | null) {
+  }, [active, boundaryKey, key, now, refreshKey]);
+
+  async function save(value: TrainingProgramme | null, success: string) {
     if (!data || saving.current) return;
-    saving.current = true; setBusy(true); setError(null);
+    saving.current = true;
+    setBusy(true);
+    setError(null);
     try {
       await saveTrainingProgramme(value, editingVersion.current);
-      setData(null); setEditing(false); setReceipt(value ? "Programme saved. No workout was started." : "Programme cleared. Past workouts are unchanged."); setKey((n) => n + 1);
-    } catch (e) { setError(e instanceof Error ? e.message : "Programme couldn't be saved."); }
-    finally { saving.current = false; setBusy(false); }
+      setData(null);
+      setEditing(false);
+      setActivating(false);
+      setReceipt(success);
+      setKey((value) => value + 1);
+      onProgrammeChanged?.();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Programme couldn't be saved.");
+    } finally {
+      saving.current = false;
+      setBusy(false);
+    }
   }
-  const template = data?.templates.find((t) => t.id === data.planned.templateId);
-  // LIFE-PATTERN-001: the shared section shape. The heading says where the plan stands today.
-  const standing = !data ? "Your weekly plan" : !data.revision.programme ? "No programme set" : !data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved" : template ? `Today: ${template.name}` : data.planned.templateId ? "Template no longer available" : "Nothing assigned today";
+
+  function beginActivation() {
+    if (!data) return;
+    editingVersion.current = data.revision.id;
+    setMemberIds(["", "", ""]);
+    setStartId("");
+    setActivating(true);
+    setEditing(false);
+    setReceipt(null);
+  }
+
+  function beginAssignments() {
+    if (!data) return;
+    editingVersion.current = data.revision.id;
+    const current = data.revision.programme;
+    setDraft(current && current.mode !== "SEQUENCE" ? { ...current, slots: { ...current.slots } } : emptyAssigned());
+    setEditing(true);
+    setActivating(false);
+    setReceipt(null);
+  }
+
+  const plannedTemplate = data?.templates.find((template) => template.id === data.planned.templateId);
+  const sequence = data?.sequence ?? null;
+  const selectedTemplates = memberIds.map((id) => data?.customTemplates.find((template) => template.id === id));
+  const activationReady = memberIds.every(Boolean) && new Set(memberIds).size === 3 && selectedTemplates.every(Boolean) && memberIds.includes(startId);
+  const standing = !data ? "Your programme" : sequence
+    ? sequence.status === "READY" ? `Next: ${sequence.nextMember?.key ?? "—"} · ${sequence.nextMember?.name ?? "Unknown"}` : "Sequence needs review"
+    : !data.revision.programme ? "No programme set"
+      : !data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved"
+        : plannedTemplate ? `Today: ${plannedTemplate.name}` : data.planned.templateId ? "Template no longer available" : "Nothing assigned today";
+
   return <section className="suit-panel bx-section" aria-label="My programme" aria-busy={busy || (active && !data && !error)}>
     <header className="bx-head"><div><p className="bx-eyebrow">MY PROGRAMME</p><h2 className="bx-title">{standing}</h2></div></header>
     {active && !data && !error && <p className="suit-panel__loading">Reading your programme…</p>}
-    {error && <p role="alert">{error}<button type="button" className="btn-secondary" onClick={() => { setEditing(false); setKey((n) => n + 1); }}>RELOAD PROGRAMME</button></p>}
+    {error && <p role="alert">{error}<button type="button" className="btn-secondary" onClick={() => { setEditing(false); setActivating(false); setKey((value) => value + 1); }}>RELOAD PROGRAMME</button></p>}
     {data && <>
-      {data.revision.programme ? <><p className="meta">Planned today: {!data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved" : template?.name ?? (data.planned.templateId ? "Template no longer available" : "No assigned session")}{data.revision.programme.mode === "ROTATION" && data.rotationAvailable && data.forecast ? " · schedule forecast" : ""}</p>
+      {sequence ? <>
+        <p className="meta"><b>A → B → C</b> · advances by qualifying completed training, never by weekday. Missed time creates no debt.</p>
+        <ol className="train-prescription train-prescription--preview" aria-label="Active programme sequence">
+          {sequence.members.map((member) => <li key={member.key}><span className="train-prescription-index">{member.key}</span><span>{member.name}</span><span className="meta">{member.issue ? member.issue.toLowerCase() : member.templateId === sequence.nextMember?.templateId ? "NEXT" : "READY"}</span></li>)}
+        </ol>
+        <p className="meta"><b>Current capacity form:</b> {capacityForm}. The sequence chooses what to train; capacity still chooses how.</p>
+        <p className="meta"><b>WHY:</b> {sequence.why}</p>
+        {sequence.status === "READY" && sequence.nextMember
+          ? <p role="status">START NEXT is ready in the command surface above.</p>
+          : <p role="status">Guided start is paused. Review the sequence before GRAYSON names a next workout. Direct workout choice remains available above.</p>}
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={beginActivation}>REVIEW OR REPLACE SEQUENCE</button>
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; void save(sequence.previousProgramme, sequence.previousProgramme ? "Activation undone. Your prior programme was restored." : "Activation undone. No prior programme was set."); }}>UNDO ACTIVATION</button>
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; void save(null, "Programme deactivated. Past workouts are unchanged."); }}>DEACTIVATE</button>
+      </> : data.revision.programme ? <>
+        <p className="meta">Planned today: {!data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved" : plannedTemplate?.name ?? (data.planned.templateId ? "Template no longer available" : "No assigned session")}{data.revision.programme.mode === "ROTATION" && data.rotationAvailable && data.forecast ? " · schedule forecast" : ""}</p>
         {!data.rotationAvailable && data.revision.programme.mode === "ROTATION" && <p className="meta">Save a work schedule to resolve rotation slots.</p>}
-        {template && <button type="button" className="btn-secondary" disabled={disabled || startDisabled || busy} onClick={() => onStart(template.id)}>START PLANNED WORKOUT</button>}
-        <p className="meta">Your own plan. The existing capacity and recovery advice still applies. Skipping changes nothing.</p>
-      </> : <p className="meta">Assign existing templates to weekdays or work/day-off slots. This does not change recommendations.</p>}
-      <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setDraft(data.revision.programme ? { ...data.revision.programme, slots: { ...data.revision.programme.slots } } : { mode: "ROTATION", slots: {} }); setEditing(true); setReceipt(null); }}>EDIT PROGRAMME</button>
-      {editing && <fieldset disabled={busy || disabled} style={{ minWidth: 0 }}><legend>Programme assignments</legend><label>Follow<select aria-label="Programme mode" value={draft.mode} onChange={(e) => setDraft({ mode: e.target.value as TrainingProgramme["mode"], slots: {} })}><option value="ROTATION">Work day / day off rotation</option><option value="WEEKDAYS">Weekdays</option></select></label>
-        {(draft.mode === "WEEKDAYS" ? WEEKDAY_SLOTS : ROTATION_SLOTS).map((slot) => <label key={slot} style={{ display: "block", marginTop: 8 }}>{slotLabel(slot)}<select aria-label={slotLabel(slot)} style={{ width: "100%" }} value={draft.slots[slot] ?? ""} onChange={(e) => setDraft((old) => { const slots = { ...old.slots }; if (e.target.value) slots[slot] = e.target.value; else delete slots[slot]; return { ...old, slots }; })}><option value="">No assigned session</option>{draft.slots[slot] && !data.templates.some((t) => t.id === draft.slots[slot]) && <option value={draft.slots[slot]}>Unavailable template</option>}{data.templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>)}
-        <p className="meta">SAVE confirms these assignments. Days beyond a third consecutive work/off day remain unassigned.</p><button type="button" className="btn-primary" onClick={() => void save(draft)}>SAVE PROGRAMME</button><button type="button" className="btn-secondary" onClick={() => setEditing(false)}>CANCEL</button>
-        {data.revision.programme && <button type="button" className="btn-secondary" onClick={() => void save(null)}>CONFIRM CLEAR PROGRAMME</button>}
+        {plannedTemplate && <button type="button" className="btn-secondary" disabled={disabled || startDisabled || busy} onClick={() => onStart(plannedTemplate.id)}>START PLANNED WORKOUT</button>}
+        <p className="meta">Your own plan. Existing capacity and recovery advice still applies. Skipping changes nothing.</p>
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={beginAssignments}>EDIT PROGRAMME</button>
+        <button type="button" className="btn-secondary" disabled={disabled || busy || data.customTemplates.length < 3} onClick={beginActivation}>ACTIVATE A → B → C</button>
+      </> : <>
+        <p className="meta">Activate three saved custom workouts as one sequence, or assign templates to weekdays or work/day-off slots. Neither changes recovery authority.</p>
+        <button type="button" className="btn-primary" disabled={disabled || busy || data.customTemplates.length < 3} onClick={beginActivation}>ACTIVATE A → B → C</button>
+        {data.customTemplates.length < 3 && <p className="meta">Save three custom workout templates before activating a sequence.</p>}
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={beginAssignments}>EDIT PROGRAMME</button>
+      </>}
+
+      {activating && <fieldset disabled={busy || disabled} style={{ minWidth: 0 }}><legend>Review A → B → C activation</legend>
+        {(["A", "B", "C"] as const).map((memberKey, index) => <label key={memberKey} style={{ display: "block", marginTop: 8 }}>{memberKey}<select aria-label={`Sequence ${memberKey}`} style={{ width: "100%" }} value={memberIds[index]} onChange={(event) => setMemberIds((old) => { const next = [...old] as [string, string, string]; next[index] = event.target.value; if (!startId || !next.includes(startId)) setStartId(next[0]); return next; })}><option value="">Choose a saved workout</option>{data.customTemplates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>)}
+        <label style={{ display: "block", marginTop: 8 }}>Begin with<select aria-label="First sequence member" style={{ width: "100%" }} value={startId} onChange={(event) => setStartId(event.target.value)}>{memberIds.map((id, index) => id && <option key={`${id}-${index}`} value={id}>{(["A", "B", "C"] as const)[index]}</option>)}</select></label>
+        {!activationReady && <p className="meta">Choose three different, available custom workouts.</p>}
+        {selectedTemplates.map((template, index) => template && <div key={`${template.id}-${index}`} className="quiet-fact"><h3>{(["A", "B", "C"] as const)[index]} · {template.name}</h3><ol>{template.exercises.map((exercise) => <li key={exercise.exerciseId}>{exercise.name} · {exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</li>)}</ol></div>)}
+        <p className="meta">CONFIRM stores these exact reviewed templates. STANDARD complete with a working set advances; STANDARD partial holds. REDUCED complete or partial with a working set advances. Recovery, abandoned, zero-set and non-member sessions hold.</p>
+        <button type="button" className="btn-primary" disabled={!activationReady} onClick={() => { editingVersion.current = data.revision.id; void save(buildSequenceProgramme(memberIds, data.customTemplates, startId), "A → B → C activated. No workout was started."); }}>CONFIRM ACTIVATION</button>
+        <button type="button" className="btn-secondary" onClick={() => setActivating(false)}>CANCEL</button>
+      </fieldset>}
+
+      {editing && <fieldset disabled={busy || disabled} style={{ minWidth: 0 }}><legend>Programme assignments</legend><label>Follow<select aria-label="Programme mode" value={draft.mode} onChange={(event) => setDraft({ mode: event.target.value as AssignedTrainingProgramme["mode"], slots: {} })}><option value="ROTATION">Work day / day off rotation</option><option value="WEEKDAYS">Weekdays</option></select></label>
+        {(draft.mode === "WEEKDAYS" ? WEEKDAY_SLOTS : ROTATION_SLOTS).map((slot) => <label key={slot} style={{ display: "block", marginTop: 8 }}>{slotLabel(slot)}<select aria-label={slotLabel(slot)} style={{ width: "100%" }} value={draft.slots[slot] ?? ""} onChange={(event) => setDraft((old) => { const slots = { ...old.slots }; if (event.target.value) slots[slot] = event.target.value; else delete slots[slot]; return { ...old, slots }; })}><option value="">No assigned session</option>{draft.slots[slot] && !data.templates.some((template) => template.id === draft.slots[slot]) && <option value={draft.slots[slot]}>Unavailable template</option>}{data.templates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>)}
+        <p className="meta">SAVE confirms these assignments. Days beyond a third consecutive work/off day remain unassigned.</p><button type="button" className="btn-primary" onClick={() => void save(draft, "Programme saved. No workout was started.")}>SAVE PROGRAMME</button><button type="button" className="btn-secondary" onClick={() => setEditing(false)}>CANCEL</button>
+        {data.revision.programme && <button type="button" className="btn-secondary" onClick={() => void save(null, "Programme cleared. Past workouts are unchanged.")}>CONFIRM CLEAR PROGRAMME</button>}
       </fieldset>}
       {receipt && <p role="status">{receipt}</p>}
     </>}

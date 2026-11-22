@@ -128,18 +128,20 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   designs only. Muscle coverage is a proxy, never proof of growth; estimated strength is not an
   observed test. Prior free-exercise-db research remains a field-shape donor, not a bulk-import or
   content license. The read-only calibration preview (#608), ephemeral A/B/C draft (#609) and atomic
-  owner-confirmed three-template save (#610) are now built. Programme activation, ordered sequence
-  authority, linked short/home variants and programme-level adaptation remain unimplemented.
+  owner-confirmed three-template save (#610) are now built. The current #612 candidate adds explicit
+  ordered sequence activation; linked short/home variants and programme-level adaptation remain
+  unimplemented.
 
 - **Sequence activation design (design only, 2026-11-21):**
   [`GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md`](../GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md) reconciles the
   merged guided draft/template-save work with current custom templates, `TRAIN_PROGRAM_SET`, workout
   outcomes, capacity/recovery and planning. Current weekday/WORK-OFF assignments and the built-in
   Engine A/B/C selector are different systems; neither represents Gavin's approved date-independent
-  custom-template sequence. Future implementation should deepen the existing causal programme
-  revision with an explicit SEQUENCE mode and derive next-member state from qualifying outcomes,
-  rather than add a mutable cursor/table or infer by names/dates. Runtime semantics are unchanged;
-  linked short/home variants, planning connection and activation all remain separately Protected.
+  custom-template sequence. The `GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001` candidate deepens the existing
+  causal programme revision with an explicit SEQUENCE mode and derives next-member state from qualifying outcomes,
+  rather than add a mutable cursor/table or infer by names/dates. Existing capacity/recovery,
+  working-set, RED-override and progression semantics are unchanged;
+  linked short/home variants and planning connection remain separately Protected.
 
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /

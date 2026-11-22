@@ -3693,3 +3693,27 @@ the merged Integrated Health Mission and current TRAIN implementation.
   never presented as an observed test.
 - **Scope boundary:** exercise demonstrations are deferred. This ruling authorizes no code,
   navigation, schema, provider, dependency, programme activation or recommendation change.
+
+## 2026-11-22 — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001: owner-confirmed sequence, derived position
+
+**Protected owner authorization.** Gavin may activate exactly three existing active custom workout
+templates as one explicitly reviewed A → B → C sequence. The programme stores the confirmed member
+identity and exact reviewed content in the existing `TRAIN_PROGRAM_SET` revision chain; it does not
+add a table or mutable position cursor. The next member is derived from the activation revision and
+causally ordered recorded workout outcomes.
+
+- STANDARD completed with at least one working set advances; STANDARD partial holds.
+- REDUCED completed or partial with at least one working set advances.
+- RECOVERY, abandoned, zero-working-set and non-member sessions hold. An explicitly completed
+  out-of-order member advances from that member.
+- Dates never advance the sequence and missed time creates no catch-up debt. Sequence selects the
+  workout identity; existing capacity and RED override authority still select or guard its form.
+- Changed, archived, missing or causally incomplete member evidence pauses guided START NEXT and
+  explains why. Direct owner workout choice remains available.
+- Activation, replacement, undo/prior restoration and deactivation are explicit stale-write-guarded
+  owner actions. Existing weekday and WORK/OFF modes, history, progression and backup compatibility
+  remain supported.
+
+This ruling does not authorize linked short/home variants, programme adaptation, Week Planner/Week
+Ahead changes, exercise-content changes, schemas, dependencies, providers or primary-navigation
+changes.
