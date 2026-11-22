@@ -1,4 +1,47 @@
-# Current objective — GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001 (2026-11-21)
+# Current objective — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001 (2026-11-22)
+
+- **Owner authorization / lane:** Gavin approved a **PROTECTED implementation** allowing exactly
+  three reviewed custom templates to activate as a derived A → B → C sequence. No calendar planner,
+  linked fallback, adaptation, exercise-content, schema/table/dependency/provider, navigation or
+  Drive change.
+- **Starting master / Builder:** `29458b7ec46407bb077a0d173a1ea705ad054203` after #611; Builder
+  Codex; branch `codex/grayson-train-sequence-activate-001`;
+  [PR #612](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/612).
+- **Brief:** [`GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001.md`](GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001.md).
+- **Candidate:** extends existing `TrainingProgramme` / `TRAIN_PROGRAM_SET` with exact member
+  snapshots and derives next from activation plus qualifying workout outcomes. TRAIN exposes the
+  active sequence, evidence/WHY, separate capacity form and START NEXT. Changed, archived, missing
+  or incomplete evidence abstains without blocking direct choice. Undo restores the prior programme;
+  deactivation and every replacement use the existing stale-write guard.
+- **Authority preserved:** STANDARD/REDUCED/RECOVERY, working-set and RED override behavior remain
+  existing authority. Weekday and WORK/OFF programmes, direct workout choice, progression, history
+  and native backup remain compatible; no cursor, table or schema was added.
+- **Verification:** typecheck, architecture and production/PWA build pass. Focused programme Node
+  tests pass 13/13, including sequence advancement/holds, out-of-order completion, abstention,
+  stale writes, position-preserving restoration and backup. Affected TRAIN plan/sequence Chromium
+  passes 10/10. Built-PWA
+  review/confirmation/active evidence at 320/360/412 px has no overflow or page errors in
+  [`docs/screenshots/grayson-train-sequence-activate-001/`](../screenshots/grayson-train-sequence-activate-001/).
+  Required CI and independent exact-head review remain pending; no physical-phone check yet.
+- **Review history:** independent review BLOCKED prior head `04bb3858` on false WHY copy for direct
+  choices, missing undo/deactivation confirmation, prior-sequence position loss on restoration and
+  conflated capacity/manual-form labeling. The candidate now repairs all four and adds focused proof.
+  The earlier CI shard's sole failure was a stale plan-draft test looking for the pre-#610 exit label;
+  it now closes through the visible CLOSE control and passes locally. Renewed exact-head review and
+  clean CI are required.
+- **Renewed review:** the reviewer confirmed those four repairs but BLOCKED head `1c844d0b` on two
+  remaining clarity gaps: non-member direct-choice consequences and exact restore contents. The
+  candidate now distinguishes out-of-order sequence members from non-members (which never advance
+  the sequence), and restore confirmation enumerates the prior A/B/C members or prior slot
+  assignments before writing. Chromium proves both direct-choice cases and the exact weekday restore.
+  A final new-head review is required.
+- **Concurrent work:** root research changes remain untouched.
+- **Next:** finish diff/risk checks, open the PR, obtain green required CI and independent exact-head
+  review, then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001 (merged as PR #611)
 
 - **Owner authorization / lane:** Gavin approved a **PROTECTED documentation/design-only** objective
   for explicit activation of saved A/B/C templates as one ordered programme. No runtime, programme,

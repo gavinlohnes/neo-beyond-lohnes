@@ -89,7 +89,7 @@ describe("TRAIN-HOME-001", () => {
     await screen.getByRole("button", { name: "MINIMUM" }).click();
     await screen.getByRole("button", { name: "CONTINUE" }).click();
     await expect.element(screen.getByText(/Nothing has been activated/i)).toBeVisible();
-    await screen.getByRole("button", { name: "RETURN TO TRAIN" }).click();
+    await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
     await expect.element(trigger).toHaveFocus();
     expect(await db.events.count()).toBe(beforeEvents);
     expect(await db.workoutSessions.count()).toBe(beforeSessions);
