@@ -10,6 +10,9 @@ import { getObligation } from "../../src/application/intentQueries";
 import { saveTrainingProgramme } from "../../src/application/trainingProgramme";
 import { applyAnyRestore } from "../../src/persistence/restore";
 import type { GoogleCalendarEvent } from "../../src/application/googleCalendar";
+import { createCustomTemplate } from "../../src/application/customTemplateCommands";
+import { buildSequenceProgramme, getProgrammeView } from "../../src/application/trainingProgrammeQueries";
+import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 
 const now = new Date(2026, 10, 14, 12);
 beforeEach(async () => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(now); await db.open(); });
@@ -34,6 +37,33 @@ it("your weekday programme is an assignment even without a known work forecast",
   const result = await getWeekPlanner(now);
   expect(result.days[0]?.workout).toEqual({ label: "Workout B", basis: "ASSIGNED" });
   expect(result.days[1]?.workout.basis).toBe("UNASSIGNED");
+});
+it("projects one unchanged next sequence member onto real opportunities without calendar advancement", async () => {
+  const { id: _id, createdAt: _created, updatedAt: _updated, ...pattern } = DEFAULT_SCHEDULE_PATTERN;
+  await updateSchedulePattern(pattern);
+  const templates = await Promise.all((["Planning A", "Planning B", "Planning C"] as const).map((name, index) => createCustomTemplate({
+    name,
+    exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+  const sequence = buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates, templates[1]!.id);
+  await saveTrainingProgramme(sequence, null);
+  const before = await db.events.count();
+
+  const first = await getWeekPlanner(now);
+  expect(first.trainingConnection).toMatchObject({ status: "READY", key: "B", name: "Planning B" });
+  const opportunities = first.days.filter((day) => day.suggestedTemplate);
+  expect(opportunities.length).toBeGreaterThan(0);
+  expect(opportunities.every((day) => day.workout.basis === "SUGGESTED")).toBe(true);
+  expect(first.days.filter((day) => !day.suggestedTemplate).every((day) => day.workout.basis === "UNASSIGNED")).toBe(true);
+
+  const tomorrow = await getWeekPlanner(new Date(2026, 10, 15, 12));
+  expect(tomorrow.trainingConnection).toMatchObject({ status: "READY", key: "B", name: "Planning B" });
+  const target = first.days.find((day) => day.basis === "PREDICTED" && day.date > first.date)!;
+  await confirmScheduleException({ date: target.date, kind: target.work === "WORK" ? "OFF" : "WORK", note: "Changed availability" });
+  const changed = await getWeekPlanner(now);
+  expect(changed.trainingConnection).toMatchObject({ status: "READY", key: "B", name: "Planning B" });
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+  expect(await db.events.count()).toBe(before); // no programme/workout event was added
 });
 it("moves only planned attention, keeps deadline/recurrence, no-ops same dates and survives native restore", async () => {
   const task = await createObligation({ title: "Dentist", dueAt: "2026-11-15", plannedAt: "2026-11-14", recurrence: { rrule: "FREQ=WEEKLY;BYDAY=SU" } });

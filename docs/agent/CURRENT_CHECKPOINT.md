@@ -1,4 +1,30 @@
-# Current objective — PR #584 takeover: METRIC-PAGE-002 slice 3 (2026-11-22)
+# Current objective — GRAYSON-TRAIN-PLANNING-CONNECTION-001 (2026-11-22)
+
+- **Owner authorization / lane:** Gavin approved a **PROTECTED implementation** connecting the
+  active A → B → C sequence to existing Week Planner and Week Ahead training opportunities. No
+  fixed-date assignment, catch-up debt, time advancement, capacity/recovery, Engine/recommendation,
+  command/event/schema, navigation, dependency/provider or Drive change.
+- **Starting master / Builder:** `c881ac1e3789d64c6dd505a4deb2c3cd09627900` after merged #584;
+  Builder Codex; branch `codex/grayson-train-planning-connection-001`; PR pending.
+- **Brief / campaign:** [`GRAYSON-TRAIN-PLANNING-CONNECTION-001.md`](GRAYSON-TRAIN-PLANNING-CONNECTION-001.md), C4.4t.
+- **Candidate:** one read-only connection projects TRAIN's same authoritative next member and WHY
+  onto every already-eligible planning opportunity. Dates never select or advance it; missing an
+  opportunity changes nothing; review-required evidence abstains and points back to TRAIN.
+- **Reuse boundary:** existing Week Ahead eligibility, Week Planner composition and
+  `getProgrammeView` are reused. PlannerDay/work-run data keeps its prior suggestion meaning so the
+  new sequence overlay changes only the two owner-approved presentations.
+- **Concurrent work:** protected PR #606 and the root research changes remain unrelated and untouched.
+- **Local verification:** Week Planner/work-run integration passes 16/16. The focused real-Chromium
+  journey passes 4/4 at 320/360/412 px, with no overflow or axe violations; it proves READY and
+  review-required states and read-only sequence behavior. Typecheck, architecture boundaries and
+  production/PWA build pass. Representative evidence is in
+  [`docs/screenshots/grayson-train-planning-connection-001/`](../screenshots/grayson-train-planning-connection-001/).
+- **Review / next:** finish diff/risk checks, open the PR, obtain green required CI and independent
+  exact-head review, repair only in-scope findings, then return for Gavin's merge approval.
+
+---
+
+# Historical — PR #584 takeover: METRIC-PAGE-002 slice 3 (merged 2026-11-22)
 
 - **Owner authorization / lane:** Gavin explicitly authorized Codex to take over PR #584, reconcile
   it with current Project Grayson/TRAIN truth, preserve its bounded scope, verify it and return it for

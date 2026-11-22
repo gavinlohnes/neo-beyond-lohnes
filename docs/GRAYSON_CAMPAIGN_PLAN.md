@@ -82,7 +82,8 @@ status of its own.
 | C4.4d | Guided three-session plan draft | Done (#609) | Ephemeral A/B/C and reality-form preview; no save/activation and does not start C4.4 |
 | C4.4s | Owner-confirmed A/B/C template save | Done (#610) | Exact review plus atomic custom-template creation; no programme activation, assignment or C4.4 behavior |
 | C4.4q | Ordered sequence activation design | Done (#611) | Protected design only: date-independent next-member, recovery and failure semantics; no runtime change or C4.4 behavior |
-| C4.4r | Owner-confirmed A/B/C sequence activation | In progress | Existing programme history plus qualifying workout outcomes; preserves capacity/recovery authority and does not start C4.4 training-to-night behavior |
+| C4.4r | Owner-confirmed A/B/C sequence activation | Done (#612) | Existing programme history plus qualifying workout outcomes; preserves capacity/recovery authority and does not start C4.4 training-to-night behavior |
+| C4.4t | Connect next sequence member to week opportunities | In progress | Read-only Week Planner/Week Ahead composition; no fixed dates, time advancement, catch-up debt or new planning semantics |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
