@@ -2,11 +2,15 @@ export type TrainingFocus = "Chest" | "Triceps" | "Traps" | "Back" | "Legs" | "S
 export type SessionMinutes = 35 | 50 | 65;
 
 export interface DraftExercise {
+  exerciseId: string;
   name: string;
   role: string;
   muscles: TrainingFocus[];
   sets: number;
   reps: string;
+  repRangeLow: number;
+  repRangeHigh: number;
+  incrementLbs: number;
   home: string;
 }
 
@@ -20,7 +24,33 @@ export interface DraftSession {
   home: DraftExercise[];
 }
 
-const ex = (name: string, role: string, muscles: TrainingFocus[], sets: number, reps: string, home: string): DraftExercise => ({ name, role, muscles, sets, reps, home });
+const PRESCRIPTIONS: Record<string, Pick<DraftExercise, "exerciseId" | "repRangeLow" | "repRangeHigh" | "incrementLbs">> = {
+  "Barbell Bench Press": { exerciseId: "barbell-bench-press", repRangeLow: 6, repRangeHigh: 8, incrementLbs: 5 },
+  "Leg Press": { exerciseId: "leg-press", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 10 },
+  "Seated Cable Row": { exerciseId: "seated-cable-row", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 },
+  "Triceps Pressdown": { exerciseId: "triceps-pressdown", repRangeLow: 10, repRangeHigh: 15, incrementLbs: 5 },
+  "Dumbbell Shrug": { exerciseId: "dumbbell-shrug", repRangeLow: 10, repRangeHigh: 15, incrementLbs: 5 },
+  "Sit-Up Practice": { exerciseId: "sit-up-practice", repRangeLow: 8, repRangeHigh: 15, incrementLbs: 5 },
+  "Hamstring Mobility": { exerciseId: "hamstring-mobility", repRangeLow: 1, repRangeHigh: 1, incrementLbs: 5 },
+  "Dumbbell Romanian Deadlift": { exerciseId: "dumbbell-romanian-deadlift", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 },
+  "Lat Pulldown": { exerciseId: "lat-pulldown", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 },
+  "Machine Shoulder Press": { exerciseId: "machine-shoulder-press", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 10 },
+  "Incline Dumbbell Press": { exerciseId: "incline-dumbbell-press", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 },
+  "Face Pull": { exerciseId: "face-pull", repRangeLow: 12, repRangeHigh: 15, incrementLbs: 5 },
+  "Plank or Dead Bug": { exerciseId: "plank-or-dead-bug", repRangeLow: 6, repRangeHigh: 12, incrementLbs: 5 },
+  "Reverse Lunge": { exerciseId: "reverse-lunge", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 },
+  "One-Arm Dumbbell Row": { exerciseId: "one-arm-dumbbell-row", repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 },
+  "Pec Deck": { exerciseId: "pec-deck", repRangeLow: 10, repRangeHigh: 15, incrementLbs: 10 },
+  "Overhead Triceps Extension": { exerciseId: "overhead-triceps-extension", repRangeLow: 10, repRangeHigh: 15, incrementLbs: 5 },
+  "Standing Calf Raise": { exerciseId: "standing-calf-raise", repRangeLow: 12, repRangeHigh: 20, incrementLbs: 5 },
+  "One-Minute Sit-Up Practice": { exerciseId: "one-minute-sit-up-practice", repRangeLow: 1, repRangeHigh: 50, incrementLbs: 5 },
+};
+
+const ex = (name: string, role: string, muscles: TrainingFocus[], sets: number, reps: string, home: string): DraftExercise => {
+  const prescription = PRESCRIPTIONS[name];
+  if (!prescription) throw new Error(`Missing GRAYSON prescription for ${name}`);
+  return { ...prescription, name, role, muscles, sets, reps, home };
+};
 
 const BASE: DraftSession[] = [
   { id: "A", title: "Bench strength", purpose: "Practice the tested press while training legs, horizontal pull, triceps and core.", full: [
@@ -65,6 +95,21 @@ export function buildGraysonPlanDraft(focus: TrainingFocus[], minutes: SessionMi
     const home = full.slice(0, 5).map((item) => ({ ...item, name: item.home, role: `${item.role} · home`, sets: Math.min(item.sets, 2), reps: "comfortable, controlled" }));
     return { ...session, full, short, minimum, home };
   });
+}
+
+/** The exact owner-reviewable records GRAYSON can save; variants remain preview-only. */
+export function buildGraysonTemplateSetDraft(focus: TrainingFocus[], minutes: SessionMinutes) {
+  return buildGraysonPlanDraft(focus, minutes).map((session) => ({
+    name: `Grayson ${session.id} - ${session.title}`,
+    exercises: session.full.map(({ exerciseId, name, sets, repRangeLow, repRangeHigh, incrementLbs }) => ({
+      exerciseId,
+      name,
+      sets,
+      repRangeLow,
+      repRangeHigh,
+      incrementLbs,
+    })),
+  }));
 }
 
 export const TRAINING_FOCUS_OPTIONS: TrainingFocus[] = ["Chest", "Triceps", "Traps", "Back", "Legs", "Shoulders", "Core"];

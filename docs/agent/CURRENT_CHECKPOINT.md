@@ -1,4 +1,26 @@
-# Current objective — GRAYSON-TRAIN-PLAN-DRAFT-001 (2026-11-20)
+# Current objective — GRAYSON-TRAIN-PLAN-SAVE-001 (2026-11-21)
+
+- **Owner authorization / lane:** Gavin approved an explicit review-and-save journey that creates
+  three custom templates together; **PROTECTED**. No programme activation/assignment, recommendation,
+  sequence, Engine/progression/recovery, schema, dependency or primary-navigation change.
+- **Starting master / Builder:** `623e876a` after #609; Builder Codex; branch
+  `codex/grayson-train-plan-save-001`; [PR #610](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/610).
+- **Brief:** [`GRAYSON-TRAIN-PLAN-SAVE-001.md`](GRAYSON-TRAIN-PLAN-SAVE-001.md).
+- **Candidate outcome:** the merged draft exposes the exact three full-session records, then one
+  owner confirmation creates all three custom templates atomically with duplicate protection and a
+  visible receipt. Existing My Templates and native backup remain authoritative.
+- **Concurrent work:** #584 and #606 remain separate and untouched. The root research checkout and
+  its local changes remain untouched.
+- **Verification:** typecheck, architecture and production/PWA build pass. Draft/template unit and
+  command integration pass 26/26; focused Chromium passes 4/4. Built-PWA review/confirmation/receipt
+  evidence at 320/360/412 px has no overflow or page errors. Required CI and independent exact-head
+  review remain pending; no physical-phone check yet.
+- **Next:** finish bounded implementation evidence, push/open the PR, obtain green required CI and
+  independent exact-head review, then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-PLAN-DRAFT-001 (merged as PR #609)
 
 - **Owner authorization / lane:** Gavin said "Merged. Start next work" after the bounded guided
   three-session plan preview was identified as next. FEATURE; no save/activation or protected
@@ -14,8 +36,7 @@
   passes 2/2; broader TRAIN Chromium passes 100/100 across plan draft, TRAIN home/no-write,
   calibration, execution/operator and redesign regressions. Built-PWA evidence at 320/360/412 px has no overflow or page errors; screenshots are
   in `docs/screenshots/grayson-train-plan-draft-001/`. No physical-phone check yet.
-- **Next:** required CI and independent exact-head review,
-  then integration under DEV-FLOW-002.
+- **Merged result:** PR #609 merged into master at `623e876a` after required CI and owner approval.
 
 ---
 
