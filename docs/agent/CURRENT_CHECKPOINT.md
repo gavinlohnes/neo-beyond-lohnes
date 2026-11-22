@@ -5,7 +5,8 @@
   linked fallback, adaptation, exercise-content, schema/table/dependency/provider, navigation or
   Drive change.
 - **Starting master / Builder:** `29458b7ec46407bb077a0d173a1ea705ad054203` after #611; Builder
-  Codex; branch `codex/grayson-train-sequence-activate-001`; PR pending.
+  Codex; branch `codex/grayson-train-sequence-activate-001`;
+  [PR #612](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/612).
 - **Brief:** [`GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001.md`](GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001.md).
 - **Candidate:** extends existing `TrainingProgramme` / `TRAIN_PROGRAM_SET` with exact member
   snapshots and derives next from activation plus qualifying workout outcomes. TRAIN exposes the

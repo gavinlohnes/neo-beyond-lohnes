@@ -6,7 +6,8 @@
   Gavin's merge approval are required.
 - **Starting commit:** `29458b7ec46407bb077a0d173a1ea705ad054203` (fresh `origin/master`, including
   merged sequence design PR #611).
-- **Builder / branch / PR:** Codex; `codex/grayson-train-sequence-activate-001`; PR pending.
+- **Builder / branch / PR:** Codex; `codex/grayson-train-sequence-activate-001`;
+  [PR #612](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/612).
 - **Operator benefit:** Gavin can turn his three saved workouts into one inspectable A → B → C
   programme, see exactly what is next and why, then start the capacity-appropriate form without
   calendar debt or a hidden cursor.
