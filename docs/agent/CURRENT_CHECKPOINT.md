@@ -1,4 +1,34 @@
-# Current objective — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001 (2026-11-22)
+# Current objective — PR #584 takeover: METRIC-PAGE-002 slice 3 (2026-11-22)
+
+- **Owner authorization / lane:** Gavin explicitly authorized Codex to take over PR #584, reconcile
+  it with current Project Grayson/TRAIN truth, preserve its bounded scope, verify it and return it for
+  merge. FEATURE; read-only workout metric only. No Engine/programme/recommendation, command/event,
+  schema/backup, navigation, dependency/provider or Google Drive change.
+- **Current master / Builder:** `57290a0094d74987b6d0a05efd81b571b8732742` after #612; Builder
+  Codex (transferred from Claude Code); branch `claude/metric-page-002-workouts`;
+  [PR #584](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/584).
+- **Brief:** [`METRIC-PAGE-002.md`](METRIC-PAGE-002.md), slice 3.
+- **Candidate:** adds WORKOUTS to the existing shared metric detail, reached through DATA/BODY
+  progress. Completed and partial sessions are the established descriptive “finished workout” count;
+  abandoned/active sessions do not count. Recorded zero remains different from an unopened/missing
+  lived day. Custom names, weekly totals/usual and work/day-off coverage remain inspectable without
+  goals, streaks, pace or advice.
+- **Project Grayson boundary:** supporting evidence for future TRAIN Progress and Direction only. It
+  does not measure programme adherence, muscle/strength progress or whether training is working, and
+  it does not use or alter the stricter outcome rule that advances the active A → B → C sequence.
+- **Reconciliation:** current master merged cleanly; #607–#612 TRAIN work produced no code conflict.
+  Open protected PR #606 remains unrelated and untouched.
+- **Local verification:** metric domain/query tests pass 33/33; the real-Chromium WORKOUTS journeys
+  pass within the 11/11 shared metric-page suite, including 320/412/1024 px, honest zero/missing
+  treatment and axe checks. Typecheck, architecture boundaries and production/PWA build pass.
+  Representative 360 px evidence is in
+  [`docs/screenshots/metric-page-002/`](../screenshots/metric-page-002/).
+- **Review / next:** push the reconciled exact head, obtain green required CI and independent exact-head
+  review, repair only in-scope findings, then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001 (merged as PR #612)
 
 - **Owner authorization / lane:** Gavin approved a **PROTECTED implementation** allowing exactly
   three reviewed custom templates to activate as a derived A → B → C sequence. No calendar planner,

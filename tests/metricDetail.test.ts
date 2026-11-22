@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90, rangesFor, WEEK_MODE, DIGITS, weekCompare } from "../src/application/metricDetail";
+import { dailySeries, rangeValues, summarise, usualOf, workOffSplit, SPLIT_MIN_DAYS, direction90, rangesFor, WEEK_MODE, DIGITS, weekCompare, weekTotals, weeklyUsual, trainedSplit, WORKOUT_USUAL_MIN_WEEKS } from "../src/application/metricDetail";
 import { recentPeriods, type PeriodValue } from "../src/domain/health/measuredSeries";
 import { BASELINE_MIN_SAMPLES } from "../src/domain/health/baselines";
 
@@ -160,5 +160,37 @@ describe("METRIC-CHANGE-001 weekCompare: this lived week against last week", () 
     expect(weekCompare([day(0, 120), day(7, 150), day(8, 140), day(9, 1, true)], 5)).toBeNull();
     expect(weekCompare([day(0, 120), day(1, 118), day(7, 121), day(8, 123), day(9, 1, true)], 5)?.way).toBe("SAME");
     expect(weekCompare([day(0, 206.4), day(1, 206.0), day(7, 205.1), day(8, 204.9), day(9, null, true)], 1, 0, 1)).toMatchObject({ thisWeek: 205, lastWeek: 206.2, way: "LOWER" });
+  });
+});
+
+describe("METRIC-PAGE-002 slice 3: finished workouts", () => {
+  const day = (i: number, value: number | null, partial = false): PeriodValue => {
+    const from = new Date(2026, 10, 9 + i, 16, 30).getTime();
+    return { dayId: `d${i}`, from, to: new Date(2026, 10, 10 + i, 16, 30).getTime(), value, partial };
+  };
+  it("weeks are totals, the series keeps 0 for a recorded day without one and null for a missing day", () => {
+    expect(WEEK_MODE.workouts).toBe("sum");
+    expect(DIGITS.workouts).toBe(0);
+    expect(rangesFor("workouts").map(([id]) => id)).toEqual(["today", "7d", "30d", "1y"]);
+    const week = Array.from({ length: 7 }, (_, i) => pv(i, [1, 0, null, 1, 2, 0, 0][i]!));
+    expect(rangeValues(week, "1y", "sum").map((v) => v.value)).toEqual([4]);
+  });
+  it("this week so far and last week are plain totals, the day in progress included; quiet until last week has a recorded day", () => {
+    const series = [day(0, 1), day(1, 0), day(2, null), day(3, 1), day(4, 0), day(5, 1), day(6, 0), day(7, 0), day(8, 1), day(9, 1, true)];
+    expect(weekTotals(series)).toEqual({ thisWeek: 2, lastWeek: 3 });
+    expect(weekTotals([day(7, 1), day(8, 0, true)])).toBeNull();
+  });
+  it("the usual is the median weekly total of the last 8 finished weeks, once there are 4", () => {
+    const weeks = (totals: number[]) => totals.flatMap((t, w) => Array.from({ length: 7 }, (_, i) => pv(w * 7 + i, i < t ? 1 : 0)));
+    expect(weeklyUsual(weeks([3, 2, 4]))).toEqual({ value: null, samples: 3, need: WORKOUT_USUAL_MIN_WEEKS });
+    expect(weeklyUsual(weeks([5, 5, 3, 2, 4, 3, 3, 4, 2, 6]))).toMatchObject({ value: 3, samples: 8 });
+    // The week in progress never counts.
+    const live = [...weeks([3, 3, 3, 3]), ...Array.from({ length: 7 }, (_, i) => pv(28 + i, 1, `d${28 + i}`, i === 6))];
+    expect(weeklyUsual(live)).toMatchObject({ value: 3, samples: 4 });
+  });
+  it("work days against days off count the days that had a finished workout, never a median", () => {
+    const series = Array.from({ length: 10 }, (_, i) => pv(i, i === 9 ? null : i % 3 === 0 ? 1 : 0));
+    const ctx = (id: string) => (Number(id.slice(1)) % 2 ? "WORK" : "OFF");
+    expect(trainedSplit(series, ctx)).toEqual({ work: { days: 4, trained: 1 }, off: { days: 5, trained: 2 } });
   });
 });

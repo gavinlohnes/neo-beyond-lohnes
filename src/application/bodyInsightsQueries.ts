@@ -21,6 +21,9 @@ export interface InsightDay {
 export interface InsightPoint { id: string; at: string; value: number; source?: { beyondDayId: string; rootEventId?: string } }
 export interface BodyInsights { days: InsightDay[]; readAt: string; weightSources?: SourceWeighIn[] }
 
+/** A finished workout: completed or partial, as BEYOND's progress has always counted it (abandoned and active aren't). */
+export const isFinishedWorkout = (workout: { status: string }) => workout.status === "COMPLETED" || workout.status === "PARTIAL";
+
 /** Presentation-only, existing effective ledger values; no score, inference or write. */
 export function insightDay(day: DaySummary, macros?: { carbs: number; fat: number }): InsightDay {
   const mainLogs = day.sleep.primaryLogs ?? [];
@@ -32,7 +35,7 @@ export function insightDay(day: DaySummary, macros?: { carbs: number; fat: numbe
     // A sum of two main-sleep entries is not one reliable sleep observation.
     ...(mainLogs.length === 1 ? { sleep: mainLogs[0]!.minutes / 60 } : {}),
     mainSleepEntries: mainLogs.length,
-    workouts: day.workouts.filter((workout) => workout.status === "COMPLETED" || workout.status === "PARTIAL").length,
+    workouts: day.workouts.filter(isFinishedWorkout).length,
     ...(macros ? macros : {}),
   };
 }

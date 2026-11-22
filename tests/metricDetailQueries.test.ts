@@ -3,6 +3,8 @@ import { db } from "../src/persistence/db";
 import { startDay, logWater, correctWater, voidWaterLog } from "../src/application/commands";
 import { getHydrationEntries } from "../src/application/queries";
 import { getMetricDetail } from "../src/application/metricDetailQueries";
+import { archiveCustomTemplate, createCustomTemplate } from "../src/application/customTemplateCommands";
+import { WORKOUT_TEMPLATES } from "../src/domain/workout/types";
 
 beforeEach(async () => { await db.delete(); await db.open(); vi.useFakeTimers({ toFake: ["Date"] }); });
 
@@ -222,5 +224,37 @@ it("METRIC-PAGE-002 slice 2: with no weigh-in there is no protein target, never 
     expect(d.target).toBeUndefined();
     expect(d.series.every((v) => v.value === null)).toBe(true);
     expect(d.today).toMatchObject({ kind: "logged", points: [{ total: 0 }] });
+  } finally { vi.useRealTimers(); }
+});
+
+it("METRIC-PAGE-002 slice 3: workouts count completed and partial sessions per lived day; abandoned and active don't; a recorded day without one is 0; read without writing", async () => {
+  const { startWorkout, completeWorkout, abandonWorkout } = await import("../src/application/trainCommands");
+  try {
+    vi.setSystemTime(new Date(2026, 10, 10, 18));
+    const first = await startDay();
+    const a = await startWorkout(first.id, "A", "STANDARD");
+    await completeWorkout(first.id, a.id, "STANDARD", "COMPLETED", 50);
+    const b = await startWorkout(first.id, "B", "REDUCED");
+    await completeWorkout(first.id, b.id, "REDUCED", "PARTIAL", 20);
+    vi.setSystemTime(new Date(2026, 10, 11, 18));
+    const second = await startDay();
+    const gone = await startWorkout(second.id, "C", "STANDARD");
+    await abandonWorkout(second.id, gone.id, "STANDARD", 5);
+    vi.setSystemTime(new Date(2026, 10, 13, 18)); // Nov 12 never opened: a gap
+    const third = await startDay();
+    const custom = await createCustomTemplate({ name: "Grayson archived session", exercises: WORKOUT_TEMPLATES.A!.exercises });
+    const c = await startWorkout(third.id, custom.id, "STANDARD");
+    vi.setSystemTime(new Date(2026, 10, 13, 19));
+    await completeWorkout(third.id, c.id, "STANDARD", "COMPLETED", 45);
+    await archiveCustomTemplate(custom.id);
+    await startWorkout(third.id, "B", "STANDARD"); // still active: not finished, not counted
+    vi.setSystemTime(new Date(2026, 10, 13, 20));
+    const before = await db.events.toArray();
+    const d = await getMetricDetail("workouts");
+    expect(d.source).toBe("LOGGED");
+    expect(d.series.slice(-4).map((v) => v.value)).toEqual([2, 0, null, 1]); // the unopened day is missing, never 0
+    expect(d.today).toMatchObject({ kind: "sessions", sessions: [{ label: "Grayson archived session", sessionType: "STANDARD", status: "COMPLETED", durationMinutes: 60 }] });
+    expect(d.usual).toMatchObject({ value: null, need: 4 });
+    expect(await db.events.toArray()).toEqual(before);
   } finally { vi.useRealTimers(); }
 });
