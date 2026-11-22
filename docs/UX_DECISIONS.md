@@ -3664,3 +3664,56 @@ history and existing sharing boundaries; they do not automatically alter Engine 
 recommendation semantics or Mission authority. This slice adds no provider, autonomous inference,
 hidden profile, schema or primary-navigation change. Mounted-session resumption does not establish a
 new persisted guided-session contract.
+
+## 2026-11-20 — GRAYSON-TRAIN-INTELLIGENCE-001: guided training with restrained adaptation
+
+**Protected documentation/design-only owner authorization.** The canonical design is
+[`GRAYSON_TRAIN_INTELLIGENCE.md`](GRAYSON_TRAIN_INTELLIGENCE.md). It refines, rather than replaces,
+the merged Integrated Health Mission and current TRAIN implementation.
+
+- **Programme identity:** a sequenced three-day full-body A/B/C Mission, not fixed weekdays. A
+  permanent balanced foundation remains beneath zero-to-three owner-selected emphasis areas.
+- **Training Emphasis Rule:** focus runs in four-to-six-week blocks. Weekly flexibility may move,
+  reduce or temporarily substitute work; it changes dosage, not programme identity. Gavin chooses a
+  new emphasis.
+- **Calibration:** the first exposures learn conservative working loads through preparation sets and
+  explicit feedback, not guessed loads or a forced maximum test. Proposed understandings remain
+  inspectable and owner-controlled.
+- **Delta Training Intervention Rule:** Delta stays quiet after normal sets; speaks briefly when
+  recorded evidence justifies an adjustment; responds immediately to reported pain or safety; gives
+  detail on request; and consolidates proposed learnings after the workout. It never claims to have
+  observed technique without an authorized observation source and never diagnoses pain.
+- **Adaptation:** change the smallest supported variable. One poor session ordinarily holds. Stalls
+  require multiple comparable exposures and context; associations do not become causes. Current
+  Engine progression, REDUCED/RECOVERY and programme-selection semantics remain authoritative until
+  separately amended.
+- **Progress:** TRAIN Progress and Direction composes the Mission, current emphasis, four performance
+  tracks, strength/coverage, consistency/recovery and one inspectable Delta assessment. A muscle map
+  navigates anatomy and planned/completed coverage; it does not claim hypertrophy. Estimated 1RM is
+  never presented as an observed test.
+- **Scope boundary:** exercise demonstrations are deferred. This ruling authorizes no code,
+  navigation, schema, provider, dependency, programme activation or recommendation change.
+
+## 2026-11-22 — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001: owner-confirmed sequence, derived position
+
+**Protected owner authorization.** Gavin may activate exactly three existing active custom workout
+templates as one explicitly reviewed A → B → C sequence. The programme stores the confirmed member
+identity and exact reviewed content in the existing `TRAIN_PROGRAM_SET` revision chain; it does not
+add a table or mutable position cursor. The next member is derived from the activation revision and
+causally ordered recorded workout outcomes.
+
+- STANDARD completed with at least one working set advances; STANDARD partial holds.
+- REDUCED completed or partial with at least one working set advances.
+- RECOVERY, abandoned, zero-working-set and non-member sessions hold. An explicitly completed
+  out-of-order member advances from that member.
+- Dates never advance the sequence and missed time creates no catch-up debt. Sequence selects the
+  workout identity; existing capacity and RED override authority still select or guard its form.
+- Changed, archived, missing or causally incomplete member evidence pauses guided START NEXT and
+  explains why. Direct owner workout choice remains available.
+- Activation, replacement, undo/prior restoration and deactivation are explicit stale-write-guarded
+  owner actions. Existing weekday and WORK/OFF modes, history, progression and backup compatibility
+  remain supported.
+
+This ruling does not authorize linked short/home variants, programme adaptation, Week Planner/Week
+Ahead changes, exercise-content changes, schemas, dependencies, providers or primary-navigation
+changes.

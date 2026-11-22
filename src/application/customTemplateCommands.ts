@@ -7,6 +7,7 @@ import {
   type CustomWorkoutTemplateInput,
   type CustomWorkoutTemplateModifyInput,
 } from "../persistence/workoutTemplateValidation";
+import { writeAtomically } from "./atomicWrite";
 
 /**
  * TRAIN-CREATE-002 (Custom Workout Templates, High-Risk Drop). A
@@ -33,6 +34,41 @@ export async function createCustomTemplate(input: CustomWorkoutTemplateInput): P
   };
   await db.customWorkoutTemplates.add(template);
   return template;
+}
+
+/**
+ * GRAYSON-TRAIN-PLAN-SAVE-001: one explicit confirmation creates the
+ * reviewed A/B/C set as one transaction. Validation and duplicate-name
+ * guards run before any row is added, so interruption or a stale retry
+ * cannot leave a partial plan behind. The records retain the existing
+ * directly-mutable template provenance (owner action + createdAt); no
+ * programme event, recommendation or second storage contract is added.
+ */
+export async function createCustomTemplateSet(inputs: readonly CustomWorkoutTemplateInput[]): Promise<CustomWorkoutTemplate[]> {
+  if (inputs.length !== 3) throw new Error("TRAIN_PLAN_SET_INVALID: exactly three templates are required.");
+  const parsed = inputs.map((input) => customWorkoutTemplateInputSchema.parse(input));
+  const normalizedNames = parsed.map((input) => input.name.trim().toLowerCase());
+  if (new Set(normalizedNames).size !== normalizedNames.length) {
+    throw new Error("TRAIN_PLAN_SET_DUPLICATE: every template needs a distinct name.");
+  }
+
+  return writeAtomically(["customWorkoutTemplates"], async () => {
+    const existing = await db.customWorkoutTemplates.toArray();
+    const activeNames = new Set(existing.filter((template) => !template.archivedAt).map((template) => template.name.trim().toLowerCase()));
+    if (normalizedNames.some((name) => activeNames.has(name))) {
+      throw new Error("TRAIN_PLAN_SET_EXISTS: one or more Grayson plan templates already exist. Review My Templates before saving again.");
+    }
+
+    const createdAt = new Date().toISOString();
+    const templates: CustomWorkoutTemplate[] = parsed.map((input) => ({
+      id: newId(),
+      name: input.name,
+      exercises: input.exercises,
+      createdAt,
+    }));
+    await db.customWorkoutTemplates.bulkAdd(templates);
+    return templates;
+  });
 }
 
 export async function updateCustomTemplate(

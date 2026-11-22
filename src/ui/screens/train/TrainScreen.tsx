@@ -30,6 +30,8 @@ import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
 import { GymMode } from "./GymMode";
+import { CalibrationPreview } from "./CalibrationPreview";
+import { TrainPlanDraft } from "./TrainPlanDraft";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -37,6 +39,7 @@ import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId
 import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
+import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
@@ -51,6 +54,7 @@ import { PlannedWorkCard } from "../today/PlannedWorkCard";
 import {
   getActiveWorkoutSession,
   getCurrentProgressionSuggestions,
+  getExerciseCues,
   getLastAdvancingTemplate,
   getLastPerformedSetForExercise,
   getLastStrengthSession,
@@ -164,7 +168,7 @@ interface CompletionSummary {
   setsLogged: number;
   setsSkipped: number;
   durationMinutes: number | null;
-  nextTemplate: WorkoutTemplateId;
+  nextLabel: string;
   advisoryChanges: { name: string; before: string; after: string }[];
   /** Drop 4: records set this session, in logged order, already worded for display. */
   records: string[];
@@ -197,6 +201,7 @@ export function TrainScreen({
   const [lastAdvancingTemplate, setLastAdvancingTemplate] = useState<WorkoutTemplateId | null>(null);
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
   const [chosenVariant, setChosenVariant] = useState<SessionType>("STANDARD");
+  const [capacityForm, setCapacityForm] = useState<SessionType>("STANDARD");
   // DECLUTTER-001: the template/variant override chips sit behind one
   // CHANGE tap so START WORKOUT stays on the first screen. Opens itself for
   // the TODAY → RECOVERY handoff, whose focus target is the RECOVERY chip.
@@ -236,6 +241,13 @@ export function TrainScreen({
   // when they aren't the prominent tool, so it structurally recedes
   // instead of consuming full footprint before any decision is made.
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
+  const [calibrationPreview, setCalibrationPreview] = useState<{
+    exercise: ExercisePrescription;
+    lastSet?: LastSetInfo;
+    cue?: string;
+    readError?: string;
+  } | null>(null);
+  const [planDraftOpen, setPlanDraftOpen] = useState(false);
   const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS">(recordsFocus ? "RECORDS" : "WORKOUT");
   const [visitedRecords, setVisitedRecords] = useState(recordsFocus !== null);
   const [visitedHistory, setVisitedHistory] = useState(false);
@@ -298,6 +310,8 @@ export function TrainScreen({
   // exercisesFor/templateLabel take this as an explicit argument rather
   // than reading component state themselves, so they stay pure functions.
   const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
+  const [sequenceProgramme, setSequenceProgramme] = useState<SequenceProgrammeView | null>(null);
+  const [programmeRefreshKey, setProgrammeRefreshKey] = useState(0);
   // TRAIN-CREATE-003: names only, offered as substitution quick-picks
   // alongside recentSubstitutions — never a foreign-key reference, same
   // free-text substitutedName field as today.
@@ -405,8 +419,13 @@ export function TrainScreen({
 
     const suggestion = suggestSessionVariant(cap, sleepShort);
     setNoCheckIn(suggestion.noCheckIn);
+    setCapacityForm(suggestion.variant === "RESET" ? "STANDARD" : suggestion.variant);
 
-    const nextTemplate = await suggestTemplateForNextWorkout();
+    const programmeView = await getProgrammeView();
+    setSequenceProgramme(programmeView.sequence);
+    const nextTemplate = programmeView.sequence?.status === "READY" && programmeView.sequence.nextMember
+      ? programmeView.sequence.nextMember.templateId
+      : await suggestTemplateForNextWorkout();
     setSuggestedTemplate(nextTemplate);
     if (!preserveChoice) templateChosenRef.current = false;
     if (!templateChosenRef.current) setChosenTemplate(nextTemplate);
@@ -872,7 +891,12 @@ export function TrainScreen({
         setsLogged,
         setsSkipped,
         durationMinutes,
-        nextTemplate: await suggestTemplateForNextWorkout(),
+        nextLabel: await (async () => {
+          const programme = await getProgrammeView();
+          return programme.sequence?.status === "READY" && programme.sequence.nextMember
+            ? `${programme.sequence.nextMember.key} · ${programme.sequence.nextMember.name}`
+            : `Template ${await suggestTemplateForNextWorkout()}`;
+        })(),
         advisoryChanges,
         records,
         volumeLbs,
@@ -947,6 +971,7 @@ export function TrainScreen({
   // (suggestedTemplate/describeTemplateSuggestion below still describe
   // only the locked A -> B -> C -> A suggestion, unchanged).
   const templateOptions: WorkoutTemplateId[] = [...WORKOUT_TEMPLATE_ORDER, ...customTemplates.map((t) => t.id)];
+  const sequenceNeedsReview = sequenceProgramme !== null && sequenceProgramme.status !== "READY" && !templateChosenRef.current;
   const activeExercises = session
     ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates)
     : [];
@@ -957,6 +982,25 @@ export function TrainScreen({
     customTemplates,
   );
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
+
+  async function openCalibrationPreview() {
+    const exercise = suggestedExercises[0];
+    if (!exercise || chosenVariant === "RECOVERY") return;
+    setCalibrationPreview({ exercise });
+    try {
+      const [lastSet, cues] = await Promise.all([
+        getLastPerformedSetForExercise(chosenTemplate, chosenVariant, exercise.exerciseId),
+        getExerciseCues(),
+      ]);
+      setCalibrationPreview((current) => current?.exercise.exerciseId === exercise.exerciseId
+        ? { exercise, ...(lastSet ? { lastSet } : {}), ...(cues.get(exercise.exerciseId) ? { cue: cues.get(exercise.exerciseId)! } : {}) }
+        : current);
+    } catch (error) {
+      setCalibrationPreview((current) => current?.exercise.exerciseId === exercise.exerciseId
+        ? { exercise, readError: describeError(error, "Could not read prior performance.") }
+        : current);
+    }
+  }
   // TRAIN-003 (Performance Brief): pure aggregation of already-fetched
   // state, recomputed on every render — no separate query/state needed.
   const progressionCounts = summarizeProgressionSuggestions(currentProgressionSuggestions);
@@ -1052,6 +1096,15 @@ export function TrainScreen({
 
   return (
     <div className="screen fade-in train-field train-operator bf" data-training-view={trainView} data-workout-active={Boolean(session)}>
+      {calibrationPreview && <CalibrationPreview
+        exercise={calibrationPreview.exercise}
+        templateLabel={templateLabel(chosenTemplate, customTemplates)}
+        {...(calibrationPreview.lastSet ? { lastSet: calibrationPreview.lastSet } : {})}
+        {...(calibrationPreview.cue ? { personalCue: calibrationPreview.cue } : {})}
+        {...(calibrationPreview.readError ? { readError: calibrationPreview.readError } : {})}
+        onClose={() => setCalibrationPreview(null)}
+      />}
+      {planDraftOpen && <TrainPlanDraft onClose={() => setPlanDraftOpen(false)} onSaved={() => { setProgrammeRefreshKey((value) => value + 1); void refresh(true); }} />}
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -1153,7 +1206,7 @@ export function TrainScreen({
               ))}
             </div>
           )}
-          <p className="meta" style={{ marginBottom: 8 }}>Next up: Template {completionSummary.nextTemplate}.</p>
+          <p className="meta" style={{ marginBottom: 8 }}>Next up: {completionSummary.nextLabel}.</p>
           {completionSummary.advisoryChanges.length > 0 && (
             <div style={{ marginTop: 8, marginBottom: 8 }}>
               <p className="meta" style={{ marginBottom: 4 }}>Next time:</p>
@@ -1206,7 +1259,7 @@ export function TrainScreen({
       {!session && !completionSummary && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
-            {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
+            {sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
           <h2 className="command-title">
             {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
@@ -1276,24 +1329,37 @@ export function TrainScreen({
           <button
             className="btn-primary"
             style={{ fontSize: 18, padding: "18px var(--space-4)" }}
-            disabled={busy}
+            disabled={busy || sequenceNeedsReview}
             onClick={() => void handleStart()}
           >
-            START WORKOUT
+            {sequenceNeedsReview
+              ? "CHOOSE A WORKOUT"
+              : sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember && chosenTemplate === sequenceProgramme.nextMember.templateId
+                ? chosenVariant === "RECOVERY" ? "START RECOVERY" : `START NEXT · ${sequenceProgramme.nextMember.key}`
+                : "START WORKOUT"}
           </button>
+          {sequenceNeedsReview && <p className="meta">The active sequence cannot name a safe next member from current evidence. Review it below, or use CHANGE to make a direct choice.</p>}
 
           {/* REAL-DATA-001: see the workout before starting it. The owner's real backup had 10 of 12
               workouts abandoned within seconds; looking should never cost an abandoned session. */}
           {chosenVariant !== "RECOVERY" && (
-            <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
-              {suggestedExercises.map((exercise, index) => (
-                <li key={exercise.exerciseId}>
-                  <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                  <span>{exercise.name}</span>
-                  <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
-                </li>
-              ))}
-            </ol>
+            <>
+              <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
+                {suggestedExercises.map((exercise, index) => (
+                  <li key={exercise.exerciseId}>
+                    <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <span>{exercise.name}</span>
+                    <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
+                  </li>
+                ))}
+              </ol>
+              <button type="button" className="btn-secondary" style={{ marginTop: 12 }} onClick={() => void openCalibrationPreview()}>
+                PREVIEW CALIBRATION
+              </button>
+              <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setPlanDraftOpen(true)}>
+                DRAFT MY 3-DAY PLAN
+              </button>
+            </>
           )}
 
 
@@ -1302,7 +1368,13 @@ export function TrainScreen({
               <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
               {chosenVariant !== "RECOVERY" && (
                 <p className="card-body" style={{ marginBottom: 6 }}>
-                  {describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
+                  {sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember
+                    ? chosenTemplate === sequenceProgramme.nextMember.templateId
+                      ? sequenceProgramme.why
+                      : sequenceProgramme.members.some((member) => member.templateId === chosenTemplate)
+                        ? `You chose sequence member ${sequenceProgramme.members.find((member) => member.templateId === chosenTemplate)!.key} · ${templateLabel(chosenTemplate, customTemplates)} out of order. The active sequence currently names ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} next. A qualifying completion advances from the member actually completed.`
+                        : `You chose ${templateLabel(chosenTemplate, customTemplates)} directly. It is not a member of the active A → B → C sequence, so completing it will not advance that sequence. ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} remains next.`
+                    : describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
                 </p>
               )}
               <p className="card-body">{VARIANT_MEANINGS}</p>
@@ -1350,8 +1422,9 @@ export function TrainScreen({
         );
       })()}
 
-      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} disabled={busy} startDisabled={!!session} onStart={(templateId) => {
-        const variant = chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant;
+      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm) => {
+        const requested = requestedForm ?? chosenVariant;
+        const variant = requestedForm ? requested : requested === "RECOVERY" ? "STANDARD" : requested;
         templateChosenRef.current = true; variantChosenRef.current = true;
         setChosenTemplate(templateId); setChosenVariant(variant);
         void handleStart(templateId, variant);

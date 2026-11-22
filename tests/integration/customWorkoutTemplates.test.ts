@@ -9,6 +9,7 @@ import { getProgressionSuggestion, getCurrentProgressionSuggestions } from "../.
 import {
   archiveCustomTemplate,
   createCustomTemplate,
+  createCustomTemplateSet,
   updateCustomTemplate,
 } from "../../src/application/customTemplateCommands";
 import {
@@ -93,6 +94,41 @@ describe("CustomWorkoutTemplate CRUD — directly mutable, no event trail of its
         exercises: [{ exerciseId: "x", name: "X", sets: 3, repRangeLow: 12, repRangeHigh: 8, incrementLbs: 5 }],
       }),
     ).rejects.toThrow();
+  });
+});
+
+describe("GRAYSON plan set — one owner-confirmed atomic save", () => {
+  const input = (name: string) => ({
+    name,
+    exercises: [{ exerciseId: name.toLowerCase(), name, sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 }],
+  });
+
+  it("creates all three with one timestamp and no programme event", async () => {
+    const saved = await createCustomTemplateSet([input("Grayson A"), input("Grayson B"), input("Grayson C")]);
+    expect(saved).toHaveLength(3);
+    expect(new Set(saved.map((template) => template.createdAt)).size).toBe(1);
+    expect(await db.customWorkoutTemplates.count()).toBe(3);
+    expect(await db.events.where("type").equals("TRAIN_PROGRAM_SET").count()).toBe(0);
+  });
+
+  it("rejects a stale retry without creating duplicates", async () => {
+    const set = [input("Grayson A"), input("Grayson B"), input("Grayson C")] as const;
+    await createCustomTemplateSet(set);
+    await expect(createCustomTemplateSet(set)).rejects.toThrow(/TRAIN_PLAN_SET_EXISTS/);
+    expect(await db.customWorkoutTemplates.count()).toBe(3);
+  });
+
+  it("validates the whole set before writing any row", async () => {
+    await expect(createCustomTemplateSet([input("Grayson A"), { ...input("Grayson B"), exercises: [] }, input("Grayson C")])).rejects.toThrow();
+    expect(await db.customWorkoutTemplates.count()).toBe(0);
+  });
+
+  it("keeps the confirmed set through the existing native backup contract", async () => {
+    await createCustomTemplateSet([input("Grayson A"), input("Grayson B"), input("Grayson C")]);
+    const blob = await db.export({ prettyJson: true });
+    await db.customWorkoutTemplates.clear();
+    await db.import(new File([blob], "grayson-plan.json", { type: "application/json" }), { clearTablesBeforeImport: true });
+    expect((await getCustomTemplates()).map((template) => template.name).sort()).toEqual(["Grayson A", "Grayson B", "Grayson C"]);
   });
 });
 

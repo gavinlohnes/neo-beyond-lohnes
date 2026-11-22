@@ -1,4 +1,181 @@
-# Current objective — GRAYSON-GUIDED-START-001 (2026-11-20)
+# Current objective — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001 (2026-11-22)
+
+- **Owner authorization / lane:** Gavin approved a **PROTECTED implementation** allowing exactly
+  three reviewed custom templates to activate as a derived A → B → C sequence. No calendar planner,
+  linked fallback, adaptation, exercise-content, schema/table/dependency/provider, navigation or
+  Drive change.
+- **Starting master / Builder:** `29458b7ec46407bb077a0d173a1ea705ad054203` after #611; Builder
+  Codex; branch `codex/grayson-train-sequence-activate-001`;
+  [PR #612](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/612).
+- **Brief:** [`GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001.md`](GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001.md).
+- **Candidate:** extends existing `TrainingProgramme` / `TRAIN_PROGRAM_SET` with exact member
+  snapshots and derives next from activation plus qualifying workout outcomes. TRAIN exposes the
+  active sequence, evidence/WHY, separate capacity form and START NEXT. Changed, archived, missing
+  or incomplete evidence abstains without blocking direct choice. Undo restores the prior programme;
+  deactivation and every replacement use the existing stale-write guard.
+- **Authority preserved:** STANDARD/REDUCED/RECOVERY, working-set and RED override behavior remain
+  existing authority. Weekday and WORK/OFF programmes, direct workout choice, progression, history
+  and native backup remain compatible; no cursor, table or schema was added.
+- **Verification:** typecheck, architecture and production/PWA build pass. Focused programme Node
+  tests pass 13/13, including sequence advancement/holds, out-of-order completion, abstention,
+  stale writes, position-preserving restoration and backup. Affected TRAIN plan/sequence Chromium
+  passes 10/10. Built-PWA
+  review/confirmation/active evidence at 320/360/412 px has no overflow or page errors in
+  [`docs/screenshots/grayson-train-sequence-activate-001/`](../screenshots/grayson-train-sequence-activate-001/).
+  Required CI and independent exact-head review remain pending; no physical-phone check yet.
+- **Review history:** independent review BLOCKED prior head `04bb3858` on false WHY copy for direct
+  choices, missing undo/deactivation confirmation, prior-sequence position loss on restoration and
+  conflated capacity/manual-form labeling. The candidate now repairs all four and adds focused proof.
+  The earlier CI shard's sole failure was a stale plan-draft test looking for the pre-#610 exit label;
+  it now closes through the visible CLOSE control and passes locally. Renewed exact-head review and
+  clean CI are required.
+- **Renewed review:** the reviewer confirmed those four repairs but BLOCKED head `1c844d0b` on two
+  remaining clarity gaps: non-member direct-choice consequences and exact restore contents. The
+  candidate now distinguishes out-of-order sequence members from non-members (which never advance
+  the sequence), and restore confirmation enumerates the prior A/B/C members or prior slot
+  assignments before writing. Chromium proves both direct-choice cases and the exact weekday restore.
+  A final new-head review is required.
+- **Concurrent work:** root research changes remain untouched.
+- **Next:** finish diff/risk checks, open the PR, obtain green required CI and independent exact-head
+  review, then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001 (merged as PR #611)
+
+- **Owner authorization / lane:** Gavin approved a **PROTECTED documentation/design-only** objective
+  for explicit activation of saved A/B/C templates as one ordered programme. No runtime, programme,
+  Engine/recommendation/command/event/schema, navigation, dependency, provider or Drive change.
+- **Starting master / Builder:** `b5eeead9` after #610; Builder Codex; branch
+  `codex/grayson-train-sequence-activation-design-001`;
+  [PR #611](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/611).
+- **Brief:** [`GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001.md`](GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001.md).
+- **Canonical candidate:**
+  [`GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md`](../GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md).
+- **Repository truth:** current programme modes assign templates to weekdays or WORK/OFF positions;
+  the Engine's built-in A/B/C selector is separate; custom templates have no ordered programme
+  cursor. Existing workout outcomes and `doesSessionAdvanceRotation` supply the reusable evidence.
+- **Design direction:** future SEQUENCE mode in the existing programme revision chain; next member
+  derived from activation plus qualifying recorded outcomes; capacity/recovery controls form;
+  dates never advance or create debt; changed/missing members force inspectable abstention.
+- **Recommended future slice:** `GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001`, bounded to exact activation,
+  TRAIN next-member projection/start, guarded undo/deactivation and failure handling. It is not
+  authorized and excludes planning, linked short/home variants and adaptation.
+- **Concurrent work:** #584 and #606 remain separate and untouched. Root research changes remain
+  untouched.
+- **Verification / review:** whitespace/diff checks pass; all referenced local repository paths
+  exist; committed risk classification is PROTECTED documentation/governance only. Required docs CI
+  and independent exact-head review remain pending.
+- **Next:** finish docs checks, open the PR, obtain green required CI and independent review, then
+  return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-PLAN-SAVE-001 (merged as PR #610)
+
+- **Owner authorization / lane:** Gavin approved an explicit review-and-save journey that creates
+  three custom templates together; **PROTECTED**. No programme activation/assignment, recommendation,
+  sequence, Engine/progression/recovery, schema, dependency or primary-navigation change.
+- **Starting master / Builder:** `623e876a` after #609; Builder Codex; branch
+  `codex/grayson-train-plan-save-001`; [PR #610](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/610).
+- **Brief:** [`GRAYSON-TRAIN-PLAN-SAVE-001.md`](GRAYSON-TRAIN-PLAN-SAVE-001.md).
+- **Candidate outcome:** the merged draft exposes the exact three full-session records, then one
+  owner confirmation creates all three custom templates atomically with duplicate protection and a
+  visible receipt. Existing My Templates and native backup remain authoritative.
+- **Concurrent work:** #584 and #606 remain separate and untouched. The root research checkout and
+  its local changes remain untouched.
+- **Verification:** typecheck, architecture and production/PWA build pass. Draft/template unit and
+  command integration pass 26/26; focused Chromium passes 4/4. Built-PWA review/confirmation/receipt
+  evidence at 320/360/412 px has no overflow or page errors. Required CI and independent exact-head
+  review remain pending; no physical-phone check yet.
+- **Merged result:** PR #610 merged into master at `b5eeead9` after required CI, independent review
+  and owner approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-PLAN-DRAFT-001 (merged as PR #609)
+
+- **Owner authorization / lane:** Gavin said "Merged. Start next work" after the bounded guided
+  three-session plan preview was identified as next. FEATURE; no save/activation or protected
+  programme/Engine/data semantics.
+- **Starting master / Builder:** `2747049e41165b879e927aa48b22bb3b1272ea6c` after #608;
+  Builder Codex; branch `codex/grayson-train-plan-draft-001`;
+  [PR #609](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/609).
+- **Brief:** [`GRAYSON-TRAIN-PLAN-DRAFT-001.md`](GRAYSON-TRAIN-PLAN-DRAFT-001.md).
+- **Outcome:** optional phone-first ephemeral setup for emphasis and time, then a balanced A/B/C
+  draft with full/short/minimum/home forms and explicit unsaved status.
+- **Concurrent work:** #584 and #606 remain separate and untouched.
+- **Verification:** typecheck, architecture and production/PWA build pass. Pure plan composition
+  passes 2/2; broader TRAIN Chromium passes 100/100 across plan draft, TRAIN home/no-write,
+  calibration, execution/operator and redesign regressions. Built-PWA evidence at 320/360/412 px has no overflow or page errors; screenshots are
+  in `docs/screenshots/grayson-train-plan-draft-001/`. No physical-phone check yet.
+- **Merged result:** PR #609 merged into master at `623e876a` after required CI and owner approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-CALIBRATION-PREVIEW-001 (merged as PR #608)
+
+- **Owner authorization / lane:** Gavin authorized the first bounded implementation recommended by
+  the merged Training Intelligence design. FEATURE lane; stop before any programme, set, memory,
+  schema, Engine or recommendation semantic change.
+- **Starting master / Builder:** `760d9fca1e93512779ae105a2cd1592f3a7dd84a` after #607;
+  Builder Codex; branch `codex/grayson-train-calibration-preview-001`;
+  [PR #608](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/608).
+- **Brief:** [`GRAYSON-TRAIN-CALIBRATION-PREVIEW-001.md`](GRAYSON-TRAIN-CALIBRATION-PREVIEW-001.md).
+- **Outcome:** optional read-only preview from the existing suggested workout; first-exercise role,
+  setup/cues/mistakes/alternatives, comparable prior set and personal cue, plus ephemeral conservative
+  calibration feedback. START WORKOUT and existing authority remain unchanged.
+- **Concurrent work:** #584 and #606 remain separate and untouched.
+- **Verification:** typecheck, architecture and production/PWA build pass. Focused Chromium passes
+  4/4; broader TRAIN Chromium passes 97/97. Built-PWA evidence at 320/360/412 px has no overflow or
+  page errors; screenshots are in `docs/screenshots/grayson-train-calibration-preview-001/`.
+  `npm run verify` was stopped after the affected suites passed because the full parallel browser run
+  hit unchanged MetricPage/MealRoundTrip timing failures and emitted continuous shared-worktree font
+  allow-list warnings; required clean CI remains decisive. No physical-phone check yet.
+- **Independent review:** BLOCK at `616a9bc11df53000dcc709516a3811fbf752ead8` on two bounded
+  findings: the modal needed background inertness/focus containment plus Escape/focus-return proof,
+  and the campaign tracker needed this slice recorded without starting C4.4. Both are repaired;
+  focused Chromium again passes 4/4. The old BLOCK remains historical and renewed exact-head review
+  is required.
+- **Next:** obtain green required CI and independent exact-head review,
+  resolve in-scope findings, then integrate under DEV-FLOW-002.
+
+---
+
+# Historical — GRAYSON-TRAIN-INTELLIGENCE-001 (merged as PR #607)
+
+- **Owner authorization / lane:** Gavin approved a Protected documentation/design-only objective to
+  establish the canonical training-intelligence experience. No product code, navigation, Engine,
+  command/event/schema, provider/dependency, demonstration media, Google Drive or implementation is
+  authorized.
+- **Starting master / Builder:** `1ee257941cd3700faaa7e0c0e472d8986f6c772f` after PR #605;
+  Builder Codex; branch `codex/grayson-train-intelligence-001`;
+  [PR #607](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/607).
+- **Brief:** [`GRAYSON-TRAIN-INTELLIGENCE-001.md`](GRAYSON-TRAIN-INTELLIGENCE-001.md).
+- **Canonical candidate:**
+  [`GRAYSON_TRAIN_INTELLIGENCE.md`](../GRAYSON_TRAIN_INTELLIGENCE.md).
+- **Repository truth reused:** current exercise/custom libraries, templates, programme resolver,
+  live workout, warm-ups/effort/substitution, progression/re-entry/deload, history/records/metrics,
+  Body, Food, recovery, Missions and the merged Guided/Health designs. Current semantics remain
+  authoritative.
+- **Design direction:** sequenced full-body A/B/C; conservative guided calibration; layered exercise
+  cards without demonstrations; restrained in-workout Delta; smallest-supported adaptation;
+  four-to-six-week emphasis blocks; Planet Fitness/home variants; and evidence-bounded TRAIN
+  Progress and Direction. Coverage is not muscle growth, estimates are not tests and associations
+  are not causes.
+- **Recommended future slice:** `GRAYSON-TRAIN-CALIBRATION-PREVIEW-001`, an optional read-only
+  exercise-understanding/calibration preview using existing records and stopping before any write or
+  recommendation change. It is not authorized. The prior Mission plan draft remains ranked second.
+- **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
+  unrelated. The root checkout and its user/research changes remain untouched.
+- **Verification / review:** `git diff --check` passes and risk classification is PROTECTED as
+  expected. Required docs-only CI and independent exact-head review remain pending.
+- **Next:** obtain green required CI and independent Protected exact-head review, resolve any
+  in-scope findings, then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-GUIDED-START-001 (merged as PR #605)
 
 - **Owner authorization / lane:** Gavin approved a Protected implementation objective evolving
   **A PLACE TO START** and **What BEYOND should remember** into an optional, resumable, phone-first
@@ -17,18 +194,19 @@
   plans or recommendations.
 - **Concurrent work:** PR #584 remains separate finished-workout metric work; draft PR #473 remains
   unrelated. The root checkout contains unrelated user/research work and remains untouched.
-- **Verification so far:** typecheck/build and architecture pass. Guided Chromium passes 21/21 at
+- **Merged result:** PR #605 merged into master at `1ee257941cd3700faaa7e0c0e472d8986f6c772f`.
+  The final result included the exact-head review repair and required green CI. Prior candidate
+  evidence is retained below as historical context.
+- **Verification at candidate:** typecheck/build and architecture pass. Guided Chromium passes 21/21 at
   320/360/412 px including confirmation, provenance, no-recommendation-change and accessibility;
   adjacent Memory/MORE/LIFE Chromium passes 60/60; memory/guided integration passes 10/10. Real
   Chromium evidence is in `docs/screenshots/grayson-guided-start-001`. Full `npm run verify` reached
   4349 passing / 2 skipped but failed four unrelated timing cases; isolated reruns passed 3/4, while
   the unchanged `Habits001` Done control remained disabled. Required exact-head CI remains decisive.
-- **Review status:** first independent exact-head review BLOCKED stale guided context after returning
+- **Historical review:** first independent exact-head review BLOCKED stale guided context after returning
   from canonical memory, missing C6.8 campaign reconciliation and stale checkpoint actions. The
   bounded repair re-reads memory on every guide re-entry, adds a correction/re-entry browser proof,
-  reconciles C6.8 and fixes this handoff. Renewed CI and exact-head review are required.
-- **Remaining:** obtain green required CI and renewed independent exact-head PASS, then return for
-  Gavin's Protected merge approval.
+  reconciled C6.8 and fixed the handoff before the final reviewed merge.
 
 ---
 
