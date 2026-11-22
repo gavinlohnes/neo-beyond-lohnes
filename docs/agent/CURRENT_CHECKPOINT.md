@@ -17,11 +17,18 @@
   existing authority. Weekday and WORK/OFF programmes, direct workout choice, progression, history
   and native backup remain compatible; no cursor, table or schema was added.
 - **Verification:** typecheck, architecture and production/PWA build pass. Focused programme Node
-  tests pass 12/12, including sequence advancement/holds, out-of-order completion, abstention,
-  stale writes, restoration and backup. Affected plan/sequence Chromium passes 7/7. Built-PWA
+  tests pass 13/13, including sequence advancement/holds, out-of-order completion, abstention,
+  stale writes, position-preserving restoration and backup. Affected TRAIN plan/sequence Chromium
+  passes 10/10. Built-PWA
   review/confirmation/active evidence at 320/360/412 px has no overflow or page errors in
   [`docs/screenshots/grayson-train-sequence-activate-001/`](../screenshots/grayson-train-sequence-activate-001/).
   Required CI and independent exact-head review remain pending; no physical-phone check yet.
+- **Review history:** independent review BLOCKED prior head `04bb3858` on false WHY copy for direct
+  choices, missing undo/deactivation confirmation, prior-sequence position loss on restoration and
+  conflated capacity/manual-form labeling. The candidate now repairs all four and adds focused proof.
+  The earlier CI shard's sole failure was a stale plan-draft test looking for the pre-#610 exit label;
+  it now closes through the visible CLOSE control and passes locally. Renewed exact-head review and
+  clean CI are required.
 - **Concurrent work:** root research changes remain untouched.
 - **Next:** finish diff/risk checks, open the PR, obtain green required CI and independent exact-head
   review, then return for Gavin's merge approval.

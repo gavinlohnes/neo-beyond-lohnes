@@ -201,6 +201,7 @@ export function TrainScreen({
   const [lastAdvancingTemplate, setLastAdvancingTemplate] = useState<WorkoutTemplateId | null>(null);
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
   const [chosenVariant, setChosenVariant] = useState<SessionType>("STANDARD");
+  const [capacityForm, setCapacityForm] = useState<SessionType>("STANDARD");
   // DECLUTTER-001: the template/variant override chips sit behind one
   // CHANGE tap so START WORKOUT stays on the first screen. Opens itself for
   // the TODAY → RECOVERY handoff, whose focus target is the RECOVERY chip.
@@ -418,6 +419,7 @@ export function TrainScreen({
 
     const suggestion = suggestSessionVariant(cap, sleepShort);
     setNoCheckIn(suggestion.noCheckIn);
+    setCapacityForm(suggestion.variant === "RESET" ? "STANDARD" : suggestion.variant);
 
     const programmeView = await getProgrammeView();
     setSequenceProgramme(programmeView.sequence);
@@ -1366,8 +1368,10 @@ export function TrainScreen({
               <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
               {chosenVariant !== "RECOVERY" && (
                 <p className="card-body" style={{ marginBottom: 6 }}>
-                  {sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember && chosenTemplate === sequenceProgramme.nextMember.templateId
-                    ? sequenceProgramme.why
+                  {sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember
+                    ? chosenTemplate === sequenceProgramme.nextMember.templateId
+                      ? sequenceProgramme.why
+                      : `You chose ${templateLabel(chosenTemplate, customTemplates)} directly. The active sequence still names ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} next unless this session records a qualifying completion; an out-of-order sequence member advances from the member actually completed.`
                     : describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
                 </p>
               )}
@@ -1416,7 +1420,7 @@ export function TrainScreen({
         );
       })()}
 
-      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm) => {
+      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm) => {
         const requested = requestedForm ?? chosenVariant;
         const variant = requestedForm ? requested : requested === "RECOVERY" ? "STANDARD" : requested;
         templateChosenRef.current = true; variantChosenRef.current = true;

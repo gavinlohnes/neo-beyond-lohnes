@@ -41,30 +41,30 @@ function completionPayload(value: unknown): { sessionId: string; status: "COMPLE
   return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType };
 }
 
-async function getSequenceView(revision: ProgrammeRevision, history: ProgrammeRevision[], allTemplates: CustomWorkoutTemplate[]): Promise<SequenceProgrammeView> {
+async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: CustomWorkoutTemplate[], endSeq = Number.MAX_SAFE_INTEGER): Promise<Omit<SequenceProgrammeView, "previousProgramme">> {
   const programme = revision.programme as SequenceTrainingProgramme;
   const members = programme.members.map((member): SequenceMemberView => {
     const current = allTemplates.find((template) => template.id === member.templateId);
     const issue = !current ? "MISSING" : current.archivedAt ? "ARCHIVED" : !sameSnapshot(current, member.snapshot) ? "CHANGED" : null;
     return { key: member.key, templateId: member.templateId, name: current?.name ?? member.snapshot.name, issue };
   });
-  const previousProgramme = history.length > 1 ? history.at(-2)!.programme : null;
   const start = members.find((member) => member.templateId === programme.startTemplateId) ?? null;
-  if (!start || revision.seq === undefined || !revision.recordedAt) return { status: "UNKNOWN", members, nextMember: start, why: "Programme activation evidence is incomplete. Nothing was inferred.", previousProgramme, activatedAt: revision.recordedAt ?? null };
+  if (!start || revision.seq === undefined || !revision.recordedAt) return { status: "UNKNOWN", members, nextMember: start, why: "Programme activation evidence is incomplete. Nothing was inferred.", activatedAt: revision.recordedAt ?? null };
 
   let next = start;
   let why = `Sequence activated with ${start.key} selected first.`;
   const completions = (await db.events.where("type").equals("WORKOUT_COMPLETED").toArray()).sort((a, b) => (a.seq ?? Number.MAX_SAFE_INTEGER) - (b.seq ?? Number.MAX_SAFE_INTEGER));
   for (const event of completions) {
     if (event.seq === undefined) {
-      if (event.recordedAt >= revision.recordedAt) return { status: "UNKNOWN", members, nextMember: null, why: "A workout outcome has no causal order. Next session is unknown.", previousProgramme, activatedAt: revision.recordedAt };
+      if (event.recordedAt >= revision.recordedAt) return { status: "UNKNOWN", members, nextMember: null, why: "A workout outcome has no causal order. Next session is unknown.", activatedAt: revision.recordedAt };
       continue;
     }
     if (event.seq <= revision.seq) continue;
+    if (event.seq >= endSeq) continue;
     const payload = completionPayload(event.payload);
-    if (!payload) return { status: "UNKNOWN", members, nextMember: null, why: "A workout outcome is incomplete. Next session is unknown.", previousProgramme, activatedAt: revision.recordedAt };
+    if (!payload) return { status: "UNKNOWN", members, nextMember: null, why: "A workout outcome is incomplete. Next session is unknown.", activatedAt: revision.recordedAt };
     const session = await db.workoutSessions.get(payload.sessionId);
-    if (!session || session.sessionType !== payload.sessionType || session.status !== payload.status) return { status: "UNKNOWN", members, nextMember: null, why: "Workout records disagree. Next session is unknown.", previousProgramme, activatedAt: revision.recordedAt };
+    if (!session || session.sessionType !== payload.sessionType || session.status !== payload.status) return { status: "UNKNOWN", members, nextMember: null, why: "Workout records disagree. Next session is unknown.", activatedAt: revision.recordedAt };
     const memberIndex = members.findIndex((member) => member.templateId === session.templateId);
     if (memberIndex < 0) continue;
     const sets = await getPerformedSets(session.id);
@@ -75,7 +75,21 @@ async function getSequenceView(revision: ProgrammeRevision, history: ProgrammeRe
     }
   }
   const status = members.some((member) => member.issue) ? "REVIEW_REQUIRED" : "READY";
-  return { status, members, nextMember: next, why, previousProgramme, activatedAt: revision.recordedAt };
+  return { status, members, nextMember: next, why, activatedAt: revision.recordedAt };
+}
+
+async function getSequenceView(revision: ProgrammeRevision, history: ProgrammeRevision[], allTemplates: CustomWorkoutTemplate[]): Promise<SequenceProgrammeView> {
+  const state = await deriveSequenceState(revision, allTemplates);
+  const index = history.findIndex((entry) => entry.id === revision.id);
+  const previous = index > 0 ? history[index - 1]! : null;
+  let previousProgramme = previous?.programme ?? null;
+  if (previous?.programme?.mode === "SEQUENCE" && revision.seq !== undefined) {
+    const previousState = await deriveSequenceState(previous, allTemplates, revision.seq);
+    previousProgramme = previousState.status !== "UNKNOWN" && previousState.nextMember
+      ? { ...previous.programme, startTemplateId: previousState.nextMember.templateId }
+      : null;
+  }
+  return { ...state, previousProgramme };
 }
 
 export function buildSequenceProgramme(templateIds: [string, string, string], templates: readonly CustomWorkoutTemplate[], startTemplateId = templateIds[0]): SequenceTrainingProgramme {

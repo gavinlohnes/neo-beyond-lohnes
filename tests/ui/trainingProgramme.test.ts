@@ -172,3 +172,24 @@ it("round-trips a sequence and its snapshots through the existing backup contrac
   expect(restored.sequence?.status).toBe("READY");
   expect(restored.sequence?.members.map((member) => member.name)).toEqual(["Foundation A", "Foundation B", "Foundation C"]);
 });
+
+it("restores a prior sequence from its earned next member rather than its original start", async () => {
+  const templates = await threeCustomTemplates();
+  const first = buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates);
+  const firstRevision = await saveTrainingProgramme(first, null);
+  const day = await startDay();
+  const workout = await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true });
+  await logSet(day.id, workout.id, templates[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, workout.id, "STANDARD", "COMPLETED");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+
+  const replacement = buildSequenceProgramme([templates[2]!.id, templates[0]!.id, templates[1]!.id], templates);
+  const replacementRevision = await saveTrainingProgramme(replacement, firstRevision.id);
+  const replacementView = await getProgrammeView();
+  expect(replacementView.sequence?.previousProgramme?.mode).toBe("SEQUENCE");
+  expect(replacementView.sequence?.previousProgramme?.mode === "SEQUENCE" ? replacementView.sequence.previousProgramme.startTemplateId : null).toBe(templates[1]!.id);
+
+  await saveTrainingProgramme(replacementView.sequence!.previousProgramme, replacementRevision.id);
+  const restored = await getProgrammeView();
+  expect(restored.sequence?.nextMember?.templateId).toBe(templates[1]!.id);
+});

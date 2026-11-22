@@ -10,11 +10,15 @@ import "../../components/section.css";
 const WEEKDAYS: Record<string, string> = { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "0": "Sunday" };
 const slotLabel = (slot: string) => WEEKDAYS[slot] ?? slot.replace("WORK", "Work day ").replace("OFF", "Day off ");
 const emptyAssigned = (): AssignedTrainingProgramme => ({ mode: "ROTATION", slots: {} });
+const describeRestoration = (programme: TrainingProgramme) => programme.mode === "SEQUENCE"
+  ? `Restore its A → B → C sequence beginning from the preserved next member ${programme.members.find((member) => member.templateId === programme.startTemplateId)?.key ?? "unknown"}.`
+  : `Restore the prior ${programme.mode === "WEEKDAYS" ? "weekday" : "work/day-off"} assignments.`;
 
-export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityForm, disabled = false, startDisabled = false, active = true, refreshKey = 0, now }: {
+export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityForm, selectedForm, disabled = false, startDisabled = false, active = true, refreshKey = 0, now }: {
   onStart: (templateId: string, capacityForm?: SessionType) => void;
   onProgrammeChanged?: () => void;
   capacityForm: SessionType;
+  selectedForm: SessionType;
   disabled?: boolean;
   startDisabled?: boolean;
   active?: boolean;
@@ -31,6 +35,7 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
   const [startId, setStartId] = useState("");
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<"UNDO" | "DEACTIVATE" | null>(null);
   const saving = useRef(false);
   const editingVersion = useRef<string | null>(null);
   const boundaryKey = mostRecentBoundaryAtOrBefore(now ?? new Date()).getTime();
@@ -57,6 +62,7 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
       setData(null);
       setEditing(false);
       setActivating(false);
+      setPendingAction(null);
       setReceipt(success);
       setKey((value) => value + 1);
       onProgrammeChanged?.();
@@ -108,14 +114,23 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
         <ol className="train-prescription train-prescription--preview" aria-label="Active programme sequence">
           {sequence.members.map((member) => <li key={member.key}><span className="train-prescription-index">{member.key}</span><span>{member.name}</span><span className="meta">{member.issue ? member.issue.toLowerCase() : member.templateId === sequence.nextMember?.templateId ? "NEXT" : "READY"}</span></li>)}
         </ol>
-        <p className="meta"><b>Current capacity form:</b> {capacityForm}. The sequence chooses what to train; capacity still chooses how.</p>
+        <p className="meta"><b>Capacity guidance:</b> {capacityForm}. <b>Selected start form:</b> {selectedForm}. The sequence chooses what to train; capacity guidance and your explicit choice still choose how.</p>
         <p className="meta"><b>WHY:</b> {sequence.why}</p>
         {sequence.status === "READY" && sequence.nextMember
           ? <p role="status">START NEXT is ready in the command surface above.</p>
           : <p role="status">Guided start is paused. Review the sequence before GRAYSON names a next workout. Direct workout choice remains available above.</p>}
         <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={beginActivation}>REVIEW OR REPLACE SEQUENCE</button>
-        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; void save(sequence.previousProgramme, sequence.previousProgramme ? "Activation undone. Your prior programme was restored." : "Activation undone. No prior programme was set."); }}>UNDO ACTIVATION</button>
-        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; void save(null, "Programme deactivated. Past workouts are unchanged."); }}>DEACTIVATE</button>
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setPendingAction("UNDO"); }}>UNDO ACTIVATION</button>
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setPendingAction("DEACTIVATE"); }}>DEACTIVATE</button>
+        {pendingAction && <div className="quiet-fact" role="group" aria-label={pendingAction === "UNDO" ? "Confirm activation undo" : "Confirm programme deactivation"}>
+          <h3>{pendingAction === "UNDO" ? "Restore the programme from before this activation?" : "Deactivate this programme?"}</h3>
+          {pendingAction === "UNDO" ? sequence.previousProgramme
+            ? <p>{describeRestoration(sequence.previousProgramme)} Current sequence history remains recorded.</p>
+            : <p>No restorable prior programme is available. Confirming leaves no active programme; workout history remains recorded.</p>
+            : <p>The A → B → C sequence will stop guiding START NEXT. Saved templates and workout history remain unchanged.</p>}
+          <button type="button" className="btn-primary" onClick={() => void save(pendingAction === "UNDO" ? sequence.previousProgramme : null, pendingAction === "UNDO" ? sequence.previousProgramme ? "Activation undone. Your prior programme was restored." : "Activation undone. No prior programme was set." : "Programme deactivated. Past workouts are unchanged.")}>{pendingAction === "UNDO" ? "CONFIRM RESTORE" : "CONFIRM DEACTIVATE"}</button>
+          <button type="button" className="btn-secondary" onClick={() => setPendingAction(null)}>CANCEL</button>
+        </div>}
       </> : data.revision.programme ? <>
         <p className="meta">Planned today: {!data.rotationAvailable && data.revision.programme.mode === "ROTATION" ? "Schedule not saved" : plannedTemplate?.name ?? (data.planned.templateId ? "Template no longer available" : "No assigned session")}{data.revision.programme.mode === "ROTATION" && data.rotationAvailable && data.forecast ? " · schedule forecast" : ""}</p>
         {!data.rotationAvailable && data.revision.programme.mode === "ROTATION" && <p className="meta">Save a work schedule to resolve rotation slots.</p>}
