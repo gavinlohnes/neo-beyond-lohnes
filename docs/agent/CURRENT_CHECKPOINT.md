@@ -29,6 +29,12 @@
   The earlier CI shard's sole failure was a stale plan-draft test looking for the pre-#610 exit label;
   it now closes through the visible CLOSE control and passes locally. Renewed exact-head review and
   clean CI are required.
+- **Renewed review:** the reviewer confirmed those four repairs but BLOCKED head `1c844d0b` on two
+  remaining clarity gaps: non-member direct-choice consequences and exact restore contents. The
+  candidate now distinguishes out-of-order sequence members from non-members (which never advance
+  the sequence), and restore confirmation enumerates the prior A/B/C members or prior slot
+  assignments before writing. Chromium proves both direct-choice cases and the exact weekday restore.
+  A final new-head review is required.
 - **Concurrent work:** root research changes remain untouched.
 - **Next:** finish diff/risk checks, open the PR, obtain green required CI and independent exact-head
   review, then return for Gavin's merge approval.

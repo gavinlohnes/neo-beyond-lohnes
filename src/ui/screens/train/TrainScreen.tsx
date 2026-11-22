@@ -1371,7 +1371,9 @@ export function TrainScreen({
                   {sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember
                     ? chosenTemplate === sequenceProgramme.nextMember.templateId
                       ? sequenceProgramme.why
-                      : `You chose ${templateLabel(chosenTemplate, customTemplates)} directly. The active sequence still names ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} next unless this session records a qualifying completion; an out-of-order sequence member advances from the member actually completed.`
+                      : sequenceProgramme.members.some((member) => member.templateId === chosenTemplate)
+                        ? `You chose sequence member ${sequenceProgramme.members.find((member) => member.templateId === chosenTemplate)!.key} · ${templateLabel(chosenTemplate, customTemplates)} out of order. The active sequence currently names ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} next. A qualifying completion advances from the member actually completed.`
+                        : `You chose ${templateLabel(chosenTemplate, customTemplates)} directly. It is not a member of the active A → B → C sequence, so completing it will not advance that sequence. ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} remains next.`
                     : describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
                 </p>
               )}

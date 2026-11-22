@@ -10,9 +10,16 @@ import "../../components/section.css";
 const WEEKDAYS: Record<string, string> = { "1": "Monday", "2": "Tuesday", "3": "Wednesday", "4": "Thursday", "5": "Friday", "6": "Saturday", "0": "Sunday" };
 const slotLabel = (slot: string) => WEEKDAYS[slot] ?? slot.replace("WORK", "Work day ").replace("OFF", "Day off ");
 const emptyAssigned = (): AssignedTrainingProgramme => ({ mode: "ROTATION", slots: {} });
-const describeRestoration = (programme: TrainingProgramme) => programme.mode === "SEQUENCE"
-  ? `Restore its A → B → C sequence beginning from the preserved next member ${programme.members.find((member) => member.templateId === programme.startTemplateId)?.key ?? "unknown"}.`
-  : `Restore the prior ${programme.mode === "WEEKDAYS" ? "weekday" : "work/day-off"} assignments.`;
+function RestorationDetail({ programme, templates }: { programme: TrainingProgramme; templates: readonly { id: string; name: string }[] }) {
+  if (programme.mode === "SEQUENCE") return <>
+    <p>Restore this exact sequence. Its preserved next member is {programme.members.find((member) => member.templateId === programme.startTemplateId)?.key ?? "unknown"}. Current sequence history remains recorded.</p>
+    <ol>{programme.members.map((member) => <li key={member.key}><b>{member.key}</b> · {member.snapshot.name}{member.templateId === programme.startTemplateId ? " · NEXT" : ""}</li>)}</ol>
+  </>;
+  return <>
+    <p>Restore these prior {programme.mode === "WEEKDAYS" ? "weekday" : "work/day-off"} assignments. Current sequence history remains recorded.</p>
+    <ul>{Object.entries(programme.slots).map(([slot, templateId]) => <li key={slot}><b>{slotLabel(slot)}</b> · {templates.find((template) => template.id === templateId)?.name ?? `Unavailable template (${templateId})`}</li>)}</ul>
+  </>;
+}
 
 export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityForm, selectedForm, disabled = false, startDisabled = false, active = true, refreshKey = 0, now }: {
   onStart: (templateId: string, capacityForm?: SessionType) => void;
@@ -125,7 +132,7 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
         {pendingAction && <div className="quiet-fact" role="group" aria-label={pendingAction === "UNDO" ? "Confirm activation undo" : "Confirm programme deactivation"}>
           <h3>{pendingAction === "UNDO" ? "Restore the programme from before this activation?" : "Deactivate this programme?"}</h3>
           {pendingAction === "UNDO" ? sequence.previousProgramme
-            ? <p>{describeRestoration(sequence.previousProgramme)} Current sequence history remains recorded.</p>
+            ? <RestorationDetail programme={sequence.previousProgramme} templates={data.templates} />
             : <p>No restorable prior programme is available. Confirming leaves no active programme; workout history remains recorded.</p>
             : <p>The A → B → C sequence will stop guiding START NEXT. Saved templates and workout history remain unchanged.</p>}
           <button type="button" className="btn-primary" onClick={() => void save(pendingAction === "UNDO" ? sequence.previousProgramme : null, pendingAction === "UNDO" ? sequence.previousProgramme ? "Activation undone. Your prior programme was restored." : "Activation undone. No prior programme was set." : "Programme deactivated. Past workouts are unchanged.")}>{pendingAction === "UNDO" ? "CONFIRM RESTORE" : "CONFIRM DEACTIVATE"}</button>
