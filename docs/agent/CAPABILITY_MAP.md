@@ -127,8 +127,19 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   authority: the Mission A/B/C, short/minimum/home variants and programme-level adaptation are
   designs only. Muscle coverage is a proxy, never proof of growth; estimated strength is not an
   observed test. Prior free-exercise-db research remains a field-shape donor, not a bulk-import or
-  content license. Recommended first future slice is a read-only calibration/exercise-understanding
-  preview; it is not authorized.
+  content license. The read-only calibration preview (#608), ephemeral A/B/C draft (#609) and atomic
+  owner-confirmed three-template save (#610) are now built. Programme activation, ordered sequence
+  authority, linked short/home variants and programme-level adaptation remain unimplemented.
+
+- **Sequence activation design (design only, 2026-11-21):**
+  [`GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md`](../GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md) reconciles the
+  merged guided draft/template-save work with current custom templates, `TRAIN_PROGRAM_SET`, workout
+  outcomes, capacity/recovery and planning. Current weekday/WORK-OFF assignments and the built-in
+  Engine A/B/C selector are different systems; neither represents Gavin's approved date-independent
+  custom-template sequence. Future implementation should deepen the existing causal programme
+  revision with an explicit SEQUENCE mode and derive next-member state from qualifying outcomes,
+  rather than add a mutable cursor/table or infer by names/dates. Runtime semantics are unchanged;
+  linked short/home variants, planning connection and activation all remain separately Protected.
 
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /

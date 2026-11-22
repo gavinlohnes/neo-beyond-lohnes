@@ -1,4 +1,32 @@
-# Current objective — GRAYSON-TRAIN-PLAN-SAVE-001 (2026-11-21)
+# Current objective — GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001 (2026-11-21)
+
+- **Owner authorization / lane:** Gavin approved a **PROTECTED documentation/design-only** objective
+  for explicit activation of saved A/B/C templates as one ordered programme. No runtime, programme,
+  Engine/recommendation/command/event/schema, navigation, dependency, provider or Drive change.
+- **Starting master / Builder:** `b5eeead9` after #610; Builder Codex; branch
+  `codex/grayson-train-sequence-activation-design-001`; PR pending.
+- **Brief:** [`GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001.md`](GRAYSON-TRAIN-SEQUENCE-ACTIVATION-DESIGN-001.md).
+- **Canonical candidate:**
+  [`GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md`](../GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md).
+- **Repository truth:** current programme modes assign templates to weekdays or WORK/OFF positions;
+  the Engine's built-in A/B/C selector is separate; custom templates have no ordered programme
+  cursor. Existing workout outcomes and `doesSessionAdvanceRotation` supply the reusable evidence.
+- **Design direction:** future SEQUENCE mode in the existing programme revision chain; next member
+  derived from activation plus qualifying recorded outcomes; capacity/recovery controls form;
+  dates never advance or create debt; changed/missing members force inspectable abstention.
+- **Recommended future slice:** `GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001`, bounded to exact activation,
+  TRAIN next-member projection/start, guarded undo/deactivation and failure handling. It is not
+  authorized and excludes planning, linked short/home variants and adaptation.
+- **Concurrent work:** #584 and #606 remain separate and untouched. Root research changes remain
+  untouched.
+- **Verification / review:** docs diff/link/risk checks, required CI and independent exact-head
+  review pending.
+- **Next:** finish docs checks, open the PR, obtain green required CI and independent review, then
+  return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-PLAN-SAVE-001 (merged as PR #610)
 
 - **Owner authorization / lane:** Gavin approved an explicit review-and-save journey that creates
   three custom templates together; **PROTECTED**. No programme activation/assignment, recommendation,
@@ -15,8 +43,8 @@
   command integration pass 26/26; focused Chromium passes 4/4. Built-PWA review/confirmation/receipt
   evidence at 320/360/412 px has no overflow or page errors. Required CI and independent exact-head
   review remain pending; no physical-phone check yet.
-- **Next:** finish bounded implementation evidence, push/open the PR, obtain green required CI and
-  independent exact-head review, then return for Gavin's merge approval.
+- **Merged result:** PR #610 merged into master at `b5eeead9` after required CI, independent review
+  and owner approval.
 
 ---
 
