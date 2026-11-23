@@ -66,3 +66,9 @@
 .train-plan-draft__exercises li p { margin: 2px 0 0; color: var(--color-muted, #aaa); }
 .train-plan-draft__exercises li > span { white-space: nowrap; }
 .train-plan-draft__actions { justify-content: flex-end; margin-top: 18px; }
+/* GRAYSON-TRAIN-PROGRESS-001: Progress & Direction, quiet and readable; no red. */
+.train-operator .train-switcher .btn-secondary { padding-inline: 4px; min-width: 0; overflow-wrap: anywhere; }
+.train-progress__verdict { margin: 0 0 4px; font-size: 17px; line-height: 1.45; color: var(--p-t1, #f2f2f2); }
+.train-progress__h { margin: 18px 0 6px; font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; color: var(--p-t2, #a8a8a8); }
+.train-progress__list { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.train-progress__why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-mono, monospace); letter-spacing: .14em; }

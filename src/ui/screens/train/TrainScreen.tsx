@@ -2,6 +2,7 @@ import { WorkoutRecap } from "./WorkoutRecap";
 import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
+import { TrainProgress } from "./TrainProgress";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
@@ -248,12 +249,12 @@ export function TrainScreen({
     readError?: string;
   } | null>(null);
   const [planDraftOpen, setPlanDraftOpen] = useState(false);
-  const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS">(recordsFocus ? "RECORDS" : "WORKOUT");
+  const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS" | "PROGRESS">(recordsFocus ? "RECORDS" : "WORKOUT");
   const [visitedRecords, setVisitedRecords] = useState(recordsFocus !== null);
   const [visitedHistory, setVisitedHistory] = useState(false);
   const [bestRecords, setBestRecords] = useState<Record<string, RecordCard>>({});
   const focusValues = useRef<Record<string, string>>({});
-  function openTrainView(view: "WORKOUT" | "HISTORY" | "RECORDS") {
+  function openTrainView(view: "WORKOUT" | "HISTORY" | "RECORDS" | "PROGRESS") {
     setTrainView(view);
     if (view === "RECORDS") setVisitedRecords(true);
     if (view === "HISTORY") setVisitedHistory(true);
@@ -1136,11 +1137,13 @@ export function TrainScreen({
           </section>)}
 
       <div className="train-switcher" role="group" aria-label="Training views">
-        {(["WORKOUT", "HISTORY", "RECORDS"] as const).map((view) => <button key={view} type="button"
+        {(["WORKOUT", "HISTORY", "RECORDS", "PROGRESS"] as const).map((view) => <button key={view} type="button"
           className="btn-secondary" aria-pressed={trainView === view} onClick={() => openTrainView(view)}>{view}</button>)}
       </div>
       {visitedHistory && <div hidden={trainView !== "HISTORY"}><TrainingHistory active={active && trainView === "HISTORY"} customTemplates={customTemplates} onClose={() => openTrainView("WORKOUT")} /></div>}
       {visitedRecords && <div hidden={trainView !== "RECORDS"}><RecordsList active={active && trainView === "RECORDS"} focusExerciseId={recordsFocus} onClose={() => openTrainView("WORKOUT")} /></div>}
+      {/* GRAYSON-TRAIN-PROGRESS-001: one tap from today's workout, read only. */}
+      {trainView === "PROGRESS" && <TrainProgress active={active} />}
       <div hidden={trainView !== "WORKOUT"}>
       <ConfirmPanel />
 
