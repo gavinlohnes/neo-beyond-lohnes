@@ -5,7 +5,7 @@ import { DEFAULT_SCHEDULE_PATTERN, scheduledWorkContextForLivedDay } from "../..
 import { getTrainingProgramme, saveTrainingProgramme, projectTrainingProgramme } from "../../src/application/trainingProgramme";
 import { createCustomTemplate, createCustomTemplateSet, ensureExactCustomTemplateSet, archiveCustomTemplate, updateCustomTemplate } from "../../src/application/customTemplateCommands";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
-import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms } from "../../src/application/trainingProgrammeQueries";
+import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms, linkSequenceShortForms, shortDraftInputs } from "../../src/application/trainingProgrammeQueries";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { previewAnyRestore, applyAnyRestore } from "../../src/persistence/restore";
@@ -290,4 +290,85 @@ it("restores a prior sequence from its earned next member rather than its origin
   await saveTrainingProgramme(replacementView.sequence!.previousProgramme, replacementRevision.id);
   const restored = await getProgrammeView();
   expect(restored.sequence?.nextMember?.templateId).toBe(templates[1]!.id);
+});
+
+// ---- GRAYSON-TRAIN-SHORT-LINK-001: SHORT is HOME's sibling: an exact linked smaller loaded prescription. ----
+type Seq = import("../../src/domain/workout/trainingProgramme").SequenceTrainingProgramme;
+
+async function activateWithShort() {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const shorts = await ensureExactCustomTemplateSet(shortDraftInputs(activation.programme as Seq));
+  const revision = await saveTrainingProgramme(linkSequenceShortForms(activation.programme as Seq, shorts.map((t) => t.id) as [string, string, string], shorts), activation.id);
+  return { templates, activation, shorts, revision };
+}
+
+it("SHORT drafts are each member's first three FULL movements, unlinked until confirmed", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const drafts = shortDraftInputs(activation.programme as Seq);
+  expect(drafts.map((d) => d.name)).toEqual(["Foundation A · SHORT", "Foundation B · SHORT", "Foundation C · SHORT"]);
+  expect(drafts[0]!.exercises).toEqual(templates[0]!.exercises.slice(0, 3));
+  await ensureExactCustomTemplateSet(drafts);
+  expect((await getProgrammeView()).sequence?.members.every((m) => m.short === null)).toBe(true);
+});
+
+it("links exact SHORT forms: a partial holds, a completed worked SHORT advances, history names it, loaded progression stays", async () => {
+  const { templates, shorts, revision } = await activateWithShort();
+  expect((await getProgrammeView()).sequence?.nextMember?.short).toMatchObject({ templateId: shorts[0]!.id, issue: null });
+  const day = await startDay();
+  const context = { programmeRevisionId: revision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "SHORT" as const };
+  const partial = await startWorkout(day.id, shorts[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+  await logSet(day.id, partial.id, shorts[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, partial.id, "STANDARD", "PARTIAL");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("A");
+  const done = await startWorkout(day.id, shorts[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+  await logSet(day.id, done.id, shorts[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, done.id, "STANDARD", "COMPLETED");
+  const view = await getProgrammeView();
+  expect(view.sequence?.nextMember?.key).toBe("B");
+  expect(view.sequence?.why).toContain("SHORT completed");
+  expect((await getTrainingHistory()).find((entry) => entry.id === done.id)?.programmeForm).toBe("SHORT");
+  // SHORT is loaded work on its own template: normal progression applies (unlike HOME).
+  expect((await getProgressionSuggestion(shorts[0]!.id, "STANDARD", shorts[0]!.exercises[0]!.exerciseId)).reason ?? "").not.toContain("loaded progression");
+
+  const backup = new File([await db.export()], "synthetic-short-links.json", { type: "application/json" });
+  await db.events.clear(); await db.customWorkoutTemplates.clear(); await db.workoutSessions.clear(); await db.performedSets.clear();
+  await previewAnyRestore(backup); await applyAnyRestore(backup);
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+});
+
+it("refuses SHORT links that are bodyweight, the FULL template itself, or shared with HOME, and stale SHORT starts", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const seq = activation.programme as Seq;
+  const homes = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+  expect(() => linkSequenceShortForms(seq, homes.map((h) => h.id) as [string, string, string], homes)).toThrow("loaded SHORT");
+  expect(() => linkSequenceShortForms(seq, templates.map((t) => t.id) as [string, string, string], templates)).toThrow("not the FULL one");
+  const shorts = await ensureExactCustomTemplateSet(shortDraftInputs(seq));
+  const withShort = linkSequenceShortForms(seq, shorts.map((t) => t.id) as [string, string, string], shorts);
+  const clash = { ...withShort, members: withShort.members.map((m, i) => i === 0 ? { ...m, home: { templateId: shorts[0]!.id, snapshot: m.short!.snapshot } } : m) } as Seq;
+  await expect(saveTrainingProgramme(clash, activation.id)).rejects.toThrow();
+  const revision = await saveTrainingProgramme(withShort, activation.id);
+  const day = await startDay();
+  const context = { programmeRevisionId: revision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "SHORT" as const };
+  await expect(startWorkout(day.id, shorts[0]!.id, "RECOVERY", { overrideConfirmed: true, programmeContext: context })).rejects.toThrow("SHORT_FORM_INVALID");
+  await updateCustomTemplate(shorts[0]!.id, { name: "Changed SHORT A" });
+  await expect(startWorkout(day.id, shorts[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context })).rejects.toThrow("changed or is unavailable");
+  expect((await getProgrammeView()).sequence?.members[0]!.short?.issue).toBe("CHANGED");
+  // FULL stays available while SHORT needs review.
+  expect((await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true })).templateId).toBe(templates[0]!.id);
+});
+
+it("preserves the earned next member when SHORT links create a new programme revision", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const day = await startDay();
+  const full = await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true });
+  await logSet(day.id, full.id, templates[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, full.id, "STANDARD", "COMPLETED");
+  const before = await getProgrammeView();
+  const shorts = await ensureExactCustomTemplateSet(shortDraftInputs(activation.programme as Seq));
+  await saveTrainingProgramme(linkSequenceShortForms(activation.programme as Seq, shorts.map((t) => t.id) as [string, string, string], shorts, before.sequence!.nextMember!.templateId), activation.id);
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
 });

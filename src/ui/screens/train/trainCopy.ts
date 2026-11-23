@@ -341,7 +341,9 @@ export function templateLabel(templateId: WorkoutTemplateId, customTemplates: re
 
 /** ULTIMATE-FOUNDATION-002: "Template A · REDUCED" — the variant only when REDUCED, as RECENT words it. */
 export function describeHistoryTitle(entry: Pick<TrainingHistoryEntry, "templateId" | "sessionType" | "programmeForm">, customTemplates: readonly CustomWorkoutTemplate[]): string {
-  return `WORKOUT ${templateLabel(entry.templateId, customTemplates)}${entry.programmeForm === "HOME" ? " · HOME" : entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
+  const label = templateLabel(entry.templateId, customTemplates);
+  // A linked form is named once: "Bench A · SHORT", never "Bench A · SHORT · SHORT".
+  return `WORKOUT ${label}${entry.programmeForm ? (label.toUpperCase().includes(entry.programmeForm) ? "" : ` · ${entry.programmeForm}`) : entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
 }
 
 /** ULTIMATE-FOUNDATION-002: one history row's facts — real status, then only what was recorded. */

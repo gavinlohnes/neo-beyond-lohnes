@@ -43,16 +43,21 @@ export async function getTrainingProgrammeHistory(): Promise<ProgrammeRevision[]
 function snapshotMatches(current: { name: string; exercises: unknown }, snapshot: { name: string; exercises: unknown }) {
   return JSON.stringify({ name: current.name, exercises: current.exercises }) === JSON.stringify(snapshot);
 }
-export async function assertLinkedHomeStart(templateId: string, context: NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>): Promise<void> {
+const isBodyweightSet = (template: { exercises: { exerciseId: string }[] }) => template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"));
+/** HOME-LINK-001 / SHORT-LINK-001: a linked-form start must name the exact current link, parent and snapshot. */
+export async function assertLinkedFormStart(templateId: string, context: NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>): Promise<void> {
+  const form = context.form;
   const current = await getTrainingProgramme();
-  if (current.id !== context.programmeRevisionId || current.programme?.mode !== "SEQUENCE") throw new Error("HOME link changed. Reopen MY PROGRAMME before starting.");
+  if (current.id !== context.programmeRevisionId || current.programme?.mode !== "SEQUENCE") throw new Error(`${form} link changed. Reopen MY PROGRAMME before starting.`);
   const member = current.programme.members.find((item) => item.key === context.memberKey && item.templateId === context.parentTemplateId);
-  if (!member?.home || member.home.templateId !== templateId) throw new Error("HOME link changed. Reopen MY PROGRAMME before starting.");
+  const link = form === "HOME" ? member?.home : member?.short;
+  if (!member || !link || link.templateId !== templateId) throw new Error(`${form} link changed. Reopen MY PROGRAMME before starting.`);
   const templates = await getCustomTemplates();
   const parent = templates.find((item) => item.id === member.templateId);
-  if (!parent || !snapshotMatches(parent, member.snapshot)) throw new Error("Programme member changed or is unavailable. Review the sequence before starting HOME.");
+  if (!parent || !snapshotMatches(parent, member.snapshot)) throw new Error(`Programme member changed or is unavailable. Review the sequence before starting ${form}.`);
   const template = templates.find((item) => item.id === templateId);
-  if (!template || !template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-")) || !snapshotMatches(template, member.home.snapshot)) throw new Error("HOME form changed or is unavailable. Review it before starting.");
+  const rightKind = template && (form === "HOME" ? isBodyweightSet(template) : !isBodyweightSet(template));
+  if (!template || !rightKind || !snapshotMatches(template, link.snapshot)) throw new Error(`${form} form changed or is unavailable. Review it before starting.`);
 }
 /** Explicit SAVE/CLEAR only. Native backups already retain events; no schema/table is added. */
 export async function saveTrainingProgramme(programme: TrainingProgramme | null, expectedPreviousId: string | null): Promise<ProgrammeRevision> {
@@ -71,6 +76,12 @@ export async function saveTrainingProgramme(programme: TrainingProgramme | null,
           if (!home) throw new Error("A linked HOME template is no longer available. Reopen the programme before saving.");
           if (!home.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))) throw new Error("HOME templates must use bodyweight-specific exercise identities.");
           if (!snapshotMatches(home, member.home.snapshot)) throw new Error("A linked HOME template changed. Reopen and review it before saving.");
+        }
+        if (member.short) {
+          const short = custom.find((item) => item.id === member.short!.templateId);
+          if (!short) throw new Error("A linked SHORT template is no longer available. Reopen the programme before saving.");
+          if (short.exercises.some((exercise) => exercise.exerciseId.startsWith("home-"))) throw new Error("SHORT templates use the gym's loaded exercises; bodyweight work belongs in HOME.");
+          if (!snapshotMatches(short, member.short.snapshot)) throw new Error("A linked SHORT template changed. Reopen and review it before saving.");
         }
       }
     } else {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms } from "../../../application/trainingProgrammeQueries";
+import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms, linkSequenceShortForms, shortDraftInputs } from "../../../application/trainingProgrammeQueries";
 import { saveTrainingProgramme } from "../../../application/trainingProgramme";
 import { ensureExactCustomTemplateSet } from "../../../application/customTemplateCommands";
 import { GRAYSON_HOME_TEMPLATE_INPUTS } from "../../../domain/workout/homeTemplates";
@@ -48,6 +48,9 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
   const [pendingAction, setPendingAction] = useState<"UNDO" | "DEACTIVATE" | null>(null);
   const [homeEditing, setHomeEditing] = useState(false);
   const [homeIds, setHomeIds] = useState<[string, string, string]>(["", "", ""]);
+  // GRAYSON-TRAIN-SHORT-LINK-001: the SHORT review, like HOME's.
+  const [shortEditing, setShortEditing] = useState(false);
+  const [shortIds, setShortIds] = useState<[string, string, string]>(["", "", ""]);
   const saving = useRef(false);
   const editingVersion = useRef<string | null>(null);
   const boundaryKey = mostRecentBoundaryAtOrBefore(now ?? new Date()).getTime();
@@ -95,6 +98,15 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
     } catch (cause) { setError(cause instanceof Error ? cause.message : "HOME forms couldn't be linked."); }
   }
 
+  async function saveShortLinks(sequence: NonNullable<Awaited<ReturnType<typeof getProgrammeView>>["sequence"]>) {
+    if (!data || data.revision.programme?.mode !== "SEQUENCE" || !sequence.nextMember) return;
+    try {
+      const linked = linkSequenceShortForms(data.revision.programme, shortIds, data.customTemplates, sequence.nextMember.templateId);
+      await save(linked, "SHORT forms linked. Current next member was preserved. No workout was started.");
+      setShortEditing(false);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "SHORT forms couldn't be linked."); }
+  }
+
   function beginActivation() {
     if (!data) return;
     editingVersion.current = data.revision.id;
@@ -133,16 +145,21 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
       {sequence ? <>
         <p className="meta"><b>A → B → C</b> · advances by qualifying completed training, never by weekday. Missed time creates no debt.</p>
         <ol className="train-prescription train-prescription--preview" aria-label="Active programme sequence">
-          {sequence.members.map((member) => <li key={member.key}><span className="train-prescription-index">{member.key}</span><span>{member.name}</span><span className="meta">{member.issue ? member.issue.toLowerCase() : member.templateId === sequence.nextMember?.templateId ? "NEXT" : "READY"}</span></li>)}
+          {sequence.members.map((member) => <li key={member.key}><span className="train-prescription-index">{member.key}</span><span>{member.name}
+            {/* REALITY-FORMS design §5: FULL, MINIMUM and RECOVERY always; SHORT and HOME once confirmed. */}
+            <span className="meta train-forms-line" data-forms={member.key}>FULL · {member.short ? `SHORT${member.short.issue ? ` (${member.short.issue.toLowerCase()})` : ""}` : "SHORT not set"} · MINIMUM · {member.home ? `HOME${member.home.issue ? ` (${member.home.issue.toLowerCase()})` : ""}` : "HOME not set"} · RECOVERY</span></span>
+            <span className="meta">{member.issue ? member.issue.toLowerCase() : member.templateId === sequence.nextMember?.templateId ? "NEXT" : "READY"}</span></li>)}
         </ol>
         <p className="meta"><b>Capacity guidance:</b> {capacityForm}. <b>Selected start form:</b> {selectedForm}. The sequence chooses what to train; capacity guidance and your explicit choice still choose how.</p>
         <p className="meta"><b>WHY:</b> {sequence.why}</p>
+        {sequence.nextMember?.short && !sequence.nextMember.issue && !sequence.nextMember.short.issue && data.revision.id && <button type="button" className="btn-secondary" disabled={disabled || startDisabled || busy} onClick={() => onStart(sequence.nextMember!.short!.templateId, "STANDARD", { programmeRevisionId: data.revision.id!, memberKey: sequence.nextMember!.key, parentTemplateId: sequence.nextMember!.templateId, form: "SHORT" })}>START SHORT · {sequence.nextMember.key}</button>}
         {sequence.nextMember?.home && !sequence.nextMember.issue && !sequence.nextMember.home.issue && data.revision.id && <button type="button" className="btn-primary" disabled={disabled || startDisabled || busy} onClick={() => onStart(sequence.nextMember!.home!.templateId, "STANDARD", { programmeRevisionId: data.revision.id!, memberKey: sequence.nextMember!.key, parentTemplateId: sequence.nextMember!.templateId, form: "HOME" })}>START HOME · {sequence.nextMember.key}</button>}
         {sequence.status === "READY" && sequence.nextMember
           ? <p role="status">START NEXT is ready in the command surface above.</p>
           : <p role="status">Guided start is paused. Review the sequence before GRAYSON names a next workout. Direct workout choice remains available above.</p>}
         <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={beginActivation}>REVIEW OR REPLACE SEQUENCE</button>
         <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setHomeIds(sequence.members.map((member) => member.home?.templateId ?? "") as [string, string, string]); setHomeEditing(true); }}>SET UP HOME FORMS</button>
+        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setShortIds(sequence.members.map((member) => member.short?.templateId ?? "") as [string, string, string]); setShortEditing(true); }}>SET UP SHORT FORMS</button>
         <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setPendingAction("UNDO"); }}>UNDO ACTIVATION</button>
         <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => { editingVersion.current = data.revision.id; setPendingAction("DEACTIVATE"); }}>DEACTIVATE</button>
         {pendingAction && <div className="quiet-fact" role="group" aria-label={pendingAction === "UNDO" ? "Confirm activation undo" : "Confirm programme deactivation"}>
@@ -168,6 +185,14 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
         <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={beginAssignments}>EDIT PROGRAMME</button>
       </>}
 
+      {shortEditing && sequence && data.revision.programme?.mode === "SEQUENCE" && <fieldset disabled={busy || disabled} style={{ minWidth: 0 }}><legend>Review SHORT forms</legend>
+        <p className="meta">SHORT stays attached to the same A, B or C member: a smaller loaded session for a tight day. Completing this exact SHORT with recorded work advances the programme; a partial SHORT holds it. It isn't the same dose as FULL.</p>
+        {sequence.members.map((member, index) => <label key={member.key} style={{ display: "block", marginTop: 8 }}>SHORT {member.key}<select aria-label={`SHORT ${member.key}`} style={{ width: "100%" }} value={shortIds[index]} onChange={(event) => setShortIds((old) => { const next = [...old] as [string, string, string]; next[index] = event.target.value; return next; })}><option value="">Choose a short workout</option>{data.customTemplates.filter((template) => template.exercises.length > 0 && !template.exercises.some((exercise) => exercise.exerciseId.startsWith("home-")) && !sequence.members.some((m) => m.templateId === template.id)).map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>)}
+        {shortIds.map((id, index) => { const template = data.customTemplates.find((item) => item.id === id); const full = data.revision.programme?.mode === "SEQUENCE" ? data.revision.programme.members[index]!.snapshot : null; return template ? <div key={id} className="quiet-fact"><h3>{sequence.members[index]!.key} · {template.name}</h3><ol>{template.exercises.map((exercise) => <li key={exercise.exerciseId}>{exercise.name} · {exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</li>)}</ol>{full && <p className="meta">Left out from FULL: {full.exercises.filter((e) => !template.exercises.some((t) => t.exerciseId === e.exerciseId)).map((e) => e.name).join(", ") || "nothing"}.</p>}</div> : null; })}
+        {shortIds.some((id) => !id) && <button type="button" className="btn-secondary" onClick={() => void (async () => { try { setBusy(true); if (data.revision.programme?.mode !== "SEQUENCE") return; const created = await ensureExactCustomTemplateSet(shortDraftInputs(data.revision.programme)); setShortIds(created.map((template) => template.id) as [string, string, string]); setReceipt("SHORT drafts are ready for review: the first three movements of each session. They are not linked yet."); setKey((value) => value + 1); } catch (cause) { setError(cause instanceof Error ? cause.message : "SHORT drafts couldn't be created."); } finally { setBusy(false); } })()}>CREATE SHORT DRAFTS</button>}
+        <button type="button" className="btn-primary" disabled={shortIds.some((id) => !id) || new Set(shortIds).size !== 3 || !sequence.nextMember} onClick={() => void saveShortLinks(sequence)}>CONFIRM SHORT LINKS</button>
+        <button type="button" className="btn-secondary" onClick={() => setShortEditing(false)}>CANCEL</button>
+      </fieldset>}
       {homeEditing && sequence && data.revision.programme?.mode === "SEQUENCE" && <fieldset disabled={busy || disabled} style={{ minWidth: 0 }}><legend>Review HOME forms</legend>
         <p className="meta">HOME stays attached to the same A, B or C member. It advances only after a completed linked HOME workout with recorded work.</p>
         {sequence.members.map((member, index) => <label key={member.key} style={{ display: "block", marginTop: 8 }}>HOME {member.key}<select aria-label={`HOME ${member.key}`} style={{ width: "100%" }} value={homeIds[index]} onChange={(event) => setHomeIds((old) => { const next = [...old] as [string, string, string]; next[index] = event.target.value; return next; })}><option value="">Choose a bodyweight workout</option>{data.customTemplates.filter((template) => template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))).map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>)}

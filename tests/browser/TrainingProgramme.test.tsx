@@ -118,9 +118,39 @@ it("creates, reviews, links and starts the next exact HOME form at 360px", async
   await expect.element(screen.getByRole("button", { name: "START HOME · A", exact: true })).toBeVisible();
   await screen.getByRole("button", { name: "START HOME · A", exact: true }).click();
   await expect.poll(() => db.workoutSessions.count()).toBe(1);
-  await expect.element(screen.getByText(/Grayson HOME A · HOME — in progress/)).toBeVisible();
+  await expect.element(screen.getByText(/WORKOUT Grayson HOME A — in progress/)).toBeVisible();
   const started = (await db.workoutSessions.toArray())[0]!;
   expect(started.templateId).not.toBe(templates[0]!.id);
   expect(started.programmeContext).toMatchObject({ memberKey: "A", parentTemplateId: templates[0]!.id, form: "HOME" });
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+});
+
+for (const width of [320, 360, 412]) it(`GRAYSON SHORT: drafts, reviews what's left out, links and starts SHORT · A at ${width}px`, async () => {
+  vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 2, 17));
+  await page.viewport(width, 900);
+  const templates = await createCustomTemplateSet((["Short Test A", "Short Test B", "Short Test C"] as const).map((name, index) => ({
+    name, exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+  const screen = await render(<TrainScreen />);
+  await screen.getByRole("button", { name: "ACTIVATE A → B → C", exact: true }).click();
+  for (const [index, key] of (["A", "B", "C"] as const).entries()) await screen.getByRole("combobox", { name: `Sequence ${key}` }).selectOptions(templates[index]!.id);
+  await screen.getByRole("button", { name: "CONFIRM ACTIVATION", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "Next: A · Short Test A", exact: true })).toBeVisible();
+  // Each member shows its five forms; SHORT and HOME aren't set yet.
+  await expect.element(screen.getByText("FULL · SHORT not set · MINIMUM · HOME not set · RECOVERY").first()).toBeVisible();
+  await screen.getByRole("button", { name: "SET UP SHORT FORMS", exact: true }).click();
+  await screen.getByRole("button", { name: "CREATE SHORT DRAFTS", exact: true }).click();
+  await expect.element(screen.getByText("A · Short Test A · SHORT", { exact: true })).toBeVisible();
+  const fullA = templates[0]!.exercises;
+  if (fullA.length > 3) await expect.element(screen.getByText(`Left out from FULL: ${fullA.slice(3).map((e) => e.name).join(", ")}.`).first()).toBeVisible();
+  expect((await axe.run(screen.getByRole("region", { name: "My programme", exact: true }).element())).violations).toEqual([]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  await screen.getByRole("button", { name: "CONFIRM SHORT LINKS", exact: true }).click();
+  await expect.element(screen.getByText("FULL · SHORT · MINIMUM · HOME not set · RECOVERY").first()).toBeVisible();
+  await screen.getByRole("button", { name: "START SHORT · A", exact: true }).click();
+  await expect.poll(() => db.workoutSessions.count()).toBe(1);
+  await expect.element(screen.getByText(/WORKOUT Short Test A · SHORT — in progress/)).toBeVisible();
+  const started = (await db.workoutSessions.toArray())[0]!;
+  expect(started.programmeContext).toMatchObject({ memberKey: "A", parentTemplateId: templates[0]!.id, form: "SHORT" });
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
 });

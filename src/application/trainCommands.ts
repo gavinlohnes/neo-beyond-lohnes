@@ -18,7 +18,7 @@ import type {
   WorkoutTemplateId,
 } from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
-import { assertLinkedHomeStart } from "./trainingProgramme";
+import { assertLinkedFormStart } from "./trainingProgramme";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -94,8 +94,8 @@ export async function startWorkout(
       assertRedOverrideConfirmed(capacity, options.overrideConfirmed ?? false);
     }
     if (options.programmeContext) {
-      if (sessionType !== "STANDARD") throw new Error("HOME_FORM_INVALID: linked HOME workouts use STANDARD execution with HOME provenance.");
-      await assertLinkedHomeStart(templateId ?? "", options.programmeContext);
+      if (sessionType !== "STANDARD") throw new Error(`${options.programmeContext.form}_FORM_INVALID: linked ${options.programmeContext.form} workouts use STANDARD execution with ${options.programmeContext.form} provenance.`);
+      await assertLinkedFormStart(templateId ?? "", options.programmeContext);
     }
 
     const id = newId();

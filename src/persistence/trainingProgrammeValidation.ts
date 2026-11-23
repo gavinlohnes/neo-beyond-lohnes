@@ -15,6 +15,7 @@ const sequenceMemberSchema = z.object({
   templateId: z.string().trim().min(1).max(100),
   snapshot: customWorkoutTemplateInputSchema,
   home: z.object({ templateId: z.string().trim().min(1).max(100), snapshot: customWorkoutTemplateInputSchema }).strict().optional(),
+  short: z.object({ templateId: z.string().trim().min(1).max(100), snapshot: customWorkoutTemplateInputSchema }).strict().optional(),
 }).strict();
 
 const sequenceProgrammeSchema = z.object({
@@ -28,6 +29,9 @@ const sequenceProgrammeSchema = z.object({
   if (!ids.includes(value.startTemplateId)) ctx.addIssue({ code: "custom", path: ["startTemplateId"], message: "Starting member must belong to the sequence." });
   const homeIds = value.members.flatMap((member) => member.home ? [member.home.templateId] : []);
   if (new Set(homeIds).size !== homeIds.length) ctx.addIssue({ code: "custom", path: ["members"], message: "HOME forms must use different templates." });
+  // GRAYSON-TRAIN-SHORT-LINK-001: a linked form template belongs to one member and one form only (design §4 rule 2).
+  const formIds = value.members.flatMap((member) => [member.home?.templateId, member.short?.templateId].filter((id): id is string => !!id));
+  if (new Set(formIds).size !== formIds.length || formIds.some((id) => ids.includes(id))) ctx.addIssue({ code: "custom", path: ["members"], message: "Each linked form must use its own template, different from every member's FULL template." });
 });
 
 export const trainingProgrammeSchema = z.union([assignedProgrammeSchema, sequenceProgrammeSchema]);
