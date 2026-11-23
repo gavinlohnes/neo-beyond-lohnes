@@ -35,11 +35,18 @@ export interface SequenceProgrammeView {
 const sameSnapshot = (template: CustomWorkoutTemplate, snapshot: SequenceTrainingProgramme["members"][number]["snapshot"]) =>
   JSON.stringify({ name: template.name, exercises: template.exercises }) === JSON.stringify(snapshot);
 
-function completionPayload(value: unknown): { sessionId: string; status: "COMPLETED" | "PARTIAL"; sessionType: SessionType } | null {
+type HomeContext = NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>;
+function homeContext(value: unknown): HomeContext | null {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Record<string, unknown>;
+  return typeof item.programmeRevisionId === "string" && (item.memberKey === "A" || item.memberKey === "B" || item.memberKey === "C") && typeof item.parentTemplateId === "string" && item.form === "HOME"
+    ? item as unknown as HomeContext : null;
+}
+function completionPayload(value: unknown): { sessionId: string; status: "COMPLETED" | "PARTIAL"; sessionType: SessionType; programmeContext: HomeContext | null } | null {
   if (!value || typeof value !== "object") return null;
   const payload = value as Record<string, unknown>;
   if (typeof payload.sessionId !== "string" || (payload.status !== "COMPLETED" && payload.status !== "PARTIAL") || (payload.sessionType !== "STANDARD" && payload.sessionType !== "REDUCED" && payload.sessionType !== "RECOVERY")) return null;
-  return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType };
+  return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType, programmeContext: homeContext(payload.programmeContext) };
 }
 
 async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: CustomWorkoutTemplate[], endSeq = Number.MAX_SAFE_INTEGER): Promise<Omit<SequenceProgrammeView, "previousProgramme">> {
@@ -69,18 +76,21 @@ async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: Cu
     if (!payload) return { status: "UNKNOWN", members, nextMember: null, why: "A workout outcome is incomplete. Next session is unknown.", activatedAt: revision.recordedAt };
     const session = await db.workoutSessions.get(payload.sessionId);
     if (!session || session.sessionType !== payload.sessionType || session.status !== payload.status) return { status: "UNKNOWN", members, nextMember: null, why: "Workout records disagree. Next session is unknown.", activatedAt: revision.recordedAt };
+    if (payload.programmeContext && !session.programmeContext) return { status: "UNKNOWN", members, nextMember: null, why: "Workout form provenance disagrees. Next session is unknown.", activatedAt: revision.recordedAt };
     let memberIndex = members.findIndex((member) => member.templateId === session.templateId);
     if (session.programmeContext?.form === "HOME") {
       const context = session.programmeContext;
       memberIndex = members.findIndex((member) => member.key === context.memberKey && member.templateId === context.parentTemplateId);
       const linked = memberIndex >= 0 ? members[memberIndex]!.home : null;
-      if (context.programmeRevisionId !== revision.id || !linked || linked.templateId !== session.templateId) {
+      if (payload.sessionType !== "STANDARD" || !payload.programmeContext || JSON.stringify(payload.programmeContext) !== JSON.stringify(context) || context.programmeRevisionId !== revision.id || !linked || linked.templateId !== session.templateId) {
         return { status: "UNKNOWN", members, nextMember: null, why: "HOME workout evidence conflicts with the confirmed programme. Next session is unknown.", activatedAt: revision.recordedAt };
       }
     }
     if (memberIndex < 0) continue;
     const sets = await getPerformedSets(session.id);
-    const workingSetCount = sets.filter(isWorkingSet).length;
+    const allowedHomeExercises = session.programmeContext?.form === "HOME" && memberIndex >= 0
+      ? new Set((programme.members[memberIndex]!.home?.snapshot.exercises ?? []).map((exercise) => exercise.exerciseId)) : null;
+    const workingSetCount = sets.filter((set) => isWorkingSet(set) && (!allowedHomeExercises || allowedHomeExercises.has(set.exerciseId))).length;
     const advances = session.programmeContext?.form === "HOME"
       ? session.status === "COMPLETED" && workingSetCount > 0
       : doesSessionAdvanceRotation(session.sessionType as SessionType, session.status as WorkoutSessionStatus, workingSetCount);

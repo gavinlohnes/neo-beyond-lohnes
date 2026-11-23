@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms } from "../../../application/trainingProgrammeQueries";
 import { saveTrainingProgramme } from "../../../application/trainingProgramme";
-import { createCustomTemplateSet } from "../../../application/customTemplateCommands";
+import { ensureExactCustomTemplateSet } from "../../../application/customTemplateCommands";
 import { GRAYSON_HOME_TEMPLATE_INPUTS } from "../../../domain/workout/homeTemplates";
 import { mostRecentBoundaryAtOrBefore } from "../../../engine/dayRollover";
-import { ROTATION_SLOTS, WEEKDAY_SLOTS, type AssignedTrainingProgramme, type SequenceTrainingProgramme, type TrainingProgramme } from "../../../domain/workout/trainingProgramme";
+import { ROTATION_SLOTS, WEEKDAY_SLOTS, type AssignedTrainingProgramme, type TrainingProgramme } from "../../../domain/workout/trainingProgramme";
 import type { WorkoutSession } from "../../../domain/common/types";
 import type { SessionType } from "../../../domain/workout/types";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
@@ -87,6 +87,14 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
     }
   }
 
+  async function saveHomeLinks(sequence: NonNullable<Awaited<ReturnType<typeof getProgrammeView>>["sequence"]>) {
+    if (!data || data.revision.programme?.mode !== "SEQUENCE" || !sequence.nextMember) return;
+    try {
+      const linked = linkSequenceHomeForms(data.revision.programme, homeIds, data.customTemplates, sequence.nextMember.templateId);
+      await save(linked, "HOME forms linked. Current next member was preserved. No workout was started.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "HOME forms couldn't be linked."); }
+  }
+
   function beginActivation() {
     if (!data) return;
     editingVersion.current = data.revision.id;
@@ -129,7 +137,7 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
         </ol>
         <p className="meta"><b>Capacity guidance:</b> {capacityForm}. <b>Selected start form:</b> {selectedForm}. The sequence chooses what to train; capacity guidance and your explicit choice still choose how.</p>
         <p className="meta"><b>WHY:</b> {sequence.why}</p>
-        {sequence.nextMember?.home && !sequence.nextMember.home.issue && data.revision.id && <button type="button" className="btn-primary" disabled={disabled || startDisabled || busy} onClick={() => onStart(sequence.nextMember!.home!.templateId, "STANDARD", { programmeRevisionId: data.revision.id!, memberKey: sequence.nextMember!.key, parentTemplateId: sequence.nextMember!.templateId, form: "HOME" })}>START HOME · {sequence.nextMember.key}</button>}
+        {sequence.nextMember?.home && !sequence.nextMember.issue && !sequence.nextMember.home.issue && data.revision.id && <button type="button" className="btn-primary" disabled={disabled || startDisabled || busy} onClick={() => onStart(sequence.nextMember!.home!.templateId, "STANDARD", { programmeRevisionId: data.revision.id!, memberKey: sequence.nextMember!.key, parentTemplateId: sequence.nextMember!.templateId, form: "HOME" })}>START HOME · {sequence.nextMember.key}</button>}
         {sequence.status === "READY" && sequence.nextMember
           ? <p role="status">START NEXT is ready in the command surface above.</p>
           : <p role="status">Guided start is paused. Review the sequence before GRAYSON names a next workout. Direct workout choice remains available above.</p>}
@@ -164,8 +172,8 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
         <p className="meta">HOME stays attached to the same A, B or C member. It advances only after a completed linked HOME workout with recorded work.</p>
         {sequence.members.map((member, index) => <label key={member.key} style={{ display: "block", marginTop: 8 }}>HOME {member.key}<select aria-label={`HOME ${member.key}`} style={{ width: "100%" }} value={homeIds[index]} onChange={(event) => setHomeIds((old) => { const next = [...old] as [string, string, string]; next[index] = event.target.value; return next; })}><option value="">Choose a bodyweight workout</option>{data.customTemplates.filter((template) => template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))).map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}</select></label>)}
         {homeIds.map((id, index) => { const template = data.customTemplates.find((item) => item.id === id); return template ? <div key={id} className="quiet-fact"><h3>{sequence.members[index]!.key} · {template.name}</h3><ol>{template.exercises.map((exercise) => <li key={exercise.exerciseId}>{exercise.name} · {exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</li>)}</ol></div> : null; })}
-        {!data.customTemplates.some((template) => template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))) && <button type="button" className="btn-secondary" onClick={() => void (async () => { try { setBusy(true); const created = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS); setHomeIds(created.map((template) => template.id) as [string, string, string]); setReceipt("Bodyweight HOME options created for review. They are not linked yet."); setKey((value) => value + 1); } catch (cause) { setError(cause instanceof Error ? cause.message : "HOME options couldn't be created."); } finally { setBusy(false); } })()}>CREATE BODYWEIGHT HOME OPTIONS</button>}
-        <button type="button" className="btn-primary" disabled={homeIds.some((id) => !id) || new Set(homeIds).size !== 3 || !sequence.nextMember} onClick={() => void save(linkSequenceHomeForms(data.revision.programme as SequenceTrainingProgramme, homeIds, data.customTemplates, sequence.nextMember!.templateId), "HOME forms linked. Current next member was preserved. No workout was started.")}>CONFIRM HOME LINKS</button>
+        {data.customTemplates.filter((template) => template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))).length < 3 && <button type="button" className="btn-secondary" onClick={() => void (async () => { try { setBusy(true); const created = await ensureExactCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS); setHomeIds(created.map((template) => template.id) as [string, string, string]); setReceipt("Bodyweight HOME options are ready for review. They are not linked yet."); setKey((value) => value + 1); } catch (cause) { setError(cause instanceof Error ? cause.message : "HOME options couldn't be created."); } finally { setBusy(false); } })()}>CREATE BODYWEIGHT HOME OPTIONS</button>}
+        <button type="button" className="btn-primary" disabled={homeIds.some((id) => !id) || new Set(homeIds).size !== 3 || !sequence.nextMember} onClick={() => void saveHomeLinks(sequence)}>CONFIRM HOME LINKS</button>
         <button type="button" className="btn-secondary" onClick={() => setHomeEditing(false)}>CANCEL</button>
       </fieldset>}
 

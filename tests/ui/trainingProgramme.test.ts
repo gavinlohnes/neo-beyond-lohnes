@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 import { resolveProgrammeSlot } from "../../src/engine/trainingProgrammeResolution";
 import { DEFAULT_SCHEDULE_PATTERN, scheduledWorkContextForLivedDay } from "../../src/engine/scheduledContext";
 import { getTrainingProgramme, saveTrainingProgramme, projectTrainingProgramme } from "../../src/application/trainingProgramme";
-import { createCustomTemplate, createCustomTemplateSet, archiveCustomTemplate, updateCustomTemplate } from "../../src/application/customTemplateCommands";
+import { createCustomTemplate, createCustomTemplateSet, ensureExactCustomTemplateSet, archiveCustomTemplate, updateCustomTemplate } from "../../src/application/customTemplateCommands";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms } from "../../src/application/trainingProgrammeQueries";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
@@ -187,6 +187,10 @@ it("links exact HOME forms, records provenance, advances only a completed worked
 
   const day = await startDay();
   const context = { programmeRevisionId: linkedRevision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "HOME" as const };
+  const foreign = await startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+  await logSet(day.id, foreign.id, "foreign-exercise", 1, 0, 20);
+  await completeWorkout(day.id, foreign.id, "STANDARD", "COMPLETED");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("A");
   const partial = await startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
   await logSet(day.id, partial.id, homes[0]!.exercises[0]!.exerciseId, 1, 0, 8);
   await completeWorkout(day.id, partial.id, "STANDARD", "PARTIAL");
@@ -215,11 +219,41 @@ it("refuses stale or changed HOME starts without blocking the confirmed full mem
   const revision = await saveTrainingProgramme(linked, activation.id);
   const day = await startDay();
   const context = { programmeRevisionId: revision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "HOME" as const };
+  await expect(startWorkout(day.id, homes[0]!.id, "RECOVERY", { overrideConfirmed: true, programmeContext: context })).rejects.toThrow("HOME_FORM_INVALID");
+  await updateCustomTemplate(templates[0]!.id, { name: "Changed parent A" });
+  await expect(startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context })).rejects.toThrow("Programme member changed");
+  await updateCustomTemplate(templates[0]!.id, { name: "Foundation A" });
   await updateCustomTemplate(homes[0]!.id, { name: "Changed HOME A" });
   await expect(startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context })).rejects.toThrow("changed or is unavailable");
   expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("A");
   const full = await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true });
   expect(full.templateId).toBe(templates[0]!.id);
+});
+
+it("atomically fills a mixed HOME-template state without duplicating an exact existing default", async () => {
+  const existing = await createCustomTemplate(GRAYSON_HOME_TEMPLATE_INPUTS[0]!);
+  const ensured = await ensureExactCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+  expect(ensured).toHaveLength(3);
+  expect(ensured[0]!.id).toBe(existing.id);
+  expect(await db.customWorkoutTemplates.count()).toBe(3);
+});
+
+it("abstains when imported HOME completion provenance disagrees with its session", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const homes = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+  const linked = linkSequenceHomeForms(activation.programme as import("../../src/domain/workout/trainingProgramme").SequenceTrainingProgramme, homes.map((home) => home.id) as [string, string, string], homes);
+  const revision = await saveTrainingProgramme(linked, activation.id);
+  const day = await startDay();
+  const context = { programmeRevisionId: revision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "HOME" as const };
+  const session = await startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+  await logSet(day.id, session.id, homes[0]!.exercises[0]!.exerciseId, 1, 0, 10);
+  await completeWorkout(day.id, session.id, "STANDARD", "COMPLETED");
+  const event = (await db.events.where("type").equals("WORKOUT_COMPLETED").toArray())[0]!;
+  await db.events.update(event.id, { payload: { ...(event.payload as object), programmeContext: { ...context, memberKey: "B" } } });
+  const view = await getProgrammeView();
+  expect(view.sequence?.status).toBe("UNKNOWN");
+  expect(view.sequence?.why).toContain("conflicts");
 });
 
 it("preserves the earned next member when HOME links create a new programme revision", async () => {

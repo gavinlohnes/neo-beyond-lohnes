@@ -48,7 +48,10 @@ export async function assertLinkedHomeStart(templateId: string, context: NonNull
   if (current.id !== context.programmeRevisionId || current.programme?.mode !== "SEQUENCE") throw new Error("HOME link changed. Reopen MY PROGRAMME before starting.");
   const member = current.programme.members.find((item) => item.key === context.memberKey && item.templateId === context.parentTemplateId);
   if (!member?.home || member.home.templateId !== templateId) throw new Error("HOME link changed. Reopen MY PROGRAMME before starting.");
-  const template = (await getCustomTemplates()).find((item) => item.id === templateId);
+  const templates = await getCustomTemplates();
+  const parent = templates.find((item) => item.id === member.templateId);
+  if (!parent || !snapshotMatches(parent, member.snapshot)) throw new Error("Programme member changed or is unavailable. Review the sequence before starting HOME.");
+  const template = templates.find((item) => item.id === templateId);
   if (!template || !template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-")) || !snapshotMatches(template, member.home.snapshot)) throw new Error("HOME form changed or is unavailable. Review it before starting.");
 }
 /** Explicit SAVE/CLEAR only. Native backups already retain events; no schema/table is added. */

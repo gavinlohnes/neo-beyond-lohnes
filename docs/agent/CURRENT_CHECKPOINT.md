@@ -9,12 +9,17 @@
   provenance; HOME active/history labels; COMPLETED-plus-working-set advancement; loaded progression
   suppression. FULL/MINIMUM/RECOVERY and capacity authority remain intact.
 - **Concurrent work:** protected PR #606 and unrelated root research edits remain untouched.
-- **Local evidence:** programme/backup causal suite passes 16/16; related command/template suites
+- **Local evidence:** programme/backup causal suite passes 18/18; related command/template suites
   pass within 58/58; real-Chromium programme journey passes 4/4 including axe at 360 px; built-PWA
   review/link/live states at 320/360/412 px have no overflow or page errors. Architecture, typecheck
   and production/PWA build pass. Physical-phone verification remains unperformed.
-- **Next:** finish proportional verification and phone evidence, open the Protected PR, obtain green
-  required CI and independent exact-head PASS, then return to Gavin for merge approval.
+- **Next:** push the review repair to PR #616, obtain renewed green required CI and independent
+  exact-head PASS, then return to Gavin for merge approval.
+- **Review history:** independent review BLOCKED first head `4c4b12a2` on invalid-parent HOME start,
+  insufficient completion/set provenance, synchronous stale confirmation and mixed-template setup.
+  The candidate now validates the parent and STANDARD form at start, requires matching event/session
+  provenance, counts only the confirmed HOME prescription, catches confirmation failure and
+  atomically reuses/creates missing defaults. Renewed exact-head review is required.
 
 ---
 

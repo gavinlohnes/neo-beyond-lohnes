@@ -93,7 +93,10 @@ export async function startWorkout(
       const capacity = await currentCapacity(beyondDayId);
       assertRedOverrideConfirmed(capacity, options.overrideConfirmed ?? false);
     }
-    if (options.programmeContext) await assertLinkedHomeStart(templateId ?? "", options.programmeContext);
+    if (options.programmeContext) {
+      if (sessionType !== "STANDARD") throw new Error("HOME_FORM_INVALID: linked HOME workouts use STANDARD execution with HOME provenance.");
+      await assertLinkedHomeStart(templateId ?? "", options.programmeContext);
+    }
 
     const id = newId();
     const session: WorkoutSession = {
