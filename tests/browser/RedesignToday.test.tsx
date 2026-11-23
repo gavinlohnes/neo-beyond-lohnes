@@ -27,8 +27,10 @@ for (const width of [320, 360, 390, 412]) it(`keeps the compact TODAY hierarchy,
     const screen = await render(<App />);
     await expect.poll(() => document.querySelector('.mode-header')?.getAttribute('data-mode')).toBe(mode);
     const main = document.querySelector('.redesign-today')!;
-    // TODAY-FOLD-001: center LOG owns logging; the next card stays quiet and At a Glance follows.
-    expect([...main.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'))).toEqual(['Day mode', 'Next action', "Today's numbers"]);
+    // TODAY-FOLD-001: center LOG owns logging; the next card stays quiet and At a Glance follows. ENERGY-CURVE-001's
+    // section reads its estimate asynchronously, so wait for it before checking the order rather than racing it.
+    await expect.poll(() => main.querySelector('[aria-label="Tonight\'s energy"]')).not.toBeNull();
+    expect([...main.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'))).toEqual(['Day mode', 'Next action', "Tonight's energy", "Today's numbers"]);
     expect([...main.querySelectorAll<HTMLElement>('.btn-primary')].filter((el) => el.getClientRects().length)).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'CHECK IN', exact: true }).elements()).toHaveLength(1);
     expect(document.body.textContent).not.toContain('NOT CHECKED IN');

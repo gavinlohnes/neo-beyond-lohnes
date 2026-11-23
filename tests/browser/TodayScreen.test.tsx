@@ -129,7 +129,7 @@ function scriptTodayScreenReads() {
   const queue: (() => Promise<BeyondDay | undefined>)[] = [];
   const script = { count: 0, next(read: () => Promise<BeyondDay | undefined>) { queue.push(read); } };
   getActiveDayMock.mockImplementation(() => {
-    if (!/TodayScreen\.tsx/.test(new Error().stack ?? "")) return realGetActiveDay();
+    if (!/at refresh \(.*TodayScreen\.tsx/.test(new Error().stack ?? "")) return realGetActiveDay();
     script.count += 1;
     return (queue.shift() ?? realGetActiveDay)();
   });
@@ -762,6 +762,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     // on B — A's context composition must never even have started.
     expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
     expect(currentContextMock).toHaveBeenCalledTimes(1);
+    expect(today.count).toBe(2); // the mount refresh and the capture refresh, nothing else
   });
 
   it("keeps the newer day/context installed and produces no unhandled rejection when an older, superseded refresh's getActiveDay() rejects after a newer refresh already succeeded", async () => {
@@ -794,6 +795,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
 
     expect(tracker.reasons).toEqual([]);
     expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    expect(today.count).toBe(2); // the mount refresh and the capture refresh, nothing else
     tracker.stop();
   });
 
