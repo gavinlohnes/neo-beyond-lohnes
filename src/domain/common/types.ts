@@ -561,6 +561,8 @@ export interface NutritionTargets {
   strengthSessionsTargetPerWeek?: number;
   /** TARGET-PROPOSAL-002 (Gavin, 2026-11-15): the lowest calorie target Weekly may propose; unset means 1,500. */
   calorieFloorKcal?: number;
+  /** GRAYSON C4.6 (Gavin, 2026-11-23): his own daily water target in oz; unset means no target and no nag. */
+  waterTargetOz?: number;
   createdAt: string;
   updatedAt: string;
 }
