@@ -155,6 +155,13 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   create debt. The underlying PlannerDay/work-run suggestion projection is preserved, so this is a
   bounded overlay in the two approved planning views rather than new scheduling authority.
 
+- **Training reality-form design (C4.4v, design only):**
+  [`GRAYSON_TRAIN_REALITY_FORMS.md`](../GRAYSON_TRAIN_REALITY_FORMS.md) preserves FULL as the base
+  template, reframes existing REDUCED as MINIMUM and preserves RECOVERY, while requiring separate
+  owner-confirmed SHORT/HOME template links and form-at-start provenance. Names, shared exercises and
+  muscle similarity are never programme identity. The recommended first later slice is linked HOME
+  forms; no form link, event/command/backup change or implementation is authorized by the design.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,

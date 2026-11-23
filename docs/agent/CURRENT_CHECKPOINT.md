@@ -1,4 +1,29 @@
-# Current objective — GRAYSON-TRAIN-PLANNING-CONNECTION-001 (2026-11-22)
+# Current objective — GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001 (2026-11-22)
+
+- **Owner authorization / lane:** Gavin approved a **PROTECTED documentation/design-only** objective
+  for coherent FULL, SHORT, MINIMUM, HOME and RECOVERY forms around the active A → B → C programme.
+  No product code, programme/template/session/event/command/schema/backup semantics, Engine,
+  recommendation, navigation, dependency/provider or Drive change.
+- **Starting master / Builder:** `33912b8ec389432a9b934091bf68d3cdd45eb5e4` after merged #613;
+  Builder Codex; branch `codex/grayson-train-reality-forms-design-001`; PR pending.
+- **Brief / campaign:** [`GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001.md`](GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001.md), C4.4v.
+- **Canonical candidate:** [`GRAYSON_TRAIN_REALITY_FORMS.md`](../GRAYSON_TRAIN_REALITY_FORMS.md).
+- **Direction:** one programme member owns several reality forms. FULL remains the base STANDARD
+  template; MINIMUM preserves existing REDUCED behavior; RECOVERY never consumes the member; SHORT
+  and HOME require exact owner-confirmed linked templates and recorded form provenance. Similarity,
+  names and dates never create programme identity.
+- **Recommended later slice:** `GRAYSON-TRAIN-HOME-LINK-001`, bounded to explicit bodyweight HOME
+  links, exact review/start provenance, honest advancement/history and form-local repair. It is not
+  authorized by this design objective.
+- **Concurrent work:** protected PR #606 and the root research changes remain unrelated and untouched.
+- **Verification / review:** Markdown/link/diff/risk checks, required docs CI and independent
+  exact-head review remain pending.
+- **Next:** complete docs verification, open the PR, obtain green CI and independent exact-head PASS,
+  then return for Gavin's merge approval.
+
+---
+
+# Historical — GRAYSON-TRAIN-PLANNING-CONNECTION-001 (merged as PR #613)
 
 - **Owner authorization / lane:** Gavin approved a **PROTECTED implementation** connecting the
   active A → B → C sequence to existing Week Planner and Week Ahead training opportunities. No
@@ -20,8 +45,8 @@
   review-required states and read-only sequence behavior. Typecheck, architecture boundaries and
   production/PWA build pass. Representative evidence is in
   [`docs/screenshots/grayson-train-planning-connection-001/`](../screenshots/grayson-train-planning-connection-001/).
-- **Review / next:** finish diff/risk checks, open the PR, obtain green required CI and independent
-  exact-head review, repair only in-scope findings, then return for Gavin's merge approval.
+- **Integration:** exact-head independent review passed with no findings, required CI was green and
+  Gavin merged #613 as `33912b8e`. Physical-phone verification remains unperformed.
 
 ---
 
