@@ -33,12 +33,26 @@ export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead,
   useEffect(() => { if (open) panelRef.current?.scrollIntoView({ block: "start" }); }, [open]);
   useEffect(() => {
     if (!open || !focusDay) return;
-    let tries = 0;
+    // The week loads a moment later (on a slow phone, seconds), and content above it can still grow after the row
+    // appears. Wait up to 5 s for the row, centre it, then keep it in view for 1 s while the page settles. Any touch,
+    // wheel or key from him stops it at once, so it never fights his own scrolling.
+    let tries = 0, settled = 0, found: HTMLElement | null = null, stopped = false;
+    const stop = () => { stopped = true; };
+    const opts = { passive: true, once: true } as const;
+    window.addEventListener("touchstart", stop, opts); window.addEventListener("wheel", stop, opts); window.addEventListener("keydown", stop, opts);
+    const inView = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= window.innerHeight; };
     const timer = window.setInterval(() => {
-      const row = panelRef.current?.querySelector<HTMLElement>(`[data-week-ahead-day="${focusDay}"]`);
-      if (row || ++tries > 20) { window.clearInterval(timer); row?.scrollIntoView({ block: "center" }); setFocusDay(null); }
+      if (stopped) { window.clearInterval(timer); setFocusDay(null); return; }
+      if (!found) {
+        found = panelRef.current?.querySelector<HTMLElement>(`[data-week-ahead-day="${focusDay}"]`) ?? null;
+        if (found) found.scrollIntoView({ block: "center" });
+        else if (++tries > 100) { window.clearInterval(timer); setFocusDay(null); }
+        return;
+      }
+      if (!inView(found)) found.scrollIntoView({ block: "center" });
+      if (++settled >= 20) { window.clearInterval(timer); setFocusDay(null); }
     }, 50);
-    return () => window.clearInterval(timer);
+    return () => { window.clearInterval(timer); window.removeEventListener("touchstart", stop); window.removeEventListener("wheel", stop); window.removeEventListener("keydown", stop); };
   }, [open, focusDay]);
   if (!reading) return null;
   return (
