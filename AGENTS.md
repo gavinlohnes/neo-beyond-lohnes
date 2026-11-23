@@ -6,7 +6,7 @@ charter and binding product/engineering safeguards; older procedural documents d
 
 This is a navigation/guardrail document, not a product spec. The durable constitutional authority
 for product/interface doctrine is `docs/OPERATOR_INTERFACE_DOCTRINE.md`; specific locked product
-and UX adjudications live in `docs/UX_DECISIONS.md`. Doctrine constrains implementation but does
+and UX adjudications live in the Decision Register: `docs/UX_DECISIONS.md` plus `docs/decisions/`. Doctrine constrains implementation but does
 not itself authorize a feature, campaign, or code change.
 
 [`docs/PRODUCT_DIRECTION.md`](docs/PRODUCT_DIRECTION.md) captures the owner-approved vision and
@@ -30,7 +30,7 @@ data through a migration plan, and obtain every applicable Protected approval.
 [`docs/GRAYSON_CAMPAIGN_PLAN.md`](docs/GRAYSON_CAMPAIGN_PLAN.md) breaks the road to Project Grayson into
 bounded campaigns and holds the shared progress tracker. Before starting Grayson work, find the item
 there and check open PRs for its ID; name the item ID in your PR and update its tracker row in the same
-PR. The plan grants no authority: each item still needs owner approval and its lane under DEV-FLOW-002.
+PR (when several PRs are open at once, DEV-FLOW-002 says which one edits the tracker). The plan grants no authority: each item still needs owner approval and its lane under DEV-FLOW-002.
 
 ## Development workflow
 
@@ -92,7 +92,7 @@ A report-only mission never closes, merges, or deletes anything without owner ap
 
 1. Direct owner decision.
 2. BEYOND Operator Interface Doctrine (`docs/OPERATOR_INTERFACE_DOCTRINE.md`).
-3. Canonical Spec + later explicitly locked Decision Register entries (`docs/UX_DECISIONS.md`).
+3. Canonical Spec + later explicitly locked Decision Register entries (`docs/UX_DECISIONS.md` and `docs/decisions/`).
 4. The current objective's approved brief, if one is in flight.
 5. Current repository implementation truth (the code itself).
 6. Current visual/interaction contracts.
@@ -219,7 +219,7 @@ Stop on unresolved conflicts.
 - `docs/OPERATOR_INTERFACE_DOCTRINE.md` — constitutional product/interface doctrine; constrains
   future work but never authorizes implementation by itself.
 - `docs/UX_DECISIONS.md` — BEYOND UX Decision Register, the canonical locked-decision log.
-  New entries from 2026-11-23 live one file each in `docs/decisions/`.
+  Entries recorded after #624 merges live one file each in `docs/decisions/`, part of the same register.
 - `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` — the shared engineering invariants.
 - `docs/agent/CAPABILITY_MAP.md` — repo-native index into Google Drive's owner-approved
   Research & Reuse Register / Donor & Experience Program: per-domain existing primitives,

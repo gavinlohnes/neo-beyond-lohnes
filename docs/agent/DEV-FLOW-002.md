@@ -282,15 +282,17 @@ merge, Gavin asked for "a better way to run this process ... while keeping usage
 1. **One PR per approved batch.** Approved items that belong together ship as one PR: one brief section per item, one
    independent exact-head review, one CI run, one merge. Split an item out only when it is blocked or its risk would
    hold up the rest. One batch PR is open at a time unless Gavin asks for more. Approval and merge rules are unchanged.
-2. **Conflict-free records.** A new decision entry goes in its own file, `docs/decisions/<ID>.md`, not appended to
-   `docs/UX_DECISIONS.md`, which stays the canonical register for entries up to this amendment and points to the
-   folder. Briefs stay one file each. Only the open batch PR edits the campaign tracker and the checkpoint; a status
-   that changes at merge is recorded in the next PR.
+2. **Conflict-free records.** The Decision Register is `docs/UX_DECISIONS.md` plus `docs/decisions/`, with equal
+   authority. Decision entries recorded after this amendment merges (#624) go one file each in
+   `docs/decisions/<ID>.md`; every earlier entry, including those dated 2026-11-23, stays in `docs/UX_DECISIONS.md`.
+   Briefs stay one file each. A PR updates its item's tracker row and the checkpoint as before, but when several PRs
+   are open at once, only one of them (the batch PR, or the oldest) edits those shared files; the others record their
+   status in their PR description, and it is carried into the files by the next PR.
 3. **Tests settle before they act.** Browser tests that tap or measure TODAY wait for its async sections with the
    shared `tests/browser/helpers/todaySettled.ts` instead of racing them.
 4. **Quieter runs.** The Builder messages Gavin only at decision points: approval needed, ready to merge (or merged),
-   blocked, or a finding that changes scope. Progress lives in the PR and the checkpoint. Do not re-run a full local
-   browser suite on a head CI is already verifying.
+   blocked, or a finding that changes scope. Progress lives in the PR and the checkpoint. The Builder does not re-run a
+   full local browser suite on a head CI is already verifying.
 
 ## Cost, continuity, and historical evidence
 
