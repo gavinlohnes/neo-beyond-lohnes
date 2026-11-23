@@ -60,7 +60,7 @@ describe("deriveOrientation · work day", () => {
       plan: {
         shift: { date: "2026-11-14", start: at(14, 18).toISOString(), end: at(15, 6).toISOString(), overnight: true, firstOfRun: false, lastOfRun: false },
         cards: [], windows: [{ kind: "NAP", start: at(14, 14, 30).toISOString(), end: at(14, 17).toISOString(), basis: "RHYTHM" }],
-        caffeine: { hours: 8, setBy: "OWNER" }, caffeineAt: at(14, 23, 30).toISOString(),
+        caffeine: { hours: 8, setBy: "OWNER" }, caffeineAt: at(14, 23, 30).toISOString(), trainWindow: null,
       },
       obligations: [
         { id: "vet", title: "Call the vet", dueAt: "2026-11-14", remindAt: "16:00", status: "OPEN" },

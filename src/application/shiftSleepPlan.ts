@@ -10,6 +10,7 @@ import { flips, flipSummary, RUN_MEAN_FLOOR } from "./rotationProjection";
 import { getWholePicture } from "./wholePictureQueries";
 import type { PictureRow } from "./wholePictureProjection";
 import { getSleepPlanSettings } from "./sleepPlanSettings";
+import { getTrainingHistory } from "./trainHistoryQueries";
 
 /**
  * CIRCADIAN-SPIKE-001's first slice (BIG-IDEAS-001 item 3, Protected; Gavin, 2026-11-11 "Approved"). For the next
@@ -24,7 +25,7 @@ export interface PlanSource {
   /** How the quote was checked, when not read in full text here (Gavin chose "search-confirmed", 2026-11-11). */
   checked?: string;
 }
-export type PlanCardKind = "CAFFEINE" | "NAP" | "FIRST_SLEEP" | "LIGHT";
+export type PlanCardKind = "CAFFEINE" | "NAP" | "FIRST_SLEEP" | "LIGHT" | "TRAINING";
 export interface PlanCard {
   kind: PlanCardKind;
   title: string;
@@ -50,7 +51,26 @@ export interface ShiftSleepPlan {
   caffeine: { hours: number; setBy: CutoffSetBy };
   /** C1.1: the CAFFEINE card's cut-off instant, for Orientation's runway. Same number the card states. */
   caffeineAt: string;
+  /**
+   * C4.4 (Gavin, 2026-11-23, TRAIN finish 2): when to train before this shift, from your usual wake time on that kind
+   * of day plus WAKE_MARGIN_MINUTES, to TRAIN_PREP_MINUTES before the shift starts. Null without a saved schedule, a
+   * Garmin wake time, a shift still ahead, or TRAIN_WINDOW_MIN_MINUTES of room.
+   */
+  trainWindow: { start: string; end: string; wake: string } | null;
 }
+
+/** C4.4: leave this long between the train window's end and the shift (eat, shower, nap, PREFLIGHT). */
+export const TRAIN_PREP_MINUTES = 120;
+/** C4.4: a window shorter than this isn't offered. */
+export const TRAIN_WINDOW_MIN_MINUTES = 45;
+/** C4.4: "hard" is your own top third by volume among this many recent finished sessions (at least HARD_MIN_SESSIONS). */
+export const HARD_LOOKBACK_SESSIONS = 12;
+export const HARD_MIN_SESSIONS = 6;
+/** C4.4: "late" is a session ending this close before your usual sleep. */
+export const LATE_TRAINING_HOURS = 3;
+/** C4.4: a session counts for tonight when it ended within this many hours. */
+export const TRAINING_RECENT_HOURS = 20;
+export interface FinishedTraining { endedAt: string; volumeLbs: number }
 export type CutoffSetBy = "DEFAULT" | "OWNER";
 
 /** Cited constants: each rule number lives here with the source sentence it comes from (quoted from the full text). */
@@ -113,6 +133,8 @@ export interface ShiftSleepPlanInput {
   now: Date; pattern: SchedulePattern; rhythm: SleepRhythm | null; rows: readonly PictureRow[];
   /** C4.2a: his own cut-off, when he set one; otherwise CAFFEINE_CUTOFF_HOURS. */
   caffeineCutoff?: { hours: number; setBy: "OWNER" } | undefined;
+  /** C4.4: finished strength sessions (COMPLETED or PARTIAL, with recorded volume), any order. */
+  training?: readonly FinishedTraining[] | undefined;
 }
 
 /** C4.2a: where the cut-off's number comes from, said on the card. */
@@ -122,7 +144,53 @@ function cutoffWords(hours: number, setBy: CutoffSetBy): string {
   return `${hours} h (your setting${below})`;
 }
 
-export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutoff }: ShiftSleepPlanInput): ShiftSleepPlan | null {
+/**
+ * C4.4 · Training feeds the night (HARVEST-003 W2). Pure. A card only when the most recent session (ended within
+ * TRAINING_RECENT_HOURS) was hard by your own record (top third by volume of your last HARD_LOOKBACK_SESSIONS, with at
+ * least HARD_MIN_SESSIONS to compare) or ended within LATE_TRAINING_HOURS of your usual sleep. Facts from your records
+ * only; no length or rule is prescribed, and nothing reaches the Engine or workout choice.
+ */
+export function deriveTrainingCard(now: Date, training: readonly FinishedTraining[], usualSleep: { start: number; end: number } | null): PlanCard | null {
+  const done = training.filter((t) => t.volumeLbs > 0 && Date.parse(t.endedAt) <= now.getTime()).sort((a, b) => a.endedAt.localeCompare(b.endedAt));
+  const last = done.at(-1);
+  if (!last || now.getTime() - Date.parse(last.endedAt) > TRAINING_RECENT_HOURS * 60 * MIN) return null;
+  const ended = new Date(last.endedAt);
+  // The sleep this session leads into (Garmin rhythm): the usual window it ended inside (training after a night shift,
+  // past the usual start), else the next time that sleep starts (a 13:00 session leads into the 07:30 sleep after that
+  // night's shift). Review on #627: ending after the usual start must never point at tomorrow's sleep.
+  let sleep: { start: Date; end: Date } | null = null;
+  let inside = false;
+  if (usualSleep) {
+    const lastStart = lastAtClock(ended, usualSleep.start);
+    const lastEnd = nextAtClock(lastStart, usualSleep.end);
+    // "Inside" only shortly after the usual start (within LATE_TRAINING_HOURS): later than that, the clock says he
+    // didn't sleep at the usual time that day, so the sleep it leads into is the next one.
+    if (ended.getTime() < lastEnd.getTime() && ended.getTime() - lastStart.getTime() <= LATE_TRAINING_HOURS * 60 * MIN) { sleep = { start: lastStart, end: lastEnd }; inside = true; }
+    else { const next = nextAtClock(ended, usualSleep.start); sleep = { start: next, end: nextAtClock(next, usualSleep.end) }; }
+  }
+  if (sleep && sleep.end.getTime() <= now.getTime()) return null; // that sleep is already behind you
+  const pool = done.slice(-HARD_LOOKBACK_SESSIONS);
+  const sorted = pool.map((t) => t.volumeLbs).sort((a, b) => a - b);
+  const threshold = sorted[Math.floor(sorted.length * 2 / 3)] ?? Infinity;
+  const hard = pool.length >= HARD_MIN_SESSIONS && last.volumeLbs >= threshold;
+  const gapMin = sleep && !inside ? Math.round((sleep.start.getTime() - ended.getTime()) / MIN) : null;
+  const late = inside || (gapMin !== null && gapMin <= LATE_TRAINING_HOURS * 60);
+  if (!hard && !late) return null;
+  const facts = [
+    hard ? `Your ${clock(ended)} session was one of your hardest: ${Math.round(last.volumeLbs).toLocaleString("en-US")} lb, in the top third of your last ${pool.length}.` : null,
+    late ? (inside ? `It ended at ${clock(ended)}, after your usual sleep start at ${clock(sleep!.start)}.` : `It ended ${Math.floor(gapMin! / 60)} h ${gapMin! % 60} min before your usual sleep at ${clock(sleep!.start)}.`) : null,
+  ].filter(Boolean).join(" ");
+  const keep = sleep ? ` Keep your sleep window, ${clock(sleep.start)}–${clock(sleep.end)}.` : " Keep your next main sleep protected.";
+  return {
+    kind: "TRAINING", title: "Protect sleep tonight",
+    detail: `${facts}${keep}`,
+    basis: `Your workout records${sleep ? " and your usual sleep (Garmin)" : ""}. "Hard" is your own top third by volume; "late" is within ${LATE_TRAINING_HOURS} h of sleep. No length is prescribed, and your workout advice is unchanged.`,
+    source: null,
+    plan: { title: "Protect sleep after today's training", plannedAt: formatLocalDate(sleep?.start ?? now) },
+  };
+}
+
+export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutoff, training }: ShiftSleepPlanInput): ShiftSleepPlan | null {
   const cutoffHours = caffeineCutoff?.hours ?? CAFFEINE_CUTOFF_HOURS;
   const cutoffSetBy: CutoffSetBy = caffeineCutoff?.setBy ?? "DEFAULT";
   if (!isOperatorSavedSchedule(pattern)) return null;
@@ -202,6 +270,20 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutof
     });
   }
 
+  // 5. C4.4: training feeds the night (a hard or late session), then the train window before this shift.
+  const usual = rhythm?.groups.find((g) => g.kind === "WORK") ?? rhythm?.groups.find((g) => g.kind === "OFF") ?? null;
+  const trainingCard = deriveTrainingCard(now, training ?? [], usual ? { start: usual.start, end: usual.end } : null);
+  let trainWindow: ShiftSleepPlan["trainWindow"] = null;
+  if (!started) {
+    const dayBefore = rhythm?.groups.find((g) => g.kind === (firstOfRun ? "OFF" : "WORK"));
+    const prepBy = new Date(start.getTime() - TRAIN_PREP_MINUTES * MIN);
+    const wakeAt = dayBefore ? lastAtClock(prepBy, dayBefore.end) : null;
+    if (wakeAt && start.getTime() - wakeAt.getTime() <= 16 * 60 * MIN) {
+      const from = new Date(Math.max(wakeAt.getTime() + WAKE_MARGIN_MINUTES * MIN, now.getTime()));
+      if (prepBy.getTime() - from.getTime() >= TRAIN_WINDOW_MIN_MINUTES * MIN) trainWindow = { start: from.toISOString(), end: prepBy.toISOString(), wake: wakeAt.toISOString() };
+    }
+  }
+
   // 4. Light on the way home after a night shift.
   if (overnight) {
     cards.push({
@@ -212,12 +294,17 @@ export function deriveShiftSleepPlan({ now, pattern, rhythm, rows, caffeineCutof
       plan: { title: `Sunglasses for the way home, ${clock(end)}`, plannedAt: formatLocalDate(end) },
     });
   }
-  return { shift: { date: formatLocalDate(livedStart(now, offset)), start: start.toISOString(), end: end.toISOString(), overnight, firstOfRun, lastOfRun }, cards, windows, caffeine: { hours: cutoffHours, setBy: cutoffSetBy }, caffeineAt: cutoff.toISOString() };
+  if (trainingCard) cards.push(trainingCard);
+  return { trainWindow, shift: { date: formatLocalDate(livedStart(now, offset)), start: start.toISOString(), end: end.toISOString(), overnight, firstOfRun, lastOfRun }, cards, windows, caffeine: { hours: cutoffHours, setBy: cutoffSetBy }, caffeineAt: cutoff.toISOString() };
 }
 
 export async function getShiftSleepPlan(now: Date = new Date()): Promise<ShiftSleepPlan | null> {
-  const [pattern, records, summaries, picture, settings] = await Promise.all([getSchedulePattern(), getImportedSleep(), getDaySummaries(), getWholePicture(now), getSleepPlanSettings()]);
-  return deriveShiftSleepPlan({ now, pattern, rhythm: deriveSleepRhythm(records.map((r) => r.evidence), summaries, now), rows: picture.rows, caffeineCutoff: settings.caffeineCutoff });
+  const [pattern, records, summaries, picture, settings, history] = await Promise.all([getSchedulePattern(), getImportedSleep(), getDaySummaries(), getWholePicture(now), getSleepPlanSettings(),
+    getTrainingHistory().catch(() => [])]);
+  // C4.4: finished strength sessions with a known end (start + duration) and recorded volume.
+  const training = history.filter((h) => (h.status === "COMPLETED" || h.status === "PARTIAL") && h.durationMinutes !== null && h.volumeLbs > 0)
+    .map((h) => ({ endedAt: new Date(Date.parse(h.startedAt) + h.durationMinutes! * MIN).toISOString(), volumeLbs: h.volumeLbs }));
+  return deriveShiftSleepPlan({ now, pattern, rhythm: deriveSleepRhythm(records.map((r) => r.evidence), summaries, now), rows: picture.rows, caffeineCutoff: settings.caffeineCutoff, training });
 }
 
 /** C4.2a: owner-controlled cutoff configuration. No sleep-outcome inference or proposal. */

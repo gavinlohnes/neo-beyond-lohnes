@@ -77,7 +77,7 @@ status of its own.
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
 | C4.2a | Owner-editable caffeine cut-off, source, SAVE / UNDO | Done (#595) | Narrowed by Gavin 2026-11-20: no automated suggestion, confidence or suppression. Explicit experiment deferred to separate authorization |
 | C4.3 | Optional one-tap caffeine log | Not started |  |
-| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started | Training Intelligence design defines programme/calibration/progress boundaries; it does not authorize C4.4 |
+| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | In progress (TRAIN finish 2) | Hard/late session adds "Protect sleep tonight"; train window from usual wake to 2 h before the shift; [brief](agent/GRAYSON-TRAIN-FINISH-2.md) |
 | C4.4p | Guided exercise/calibration preview | Done (#608) | Read-only first Training Intelligence slice; no programme, Engine or C4.4 training-to-sleep/window behavior |
 | C4.4d | Guided three-session plan draft | Done (#609) | Ephemeral A/B/C and reality-form preview; no save/activation and does not start C4.4 |
 | C4.4s | Owner-confirmed A/B/C template save | Done (#610) | Exact review plus atomic custom-template creation; no programme activation, assignment or C4.4 behavior |
@@ -88,6 +88,7 @@ status of its own.
 | C4.4w | Exact bodyweight HOME links | Done (#616) | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
 | C4.4x | Linked SHORT forms | Done (#625, fix #626) | Exact loaded SHORT per member, mirrors HOME; completed advances, partial holds; [brief](agent/GRAYSON-TRAIN-FINISH-1.md) |
 | C4.4y | TRAIN Progress & Direction (read only) | Done (#625, fix #626) | WORKING / UNCERTAIN / NEEDS ATTENTION with evidence floors and WHY; no adaptation |
+| C4.4z | Delta during training (guided execution) | In progress (TRAIN finish 2) | Quiet on normal sets; one owner-decided load proposal on clear evidence; pain stop without diagnosis; one end review |
 | LOG-WHEN-001 | Logger: DAY and SHIFT on WHEN | Done (#621) | Protected (amends LOG-TIME-001); water and meal sheets; brief `docs/agent/GRAYSON-LOG-WHEN-001.md` |
 | LOG-CATCHUP-001 | Post-shift catch-up | Done (#622) | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
 | C4.5 | Mission review (monthly) | Not started |  |

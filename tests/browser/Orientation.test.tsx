@@ -28,7 +28,7 @@ const input = (over: Partial<OrientationInput> = {}): OrientationInput => ({
   picture: { now: { state: "WORK_RUN", label: "WORK RUN", line: "Shift 2 of 3. Fuel, water and sleep between shifts carry the run.", why: [] }, next: null },
   shift: { start: at(14, 18), end: at(15, 6) }, run: { position: 2, length: 3 },
   plan: { shift: { date: "2026-11-14", start: at(14, 18).toISOString(), end: at(15, 6).toISOString(), overnight: true, firstOfRun: false, lastOfRun: false },
-    cards: [], windows: [{ kind: "NAP", start: at(14, 15).toISOString(), end: at(14, 17).toISOString(), basis: "RHYTHM" }], caffeine: { hours: 6, setBy: "DEFAULT" }, caffeineAt: at(15, 1, 30).toISOString() },
+    cards: [], windows: [{ kind: "NAP", start: at(14, 15).toISOString(), end: at(14, 17).toISOString(), basis: "RHYTHM" }], caffeine: { hours: 6, setBy: "DEFAULT" }, caffeineAt: at(15, 1, 30).toISOString(), trainWindow: null },
   sleep: { minutes: 400, fromGarmin: true, band: { low: 415, high: 470, kind: "WORK" } }, checkIn: null, recommendation: null,
   draft: { kind: "RECOVER", title: "Protect recovery", reason: "Your last two main sleeps were below your usual range for those kinds of day.", nights: [{ livedDayStart: "", minutes: 400, kind: "WORK", low: 415, high: 470 }, { livedDayStart: "", minutes: 395, kind: "WORK", low: 415, high: 470 }] },
   prep: OPEN_PREP, obligations: [{ id: "vet", title: "Call the vet", dueAt: "2026-11-14", remindAt: "16:00", status: "OPEN" }], ...over,

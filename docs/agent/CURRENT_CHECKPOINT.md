@@ -4,9 +4,9 @@
   finish 1: SHORT forms + Progress & Direction). Gavin merged #625 before its review finished; the post-merge review
   BLOCKed on two points, fixed in the follow-up PR (#626): older HOME revisions stay readable (the not-a-FULL rule
   moved to save time) and Progress shows an unknown next session honestly. Builder: Claude Code.
-- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). The #625 follow-up.
-- **TRAIN left:** guided execution (Delta during sets), C4.4 training feeds the night plus a train window, programme
-  adaptation (after field evidence), C9.2 visual finish.
+- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). TRAIN finish 2 (guided execution + C4.4; Protected;
+  Gavin merges). #626 (the #625 follow-up) merged on PASS.
+- **TRAIN left after finish 2:** programme adaptation (after field evidence), Gym-mode proposals, C9.2 visual finish.
 - **Known load-sensitive test not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation).
 - **Field check pending:** C1, C2.1, C4.8a/b, WHEN day picker, catch-up, SHORT and PROGRESS on real shifts.
 
