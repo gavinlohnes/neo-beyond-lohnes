@@ -1,0 +1,10 @@
+/* GRAYSON C4.8a: Eating Window setup on BODY. Plain controls; no red. */
+.eating-setup { margin: 12px 0; }
+.eating-setup__group { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; border: 0; }
+.eating-setup__group legend { margin-bottom: 4px; font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); }
+.eating-setup__presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.eating-setup__presets .btn-secondary { width: auto; min-height: 44px; }
+.eating-setup__presets .btn-secondary[aria-pressed="true"] { border-color: var(--p-t1, #f2f2f2); color: var(--p-t1, #f2f2f2); }
+.eating-setup__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 16px; }
+.eating-setup__row input { min-height: 40px; font: inherit; font-size: 16px; color: var(--p-t1, #f2f2f2); background: var(--p-s2, #0f0f0f); border: 1px solid var(--p-line-2, #3a3a3a); padding: 0 8px; }
+.eating-setup__question p { margin: 0 0 6px; font-size: 16px; }

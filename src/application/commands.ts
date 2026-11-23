@@ -980,6 +980,8 @@ export async function updateSchedulePattern(input: SchedulePatternInput): Promis
     ...(existing?.keyMomentAlerts ? { keyMomentAlerts: existing.keyMomentAlerts } : {}),
     // C4.2a: so do the sleep plan's settings (the caffeine cut-off).
     ...(existing?.sleepPlanSettings ? { sleepPlanSettings: existing.sleepPlanSettings } : {}),
+    // GRAYSON C4.8a: and the Eating Window's.
+    ...(existing?.eatingWindowSettings ? { eatingWindowSettings: existing.eatingWindowSettings } : {}),
   };
   await db.schedulePatterns.put(record);
   return record;

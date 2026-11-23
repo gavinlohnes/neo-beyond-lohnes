@@ -1,4 +1,5 @@
 import { MealPlanPanel } from "./MealPlanPanel";
+import { EatingWindowSetup } from "./EatingWindowSetup";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { LogTimeEditor } from "../../components/LogTimeEditor";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
@@ -2511,6 +2512,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
         {/* DENSITY-001: photos, measurements, records, whole picture and rotation are DATA's shortcuts above; not listed twice. */}
       </section>
       </FieldDisclosure></div>
+      {/* GRAYSON C4.8a: Eating Window setup; off until he turns it on. */}
+      <EatingWindowSetup active={visible} />
       <section aria-label="History"><h2 className="section-label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}

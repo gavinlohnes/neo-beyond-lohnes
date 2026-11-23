@@ -266,6 +266,11 @@ export type DomainEventType =
   | "WEEKLY_REVIEW_SAVED"
   | "PREPARATION_RECORDED"
   | "MEMORY_RECORDED"
+  // GRAYSON C4.8a (Gavin, 2026-11-20 design #601; build approved 2026-11-23): Eating Window boundaries he marks, a
+  // one-day skip, and undo of either. Day-scoped to the active lived day when tapped. Payloads below.
+  | "EATING_WINDOW_MARKED"
+  | "EATING_WINDOW_DAY_SKIPPED"
+  | "EATING_WINDOW_MARK_VOIDED"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"
@@ -923,7 +928,28 @@ export interface SchedulePattern {
    * (application/sleepPlanSettings.ts), never by the schedule's own parser. Absent means the cited defaults.
    */
   sleepPlanSettings?: SleepPlanSettings;
+  /** GRAYSON C4.8a: the Eating Window programme's settings; configuration, not history (like the caffeine cut-off). */
+  eatingWindowSettings?: EatingWindowSettings;
 }
+
+/** GRAYSON C4.8a: the day kinds a planned eating window is set for. */
+export type EatingWindowDayKind = "WORK" | "RECOVERY" | "OFF";
+export interface EatingWindowSettings {
+  /** Off until he turns it on. */
+  enabled: boolean;
+  /** Hours the window is open (6–16). 12, 10, 8 and 6 are the presets 12:12, 14:10, 16:8 and 18:6. */
+  eatingHours: number;
+  /** When eating opens on each kind of lived day, "HH:MM" local. Times before 16:30 fall on the lived day's second date. */
+  opensAt: Record<EatingWindowDayKind, string>;
+  /** When he completed the safety check (answers are never stored). */
+  safetyCheckedAt: string;
+  setAt: string;
+}
+/** EATING_WINDOW_MARKED: CLOSED = he stopped eating (a fast starts); OPENED = he started eating (the fast ends). */
+export interface EatingWindowMarkedPayload { commandId: string; boundary: "CLOSED" | "OPENED" }
+export interface EatingWindowDaySkippedPayload { commandId: string }
+/** Undo of a mark or a skip, naming the event it voids. The voided event is never deleted. */
+export interface EatingWindowMarkVoidedPayload { commandId: string; voidsEventId: string }
 
 /** C4.2a: owner-set caffeine cutoff configuration and its timestamp. No automated proposal or experiment. */
 export interface SleepPlanSettings {
