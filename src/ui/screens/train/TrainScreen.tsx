@@ -1179,7 +1179,8 @@ export function TrainScreen({
               <p className="bf-bar__day" data-train-day><span className="bf-bar__date">{new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}</span>
                 {trainHome && (() => { const c = describeDayContext(trainHome.day, trainHome.schedule); return <span className="bf-bar__ctx">{c.text}{c.basis === "schedule" ? <em> · schedule</em> : null}</span>; })()}</p>
               <p className="train-purpose">Prepare your workout. You choose the session.</p>
-              <TrainWindowLine active={active} />
+              {/* C4.4: read only after TRAIN's own day read has succeeded, so it never competes with it. */}
+              {trainHome && <TrainWindowLine active={active} />}
             </>} />
           </section>)}
 
