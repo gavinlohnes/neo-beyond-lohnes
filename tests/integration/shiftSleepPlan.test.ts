@@ -112,3 +112,42 @@ describe("DAY-MAP-001 slice 2: the plan's windows as times, for TODAY's bar", ()
     expect(plan(new Date(2026, 9, 27, 9), { rows: [] })!.windows.filter((w) => w.kind === "SLEEP")).toEqual([]);
   });
 });
+
+describe("C4.4: training feeds the night, and a train window", () => {
+  const iso = (d: number, h: number, m = 0) => new Date(2026, 9, d, h, m).toISOString();
+  const history = (lastEnded: string, lastVolume: number) => [
+    ...[2000, 2500, 3000, 3500, 4000, 4500, 5000].map((volumeLbs, i) => ({ endedAt: iso(10 + i, 17), volumeLbs })), { endedAt: lastEnded, volumeLbs: lastVolume },
+  ];
+
+  it("a train window from an hour after your usual wake to two hours before the shift; none when too short or unknown", () => {
+    // Mon Oct 26, first night of the run: day-off wake 08:00, shift 18:00.
+    expect(plan(new Date(2026, 9, 26, 7))!.trainWindow).toEqual({ start: iso(26, 9), end: iso(26, 16), wake: iso(26, 8) });
+    expect(plan(new Date(2026, 9, 26, 12))!.trainWindow).toMatchObject({ start: iso(26, 12), end: iso(26, 16) });
+    expect(plan(new Date(2026, 9, 26, 15, 30))!.trainWindow).toBeNull(); // 30 minutes left: not offered
+    expect(plan(new Date(2026, 9, 26, 7), { rhythm: null })!.trainWindow).toBeNull(); // no Garmin wake time
+    expect(plan(new Date(2026, 9, 26, 19))!.trainWindow).toBeNull(); // the shift is under way
+    expect(deriveShiftSleepPlan({ now: new Date(2026, 9, 26, 7), pattern: DEFAULT_SCHEDULE_PATTERN, rhythm, rows })).toBeNull(); // no saved schedule
+  });
+
+  it("a hard session (your own top third by volume) adds Protect sleep tonight, from your records only", () => {
+    const p = plan(new Date(2026, 9, 26, 15), { training: history(iso(26, 13), 6000) })!;
+    const card = p.cards.find((c) => c.kind === "TRAINING")!;
+    expect(card.title).toBe("Protect sleep tonight");
+    expect(card.detail).toBe("Your 13:00 session was one of your hardest: 6,000 lb, in the top third of your last 8. Keep your sleep window, 07:30–14:15.");
+    expect(card.source).toBeNull();
+    expect(card.basis).toContain("your workout advice is unchanged");
+  });
+
+  it("a session ending within 3 h of your usual sleep is late, even when it isn't hard", () => {
+    // After Monday night's shift: a 06:40 session, usual work-day sleep at 07:30.
+    const card = plan(new Date(2026, 9, 27, 7), { training: history(iso(27, 6, 40), 1000) })!.cards.find((c) => c.kind === "TRAINING")!;
+    expect(card.detail).toBe("It ended 0 h 50 min before your usual sleep at 07:30. Keep your sleep window, 07:30–14:15.");
+  });
+
+  it("stays out when the session was ordinary and early, too old, too few to compare, or its sleep is behind you", () => {
+    expect(plan(new Date(2026, 9, 26, 15), { training: history(iso(26, 13), 1000) })!.cards.some((c) => c.kind === "TRAINING")).toBe(false);
+    expect(plan(new Date(2026, 9, 26, 15), { training: history(iso(25, 13), 6000) })!.cards.some((c) => c.kind === "TRAINING")).toBe(false);
+    expect(plan(new Date(2026, 9, 26, 15), { training: [{ endedAt: iso(26, 13), volumeLbs: 6000 }] })!.cards.some((c) => c.kind === "TRAINING")).toBe(false);
+    expect(plan(new Date(2026, 9, 27, 15), { training: history(iso(27, 6, 40), 1000) })!.cards.some((c) => c.kind === "TRAINING")).toBe(false);
+  });
+});

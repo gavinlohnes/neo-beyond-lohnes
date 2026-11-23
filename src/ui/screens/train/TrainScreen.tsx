@@ -3,6 +3,7 @@ import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { TrainProgress } from "./TrainProgress";
+import { TrainWindowLine } from "./TrainWindowLine";
 import { deriveSetProposal, reviewLines, type GuidanceNote, type SetProposal } from "../../../application/trainGuidance";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -1178,6 +1179,7 @@ export function TrainScreen({
               <p className="bf-bar__day" data-train-day><span className="bf-bar__date">{new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}</span>
                 {trainHome && (() => { const c = describeDayContext(trainHome.day, trainHome.schedule); return <span className="bf-bar__ctx">{c.text}{c.basis === "schedule" ? <em> · schedule</em> : null}</span>; })()}</p>
               <p className="train-purpose">Prepare your workout. You choose the session.</p>
+              <TrainWindowLine active={active} />
             </>} />
           </section>)}
 
