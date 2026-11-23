@@ -4,6 +4,7 @@ import { captureCommitFeedback } from "../feel/feedback";
 import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
+import { getEatingWindowView, windowFuelLine } from "../../application/eatingWindow";
 import { resolveWhen, shiftPointAt, type ShiftPoint, type WhenChoice } from "../../application/logTimes";
 import { getLoggableDays, type LoggableDay } from "../../application/loggableDays";
 import { BodyScreen } from "../screens/body/BodyScreen";
@@ -131,6 +132,21 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       .catch(() => { if (current) setReadState("error"); });
     return () => { current = false; };
   }, [target, retry]);
+  // GRAYSON C4.8b · 8: while logging a meal, where the eating window stands and protein against it.
+  const [windowLine, setWindowLine] = useState<string | null>(null);
+  useEffect(() => {
+    if (target !== "meal") return;
+    let current = true;
+    void getEatingWindowView().then((v) => {
+      if (!current) return;
+      if (!v) { setWindowLine(null); return; }
+      const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+      setWindowLine(v.state.kind === "FASTING" ? `Eating window: fasting since ${clock(v.state.since)}. Logging food doesn't end it; TODAY will offer that.`
+        : v.state.kind === "OPEN" ? (v.fuel ? `Eating window open. ${windowFuelLine(v.fuel, v.state)}` : "Eating window open.")
+        : null);
+    }, () => { if (current) setWindowLine(null); });
+    return () => { current = false; };
+  }, [target, retry]);
   const appliedMeal = useRef<number | null>(null);
   useEffect(() => {
     if (target !== "meal" || !mealRequest || readState !== "ready" || appliedMeal.current === mealRequest.key) return;
@@ -206,6 +222,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       </>}
       {(target === "meal" || target === "myMeals") && <>
         {target === "meal" && page === "list" && diary && <FoodDiaryHeader diary={diary} onEdit={diaryDayId ? (rootEventId) => setEditTarget({ beyondDayId: diaryDayId, rootEventId }) : undefined} />}
+        {target === "meal" && page === "list" && windowLine && <p className="meta food-diary__window" data-eating-window-line>{windowLine}</p>}
         <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={async () => { if (diaryDayId) setDiary(await getFoodDiary(diaryDayId)); }} />
         {(page === "list" || page === "new" || page === "quick" || page === "portion" || page === "food") && <WhenRow when={when} onChange={setWhen} disabled={busy} days={loggableDays} dayId={logDayId} onDay={(id) => { setLogDayId(id); setWhen({ kind: "NOW" }); }} shift={chosenDay ? chosenDay.shift : todayShift} />}
         {page !== "list" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPage("list")}>BACK TO MY MEALS</button>}

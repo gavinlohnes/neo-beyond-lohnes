@@ -12,6 +12,15 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C4.8b — the Eating Window meets the meal log (owner go 2026-11-23)
+
+"7 + 8 as C4.8b." [Brief](agent/GRAYSON-C4.8B-001.md). Amends C4.8a's "nothing is inferred from meals" to: a logged
+meal may *offer* a boundary, never set one. During a fast, a meal logged after it began offers END FAST AT its time;
+near or past the window's end (60 min), or after the planned window with no marks, the last meal offers FAST FROM its
+time. NOT NOW dismisses that offer. While the window is open, TODAY's card and the meal sheet state protein against
+it ("Protein 76 / 170 g · 94 g left with 2:10 of window."); while fasting, the meal sheet says logging food doesn't end
+the fast. Plain facts only: no failure or level words, no red, no target, advice or Engine change.
+
 ## GRAYSON-C4.8a — Eating Window foundation (owner go 2026-11-23)
 
 "Approve C4.8a". [Brief](agent/GRAYSON-C4.8A-001.md); design GRAYSON-BEHAVIOR-FASTING-DESIGN-001. Off until he
