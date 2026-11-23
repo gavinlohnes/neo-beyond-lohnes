@@ -147,8 +147,10 @@ it('TODAY-FOLD-001: missing guidance is calm, center LOG owns logging, with one 
   const root = document.querySelector('.redesign-today')!;
   expect([...root.querySelectorAll<HTMLElement>('.btn-primary')].filter(el => el.getClientRects().length)).toHaveLength(0);
   for (const gone of ['No guidance recorded yet', 'Your tools are ready', 'CHOOSE AN ACTION', 'NOT CHECKED IN']) expect(document.body.textContent).not.toContain(gone);
+  // ENERGY-CURVE-001's section loads asynchronously once a day exists; wait for it rather than racing it.
+  await expect.poll(() => root.querySelector('[aria-label="Tonight\'s energy"]')).not.toBeNull();
   const sections = [...root.children].filter((node) => node.tagName === 'SECTION').map((node) => node.getAttribute('aria-label'));
-  expect(sections).toEqual(['Day mode', 'Next action', "Today's numbers"]);
+  expect(sections).toEqual(['Day mode', 'Next action', "Tonight's energy", "Today's numbers"]);
   expect(screen.getByRole('button', { name: 'Log water', exact: true }).elements()).toHaveLength(0);
   expect(screen.getByRole('button', { name: 'Log a meal', exact: true }).elements()).toHaveLength(0);
   await expect.element(screen.getByRole('button', { name: 'Open LOG', exact: true })).toBeVisible();
