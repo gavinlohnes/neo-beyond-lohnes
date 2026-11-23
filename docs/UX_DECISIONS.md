@@ -12,6 +12,10 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+> **Decision entries recorded after #624 merges live one file each in [`decisions/`](decisions/README.md)**, so
+> parallel work never conflicts here. This file and that folder together are the Decision Register; every entry below
+> stays canonical.
+
 ## GRAYSON-C4.8b — the Eating Window meets the meal log (owner go 2026-11-23)
 
 "7 + 8 as C4.8b." [Brief](agent/GRAYSON-C4.8B-001.md). Amends C4.8a's "nothing is inferred from meals" to: a logged

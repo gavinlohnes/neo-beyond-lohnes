@@ -108,11 +108,22 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   useSessionDraft("record-sheet-edit", page === "edit");
   const [bodyFocus, setBodyFocus] = useState<"water" | "sleep" | "weight" | "urge" | "meal" | "foodLookup" | "protein" | null>(null);
   const [bodyRequest, setBodyRequest] = useState(0);
+  // Opening a sheet always starts on TODAY. A reload of the list (a saved-meal edit, a rollover) keeps the chosen day
+  // while it's still offered; if it isn't, DAY and WHEN return to TODAY/NOW together, so a time picked for an earlier
+  // day never lands on today (review note on #621).
+  useEffect(() => { setLogDayId(null); setWhen({ kind: "NOW" }); }, [target]);
   useEffect(() => {
     if (target !== "water" && target !== "meal" && target !== "myMeals") return;
-    setLogDayId(null);
     let live = true;
-    getLoggableDays().then((days) => { if (live) setLoggableDays(days); }, () => { if (live) setLoggableDays([]); });
+    const keep = (days: LoggableDay[]) => {
+      setLoggableDays(days);
+      setLogDayId((id) => {
+        if (id === null || days.some((d) => d.id === id)) return id;
+        setWhen({ kind: "NOW" });
+        return null;
+      });
+    };
+    getLoggableDays().then((days) => { if (live) keep(days); }, () => { if (live) keep([]); });
     return () => { live = false; };
   }, [target, retry]);
   useLayoutEffect(() => {

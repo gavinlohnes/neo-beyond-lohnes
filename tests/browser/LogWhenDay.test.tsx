@@ -70,3 +70,22 @@ it("after END DAY with no new day open, YESTERDAY is the real yesterday and the 
   expect((await getHydrationEntries(yesterdayId)).map((e) => e.at)).toEqual([new Date(2026, 9, 27, 20).toISOString()]);
   expect(await getHydrationEntries(todayId)).toEqual([]);
 });
+
+it("a list reload while the sheet is open keeps the chosen earlier day and its time (review note on #621)", async () => {
+  await page.viewport(360, 800);
+  const screen = await render(<App />);
+  if (document.querySelector(".shift-change")) await screen.getByRole("button", { name: "CONTINUE", exact: true }).click();
+  vi.setSystemTime(new Date(2026, 9, 28, 16, 45));
+  await openLogTarget(screen, "WATER");
+  const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
+  await sheet.getByRole("group", { name: "Day" }).getByRole("button", { name: "YESTERDAY", exact: true }).click();
+  await sheet.getByRole("group", { name: "When" }).getByLabelText("Pick a time").fill("20:00");
+  // The day rolls over with the sheet open: the list reloads, and the 27th is now an EARLIER day, still chosen.
+  const { performDueDayRollover } = await import("../../src/application/commands");
+  vi.setSystemTime(new Date(2026, 9, 29, 16, 40));
+  await performDueDayRollover();
+  await expect.element(sheet.getByRole("combobox", { name: "Earlier day" })).toHaveValue(yesterdayId);
+  await sheet.getByRole("button", { name: "+8 oz", exact: true }).click();
+  await expect.element(screen.getByText("8 oz recorded on Tue, Oct 27 at 20:00.", { exact: true })).toBeVisible();
+  expect((await getHydrationEntries(yesterdayId)).map((e) => e.at)).toEqual([new Date(2026, 9, 27, 20).toISOString()]);
+});
