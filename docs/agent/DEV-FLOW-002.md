@@ -275,6 +275,23 @@ The charter neither changes product functionality nor approves future provider/b
 Engine, primary-navigation, or AI-autonomy work. Google Drive is a planning archive, not a
 competing implementation authority. Resolve genuine product-authority conflicts with the owner.
 
+**Batches, conflict-free records, settled tests and quieter runs (amendment, Gavin, 2026-11-23).** After a day of
+three parallel logger PRs, each with its own review, CI, fix and re-review cycle, doc conflicts and a wait on each
+merge, Gavin asked for "a better way to run this process ... while keeping usage to a minimum" and approved:
+
+1. **One PR per approved batch.** Approved items that belong together ship as one PR: one brief section per item, one
+   independent exact-head review, one CI run, one merge. Split an item out only when it is blocked or its risk would
+   hold up the rest. One batch PR is open at a time unless Gavin asks for more. Approval and merge rules are unchanged.
+2. **Conflict-free records.** A new decision entry goes in its own file, `docs/decisions/<ID>.md`, not appended to
+   `docs/UX_DECISIONS.md`, which stays the canonical register for entries up to this amendment and points to the
+   folder. Briefs stay one file each. Only the open batch PR edits the campaign tracker and the checkpoint; a status
+   that changes at merge is recorded in the next PR.
+3. **Tests settle before they act.** Browser tests that tap or measure TODAY wait for its async sections with the
+   shared `tests/browser/helpers/todaySettled.ts` instead of racing them.
+4. **Quieter runs.** The Builder messages Gavin only at decision points: approval needed, ready to merge (or merged),
+   blocked, or a finding that changes scope. Progress lives in the PR and the checkpoint. Do not re-run a full local
+   browser suite on a head CI is already verifying.
+
 ## Cost, continuity, and historical evidence
 
 Prefer the most suitable available agent without unnecessary subscriptions, duplicate work, or

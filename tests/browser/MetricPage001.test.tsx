@@ -9,6 +9,7 @@ import { App } from "../../src/app/App";
 import { logWater } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 import { seedLivedMonth, MONTH_FIRST_DAY, MONTH_NOW } from "./helpers/livedMonth";
+import { todaySettled } from "./helpers/todaySettled";
 
 vi.mock("../../src/application/metricDetailQueries", async (original) => {
   const actual = await original<typeof import("../../src/application/metricDetailQueries")>();
@@ -48,7 +49,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("TODAY's WATER opens HYDRATION: your logs, today by hour, honest gaps, the split, and its records and LOG one tap away", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Water 32 oz/ }).click();
     await expect.element(sheet("HYDRATION")).toBeVisible();
     await expect.poll(() => text("[data-md-hero]")).toContain("32");
@@ -88,7 +89,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("HYDRATION's LOG WATER opens the existing water sheet", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Water 32 oz/ }).click();
     await sheet("HYDRATION").getByRole("button", { name: "LOG WATER", exact: true }).click();
     await expect.element(screen.getByRole("dialog").getByRole("button", { name: "+16 oz", exact: true })).toBeVisible();
@@ -100,7 +101,7 @@ describe("METRIC-PAGE-001 pilot", () => {
     vi.setSystemTime(MONTH_NOW + 3 * H + 20 * 60_000); // 01:30
     await logWater(days.at(-1)!.id, 16);
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Water 48 oz/ }).click();
     await expect.poll(() => text("[data-md-hero]")).toBe("48 oz so far · since 16:30");
   });
@@ -108,7 +109,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("BODY's STEPS opens STEPS: Garmin's measurements in blue, its running total, ranges and its own routes", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
     await expect.element(screen.getByRole("button", { name: "Open steps history" })).toBeVisible();
     await screen.getByRole("button", { name: "Open steps history" }).click();
@@ -132,7 +133,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("TODAY's STEPS and BODY's HYDRATION reach the same pages", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Steps / }).click();
     await expect.element(sheet("STEPS")).toBeVisible();
     await sheet("STEPS").getByRole("button", { name: "CLOSE" }).click();
@@ -171,7 +172,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("resting heart rate opens the same page from TODAY and BODY: its latest reading, Garmin blue, its own weekly meaning", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Resting heart rate / }).click();
     await expect.element(sheet("RESTING HEART RATE")).toBeVisible();
     await expect.poll(() => text("[data-md-hero]")).toMatch(/^\d+ bpm · (this lived day|lived day of )/);
@@ -198,7 +199,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("slice 3: the sleep page keeps its own chart and gains the source line and work days against days off", async () => {
     await seedLivedMonth();
     await page.viewport(360, 900);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Sleep / }).click();
     const sleep = page.getByRole("dialog", { name: "SLEEP", exact: true });
     await expect.element(sleep).toBeVisible();
@@ -223,7 +224,7 @@ describe("METRIC-PAGE-001 pilot", () => {
     const day = await startDay();
     await logSleep(day.id, 420, "PRIMARY");
     await page.viewport(360, 900);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     await screen.getByRole("button", { name: /^Main sleep|^Sleep / }).click();
     await expect.element(page.getByRole("dialog", { name: "SLEEP", exact: true })).toBeVisible();
     await expect.poll(() => text("[data-sleep-source]")).toContain("No Garmin data yet.");
@@ -233,7 +234,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("slice 4: TODAY's CALORIES opens the shared page: eaten in white beside burned in Garmin blue, never combined, gaps as gaps", async () => {
     await seedLivedMonth();
     await page.viewport(360, 900);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     const before = await db.events.toArray();
     await screen.getByRole("button", { name: /open calories$/ }).click();
     await expect.element(sheet("CALORIES")).toBeVisible();
@@ -296,7 +297,7 @@ describe("METRIC-PAGE-001 pilot", () => {
   it("nothing spills, sentences keep 16 px, and every page passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastWater();
     await page.viewport(360, 900);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled();
     for (const [tile, name] of [[/^Water 32 oz/, "HYDRATION"], [/^Steps /, "STEPS"], [/^Resting heart rate /, "RESTING HEART RATE"], [/open calories$/, "CALORIES"]] as const) {
       await screen.getByRole("button", { name: tile }).click();
       await expect.element(sheet(name)).toBeVisible();

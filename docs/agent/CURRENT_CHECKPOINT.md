@@ -1,19 +1,15 @@
-# Current state — after PR #619 (2026-11-23)
+# Current state — after PRs #620–#623 (2026-11-23)
 
-- **Master:** `ff2ae7b1` (#617 C2.1 and #619 C4.8a merged). Builder: Claude Code, on Gavin's direction.
-- **Open:** #606 (C3.4b + C3.4c; Protected; waiting on Gavin's merge). #620 flake fixes (Routine; independent review
-  BLOCKED one test change, repaired at `0ded41da`, renewed review pending; delegated merge once PASS + green CI).
-- **Logger work Gavin approved (2026-11-23: "1 + 2 together", "then 3", "then 7 + 8 as C4.8b"), one PR each, all
-  from master (no stacking), each Protected (independent exact-head review, green CI, Gavin's merge):**
-  - LOG-WHEN-001 — DAY and SHIFT on WHEN ([brief](GRAYSON-LOG-WHEN-001.md)); this PR.
-  - LOG-CATCHUP-001 — post-shift catch-up ([brief](GRAYSON-LOG-CATCHUP-001.md)).
-  - C4.8b — the Eating Window meets the meal log ([brief](GRAYSON-C4.8B-001.md)).
-  The three touch `RecordSheets.tsx` (WHEN and C4.8b) and the decision log/tracker; whichever merges later takes a
-  small rebase.
-- **Known load-sensitive tests not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation) failed
-  once in a loaded local run and passed alone twice; App re-tap TRAIN not reproduced.
-- **Field check pending:** C1 (Orientation, the close, Delta's voices), C2.1 PREFLIGHT, C4.8a on real shifts.
-- **Next:** reviews on the three PRs and #620; Gavin's merges; field notes from real shifts.
+- **Master:** `01f99353`. Merged today: #620 (flaky tests, delegated merge), #621 LOG-WHEN-001, #622 LOG-CATCHUP-001,
+  #623 C4.8b (Gavin: "Merge all 3"). Builder: Claude Code.
+- **Open:** #606 (C3.4b + C3.4c; Protected; waiting on Gavin's merge). This process batch (Protected: governance).
+- **Process (Gavin, 2026-11-23):** one PR per approved batch; one decision file each in `docs/decisions/`; TODAY tests
+  wait with `todaySettled()`; Builder reports only at decision points (DEV-FLOW-002 amendment). "Merge on PASS" for
+  Protected work was proposed and approved by Gavin in chat, but the edit granting it was refused by the session's
+  permission check; it stays with Gavin to make or allow. Protected merges remain his.
+- **Known load-sensitive test not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation).
+- **Field check pending:** C1, C2.1 PREFLIGHT, C4.8a/b eating window, WHEN day picker and the catch-up, on real shifts.
+- **Next:** Gavin's merge of this batch; field notes; the next approved batch.
 
 ---
 

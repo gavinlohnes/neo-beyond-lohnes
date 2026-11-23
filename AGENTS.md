@@ -219,6 +219,7 @@ Stop on unresolved conflicts.
 - `docs/OPERATOR_INTERFACE_DOCTRINE.md` — constitutional product/interface doctrine; constrains
   future work but never authorizes implementation by itself.
 - `docs/UX_DECISIONS.md` — BEYOND UX Decision Register, the canonical locked-decision log.
+  New entries from 2026-11-23 live one file each in `docs/decisions/`.
 - `docs/agent/BEYOND_ENGINEERING_CONTRACT.md` — the shared engineering invariants.
 - `docs/agent/CAPABILITY_MAP.md` — repo-native index into Google Drive's owner-approved
   Research & Reuse Register / Donor & Experience Program: per-domain existing primitives,
