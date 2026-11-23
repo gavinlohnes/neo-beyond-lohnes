@@ -64,6 +64,7 @@ import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { TodayToasts } from "./TodayToasts";
 import { TodayRecommendationDraft } from "./TodayRecommendationDraft";
 import { TodayEnergy } from "./TodayEnergy";
+import { EatingWindowCard } from "./EatingWindowCard";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
@@ -2832,6 +2833,8 @@ export function TodayScreen({
         (and the after-the-run report); the preparation/life order below them is LIFE-STATE-001's, unchanged. */}
     {/* ENERGY-CURVE-001 (Gavin, 2026-11-19, approved new TODAY panel): tonight's energy estimate, just above the numbers. */}
     {dayRead && day && <TodayEnergy now={now.getTime()} active={active} refreshKey={refreshVersion} />}
+    {/* GRAYSON C4.8a: the Eating Window, only once he has turned it on. */}
+    {dayRead && day && <EatingWindowCard active={active} refreshKey={refreshVersion} busy={busy} />}
     {/* LAUNCH-STEADY-001: no NOT LOGGED tiles before the day has been read. */}
     {dayRead && <section className="today-numbers" aria-label="Today's numbers">
       {renderFuel()}
