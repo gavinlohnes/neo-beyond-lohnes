@@ -41,6 +41,8 @@ export interface GymModeProps {
   lastSet: { label: string; record?: string } | undefined;
   /** CLEANUP-002: undoes that set (TRAIN's own handleUndoLastSet). */
   onUndoLastSet: () => void;
+  /** GRAYSON-TRAIN-FINISH-3: Delta's proposal and pain stop, rendered by TRAIN (same panels as the workout view). */
+  delta?: React.ReactNode;
 }
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
@@ -160,6 +162,7 @@ export function GymMode(props: GymModeProps) {
         </>
       )}
 
+      {props.delta && <div className="gym-mode__delta">{props.delta}</div>}
       {props.lastSet && (
         <div className="gym-mode__last">
           <div className="gym-mode__last-text">

@@ -90,3 +90,24 @@ it("UNDO of the set a proposal was based on removes the proposal (review on #627
   await expect.poll(() => document.body.textContent?.includes("#1 — 135 lb x 14")).toBe(false);
   expect(screen.getByRole("group", { name: "Delta's suggestion" }).elements()).toHaveLength(0);
 });
+
+for (const width of [320, 412]) {
+  it(`${width} px Gym mode: the same proposal and pain stop as the workout view (TRAIN finish 3)`, async () => {
+    const screen = await start(width);
+    await screen.getByRole("button", { name: "GYM MODE" }).click();
+    const gym = screen.getByRole("dialog", { name: "Gym mode" });
+    await gym.getByRole("spinbutton", { name: "Weight", exact: true }).fill("135");
+    await gym.getByRole("spinbutton", { name: "Reps", exact: true }).fill("14");
+    await gym.getByRole("button", { name: "LOG SET 1" }).click();
+    const delta = gym.getByRole("group", { name: "Delta's suggestion" });
+    await expect.element(delta.getByText(/14 reps cleared the top of 8–12\. Set 2 at 145 lb\?/)).toBeVisible();
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+    expect((await axe.run(gym.element(), { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/${width}-gym-delta.png`, element: gym });
+    await delta.getByRole("button", { name: "USE 145 LB" }).click();
+    await expect.element(gym.getByRole("spinbutton", { name: "Weight", exact: true })).toHaveValue(145);
+    await gym.getByRole("button", { name: "PAIN OR SOMETHING WRONG" }).click();
+    await gym.getByRole("group", { name: "Stop this movement" }).getByRole("button", { name: "SKIP ITS REMAINING SETS" }).click();
+    await expect.poll(async () => (await db.performedSets.toArray()).filter((s) => s.skipped).length).toBe(2);
+  });
+}

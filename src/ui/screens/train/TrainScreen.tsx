@@ -4,6 +4,7 @@ import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { TrainProgress } from "./TrainProgress";
 import { TrainWindowLine } from "./TrainWindowLine";
+import { DeltaPain, DeltaProposal } from "./DeltaPanels";
 import { deriveSetProposal, reviewLines, type GuidanceNote, type SetProposal } from "../../../application/trainGuidance";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -1671,6 +1672,11 @@ export function TrainScreen({
               onNextExercise={() => setFocusedExerciseId(null)}
               lastSet={describeGymLastSet()}
               onUndoLastSet={() => void handleUndoLastSet()}
+              delta={<>
+                {/* GRAYSON-TRAIN-FINISH-3: Delta in Gym mode, the same proposal and pain stop as the workout view. */}
+                <DeltaProposal proposal={proposal && proposal.exerciseId === currentExercise.exerciseId ? proposal : null} why={proposalWhy} busy={busy} onAnswer={answerProposal} onToggleWhy={() => setProposalWhy((v) => !v)} />
+                <DeltaPain exerciseName={currentExercise.name} open={painFor === currentExercise.exerciseId} busy={busy} onOpen={() => setPainFor(currentExercise.exerciseId)} onStop={(skip) => void stopForPain(currentExercise.exerciseId, skip)} onCancel={() => setPainFor(null)} />
+              </>}
               onSaveCue={async (exerciseId, cue) => {
     const acknowledge = captureCommitFeedback();
                 await setExerciseCue(session.beyondDayId, exerciseId, cue);
@@ -1729,15 +1735,7 @@ export function TrainScreen({
                   Inside the per-exercise surface, so it closes when the exercise changes. */}
               <LiftHistoryControl exerciseId={currentExercise.exerciseId} exerciseName={currentExercise.name} />
               {/* GRAYSON-TRAIN-GUIDED-001: Delta speaks once, only on clear evidence; you decide. */}
-              {proposal && proposal.exerciseId === currentExercise.exerciseId && <div className="train-delta" role="group" aria-label="Delta's suggestion">
-                <p className="train-delta__line"><span className="train-delta__who">DELTA</span> {proposal.line}</p>
-                <div className="train-delta__acts">
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => answerProposal(true)}>USE {proposal.to} LB</button>
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => answerProposal(false)}>KEEP {proposal.from} LB</button>
-                  <button type="button" className="train-delta__why" aria-expanded={proposalWhy} onClick={() => setProposalWhy((v) => !v)}>WHY?</button>
-                </div>
-                {proposalWhy && <ul className="train-delta__whylist">{proposal.why.map((w) => <li key={w} className="meta">{w}</li>)}</ul>}
-              </div>}
+              <DeltaProposal proposal={proposal && proposal.exerciseId === currentExercise.exerciseId ? proposal : null} why={proposalWhy} busy={busy} onAnswer={answerProposal} onToggleWhy={() => setProposalWhy((v) => !v)} />
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
                   sets stay as one-line summaries; later sets are counted in a
@@ -1954,14 +1952,7 @@ export function TrainScreen({
                 </button>
               )}
               {/* GRAYSON-TRAIN-GUIDED-001: below the set inputs, so LOG stays where the thumb expects it. */}
-              {painFor === currentExercise.exerciseId ? <div className="train-delta train-delta--stop" role="group" aria-label="Stop this movement">
-                <p className="train-delta__line"><span className="train-delta__who">DELTA</span> {currentExercise.name} is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before training it again.</p>
-                <div className="train-delta__acts">
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, true)}>SKIP ITS REMAINING SETS</button>
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, false)}>JUST NOTE IT</button>
-                  <button type="button" className="train-delta__why" onClick={() => setPainFor(null)}>IT'S FINE, CONTINUE</button>
-                </div>
-              </div> : <button type="button" className="train-delta__pain" onClick={() => setPainFor(currentExercise.exerciseId)}>PAIN OR SOMETHING WRONG</button>}
+              <DeltaPain exerciseName={currentExercise.name} open={painFor === currentExercise.exerciseId} busy={busy} onOpen={() => setPainFor(currentExercise.exerciseId)} onStop={(skip) => void stopForPain(currentExercise.exerciseId, skip)} onCancel={() => setPainFor(null)} />
               <details className="train-lift-inspect">
                 <summary className="disclosure-row">Progression and substitution</summary>
                 <p className="meta">Session: {describeTemplateSummary(activeExercises).bodyAreas}.</p>
