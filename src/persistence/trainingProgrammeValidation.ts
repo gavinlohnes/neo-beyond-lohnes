@@ -14,6 +14,7 @@ const sequenceMemberSchema = z.object({
   key: z.enum(["A", "B", "C"]),
   templateId: z.string().trim().min(1).max(100),
   snapshot: customWorkoutTemplateInputSchema,
+  home: z.object({ templateId: z.string().trim().min(1).max(100), snapshot: customWorkoutTemplateInputSchema }).strict().optional(),
 }).strict();
 
 const sequenceProgrammeSchema = z.object({
@@ -25,6 +26,8 @@ const sequenceProgrammeSchema = z.object({
   if (new Set(ids).size !== 3) ctx.addIssue({ code: "custom", path: ["members"], message: "Sequence members must use three different templates." });
   if (value.members.map((member) => member.key).join("") !== "ABC") ctx.addIssue({ code: "custom", path: ["members"], message: "Sequence member keys must be A, B and C in order." });
   if (!ids.includes(value.startTemplateId)) ctx.addIssue({ code: "custom", path: ["startTemplateId"], message: "Starting member must belong to the sequence." });
+  const homeIds = value.members.flatMap((member) => member.home ? [member.home.templateId] : []);
+  if (new Set(homeIds).size !== homeIds.length) ctx.addIssue({ code: "custom", path: ["members"], message: "HOME forms must use different templates." });
 });
 
 export const trainingProgrammeSchema = z.union([assignedProgrammeSchema, sequenceProgrammeSchema]);

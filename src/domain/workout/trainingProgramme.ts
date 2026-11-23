@@ -7,6 +7,7 @@ export interface SequenceProgrammeMember {
   key: "A" | "B" | "C";
   templateId: string;
   snapshot: { name: string; exercises: ExercisePrescription[] };
+  home?: { templateId: string; snapshot: { name: string; exercises: ExercisePrescription[] } };
 }
 
 /** Owner-confirmed order. Capacity still owns STANDARD / REDUCED / RECOVERY. */

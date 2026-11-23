@@ -161,6 +161,9 @@ export async function getProgressionSuggestion(
   }
 
   const allSessions = await db.workoutSessions.toArray();
+  if (allSessions.some((session) => session.templateId === templateId && session.programmeContext?.form === "HOME")) {
+    return { recommendation: "NO_HISTORY", reason: "HOME uses bodyweight work; loaded progression, re-entry and deload do not apply." };
+  }
   const sessions = allSessions
     .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE")
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
@@ -383,7 +386,9 @@ export async function getLastPerformedSetForExercise(
   sessionType: "STANDARD" | "REDUCED",
   exerciseId: string,
 ): Promise<LastSetInfo | undefined> {
-  const sessions = (await db.workoutSessions.toArray())
+  const allSessions = await db.workoutSessions.toArray();
+  if (allSessions.some((session) => session.templateId === templateId && session.programmeContext?.form === "HOME")) return undefined;
+  const sessions = allSessions
     .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE")
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
 

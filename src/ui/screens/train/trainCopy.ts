@@ -340,8 +340,8 @@ export function templateLabel(templateId: WorkoutTemplateId, customTemplates: re
 }
 
 /** ULTIMATE-FOUNDATION-002: "Template A · REDUCED" — the variant only when REDUCED, as RECENT words it. */
-export function describeHistoryTitle(entry: Pick<TrainingHistoryEntry, "templateId" | "sessionType">, customTemplates: readonly CustomWorkoutTemplate[]): string {
-  return `WORKOUT ${templateLabel(entry.templateId, customTemplates)}${entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
+export function describeHistoryTitle(entry: Pick<TrainingHistoryEntry, "templateId" | "sessionType" | "programmeForm">, customTemplates: readonly CustomWorkoutTemplate[]): string {
+  return `WORKOUT ${templateLabel(entry.templateId, customTemplates)}${entry.programmeForm === "HOME" ? " · HOME" : entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
 }
 
 /** ULTIMATE-FOUNDATION-002: one history row's facts — real status, then only what was recorded. */

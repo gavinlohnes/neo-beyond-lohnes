@@ -20,6 +20,7 @@ export interface SequenceMemberView {
   templateId: string;
   name: string;
   issue: "CHANGED" | "ARCHIVED" | "MISSING" | null;
+  home: { templateId: string; name: string; issue: "CHANGED" | "ARCHIVED" | "MISSING" | null } | null;
 }
 
 export interface SequenceProgrammeView {
@@ -34,11 +35,18 @@ export interface SequenceProgrammeView {
 const sameSnapshot = (template: CustomWorkoutTemplate, snapshot: SequenceTrainingProgramme["members"][number]["snapshot"]) =>
   JSON.stringify({ name: template.name, exercises: template.exercises }) === JSON.stringify(snapshot);
 
-function completionPayload(value: unknown): { sessionId: string; status: "COMPLETED" | "PARTIAL"; sessionType: SessionType } | null {
+type HomeContext = NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>;
+function homeContext(value: unknown): HomeContext | null {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Record<string, unknown>;
+  return typeof item.programmeRevisionId === "string" && (item.memberKey === "A" || item.memberKey === "B" || item.memberKey === "C") && typeof item.parentTemplateId === "string" && item.form === "HOME"
+    ? item as unknown as HomeContext : null;
+}
+function completionPayload(value: unknown): { sessionId: string; status: "COMPLETED" | "PARTIAL"; sessionType: SessionType; programmeContext: HomeContext | null } | null {
   if (!value || typeof value !== "object") return null;
   const payload = value as Record<string, unknown>;
   if (typeof payload.sessionId !== "string" || (payload.status !== "COMPLETED" && payload.status !== "PARTIAL") || (payload.sessionType !== "STANDARD" && payload.sessionType !== "REDUCED" && payload.sessionType !== "RECOVERY")) return null;
-  return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType };
+  return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType, programmeContext: homeContext(payload.programmeContext) };
 }
 
 async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: CustomWorkoutTemplate[], endSeq = Number.MAX_SAFE_INTEGER): Promise<Omit<SequenceProgrammeView, "previousProgramme">> {
@@ -46,7 +54,10 @@ async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: Cu
   const members = programme.members.map((member): SequenceMemberView => {
     const current = allTemplates.find((template) => template.id === member.templateId);
     const issue = !current ? "MISSING" : current.archivedAt ? "ARCHIVED" : !sameSnapshot(current, member.snapshot) ? "CHANGED" : null;
-    return { key: member.key, templateId: member.templateId, name: current?.name ?? member.snapshot.name, issue };
+    const currentHome = member.home ? allTemplates.find((template) => template.id === member.home!.templateId) : undefined;
+    const homeIssue = !member.home ? null : !currentHome ? "MISSING" : currentHome.archivedAt ? "ARCHIVED" : !sameSnapshot(currentHome, member.home.snapshot) ? "CHANGED" : null;
+    return { key: member.key, templateId: member.templateId, name: current?.name ?? member.snapshot.name, issue,
+      home: member.home ? { templateId: member.home.templateId, name: currentHome?.name ?? member.home.snapshot.name, issue: homeIssue } : null };
   });
   const start = members.find((member) => member.templateId === programme.startTemplateId) ?? null;
   if (!start || revision.seq === undefined || !revision.recordedAt) return { status: "UNKNOWN", members, nextMember: start, why: "Programme activation evidence is incomplete. Nothing was inferred.", activatedAt: revision.recordedAt ?? null };
@@ -65,13 +76,27 @@ async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: Cu
     if (!payload) return { status: "UNKNOWN", members, nextMember: null, why: "A workout outcome is incomplete. Next session is unknown.", activatedAt: revision.recordedAt };
     const session = await db.workoutSessions.get(payload.sessionId);
     if (!session || session.sessionType !== payload.sessionType || session.status !== payload.status) return { status: "UNKNOWN", members, nextMember: null, why: "Workout records disagree. Next session is unknown.", activatedAt: revision.recordedAt };
-    const memberIndex = members.findIndex((member) => member.templateId === session.templateId);
+    if (payload.programmeContext && !session.programmeContext) return { status: "UNKNOWN", members, nextMember: null, why: "Workout form provenance disagrees. Next session is unknown.", activatedAt: revision.recordedAt };
+    let memberIndex = members.findIndex((member) => member.templateId === session.templateId);
+    if (session.programmeContext?.form === "HOME") {
+      const context = session.programmeContext;
+      memberIndex = members.findIndex((member) => member.key === context.memberKey && member.templateId === context.parentTemplateId);
+      const linked = memberIndex >= 0 ? members[memberIndex]!.home : null;
+      if (payload.sessionType !== "STANDARD" || !payload.programmeContext || JSON.stringify(payload.programmeContext) !== JSON.stringify(context) || context.programmeRevisionId !== revision.id || !linked || linked.templateId !== session.templateId) {
+        return { status: "UNKNOWN", members, nextMember: null, why: "HOME workout evidence conflicts with the confirmed programme. Next session is unknown.", activatedAt: revision.recordedAt };
+      }
+    }
     if (memberIndex < 0) continue;
     const sets = await getPerformedSets(session.id);
-    const workingSetCount = sets.filter(isWorkingSet).length;
-    if (doesSessionAdvanceRotation(session.sessionType as SessionType, session.status as WorkoutSessionStatus, workingSetCount)) {
+    const allowedHomeExercises = session.programmeContext?.form === "HOME" && memberIndex >= 0
+      ? new Set((programme.members[memberIndex]!.home?.snapshot.exercises ?? []).map((exercise) => exercise.exerciseId)) : null;
+    const workingSetCount = sets.filter((set) => isWorkingSet(set) && (!allowedHomeExercises || allowedHomeExercises.has(set.exerciseId))).length;
+    const advances = session.programmeContext?.form === "HOME"
+      ? session.status === "COMPLETED" && workingSetCount > 0
+      : doesSessionAdvanceRotation(session.sessionType as SessionType, session.status as WorkoutSessionStatus, workingSetCount);
+    if (advances) {
       next = members[(memberIndex + 1) % members.length]!;
-      why = `${members[memberIndex]!.key} advanced after a recorded ${session.sessionType.toLowerCase()} ${session.status.toLowerCase()} session with ${workingSetCount} working ${workingSetCount === 1 ? "set" : "sets"}.`;
+      why = `${members[memberIndex]!.key} advanced after a recorded ${session.programmeContext?.form === "HOME" ? "HOME " : session.sessionType.toLowerCase() + " "}${session.status.toLowerCase()} session with ${workingSetCount} working ${workingSetCount === 1 ? "set" : "sets"}.`;
     }
   }
   const status = members.some((member) => member.issue) ? "REVIEW_REQUIRED" : "READY";
@@ -101,6 +126,16 @@ export function buildSequenceProgramme(templateIds: [string, string, string], te
     return { key: keys[index]!, templateId, snapshot: { name: template.name, exercises: structuredClone(template.exercises) } };
   }) as SequenceTrainingProgramme["members"];
   return { mode: "SEQUENCE", members, startTemplateId };
+}
+
+export function linkSequenceHomeForms(programme: SequenceTrainingProgramme, ids: [string, string, string], templates: readonly CustomWorkoutTemplate[], currentNextTemplateId = programme.startTemplateId): SequenceTrainingProgramme {
+  if (new Set(ids).size !== 3) throw new Error("Choose three different HOME templates.");
+  if (!programme.members.some((member) => member.templateId === currentNextTemplateId)) throw new Error("Current next member is unavailable. Reopen the programme.");
+  return { ...programme, startTemplateId: currentNextTemplateId, members: programme.members.map((member, index) => {
+    const template = templates.find((item) => item.id === ids[index] && !item.archivedAt);
+    if (!template || !template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))) throw new Error("Choose a bodyweight HOME template for every member.");
+    return { ...member, home: { templateId: template.id, snapshot: { name: template.name, exercises: structuredClone(template.exercises) } } };
+  }) as SequenceTrainingProgramme["members"] };
 }
 
 export async function getProgrammeView(now = new Date()) {

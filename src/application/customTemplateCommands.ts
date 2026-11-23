@@ -71,6 +71,28 @@ export async function createCustomTemplateSet(inputs: readonly CustomWorkoutTemp
   });
 }
 
+/** HOME-LINK-001: atomically reuse exact defaults and create only missing members. */
+export async function ensureExactCustomTemplateSet(inputs: readonly CustomWorkoutTemplateInput[]): Promise<CustomWorkoutTemplate[]> {
+  if (inputs.length !== 3) throw new Error("TRAIN_PLAN_SET_INVALID: exactly three templates are required.");
+  const parsed = inputs.map((input) => customWorkoutTemplateInputSchema.parse(input));
+  return writeAtomically(["customWorkoutTemplates"], async () => {
+    const existing = (await db.customWorkoutTemplates.toArray()).filter((template) => !template.archivedAt);
+    const createdAt = new Date().toISOString();
+    const created: CustomWorkoutTemplate[] = [];
+    const result = parsed.map((input) => {
+      const match = existing.find((template) => template.name.trim().toLowerCase() === input.name.trim().toLowerCase());
+      if (match) {
+        if (JSON.stringify(match.exercises) !== JSON.stringify(input.exercises)) throw new Error(`HOME_TEMPLATE_CHANGED: ${input.name} already exists with different exercises. Review My Templates.`);
+        return match;
+      }
+      const template = { id: newId(), name: input.name, exercises: input.exercises, createdAt };
+      created.push(template); return template;
+    });
+    if (created.length) await db.customWorkoutTemplates.bulkAdd(created);
+    return result;
+  });
+}
+
 export async function updateCustomTemplate(
   id: string,
   changes: CustomWorkoutTemplateModifyInput,

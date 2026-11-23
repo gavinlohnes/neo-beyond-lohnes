@@ -525,7 +525,7 @@ export function TrainScreen({
     setRecentSubstitutions(Object.fromEntries(substitutionEntries));
   }
 
-  async function actuallyStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant) {
+  async function actuallyStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant, programmeContext?: WorkoutSession["programmeContext"]) {
     const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
@@ -536,7 +536,7 @@ export function TrainScreen({
         activeDay.id,
         variant === "RECOVERY" ? null : template,
         variant,
-        { overrideConfirmed: true, receipt },
+        { overrideConfirmed: true, receipt, ...(programmeContext ? { programmeContext } : {}) },
       );
       if (receipt.changed) acknowledge("MEDIUM");
       setSession(started);
@@ -555,12 +555,12 @@ export function TrainScreen({
     }
   }
 
-  async function handleStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant) {
+  async function handleStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant, programmeContext?: WorkoutSession["programmeContext"]) {
     if (busy) return;
     if (variant === "STANDARD") {
-      guard(capacity, () => actuallyStart(template, variant));
+      guard(capacity, () => actuallyStart(template, variant, programmeContext));
     } else {
-      await actuallyStart(template, variant);
+      await actuallyStart(template, variant, programmeContext);
     }
   }
 
@@ -1422,12 +1422,12 @@ export function TrainScreen({
         );
       })()}
 
-      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm) => {
+      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm, programmeContext) => {
         const requested = requestedForm ?? chosenVariant;
         const variant = requestedForm ? requested : requested === "RECOVERY" ? "STANDARD" : requested;
         templateChosenRef.current = true; variantChosenRef.current = true;
         setChosenTemplate(templateId); setChosenVariant(variant);
-        void handleStart(templateId, variant);
+        void handleStart(templateId, variant, programmeContext);
       }} />
 
 
@@ -1559,7 +1559,7 @@ export function TrainScreen({
                 <div className="bf-bar train-session-tools">
                   <div className="bf-bar__id">
                     <p className="bf-bar__eyebrow" aria-hidden="true"><span className="bf-slashes">///</span> TRAIN // LIVE</p>
-                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
+                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.programmeContext?.form === "HOME" ? " · HOME" : session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
                   </div>
                   <button ref={gymModeButtonRef} type="button" className="bf-bar__log train-live-gym" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
                 </div>
