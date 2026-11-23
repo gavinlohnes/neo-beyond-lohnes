@@ -705,7 +705,8 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     getActiveDayMock.mockImplementationOnce(() => dayADeferred.promise);
 
     const screen = await render(<TodayScreen />);
-    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalledTimes(1));
+    // Other TODAY parts read the active day at mount too; what matters is that the pending mount read has begun.
+    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalled());
 
     // Day transitions entirely outside the still-pending mount refresh.
     await endDay(dayA.id, "EXPLICIT_END_DAY");
@@ -754,7 +755,8 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     getActiveDayMock.mockImplementationOnce(() => dayADeferred.promise); // mount refresh (A) — pending
 
     const screen = await render(<TodayScreen />);
-    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalledTimes(1));
+    // Other TODAY parts read the active day at mount too; what matters is that the pending mount read has begun.
+    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalled());
 
     await endDay(dayA.id, "EXPLICIT_END_DAY");
     const dayB = await startDay();
