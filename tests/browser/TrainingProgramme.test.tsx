@@ -70,7 +70,7 @@ it("reviews and activates three saved workouts, shows evidence, and starts the n
   expect((await getTrainingProgramme()).programme).toEqual(priorProgramme);
   await screen.getByRole("button", { name: "CONFIRM ACTIVATION", exact: true }).click();
   await expect.element(screen.getByRole("heading", { name: "Next: A · Grayson A", exact: true })).toBeVisible();
-  await expect.element(screen.getByText(/Sequence activated with A selected first/)).toBeVisible();
+  await expect.element(screen.getByText("WHY: Sequence activated with A selected first.", { exact: true })).toBeVisible();
   const saved = (await getTrainingProgramme()).programme;
   expect(saved?.mode).toBe("SEQUENCE");
   expect(saved?.mode === "SEQUENCE" ? saved.members.map((member) => member.templateId) : []).toEqual(templates.map((template) => template.id));
