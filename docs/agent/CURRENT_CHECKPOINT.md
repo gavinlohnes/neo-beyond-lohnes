@@ -14,8 +14,9 @@
   and HOME require exact owner-confirmed linked templates and recorded form provenance. Similarity,
   names and dates never create programme identity.
 - **Recommended later slice:** `GRAYSON-TRAIN-HOME-LINK-001`, bounded to explicit bodyweight HOME
-  links, exact review/start provenance, honest advancement/history and form-local repair. It is not
-  authorized by this design objective.
+  links, exact review/start provenance, honest advancement/history, bodyweight-specific exercise IDs,
+  suppression of inapplicable loaded progression and form-local repair. It is not authorized by this
+  design objective.
 - **Concurrent work:** protected PR #606 and the root research changes remain unrelated and untouched.
 - **Verification / review:** Markdown/link/diff/risk checks, required docs CI and independent
   exact-head review remain pending.

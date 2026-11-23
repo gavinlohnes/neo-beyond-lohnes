@@ -19,11 +19,13 @@
   Drive change or implementation authority.
 - **Acceptance:** preserve current FULL/REDUCED/RECOVERY truth; never infer membership from names or
   similarity; distinguish form from member and opportunity; make advancement and abstention explicit;
-  keep direct choice; preserve historical evidence; identify compatibility/failure requirements; and
+  keep direct choice; preserve historical evidence; account for cross-template re-entry/deload and
+  prevent fictional loaded progression in HOME; identify compatibility/failure requirements; and
   recommend one smallest valuable implementation.
 - **REUSE:** current sequence revisions/projection, custom templates, STANDARD/REDUCED/RECOVERY,
-  working-set evidence, custom-template snapshots, per-context progression, native backup and the
-  approved inspect-confirm-receipt pattern.
+  working-set evidence, custom-template snapshots, current direct-context progression plus its
+  cross-template re-entry/deload boundaries, native backup and the approved inspect-confirm-receipt
+  pattern.
 - **OWN:** the GRAYSON-specific parent-member/form authority model and reality-first operator journey.
 - **BUILD FROM SCRATCH:** none; the design composes existing programme, template, session and set
   primitives and rejects another form store or cursor.

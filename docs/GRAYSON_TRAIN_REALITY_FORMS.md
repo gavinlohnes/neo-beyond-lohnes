@@ -37,8 +37,10 @@ BEYOND already provides most of the required system:
   member changes, disappears or is archived.
 - REDUCED is already deterministic for custom templates: the first two exercises, two working sets
   each. It is the truthful current minimum-like form.
-- Progression and “last time” evidence are scoped by `templateId` and `sessionType`; histories are
-  not silently combined across different templates or forms.
+- Direct “last time” and base progression evidence begin in a matching `templateId` + `sessionType`
+  context. Re-entry timing and deload/stall evidence deliberately span templates by `exerciseId`, and
+  every active custom template participates in the current progression sweep. A separate HOME
+  template therefore does **not** by itself isolate bodyweight work from loaded guidance.
 - Week Planner and Week Ahead now repeat the same authoritative next member on genuine opportunities,
   but remain read-only and create no due date.
 - Native backup already includes custom templates, programme events, workout sessions and sets.
@@ -51,6 +53,7 @@ What does **not** exist:
 - no safe inference that a bodyweight circuit is “Home B”;
 - no atomic create/link/review journey for form templates;
 - no form-aware history, progression or programme repair.
+- no bodyweight-specific progression model or general suppression rule for HOME exercise guidance.
 
 The gap is explicit identity and composition, not another exercise database, calendar or programme.
 
@@ -190,10 +193,14 @@ Gavin reviews the exact prescription; this design does not save them.
 | C · Bench volume/balance | Barbell bench press; reverse lunge; one-arm dumbbell row | Appropriate push-up level; bodyweight reverse lunge; prone Y-T-W; close-grip incline push-up; bodyweight calf raise or timed sit-up practice |
 
 The SHORT drafts preserve the first three foundation movements already chosen by the guided plan.
-The HOME drafts cap ordinary movements at about two controlled sets and require Gavin to choose an
-appropriate push-up/pike level. Prone Y-T-W is labelled scapular/postural movement, not a replacement
-for cable, dumbbell or pulldown loading. The final C accessory is chosen during exact review rather
-than silently making a six-movement home session.
+The existing draft donor changes the display names but retains the loaded exercise IDs and increments;
+it is therefore safe as a preview only and must **not** be saved directly as HOME execution truth. A
+future HOME implementation must create/select bodyweight-specific exercise IDs and prescriptions for
+push-up levels, bodyweight squat/lunge, bridge, prone Y-T-W, pike push-up, calf work and core. The HOME
+drafts cap ordinary movements at about two controlled sets and require Gavin to choose an appropriate
+push-up/pike level. Prone Y-T-W is labelled scapular/postural movement, not a replacement for cable,
+dumbbell or pulldown loading. The final C accessory is chosen during exact review rather than silently
+making a six-movement home session.
 
 ### No mandatory setup burden
 
@@ -274,12 +281,19 @@ are never retroactively classified.
 
 - FULL STANDARD history stays with the base template and STANDARD context.
 - MINIMUM stays with the base template and existing REDUCED context.
-- SHORT and HOME use their own template IDs, so last-time and progression evidence remains separate.
-- No load is copied from machine/barbell FULL work into bodyweight HOME work.
-- Exercise-level history may show the same underlying exercise across forms as recorded facts, but a
-  load/rep recommendation may cross contexts only under a separately approved progression rule.
-- Weight `0` remains a valid bodyweight record. Reps, tempo/range or variation progress require honest
-  supported fields; missing tempo/difficulty data is not invented.
+- SHORT uses its own template ID, so direct last-session comparison remains in the short prescription;
+  shared loaded exercise IDs may still correctly inform re-entry/deload under the existing rule.
+- HOME requires bodyweight-specific exercise IDs instead of reusing a loaded press/row/squat ID under
+  a new name. Template identity alone is insufficient because current re-entry and deload span
+  templates by exercise ID.
+- The first HOME implementation must suppress current weight-based progression/advisory output for
+  every HOME-linked template. Otherwise a 0-lb set at the top of its rep range can produce a fictional
+  `+5 lb` suggestion, and current custom-template sweeps would surface it outside the form screen.
+- Weight `0` remains a valid bodyweight record. Reps, tempo/range, leverage or variation progression
+  needs a separately designed bodyweight rule and supported fields; until then HOME shows recorded
+  history and `NO FORM-SPECIFIC PROGRESSION`, not INCREASE/HOLD/REDUCE fiction.
+- Exercise-level history may show bodyweight facts, but no loaded progression, re-entry or deload
+  evidence is imported into HOME and no HOME record alters loaded-lift progression through a shared ID.
 
 ### Claims
 
@@ -456,15 +470,17 @@ would drift.
 | Custom templates | SHORT/HOME prescriptions | Reuse |
 | Programme revision chain | Owner-confirmed form links/snapshots | Deepen carefully |
 | Workout session/event provenance | Optional member/form identity at start | Deepen carefully |
-| Set history and per-context progression | Separate evidence for each linked template/form | Preserve |
+| Set history and direct last-session progression | Matching template/session context | Preserve |
+| Cross-template re-entry/deload by exercise ID | Loaded forms only; HOME uses distinct IDs and suppresses weight progression | Bound in first HOME implementation |
 | Week planning connection | Repeats member, not form/date obligation | Preserve |
 | Similarity/name inference | Programme authority | Reject |
 | Separate form programme/table/cursor | Duplicate truth | Reject |
 
 ## 16. Ranked evolution sequence
 
-1. **Linked HOME forms.** Prove explicit member/form identity, atomic review/link, start provenance,
-   honest advancement, history and repair with the highest-value real-life fallback.
+1. **Linked HOME forms plus progression isolation.** Prove explicit member/form identity, atomic
+   review/link, start provenance, honest advancement, history and repair with bodyweight-specific
+   exercise IDs and suppression of current weight-based progression for HOME-linked templates.
 2. **Linked SHORT forms.** Reuse the same identity mechanism for a confirmed three-movement/time-
    limited prescription; no REDUCED slicing.
 3. **Unified form chooser and receipts.** Present FULL/SHORT/MINIMUM/HOME/RECOVERY consistently once
@@ -485,10 +501,14 @@ member/form/revision provenance when starting a linked HOME session; show HOME i
 history; advance only when the exact linked form is COMPLETED with at least one working set; hold on
 PARTIAL, ABANDONED, RECOVERY, zero working sets or missing/conflicting evidence. A changed/archived
 HOME form becomes unavailable without blocking valid FULL, MINIMUM or RECOVERY paths. Preserve atomic
-creation/linking, undo, backup compatibility, direct choice and all current capacity authority.
+creation/linking, undo, backup compatibility, direct choice and all current capacity authority. HOME
+prescriptions must use bodyweight-specific exercise IDs, and the objective must suppress existing
+weight-based progression, re-entry and deload output for HOME-linked templates everywhere it can
+surface. It must prove loaded histories remain unchanged.
 
-Stop before SHORT forms, form suggestions, automatic drafting, new progression rules, programme
-adaptation, exercise demonstrations, navigation, providers or dependencies.
+Stop before SHORT forms, form suggestions, automatic drafting, a new bodyweight progression rule,
+programme adaptation, exercise demonstrations, navigation, providers or dependencies. Suppression of
+inapplicable loaded progression is part of truthful HOME execution, not authority to invent a new rule.
 
 This implementation would cross programme event/command and backup-contract boundaries. It is **not
 authorized by this design objective** and requires a separately approved Protected brief with exact

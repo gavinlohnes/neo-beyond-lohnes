@@ -159,8 +159,10 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   [`GRAYSON_TRAIN_REALITY_FORMS.md`](../GRAYSON_TRAIN_REALITY_FORMS.md) preserves FULL as the base
   template, reframes existing REDUCED as MINIMUM and preserves RECOVERY, while requiring separate
   owner-confirmed SHORT/HOME template links and form-at-start provenance. Names, shared exercises and
-  muscle similarity are never programme identity. The recommended first later slice is linked HOME
-  forms; no form link, event/command/backup change or implementation is authorized by the design.
+  muscle similarity are never programme identity. Current re-entry/deload spans templates by exercise
+  ID, so the recommended first later slice couples linked HOME forms with bodyweight-specific IDs and
+  suppression of inapplicable loaded progression; no form link, progression change,
+  event/command/backup change or implementation is authorized by the design.
 
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
