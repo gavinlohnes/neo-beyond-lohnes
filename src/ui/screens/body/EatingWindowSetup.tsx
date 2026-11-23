@@ -23,6 +23,8 @@ export function EatingWindowSetup({ active }: { active: boolean }) {
   const [answers, setAnswers] = useState<(boolean | null)[]>(SAFETY_QUESTIONS.map(() => null));
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // BODY stays free of entry forms until he opens this (RedesignBody: numbers, progress and history first).
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!active) return;
@@ -47,8 +49,9 @@ export function EatingWindowSetup({ active }: { active: boolean }) {
   const allAnswered = answers.every((a) => a !== null);
 
   return (
-    <details className="eating-setup">
+    <details className="eating-setup" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
       <summary className="disclosure-row">EATING WINDOW {saved?.enabled ? `· ON · ${presetLabel(saved.eatingHours)}` : "· OFF"}</summary>
+      {open && <>
       <p className="meta">A time to eat and a time not to, set around your shifts. It's a tool, not a test: ending a fast early is fine, and there are no levels.</p>
       <fieldset className="eating-setup__group">
         <legend>Window</legend>
@@ -92,6 +95,7 @@ export function EatingWindowSetup({ active }: { active: boolean }) {
         </div>
       )}
       {message && <p className="meta" role="status">{message}</p>}
+      </>}
     </details>
   );
 }
