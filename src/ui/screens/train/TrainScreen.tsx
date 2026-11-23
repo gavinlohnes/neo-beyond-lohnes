@@ -778,6 +778,8 @@ export function TrainScreen({
   async function handleUndoLastSet() {
     const acknowledge = captureCommitFeedback();
     if (busy || setWriteRef.current || !session) return;
+    // GRAYSON-TRAIN-GUIDED-001 (review on #627): a proposal never outlives the set it was based on.
+    setProposal(null);
     setWriteRef.current = true;
     setBusy(true);
     try {
@@ -847,22 +849,26 @@ export function TrainScreen({
     let skipped = 0;
     if (skipRest) {
       const done = new Set(sets.filter((x) => x.exerciseId === exerciseId && x.setKind !== "WARMUP").map((x) => x.setNumber));
-      for (let n = 1; n <= exercise.sets; n++) if (!done.has(n)) { await handleSkipSet(exerciseId, n); skipped += 1; }
+      for (let n = 1; n <= exercise.sets; n++) if (!done.has(n) && await handleSkipSet(exerciseId, n)) skipped += 1;
     }
-    setGuidanceNotes((notes) => [...notes, { kind: "STOPPED", exerciseName: exercise.name, skipped }]);
+    setGuidanceNotes((notes) => [...notes, skipRest ? { kind: "STOPPED", exerciseName: exercise.name, skipped } : { kind: "NOTED", exerciseName: exercise.name }]);
     setProposal((p) => p?.exerciseId === exerciseId ? null : p);
     setPainFor(null);
   }
 
-  async function handleSkipSet(exerciseId: string, setNumber: number) {
-    if (busy || setWriteRef.current || !session) return;
+  async function handleSkipSet(exerciseId: string, setNumber: number): Promise<boolean> {
+    if (busy || setWriteRef.current || !session) return false;
     setWriteRef.current = true;
     setBusy(true);
+    // A proposal for the set being skipped has nothing left to apply to.
+    setProposal((p) => p?.exerciseId === exerciseId && p.nextSetNumber === setNumber ? null : p);
     try {
       await skipSet(session.beyondDayId, session.id, exerciseId, setNumber);
       setSets(await getPerformedSets(session.id));
+      return true;
     } catch (error) {
       reportOperationFailure(error);
+      return false;
     } finally {
       setWriteRef.current = false;
       setBusy(false);

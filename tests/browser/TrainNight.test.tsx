@@ -30,7 +30,7 @@ for (const width of [320, 360, 412]) {
     await page.viewport(width, 900);
     plan.value = { ...base, cards: [{ kind: "TRAINING", title: "Protect sleep tonight", detail: "Your 13:00 session was one of your hardest: 6,000 lb, in the top third of your last 8. Keep your sleep window, 07:30–14:15.", basis: "Your workout records and your usual sleep (Garmin).", source: null, plan: { title: "Protect sleep after today's training", plannedAt: "2026-10-27" } }] };
     const train = await render(<TrainScreen />);
-    await expect.element(train.getByText("Train window: 09:00–16:00 · an hour after your usual wake (08:00), done 2 h before your 18:00 shift.")).toBeVisible();
+    await expect.element(train.getByText("Train window: 09:00–16:00 · 1 h after your usual wake (08:00), done 2 h before your 18:00 shift.")).toBeVisible();
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     await cleanup();
     const route = await render(<ShiftSleepPlanCards />);
@@ -46,4 +46,10 @@ it("no window, no line: TRAIN says nothing about a window it doesn't have", asyn
   const train = await render(<TrainScreen />);
   await expect.element(train.getByText("Prepare your workout. You choose the session.")).toBeVisible();
   expect(document.querySelector("[data-train-window]")).toBeNull();
+});
+
+it("once the window has begun, it reads from now (review on #627)", async () => {
+  plan.value = { ...base, trainWindow: { start: iso(11, 7), end: iso(16), wake: iso(8) } };
+  const train = await render(<TrainScreen />);
+  await expect.element(train.getByText("Train window: now–16:00, done 2 h before your 18:00 shift.")).toBeVisible();
 });

@@ -76,8 +76,17 @@ for (const width of [320, 360, 412]) {
     await holdToConfirm(screen.getByRole("button", { name: "PARTIAL" }));
     const review = screen.getByRole("group", { name: "What Delta noticed" });
     await expect.element(review.getByText(/Machine Chest Press: 15 reps cleared the top of 8–12\. Set 3 at 145 lb\. You kept your weight\./)).toBeVisible();
-    await expect.element(review.getByText(/Machine Chest Press: stopped\. If pain was sharp/)).toBeVisible();
+    await expect.element(review.getByText(/Machine Chest Press: pain or a problem noted; its sets were left open\./)).toBeVisible();
     expect((await axe.run(review.element(), { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
     if (SHOTS && width === 360) await page.screenshot({ path: `${SHOTS}/360-delta-review.png`, element: review });
   });
 }
+
+it("UNDO of the set a proposal was based on removes the proposal (review on #627)", async () => {
+  const screen = await start(360);
+  await log(screen, "135", "14");
+  await expect.element(screen.getByRole("group", { name: "Delta's suggestion" })).toBeVisible();
+  await screen.getByRole("button", { name: "UNDO", exact: true }).click();
+  await expect.poll(() => document.body.textContent?.includes("#1 — 135 lb x 14")).toBe(false);
+  expect(screen.getByRole("group", { name: "Delta's suggestion" }).elements()).toHaveLength(0);
+});

@@ -24,6 +24,7 @@ describe("deriveSetProposal", () => {
     expect(deriveSetProposal(set({ reps: 12, bodyweightForm: true }))).toBeNull();
     expect(deriveSetProposal(set({ reps: 12, weight: 0 }))).toBeNull();
     expect(deriveSetProposal(set({ reps: 12, incrementLbs: 0 }))).toBeNull();
+    expect(deriveSetProposal(set({ weight: 5, reps: 3 }))).toBeNull(); // never down to 0 lb (review on #627)
   });
   it("explains WHY with the evidence, the step and whose call it is", () => {
     const why = deriveSetProposal(set({ reps: 10, repsInReserve: 2 }))!.why.join(" ");
@@ -38,9 +39,11 @@ describe("reviewLines", () => {
     expect(reviewLines([
       { kind: "PROPOSAL", exerciseName: "Bench", line: "10 reps cleared the top of 6–8. Set 2 at 140 lb?", choice: "USED" },
       { kind: "STOPPED", exerciseName: "Row", skipped: 2 },
+      { kind: "NOTED", exerciseName: "Squat" },
     ])).toEqual([
       "Bench: 10 reps cleared the top of 6–8. Set 2 at 140 lb. You used it.",
       "Row: stopped, 2 sets skipped. If pain was sharp or doesn't ease, get it checked before training it again.",
+      "Squat: pain or a problem noted; its sets were left open. If pain was sharp or doesn't ease, get it checked before training it again.",
     ]);
   });
 });

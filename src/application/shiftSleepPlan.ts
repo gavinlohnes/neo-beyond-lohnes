@@ -155,21 +155,30 @@ export function deriveTrainingCard(now: Date, training: readonly FinishedTrainin
   const last = done.at(-1);
   if (!last || now.getTime() - Date.parse(last.endedAt) > TRAINING_RECENT_HOURS * 60 * MIN) return null;
   const ended = new Date(last.endedAt);
-  // The sleep this session leads into: the next time your usual main sleep starts (Garmin rhythm). For a night worker a
-  // 13:00 session leads into the 07:30 sleep after that night's shift.
-  const sleepStart = usualSleep ? nextAtClock(ended, usualSleep.start) : null;
-  const sleep = sleepStart ? { start: sleepStart, end: nextAtClock(sleepStart, usualSleep!.end) } : null;
+  // The sleep this session leads into (Garmin rhythm): the usual window it ended inside (training after a night shift,
+  // past the usual start), else the next time that sleep starts (a 13:00 session leads into the 07:30 sleep after that
+  // night's shift). Review on #627: ending after the usual start must never point at tomorrow's sleep.
+  let sleep: { start: Date; end: Date } | null = null;
+  let inside = false;
+  if (usualSleep) {
+    const lastStart = lastAtClock(ended, usualSleep.start);
+    const lastEnd = nextAtClock(lastStart, usualSleep.end);
+    // "Inside" only shortly after the usual start (within LATE_TRAINING_HOURS): later than that, the clock says he
+    // didn't sleep at the usual time that day, so the sleep it leads into is the next one.
+    if (ended.getTime() < lastEnd.getTime() && ended.getTime() - lastStart.getTime() <= LATE_TRAINING_HOURS * 60 * MIN) { sleep = { start: lastStart, end: lastEnd }; inside = true; }
+    else { const next = nextAtClock(ended, usualSleep.start); sleep = { start: next, end: nextAtClock(next, usualSleep.end) }; }
+  }
   if (sleep && sleep.end.getTime() <= now.getTime()) return null; // that sleep is already behind you
   const pool = done.slice(-HARD_LOOKBACK_SESSIONS);
   const sorted = pool.map((t) => t.volumeLbs).sort((a, b) => a - b);
   const threshold = sorted[Math.floor(sorted.length * 2 / 3)] ?? Infinity;
   const hard = pool.length >= HARD_MIN_SESSIONS && last.volumeLbs >= threshold;
-  const gapMin = sleep ? Math.round((sleep.start.getTime() - ended.getTime()) / MIN) : null;
-  const late = gapMin !== null && gapMin <= LATE_TRAINING_HOURS * 60;
+  const gapMin = sleep && !inside ? Math.round((sleep.start.getTime() - ended.getTime()) / MIN) : null;
+  const late = inside || (gapMin !== null && gapMin <= LATE_TRAINING_HOURS * 60);
   if (!hard && !late) return null;
   const facts = [
     hard ? `Your ${clock(ended)} session was one of your hardest: ${Math.round(last.volumeLbs).toLocaleString("en-US")} lb, in the top third of your last ${pool.length}.` : null,
-    late ? `It ended ${Math.floor(gapMin! / 60)} h ${gapMin! % 60} min before your usual sleep at ${clock(sleep!.start)}.` : null,
+    late ? (inside ? `It ended at ${clock(ended)}, after your usual sleep start at ${clock(sleep!.start)}.` : `It ended ${Math.floor(gapMin! / 60)} h ${gapMin! % 60} min before your usual sleep at ${clock(sleep!.start)}.`) : null,
   ].filter(Boolean).join(" ");
   const keep = sleep ? ` Keep your sleep window, ${clock(sleep.start)}–${clock(sleep.end)}.` : " Keep your next main sleep protected.";
   return {

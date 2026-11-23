@@ -48,8 +48,8 @@ export function deriveSetProposal(e: SetEvidence): SetProposal | null {
       why: [evidence, step, choice] };
   }
   if (e.reps <= e.range.low - DOWN_MARGIN_REPS) {
-    const to = Math.max(0, e.weight - e.incrementLbs);
-    if (to === e.weight) return null;
+    const to = e.weight - e.incrementLbs;
+    if (to <= 0) return null; // never propose an empty bar of 0 lb
     return { direction: "DOWN", nextSetNumber: e.nextSetNumber, from: e.weight, to,
       line: `${e.reps} reps is short of ${e.range.low}–${e.range.high}. Set ${e.nextSetNumber} at ${to} lb to stay in range?`,
       why: [evidence, step, choice] };
@@ -60,10 +60,13 @@ export function deriveSetProposal(e: SetEvidence): SetProposal | null {
 /** What Delta noticed this workout, for the one review at the end. Kept in memory only; never stored. */
 export type GuidanceNote =
   | { kind: "PROPOSAL"; exerciseName: string; line: string; choice: "USED" | "KEPT" }
-  | { kind: "STOPPED"; exerciseName: string; skipped: number };
+  | { kind: "STOPPED"; exerciseName: string; skipped: number }
+  | { kind: "NOTED"; exerciseName: string };
 
 export function reviewLines(notes: readonly GuidanceNote[]): string[] {
+  const check = "If pain was sharp or doesn't ease, get it checked before training it again.";
   return notes.map((n) => n.kind === "STOPPED"
-    ? `${n.exerciseName}: stopped${n.skipped ? `, ${n.skipped} ${n.skipped === 1 ? "set" : "sets"} skipped` : ""}. If pain was sharp or doesn't ease, get it checked before training it again.`
+    ? `${n.exerciseName}: stopped${n.skipped ? `, ${n.skipped} ${n.skipped === 1 ? "set" : "sets"} skipped` : ""}. ${check}`
+    : n.kind === "NOTED" ? `${n.exerciseName}: pain or a problem noted; its sets were left open. ${check}`
     : `${n.exerciseName}: ${n.line.replace(/\?$/, "")}. You ${n.choice === "USED" ? "used it" : "kept your weight"}.`);
 }

@@ -150,4 +150,15 @@ describe("C4.4: training feeds the night, and a train window", () => {
     expect(plan(new Date(2026, 9, 26, 15), { training: [{ endedAt: iso(26, 13), volumeLbs: 6000 }] })!.cards.some((c) => c.kind === "TRAINING")).toBe(false);
     expect(plan(new Date(2026, 9, 27, 15), { training: history(iso(27, 6, 40), 1000) })!.cards.some((c) => c.kind === "TRAINING")).toBe(false);
   });
+
+  it("a session ending after the usual sleep start points at that sleep, never tomorrow's (review on #627)", () => {
+    // After Monday night's shift, a light session ending 08:30 (usual work-day sleep 07:30–14:15).
+    const card = plan(new Date(2026, 9, 27, 8, 40), { training: history(iso(27, 8, 30), 1000) })!.cards.find((c) => c.kind === "TRAINING")!;
+    expect(card.detail).toBe("It ended at 08:30, after your usual sleep start at 07:30. Keep your sleep window, 07:30–14:15.");
+    expect(card.plan.plannedAt).toBe("2026-10-27");
+    // Hard and inside the window: same sleep, today.
+    const hard = plan(new Date(2026, 9, 27, 8, 40), { training: history(iso(27, 8, 30), 6000) })!.cards.find((c) => c.kind === "TRAINING")!;
+    expect(hard.detail).toContain("after your usual sleep start at 07:30");
+    expect(hard.plan.plannedAt).toBe("2026-10-27");
+  });
 });
