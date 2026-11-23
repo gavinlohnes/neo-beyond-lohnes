@@ -18,6 +18,7 @@ import type {
   WorkoutTemplateId,
 } from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
+import { assertLinkedHomeStart } from "./trainingProgramme";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -78,7 +79,7 @@ export async function startWorkout(
   beyondDayId: string,
   templateId: WorkoutTemplateId | null,
   sessionType: SessionType,
-  options: { overrideConfirmed?: boolean; receipt?: WriteReceipt } = {},
+  options: { overrideConfirmed?: boolean; receipt?: WriteReceipt; programmeContext?: WorkoutSession["programmeContext"] } = {},
 ): Promise<WorkoutSession> {
   if (startWorkoutInFlight) return startWorkoutInFlight;
 
@@ -92,6 +93,7 @@ export async function startWorkout(
       const capacity = await currentCapacity(beyondDayId);
       assertRedOverrideConfirmed(capacity, options.overrideConfirmed ?? false);
     }
+    if (options.programmeContext) await assertLinkedHomeStart(templateId ?? "", options.programmeContext);
 
     const id = newId();
     const session: WorkoutSession = {
@@ -102,6 +104,7 @@ export async function startWorkout(
       sessionType,
       status: "ACTIVE",
       startedAt: new Date().toISOString(),
+      ...(options.programmeContext ? { programmeContext: structuredClone(options.programmeContext) } : {}),
     };
     await writeWorkoutAtomically(async () => {
       await db.workoutSessions.add(session);
@@ -110,7 +113,7 @@ export async function startWorkout(
       await logEvent(
         beyondDayId,
         "WORKOUT_STARTED",
-        { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType },
+        { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType, ...(session.programmeContext ? { programmeContext: session.programmeContext } : {}) },
         "USER",
         correlationId,
       );
@@ -298,6 +301,7 @@ export async function completeWorkout(
   durationMinutes?: number,
 ): Promise<void> {
   await writeWorkoutAtomically(async () => {
+    const existing = await db.workoutSessions.get(sessionId);
     await db.workoutSessions
       .where(":id")
       .equals(sessionId)
@@ -315,6 +319,7 @@ export async function completeWorkout(
         sessionId,
         status,
         sessionType,
+        ...(existing?.programmeContext ? { programmeContext: existing.programmeContext } : {}),
         ...(durationMinutes !== undefined ? { durationMinutes } : {}),
       },
       "USER",

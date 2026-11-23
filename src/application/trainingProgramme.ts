@@ -43,6 +43,14 @@ export async function getTrainingProgrammeHistory(): Promise<ProgrammeRevision[]
 function snapshotMatches(current: { name: string; exercises: unknown }, snapshot: { name: string; exercises: unknown }) {
   return JSON.stringify({ name: current.name, exercises: current.exercises }) === JSON.stringify(snapshot);
 }
+export async function assertLinkedHomeStart(templateId: string, context: NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>): Promise<void> {
+  const current = await getTrainingProgramme();
+  if (current.id !== context.programmeRevisionId || current.programme?.mode !== "SEQUENCE") throw new Error("HOME link changed. Reopen MY PROGRAMME before starting.");
+  const member = current.programme.members.find((item) => item.key === context.memberKey && item.templateId === context.parentTemplateId);
+  if (!member?.home || member.home.templateId !== templateId) throw new Error("HOME link changed. Reopen MY PROGRAMME before starting.");
+  const template = (await getCustomTemplates()).find((item) => item.id === templateId);
+  if (!template || !template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-")) || !snapshotMatches(template, member.home.snapshot)) throw new Error("HOME form changed or is unavailable. Review it before starting.");
+}
 /** Explicit SAVE/CLEAR only. Native backups already retain events; no schema/table is added. */
 export async function saveTrainingProgramme(programme: TrainingProgramme | null, expectedPreviousId: string | null): Promise<ProgrammeRevision> {
   const parsed = programme === null ? null : trainingProgrammeSchema.parse(programme) as TrainingProgramme;
@@ -55,6 +63,12 @@ export async function saveTrainingProgramme(programme: TrainingProgramme | null,
         const template = custom.find((item) => item.id === member.templateId);
         if (!template) throw new Error("A sequence template is no longer available. Reopen the programme before activating it.");
         if (!snapshotMatches(template, member.snapshot)) throw new Error("A sequence template changed. Reopen and review the current exercises before activating it.");
+        if (member.home) {
+          const home = custom.find((item) => item.id === member.home!.templateId);
+          if (!home) throw new Error("A linked HOME template is no longer available. Reopen the programme before saving.");
+          if (!home.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))) throw new Error("HOME templates must use bodyweight-specific exercise identities.");
+          if (!snapshotMatches(home, member.home.snapshot)) throw new Error("A linked HOME template changed. Reopen and review it before saving.");
+        }
       }
     } else {
       for (const id of Object.values(parsed?.slots ?? {})) if (!Object.hasOwn(WORKOUT_TEMPLATES, id) && !custom.some((t) => t.id === id)) throw new Error("A selected template is no longer available. Choose another or clear that slot.");

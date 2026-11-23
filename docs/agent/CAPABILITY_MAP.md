@@ -164,6 +164,12 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   suppression of inapplicable loaded progression; no form link, progression change,
   event/command/backup change or implementation is authorized by the design.
 
+- **Linked HOME forms (C4.4w candidate):** extends each existing sequence member with an optional
+  exact owner-confirmed bodyweight template rather than creating another programme. Starts and
+  outcomes retain programme revision, parent member and HOME provenance; only completed linked work
+  with a working set advances. Changed/unavailable links cannot start, FULL remains available, HOME
+  is named in active/history views and loaded progression/re-entry/deload output is suppressed.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,

@@ -97,3 +97,30 @@ it("reviews and activates three saved workouts, shows evidence, and starts the n
   await expect.poll(async () => (await getTrainingProgramme()).programme).toEqual(priorProgramme);
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
 });
+
+it("creates, reviews, links and starts the next exact HOME form at 360px", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 2, 17));
+  await page.viewport(360, 900);
+  const templates = await createCustomTemplateSet((["Home Test A", "Home Test B", "Home Test C"] as const).map((name, index) => ({
+    name, exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+  const screen = await render(<TrainScreen />);
+  await screen.getByRole("button", { name: "ACTIVATE A → B → C", exact: true }).click();
+  for (const [index, key] of (["A", "B", "C"] as const).entries()) await screen.getByRole("combobox", { name: `Sequence ${key}` }).selectOptions(templates[index]!.id);
+  await screen.getByRole("button", { name: "CONFIRM ACTIVATION", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "Next: A · Home Test A", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "SET UP HOME FORMS", exact: true }).click();
+  await screen.getByRole("button", { name: "CREATE BODYWEIGHT HOME OPTIONS", exact: true }).click();
+  await expect.element(screen.getByText("A · Grayson HOME A", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("Incline Push-Up · 3 × 6–15", { exact: true })).toBeVisible();
+  expect((await axe.run(screen.getByRole("region", { name: "My programme", exact: true }).element())).violations).toEqual([]);
+  await screen.getByRole("button", { name: "CONFIRM HOME LINKS", exact: true }).click();
+  await expect.element(screen.getByRole("button", { name: "START HOME · A", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "START HOME · A", exact: true }).click();
+  await expect.poll(() => db.workoutSessions.count()).toBe(1);
+  await expect.element(screen.getByText(/Grayson HOME A · HOME — in progress/)).toBeVisible();
+  const started = (await db.workoutSessions.toArray())[0]!;
+  expect(started.templateId).not.toBe(templates[0]!.id);
+  expect(started.programmeContext).toMatchObject({ memberKey: "A", parentTemplateId: templates[0]!.id, form: "HOME" });
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+});

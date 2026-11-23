@@ -137,6 +137,8 @@ export interface WorkoutSession {
   status: string;
   startedAt: string;
   endedAt?: string;
+  /** GRAYSON-TRAIN-HOME-LINK-001: exact owner-confirmed programme/form context; absent for every legacy and ordinary workout. */
+  programmeContext?: { programmeRevisionId: string; memberKey: "A" | "B" | "C"; parentTemplateId: string; form: "HOME" };
   /**
    * TRAIN-WAVE-A (Persistent Rest, 2026-09-02): absolute end time of the
    * current rest period, or absent when not resting. Absolute rather than

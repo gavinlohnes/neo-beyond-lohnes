@@ -1,4 +1,24 @@
-# Current objective — TRAINING-PROGRAMME-TEST-REPAIR-001 (2026-11-22)
+# Current objective — GRAYSON-TRAIN-HOME-LINK-001 (2026-11-22)
+
+- **Owner authorization / lane:** exact bounded Protected implementation approved by Gavin. Brief:
+  [`GRAYSON-TRAIN-HOME-LINK-001.md`](GRAYSON-TRAIN-HOME-LINK-001.md).
+- **Starting master / Builder:** `1513b8911b03496e260b77353366c781edf5cedc`; Builder Codex;
+  branch `codex/grayson-train-home-link-001`.
+- **Candidate:** optional exact HOME link on each existing sequence member; reviewable bodyweight
+  defaults or existing bodyweight templates; guarded programme revision; exact start/completion
+  provenance; HOME active/history labels; COMPLETED-plus-working-set advancement; loaded progression
+  suppression. FULL/MINIMUM/RECOVERY and capacity authority remain intact.
+- **Concurrent work:** protected PR #606 and unrelated root research edits remain untouched.
+- **Local evidence:** programme/backup causal suite passes 16/16; related command/template suites
+  pass within 58/58; real-Chromium programme journey passes 4/4 including axe at 360 px; built-PWA
+  review/link/live states at 320/360/412 px have no overflow or page errors. Architecture, typecheck
+  and production/PWA build pass. Physical-phone verification remains unperformed.
+- **Next:** finish proportional verification and phone evidence, open the Protected PR, obtain green
+  required CI and independent exact-head PASS, then return to Gavin for merge approval.
+
+---
+
+# Historical — TRAINING-PROGRAMME-TEST-REPAIR-001 (merged as PR #615)
 
 - **Owner authorization / lane:** Gavin directed the failed `TrainingProgramme` browser test to be
   repaired, the full suite and deployment confirmed, and the newest build verified live. ROUTINE;

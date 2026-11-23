@@ -3,13 +3,16 @@ import { expect, it } from "vitest";
 import { resolveProgrammeSlot } from "../../src/engine/trainingProgrammeResolution";
 import { DEFAULT_SCHEDULE_PATTERN, scheduledWorkContextForLivedDay } from "../../src/engine/scheduledContext";
 import { getTrainingProgramme, saveTrainingProgramme, projectTrainingProgramme } from "../../src/application/trainingProgramme";
-import { createCustomTemplate, archiveCustomTemplate, updateCustomTemplate } from "../../src/application/customTemplateCommands";
+import { createCustomTemplate, createCustomTemplateSet, archiveCustomTemplate, updateCustomTemplate } from "../../src/application/customTemplateCommands";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
-import { buildSequenceProgramme, getProgrammeView } from "../../src/application/trainingProgrammeQueries";
+import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms } from "../../src/application/trainingProgrammeQueries";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 import { db } from "../../src/persistence/db";
 import { previewAnyRestore, applyAnyRestore } from "../../src/persistence/restore";
 import "dexie-export-import";
+import { GRAYSON_HOME_TEMPLATE_INPUTS } from "../../src/domain/workout/homeTemplates";
+import { getProgressionSuggestion } from "../../src/application/trainQueries";
+import { getTrainingHistory } from "../../src/application/trainHistoryQueries";
 const schedule = { ...DEFAULT_SCHEDULE_PATTERN, anchorMonday: "2026-11-02", updatedAt: "2026-11-01T00:00:00Z" };
 const programme = { mode: "ROTATION" as const, slots: { WORK1: "A", WORK2: "B", WORK3: "C", OFF1: "B", OFF2: "C", OFF3: "A" } };
 const date = (day: number) => new Date(2026, 10, day, 16, 30);
@@ -171,6 +174,67 @@ it("round-trips a sequence and its snapshots through the existing backup contrac
   const restored = await getProgrammeView();
   expect(restored.sequence?.status).toBe("READY");
   expect(restored.sequence?.members.map((member) => member.name)).toEqual(["Foundation A", "Foundation B", "Foundation C"]);
+});
+
+it("links exact HOME forms, records provenance, advances only a completed worked form, and suppresses loaded progression", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const homes = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+  const linked = linkSequenceHomeForms(activation.programme as import("../../src/domain/workout/trainingProgramme").SequenceTrainingProgramme, homes.map((home) => home.id) as [string, string, string], homes);
+  const linkedRevision = await saveTrainingProgramme(linked, activation.id);
+  const view = await getProgrammeView();
+  expect(view.sequence?.nextMember?.home).toMatchObject({ templateId: homes[0]!.id, issue: null });
+
+  const day = await startDay();
+  const context = { programmeRevisionId: linkedRevision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "HOME" as const };
+  const partial = await startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+  await logSet(day.id, partial.id, homes[0]!.exercises[0]!.exerciseId, 1, 0, 8);
+  await completeWorkout(day.id, partial.id, "STANDARD", "PARTIAL");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("A");
+
+  const completed = await startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+  await logSet(day.id, completed.id, homes[0]!.exercises[0]!.exerciseId, 1, 0, 10);
+  await completeWorkout(day.id, completed.id, "STANDARD", "COMPLETED");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+  const completedEvent = (await db.events.where("type").equals("WORKOUT_COMPLETED").toArray()).find((event) => (event.payload as { sessionId?: string }).sessionId === completed.id);
+  expect((completedEvent?.payload as { programmeContext?: unknown }).programmeContext).toEqual(context);
+  expect((await getTrainingHistory()).find((entry) => entry.id === completed.id)?.programmeForm).toBe("HOME");
+  expect((await getProgressionSuggestion(homes[0]!.id, "STANDARD", homes[0]!.exercises[0]!.exerciseId)).reason).toContain("loaded progression");
+
+  const backup = new File([await db.export()], "synthetic-home-links.json", { type: "application/json" });
+  await db.events.clear(); await db.customWorkoutTemplates.clear(); await db.workoutSessions.clear(); await db.performedSets.clear();
+  await previewAnyRestore(backup); await applyAnyRestore(backup);
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
+});
+
+it("refuses stale or changed HOME starts without blocking the confirmed full member", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const homes = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+  const linked = linkSequenceHomeForms(activation.programme as import("../../src/domain/workout/trainingProgramme").SequenceTrainingProgramme, homes.map((home) => home.id) as [string, string, string], homes);
+  const revision = await saveTrainingProgramme(linked, activation.id);
+  const day = await startDay();
+  const context = { programmeRevisionId: revision.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "HOME" as const };
+  await updateCustomTemplate(homes[0]!.id, { name: "Changed HOME A" });
+  await expect(startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context })).rejects.toThrow("changed or is unavailable");
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("A");
+  const full = await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true });
+  expect(full.templateId).toBe(templates[0]!.id);
+});
+
+it("preserves the earned next member when HOME links create a new programme revision", async () => {
+  const templates = await threeCustomTemplates();
+  const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+  const day = await startDay();
+  const full = await startWorkout(day.id, templates[0]!.id, "STANDARD", { overrideConfirmed: true });
+  await logSet(day.id, full.id, templates[0]!.exercises[0]!.exerciseId, 1, 100, 8);
+  await completeWorkout(day.id, full.id, "STANDARD", "COMPLETED");
+  const before = await getProgrammeView();
+  expect(before.sequence?.nextMember?.key).toBe("B");
+  const homes = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+  const linked = linkSequenceHomeForms(activation.programme as import("../../src/domain/workout/trainingProgramme").SequenceTrainingProgramme, homes.map((home) => home.id) as [string, string, string], homes, before.sequence!.nextMember!.templateId);
+  await saveTrainingProgramme(linked, activation.id);
+  expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
 });
 
 it("restores a prior sequence from its earned next member rather than its original start", async () => {
