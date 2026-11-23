@@ -86,13 +86,15 @@ status of its own.
 | C4.4t | Connect next sequence member to week opportunities | Done (#613) | Read-only Week Planner/Week Ahead composition; no fixed dates, time advancement, catch-up debt or new planning semantics |
 | C4.4v | FULL/SHORT/MINIMUM/HOME/RECOVERY form design | Done (#614) | Protected design only: explicit parent identity, advancement, history and repair; no runtime change |
 | C4.4w | Exact bodyweight HOME links | Done (#616) | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
+| C4.4x | Linked SHORT forms | Done (#625, fix #626) | Exact loaded SHORT per member, mirrors HOME; completed advances, partial holds; [brief](agent/GRAYSON-TRAIN-FINISH-1.md) |
+| C4.4y | TRAIN Progress & Direction (read only) | Done (#625, fix #626) | WORKING / UNCERTAIN / NEEDS ATTENTION with evidence floors and WHY; no adaptation |
 | LOG-WHEN-001 | Logger: DAY and SHIFT on WHEN | Done (#621) | Protected (amends LOG-TIME-001); water and meal sheets; brief `docs/agent/GRAYSON-LOG-WHEN-001.md` |
 | LOG-CATCHUP-001 | Post-shift catch-up | Done (#622) | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
 | C4.8 | Optional fasting window | Not started | Design in #601; no implementation authorized |
-| C4.8a | Eating Window foundation | In progress | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |
+| C4.8a | Eating Window foundation | Done (#619) | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |
 | C4.8b | Eating Window meets the meal log | Done (#623) | Offers END FAST AT / FAST FROM a logged meal (never automatic); protein against the open window; [brief](agent/GRAYSON-C4.8B-001.md) |
 | **Campaign 5 — Inner Day** | | | |
 | C5.1 | Feeling word (optional) | Not started |  |

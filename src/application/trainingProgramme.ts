@@ -44,6 +44,8 @@ function snapshotMatches(current: { name: string; exercises: unknown }, snapshot
   return JSON.stringify({ name: current.name, exercises: current.exercises }) === JSON.stringify(snapshot);
 }
 const isBodyweightSet = (template: { exercises: { exerciseId: string }[] }) => template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"));
+/** SHORT is loaded gym work: at least one exercise and no bodyweight HOME identities (same rule at link, save and start). */
+const isLoadedSet = (template: { exercises: { exerciseId: string }[] }) => template.exercises.length > 0 && !template.exercises.some((exercise) => exercise.exerciseId.startsWith("home-"));
 /** HOME-LINK-001 / SHORT-LINK-001: a linked-form start must name the exact current link, parent and snapshot. */
 export async function assertLinkedFormStart(templateId: string, context: NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>): Promise<void> {
   const form = context.form;
@@ -56,7 +58,7 @@ export async function assertLinkedFormStart(templateId: string, context: NonNull
   const parent = templates.find((item) => item.id === member.templateId);
   if (!parent || !snapshotMatches(parent, member.snapshot)) throw new Error(`Programme member changed or is unavailable. Review the sequence before starting ${form}.`);
   const template = templates.find((item) => item.id === templateId);
-  const rightKind = template && (form === "HOME" ? isBodyweightSet(template) : !isBodyweightSet(template));
+  const rightKind = template && (form === "HOME" ? isBodyweightSet(template) : isLoadedSet(template));
   if (!template || !rightKind || !snapshotMatches(template, link.snapshot)) throw new Error(`${form} form changed or is unavailable. Review it before starting.`);
 }
 /** Explicit SAVE/CLEAR only. Native backups already retain events; no schema/table is added. */
@@ -67,6 +69,9 @@ export async function saveTrainingProgramme(programme: TrainingProgramme | null,
     if (current.id !== expectedPreviousId) throw new Error("Programme changed. Reopen it before saving.");
     const custom = await getCustomTemplates();
     if (parsed?.mode === "SEQUENCE") {
+      // SHORT-LINK-001 (save time only, so older stored revisions still read): a SHORT is never a member's FULL.
+      const fullIds = new Set(parsed.members.map((member) => member.templateId));
+      if (parsed.members.some((member) => member.short && fullIds.has(member.short.templateId))) throw new Error("A SHORT form must be its own template, not a member's FULL one.");
       for (const member of parsed.members) {
         const template = custom.find((item) => item.id === member.templateId);
         if (!template) throw new Error("A sequence template is no longer available. Reopen the programme before activating it.");

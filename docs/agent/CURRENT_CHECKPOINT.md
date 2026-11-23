@@ -1,15 +1,14 @@
-# Current state — after PRs #620–#623 (2026-11-23)
+# Current state — after #625 (2026-11-23)
 
-- **Master:** `01f99353`. Merged today: #620 (flaky tests, delegated merge), #621 LOG-WHEN-001, #622 LOG-CATCHUP-001,
-  #623 C4.8b (Gavin: "Merge all 3"). Builder: Claude Code.
-- **Open:** #606 (C3.4b + C3.4c; Protected; waiting on Gavin's merge). This process batch (Protected: governance).
-- **Process (Gavin, 2026-11-23):** one PR per approved batch; one decision file each in `docs/decisions/`; TODAY tests
-  wait with `todaySettled()`; Builder reports only at decision points (DEV-FLOW-002 amendment). "Merge on PASS" for
-  Protected work was proposed and approved by Gavin in chat, but the edit granting it was refused by the session's
-  permission check; it stays with Gavin to make or allow. Protected merges remain his.
+- **Master:** includes #624 (process: batches, `docs/decisions/`, `todaySettled()`, quieter runs) and #625 (TRAIN
+  finish 1: SHORT forms + Progress & Direction). Gavin merged #625 before its review finished; the post-merge review
+  BLOCKed on two points, fixed in the follow-up PR (#626): older HOME revisions stay readable (the not-a-FULL rule
+  moved to save time) and Progress shows an unknown next session honestly. Builder: Claude Code.
+- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). The #625 follow-up.
+- **TRAIN left:** guided execution (Delta during sets), C4.4 training feeds the night plus a train window, programme
+  adaptation (after field evidence), C9.2 visual finish.
 - **Known load-sensitive test not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation).
-- **Field check pending:** C1, C2.1 PREFLIGHT, C4.8a/b eating window, WHEN day picker and the catch-up, on real shifts.
-- **Next:** Gavin's merge of this batch; field notes; the next approved batch.
+- **Field check pending:** C1, C2.1, C4.8a/b, WHEN day picker, catch-up, SHORT and PROGRESS on real shifts.
 
 ---
 

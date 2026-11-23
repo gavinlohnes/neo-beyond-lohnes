@@ -27,7 +27,7 @@ export function TrainProgress({ active }: { active: boolean }) {
     <p className="meta">Confidence: {a.confidence.toLowerCase()}. Nothing here changes your plan.</p>
 
     <h3 className="train-progress__h">WHERE YOU ARE</h3>
-    <p className="meta">{where.next ? `Next in your A → B → C: ${where.next}.` : "No A → B → C sequence active."} {where.sessions28} finished {where.sessions28 === 1 ? "session" : "sessions"} in the last 4 weeks{forms ? ` (${forms})` : ""}.</p>
+    <p className="meta" data-next={where.next.kind}>{where.next.kind === "KNOWN" ? `Next in your A → B → C: ${where.next.label}.` : where.next.kind === "UNKNOWN" ? `Next in your A → B → C is unknown: ${where.next.why}` : "No A → B → C sequence active."} {where.sessions28} finished {where.sessions28 === 1 ? "session" : "sessions"} in the last 4 weeks{forms ? ` (${forms})` : ""}.</p>
     <p className="meta" data-per-week>By week, oldest first: {where.perWeek.join(" · ")}</p>
 
     <h3 className="train-progress__h">THIS BLOCK</h3>

@@ -18,8 +18,10 @@ export const MIN_COMPARABLE_LIFTS = 2;
 
 export interface FinishedSession { at: string; form: Form; status: "COMPLETED" | "PARTIAL" }
 export interface Standard { name: string; evidence: EvidenceClass; text: string }
+/** Where the A → B → C stands: none active, unknown (with the programme's own reason), or a named next member. */
+export type NextState = { kind: "NONE" } | { kind: "UNKNOWN"; why: string } | { kind: "KNOWN"; label: string };
 export interface TrainProgress {
-  where: { next: string | null; sessions28: number; byForm: Partial<Record<Form, number>>; perWeek: number[] };
+  where: { next: NextState; strength28: number; sessions28: number; byForm: Partial<Record<Form, number>>; perWeek: number[] };
   standards: Standard[];
   lifts: { name: string; status: LiftStrengthReview["status"]; text: string }[];
   bodyweight: { evidence: EvidenceClass; text: string };
@@ -43,7 +45,7 @@ export function weeklyCounts(sessions: readonly FinishedSession[], now: Date): n
 /** Pure. The whole page from already-read records. */
 export function deriveTrainProgress(input: {
   now: Date;
-  next: string | null;
+  next: NextState;
   sessions: readonly FinishedSession[];
   lifts: readonly LiftStrengthReview[];
   names: Readonly<Record<string, string>>;
@@ -57,11 +59,13 @@ export function deriveTrainProgress(input: {
   const recent = input.sessions.filter((s) => now.getTime() - Date.parse(s.at) < 28 * DAY && Date.parse(s.at) <= now.getTime());
   const byForm: Partial<Record<Form, number>> = {};
   for (const s of recent) byForm[s.form] = (byForm[s.form] ?? 0) + 1;
+  // RECOVERY is shown but isn't strength work, so it doesn't count toward the evidence floor.
+  const strength = recent.filter((s) => s.form !== "RECOVERY").length;
 
   const standards: Standard[] = [
     input.benchRelative
-      ? { name: "Bench, relative to bodyweight", evidence: "OBSERVED", text: `${lb(input.benchRelative.weight)} × ${input.benchRelative.reps} at ${lb(input.benchRelative.bodyweightLbs)} bodyweight (${(input.benchRelative.weight / input.benchRelative.bodyweightLbs).toFixed(2)}× bodyweight), last 4 weeks.` }
-      : { name: "Bench, relative to bodyweight", evidence: "UNKNOWN", text: "Needs a recorded bench set and a weigh-in from the same weeks." },
+      ? { name: "Bench, relative to bodyweight", evidence: "OBSERVED", text: `${lb(input.benchRelative.weight)} × ${input.benchRelative.reps} at ${lb(input.benchRelative.bodyweightLbs)} bodyweight (${(input.benchRelative.weight / input.benchRelative.bodyweightLbs).toFixed(2)}× bodyweight), last 4 weeks, with a weigh-in from within 2 weeks of the set.` }
+      : { name: "Bench, relative to bodyweight", evidence: "UNKNOWN", text: "Needs a bench set from the last 4 weeks and a weigh-in from within 2 weeks of it." },
     input.sitUpBestReps !== null
       ? { name: "One-minute sit-ups", evidence: "OBSERVED", text: `Best recorded practice set: ${input.sitUpBestReps} reps. Practice isn't a timed test.` }
       : { name: "One-minute sit-ups", evidence: "UNKNOWN", text: "Not recorded yet." },
@@ -84,9 +88,9 @@ export function deriveTrainProgress(input: {
     : { evidence: "UNKNOWN" as const, text: latest ? `${lb(latest.weightLbs)} now; no weigh-in from 3+ weeks earlier to compare.` : "No weigh-ins recorded." };
 
   const missing: string[] = [];
-  if (recent.length < MIN_SESSIONS_28D) missing.push(`${recent.length} of ${MIN_SESSIONS_28D} finished sessions in 4 weeks`);
+  if (strength < MIN_SESSIONS_28D) missing.push(`${strength} of ${MIN_SESSIONS_28D} finished strength sessions in 4 weeks`);
   if (input.comparableLifts < MIN_COMPARABLE_LIFTS) missing.push(`${input.comparableLifts} of ${MIN_COMPARABLE_LIFTS} lifts with sessions in both of the last two 4-week periods`);
-  const why = [`${recent.length} finished sessions in the last 4 weeks.`];
+  const why = [`${strength} finished strength ${strength === 1 ? "session" : "sessions"} in the last 4 weeks${recent.length > strength ? `, plus ${recent.length - strength} recovery` : ""}.`];
   if (input.strengthIndexChangePercent !== undefined) why.push(`Strength across ${input.comparableLifts} comparable lifts: ${pct(input.strengthIndexChangePercent)} (best set and volume, vs the 4 weeks before).`);
   if (bodyweight.evidence === "OBSERVED") why.push(`Bodyweight: ${bodyweight.text}`);
 
@@ -105,7 +109,7 @@ export function deriveTrainProgress(input: {
       : "Strength is holding or rising across your comparable lifts. Keep the plan.";
   }
   return {
-    where: { next: input.next, sessions28: recent.length, byForm, perWeek: weeklyCounts(input.sessions, now) },
+    where: { next: input.next, strength28: strength, sessions28: recent.length, byForm, perWeek: weeklyCounts(input.sessions, now) },
     standards, lifts, bodyweight,
     assessment: { state, verdict, why, missing, confidence: missing.length ? "LOW" : "MODERATE" },
   };

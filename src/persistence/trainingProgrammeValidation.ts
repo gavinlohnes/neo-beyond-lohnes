@@ -30,8 +30,10 @@ const sequenceProgrammeSchema = z.object({
   const homeIds = value.members.flatMap((member) => member.home ? [member.home.templateId] : []);
   if (new Set(homeIds).size !== homeIds.length) ctx.addIssue({ code: "custom", path: ["members"], message: "HOME forms must use different templates." });
   // GRAYSON-TRAIN-SHORT-LINK-001: a linked form template belongs to one member and one form only (design §4 rule 2).
+  // This schema also reads stored history, so it holds only what every earlier revision already satisfied (HOME IDs
+  // were unique); "never a member's FULL template" is checked when a new revision is saved (saveTrainingProgramme).
   const formIds = value.members.flatMap((member) => [member.home?.templateId, member.short?.templateId].filter((id): id is string => !!id));
-  if (new Set(formIds).size !== formIds.length || formIds.some((id) => ids.includes(id))) ctx.addIssue({ code: "custom", path: ["members"], message: "Each linked form must use its own template, different from every member's FULL template." });
+  if (new Set(formIds).size !== formIds.length) ctx.addIssue({ code: "custom", path: ["members"], message: "Each linked form must use its own template." });
 });
 
 export const trainingProgrammeSchema = z.union([assignedProgrammeSchema, sequenceProgrammeSchema]);
