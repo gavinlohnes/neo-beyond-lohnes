@@ -57,7 +57,7 @@ status of its own.
 | C1.5 | Re-entry thread | Not started |  |
 | C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
 | **Campaign 2 — Shift Transitions** | | | |
-| C2.1 | Arrival in two taps | Not started |  |
+| C2.1 | Arrival in two taps | In progress | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |
 | C2.3 | Home moment | Not started |  |
 | C2.4 | Flip-day plan | Not started |  |
