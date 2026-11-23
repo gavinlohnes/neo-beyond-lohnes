@@ -19,7 +19,9 @@
   - Time: a meal at its median point into the shift; water spread evenly across the shift; never before the shift
     starts or after its end or now. Servings and water amount are his most common ones.
   - Nothing is ticked for him. LOG n writes each ticked item through `logMeal`/`logWater` on tonight's day; a failure
-    keeps what saved and offers the rest again. NOTHING ELSE writes nothing. Neither card uses red.
+    keeps what saved and offers the rest again;
+    progress is tracked per write, so a retry never repeats a time that saved. Placement also stays inside tonight's
+    lived day. NOTHING ELSE writes nothing. Neither card uses red.
   - Shows nothing when there is no pattern yet.
 - **REUSE:** C1.3's close card frame and device flag, SHIFT DOWN completion, `livedDayShiftWindow`, `getMealEntries`,
   `getHydrationEntries`, `logMeal`, `logWater`, LOG-TIME-001 placement. MyFitnessPal "recent/frequent foods" and

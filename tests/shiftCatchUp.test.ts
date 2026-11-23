@@ -41,6 +41,12 @@ describe("deriveCatchUp", () => {
     expect(deriveCatchUp(past, sample(14), d(14, 17), live)).toEqual([]);
   });
 
+  it("keeps placement inside tonight's lived day when the shift starts before it", () => {
+    const past = [sample(5, [["bowl", 0.5]]), sample(6, [["bowl", 0.5]])];
+    const lived = { start: d(14, 19), end: d(15, 16, 30) }; // a lived day that opens after the shift began
+    expect(deriveCatchUp(past, sample(14), d(15, 6, 45), live, lived)[0]!.times).toEqual([d(14, 19).toISOString()]);
+  });
+
   it("needs a pattern: one shift is not usual, and logs outside the shift don't count", () => {
     expect(deriveCatchUp([sample(5, [["bowl", 4]], [[16, 1]])], sample(14), d(15, 6, 45), live)).toEqual([]);
     expect(deriveCatchUp([sample(5, [["bowl", -3]]), sample(6, [["bowl", 13]])], sample(14), d(15, 6, 45), live)).toEqual([]);

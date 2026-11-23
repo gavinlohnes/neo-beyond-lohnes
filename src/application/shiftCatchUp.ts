@@ -3,6 +3,7 @@ import type { DomainEvent, MealLoggedPayload } from "../domain/common/types";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import { getSchedulePattern, getHydrationEntries } from "./queries";
 import { getMealEntries, getSavedMeals } from "./nutritionQueries";
+import { logWindow } from "./logTimes";
 
 /**
  * GRAYSON LOG-CATCHUP-001 (Gavin, 2026-11-23: "Then: 3, the post-shift catch-up"): after SHIFT DOWN on a work day,
@@ -30,12 +31,17 @@ const inShift = (at: string, w: Window) => { const t = Date.parse(at); return t 
 const median = (xs: number[]) => { const s = [...xs].sort((a, b) => a - b); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2; };
 const mode = (xs: number[]) => { const c = new Map<number, number>(); for (const x of xs) c.set(x, (c.get(x) ?? 0) + 1); return [...c].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0]![0]; };
 
+export const waterLabel = (count: number, amountOz: number) => count === 1 ? `Water · ${amountOz} oz` : `Water · ${count} × ${amountOz} oz`;
+
 /** Pure. The catch-up list: usual shift meals and water not yet logged tonight, each with when to place it. */
-export function deriveCatchUp(past: readonly ShiftSample[], tonight: ShiftSample, now: Date, liveMealIds: ReadonlySet<string>): CatchUpItem[] {
+export function deriveCatchUp(past: readonly ShiftSample[], tonight: ShiftSample, now: Date, liveMealIds: ReadonlySet<string>,
+  placeable?: { start: Date; end: Date }): CatchUpItem[] {
   const { start, end } = tonight.shift;
-  const latest = Math.min(end.getTime(), now.getTime());
-  if (latest <= start.getTime()) return [];
-  const place = (offsetMin: number) => new Date(Math.min(Math.max(start.getTime() + offsetMin * 60_000, start.getTime()), latest)).toISOString();
+  // Placement stays inside the shift, before now and, when given, inside tonight's lived day (where the log goes).
+  const earliest = Math.max(start.getTime(), placeable?.start.getTime() ?? -Infinity);
+  const latest = Math.min(end.getTime(), now.getTime(), (placeable?.end.getTime() ?? Infinity) - 60_000);
+  if (latest <= earliest) return [];
+  const place = (offsetMin: number) => new Date(Math.min(Math.max(start.getTime() + offsetMin * 60_000, earliest), latest)).toISOString();
   const items: CatchUpItem[] = [];
 
   const meals = new Map<string, { name: string; shifts: number; offsets: number[]; servings: number[] }>();
@@ -65,7 +71,7 @@ export function deriveCatchUp(past: readonly ShiftSample[], tonight: ShiftSample
     const already = tonight.water.filter((w) => inShift(w.at, tonight.shift)).length;
     const slotMin = (end.getTime() - start.getTime()) / 60_000 / Math.max(usual, 1);
     const times = Array.from({ length: Math.max(usual - already, 0) }, (_, i) => place((already + i + 0.5) * slotMin));
-    if (times.length > 0) items.push({ key: "water", kind: "WATER", label: times.length === 1 ? `Water · ${amountOz} oz` : `Water · ${times.length} × ${amountOz} oz`, amountOz, times });
+    if (times.length > 0) items.push({ key: "water", kind: "WATER", label: waterLabel(times.length, amountOz), amountOz, times });
   }
   return items;
 }
@@ -96,5 +102,5 @@ export async function getShiftCatchUp(dayId: string, now: Date = new Date()): Pr
     return w ? sample(d.id, w) : null;
   }))).filter((s): s is ShiftSample => s !== null);
   const [tonight, live] = await Promise.all([sample(dayId, shift), getSavedMeals()]);
-  return { items: deriveCatchUp(past, tonight, now, new Set(live.map((m) => m.id))), shift };
+  return { items: deriveCatchUp(past, tonight, now, new Set(live.map((m) => m.id)), logWindow(day.startedAt, day.createdAt)), shift };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getShiftCatchUp, type CatchUpItem } from "../../../application/shiftCatchUp";
+import { getShiftCatchUp, waterLabel, type CatchUpItem } from "../../../application/shiftCatchUp";
 import { logWater } from "../../../application/commands";
 import { logMeal } from "../../../application/nutritionCommands";
 import { catchUpDone, markCatchUpDone } from "./closeStore";
@@ -31,21 +31,31 @@ export function ShiftCatchUpCard({ dayId, busy, onDone }: { dayId: string; busy:
     const chosen = items.filter((i) => ticked.has(i.key));
     if (chosen.length === 0) { finish(); return; }
     setSaving(true); setError(null);
-    const done: string[] = [];
+    // Progress is kept per write, not per item: a water item has several times, and a retry must never write a
+    // time that already saved.
+    const left = new Map(chosen.map((i) => [i.key, [...i.times]]));
+    let saved = 0;
     try {
       for (const item of chosen) {
-        for (const at of item.times) {
-          if (item.kind === "MEAL") await logMeal(dayId, item.savedMealId, item.servings, at);
-          else await logWater(dayId, item.amountOz, at);
+        const times = left.get(item.key)!;
+        while (times.length > 0) {
+          if (item.kind === "MEAL") await logMeal(dayId, item.savedMealId, item.servings, times[0]!);
+          else await logWater(dayId, item.amountOz, times[0]!);
+          times.shift(); saved += 1;
         }
-        done.push(item.key);
       }
       finish();
     } catch {
-      // Whatever saved stays saved; only the rest is offered again.
-      setItems(items.filter((i) => !done.includes(i.key)));
-      setTicked((t) => new Set([...t].filter((k) => !done.includes(k))));
-      setError(done.length ? `${done.length} saved. The rest didn't; try again.` : "Nothing saved. Try again.");
+      // Whatever saved stays saved; only the times that didn't are offered again, still ticked.
+      const rest = items.flatMap((i): CatchUpItem[] => {
+        const times = left.get(i.key);
+        if (!times) return [i];
+        if (times.length === 0) return [];
+        return [i.kind === "WATER" ? { ...i, times, label: waterLabel(times.length, i.amountOz) } : { ...i, times }];
+      });
+      setItems(rest);
+      setTicked((t) => new Set([...t].filter((k) => rest.some((i) => i.key === k))));
+      setError(saved ? `${saved} logged. The rest didn't save; try again.` : "Nothing saved. Try again.");
     } finally { setSaving(false); }
   };
 
