@@ -86,6 +86,7 @@ status of its own.
 | C4.4t | Connect next sequence member to week opportunities | Done (#613) | Read-only Week Planner/Week Ahead composition; no fixed dates, time advancement, catch-up debt or new planning semantics |
 | C4.4v | FULL/SHORT/MINIMUM/HOME/RECOVERY form design | Done (#614) | Protected design only: explicit parent identity, advancement, history and repair; no runtime change |
 | C4.4w | Exact bodyweight HOME links | Done (#616) | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
+| LOG-CATCHUP-001 | Post-shift catch-up | In progress | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
