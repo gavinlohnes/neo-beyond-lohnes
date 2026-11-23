@@ -41,7 +41,7 @@ export interface TrainingHistoryEntry {
   skippedSetCount: number;
   volumeLbs: number;
   recordCount: number;
-  programmeForm?: "HOME";
+  programmeForm?: "HOME" | "SHORT";
 }
 
 function isHistorySession(s: WorkoutSession): s is WorkoutSession & { sessionType: StrengthSessionType; status: HistoryStatus } {
@@ -79,7 +79,7 @@ function toEntry(session: WorkoutSession & { sessionType: StrengthSessionType; s
     skippedSetCount: sets.filter((s) => s.skipped).length,
     volumeLbs: workoutVolumeLbs(sets),
     recordCount,
-    ...(session.programmeContext?.form === "HOME" ? { programmeForm: "HOME" as const } : {}),
+    ...(session.programmeContext?.form ? { programmeForm: session.programmeContext.form } : {}),
   };
 }
 

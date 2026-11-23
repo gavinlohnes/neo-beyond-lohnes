@@ -8,6 +8,8 @@ export interface SequenceProgrammeMember {
   templateId: string;
   snapshot: { name: string; exercises: ExercisePrescription[] };
   home?: { templateId: string; snapshot: { name: string; exercises: ExercisePrescription[] } };
+  /** GRAYSON-TRAIN-SHORT-LINK-001: an owner-confirmed shorter loaded prescription for the same member. */
+  short?: { templateId: string; snapshot: { name: string; exercises: ExercisePrescription[] } };
 }
 
 /** Owner-confirmed order. Capacity still owns STANDARD / REDUCED / RECOVERY. */

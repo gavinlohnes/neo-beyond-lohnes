@@ -21,6 +21,7 @@ export interface SequenceMemberView {
   name: string;
   issue: "CHANGED" | "ARCHIVED" | "MISSING" | null;
   home: { templateId: string; name: string; issue: "CHANGED" | "ARCHIVED" | "MISSING" | null } | null;
+  short: { templateId: string; name: string; issue: "CHANGED" | "ARCHIVED" | "MISSING" | null } | null;
 }
 
 export interface SequenceProgrammeView {
@@ -35,18 +36,18 @@ export interface SequenceProgrammeView {
 const sameSnapshot = (template: CustomWorkoutTemplate, snapshot: SequenceTrainingProgramme["members"][number]["snapshot"]) =>
   JSON.stringify({ name: template.name, exercises: template.exercises }) === JSON.stringify(snapshot);
 
-type HomeContext = NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>;
-function homeContext(value: unknown): HomeContext | null {
+type FormContext = NonNullable<import("../domain/common/types").WorkoutSession["programmeContext"]>;
+function formContext(value: unknown): FormContext | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
-  return typeof item.programmeRevisionId === "string" && (item.memberKey === "A" || item.memberKey === "B" || item.memberKey === "C") && typeof item.parentTemplateId === "string" && item.form === "HOME"
-    ? item as unknown as HomeContext : null;
+  return typeof item.programmeRevisionId === "string" && (item.memberKey === "A" || item.memberKey === "B" || item.memberKey === "C") && typeof item.parentTemplateId === "string" && (item.form === "HOME" || item.form === "SHORT")
+    ? item as unknown as FormContext : null;
 }
-function completionPayload(value: unknown): { sessionId: string; status: "COMPLETED" | "PARTIAL"; sessionType: SessionType; programmeContext: HomeContext | null } | null {
+function completionPayload(value: unknown): { sessionId: string; status: "COMPLETED" | "PARTIAL"; sessionType: SessionType; programmeContext: FormContext | null } | null {
   if (!value || typeof value !== "object") return null;
   const payload = value as Record<string, unknown>;
   if (typeof payload.sessionId !== "string" || (payload.status !== "COMPLETED" && payload.status !== "PARTIAL") || (payload.sessionType !== "STANDARD" && payload.sessionType !== "REDUCED" && payload.sessionType !== "RECOVERY")) return null;
-  return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType, programmeContext: homeContext(payload.programmeContext) };
+  return { sessionId: payload.sessionId, status: payload.status, sessionType: payload.sessionType, programmeContext: formContext(payload.programmeContext) };
 }
 
 async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: CustomWorkoutTemplate[], endSeq = Number.MAX_SAFE_INTEGER): Promise<Omit<SequenceProgrammeView, "previousProgramme">> {
@@ -56,8 +57,11 @@ async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: Cu
     const issue = !current ? "MISSING" : current.archivedAt ? "ARCHIVED" : !sameSnapshot(current, member.snapshot) ? "CHANGED" : null;
     const currentHome = member.home ? allTemplates.find((template) => template.id === member.home!.templateId) : undefined;
     const homeIssue = !member.home ? null : !currentHome ? "MISSING" : currentHome.archivedAt ? "ARCHIVED" : !sameSnapshot(currentHome, member.home.snapshot) ? "CHANGED" : null;
+    const currentShort = member.short ? allTemplates.find((template) => template.id === member.short!.templateId) : undefined;
+    const shortIssue = !member.short ? null : !currentShort ? "MISSING" : currentShort.archivedAt ? "ARCHIVED" : !sameSnapshot(currentShort, member.short.snapshot) ? "CHANGED" : null;
     return { key: member.key, templateId: member.templateId, name: current?.name ?? member.snapshot.name, issue,
-      home: member.home ? { templateId: member.home.templateId, name: currentHome?.name ?? member.home.snapshot.name, issue: homeIssue } : null };
+      home: member.home ? { templateId: member.home.templateId, name: currentHome?.name ?? member.home.snapshot.name, issue: homeIssue } : null,
+      short: member.short ? { templateId: member.short.templateId, name: currentShort?.name ?? member.short.snapshot.name, issue: shortIssue } : null };
   });
   const start = members.find((member) => member.templateId === programme.startTemplateId) ?? null;
   if (!start || revision.seq === undefined || !revision.recordedAt) return { status: "UNKNOWN", members, nextMember: start, why: "Programme activation evidence is incomplete. Nothing was inferred.", activatedAt: revision.recordedAt ?? null };
@@ -78,25 +82,28 @@ async function deriveSequenceState(revision: ProgrammeRevision, allTemplates: Cu
     if (!session || session.sessionType !== payload.sessionType || session.status !== payload.status) return { status: "UNKNOWN", members, nextMember: null, why: "Workout records disagree. Next session is unknown.", activatedAt: revision.recordedAt };
     if (payload.programmeContext && !session.programmeContext) return { status: "UNKNOWN", members, nextMember: null, why: "Workout form provenance disagrees. Next session is unknown.", activatedAt: revision.recordedAt };
     let memberIndex = members.findIndex((member) => member.templateId === session.templateId);
-    if (session.programmeContext?.form === "HOME") {
-      const context = session.programmeContext;
+    // HOME-LINK-001 / SHORT-LINK-001: a linked form counts only through its recorded, exact start provenance.
+    const form = session.programmeContext?.form ?? null;
+    if (form) {
+      const context = session.programmeContext!;
       memberIndex = members.findIndex((member) => member.key === context.memberKey && member.templateId === context.parentTemplateId);
-      const linked = memberIndex >= 0 ? members[memberIndex]!.home : null;
+      const linked = memberIndex >= 0 ? (form === "HOME" ? members[memberIndex]!.home : members[memberIndex]!.short) : null;
       if (payload.sessionType !== "STANDARD" || !payload.programmeContext || JSON.stringify(payload.programmeContext) !== JSON.stringify(context) || context.programmeRevisionId !== revision.id || !linked || linked.templateId !== session.templateId) {
-        return { status: "UNKNOWN", members, nextMember: null, why: "HOME workout evidence conflicts with the confirmed programme. Next session is unknown.", activatedAt: revision.recordedAt };
+        return { status: "UNKNOWN", members, nextMember: null, why: `${form} workout evidence conflicts with the confirmed programme. Next session is unknown.`, activatedAt: revision.recordedAt };
       }
     }
     if (memberIndex < 0) continue;
     const sets = await getPerformedSets(session.id);
-    const allowedHomeExercises = session.programmeContext?.form === "HOME" && memberIndex >= 0
-      ? new Set((programme.members[memberIndex]!.home?.snapshot.exercises ?? []).map((exercise) => exercise.exerciseId)) : null;
-    const workingSetCount = sets.filter((set) => isWorkingSet(set) && (!allowedHomeExercises || allowedHomeExercises.has(set.exerciseId))).length;
-    const advances = session.programmeContext?.form === "HOME"
+    const linkedSnapshot = form && memberIndex >= 0 ? (form === "HOME" ? programme.members[memberIndex]!.home : programme.members[memberIndex]!.short)?.snapshot : undefined;
+    const allowedFormExercises = form ? new Set((linkedSnapshot?.exercises ?? []).map((exercise) => exercise.exerciseId)) : null;
+    const workingSetCount = sets.filter((set) => isWorkingSet(set) && (!allowedFormExercises || allowedFormExercises.has(set.exerciseId))).length;
+    // A linked SHORT or HOME is a complete smaller prescription: COMPLETED with recorded work advances, PARTIAL holds.
+    const advances = form
       ? session.status === "COMPLETED" && workingSetCount > 0
       : doesSessionAdvanceRotation(session.sessionType as SessionType, session.status as WorkoutSessionStatus, workingSetCount);
     if (advances) {
       next = members[(memberIndex + 1) % members.length]!;
-      why = `${members[memberIndex]!.key} advanced after a recorded ${session.programmeContext?.form === "HOME" ? "HOME " : session.sessionType.toLowerCase() + " "}${session.status.toLowerCase()} session with ${workingSetCount} working ${workingSetCount === 1 ? "set" : "sets"}.`;
+      why = `${members[memberIndex]!.key} advanced after a recorded ${form ? `${form} ` : session.sessionType.toLowerCase() + " "}${session.status.toLowerCase()} session with ${workingSetCount} working ${workingSetCount === 1 ? "set" : "sets"}.`;
     }
   }
   const status = members.some((member) => member.issue) ? "REVIEW_REQUIRED" : "READY";
@@ -136,6 +143,26 @@ export function linkSequenceHomeForms(programme: SequenceTrainingProgramme, ids:
     if (!template || !template.exercises.every((exercise) => exercise.exerciseId.startsWith("home-"))) throw new Error("Choose a bodyweight HOME template for every member.");
     return { ...member, home: { templateId: template.id, snapshot: { name: template.name, exercises: structuredClone(template.exercises) } } };
   }) as SequenceTrainingProgramme["members"] };
+}
+
+/** SHORT-LINK-001: link one confirmed loaded SHORT template to each member; the projected next member is kept. */
+export function linkSequenceShortForms(programme: SequenceTrainingProgramme, ids: [string, string, string], templates: readonly CustomWorkoutTemplate[], currentNextTemplateId = programme.startTemplateId): SequenceTrainingProgramme {
+  if (new Set(ids).size !== 3) throw new Error("Choose three different SHORT templates.");
+  if (!programme.members.some((member) => member.templateId === currentNextTemplateId)) throw new Error("Current next member is unavailable. Reopen the programme.");
+  return { ...programme, startTemplateId: currentNextTemplateId, members: programme.members.map((member, index) => {
+    const template = templates.find((item) => item.id === ids[index] && !item.archivedAt);
+    if (!template || template.exercises.length === 0 || template.exercises.some((exercise) => exercise.exerciseId.startsWith("home-"))) throw new Error("Choose a loaded SHORT template for every member.");
+    if (template.id === member.templateId) throw new Error(`SHORT ${member.key} must be its own template, not the FULL one.`);
+    return { ...member, short: { templateId: template.id, snapshot: { name: template.name, exercises: structuredClone(template.exercises) } } };
+  }) as SequenceTrainingProgramme["members"] };
+}
+
+/**
+ * SHORT-LINK-001 (design §5): reviewable starting drafts, the first three movements of each member's confirmed FULL,
+ * same exercise IDs and prescription. Creating them never links or starts them.
+ */
+export function shortDraftInputs(programme: SequenceTrainingProgramme): { name: string; exercises: SequenceTrainingProgramme["members"][number]["snapshot"]["exercises"] }[] {
+  return programme.members.map((member) => ({ name: `${member.snapshot.name} · SHORT`, exercises: structuredClone(member.snapshot.exercises.slice(0, 3)) }));
 }
 
 export async function getProgrammeView(now = new Date()) {

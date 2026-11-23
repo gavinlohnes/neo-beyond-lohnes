@@ -1559,7 +1559,7 @@ export function TrainScreen({
                 <div className="bf-bar train-session-tools">
                   <div className="bf-bar__id">
                     <p className="bf-bar__eyebrow" aria-hidden="true"><span className="bf-slashes">///</span> TRAIN // LIVE</p>
-                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.programmeContext?.form === "HOME" ? " · HOME" : session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
+                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.programmeContext?.form ? (templateLabel(session.templateId, customTemplates).toUpperCase().includes(session.programmeContext.form) ? "" : ` · ${session.programmeContext.form}`) : session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
                   </div>
                   <button ref={gymModeButtonRef} type="button" className="bf-bar__log train-live-gym" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
                 </div>
