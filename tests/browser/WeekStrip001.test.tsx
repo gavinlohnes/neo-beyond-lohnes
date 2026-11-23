@@ -48,7 +48,7 @@ it("reads the week at a glance and opens Week Ahead at a tapped day, writing not
 
   await screen.getByRole("button", { name: /^Sun, Nov 22: day off, forecast/ }).click();
   await expect.element(screen.getByRole("region", { name: "Week ahead" })).toBeVisible();
-  await expect.poll(() => { const row = document.querySelector("#today-week-ahead [data-week-ahead-day='2026-11-22']"); if (!row) return false; const r = row.getBoundingClientRect(); return r.top >= -2 && r.bottom <= window.innerHeight + 2; }).toBe(true);
+  await expect.poll(() => { const row = document.querySelector("#today-week-ahead [data-week-ahead-day='2026-11-22']"); if (!row) return false; const r = row.getBoundingClientRect(); return r.top >= -2 && r.bottom <= window.innerHeight + 2; }, { timeout: 5000 }).toBe(true); // the week may load late on a busy device; the app waits up to 5 s
   expect({ events: await db.events.count(), exceptions: JSON.stringify(await db.scheduleExceptions.toArray()) }).toEqual(before);
 });
 

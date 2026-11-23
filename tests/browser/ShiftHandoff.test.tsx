@@ -71,8 +71,9 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     for (const animation of document.getAnimations()) animation.finish();
     expect(screen.getByRole("button", { name: "GOT IT", exact: true }).element().getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
     await screen.getByRole("button", { name: "GOT IT", exact: true }).click();
+    // Wait for the record itself: the panel can blink out during an ordinary re-render while the save is in flight.
+    await expect.poll(async () => db.events.where("type").equals("SHIFT_HANDOFF_READ").count()).toBe(1);
     await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();
-    expect(await db.events.where("type").equals("SHIFT_HANDOFF_READ").count()).toBe(1);
   });
 
   it("LOOP-002: the same prompt asks how the shift was; the note becomes the debrief's plan", async () => {
@@ -117,8 +118,9 @@ describe("NOTES-HANDOFF-001 — shift handoff", () => {
     for (const animation of document.getAnimations()) animation.finish();
     expect((await axe.run(document.querySelector(".shift-handoff")!)).violations).toEqual([]);
     await screen.getByRole("button", { name: "Did it", exact: true }).click();
+    // Wait for the record itself: the panel can blink out during an ordinary re-render while the save is in flight.
+    await expect.poll(async () => db.events.where("type").equals("SHIFT_HANDOFF_READ").count()).toBe(1);
     await expect.poll(() => document.querySelector(".shift-handoff")).toBeNull();
-    expect(await db.events.where("type").equals("SHIFT_HANDOFF_READ").count()).toBe(1);
     expect(await db.decisionJournalEntries.toArray()).toEqual([expect.objectContaining({ status: "REVIEWED", outcome: "Did it" })]);
   });
 });

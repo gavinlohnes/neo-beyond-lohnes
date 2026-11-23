@@ -126,3 +126,8 @@
 .today-field.redesign-today .today-eating__not { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
 .today-field.redesign-today .today-eating__acts .btn-secondary, .today-field.redesign-today .today-eating__undo .btn-secondary { width: auto; min-height: 44px; }
 .today-field.redesign-today .today-eating__undo { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; }
+/* GRAYSON LOG-CATCHUP-001: the catch-up list reuses the close card's frame. */
+.today-field.redesign-today .today-catchup__list { display: grid; gap: 2px; }
+.today-field.redesign-today .today-catchup__item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-catchup__item input { width: 20px; height: 20px; accent-color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-catchup__time { font-family: var(--font-mono, monospace); font-size: 13px; color: var(--tf-quiet); }

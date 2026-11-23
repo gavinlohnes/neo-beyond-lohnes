@@ -5,7 +5,8 @@ import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
 import { getEatingWindowView, windowFuelLine } from "../../application/eatingWindow";
-import { resolveWhen, type WhenChoice } from "../../application/logTimes";
+import { resolveWhen, shiftPointAt, type ShiftPoint, type WhenChoice } from "../../application/logTimes";
+import { getLoggableDays, type LoggableDay } from "../../application/loggableDays";
 import { BodyScreen } from "../screens/body/BodyScreen";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
@@ -63,7 +64,20 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   const [busy, setBusyState] = useState(false); const busyRef = useRef(false);
   // LOG-TIME-001: when the drink or meal happened; NOW unless the operator says otherwise.
   const [when, setWhen] = useState<WhenChoice>({ kind: "NOW" });
-  const whenAt = (dayStartedAt: string, dayCreatedAt?: string) => resolveWhen(when, dayStartedAt, new Date(), dayCreatedAt);
+  // GRAYSON WHEN upgrade: which lived day it lands on (null = today) and the recent days he can choose.
+  const [logDayId, setLogDayId] = useState<string | null>(null);
+  const [loggableDays, setLoggableDays] = useState<LoggableDay[]>([]);
+  const chosenDay = logDayId ? loggableDays.find((d) => d.id === logDayId) ?? null : null;
+  const todayShift = loggableDays.find((d) => d.isToday)?.shift ?? null;
+  /** Where the next log lands: the chosen earlier day, or today's (opened if needed), and when on it. */
+  async function place(): Promise<{ id: string; at: string | undefined; on: string }> {
+    const day = chosenDay ?? await ensureActiveDay();
+    const shift = chosenDay ? chosenDay.shift : todayShift;
+    const at = resolveWhen(when, day.startedAt, new Date(), day.createdAt, shift);
+    if (chosenDay && at === undefined) throw new Error(`LOG_TIME_NEEDED: pick when on ${dayWords(chosenDay)}.`);
+    return { id: day.id, at, on: chosenDay ? (chosenDay.label === "Yesterday" ? " yesterday" : ` on ${chosenDay.label}`) : "" };
+  }
+  const resetWhen = () => { setWhen({ kind: "NOW" }); setLogDayId(null); };
   function setBusy(next: boolean) { busyRef.current = next; setBusyState(next); onBusy(next); }
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState(""); const [meals, setMeals] = useState<SavedMeal[]>([]);
@@ -94,6 +108,13 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   useSessionDraft("record-sheet-edit", page === "edit");
   const [bodyFocus, setBodyFocus] = useState<"water" | "sleep" | "weight" | "urge" | "meal" | "foodLookup" | "protein" | null>(null);
   const [bodyRequest, setBodyRequest] = useState(0);
+  useEffect(() => {
+    if (target !== "water" && target !== "meal" && target !== "myMeals") return;
+    setLogDayId(null);
+    let live = true;
+    getLoggableDays().then((days) => { if (live) setLoggableDays(days); }, () => { if (live) setLoggableDays([]); });
+    return () => { live = false; };
+  }, [target, retry]);
   useLayoutEffect(() => {
     if (!target) return;
     setError(null); setPage("list");
@@ -145,8 +166,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     } catch (cause) { setError(`${target === "water" ? "Water" : target === "note" ? "Note" : "Meal"} didn't save. ${describeError(cause, "Nothing saved.")} Try again.`); }
     finally { setBusy(false); }
   }
-  async function mealReceipt(dayId: string, eventId: string, name: string) {
-    return { message: `${name} logged.`, undo: () => voidMealLog(dayId, eventId) };
+  async function mealReceipt(dayId: string, eventId: string, name: string, on = "") {
+    return { message: `${name} logged${on}.`, undo: () => voidMealLog(dayId, eventId) };
   }
 
   async function searchAllFoods(asked = query) {
@@ -166,7 +187,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
   const foodServings = food ? Number(amount) / (gramsOf(food.servingDescription) ?? 1) : 0;
   const foodAmountOk = Number.isFinite(foodServings) && foodServings > 0 && foodServings <= MAX_SERVINGS;
   async function logFood(found: FoundFood, servingsOfFood: number) {
-    const day = await ensureActiveDay();
+    const day = await place();
     // Saved like MyFitnessPal's recent foods, so next time it's one tap in LIKELY NOW; an identical one is reused.
     const name = `${found.description}${found.brandOwner ? ` (${found.brandOwner})` : ""} · ${found.servingDescription}`;
     const input = { name, calories: round1(found.calories), proteinG: round1(found.proteinG), carbsG: round1(found.carbsG), fatG: round1(found.fatG),
@@ -174,8 +195,8 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       ...(found.fiberG !== undefined ? { fiberG: round1(found.fiberG) } : {}), ...(found.sodiumMg !== undefined ? { sodiumMg: Math.round(found.sodiumMg) } : {}) };
     const existing = meals.find((m) => m.name === input.name && m.calories === input.calories && m.proteinG === input.proteinG);
     const meal = existing ?? await createSavedMeal(input);
-    const result = await logMeal(day.id, meal.id, servingsOfFood, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" });
-    return mealReceipt(day.id, result.eventId, found.description);
+    const result = await logMeal(day.id, meal.id, servingsOfFood, day.at); resetWhen();
+    return mealReceipt(day.id, result.eventId, found.description, day.on);
   }
   function chooseMeal(meal: SavedMeal) { setMealId(meal.id); setServings(1); setPage("portion"); }
   const selected = meals.find((meal) => meal.id === mealId);
@@ -193,9 +214,9 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       {busy && <p role="status">Saving…</p>}
       {error && <p role="alert">{error}</p>}
       {target === "water" && page !== "waterDetails" && <>
-        <WhenRow when={when} onChange={setWhen} disabled={busy} />
-        <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const at = whenAt(day.startedAt, day.createdAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
-        <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await ensureActiveDay(); const amount = lastWater; const at = whenAt(day.startedAt, day.createdAt); const id = await logWater(day.id, amount, at); setWhen({ kind: "NOW" }); return { message: `${amount} oz recorded${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
+        <WhenRow when={when} onChange={setWhen} disabled={busy} days={loggableDays} dayId={logDayId} onDay={(id) => { setLogDayId(id); setWhen({ kind: "NOW" }); }} shift={chosenDay ? chosenDay.shift : todayShift} />
+        <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await place(); const at = day.at; const id = await logWater(day.id, amount, at); resetWhen(); return { message: `${amount} oz recorded${day.on}${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
+        <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await place(); const amount = lastWater; const at = day.at; const id = await logWater(day.id, amount, at); resetWhen(); return { message: `${amount} oz recorded${day.on}${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
         <button type="button" className="btn-secondary" onClick={() => { setBodyFocus("water"); setBodyRequest((key) => key + 1); setPage("waterDetails"); }}>Custom amount & entries</button>
         <button type="button" className="btn-secondary" onClick={() => onHistory("water")}>WATER HISTORY</button>
       </>}
@@ -203,7 +224,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
         {target === "meal" && page === "list" && diary && <FoodDiaryHeader diary={diary} onEdit={diaryDayId ? (rootEventId) => setEditTarget({ beyondDayId: diaryDayId, rootEventId }) : undefined} />}
         {target === "meal" && page === "list" && windowLine && <p className="meta food-diary__window" data-eating-window-line>{windowLine}</p>}
         <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={async () => { if (diaryDayId) setDiary(await getFoodDiary(diaryDayId)); }} />
-        {(page === "list" || page === "new" || page === "quick" || page === "portion" || page === "food") && <WhenRow when={when} onChange={setWhen} disabled={busy} />}
+        {(page === "list" || page === "new" || page === "quick" || page === "portion" || page === "food") && <WhenRow when={when} onChange={setWhen} disabled={busy} days={loggableDays} dayId={logDayId} onDay={(id) => { setLogDayId(id); setWhen({ kind: "NOW" }); }} shift={chosenDay ? chosenDay.shift : todayShift} />}
         {page !== "list" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPage("list")}>BACK TO MY MEALS</button>}
         {page === "list" && <>
           {/* NAV-001: starting a new meal comes first, not after the whole list. */}
@@ -217,7 +238,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
             <h3>{target === "myMeals" ? "MY MEALS" : query.trim() ? "MATCHES" : "LIKELY NOW"}</h3>
             {(target === "myMeals" && !query.trim() ? meals : displayed).map((meal) => <div className="record-meal-row" key={meal.id}>
               <button type="button" className="btn-secondary" disabled={busy} aria-label={`Servings for ${meal.name}`} onClick={() => chooseMeal(meal)}><strong>{meal.name}</strong><span className="meta">{meal.calories} kcal · {meal.proteinG} g protein · 1 serving</span></button>
-              <button type="button" className="btn-secondary" disabled={busy} aria-label={`Log ${meal.name}`} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, meal.id, 1, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
+              <button type="button" className="btn-secondary" disabled={busy} aria-label={`Log ${meal.name}`} onClick={() => void commit(async () => { const day = await place(); const result = await logMeal(day.id, meal.id, 1, day.at); resetWhen(); return mealReceipt(day.id, result.eventId, result.name, day.on); })}>LOG</button>
             </div>)}
             {!displayed.length && <p>No matching meals.</p>}
             {/* FOOD-001: MyFitnessPal's "search all foods" — online only when asked, so nothing leaves the phone by typing. */}
@@ -242,10 +263,10 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
           {formFields(page === "quick" ? quick : form, page === "quick" ? setQuick : setForm, page === "quick" ? "Quick add" : "New meal", page === "quick")}
           {page === "new" && <label className="save-meal-choice"><input type="checkbox" disabled={busy} checked={saveNext} onChange={(event) => setSaveNext(event.target.checked)} />Save for next time</label>}
           <button type="button" className="btn-primary" disabled={busy} onClick={() => void commit(async () => {
-            const input = parse(page === "quick" ? quick : form); const day = await ensureActiveDay();
-            const result = await logManualMeal(day.id, input, page === "new" && saveNext, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" });
+            const input = parse(page === "quick" ? quick : form); const day = await place();
+            const result = await logManualMeal(day.id, input, page === "new" && saveNext, day.at); resetWhen();
             if (page === "quick") setQuick({ ...EMPTY, name: "Quick add" }); else { setForm(EMPTY); setSaveNext(false); }
-            return mealReceipt(day.id, result.eventId, result.name);
+            return mealReceipt(day.id, result.eventId, result.name, day.on);
           })}>LOG</button>
         </>}
         {page === "scan" && <>
@@ -266,7 +287,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
           {/* FOOD-001: any number of servings, as MyFitnessPal allows. */}
           <label className="field">Servings<input className="input" type="number" inputMode="decimal" min="0" step="any" aria-label="Number of servings" value={servings} onChange={(event) => setServings(Number(event.target.value))} /></label>
           <p>{Math.round(selected.calories * servings)} kcal · {round1(selected.proteinG * servings)} g protein</p>
-          <button type="button" className="btn-primary" disabled={busy || !(servings > 0 && servings <= MAX_SERVINGS)} onClick={() => void commit(async () => { const day = await ensureActiveDay(); const result = await logMeal(day.id, selected.id, servings, whenAt(day.startedAt, day.createdAt)); setWhen({ kind: "NOW" }); return mealReceipt(day.id, result.eventId, result.name); })}>LOG</button>
+          <button type="button" className="btn-primary" disabled={busy || !(servings > 0 && servings <= MAX_SERVINGS)} onClick={() => void commit(async () => { const day = await place(); const result = await logMeal(day.id, selected.id, servings, day.at); resetWhen(); return mealReceipt(day.id, result.eventId, result.name, day.on); })}>LOG</button>
           <button type="button" className="btn-secondary" onClick={() => { setEdit({ name: selected.name, calories: String(selected.calories), proteinG: String(selected.proteinG), carbsG: String(selected.carbsG), fatG: String(selected.fatG) }); setPage("edit"); }}>EDIT SAVED MEAL</button>
         </>}
         {page === "edit" && selected && <>
@@ -303,14 +324,50 @@ const clockOf = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hou
 /**
  * LOG-TIME-001: one extra tap to say when it happened. NOW is the default; a time ahead within the day
  * is a pre-log. The choice applies to the next log only, then returns to NOW.
+ *
+ * GRAYSON WHEN upgrade (Gavin, 2026-11-23: "Day picker plus shift-shaped times"): a DAY row puts the log on
+ * today, yesterday or an earlier lived day from the last week, and the day's own shift offers START / MID / END /
+ * AFTER as one tap. An earlier day has no "now", so it asks for one of those or a time.
  */
-function WhenRow({ when, onChange, disabled }: { when: WhenChoice; onChange: (w: WhenChoice) => void; disabled: boolean }) {
+const dayWords = (day: LoggableDay) => day.label === "Yesterday" ? "yesterday" : day.label;
+const SHIFT_POINTS: { point: ShiftPoint; label: string }[] = [
+  { point: "START", label: "START" }, { point: "MID", label: "MID" }, { point: "END", label: "END" }, { point: "AFTER", label: "AFTER" },
+];
+function WhenRow({ when, onChange, disabled, days, dayId, onDay, shift }: {
+  when: WhenChoice; onChange: (w: WhenChoice) => void; disabled: boolean;
+  days: readonly LoggableDay[]; dayId: string | null; onDay: (id: string | null) => void; shift: { start: Date; end: Date } | null;
+}) {
   const ago = (minutes: number) => when.kind === "AGO" && when.minutes === minutes;
-  return <div className="log-when" role="group" aria-label="When">
-    <span className="log-when__key">WHEN</span>
-    <button type="button" className="chip" aria-pressed={when.kind === "NOW"} disabled={disabled} onClick={() => onChange({ kind: "NOW" })}>NOW</button>
-    {[30, 60, 120].map((m) => <button type="button" key={m} className="chip" aria-pressed={ago(m)} disabled={disabled} onClick={() => onChange({ kind: "AGO", minutes: m })}>{m < 60 ? `${m} MIN` : `${m / 60} H`} AGO</button>)}
-    <input type="time" className="input log-when__at" aria-label="Pick a time" disabled={disabled} value={when.kind === "AT" ? when.hhmm : ""} onChange={(e) => onChange(e.target.value ? { kind: "AT", hhmm: e.target.value } : { kind: "NOW" })} />
+  const earlier = days.filter((d) => !d.isToday);
+  const yesterday = earlier[0]?.label === "Yesterday" ? earlier[0] : null;
+  const older = earlier.filter((d) => d !== yesterday);
+  const chosen = dayId ? days.find((d) => d.id === dayId) ?? null : null;
+  const past = chosen !== null;
+  const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return <div className="log-when-block">
+    {earlier.length > 0 && <div className="log-when" role="group" aria-label="Day">
+      <span className="log-when__key">DAY</span>
+      <button type="button" className="chip" aria-pressed={!past} disabled={disabled} onClick={() => onDay(null)}>TODAY</button>
+      {yesterday && <button type="button" className="chip" aria-pressed={dayId === yesterday.id} disabled={disabled} onClick={() => onDay(yesterday.id)}>YESTERDAY</button>}
+      {older.length > 0 && <select className="input log-when__day" aria-label="Earlier day" disabled={disabled}
+        value={older.some((d) => d.id === dayId) ? dayId! : ""} onChange={(e) => onDay(e.target.value || null)}>
+        <option value="">EARLIER…</option>
+        {older.map((d) => <option key={d.id} value={d.id}>{d.label}</option>)}
+      </select>}
+    </div>}
+    <div className="log-when" role="group" aria-label="When">
+      <span className="log-when__key">WHEN</span>
+      {!past && <button type="button" className="chip" aria-pressed={when.kind === "NOW"} disabled={disabled} onClick={() => onChange({ kind: "NOW" })}>NOW</button>}
+      {!past && [30, 60, 120].map((m) => <button type="button" key={m} className="chip" aria-pressed={ago(m)} disabled={disabled} onClick={() => onChange({ kind: "AGO", minutes: m })}>{m < 60 ? `${m} MIN` : `${m / 60} H`} AGO</button>)}
+      <input type="time" className="input log-when__at" aria-label="Pick a time" disabled={disabled} value={when.kind === "AT" ? when.hhmm : ""} onChange={(e) => onChange(e.target.value ? { kind: "AT", hhmm: e.target.value } : { kind: "NOW" })} />
+    </div>
+    {shift && <div className="log-when" role="group" aria-label="Shift">
+      <span className="log-when__key">SHIFT</span>
+      {SHIFT_POINTS.map(({ point, label }) => <button type="button" key={point} className="chip" aria-pressed={when.kind === "SHIFT" && when.point === point} disabled={disabled}
+        aria-label={`${label === "AFTER" ? "After shift" : `Shift ${label.toLowerCase()}`}, ${hhmm(shiftPointAt(point, shift))}`}
+        onClick={() => onChange({ kind: "SHIFT", point })}>{label} <span className="log-when__clock">{hhmm(shiftPointAt(point, shift))}</span></button>)}
+    </div>}
+    {past && when.kind !== "AT" && when.kind !== "SHIFT" && <p className="meta log-when__hint">Pick when on {dayWords(chosen)}.</p>}
   </div>;
 }
 

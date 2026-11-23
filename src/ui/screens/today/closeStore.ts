@@ -26,3 +26,12 @@ export function closeDone(dayId: string): boolean {
 export function markCloseDone(dayId: string): void {
   try { localStorage.setItem(DONE, dayId); } catch { /* not remembered; offered once more */ }
 }
+
+/** GRAYSON LOG-CATCHUP-001: whether tonight's catch-up was answered or skipped, on this device only. */
+const CATCH_UP_DONE = "beyond.catchup.done.v1";
+export function catchUpDone(dayId: string): boolean {
+  try { return localStorage.getItem(CATCH_UP_DONE) === dayId; } catch { return false; }
+}
+export function markCatchUpDone(dayId: string): void {
+  try { localStorage.setItem(CATCH_UP_DONE, dayId); } catch { /* not remembered; offered once more */ }
+}
