@@ -108,3 +108,18 @@
 .today-field.redesign-today .today-close__acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .today-field.redesign-today .today-close__acts .btn-secondary { width: auto; min-height: 44px; }
 .today-field.redesign-today .today-close__change { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
+
+/* GRAYSON C4.8a: the Eating Window card. Framed like TODAY's other panels; no red, it never outranks the day. */
+.today-field.redesign-today .today-eating {
+  position: relative; display: grid; gap: 6px; margin: 8px 0 0; padding: 12px 12px 12px 14px; background: var(--tf-s1); border: 1px solid var(--tf-line);
+  clip-path: polygon(0 0, calc(100% - var(--tf-cut)) 0, 100% var(--tf-cut), 100% 100%, var(--tf-cut) 100%, 0 calc(100% - var(--tf-cut)));
+}
+.today-field.redesign-today .today-eating__head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.today-field.redesign-today .today-eating__label { margin: 0; font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 600; letter-spacing: .14em; color: var(--p-t1, #f2f2f2); }
+.today-field.redesign-today .today-eating__state { margin: 0; font-family: var(--font-mono, monospace); font-size: 13px; letter-spacing: .12em; color: var(--tf-quiet); }
+.today-field.redesign-today .today-eating__state b { margin-left: 8px; font-family: var(--font-display, sans-serif); font-size: 28px; letter-spacing: .01em; color: var(--p-t1, #f2f2f2); font-variant-numeric: tabular-nums; }
+.today-field.redesign-today .today-eating__context { margin: 0; font-size: 15px; line-height: 1.4; color: var(--tf-quiet); }
+.today-field.redesign-today .today-eating__context em { display: block; font-style: normal; font-family: var(--font-mono, monospace); font-size: 11px; letter-spacing: .1em; color: var(--p-t2, #a8a8a8); }
+.today-field.redesign-today .today-eating__acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.today-field.redesign-today .today-eating__acts .btn-secondary, .today-field.redesign-today .today-eating__undo .btn-secondary { width: auto; min-height: 44px; }
+.today-field.redesign-today .today-eating__undo { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; }

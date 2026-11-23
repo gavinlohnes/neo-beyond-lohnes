@@ -12,6 +12,14 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C4.8a — Eating Window foundation (owner go 2026-11-23)
+
+"Approve C4.8a". [Brief](agent/GRAYSON-C4.8A-001.md); design GRAYSON-BEHAVIOR-FASTING-DESIGN-001. Off until he
+turns it on behind a private safety check (only completion is stored). Neutral programme: window length is a
+setting, never a level; completing a fast is not success; END FAST and SKIP TODAY need no reason; every mark has
+UNDO. Context is labelled "Typical, not measured in you." Nothing is inferred from meals and no target, advice or
+Engine input changes. New events: EATING_WINDOW_MARKED, EATING_WINDOW_DAY_SKIPPED, EATING_WINDOW_MARK_VOIDED.
+
 ## GRAYSON-C2.1 — arrival in two taps (owner go 2026-11-23)
 
 Gavin: "1, yes 2 yes". [Brief](agent/GRAYSON-C2.1-001.md). PREFLIGHT shows last shift's unread handoff note and the

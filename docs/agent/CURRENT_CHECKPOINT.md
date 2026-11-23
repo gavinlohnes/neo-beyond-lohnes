@@ -7,6 +7,7 @@
   existing PREFLIGHT / STARTED WORK path, brief for approval first; (3) maybe C4.8 eating window (designed in #601),
   only if he wants a fasting window.
 - **C2.1:** approved 2026-11-23 and built ([brief](GRAYSON-C2.1-001.md)); goes up after #617 merges.
+- **C4.8a:** approved 2026-11-23 and built ([brief](GRAYSON-C4.8A-001.md)); needs its own PR.
 - **Field check pending:** Gavin is trying C1 (START DAY → Orientation, the close after SHIFT DOWN, Delta's voices)
   on real shifts; his "Anything Delta should learn?" answers land in Daily Notes as `#close` blocks.
 
