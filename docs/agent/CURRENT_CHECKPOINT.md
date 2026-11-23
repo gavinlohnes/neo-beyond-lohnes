@@ -1,15 +1,19 @@
-# Current state — after PR #616 (2026-11-23)
+# Current state — after PR #619 (2026-11-23)
 
-- **Master:** `5238638` (#616 merged: GRAYSON-TRAIN-HOME-LINK-001, C4.4w). Builder for new work: Claude Code, on
-  Gavin's direction; branch `ccr-380c4225-1es42i`.
-- **Open:** #606 (C3.4b + C3.4c yearly repeats in Plans; Protected; waiting on Gavin's merge). Nothing else.
-- **Gavin's order (2026-11-23):** (1) this records reconciliation; (2) C2.1 Arrival in two taps, evolving the
-  existing PREFLIGHT / STARTED WORK path, brief for approval first; (3) maybe C4.8 eating window (designed in #601),
-  only if he wants a fasting window.
-- **C2.1:** approved 2026-11-23 and built ([brief](GRAYSON-C2.1-001.md)); goes up after #617 merges.
-- **C4.8a:** approved 2026-11-23 and built ([brief](GRAYSON-C4.8A-001.md)); needs its own PR.
-- **Field check pending:** Gavin is trying C1 (START DAY → Orientation, the close after SHIFT DOWN, Delta's voices)
-  on real shifts; his "Anything Delta should learn?" answers land in Daily Notes as `#close` blocks.
+- **Master:** `ff2ae7b1` (#617 C2.1 and #619 C4.8a merged). Builder: Claude Code, on Gavin's direction.
+- **Open:** #606 (C3.4b + C3.4c; Protected; waiting on Gavin's merge). #620 flake fixes (Routine; independent review
+  BLOCKED one test change, repaired at `0ded41da`, renewed review pending; delegated merge once PASS + green CI).
+- **Logger work Gavin approved (2026-11-23: "1 + 2 together", "then 3", "then 7 + 8 as C4.8b"), one PR each, all
+  from master (no stacking), each Protected (independent exact-head review, green CI, Gavin's merge):**
+  - LOG-WHEN-001 — DAY and SHIFT on WHEN ([brief](GRAYSON-LOG-WHEN-001.md)); this PR.
+  - LOG-CATCHUP-001 — post-shift catch-up ([brief](GRAYSON-LOG-CATCHUP-001.md)).
+  - C4.8b — the Eating Window meets the meal log ([brief](GRAYSON-C4.8B-001.md)).
+  The three touch `RecordSheets.tsx` (WHEN and C4.8b) and the decision log/tracker; whichever merges later takes a
+  small rebase.
+- **Known load-sensitive tests not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation) failed
+  once in a loaded local run and passed alone twice; App re-tap TRAIN not reproduced.
+- **Field check pending:** C1 (Orientation, the close, Delta's voices), C2.1 PREFLIGHT, C4.8a on real shifts.
+- **Next:** reviews on the three PRs and #620; Gavin's merges; field notes from real shifts.
 
 ---
 

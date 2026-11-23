@@ -44,14 +44,29 @@ export function checkLogTime(dayStartedAt: string, at: string, dayCreatedAt?: st
 }
 
 /** What the WHEN row on the water and meal sheets can say. */
-export type WhenChoice = { kind: "NOW" } | { kind: "AGO"; minutes: number } | { kind: "AT"; hhmm: string };
+export type ShiftPoint = "START" | "MID" | "END" | "AFTER";
+export type WhenChoice = { kind: "NOW" } | { kind: "AGO"; minutes: number } | { kind: "AT"; hhmm: string } | { kind: "SHIFT"; point: ShiftPoint };
+/** GRAYSON WHEN upgrade: AFTER SHIFT means this long after the shift ends (the drive home and the first hour back). */
+export const AFTER_SHIFT_MINUTES = 60;
+
+/** Pure. The instant a shift-shaped choice names, from that lived day's own shift. */
+export function shiftPointAt(point: ShiftPoint, shift: { start: Date; end: Date }): Date {
+  if (point === "START") return shift.start;
+  if (point === "END") return shift.end;
+  if (point === "MID") return new Date((shift.start.getTime() + shift.end.getTime()) / 2);
+  return new Date(shift.end.getTime() + AFTER_SHIFT_MINUTES * 60_000);
+}
 
 /**
  * Pure: the instant a WHEN choice names inside this lived day, or undefined for now. "AT 02:00" on a
  * day that started at 16:30 means the 02:00 after midnight; "AT 17:10" means the evening it began.
  */
-export function resolveWhen(choice: WhenChoice, dayStartedAt: string, now: Date, dayCreatedAt?: string): string | undefined {
+export function resolveWhen(choice: WhenChoice, dayStartedAt: string, now: Date, dayCreatedAt?: string, shift?: { start: Date; end: Date } | null): string | undefined {
   if (choice.kind === "NOW") return undefined;
+  if (choice.kind === "SHIFT") {
+    if (!shift) throw new Error("LOG_TIME_NO_SHIFT: that day has no shift. Pick a time.");
+    return shiftPointAt(choice.point, shift).toISOString();
+  }
   if (choice.kind === "AGO") return new Date(now.getTime() - choice.minutes * 60_000).toISOString();
   const [h, m] = choice.hhmm.split(":").map(Number);
   if (!Number.isFinite(h) || !Number.isFinite(m)) return undefined;
