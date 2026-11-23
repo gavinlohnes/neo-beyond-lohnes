@@ -26,6 +26,12 @@ describe("deriveMealPrompt", () => {
     expect(deriveMealPrompt(planned, meals, at(15, 23), at(16, 0), none)).toBeNull();
     expect(deriveMealPrompt(planned, meals, at(16, 0, 5), at(16, 0), none)).toMatchObject({ kind: "START_FROM", name: "Dinner" });
   });
+  it("offers only a time inside today's lived day, where the mark is placed, skipping an earlier day's meal", () => {
+    const today = { start: at(15, 16, 30), end: at(16, 16, 30) };
+    const meals = [meal("Snack", at(15, 15)), meal("Dinner", at(15, 17, 30))];
+    expect(deriveMealPrompt(fasting, meals, at(15, 18), null, none, today)).toMatchObject({ kind: "END_AT", name: "Dinner" });
+    expect(deriveMealPrompt(fasting, [meal("Snack", at(15, 15))], at(15, 18), null, none, today)).toBeNull();
+  });
   it("NOT NOW keeps that offer away; a later meal can still offer", () => {
     const meals = [meal("Bowl", at(15, 2, 10))];
     expect(deriveMealPrompt(fasting, meals, at(15, 4), null, new Set(["END_AT:Bowl"]))).toBeNull();

@@ -14,7 +14,8 @@
   - A meal never moves a boundary by itself; it produces one offer on TODAY's Eating Window card, which he takes or
     waves off (NOT NOW, remembered on the device per meal).
   - FASTING and a meal logged after the fast began (not ahead of now): "You logged <meal> at 02:10, during this
-    fast." [END FAST AT 02:10]. Meals are read from the fast's own day and today.
+    fast." [END FAST AT 02:10]. Meals are read from the fast's own day and today, and offered only when
+    their time is inside today's lived day (where the mark is placed), so the button never offers a refused time.
   - OPEN with 60 minutes or less left (or past), from the last meal since it opened; or no marks today and the planned
     window is over, from the last meal today: "Last meal logged: <meal> at 21:40." [FAST FROM 21:40].
   - `markEatingWindow(boundary, at?)`: a given time must be inside today's lived day and not ahead of now. The event,

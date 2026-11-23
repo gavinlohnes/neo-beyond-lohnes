@@ -5,6 +5,7 @@ import { EATING_HOURS_MAX, EATING_HOURS_MIN, eatingWindowSettingsSchema, parseEa
 import type { DomainEvent, EatingWindowDayKind, EatingWindowMarkVoidedPayload, EatingWindowMarkedPayload, EatingWindowSettings } from "../domain/common/types";
 import { ensureActiveDay, logEvent, newId, placeInDay } from "./commands";
 import { getMealEntries } from "./nutritionQueries";
+import { logWindow } from "./logTimes";
 import { getFoodDiary } from "./foodDiaryQueries";
 import { getActiveDay } from "./queries";
 import { getTodayPicture } from "./todayPicture";
@@ -163,9 +164,13 @@ export const LAST_MEAL_OFFER_MINUTES = 60;
 export interface LoggedMeal { at: string; name: string; rootEventId: string }
 
 /** Pure. The one offer, if any. `plannedClose` is the planned end of today's window (for the PLANNED case). */
-export function deriveMealPrompt(state: EatingWindowState, meals: readonly LoggedMeal[], now: Date, plannedClose: Date | null, dismissed: ReadonlySet<string>): MealPrompt | null {
+export function deriveMealPrompt(state: EatingWindowState, meals: readonly LoggedMeal[], now: Date, plannedClose: Date | null, dismissed: ReadonlySet<string>,
+  placeable?: { start: Date; end: Date }): MealPrompt | null {
   const t = (m: LoggedMeal) => Date.parse(m.at);
-  const sorted = [...meals].filter((m) => t(m) <= now.getTime()).sort((a, b) => t(a) - t(b));
+  // Only a time the mark can take: not ahead of now and, when given, inside today's lived day (where marks are placed),
+  // so the card never offers a boundary its button would be refused.
+  const fits = (m: LoggedMeal) => t(m) <= now.getTime() && (!placeable || (t(m) >= placeable.start.getTime() && t(m) < placeable.end.getTime()));
+  const sorted = [...meals].filter(fits).sort((a, b) => t(a) - t(b));
   const offer = (kind: MealPrompt["kind"], m: LoggedMeal | undefined): MealPrompt | null =>
     m && !dismissed.has(`${kind}:${m.rootEventId}`) ? { kind, at: m.at, name: m.name, mealId: m.rootEventId } : null;
   if (state.kind === "FASTING") return offer("END_AT", sorted.find((m) => t(m) > Date.parse(state.since)));
@@ -203,7 +208,8 @@ export async function getEatingWindowView(now: Date = new Date(), dismissed: Rea
     getFoodDiary(day.id).catch(() => null),
   ]);
   const plannedClose = kind ? new Date(plannedOpening(mostRecentBoundaryAtOrBefore(new Date(day.startedAt)), settings.opensAt[kind]).getTime() + settings.eatingHours * 3_600_000) : null;
-  const prompt = deriveMealPrompt(state, meals.map((m) => ({ at: m.at, name: m.name, rootEventId: m.rootEventId })), now, plannedClose, dismissed);
+  const prompt = deriveMealPrompt(state, meals.map((m) => ({ at: m.at, name: m.name, rootEventId: m.rootEventId })), now, plannedClose, dismissed,
+    logWindow(day.startedAt, day.createdAt));
   const target = diary?.proteinTargetG;
   const fuel = diary && target !== undefined
     ? { proteinG: Math.round(diary.proteinG), targetG: Math.round(target), leftG: Math.max(0, Math.round(target - diary.proteinG)) } : null;

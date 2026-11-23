@@ -65,3 +65,26 @@ it("C4.8b: a meal during the fast is offered as its end; he ends it at the meal 
   await expect(markEatingWindow("CLOSED", at(15, 9).toISOString(), at(15, 4))).rejects.toThrow(/EATING_MARK_AHEAD/);
   await expect(markEatingWindow("CLOSED", at(16, 17).toISOString(), at(16, 18))).rejects.toThrow(/LOG_TIME_OUTSIDE_DAY/);
 });
+
+it("C4.8b: a fast begun on the previous lived day offers only a meal it can be ended at, and the tap works", async () => {
+  const { createSavedMeal, logMeal } = await import("../../src/application/nutritionCommands");
+  const { getActiveDay } = await import("../../src/application/queries");
+  await saveEatingWindowSettings(on, at(14, 17));
+  const first = (await getActiveDay())!;
+  vi.setSystemTime(at(15, 14));
+  await markEatingWindow("CLOSED"); // the fast starts on the 14th's lived day
+  const snack = await createSavedMeal({ name: "Snack", calories: 200, proteinG: 10, carbsG: 20, fatG: 8 });
+  vi.setSystemTime(at(15, 15, 5));
+  await logMeal(first.id, snack.id, 1, at(15, 15).toISOString()); // still the 14th's lived day
+  vi.setSystemTime(at(15, 16, 31));
+  const second = await startDay(at(15, 16, 30).toISOString());
+  // Only the snack so far: it can't be a mark on today's day, so nothing is offered (never a dead button).
+  expect((await getEatingWindowView(at(15, 18)))!.prompt).toBeNull();
+  const dinner = await createSavedMeal({ name: "Dinner", calories: 700, proteinG: 50, carbsG: 60, fatG: 20 });
+  vi.setSystemTime(at(15, 18));
+  await logMeal(second.id, dinner.id, 1, at(15, 17, 30).toISOString());
+  const view = (await getEatingWindowView(at(15, 18)))!;
+  expect(view.prompt).toMatchObject({ kind: "END_AT", name: "Dinner", at: at(15, 17, 30).toISOString() });
+  await markEatingWindow("OPENED", view.prompt!.at, at(15, 18));
+  expect((await getEatingWindowView(at(15, 18)))!.state).toMatchObject({ kind: "OPEN", since: at(15, 17, 30).toISOString() });
+});
