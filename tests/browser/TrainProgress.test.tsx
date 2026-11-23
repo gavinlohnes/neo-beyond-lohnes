@@ -57,3 +57,20 @@ for (const width of [320, 360, 412]) {
     expect({ events: await db.events.count(), sessions: await db.workoutSessions.count() }).toEqual(before);
   });
 }
+
+it("an active sequence whose next session is unknown says so, never 'no sequence' (review on #625)", async () => {
+  const { createCustomTemplateSet } = await import("../../src/application/customTemplateCommands");
+  const { saveTrainingProgramme } = await import("../../src/application/trainingProgramme");
+  const { buildSequenceProgramme } = await import("../../src/application/trainingProgrammeQueries");
+  const { WORKOUT_TEMPLATES } = await import("../../src/domain/workout/types");
+  const t = await createCustomTemplateSet((["P A", "P B", "P C"] as const).map((name, i) => ({ name, exercises: WORKOUT_TEMPLATES[(["A", "B", "C"] as const)[i]!]!.exercises })));
+  await saveTrainingProgramme(buildSequenceProgramme([t[0]!.id, t[1]!.id, t[2]!.id], t), null);
+  // A later workout outcome with no usable payload: the programme can't name the next member.
+  await db.events.add({ id: "broken-outcome", type: "WORKOUT_COMPLETED", occurredAt: now.toISOString(), recordedAt: now.toISOString(), payload: {}, source: "USER", correlationId: "broken-outcome", seq: 999_999 } as never);
+  await page.viewport(360, 900);
+  const screen = await render(<TrainScreen />);
+  await screen.getByRole("group", { name: "Training views" }).getByRole("button", { name: "PROGRESS", exact: true }).click();
+  const panel = screen.getByRole("region", { name: "Progress" });
+  await expect.element(panel.getByText(/Next in your A → B → C is unknown: A workout outcome is incomplete/)).toBeVisible();
+  expect(panel.element().textContent).not.toContain("No A → B → C sequence active");
+});

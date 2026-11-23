@@ -372,3 +372,18 @@ it("preserves the earned next member when SHORT links create a new programme rev
   await saveTrainingProgramme(linkSequenceShortForms(activation.programme as Seq, shorts.map((t) => t.id) as [string, string, string], shorts, before.sequence!.nextMember!.templateId), activation.id);
   expect((await getProgrammeView()).sequence?.nextMember?.key).toBe("B");
 });
+
+it("older HOME revisions stay readable; the not-a-FULL-template rule applies only when saving (review on #625)", async () => {
+  const templates = await threeCustomTemplates();
+  const seq = buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates) as Seq;
+  // A revision recorded before SHORT existed, where HOME B pointed at FULL A's template: it must still parse on read.
+  const legacy = { ...seq, members: seq.members.map((m, i) => i === 1 ? { ...m, home: { templateId: templates[0]!.id, snapshot: seq.members[0]!.snapshot } } : m) } as Seq;
+  await db.events.add({ id: "legacy-home", type: "TRAIN_PROGRAM_SET", occurredAt: "2026-11-20T10:00:00.000Z", recordedAt: "2026-11-20T10:00:00.000Z",
+    payload: { commandId: "legacy-home", previousId: null, programme: legacy }, source: "USER", correlationId: "legacy-home", seq: 1 } as never);
+  const read = await getTrainingProgramme();
+  expect(read.id).toBe("legacy-home");
+  expect(read.programme?.mode).toBe("SEQUENCE");
+  // A new SHORT that is a member's FULL template is refused when saved.
+  const shortIsFull = { ...seq, members: seq.members.map((m, i) => i === 0 ? { ...m, short: { templateId: templates[1]!.id, snapshot: seq.members[1]!.snapshot } } : m) } as Seq;
+  await expect(saveTrainingProgramme(shortIsFull, read.id)).rejects.toThrow("not a member's FULL one");
+});
