@@ -1,4 +1,29 @@
-# Current objective — GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001 (2026-11-22)
+# Current objective — TRAINING-PROGRAMME-TEST-REPAIR-001 (2026-11-22)
+
+- **Owner authorization / lane:** Gavin directed the failed `TrainingProgramme` browser test to be
+  repaired, the full suite and deployment confirmed, and the newest build verified live. ROUTINE;
+  test-only, with no product behavior or authority change. This checkpoint and the PR are the concise
+  durable brief.
+- **Starting master / Builder:** `85bb50cd49573970a1ff2ea3d8d6d0c26e6cb31a`; Builder Codex;
+  branch `codex/training-programme-test-repair`.
+- **Cause / repair:** one evidence substring appears in both a hidden summary and the visible WHY
+  evidence. Select the exact visible WHY evidence instead of weakening or removing coverage.
+- **Leverage disposition:** **REUSE** the existing activation journey and browser test; **OWN** only
+  selector precision that distinguishes its existing visible WHY evidence; **BUILD FROM SCRATCH:**
+  none.
+- **Concurrent work:** protected PR #606 and unrelated root research edits remain untouched.
+- **Verification:** focused `TrainingProgramme` Chromium passes 3/3; architecture and production/PWA
+  build pass. The full local run passed 4,383/4,388 tests and exposed three unrelated timing/state
+  failures (`operatorContext`, `MetricPage001`, `Habits001`); focused reruns passed the first two,
+  while the unrelated Habits button remained locally disabled. Required clean four-shard CI is the
+  decisive full-suite check.
+- **Next:** open the Routine repair PR, obtain green required CI and Gavin's merge approval, then
+  verify the post-merge Pages deployment and live revision. Reality Forms implementation remains a
+  separate owner authorization.
+
+---
+
+# Historical — GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001 (merged as PR #614)
 
 - **Owner authorization / lane:** Gavin approved a **PROTECTED documentation/design-only** objective
   for coherent FULL, SHORT, MINIMUM, HOME and RECOVERY forms around the active A → B → C programme.
