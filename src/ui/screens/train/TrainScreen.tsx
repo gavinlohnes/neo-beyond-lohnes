@@ -1732,14 +1732,6 @@ export function TrainScreen({
                 </div>
                 {proposalWhy && <ul className="train-delta__whylist">{proposal.why.map((w) => <li key={w} className="meta">{w}</li>)}</ul>}
               </div>}
-              {painFor === currentExercise.exerciseId ? <div className="train-delta train-delta--stop" role="group" aria-label="Stop this movement">
-                <p className="train-delta__line"><span className="train-delta__who">DELTA</span> {currentExercise.name} is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before training it again.</p>
-                <div className="train-delta__acts">
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, true)}>SKIP ITS REMAINING SETS</button>
-                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, false)}>JUST NOTE IT</button>
-                  <button type="button" className="train-delta__why" onClick={() => setPainFor(null)}>IT'S FINE, CONTINUE</button>
-                </div>
-              </div> : <button type="button" className="train-delta__pain" onClick={() => setPainFor(currentExercise.exerciseId)}>PAIN OR SOMETHING WRONG</button>}
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
                   sets stay as one-line summaries; later sets are counted in a
@@ -1955,6 +1947,15 @@ export function TrainScreen({
                   CONTINUE — {firstIncompleteExercise.name}
                 </button>
               )}
+              {/* GRAYSON-TRAIN-GUIDED-001: below the set inputs, so LOG stays where the thumb expects it. */}
+              {painFor === currentExercise.exerciseId ? <div className="train-delta train-delta--stop" role="group" aria-label="Stop this movement">
+                <p className="train-delta__line"><span className="train-delta__who">DELTA</span> {currentExercise.name} is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before training it again.</p>
+                <div className="train-delta__acts">
+                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, true)}>SKIP ITS REMAINING SETS</button>
+                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, false)}>JUST NOTE IT</button>
+                  <button type="button" className="train-delta__why" onClick={() => setPainFor(null)}>IT'S FINE, CONTINUE</button>
+                </div>
+              </div> : <button type="button" className="train-delta__pain" onClick={() => setPainFor(currentExercise.exerciseId)}>PAIN OR SOMETHING WRONG</button>}
               <details className="train-lift-inspect">
                 <summary className="disclosure-row">Progression and substitution</summary>
                 <p className="meta">Session: {describeTemplateSummary(activeExercises).bodyAreas}.</p>
