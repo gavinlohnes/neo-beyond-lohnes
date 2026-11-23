@@ -57,7 +57,7 @@ status of its own.
 | C1.5 | Re-entry thread | Not started |  |
 | C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
 | **Campaign 2 — Shift Transitions** | | | |
-| C2.1 | Arrival in two taps | Not started |  |
+| C2.1 | Arrival in two taps | In progress | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |
 | C2.3 | Home moment | Not started |  |
 | C2.4 | Flip-day plan | Not started |  |
@@ -85,7 +85,7 @@ status of its own.
 | C4.4r | Owner-confirmed A/B/C sequence activation | Done (#612) | Existing programme history plus qualifying workout outcomes; preserves capacity/recovery authority and does not start C4.4 training-to-night behavior |
 | C4.4t | Connect next sequence member to week opportunities | Done (#613) | Read-only Week Planner/Week Ahead composition; no fixed dates, time advancement, catch-up debt or new planning semantics |
 | C4.4v | FULL/SHORT/MINIMUM/HOME/RECOVERY form design | Done (#614) | Protected design only: explicit parent identity, advancement, history and repair; no runtime change |
-| C4.4w | Exact bodyweight HOME links | In progress | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
+| C4.4w | Exact bodyweight HOME links | Done (#616) | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Not started |  |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |

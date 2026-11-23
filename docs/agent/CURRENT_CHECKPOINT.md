@@ -1,4 +1,18 @@
-# Current objective — GRAYSON-TRAIN-HOME-LINK-001 (2026-11-22)
+# Current state — after PR #616 (2026-11-23)
+
+- **Master:** `5238638` (#616 merged: GRAYSON-TRAIN-HOME-LINK-001, C4.4w). Builder for new work: Claude Code, on
+  Gavin's direction; branch `ccr-380c4225-1es42i`.
+- **Open:** #606 (C3.4b + C3.4c yearly repeats in Plans; Protected; waiting on Gavin's merge). Nothing else.
+- **Gavin's order (2026-11-23):** (1) this records reconciliation; (2) C2.1 Arrival in two taps, evolving the
+  existing PREFLIGHT / STARTED WORK path, brief for approval first; (3) maybe C4.8 eating window (designed in #601),
+  only if he wants a fasting window.
+- **C2.1:** approved 2026-11-23 and built ([brief](GRAYSON-C2.1-001.md)); goes up after #617 merges.
+- **Field check pending:** Gavin is trying C1 (START DAY → Orientation, the close after SHIFT DOWN, Delta's voices)
+  on real shifts; his "Anything Delta should learn?" answers land in Daily Notes as `#close` blocks.
+
+---
+
+# Historical — GRAYSON-TRAIN-HOME-LINK-001 (merged as PR #616)
 
 - **Owner authorization / lane:** exact bounded Protected implementation approved by Gavin. Brief:
   [`GRAYSON-TRAIN-HOME-LINK-001.md`](GRAYSON-TRAIN-HOME-LINK-001.md).

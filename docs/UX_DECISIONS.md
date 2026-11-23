@@ -12,6 +12,13 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+## GRAYSON-C2.1 — arrival in two taps (owner go 2026-11-23)
+
+Gavin: "1, yes 2 yes". [Brief](agent/GRAYSON-C2.1-001.md). PREFLIGHT shows last shift's unread handoff note and the
+one BEFORE SHIFT step he's passed over most lately (on days he did that routine; at least twice), by its words only.
+**ROUTINES-001 reading:** skips may be read to choose that one step; no count, "missed" or streak is ever shown.
+STARTED WORK marks work started and the note on screen read in one tap.
+
 ## GRAYSON-C1.6 — Delta's voice: Mentor by default, Delta and Droid switchable (owner go 2026-11-20)
 
 "Bruce → Terry by default, with Delta and Droid as switchable voices." [Brief](agent/GRAYSON-C1.6-001.md). One copy
