@@ -88,13 +88,19 @@ export function WeekPlanner({ active, onOpen, onChanged }: { active: boolean; on
           <strong>{label(d.date)}</strong>
           <span>{d.basis === "UNKNOWN" ? "Work unknown" : d.work === "WORK" ? "Work" : "Off"}</span>
           <span>{d.tasks.length} tasks · {d.events.length} events</span>
-          <span>{d.workout.basis === "ASSIGNED" ? "Your workout" : d.workout.basis === "SUGGESTED" ? "Workout idea" : "—"}</span>
+          <span>{plan.trainingConnection && d.suggestedTemplate ? plan.trainingConnection.status === "READY" ? `Next ${plan.trainingConnection.key}` : "Review in TRAIN" : d.workout.basis === "ASSIGNED" ? "Your workout" : d.workout.basis === "SUGGESTED" ? "Workout idea" : "—"}</span>
         </button>)}
       </div>
       {day && <div className="week-planner__agenda">
         <h3 ref={heading} tabIndex={-1}>{label(day.date)}{day.date === plan.date ? " · Today" : ""}</h3>
         <p className="meta">{day.basis === "UNKNOWN" ? "Work or off is not known. Set your schedule to see work context." : `${day.work === "WORK" ? `Work${day.shiftStartHour !== null ? ` · shift starts ${String(day.shiftStartHour).padStart(2, "0")}:00` : ""}` : "Day off"} · ${day.basis === "RECORDED" ? "recorded" : day.basis === "CONFIRMED" ? "confirmed change" : "saved schedule forecast"}`}</p>
-        <p className="card-body">{day.workout.basis === "ASSIGNED" ? "Your programme: " : day.workout.basis === "SUGGESTED" ? "Suggestion, not a booking: " : ""}{day.workout.label}</p>
+        {plan.trainingConnection && day.suggestedTemplate ? <div data-training-planning-connection>{plan.trainingConnection.status === "READY" ? <>
+          <p className="card-body">Training opportunity · Next {plan.trainingConnection.key} · {plan.trainingConnection.name}</p>
+          <p className="meta">{plan.trainingConnection.why} Moving or skipping this opportunity changes nothing. Only recorded qualifying training advances the sequence.</p>
+        </> : <>
+          <p className="card-body">Sequence needs review in TRAIN</p>
+          <p className="meta">{plan.trainingConnection.why} Direct workout choice remains available in TRAIN.</p>
+        </>}</div> : <p className="card-body">{day.workout.basis === "ASSIGNED" ? "Your programme: " : day.workout.basis === "SUGGESTED" ? "Suggestion, not a booking: " : ""}{day.workout.label}</p>}
         <p className="meta">These are item counts, not hours available. Shifts belong to the lived day starting at 16:30; tasks and calendar events use calendar dates.</p>
         {day.events.length > 0 && <><h4 className="tool-label">SAVED CALENDAR EVENTS</h4><ul className="plan-list">{day.events.map((event) => <li key={event.id} className="week-planner__event"><strong>{event.title}</strong><span>{event.allDay ? "All day" : `${new Date(event.start).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })} – ${new Date(event.end).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`} · Google, read only</span></li>)}</ul></>}
         <p className="meta">{plan.calendar.lastSyncAt ? `Calendar snapshot last synced ${new Date(plan.calendar.lastSyncAt).toLocaleString()}.` : "No synced calendar snapshot available."} {plan.calendar.connected ? "Refresh the connection in Week Ahead for newer events." : "Calendar is not connected."}</p>

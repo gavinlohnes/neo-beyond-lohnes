@@ -8,7 +8,7 @@ import type { ShiftSleepPlan } from "../../src/application/shiftSleepPlan";
 import { db } from "../../src/persistence/db";
 const now = new Date(2026, 10, 15, 12);
 const day = (n: number, work: "WORK" | "OFF", basis: PlannerDay["basis"] = "PREDICTED"): PlannerDay => ({ date: `2026-11-${15 + n}`, work, basis, shiftStartHour: work === "WORK" ? 18 : null, tasks: [], events: [], workout: { basis: "ASSIGNED", label: "Workout A" } } as unknown as PlannerDay);
-const week: WeekPlanner = { date: "2026-11-15", days: [day(0, "WORK"), day(1, "WORK"), day(2, "OFF"), day(3, "OFF"), day(4, "WORK"), day(5, "WORK"), day(6, "OFF")], overdue: [], unplanned: [], calendar: { connected: false, lastSyncAt: null } };
+const week: WeekPlanner = { date: "2026-11-15", days: [day(0, "WORK"), day(1, "WORK"), day(2, "OFF"), day(3, "OFF"), day(4, "WORK"), day(5, "WORK"), day(6, "OFF")], overdue: [], unplanned: [], calendar: { connected: false, lastSyncAt: null }, trainingConnection: null };
 const meals = { meals: [1, 2, 3].map((i) => ({ id: `meal-${i}`, name: `Saved meal ${i}`, calories: 500, proteinG: 30 })), targets: {}, window: [], scheduleSaved: true } as unknown as Awaited<ReturnType<typeof getMealPlanInputs>>;
 it("drafts one work block and days off, not the next run; preserves task meanings and shared work context for meals", () => {
   const input = structuredClone(week);

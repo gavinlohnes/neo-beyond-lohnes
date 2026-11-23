@@ -149,6 +149,12 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   it is not sequence advancement, adherence, TRAIN Progress and Direction, a goal or advice. The
   stricter qualifying-outcome rule remains owned by the active programme projection.
 
+- **Sequence planning connection (C4.4t candidate):** Week Planner and Week Ahead reuse the active
+  sequence projection to label their existing eligible training opportunities with the same current
+  next member and evidence. Dates remain presentation only: they never assign, advance, defer or
+  create debt. The underlying PlannerDay/work-run suggestion projection is preserved, so this is a
+  bounded overlay in the two approved planning views rather than new scheduling authority.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,

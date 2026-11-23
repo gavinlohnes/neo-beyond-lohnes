@@ -11,6 +11,7 @@ import type { WhatIfChange } from "../../../application/shiftWhatIf";
 import { getWeekEnergyForecast, type WeekEnergyForecast } from "../../../application/weekEnergyForecast";
 import { ForecastActions, forecastLine, WeekEnergyForecastSummary } from "./WeekEnergyForecast";
 import { createObligation } from "../../../application/intentCommands";
+import { getPlanningTrainingConnection, type PlanningTrainingConnection } from "../../../application/planningTrainingConnection";
 
 
 function dayLabel(date: string): string {
@@ -34,6 +35,7 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChan
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(() => readCachedGoogleEvents());
   const [whatIf, setWhatIf] = useState<WhatIfChange | null>(null);
   const [forecast, setForecast] = useState<WeekEnergyForecast | null>(null);
+  const [trainingConnection, setTrainingConnection] = useState<PlanningTrainingConnection | null>(null);
   // SCHEDULE-EXCEPTIONS-001: bumped after a confirmed change, so the week, forecast and list re-read.
   const [changes, setChanges] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -47,9 +49,9 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChan
 
   useEffect(() => {
     let current = true;
-    void getWeekAhead(now)
-      .then((next) => {
-        if (current) setWeek(next);
+    void Promise.all([getWeekAhead(now), getPlanningTrainingConnection(now)])
+      .then(([next, connection]) => {
+        if (current) { setWeek(next); setTrainingConnection(connection); }
       })
       .catch(() => {});
     // A forecast that can't be read simply isn't shown; Week Ahead still works.
@@ -68,6 +70,17 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChan
     <div data-week-ahead ref={rootRef}>
       {onOpenWeekPlanner && <button type="button" className="btn-secondary" onClick={onOpenWeekPlanner}>OPEN WEEK PLANNER</button>}
       <p className="meta" style={{ margin: "0 0 10px" }}>Suggestions only. Move or skip anything.</p>
+      {trainingConnection && <div className="equipment-row" data-training-connection style={{ marginBottom: 10, padding: "10px 12px" }}>
+        <p className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>ACTIVE SEQUENCE</p>
+        {trainingConnection.status === "READY" ? <>
+          <p className="card-body" style={{ margin: "4px 0 0" }}>NEXT · {trainingConnection.key} — {trainingConnection.name}</p>
+          <p className="meta" style={{ margin: "4px 0 0" }}>{trainingConnection.why}</p>
+          <p className="meta" style={{ margin: "4px 0 0" }}>Eligible days below are opportunities, not bookings. Moving or skipping one does not advance the programme.</p>
+        </> : <>
+          <p className="card-body" style={{ margin: "4px 0 0" }}>NEXT SESSION NEEDS REVIEW IN TRAIN</p>
+          <p className="meta" style={{ margin: "4px 0 0" }}>{trainingConnection.why}</p>
+        </>}
+      </div>}
       <ConfirmedChangesList now={now} refreshKey={changes} onChanged={() => { setChanges((n) => n + 1); onScheduleChanged?.(); }} />
       {forecast && <WeekEnergyForecastSummary forecast={forecast} />}
       {forecast?.scheduled && <ForecastActions forecast={forecast} onOpenPlanItem={onOpenPlanItem} onOpenPlans={onOpenPlans}
@@ -89,7 +102,13 @@ export function WeekAheadView({ now, onOpenPlanItem, onOpenPlans, onScheduleChan
             {/* CONTEXT-INTEGRATION-001: an unknown day says so; a recorded day says it was recorded, not forecast. */}
             {day.basis === "UNKNOWN" ? "Work or off not known · no saved schedule"
               : <>{day.work === "WORK" ? (day.shiftStartHour === null ? "SHIFT" : shiftLabel(day.shiftStartHour)) : "OFF"}{day.basis === "RECORDED" ? " · recorded" : day.basis === "CONFIRMED" ? " · confirmed change" : ""}
-                {day.suggestedTemplate ? ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}` : " · Rest"}</>}
+                {day.suggestedTemplate
+                  ? trainingConnection?.status === "READY"
+                    ? ` · Training opportunity · Next ${trainingConnection.key}${day.afterShift ? " after shift" : ""}`
+                    : trainingConnection
+                      ? " · Training opportunity · Review sequence in TRAIN"
+                      : ` · Suggested workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}`
+                  : " · Rest"}</>}
           </p>
           {(() => {
             const f = forecast?.days.find((d) => d.date === day.date);
