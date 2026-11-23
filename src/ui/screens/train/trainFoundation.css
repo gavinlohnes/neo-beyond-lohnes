@@ -72,3 +72,12 @@
 .train-progress__h { margin: 18px 0 6px; font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; color: var(--p-t2, #a8a8a8); }
 .train-progress__list { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
 .train-progress__why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-mono, monospace); letter-spacing: .14em; }
+/* GRAYSON-TRAIN-GUIDED-001: Delta during training: one quiet panel, no red, 44 px targets. */
+.train-delta { display: grid; gap: 8px; margin: 8px 0 12px; padding: 10px 12px; border: 1px solid var(--p-line, #2a2a2a); border-left: 3px solid var(--p-t1, #f2f2f2); background: var(--p-s1, #0b0b0b); }
+.train-delta__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, #f2f2f2); }
+.train-delta__who { margin-right: 6px; font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; color: var(--p-t2, #a8a8a8); }
+.train-delta__acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.train-delta__acts .btn-secondary { width: auto; min-height: 44px; }
+.train-delta__why, .train-delta__pain { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
+.train-delta__pain { display: block; margin: 0 0 8px auto; }
+.train-delta__whylist { margin: 0; padding-left: 18px; display: grid; gap: 4px; }

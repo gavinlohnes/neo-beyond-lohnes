@@ -3,6 +3,7 @@ import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { TrainProgress } from "./TrainProgress";
+import { deriveSetProposal, reviewLines, type GuidanceNote, type SetProposal } from "../../../application/trainGuidance";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
@@ -278,6 +279,11 @@ export function TrainScreen({
   /** REST-MEMORY-001: which exercise the running rest follows, so ± taps teach that exercise. */
   const restExerciseRef = useRef<string | null>(null);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
+  // GRAYSON-TRAIN-GUIDED-001: Delta's one proposal (if any), the pain stop, and what it noticed this workout (memory only).
+  const [proposal, setProposal] = useState<(SetProposal & { exerciseId: string; exerciseName: string }) | null>(null);
+  const [proposalWhy, setProposalWhy] = useState(false);
+  const [painFor, setPainFor] = useState<string | null>(null);
+  const [guidanceNotes, setGuidanceNotes] = useState<GuidanceNote[]>([]);
   // Drop 4 (live PR alerts): sets from every other session, loaded once per
   // active session. Records for this session's sets are derived from it and
   // the sets themselves, so an UNDO simply drops the record with its set.
@@ -548,6 +554,7 @@ export function TrainScreen({
       setSets(await getPerformedSets(started.id));
       setFocusedExerciseId(null);
       setCompletionSummary(null);
+      setProposal(null); setPainFor(null); setGuidanceNotes([]);
       await loadExerciseAdvisory(started);
     } catch (error) {
       reportOperationFailure(error);
@@ -703,8 +710,10 @@ export function TrainScreen({
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined, { setKind: display.setKind ?? "WORKING", ...(display.setKind !== "WARMUP" && display.repsInReserve ? { repsInReserve: Number(display.repsInReserve) } : {}) });
       committed = true;
       haptic("SET_LOGGED");
-      setSets(await getPerformedSets(session.id));
+      const fresh = await getPerformedSets(session.id);
+      setSets(fresh);
       setJustLoggedKey(inputKey(exerciseId, setNumber));
+      offerProposal(exerciseId, weight, reps, display, fresh);
       if (display.setKind !== "WARMUP") await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
@@ -740,8 +749,10 @@ export function TrainScreen({
       );
       committed = true;
       haptic("SET_LOGGED");
-      setSets(await getPerformedSets(session.id));
+      const fresh = await getPerformedSets(session.id);
+      setSets(fresh);
       setJustLoggedKey(inputKey(exerciseId, setNumber));
+      offerProposal(exerciseId, suggestion.weight, suggestion.reps, { ...getInputDisplay(exerciseId, setNumber), setKind: "WORKING" }, fresh);
       await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
@@ -806,6 +817,40 @@ export function TrainScreen({
     } catch (error) {
       reportOperationFailure(error);
     }
+  }
+
+  /** GRAYSON-TRAIN-GUIDED-001: after a set is recorded, one proposal only when the evidence is clear; else quiet. */
+  function offerProposal(exerciseId: string, weight: number, reps: number, display: SetInputState, recorded: readonly { exerciseId: string; setNumber: number; setKind?: string }[]) {
+    const exercise = activeExercises.find((ex) => ex.exerciseId === exerciseId);
+    if (!exercise) { setProposal(null); return; }
+    const done = new Set(recorded.filter((x) => x.exerciseId === exerciseId && x.setKind !== "WARMUP").map((x) => x.setNumber));
+    const next = Array.from({ length: exercise.sets }, (_, i) => i + 1).find((n) => !done.has(n)) ?? null;
+    const found = deriveSetProposal({
+      exerciseName: exercise.name, range: { low: exercise.repRangeLow, high: exercise.repRangeHigh }, incrementLbs: exercise.incrementLbs,
+      weight, reps, repsInReserve: display.repsInReserve ? Number(display.repsInReserve) : undefined, warmup: display.setKind === "WARMUP",
+      bodyweightForm: session?.programmeContext?.form === "HOME", nextSetNumber: next,
+    });
+    setProposalWhy(false);
+    setProposal(found ? { ...found, exerciseId, exerciseName: exercise.name } : null);
+  }
+  function answerProposal(use: boolean) {
+    if (!proposal) return;
+    if (use) patchInput(proposal.exerciseId, proposal.nextSetNumber, { weight: String(proposal.to) });
+    setGuidanceNotes((notes) => [...notes, { kind: "PROPOSAL", exerciseName: proposal.exerciseName, line: proposal.line, choice: use ? "USED" : "KEPT" }]);
+    setProposal(null);
+  }
+  /** Pain or a safety concern: stop this movement now; skipping its remaining sets is his choice. No diagnosis. */
+  async function stopForPain(exerciseId: string, skipRest: boolean) {
+    const exercise = activeExercises.find((ex) => ex.exerciseId === exerciseId);
+    if (!exercise || !session) { setPainFor(null); return; }
+    let skipped = 0;
+    if (skipRest) {
+      const done = new Set(sets.filter((x) => x.exerciseId === exerciseId && x.setKind !== "WARMUP").map((x) => x.setNumber));
+      for (let n = 1; n <= exercise.sets; n++) if (!done.has(n)) { await handleSkipSet(exerciseId, n); skipped += 1; }
+    }
+    setGuidanceNotes((notes) => [...notes, { kind: "STOPPED", exerciseName: exercise.name, skipped }]);
+    setProposal((p) => p?.exerciseId === exerciseId ? null : p);
+    setPainFor(null);
   }
 
   async function handleSkipSet(exerciseId: string, setNumber: number) {
@@ -1209,6 +1254,12 @@ export function TrainScreen({
               ))}
             </div>
           )}
+          {/* GRAYSON-TRAIN-GUIDED-001: one consolidated review; nothing here was stored beyond your sets and skips. */}
+          {guidanceNotes.length > 0 && <div className="train-delta train-delta--review" role="group" aria-label="What Delta noticed">
+            <p className="train-delta__line"><span className="train-delta__who">WHAT DELTA NOTICED</span></p>
+            <ul className="train-delta__whylist">{reviewLines(guidanceNotes).map((line, i) => <li key={`${i}-${line}`} className="meta">{line}</li>)}</ul>
+            <p className="meta">Only your sets and skips were saved. Next time's suggestions come from those, as always.</p>
+          </div>}
           <p className="meta" style={{ marginBottom: 8 }}>Next up: {completionSummary.nextLabel}.</p>
           {completionSummary.advisoryChanges.length > 0 && (
             <div style={{ marginTop: 8, marginBottom: 8 }}>
@@ -1668,6 +1719,24 @@ export function TrainScreen({
                   in place — the set inputs and rest timer below stay as they are.
                   Inside the per-exercise surface, so it closes when the exercise changes. */}
               <LiftHistoryControl exerciseId={currentExercise.exerciseId} exerciseName={currentExercise.name} />
+              {/* GRAYSON-TRAIN-GUIDED-001: Delta speaks once, only on clear evidence; you decide. */}
+              {proposal && proposal.exerciseId === currentExercise.exerciseId && <div className="train-delta" role="group" aria-label="Delta's suggestion">
+                <p className="train-delta__line"><span className="train-delta__who">DELTA</span> {proposal.line}</p>
+                <div className="train-delta__acts">
+                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => answerProposal(true)}>USE {proposal.to} LB</button>
+                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => answerProposal(false)}>KEEP {proposal.from} LB</button>
+                  <button type="button" className="train-delta__why" aria-expanded={proposalWhy} onClick={() => setProposalWhy((v) => !v)}>WHY?</button>
+                </div>
+                {proposalWhy && <ul className="train-delta__whylist">{proposal.why.map((w) => <li key={w} className="meta">{w}</li>)}</ul>}
+              </div>}
+              {painFor === currentExercise.exerciseId ? <div className="train-delta train-delta--stop" role="group" aria-label="Stop this movement">
+                <p className="train-delta__line"><span className="train-delta__who">DELTA</span> {currentExercise.name} is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before training it again.</p>
+                <div className="train-delta__acts">
+                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, true)}>SKIP ITS REMAINING SETS</button>
+                  <button type="button" className="btn-secondary" disabled={busy} onClick={() => void stopForPain(currentExercise.exerciseId, false)}>JUST NOTE IT</button>
+                  <button type="button" className="train-delta__why" onClick={() => setPainFor(null)}>IT'S FINE, CONTINUE</button>
+                </div>
+              </div> : <button type="button" className="train-delta__pain" onClick={() => setPainFor(currentExercise.exerciseId)}>PAIN OR SOMETHING WRONG</button>}
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
                   sets stay as one-line summaries; later sets are counted in a
