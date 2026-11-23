@@ -6,7 +6,8 @@
 - **Campaign item:** C4.4v.
 - **Starting commit:** `33912b8ec389432a9b934091bf68d3cdd45eb5e4` (fresh `origin/master`, including
   merged sequence planning connection PR #613).
-- **Builder / branch / PR:** Codex; `codex/grayson-train-reality-forms-design-001`; PR pending.
+- **Builder / branch / PR:** Codex; `codex/grayson-train-reality-forms-design-001`;
+  [PR #614](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/614).
 - **Operator benefit:** Gavin keeps one balanced programme on normal, time-limited, very low-capacity,
   at-home and recovery days, without deciding from scratch or being told unlike work is equivalent.
 - **Scope:** repository-truth audit; canonical form/parent identity; creation and confirmation;

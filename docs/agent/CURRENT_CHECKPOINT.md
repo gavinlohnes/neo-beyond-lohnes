@@ -5,7 +5,8 @@
   No product code, programme/template/session/event/command/schema/backup semantics, Engine,
   recommendation, navigation, dependency/provider or Drive change.
 - **Starting master / Builder:** `33912b8ec389432a9b934091bf68d3cdd45eb5e4` after merged #613;
-  Builder Codex; branch `codex/grayson-train-reality-forms-design-001`; PR pending.
+  Builder Codex; branch `codex/grayson-train-reality-forms-design-001`;
+  [PR #614](https://github.com/gavinlohnes/neo-beyond-lohnes/pull/614).
 - **Brief / campaign:** [`GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001.md`](GRAYSON-TRAIN-REALITY-FORMS-DESIGN-001.md), C4.4v.
 - **Canonical candidate:** [`GRAYSON_TRAIN_REALITY_FORMS.md`](../GRAYSON_TRAIN_REALITY_FORMS.md).
 - **Direction:** one programme member owns several reality forms. FULL remains the base STANDARD
