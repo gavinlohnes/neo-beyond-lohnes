@@ -17,7 +17,8 @@ import { ShiftRecoveryBrief } from "./ShiftRecoveryBrief";
 import { LifeStateBand } from "./LifeStateBand";
 import { Orientation } from "./Orientation";
 import { CloseCard } from "./CloseCard";
-import { closeDone } from "./closeStore";
+import { closeDone, catchUpDone } from "./closeStore";
+import { ShiftCatchUpCard } from "./ShiftCatchUpCard";
 import { markOrientationSeen, orientationSeen } from "./orientationStore";
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
@@ -2816,6 +2817,11 @@ export function TodayScreen({
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
+    {/* GRAYSON LOG-CATCHUP-001: after SHIFT DOWN on a shift day, what didn't get logged at work, before the close. */}
+    {day && shiftWindow && shiftDownCompletedAt && Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime() && closeSeenTick >= 0 && !catchUpDone(day.id)
+      && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId) && (
+      <ShiftCatchUpCard dayId={day.id} busy={busy} onDone={() => { setCloseSeenTick((n) => n + 1); void refresh(); }} />
+    )}
     {/* GRAYSON C1.3: after SHIFT DOWN (his getting-home ritual), a quiet, optional close, below the next card. */}
     {day && shiftDownCompletedAt && (!shiftWindow || Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime()) && closeSeenTick >= 0 && !closeDone(day.id)
       && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId) && (

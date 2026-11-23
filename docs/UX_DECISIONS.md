@@ -2702,6 +2702,16 @@ shift-shaped times." This amends LOG-TIME-001 in one place: a new log may be pla
 - **Unchanged from LOG-TIME-001:** the log lives inside its own day's 16:30 to 16:30, entered-at is kept, totals
   count it as always, and a later move stays within its day. The receipt names the day ("…recorded yesterday at
   06:00."). That day's Engine advice is not re-run.
+## LOG-CATCHUP-001 — post-shift catch-up (owner go, 2026-11-23)
+
+Gavin: "Then: 3, the post-shift catch-up. It's the biggest time saver for how your nights actually go."
+
+- **Where:** TODAY, after SHIFT DOWN on a shift day, above CLOSE THE DAY, once per day. No red.
+- **What:** "ON SHIFT, DID YOU HAVE:" with his usual shift items not yet logged tonight. A saved meal counts as usual
+  when it was logged inside the shift on 2+ shift days in the last 28; water likewise, offered as his usual count
+  minus tonight's.
+- **When it lands:** each meal at its median point into the shift, water spread evenly across it, never outside the
+  shift or after now. Nothing is pre-ticked; NOTHING ELSE writes nothing. Writes are ordinary meal and water logs.
 
 ## BRAND-MARK-003 — Brand Drop v2: the emblem and the palette (owner decision, 2026-10-28)
 
