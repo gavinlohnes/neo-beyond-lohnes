@@ -43,6 +43,12 @@ describe("day picker", () => {
     expect(out.find((d) => d.id === "d")!.shift).toBe(shift);
   });
 
+  it("with no active day, an ended day in the current lived day is today, never \"Yesterday\"", () => {
+    // After END DAY on the 28th's morning, before a new day opens: "y" (started the 27th) is still today's lived day.
+    const out = deriveLoggableDays([day("y2", 26), day("y", 27)], null, new Date(2026, 9, 28, 10, 5), () => null);
+    expect(out.map((d) => [d.id, d.label, d.isToday])).toEqual([["y2", "Yesterday", false]]);
+  });
+
   it("puts water and a meal on yesterday at its shift end, leaving today untouched", async () => {
     vi.setSystemTime(new Date(2026, 9, 27, 16, 35)); const yesterday = await startDay();
     vi.setSystemTime(new Date(2026, 9, 28, 16, 40)); const today = (await performDueDayRollover())!;

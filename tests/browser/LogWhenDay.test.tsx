@@ -47,3 +47,26 @@ for (const width of [320, 360, 412]) {
     expect(await getHydrationEntries(todayId)).toEqual([]);
   });
 }
+
+it("after END DAY with no new day open, YESTERDAY is the real yesterday and the receipt says where it landed", async () => {
+  const { endDay } = await import("../../src/application/commands");
+  // beforeEach left the 27th ended and the 28th active; end the 28th too and look from the 29th's morning.
+  vi.setSystemTime(new Date(2026, 9, 29, 9, 0));
+  await endDay(todayId, "EXPLICIT_END_DAY");
+  vi.setSystemTime(new Date(2026, 9, 29, 10, 5));
+  await page.viewport(360, 800);
+  const screen = await render(<App />);
+  if (document.querySelector(".shift-change")) await screen.getByRole("button", { name: "CONTINUE", exact: true }).click();
+  vi.setSystemTime(new Date(2026, 9, 29, 10, 5));
+  await openLogTarget(screen, "WATER");
+  const sheet = screen.getByRole("dialog", { name: "WATER", exact: true });
+  const day = sheet.getByRole("group", { name: "Day" });
+  await day.getByRole("button", { name: "YESTERDAY", exact: true }).click();
+  // Only one earlier day is offered: the 27th's lived day. The 28th's (still today's) is not.
+  expect(day.getByRole("combobox").query()).toBeNull();
+  await sheet.getByRole("group", { name: "When" }).getByLabelText("Pick a time").fill("20:00");
+  await sheet.getByRole("button", { name: "+8 oz", exact: true }).click();
+  await expect.element(screen.getByText("8 oz recorded yesterday at 20:00.", { exact: true })).toBeVisible();
+  expect((await getHydrationEntries(yesterdayId)).map((e) => e.at)).toEqual([new Date(2026, 9, 27, 20).toISOString()]);
+  expect(await getHydrationEntries(todayId)).toEqual([]);
+});

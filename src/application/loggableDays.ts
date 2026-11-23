@@ -37,9 +37,12 @@ export function deriveLoggableDays(days: readonly BeyondDay[], activeId: string 
   const ordered = [...days].sort((a, b) => (a.id === activeId ? -1 : b.id === activeId ? 1 : b.startedAt.localeCompare(a.startedAt)));
   for (const d of ordered) {
     const lived = mostRecentBoundaryAtOrBefore(new Date(d.startedAt));
-    if (lived.getTime() < oldest.getTime() || lived.getTime() > today.getTime() || seen.has(lived.getTime())) continue;
-    seen.add(lived.getTime());
     const isToday = d.id === activeId;
+    // A day in today's lived day that isn't the active one (ended, with no new day open yet) is today, not an
+    // earlier day: TODAY covers it, so it is never offered, or labelled, as "Yesterday".
+    if (!isToday && lived.getTime() >= today.getTime()) continue;
+    if (lived.getTime() < oldest.getTime() || seen.has(lived.getTime())) continue;
+    seen.add(lived.getTime());
     const back = Math.round((today.getTime() - lived.getTime()) / 86_400_000);
     out.push({ id: d.id, startedAt: d.startedAt, createdAt: d.createdAt, isToday,
       shift: d.workContext === "OFF" ? null : shiftOf(d.startedAt),

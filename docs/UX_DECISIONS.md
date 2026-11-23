@@ -2695,7 +2695,10 @@ shift-shaped times." This amends LOG-TIME-001 in one place: a new log may be pla
   for the lived days on record from the last 7. An earlier day has no NOW or AGO; it asks for a time or a shift
   point first.
 - **SHIFT:** START, MID, END and AFTER (end + 1 hour) from the chosen day's own scheduled shift, each showing its
-  clock time. Not shown on a day without a shift.
+  clock time. Not shown on a day without a shift. Shift times come from the schedule as saved now, so changing the
+  schedule changes the SHIFT times shown for earlier days.
+- **Today is never "yesterday":** an ended day in the current lived day (after END DAY, before a new day opens) is
+  not offered as an earlier day; TODAY covers it.
 - **Unchanged from LOG-TIME-001:** the log lives inside its own day's 16:30 to 16:30, entered-at is kept, totals
   count it as always, and a later move stays within its day. The receipt names the day ("…recorded yesterday at
   06:00."). That day's Engine advice is not re-run.
