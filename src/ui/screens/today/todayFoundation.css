@@ -121,5 +121,8 @@
 .today-field.redesign-today .today-eating__context { margin: 0; font-size: 15px; line-height: 1.4; color: var(--tf-quiet); }
 .today-field.redesign-today .today-eating__context em { display: block; font-style: normal; font-family: var(--font-mono, monospace); font-size: 11px; letter-spacing: .1em; color: var(--p-t2, #a8a8a8); }
 .today-field.redesign-today .today-eating__acts { display: flex; flex-wrap: wrap; gap: 8px; }
+/* C4.8b: the offer from his meal log sits apart from the plan line; NOT NOW is quiet text, like CHANGE QUESTIONS. */
+.today-field.redesign-today .today-eating__offer { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--tf-line); }
+.today-field.redesign-today .today-eating__not { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
 .today-field.redesign-today .today-eating__acts .btn-secondary, .today-field.redesign-today .today-eating__undo .btn-secondary { width: auto; min-height: 44px; }
 .today-field.redesign-today .today-eating__undo { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; }

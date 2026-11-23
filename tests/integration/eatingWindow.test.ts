@@ -46,3 +46,22 @@ it("his marks drive the card, and UNDO and SKIP are additive", async () => {
 it("turning on needs a completed safety check", async () => {
   await expect(saveEatingWindowSettings({ ...on, safetyCheckedAt: "" })).rejects.toThrow();
 });
+
+it("C4.8b: a meal during the fast is offered as its end; he ends it at the meal time, not now", async () => {
+  const { createSavedMeal, logMeal } = await import("../../src/application/nutritionCommands");
+  const { getActiveDay } = await import("../../src/application/queries");
+  await saveEatingWindowSettings(on, at(14, 17));
+  vi.setSystemTime(at(15, 0));
+  await markEatingWindow("CLOSED");
+  const day = (await getActiveDay())!;
+  const bowl = await createSavedMeal({ name: "Chicken bowl", calories: 650, proteinG: 45, carbsG: 60, fatG: 18 });
+  vi.setSystemTime(at(15, 4));
+  await logMeal(day.id, bowl.id, 1, at(15, 2, 10).toISOString());
+  const view = (await getEatingWindowView(at(15, 4)))!;
+  expect(view.state.kind).toBe("FASTING"); // the meal alone moved nothing
+  expect(view.prompt).toMatchObject({ kind: "END_AT", name: "Chicken bowl", at: at(15, 2, 10).toISOString() });
+  await markEatingWindow("OPENED", view.prompt!.at, at(15, 4));
+  expect((await getEatingWindowView(at(15, 4)))!.state).toMatchObject({ kind: "OPEN", since: at(15, 2, 10).toISOString() });
+  await expect(markEatingWindow("CLOSED", at(15, 9).toISOString(), at(15, 4))).rejects.toThrow(/EATING_MARK_AHEAD/);
+  await expect(markEatingWindow("CLOSED", at(16, 17).toISOString(), at(16, 18))).rejects.toThrow(/LOG_TIME_OUTSIDE_DAY/);
+});
