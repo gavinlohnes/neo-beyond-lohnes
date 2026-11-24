@@ -16,7 +16,8 @@ import { DEFAULT_NUTRITION_TARGETS } from "../../src/engine/nutritionTargets";
 
 const DB_NAME = "beyond";
 // GRAYSON-TRAIN-RUN-001 (#666, brief-approved): v27 adds the additive runningSessions table.
-const CURRENT_SCHEMA_VERSION = 27;
+// GRAYSON-ASKS-COUNT-001 (brief-approved): v28 adds the additive askCounts table.
+const CURRENT_SCHEMA_VERSION = 28;
 
 afterEach(async () => {
   await Dexie.delete(DB_NAME);
@@ -83,6 +84,7 @@ describe("Dexie v1 -> current schema migration", () => {
     expect(await upgraded.highlights.count()).toBe(0);
     expect(await upgraded.scheduleExceptions.count()).toBe(0);
     expect(await upgraded.runningSessions.count()).toBe(0);
+    expect(await upgraded.askCounts.count()).toBe(0);
 
     upgraded.close();
   });

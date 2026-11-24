@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { useEffect, useState } from "react";
 import { getShiftSleepPlan, saveShiftPlanCard, type PlanCard, type PlanCardKind, type ShiftSleepPlan } from "../../../application/shiftSleepPlan";
 import { CaffeineCutoff } from "./CaffeineCutoff";
@@ -20,6 +21,8 @@ export function ShiftSleepPlanCards({ now }: { now?: Date | undefined }) {
   const [saved, setSaved] = useState<Partial<Record<PlanCardKind, true>>>({});
   const [skipped, setSkipped] = useState<Partial<Record<PlanCardKind, true>>>({});
   const [busy, setBusy] = useState(false);
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("SLEEP", "CONFIRM", preview ? `sleepPlan.${preview}` : "", preview !== null);
   const [failed, setFailed] = useState(false);
   const [reload, setReload] = useState(0);
   useEffect(() => {

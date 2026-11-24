@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { useEffect, useState } from "react";
 import type { ScheduleException } from "../../../domain/scheduleExceptions";
 import {
@@ -27,6 +28,8 @@ export function ConfirmChangeOffer({ date, to, swapWith, onConfirmed }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("WORK", "CONFIRM", "schedule.exception.confirm", preview);
   const what = to === "WORK" ? "overtime: a work day" : "time off: a day off";
   if (done) return <p className="meta" role="status" style={{ margin: "6px 0 0" }}>{done}</p>;
   return (

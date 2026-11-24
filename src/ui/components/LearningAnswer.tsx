@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../hooks/useNoteAsk";
 import { useState } from "react";
 import { respondToLearning } from "../../application/learningCommands";
 import { evidenceOf, type LifecycleItem } from "../../application/learningLifecycle";
@@ -32,6 +33,8 @@ export function LearningAnswer({ item, statement, onAnswered, via }: { item: Lif
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const learning = item.learning;
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("DELTA", "CHOICE", "delta.learning", Boolean(item.learning) && item.learning?.kind !== "UNUSUAL" && item.learning?.kind !== "EXPERIMENT");
   if (!learning || learning.kind === "UNUSUAL" || learning.kind === "EXPERIMENT") return null;
   const evidence = evidenceOf(learning);
   const answerable = !item.verdict || item.by === "EVIDENCE";

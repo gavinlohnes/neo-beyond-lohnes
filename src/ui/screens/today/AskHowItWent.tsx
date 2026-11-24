@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useId, useState } from "react";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
@@ -15,6 +16,8 @@ export function AskHowItWent({ entry, onAnswered }: { entry: DecisionJournalEntr
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const when = new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("TODAY", "CHOICE", "journal.howItWent");
   async function answer(outcome: string) {
     const acknowledge = captureCommitFeedback();
     if (busy) return;

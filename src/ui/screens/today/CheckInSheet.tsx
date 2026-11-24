@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import type { ReactNode } from "react";
 import type { CheckInDraft } from "../../../engine/checkInDraft";
 import { LogSheet } from "../../components/LogSheet";
@@ -16,6 +17,8 @@ export function CheckInSheet({ open, close, values, setValues, busy, isInFlight,
   busy: boolean; isInFlight: () => boolean; submit: () => void; quick?: (() => void) | undefined; quickValues?: CheckInValues | undefined; error?: string | null;
 }) {
   const fixing = mode === "fix";
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("TODAY", "FIELD", CHECK_IN_FIELDS.map((f) => `checkin.${f.key}`), open && !fixing);
   return <LogSheet open={open} title={fixing ? "Fix this check-in" : "CHECK IN"} onClose={close} canClose={() => !isInFlight()}>
     {!fixing && previous && sameAsLast && <div className="check-in-same">
       <button type="button" className="btn-secondary" disabled={busy} onClick={sameAsLast}>SAME AS LAST</button>

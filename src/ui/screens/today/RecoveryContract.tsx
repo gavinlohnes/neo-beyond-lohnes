@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { useState } from "react";
 import { getPostRunReport, type PostRunReport } from "../../../application/postRunReport";
 import { RECOVERY_CONTRACT, type ContractItem } from "../../../application/recoveryContract";
@@ -38,6 +39,8 @@ export function RecoveryContractOffer({ dayLabel, planned, busy, onSave, onSaved
   const [saved, setSaved] = useState<ContractItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const items = RECOVERY_CONTRACT.filter((i) => chosen.includes(i.key));
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("PLANS", "CHOICE", "recovery.contract", !saved && !planned);
   if (saved) return <div className="today-life-state__contract" role="status">
     <p className="meta">Recovery contract added for {dayLabel}: {saved.map((i) => i.title).join(", ")}.</p>
     {error && <p className="meta" role="alert">{error}</p>}

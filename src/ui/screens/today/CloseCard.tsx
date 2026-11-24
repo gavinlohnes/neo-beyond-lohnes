@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { useEffect, useState } from "react";
 import { CLOSE_GAP_WEIGH_MAX, CLOSE_GAP_WEIGH_MIN, CLOSE_PROMPTS, MAX_CLOSE_PROMPTS, closeNoteText, getCloseGaps, getDayClose, saveCloseNote, type CloseGaps, type ClosePromptId } from "../../../application/dayClose";
 import { askAlfred } from "../../components/AlfredSheet";
@@ -31,6 +32,8 @@ export function CloseCard({ dayId, busy, onClosed }: { dayId: string; busy: bool
     return () => { cancelled = true; };
   }, [dayId, gapSettings.enabled, gapSettings.weighGapDays]);
 
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("TODAY", "FIELD", prompts.map((id) => `close.prompt.${id}`), !closeDone(dayId));
   if (closeDone(dayId)) return null;
   const finish = () => { markCloseDone(dayId); onClosed(); };
   const save = async () => {
