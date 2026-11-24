@@ -25,6 +25,7 @@ import { feedback } from "../../feel/feedback";
 import { describeError } from "../../errorMessage";
 import { formatDate } from "../../formatDate";
 import { RunningPlanEditor } from "./RunningPlanEditor";
+import { RunCueControls, useRunCues, type RunCues } from "./RunCueControls";
 import {
   describeRunningLength,
   describeRunningPosition,
@@ -38,6 +39,7 @@ import {
   RUNNING_SCREEN_ON,
   RUNNING_SEGMENT_LABEL,
   RUNNING_STATUS_LABEL,
+  RUN_CUE_LOCKED,
 } from "./trainCopy";
 import "./running.css";
 
@@ -90,6 +92,8 @@ export function RunningPanel({ active, liftActive, onRunningChange }: {
   const [planOpen, setPlanOpen] = useState(false);
   const planButtonRef = useRef<HTMLButtonElement>(null);
   const headingId = useId();
+  // GRAYSON-TRAIN-RUN-CUES-001: each tap below also tells Health Bridge, when VOICE CUES is on.
+  const cues = useRunCues();
 
   const refresh = useCallback(async () => {
     try { setHome(await getRunningHome()); setReadError(null); }
@@ -111,7 +115,12 @@ export function RunningPanel({ active, liftActive, onRunningChange }: {
     const session = home?.active;
     if (!session) return;
     const ended = await act(() => endRunningSession(session.id, reason));
-    if (ended) { setFinish({ session: ended, advanced: null }); await refresh(); }
+    if (ended) {
+      // END and the pain control are taps; reaching the finish isn't, and the Bridge stops itself 10 s after it.
+      if (reason !== "FINISHED") cues.send("end", ended);
+      setFinish({ session: ended, advanced: null });
+      await refresh();
+    }
   };
 
   if (!active && !home) return null;
@@ -133,15 +142,15 @@ export function RunningPanel({ active, liftActive, onRunningChange }: {
       onClose={() => { setFinish(null); setError(null); }} />;
   }
 
-  if (home.active) return <RunningLive session={home.active} busy={busy} error={error}
-    onPause={async () => { if (await act(() => pauseRunningSession(home.active!.id))) await refresh(); }}
-    onResume={async () => { if (await act(() => resumeRunningSession(home.active!.id))) await refresh(); }}
+  if (home.active) return <RunningLive session={home.active} busy={busy} error={error} cues={cues}
+    onPause={async () => { const s = await act(() => pauseRunningSession(home.active!.id)); if (s) { cues.send("pause", s); await refresh(); } }}
+    onResume={async () => { const s = await act(() => resumeRunningSession(home.active!.id)); if (s) { cues.send("resume", s); await refresh(); } }}
     onEnd={end} />;
 
   if (planOpen) return <RunningPlanEditor home={home} onChanged={refresh} startDisabled={liftActive}
     onStart={async (position) => {
       const started = await act(async () => startRunningSession((await ensureActiveDay()).id, position));
-      if (started) { feedback("MEDIUM"); setPlanOpen(false); await refresh(); }
+      if (started) { cues.send("start", started); feedback("MEDIUM"); setPlanOpen(false); await refresh(); }
       return Boolean(started);
     }}
     startError={error}
@@ -160,15 +169,15 @@ export function RunningPanel({ active, liftActive, onRunningChange }: {
     <div className="running-card__acts">
       {home.next && !home.done && <button type="button" className="btn-primary" disabled={busy || liftActive} onClick={async () => {
         const started = await act(async () => startRunningSession((await ensureActiveDay()).id));
-        if (started) { feedback("MEDIUM"); await refresh(); }
+        if (started) { cues.send("start", started); feedback("MEDIUM"); await refresh(); }
       }}>START RUN</button>}
       <button ref={planButtonRef} type="button" className="btn-secondary" onClick={() => setPlanOpen(true)}>PLAN</button>
     </div>
   </section>;
 }
 
-function RunningLive({ session, busy, error, onPause, onResume, onEnd }: {
-  session: RunningSession; busy: boolean; error: string | null;
+function RunningLive({ session, busy, error, cues: runCues, onPause, onResume, onEnd }: {
+  session: RunningSession; busy: boolean; error: string | null; cues: RunCues;
   onPause: () => void; onResume: () => void; onEnd: (reason: RunningEndReason) => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
@@ -222,7 +231,7 @@ function RunningLive({ session, busy, error, onPause, onResume, onEnd }: {
       </li>)}
     </ol>
     <p className="visually-hidden" aria-live="polite" role="status">{announce}</p>
-    <p className="meta">{RUNNING_SCREEN_ON}</p>
+    <p className="meta">{runCues.active ? RUN_CUE_LOCKED : RUNNING_SCREEN_ON}</p>
     {error && <p className="meta" role="alert">{error}</p>}
     <div className="running-live__acts">
       {paused
@@ -237,6 +246,7 @@ function RunningLive({ session, busy, error, onPause, onResume, onEnd }: {
         : <button type="button" className="btn-secondary" disabled={busy} onClick={() => setConfirmEnd(true)}>END</button>}
       <button type="button" className="train-delta__pain running-live__pain" disabled={busy} onClick={() => onEnd("PAIN")}>PAIN OR SOMETHING WRONG</button>
     </div>
+    <RunCueControls cues={runCues} session={session} />
   </section>;
 }
 

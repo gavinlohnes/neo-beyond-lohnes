@@ -398,7 +398,18 @@ export function describeRunningWeek(week: { done: number; expected: number; show
   return week.showOptional ? `${base} · ${ORDINAL[week.expected + 1] ?? "one more"} is optional` : base;
 }
 
-export const RUNNING_SCREEN_ON = "Keep the screen on. Voice cues with the phone locked come next.";
+export const RUNNING_SCREEN_ON = "Keep the screen on, or turn on VOICE CUES to hear them with the phone locked.";
+
+// GRAYSON-TRAIN-RUN-CUES-001: VOICE CUES and CUE WORDS.
+export const RUN_CUE_LOCKED = "You can lock the phone: Health Bridge speaks and buzzes the cues.";
+export const RUN_CUE_SWITCH = "Voice and buzz with the phone locked (Health Bridge)";
+export const RUN_CUE_INSTALL = "Install Health Bridge 0.12 to hear cues with the phone locked.";
+export const RUN_CUE_BRIDGE_MISSING = "Health Bridge didn't answer, so cues stay on this screen. Install Health Bridge 0.12 to hear them with the phone locked.";
+export const RUN_CUE_NOT_ANDROID = "Health Bridge runs on Android phones, so cues stay on this screen.";
+export const RUN_CUE_TOO_LARGE = "This run has too many cues to hand to Health Bridge, so cues stay on this screen.";
+export const RUN_CUE_PLACEHOLDERS = "Write each cue your way. {minutes} and {seconds} stand for its length: 1 and 30 for a 90-second walk. A blank line uses the default.";
+export const RUN_CUE_VOICE_SETTINGS = "Voice and speed follow your phone's text-to-speech settings.";
+export const RUN_CUE_NAME = { WARMUP: "Warm-up walk", RUN: "Run", WALK: "Walk", HALFWAY: "Halfway", COOLDOWN: "Cool-down walk", FINISH: "Finish" } as const;
 export const RUNNING_FIRST_TIME = "Every run starts and ends with a 5-minute walk. Repeat any run or week whenever you like, and aim for a rest day between runs.";
 export const RUNNING_FOUNDATION_DONE = "Foundation done: 30 minutes running. The 1.5-mile phase comes next.";
 export const RUNNING_PAIN_LINE = "The run is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before running again.";
