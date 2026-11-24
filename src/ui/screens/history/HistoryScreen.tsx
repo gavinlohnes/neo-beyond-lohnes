@@ -8,6 +8,8 @@ import type { CheckInCorrectedPayload, DomainEvent, StateCheckIn } from "../../.
 import { undoCheckInCorrection, type CheckInCorrectionResult } from "../../../application/checkInCorrectionCommands";
 import { FIX_UNDO_MS, useUndoWindow } from "../../hooks/useUndoWindow";
 import { captureCommitFeedback } from "../../feel/feedback";
+import { activeVoids, voidedRootId } from "../../../domain/logVoids";
+import { undoLogVoid } from "../../../application/logVoidCommands";
 import { CheckInFixSheet, FixUndoBanner } from "../today/CheckInFix";
 
 /** GRAYSON-CHECKIN-EDIT-001: FIX's name says which check-in it fixes; the fix row's FIX says "again". */
@@ -41,6 +43,24 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
   const [fixCheckInId, setFixCheckInId] = useState<string | null>(null);
   const [fixUndo, setFixUndo] = useUndoWindow<{ message: string; correctionEventId?: string }>(FIX_UNDO_MS);
   const [undoing, setUndoing] = useState(false);
+  // GRAYSON-FIX-UNDO-001: PUT IT BACK on the owner's own standing removals, any time after its 8-second UNDO.
+  const [putBackBusy, setPutBackBusy] = useState<string | null>(null);
+  const [putBackNote, setPutBackNote] = useState<{ id: string; text: string; error?: boolean } | null>(null);
+  async function putBack(beyondDayId: string, voidEventId: string) {
+    if (putBackBusy) return;
+    const acknowledge = captureCommitFeedback();
+    setPutBackBusy(voidEventId);
+    try {
+      await undoLogVoid(beyondDayId, voidEventId);
+      acknowledge("LIGHT");
+      await refresh();
+      setPutBackNote({ id: voidEventId, text: "Put back. It counts again everywhere." });
+    } catch (error) {
+      setPutBackNote({ id: voidEventId, text: describeError(error, "It was not put back."), error: true });
+    } finally {
+      if (mounted.current) setPutBackBusy(null);
+    }
+  }
 
   async function handleFixed(result: CheckInCorrectionResult) {
     if (result.status === "CORRECTED") setFixUndo({ message: "Check-in fixed.", correctionEventId: result.correctionEventId });
@@ -113,7 +133,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
           that needs its own big display title. */}
       <h1 className="eyebrow">MORE // HISTORY</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
-        Every day and every event, exactly as it happened. A check-in can be fixed; the original stays here.
+        Every day and every event, exactly as it happened. A check-in can be fixed and a removed entry put back; the original stays here.
       </p>
       <CheckInFixSheet checkInId={fixCheckInId} onClose={() => setFixCheckInId(null)} onChanged={handleFixed} />
       {fixUndo && <FixUndoBanner message={fixUndo.message} busy={undoing} onUndo={fixUndo.correctionEventId ? () => void handleUndo() : undefined} />}
@@ -161,12 +181,13 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
               </button>
             </div>
 
-            {isOpen && (
+            {isOpen && (() => { const standing = new Set(activeVoids(events).filter((e) => e.source === "USER" && voidedRootId(e)).map((e) => e.id)); return (
               <div style={{ marginTop: 12, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
                 {events.length === 0 && <p className="meta">No events recorded.</p>}
                 {events.map((event) => (
+                  <div key={event.id}>
                   <div
-                    key={event.id} id={`history-event-${event.id}`} tabIndex={-1} className={focusEventId === event.id ? "health-history-focus" : undefined}
+                    id={`history-event-${event.id}`} tabIndex={-1} className={focusEventId === event.id ? "health-history-focus" : undefined}
                     style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0" }}
                   >
                     <span className="card-body" style={{ margin: 0, minWidth: 0, overflowWrap: "anywhere" }}>
@@ -179,11 +200,16 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
                       </span>
                       {checkInRowId(event) && <button type="button" className="btn-secondary history-fix" aria-label={fixLabel(event)}
                         onClick={() => setFixCheckInId(checkInRowId(event) ?? null)}>FIX</button>}
+                      {standing.has(event.id) && <button type="button" className="btn-secondary history-fix history-put-back" disabled={putBackBusy !== null}
+                        aria-label={`Put back the entry removed at ${new Date(event.occurredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}`}
+                        onClick={() => void putBack(day.id, event.id)}>PUT IT BACK</button>}
                     </span>
+                  </div>
+                  {putBackNote?.id === event.id && <p role={putBackNote.error ? "alert" : "status"} className="meta">{putBackNote.text}</p>}
                   </div>
                 ))}
               </div>
-            )}
+            ); })()}
           </div>
         );
       })}

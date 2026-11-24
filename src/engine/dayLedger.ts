@@ -1,3 +1,4 @@
+import { activeVoidedIds } from "../domain/logVoids";
 import type {
   BeyondDay,
   Capacity,
@@ -198,6 +199,8 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   // GRAYSON-CHECKIN-EDIT-001: a check-in fix is one correction; undoing it is another.
   "CHECK_IN_CORRECTED",
   "CHECK_IN_CORRECTION_UNDONE",
+  // GRAYSON-FIX-UNDO-001: putting a removed log back is a correction, like the removal before it.
+  "LOG_VOID_UNDONE",
 ]);
 
 const TRAINING_SET_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(["SET_LOGGED", "SET_SKIPPED"]);
@@ -345,7 +348,8 @@ function summarizeDay(
   const naps: number[] = [];
   // UNDO-001: undone logs leave every total, the same as a deleted protein log.
   const undoneLogs = new Set(
-    [...ofType(events, "SLEEP_LOG_VOIDED"), ...ofType(events, "WATER_LOG_VOIDED")].map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId),
+    // GRAYSON-FIX-UNDO-001: a removal that was put back no longer counts.
+    [...activeVoidedIds(events, "SLEEP_LOG_VOIDED"), ...activeVoidedIds(events, "WATER_LOG_VOIDED")],
   );
   for (const root of ofType(events, "SLEEP_LOGGED").filter((e) => !undoneLogs.has(e.id))) {
     const minutes = effectiveValue(root, sleepCorrections, (p) => (p as { durationMinutes: number }).durationMinutes);
@@ -364,11 +368,11 @@ function summarizeDay(
 
   // Protein + meals (voided meals leave every total, same as getMealEntries)
   const proteinCorrections = correctionsOf(events, "PROTEIN_LOG_CORRECTED");
-  const voidedProtein = new Set(ofType(events, "PROTEIN_LOG_VOIDED").map((e) => (e.payload as ProteinLogVoidedPayload).proteinEventId));
+  const voidedProtein = activeVoidedIds(events, "PROTEIN_LOG_VOIDED");
   const proteinLogs = ofType(events, "PROTEIN_LOGGED").filter((e) => !voidedProtein.has(e.id)).map((root) =>
     effectiveValue(root, proteinCorrections, (p) => (p as { grams: number }).grams),
   );
-  const voided = new Set(ofType(events, "MEAL_LOG_VOIDED").map((e) => (e.payload as MealLogVoidedPayload).mealEventId));
+  const voided = activeVoidedIds(events, "MEAL_LOG_VOIDED");
   const mealCorrections = correctionsOf(events, "MEAL_LOG_CORRECTED");
   const meals = ofType(events, "MEAL_LOGGED")
     .filter((e) => !voided.has(e.id))

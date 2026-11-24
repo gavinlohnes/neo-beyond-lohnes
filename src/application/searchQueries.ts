@@ -1,4 +1,5 @@
 import { isWorkingSet } from "../domain/workout/types";
+import { activeVoidedIds } from "../domain/logVoids";
 import MiniSearch from "minisearch";
 import { db } from "../persistence/db";
 import type { MealLoggedPayload, MealLogVoidedPayload, ShiftHandoffNotedPayload } from "../domain/common/types";
@@ -76,10 +77,10 @@ async function trainingAndLifeDocs(): Promise<IndexedDoc[]> {
     getUndoneSetIds(),
     db.events.where("type").equals("SHIFT_HANDOFF_NOTED").toArray(),
     db.events.where("type").equals("MEAL_LOGGED").toArray(),
-    db.events.where("type").equals("MEAL_LOG_VOIDED").toArray(),
+    db.events.where("type").anyOf(["MEAL_LOG_VOIDED", "LOG_VOID_UNDONE"]).toArray(),
   ]);
   // A meal deleted or undone after logging was never eaten that day.
-  const voidedMeals = new Set(mealVoids.map((e) => (e.payload as MealLogVoidedPayload).mealEventId));
+  const voidedMeals = activeVoidedIds(mealVoids, "MEAL_LOG_VOIDED");
   const mealEvents = loggedMeals.filter((e) => !voidedMeals.has(e.id));
   const finished = new Map(
     sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL").map((s) => [s.id, s] as const),

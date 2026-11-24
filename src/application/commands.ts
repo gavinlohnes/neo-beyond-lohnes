@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds, isLogVoidType } from "../domain/logVoids";
 import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { deriveShortSleepStreak } from "../engine/sleepStreak";
 import { getDaySummaries } from "./dayLedgerQueries";
@@ -1174,7 +1175,7 @@ export async function retimeLog(beyondDayId: string, rootEventId: string, at: st
     const voided =
       (root.type === "WATER_LOGGED" && isBodyLogVoided(events, "WATER_LOG_VOIDED", root.id)) ||
       (root.type === "PROTEIN_LOGGED" && isProteinLogVoided(events, root.id)) ||
-      (root.type === "MEAL_LOGGED" && events.some((e) => e.type === "MEAL_LOG_VOIDED" && (e.payload as { mealEventId: string }).mealEventId === root.id));
+      (root.type === "MEAL_LOGGED" && activeVoidedIds(events, "MEAL_LOG_VOIDED").has(root.id));
     if (voided) throw new Error("LOG_VOIDED: this entry was undone and can no longer move.");
     const current = effectiveLogTimes(events).get(root.id) ?? root.occurredAt;
     if (Date.parse(current) === Date.parse(occurredAt)) return false;
@@ -1346,9 +1347,7 @@ export async function correctProtein(
 }
 
 function isProteinLogVoided(dayEvents: readonly DomainEvent[], proteinEventId: string): boolean {
-  return dayEvents.some(
-    (e) => e.type === "PROTEIN_LOG_VOIDED" && (e.payload as ProteinLogVoidedPayload).proteinEventId === proteinEventId,
-  );
+  return activeVoidedIds(dayEvents, "PROTEIN_LOG_VOIDED").has(proteinEventId);
 }
 
 /**
@@ -1389,7 +1388,8 @@ export async function correctBodyweight(
 }
 
 function isBodyLogVoided(dayEvents: readonly DomainEvent[], voidedType: DomainEvent["type"], loggedEventId: string): boolean {
-  return dayEvents.some((e) => e.type === voidedType && (e.payload as BodyLogVoidedPayload).loggedEventId === loggedEventId);
+  // GRAYSON-FIX-UNDO-001: only a standing removal counts; a put-back entry can be corrected and removed again.
+  return isLogVoidType(voidedType) && activeVoidedIds(dayEvents, voidedType).has(loggedEventId);
 }
 
 /**
@@ -1502,9 +1502,9 @@ export async function markShiftHandoffRead(beyondDayId: string, handoffEventId: 
  * the same kind on that day. Lives here, not in garminSleep.ts, so the import graph stays one-way
  * (garminSleep → commands); a cycle hung Vitest's browser module loader.
  */
-async function replaceGarminSleep(dayId: string, kind: SleepLoggedPayload["kind"], ownerEventId: string): Promise<void> {
+export async function replaceGarminSleep(dayId: string, kind: SleepLoggedPayload["kind"], ownerEventId: string): Promise<void> {
   const events = await db.events.where("beyondDayId").equals(dayId).toArray();
-  const voided = new Set(events.filter((e) => e.type === "SLEEP_LOG_VOIDED").map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId));
+  const voided = activeVoidedIds(events, "SLEEP_LOG_VOIDED");
   for (const e of events) {
     const payload = e.payload as SleepLoggedPayload;
     if (e.type !== "SLEEP_LOGGED" || voided.has(e.id) || payload.source?.kind !== "GARMIN" || (payload.kind ?? "PRIMARY") !== kind) continue;

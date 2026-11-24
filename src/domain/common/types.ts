@@ -282,6 +282,9 @@ export type DomainEventType =
   // check-in's own beyondDayId. Append-only: no check-in row is edited or deleted. Payloads below.
   | "CHECK_IN_CORRECTED"
   | "CHECK_IN_CORRECTION_UNDONE"
+  // GRAYSON-FIX-UNDO-001 (Gavin, 2026-11-24): a removal of a meal, protein, water, sleep, bodyweight or measurement log
+  // put back. USER-sourced, under the entry's own beyondDayId (measurements: unscoped). Payload in domain/logVoids.ts.
+  | "LOG_VOID_UNDONE"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"

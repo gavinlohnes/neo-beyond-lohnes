@@ -1,4 +1,5 @@
 import { writeAtomically } from "./atomicWrite";
+import { activeVoidedIds } from "../domain/logVoids";
 import { db } from "../persistence/db";
 import { logEvent, newId, placeInDay } from "./commands";
 import type {
@@ -248,9 +249,7 @@ export async function correctMealLog(
 }
 
 function isVoided(dayEvents: readonly DomainEvent[], mealEventId: string): boolean {
-  return dayEvents.some(
-    (e) => e.type === "MEAL_LOG_VOIDED" && (e.payload as MealLogVoidedPayload).mealEventId === mealEventId,
-  );
+  return activeVoidedIds(dayEvents, "MEAL_LOG_VOIDED").has(mealEventId);
 }
 
 /**
