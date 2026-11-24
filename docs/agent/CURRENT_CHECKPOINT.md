@@ -1,14 +1,14 @@
-# Current state — after #625 (2026-11-23)
+# Current state — after #627 (2026-11-23)
 
-- **Master:** includes #624 (process: batches, `docs/decisions/`, `todaySettled()`, quieter runs) and #625 (TRAIN
-  finish 1: SHORT forms + Progress & Direction). Gavin merged #625 before its review finished; the post-merge review
-  BLOCKed on two points, fixed in the follow-up PR (#626): older HOME revisions stay readable (the not-a-FULL rule
-  moved to save time) and Progress shows an unknown next session honestly. Builder: Claude Code.
-- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). TRAIN finish 2 (guided execution + C4.4; Protected;
-  Gavin merges). #626 (the #625 follow-up) merged on PASS.
-- **TRAIN left after finish 2:** programme adaptation (after field evidence), Gym-mode proposals, C9.2 visual finish.
+- **Master:** includes TRAIN finish 1 (#625/#626: SHORT forms, PROGRESS) and TRAIN finish 2 (#627: Delta during
+  training, training feeds the night, train window). Builder: Claude Code.
+- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). TRAIN finish 3 (Delta in Gym mode + C9.2 TRAIN visual
+  finish; Protected; Gavin merges).
+- **TRAIN left after finish 3:** programme adaptation (after field evidence). Open question for Gavin: MY PROGRAMME
+  above the live workout (hiding it mid-workout removes editing it during a session).
 - **Known load-sensitive test not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation).
-- **Field check pending:** C1, C2.1, C4.8a/b, WHEN day picker, catch-up, SHORT and PROGRESS on real shifts.
+- **Field check pending:** the logger (WHEN, catch-up), eating window, SHORT, PROGRESS, Delta and the train window
+  on real shifts.
 
 ---
 

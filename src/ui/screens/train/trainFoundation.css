@@ -66,12 +66,25 @@
 .train-plan-draft__exercises li p { margin: 2px 0 0; color: var(--color-muted, #aaa); }
 .train-plan-draft__exercises li > span { white-space: nowrap; }
 .train-plan-draft__actions { justify-content: flex-end; margin-top: 18px; }
-/* GRAYSON-TRAIN-PROGRESS-001: Progress & Direction, quiet and readable; no red. */
-.train-operator .train-switcher .btn-secondary { padding-inline: 4px; min-width: 0; overflow-wrap: anywhere; }
-.train-progress__verdict { margin: 0 0 4px; font-size: 17px; line-height: 1.45; color: var(--p-t1, #f2f2f2); }
-.train-progress__h { margin: 18px 0 6px; font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .14em; color: var(--p-t2, #a8a8a8); }
-.train-progress__list { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
-.train-progress__why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-mono, monospace); letter-spacing: .14em; }
+/* GRAYSON-TRAIN-PROGRESS-001 + C9.2: Progress & Direction in the Orientation grammar: framed panels, mono keys, one
+   rule between rows, tokens only, no red. Text stays at 16 px or more (TRAIN-OPERATOR-001). */
+.train-progress { display: grid; gap: 10px; }
+.train-progress__state { margin: 0; font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 22px; line-height: 1.2; color: var(--p-t1, #f2f2f2); }
+.train-progress__verdict { margin: 4px 0 0; font-size: 17px; line-height: 1.45; color: var(--p-t1, #f2f2f2); }
+.train-progress__note { margin: 6px 0 0; font-size: 16px; line-height: 1.4; color: var(--bf-quiet, var(--p-t2, #a8a8a8)); }
+.train-progress__rows { display: grid; }
+.train-progress__row { margin: 0; padding: 8px 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, #f2f2f2); min-width: 0; }
+.train-progress__row + .train-progress__row { border-top: 1px solid var(--bf-line, var(--p-line, #2a2a2a)); }
+.train-progress__name { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-weight: 600; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.train-progress__text { margin: 2px 0 0; font-size: 16px; line-height: 1.4; color: var(--bf-quiet, var(--p-t2, #a8a8a8)); }
+.train-progress__key { margin-right: 6px; font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .08em; color: var(--p-t2, #a8a8a8); }
+.train-progress__tag { font-family: var(--font-mono, monospace); font-weight: 400; font-size: 13px; letter-spacing: .1em; padding: 1px 6px; border: 1px solid var(--p-t2, #a8a8a8); color: var(--p-t1, #f2f2f2); white-space: nowrap; }
+.train-progress__tag--quiet { border-color: var(--bf-line, var(--p-line, #2a2a2a)); color: var(--p-t2, #a8a8a8); }
+.train-progress__tag--look { border-color: var(--p-amber, #c8901e); color: var(--p-amber, #c8901e); }
+.train-progress__why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); }
+/* C9.2: four TRAIN views never break a word: two by two on a phone, one row when there's room (text stays 16 px). */
+.train-operator .train-switcher .btn-secondary { padding-inline: 4px; min-width: 0; white-space: nowrap; letter-spacing: .08em; }
+@media (max-width: 459px) { .train-operator .train-switcher { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* GRAYSON-TRAIN-GUIDED-001: Delta during training: one quiet panel, no red, 44 px targets. */
 .train-delta { display: grid; gap: 8px; margin: 8px 0 12px; padding: 10px 12px; border: 1px solid var(--p-line, #2a2a2a); border-left: 3px solid var(--p-t1, #f2f2f2); background: var(--p-s1, #0b0b0b); }
 .train-delta__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, #f2f2f2); }
