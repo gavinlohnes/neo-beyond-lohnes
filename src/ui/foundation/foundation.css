@@ -76,8 +76,12 @@
 .bf-meter { display: grid; gap: 3px; }
 .bf-meter__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 6px; font-size: 16px; color: var(--p-t2, #a8a8a8); }
 .bf-meter__row b { font-family: var(--font-display, sans-serif); font-size: 22px; font-weight: 700; color: var(--p-t1, #f2f2f2); }
-.bf-meter__track { height: 3px; background: var(--p-s3, #141414); }
+.bf-meter__track { display: block; height: 3px; background: var(--p-s3, #141414); }
 .bf-meter__track i { display: block; height: 100%; background: var(--p-t1, #f2f2f2); }
+/* A meter that opens its page: the whole meter is the button, at least 44 px tall, with a quiet › after the value. */
+.bf-meter--open { width: 100%; min-height: 44px; align-content: center; padding: 0; margin: 0; background: transparent; border: 0;
+  color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.bf-meter__chev { vertical-align: -2px; margin-left: 2px; color: var(--p-t2, #a8a8a8); }
 
 .bf button:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .bf * { transition: none !important; } }
