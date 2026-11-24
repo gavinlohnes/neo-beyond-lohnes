@@ -33,6 +33,7 @@ import { TrainingHistory } from "./TrainingHistory";
 import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
+import { SetFixSheet, useSetFixUndo } from "./SetFixSheet";
 import { restEndBuzz, shouldBuzzRestEnd } from "../../feel/restEndBuzz";
 import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
 import { RunningPanel } from "./RunningSession";
@@ -223,6 +224,9 @@ export function TrainScreen({
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [runningActive, setRunningActive] = useState(false);
   const [sets, setSets] = useState<PerformedSet[]>([]);
+  // GRAYSON-TRAIN-EDIT-001: the logged set whose fix sheet is open, and the 8 s Undo after a fix.
+  const [fixingSetId, setFixingSetId] = useState<string | null>(null);
+  const liveFixUndo = useSetFixUndo(async () => { await refresh(true); });
   const [howToOpen, setHowToOpen] = useState<{ id: string; name: string } | null>(null);
   const setWriteRef = useRef(false);
   const draftSessionRef = useRef<string | null>(null);
@@ -1780,7 +1784,11 @@ export function TrainScreen({
                   sets stay as one-line summaries; later sets are counted in a
                   single "N more sets" line instead of each showing its own
                   steppers and LOG button. */}
-              {sets.filter((s) => s.exerciseId === currentExercise.exerciseId && s.setKind === "WARMUP").sort(compareSetOrder).map((s) => <p key={s.id} className="meta">Warm-up · {s.weight} lb × {s.reps}</p>)}
+              {sets.filter((s) => s.exerciseId === currentExercise.exerciseId && s.setKind === "WARMUP").sort(compareSetOrder).map((s) => fixingSetId === s.id
+                ? <SetFixSheet key={s.id} target={{ set: s }} exerciseName={currentExercise.name}
+                    onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />
+                : <p key={s.id} className="meta train-set-fix-line">Warm-up · {s.weight} lb × {s.reps}
+                    <button type="button" className="btn-secondary train-set-fix" aria-label={`Fix warm-up ${s.weight} lb × ${s.reps}`} disabled={busy} onClick={() => setFixingSetId(s.id)}>FIX</button></p>)}
               {[...sets].sort(compareSetOrder).at(-1)?.setKind === "WARMUP" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleUndoLastSet()}>UNDO WARM-UP</button>}
               {Array.from({ length: currentExercise.sets }, (_, i) => i + 1).map((setNumber) => {
                 const ex = currentExercise;
@@ -1832,7 +1840,12 @@ export function TrainScreen({
                             UNDO
                           </button>
                         )}
+                        {/* GRAYSON-TRAIN-EDIT-001: any logged set, not only the last, opens the fix sheet. */}
+                        <button type="button" className="btn-secondary train-set-fix" aria-label={`Fix set ${setNumber}`} disabled={busy}
+                          onClick={() => setFixingSetId(loggedSet.id)}>FIX</button>
                       </div>
+                      {fixingSetId === loggedSet.id && <SetFixSheet target={{ set: loggedSet }} exerciseName={ex.name}
+                        onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />}
                       {sessionRecords.has(loggedSet.id) && (
                         // PR-CARDS-001: a quiet outlined PR tag; no sound, no vibration.
                         <p className="meta-strong fade-in pr-line">
@@ -1990,6 +2003,7 @@ export function TrainScreen({
                   CONTINUE — {firstIncompleteExercise.name}
                 </button>
               )}
+              {liveFixUndo.node}
               {/* GRAYSON-TRAIN-GUIDED-001: below the set inputs, so LOG stays where the thumb expects it. */}
               <DeltaPain exerciseName={currentExercise.name} open={painFor === currentExercise.exerciseId} busy={busy} onOpen={() => setPainFor(currentExercise.exerciseId)} onStop={(skip) => void stopForPain(currentExercise.exerciseId, skip)} onCancel={() => setPainFor(null)} />
               <details className="train-lift-inspect">

@@ -1,6 +1,7 @@
 import { contextSource, readOperatorContext } from "../operatorContext";
 import { getMemories } from "./alfredMemory";
 import { db } from "../../persistence/db";
+import { projectSetFixes } from "../../domain/workout/setFixes";
 import { parseProject } from "../../persistence/intentValidation";
 import { getDaySummaries } from "../dayLedgerQueries";
 import { dayLine } from "./alfredContext";
@@ -43,7 +44,10 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
   for (const n of notes) consider(n.capturedAt, `NOTE ${n.status}`, n.text);
   for (const t of tasks) consider(t.resolvedAt ?? t.dueAt ?? t.createdAt, `TASK ${t.status}`, { title: t.title, description: t.description, due: t.dueAt, resolved: t.resolvedAt, project: t.projectId });
   for (const w of sessions) consider(w.startedAt, `WORKOUT ${w.status}`, { template: w.templateId, type: w.sessionType, ended: w.endedAt });
-  for (const s of sets) consider(typeof s.recordedAt === "string" ? s.recordedAt : undefined, "SET", s);
+  // GRAYSON-TRAIN-EDIT-001: search reads the sets as they stand (undone, replaced and removed sets left out);
+  // the history of a fix stays findable through its events above.
+  const retracted = projectSetFixes(events).retractedSetIds;
+  for (const s of sets) if (!retracted.has(String(s.id))) consider(typeof s.recordedAt === "string" ? s.recordedAt : undefined, "SET", s);
   for (const m of memories) consider(m.savedAt, `MEMORY ${m.topic}`, m.text);
   for (const p of projects.map(parseProject).filter((x): x is NonNullable<typeof x> => x !== null)) consider(p.updatedAt, `PROJECT ${p.status}`, { id: p.id, title: p.title, finish: p.finish });
   hits.sort((a, b) => b.at.localeCompare(a.at));

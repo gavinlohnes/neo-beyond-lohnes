@@ -213,6 +213,8 @@ export interface PerformedSet {
   repsInReserve?: number;
   /** The canonical SET_LOGGED/SET_SKIPPED event sequence, for same-time undo order. */
   seq?: number;
+  /** GRAYSON-TRAIN-EDIT-001: on a corrected row, the row it replaces. */
+  correctsSetId?: string;
 }
 
 /** Shared statistics boundary; skipped sets and preparation are not working performance. */

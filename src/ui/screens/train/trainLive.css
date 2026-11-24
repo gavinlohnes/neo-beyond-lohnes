@@ -58,6 +58,26 @@
 .train-operator .train-live-rest { font-family: var(--font-display, sans-serif); font-size: 46px; font-weight: 700; line-height: 1;
   font-variant-numeric: tabular-nums; color: var(--p-t1, #f2f2f2); }
 
+/* GRAYSON-TRAIN-EDIT-001: fix any logged set. Rows stay as they read today; editing appears only on tap. */
+.set-fix-row { display: block; width: 100%; min-height: 44px; padding: 8px 0; text-align: left; background: transparent; border: 0; color: inherit; font: inherit; font-size: 16px; cursor: pointer; }
+.set-fix-row:focus-visible { outline: 2px solid var(--focus, var(--text-1)); outline-offset: 2px; }
+.set-fix-add { min-height: 44px; padding: 8px 0; background: transparent; border: 0; color: var(--text-2); font: inherit; font-size: 16px; text-decoration: underline; cursor: pointer; }
+.set-fix { display: grid; gap: 10px; margin: 6px 0 12px; padding: 12px; border: 1px solid var(--p-line-2, #3a3a3a); }
+.set-fix__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.set-fix__field { display: grid; gap: 4px; font-size: 16px; color: var(--text-2); }
+.set-fix__field input { min-height: 44px; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--p-line-2, #3a3a3a); border-radius: 0; background: var(--p-bg, #000); color: var(--text-1); min-width: 0; }
+.set-fix__check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
+.set-fix__check input { width: 20px; height: 20px; margin: 0; accent-color: var(--text-1); }
+.set-fix__acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.set-fix__acts > button { flex: 1 1 100px; min-height: 44px; font-size: 16px; }
+.set-fix-undo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; font-size: 16px; }
+.set-fix-undo--empty { margin: 0; }
+.set-fix-undo__btn, .set-fix-history__back, .train-set-fix { width: auto; min-height: 44px; padding: 4px 12px; font-size: 14px; flex: none; }
+.set-fix-history { margin: 0 0 6px; }
+.set-fix-history summary { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
+.set-fix-history ul { margin: 0 0 6px; padding-left: 18px; }
+.set-fix-removed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.train-set-fix-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* GRAYSON-TRAIN-REST-001: one short highlight on REST COMPLETE when he reaches it; none under reduced motion. */
 @keyframes train-rest-done { 0% { background: var(--text-1); color: var(--surface-1, #000); } 100% { background: transparent; } }
 .train-rest-done { animation: train-rest-done 900ms ease-out 1; }

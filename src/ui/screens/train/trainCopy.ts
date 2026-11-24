@@ -365,6 +365,20 @@ export function describeRecordedSet(set: SessionRecordSet): string {
 
 export const TRAINING_HISTORY_EMPTY = "Finished and stopped strength sessions will appear here.";
 
+// GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): set fix copy.
+/** "145 lb × 12", "warm-up 95 lb × 10", "skipped", plus reps left when recorded. */
+export function describeSetValues(v: { weight: number; reps: number; skipped: boolean; setKind?: string | undefined; repsInReserve?: number | undefined }): string {
+  if (v.skipped) return "skipped";
+  const base = `${v.setKind === "WARMUP" ? "warm-up " : ""}${v.weight} lb × ${v.reps}`;
+  return v.repsInReserve !== undefined ? `${base}, ${v.repsInReserve} reps left` : base;
+}
+
+/** One line of a set's "edited" detail: what it was and what it became. */
+export function describeSetFix(f: { kind: "CORRECTED" | "REMOVED" | "ADDED"; before?: Parameters<typeof describeSetValues>[0]; after?: Parameters<typeof describeSetValues>[0] }): string {
+  if (f.kind === "ADDED") return "Added after the workout";
+  if (f.kind === "REMOVED") return "Removed";
+  return f.before && f.after ? `Was ${describeSetValues(f.before)}, now ${describeSetValues(f.after)}` : "Corrected";
+}
 // ---------------------------------------------------------------------------------------------------------------
 // GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running copy. "run" only in words he reads; identifiers say "running".
 
