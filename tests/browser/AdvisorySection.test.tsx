@@ -33,6 +33,8 @@ describe("AdvisorySection (real browser) — PROTECT quick actions", () => {
     await expect.element(screen.getByText("Shift starts soon. Check water and protein before you go.")).toBeVisible();
     await screen.getByText("WHY", { exact: true }).click();
     await expect.element(screen.getByText(protectNote.message)).toBeVisible();
+    // GRAYSON C6.4: the same rule line as every other Delta surface.
+    await expect.element(screen.getByText("Shift protection: water or protein still short of the Minimum Day amount before a shift.")).toBeVisible();
   });
 
   it("renders one +OZ quick-add button per WATER_QUICK_ADD_OZ amount for an unmet HYDRATE item, and tapping one calls onLogWater with that exact amount", async () => {
