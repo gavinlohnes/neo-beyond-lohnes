@@ -104,10 +104,10 @@ status of its own.
 | C5.4 | Pattern review (monthly, private) | Not started |  |
 | C5.5 | Sensitive-data controls | Not started |  |
 | **Campaign 6 — Delta** | | | |
-| C6.1 | Learning lifecycle | Not started |  |
-| C6.2 | "What I think I'm learning" weekly | Not started |  |
+| C6.1 | Learning lifecycle | In review | [brief](agent/GRAYSON-C6.1-C6.2-001.md); answers are a new LEARNING_RESPONDED event |
+| C6.2 | "What I think I'm learning" weekly | In review | Ships with C6.1; [brief](agent/GRAYSON-C6.1-C6.2-001.md) |
 | C6.3 | What moves your numbers | Not started |  |
-| C6.4 | "Why am I seeing this?" everywhere | In review | [brief](agent/GRAYSON-C6.4-001.md) |
+| C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |

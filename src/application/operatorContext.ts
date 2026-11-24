@@ -23,7 +23,7 @@ import { getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitSummary } from "./quitQueries";
 import { isOperatorSavedSchedule, livedDayShiftWindow } from "../engine/scheduledContext";
 import { sleepMinutes } from "../domain/health/measuredSeries";
-import { getDeltaKnowledge } from "./delta";
+import { getReasoningKnowledge } from "./learningQueries";
 import { deltaFacts } from "./deltaFacts";
 
 export const CONTEXT_SOURCE_LIMIT = 60;
@@ -149,7 +149,8 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
         ? `SLEEP OWED: no figure yet. BEYOND is still learning his usual sleep (${describeSleepTargets(d.targets, hm)}); ${d.days} day${d.days === 1 ? "" : "s"} with sleep logged. Do not substitute a fixed 7 hours.`
         : `SLEEP OWED: ${hm(d.owedMinutes)} over the last ${d.judgedDays} days with sleep logged${d.judgedDays < d.days ? ` (${d.days - d.judgedDays} more not counted: that kind of day is still learning, its work context is unknown, or only a nap was logged)` : ""}, against the low end of his own usual main sleep for that kind of day: ${describeSleepTargets(d.targets, hm)}. A personal-baseline comparison, not a medical debt or recovery verdict.`)] : []);
     // SUPERCHARGE-001: what DELTA has learned, as counted facts. Note- and journal-based facts follow the personal opt-in.
-    await read("What DELTA has learned", () => getDeltaKnowledge(now), (k) => deltaFacts(k, options.includePersonal || options.purpose === "local").map((f) =>
+    // GRAYSON C6.1: retired learnings never reach Alfred; each line says if he confirmed, narrowed or disputed it.
+    await read("What DELTA has learned", () => getReasoningKnowledge(now), (k) => deltaFacts(k, options.includePersonal || options.purpose === "local", k.states).map((f) =>
       s("DELTA", f.id, f.text, "What DELTA has learned", f.text, "Derived from records", { at: f.at })));
     await read("Recent lived days", getDaySummaries, (v) => [...v].sort((a, b) => b.livedDayStart.localeCompare(a.livedDayStart)).map((d) => s("DAY", d.beyondDayId, JSON.stringify(d), `Recorded day ${date(d.livedDayStart)}`,
       `LAST 14 LIVED DAYS: ${dayLine(d)}`, "Derived from records", { at: d.livedDayStart, lifecycle: "Recorded history" })));

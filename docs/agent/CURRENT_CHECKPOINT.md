@@ -1,18 +1,18 @@
-# Current state — C6.4 in review (2026-11-24)
+# Current state — C6.1 + C6.2 in review (2026-11-24)
 
 - **Master:** includes TRAIN finish 1–3 and placements (#625–#628, #630), C4.6 water target (#629), C9.2 (#628,
   #632), tidy-up (#631), C8.1 settings travel with the backup (#633), Codex's Q5 protein tap (#634), TIMEBOX-001
-  (#635), C4.1 verified and locked (#636) and the CI flakes fix (#637).
-- **Open:** C6.4 "Why am I seeing this?" (Feature; brief [GRAYSON-C6.4-001](GRAYSON-C6.4-001.md); Claude Code).
-  #606 (C3.4b + C3.4c; Gavin's merge).
+  (#635), C4.1 verified and locked (#636), the CI flakes fix (#637) and C6.4 "Why am I seeing this?" (#638).
+- **Open:** C6.1 + C6.2, Delta's learning lifecycle and the weekly "What I think I'm learning" (Protected; Gavin
+  merges; brief [GRAYSON-C6.1-C6.2-001](GRAYSON-C6.1-C6.2-001.md); Claude Code). #606 (C3.4b + C3.4c; Gavin's merge).
 - **TRAIN:** planned work complete, except programme adaptation, which waits for 3–4 weeks of real use by design.
 - **C9.2:** done for TRAIN (#628) and DATA home (#632). Small follow-up noted in #632's review: "RECORDED THIS DAY"
   wraps to two lines inside the History frame at 320 px.
 - **Energy curve:** C4.1 (#636) locked the steady-night low in the waking night. The body-clock model (fully adjusted
   to nights) is still an unvalidated assumption. Partial adjustment, or anchoring to days off, would be a new
   owner-approved objective.
-- **Next:** Gavin field-tests this week. After C6.4, C6.2 "What I think I'm learning" fits next; it needs its own
-  go.
+- **Next:** Gavin field-tests this week. After C6.1/C6.2: C6.5 override as evidence (Protected), and C2 shift
+  transitions for Codex or Grok in parallel (owner to assign).
 - **Flaky tests:**
   - FieldRehearsal TRAIN contrast: fixed (#631).
   - MealRoundTrip: cause found and fixed (#637). A stale render counted the hidden meal tools as
