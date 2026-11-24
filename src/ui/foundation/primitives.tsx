@@ -69,13 +69,17 @@ export function Sparkline({ values, tone, area }: { values: readonly (number | n
 }
 
 /** A labelled number; with a target you set (`of`), a thin track under it. No target, no track: no invented goal. */
-export function Meter({ label, value, of, unit }: { label: string; value: number; of?: number | undefined; unit: string }) {
-  return (
-    <div className="bf-meter">
-      <div className="bf-meter__row"><span>{label}</span><span><b>{fmt(value)}</b>{of ? ` / ${fmt(of)}` : ""} {unit}</span></div>
-      {of ? <div className="bf-meter__track" aria-hidden="true"><i style={{ width: `${Math.min(100, (value / of) * 100)}%` }} /></div> : null}
-    </div>
-  );
+export function Meter({ label, value, of, unit, onOpen, openLabel }: {
+  label: string; value: number; of?: number | undefined; unit: string;
+  /** GRAYSON-Q5-PROTEIN-TAP-001: a meter with onOpen is itself the way into its page (a full-width 44 px button). */
+  onOpen?: (() => void) | undefined; openLabel?: string | undefined;
+}) {
+  const body = <>
+    <span className="bf-meter__row"><span>{label}</span><span><b>{fmt(value)}</b>{of ? ` / ${fmt(of)}` : ""} {unit}{onOpen && <ChevronRight className="bf-meter__chev" size={16} aria-hidden="true" />}</span></span>
+    {of ? <span className="bf-meter__track" aria-hidden="true"><i style={{ width: `${Math.min(100, (value / of) * 100)}%` }} /></span> : null}
+  </>;
+  if (onOpen) return <button type="button" className="bf-meter bf-meter--open" onClick={onOpen}>{body}<span className="visually-hidden">, {openLabel ?? `open ${label.toLowerCase()}`}</span></button>;
+  return <div className="bf-meter">{body}</div>;
 }
 
 /**
