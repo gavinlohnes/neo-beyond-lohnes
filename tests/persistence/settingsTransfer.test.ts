@@ -74,6 +74,19 @@ describe("C8.1 settings travel with the backup", () => {
     expect(localStorage.getItem("beyond.todayQuiet.opened.v1")).toBeNull();
   });
 
+  it("GRAYSON-PLAN-FRESH-001: the phone-alert switches travel; what was last sent to the phone stays on the phone", async () => {
+    const settings = JSON.stringify({ updateOnSave: false, showBehind: true });
+    setAll({ "beyond.bridgePlan.settings.v1": settings, "beyond.bridgePlan.sent.v1": JSON.stringify({ hash: "abc", at: 1, moments: [], brief: "" }), "beyond.bridgePlan.lineDay.v1": "2026-11-23" });
+    const text = await (await exportNativeBackup(false)).text();
+    expect(text).not.toContain("bridgePlan.sent");
+    expect(text).not.toContain("bridgePlan.lineDay");
+    localStorage.clear();
+    await applyAnyRestore(asFile(text));
+    expect(localStorage.getItem("beyond.bridgePlan.settings.v1")).toBe(settings);
+    expect(localStorage.getItem("beyond.bridgePlan.sent.v1")).toBeNull();
+    expect(localStorage.getItem("beyond.bridgePlan.lineDay.v1")).toBeNull();
+  });
+
   it("is replace-only for the allowlist: a preference the backup lacks returns to its default", async () => {
     setAll({ "beyond.vision": "NIGHT" });
     const text = await (await exportNativeBackup(false)).text();
@@ -151,6 +164,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond:sleepDraftDismissedDay": "dismissal", "beyond:outcomeDismissed:": "dismissal", "beyond:shiftHandoffSkipped:": "dismissal",
       "beyond:modePin:": "temporary pin", "beyond:autoBackupSnoozedUntil": "snooze", "beyond:lastBackupAt": "clock",
       "beyond:lastRestoreCheckAt": "clock", "beyond:checkInReminderLastSentDate": "clock", "beyond.garminSyncRequestedAt": "clock",
+      "beyond.bridgePlan.sent.v1": "device state (what this phone handed Health Bridge)", "beyond.bridgePlan.lineDay.v1": "seen",
+      "beyond.bridgePlan.outdated": "this visit only (session)",
       "beyond.daily-note.draft.": "draft", "beyond:gym-draft:": "draft", "beyond:decrypt:": "animation state",
     };
     const EVENTS = new Set(["beyond:ask-alfred", "beyond:do", "beyond:drive-home", "beyond:find-food", "beyond:hidden-features",

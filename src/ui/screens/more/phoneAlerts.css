@@ -1,0 +1,7 @@
+/* GRAYSON-PLAN-FRESH-001: KEY MOMENT ALERTS' phone status and TODAY's "behind" line; tokens only. */
+.phone-alerts__update { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; font-size: 16px; letter-spacing: .08em; color: var(--p-t1); text-decoration: underline; text-underline-offset: 3px; }
+.phone-alerts__update:focus-visible { outline: 2px solid var(--p-t1); outline-offset: 2px; }
+[data-phone-alerts] .meta { font-size: 16px; overflow-wrap: anywhere; }
+[data-phone-alerts] button { min-height: 44px; min-width: 44px; font-size: 16px; flex: 0 0 auto; width: auto; }
+.today-phone-behind { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: 16px; line-height: 1.35; color: var(--text-3-strong); }
+.today-phone-behind > span { min-width: 0; overflow-wrap: anywhere; }

@@ -11,6 +11,7 @@ import { describeSchedulePreview } from "../today/workContextCopy";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { describeError } from "../../errorMessage";
 import { KeyMomentAlerts } from "./KeyMomentAlerts";
+import { handPlanToPhone } from "../../bridgeHandoff";
 import { LogNudgeSettings } from "./LogNudgeSettings";
 
 /**
@@ -101,7 +102,8 @@ export function WorkScheduleScreen() {
         postWorkTailHours: draft.postWorkTailHours,
       });
       acknowledge("LIGHT");
-      setStatus("Saved.");
+      // GRAYSON-PLAN-FRESH-001: on Android, the same tap hands the new plan to the phone when it changed.
+      setStatus((await handPlanToPhone()) ? "Saved. Sent to your phone." : "Saved.");
     } catch (e) {
       setStatus(describeError(e, "Could not save."));
     } finally {

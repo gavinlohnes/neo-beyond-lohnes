@@ -4,6 +4,7 @@ import {
   cancelScheduleException, changeScheduleException, confirmScheduleException, confirmShiftSwap, getMoveTargets, getUpcomingExceptions,
   moveScheduleException,
 } from "../../../application/scheduleExceptions";
+import { handPlanToPhone } from "../../bridgeHandoff";
 
 /**
  * SCHEDULE-EXCEPTIONS-001: confirm, review, edit and cancel future changes to the standing rotation, in Week Ahead.
@@ -54,7 +55,8 @@ export function ConfirmChangeOffer({ date, to, swapWith, onConfirmed }: {
             const write = pair
               ? confirmShiftSwap({ workDate: to === "WORK" ? date : pair, offDate: to === "WORK" ? pair : date, note })
               : confirmScheduleException({ date, kind: to, note });
-            void write.then(() => { setDone(pair ? `Swap confirmed: ${day(date)} and ${day(pair)}.` : `Confirmed: ${day(date)} is ${kindWords(to)}.`); onConfirmed(); },
+            // GRAYSON-PLAN-FRESH-001: on Android, the same tap hands the new plan to the phone when it changed.
+            void write.then(() => { setDone(pair ? `Swap confirmed: ${day(date)} and ${day(pair)}.` : `Confirmed: ${day(date)} is ${kindWords(to)}.`); onConfirmed(); void handPlanToPhone(); },
               (e: unknown) => setError(plain(e))).finally(() => setSaving(false));
           }}>CONFIRM</button>
           <button type="button" className="btn-secondary" disabled={saving} onClick={() => setPreview(false)}>CANCEL</button>

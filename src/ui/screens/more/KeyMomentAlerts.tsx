@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { getKeyMomentAlerts, setKeyMomentAlerts } from "../../../application/keyMomentAlerts";
 import type { KeyMomentAlertSettings, KeyMomentKind } from "../../../domain/common/types";
 import { describeError } from "../../errorMessage";
+import { PhoneAlertsCurrency } from "./PhoneAlertsCurrency";
+import { handPlanToPhone } from "../../bridgeHandoff";
 
 /**
  * BRIDGE-NOTIFY-001 (Gavin, 2026-11-15; BEYOND-4.0 decision 5): each key-moment kind easy to turn off, and quiet
@@ -10,6 +12,8 @@ import { describeError } from "../../errorMessage";
  * FOLLOWUPS-001 (review note N4): each change is a "set" (this kind off, quiet hours on), applied when its save runs to
  * what is actually stored. A failed save is dropped on its own: changes queued after it still save, without it, and
  * the screen goes back to what is stored plus those changes.
+ * GRAYSON-PLAN-FRESH-001: on Android each saved change also hands the plan to the phone (when it changed), and the
+ * screen says how current the phone's plan is.
  */
 const KINDS: { kind: KeyMomentKind; label: string; when: string }[] = [
   { kind: "BEFORE_SHIFT", label: "Before the shift", when: "30 minutes before it starts" },
@@ -25,6 +29,7 @@ type Update = (current: KeyMomentAlertSettings) => KeyMomentAlertSettings;
 export function KeyMomentAlerts() {
   const [settings, setSettings] = useState<KeyMomentAlertSettings | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [savedTick, setSavedTick] = useState(0);
   const latest = useRef<KeyMomentAlertSettings | null>(null);
   const saved = useRef<KeyMomentAlertSettings | null>(null);
   const saving = useRef<Promise<void>>(Promise.resolve());
@@ -46,7 +51,10 @@ export function KeyMomentAlerts() {
       try {
         // On what is stored, not on the screen's optimistic value: a failed earlier change is not carried along.
         saved.current = await setKeyMomentAlerts(update(saved.current));
-        setStatus("Saved. Your phone gets it at the next SYNC GARMIN.");
+        // GRAYSON-PLAN-FRESH-001: on Android, the same tap hands the new plan to the phone when it changed.
+        const sent = await handPlanToPhone();
+        setStatus(sent ? "Saved. Sent to your phone." : "Saved. Your phone gets it at the next SYNC GARMIN.");
+        setSavedTick((n) => n + 1);
         pending.current = pending.current.filter((u) => u !== update);
       } catch (e) {
         pending.current = pending.current.filter((u) => u !== update);
@@ -124,6 +132,7 @@ export function KeyMomentAlerts() {
         )}
       </div>
       {status && <p className="meta" role="status">{status}</p>}
+      <PhoneAlertsCurrency refreshKey={savedTick} />
     </section>
   );
 }
