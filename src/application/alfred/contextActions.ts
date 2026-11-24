@@ -26,3 +26,25 @@ export function confirmContextProposal(proposal: AlfredProposal, expected: Propo
     return { result, personalVersion: await personalContextVersion(includePersonal), ...(expected.recordVersion !== undefined ? { recordVersion: await operatorContextVersion(includePersonal) } : {}) };
   });
 }
+
+/**
+ * GRAYSON-DICTATE-001: confirms cards one after another, in order, on one context read and advanced by each of his own
+ * saves (so an outside change since the read is still refused). Stops at the first failure: `saved` is how many went
+ * in (the first `saved` cards), `context` is the advanced context to retry the rest with, and `error` is the failure
+ * as thrown (a `CONTEXT_CHANGED` refusal comes through as that Error). Used by Drive Home and the "I heard" preview.
+ */
+export async function confirmProposals<C extends ProposalContext>(
+  cards: readonly AlfredProposal[], context: C, includePersonal = false,
+): Promise<{ saved: number; context: C; error: unknown }> {
+  let ctx = context, saved = 0;
+  try {
+    for (const card of cards) {
+      const done = await confirmContextProposal(card, ctx, includePersonal);
+      ctx = { ...ctx, personalVersion: done.personalVersion, ...(done.recordVersion ? { recordVersion: done.recordVersion } : {}) };
+      saved++;
+    }
+    return { saved, context: ctx, error: null };
+  } catch (error) {
+    return { saved, context: ctx, error };
+  }
+}

@@ -2,7 +2,7 @@ import * as chrono from "chrono-node";
 import { formatLocalDate } from "../../engine/scheduledContext";
 import type { AlfredProposal } from "../alfred/alfredActions";
 import { cleanValues, placeTime, type FixSnapshot } from "../alfred/fixEntryRules";
-import type { UrgeTrigger } from "../../domain/common/types";
+import type { StateCheckIn, UrgeTrigger } from "../../domain/common/types";
 
 /**
  * FREE-HELPER-001 (owner go 2026-11-01): BEYOND's free helper. It turns plain, common phrasings into
@@ -135,6 +135,24 @@ function checkIn(c: string): AlfredProposal | null | "unclear" {
     return { kind: "check_in", energy: energy as 1, stress: stress as 1, mood: mood as 1, soreness: soreness as 0, alcohol_urge: u as 0 };
   }
   return keys.length >= 2 ? "unclear" : null;
+}
+
+/**
+ * GRAYSON-DICTATE-001: the check-in reader above, for the check-in sheet's TALK. Fills only the fields he said:
+ * energy, stress and mood 1 to 5; soreness and urge 0 to 5 ("sore" means soreness, "craving" means urge). Numbers may
+ * be words ("three"). A number out of range is ignored. `interpret` is unchanged.
+ */
+export type CheckInWords = Partial<Pick<StateCheckIn, "energy" | "stress" | "mood" | "soreness" | "alcoholUrge">>;
+const SPOKEN_DIGITS: Record<string, number> = { zero: 0, none: 0, one: 1, two: 2, three: 3, four: 4, five: 5 };
+export function readCheckInWords(text: string): CheckInWords {
+  const out: CheckInWords = {};
+  for (const m of text.toLowerCase().matchAll(/\b(energy|stress|mood|soreness|sore|urge|craving)\s*(?:is|at|of|:)?\s*(\d+|zero|none|one|two|three|four|five)\b/g)) {
+    const field = m[1] === "sore" || m[1] === "soreness" ? "soreness" : m[1] === "craving" || m[1] === "urge" ? "alcoholUrge" : m[1] as "energy" | "stress" | "mood";
+    const n = /^\d+$/.test(m[2]!) ? Number(m[2]) : SPOKEN_DIGITS[m[2]!]!;
+    const ok = field === "soreness" || field === "alcoholUrge" ? n >= 0 && n <= 5 : n >= 1 && n <= 5;
+    if (ok) (out as Record<string, number>)[field] = n;
+  }
+  return out;
 }
 
 function meal(c: string, ctx: HelperContext): AlfredProposal | null | "unclear" {

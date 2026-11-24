@@ -13,6 +13,14 @@ import { BodyScreen } from "../screens/body/BodyScreen";
 import type { RecordCorrectionRequest, RecordSheetTarget } from "../recordSheets";
 import type { SavedMeal } from "../../domain/common/types";
 import { ensureActiveDay, logWater, voidWaterLog } from "../../application/commands";
+import { TalkButton } from "../speech/TalkButton";
+import { readDictationSettings } from "../speech/dictationSettings";
+import { HeardPreview } from "./HeardPreview";
+import { foodQuery, interpret } from "../../application/helper/freeHelper";
+import { readHelperContext } from "../../application/helper/helperContext";
+import { buildPlanningContext } from "../../application/alfred/personalContext";
+import { describeProposal, type AlfredProposal } from "../../application/alfred/alfredActions";
+import type { ProposalContext } from "../../application/alfred/contextActions";
 import { getActiveDay, getHydrationEntries } from "../../application/queries";
 import { getSavedMeals, getLikelySavedMeals } from "../../application/nutritionQueries";
 import { logMeal, logManualMeal, updateSavedMeal, archiveSavedMeal, voidMealLog, createSavedMeal, MAX_SERVINGS } from "../../application/nutritionCommands";
@@ -80,6 +88,38 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     return { id: day.id, at, on: chosenDay ? (chosenDay.label === "Yesterday" ? " yesterday" : ` on ${chosenDay.label}`) : "" };
   }
   const resetWhen = () => { setWhen({ kind: "NOW" }); setLogDayId(null); };
+  // GRAYSON-DICTATE-001: TALK on the meal list (logging to today only). Saved meals he names become "I heard" cards
+  // with the sheet's WHEN applied when saved; the first food it didn't match goes into the search box; other words
+  // show as "Didn't catch: …" until the sheet closes.
+  const [mealHeard, setMealHeard] = useState<{ words: string; cards: AlfredProposal[]; context: ProposalContext } | null>(null);
+  const [mealMissed, setMealMissed] = useState<string[]>([]);
+  const [mealTalkSaved, setMealTalkSaved] = useState<string | null>(null);
+  useEffect(() => { setMealHeard(null); setMealMissed([]); setMealTalkSaved(null); }, [target]);
+  async function heardMeal(words: string) {
+    setMealHeard(null); setMealMissed([]); setMealTalkSaved(null);
+    if (!readDictationSettings().sort) { setQuery(words); setOnline(null); return; }
+    try {
+      const result = interpret(words, await readHelperContext());
+      const meals = result.cards.filter((c) => c.kind === "log_meal" && !!c.saved_meal_id);
+      const missed = [...result.cards.filter((c) => !meals.includes(c)).map(describeProposal)];
+      // Everything said here is food, so a clause without "ate" is read as if it had it.
+      let searched = false;
+      for (const clause of result.unknown) {
+        const food = searched ? null : foodQuery(clause) ?? foodQuery(`ate ${clause}`);
+        if (food) { setQuery(food); setOnline(null); searched = true; } else missed.push(clause);
+      }
+      setMealMissed(missed);
+      if (meals.length) {
+        // The day is opened now, as LOG would, so the context read here still holds when he taps SAVE ALL.
+        await ensureActiveDay();
+        setMealHeard({ words, cards: meals, context: await buildPlanningContext(false) });
+      }
+    } catch { setQuery(words); setOnline(null); }
+  }
+  async function placeHeard(cards: AlfredProposal[]): Promise<AlfredProposal[]> {
+    const day = await place();
+    return cards.map((c) => (c.kind === "log_meal" && day.at ? { ...c, at: day.at } : c));
+  }
   function setBusy(next: boolean) { busyRef.current = next; setBusyState(next); onBusy(next); }
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState(""); const [meals, setMeals] = useState<SavedMeal[]>([]);
@@ -261,7 +301,15 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
             <button type="button" className="btn-secondary" onClick={() => setPage("quick")}>QUICK ADD</button>
             <button type="button" className="btn-secondary" onClick={() => { setScanNote(null); setPage("scan"); }}>SCAN BARCODE</button>
           </div>
-          <label className="field">Search your meals and foods<input className="input" type="search" aria-label="Search your meals and foods" value={query} onChange={(event) => { setQuery(event.target.value); setOnline(null); }} /></label>
+          <div className="record-meal-search">
+            <label className="field">Search your meals and foods<input className="input" type="search" aria-label="Search your meals and foods" value={query} onChange={(event) => { setQuery(event.target.value); setOnline(null); }} /></label>
+            {target === "meal" && !chosenDay && <TalkButton disabled={busy} label="TALK to log meals" onHeard={(words) => void heardMeal(words)} />}
+          </div>
+          {target === "meal" && mealHeard && <HeardPreview key={mealHeard.words} cards={mealHeard.cards} context={mealHeard.context} busy={busy} onBusy={setBusy} prepare={placeHeard}
+            onSaved={(n) => { setMealHeard(null); resetWhen(); setMealTalkSaved(`Saved ${n}.`); onSaved(); }}
+            onChangeWords={() => { setQuery(mealHeard.words); setOnline(null); setMealHeard(null); }} />}
+          {target === "meal" && mealTalkSaved && <p role="status" className="meta">{mealTalkSaved}</p>}
+          {target === "meal" && mealMissed.length > 0 && <p className="meta" data-didnt-catch>Didn't catch: {mealMissed.join("; ")}</p>}
           {readState === "loading" ? <p role="status">Reading meals…</p> : readState === "error" ? <p role="alert">Could not read your meals.<button type="button" className="btn-secondary" onClick={() => setRetry((key) => key + 1)}>RETRY MEALS</button></p> : <>
             <h3>{target === "myMeals" ? "MY MEALS" : query.trim() ? "MATCHES" : "LIKELY NOW"}</h3>
             {(target === "myMeals" && !query.trim() ? meals : displayed).map((meal) => <div className="record-meal-row" key={meal.id}>

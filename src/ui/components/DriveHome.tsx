@@ -3,10 +3,11 @@ import { interpret } from "../../application/helper/freeHelper";
 import { readHelperContext } from "../../application/helper/helperContext";
 import { describeProposal, type AlfredProposal } from "../../application/alfred/alfredActions";
 import { buildPlanningContext } from "../../application/alfred/personalContext";
-import { confirmContextProposal } from "../../application/alfred/contextActions";
+import { confirmProposals } from "../../application/alfred/contextActions";
 import { captureCommitFeedback } from "../feel/feedback";
 import "./driveHome.css";
 import { Emblem } from "./Emblem";
+import { useDictation } from "../speech/useDictation";
 
 /**
  * DRIVE-HOME-001 (#373 item 6): hands-free logging on the way home, free and on the phone.
@@ -14,11 +15,6 @@ import { Emblem } from "./Emblem";
  * Words it can't log become a note card, so nothing he said is lost, and that too waits for "save".
  * No Alfred, no network, no cost. Speech uses the browser's own recognition and voice.
  */
-type Recognition = { lang: string; interimResults: boolean; continuous?: boolean; start(): void; stop(): void; abort?(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
-function recognitionCtor(): (new () => Recognition) | null {
-  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
 
 
 export const SAVE_WORDS = /\b(yes|yep|yeah|save|save it|confirm|do it|correct)\b/;
@@ -34,7 +30,7 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
   const [cards, setCards] = useState<AlfredProposal[]>([]);
   const [log, setLog] = useState<string[]>([]);
   const [note, setNote] = useState<string | null>(null);
-  const rec = useRef<Recognition | null>(null);
+  const dictation = useDictation(); // GRAYSON-DICTATE-001: the shared Web Speech hook
   const alive = useRef(false);
   const pending = useRef<AlfredProposal[]>([]);
   const farewell = useRef(false); // let "Drive safe" finish after the screen closes
@@ -42,7 +38,7 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
   const reprompted = useRef(false);
   const context = useRef<Awaited<ReturnType<typeof buildPlanningContext>> | null>(null);
   const dialog = useRef<HTMLDivElement>(null); // callbacks chain across renders, so this lives in a ref
-  const supported = !!recognitionCtor();
+  const supported = dictation.supported;
 
   function say(text: string, then?: () => void) {
     setNote(text);
@@ -56,16 +52,16 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
   }
 
   function listen(mode: "log" | "confirm") {
-    const Ctor = recognitionCtor();
-    if (!Ctor || !alive.current) return;
-    rec.current?.abort?.();
-    const r = new Ctor(); r.lang = "en-US"; r.interimResults = false;
-    let words = "", failed = false;
-    r.onresult = (e) => { words = Array.from(e.results).map((res) => res[0]!.transcript).join(" "); setHeard(words); };
-    // Review of #381: a recognition error (silence, mic denied) stops here; it never loops.
-    r.onerror = () => { failed = true; if (alive.current) { setPhase("idle"); setNote(pending.current.length ? "Didn't catch that. Tap SAVE or SKIP." : "Didn't catch that. Tap TALK."); } };
-    r.onend = () => { if (alive.current && !failed) void (mode === "log" ? understood(words) : answered(words)); };
-    rec.current = r; setPhase(mode === "log" ? "listening" : "confirm"); r.start();
+    if (!dictation.supported || !alive.current) return;
+    setPhase(mode === "log" ? "listening" : "confirm");
+    // Mid-conversation: its own read-back has just finished, so nothing to cancel.
+    dictation.start({
+      cancelSpeech: false,
+      onWords: setHeard,
+      // Review of #381: a recognition error (silence, mic denied) stops here; it never loops.
+      onError: () => { if (alive.current) { setPhase("idle"); setNote(pending.current.length ? "Didn't catch that. Tap SAVE or SKIP." : "Didn't catch that. Tap TALK."); } },
+      onDone: (words, failed) => { if (alive.current && !failed) void (mode === "log" ? understood(words) : answered(words)); },
+    });
   }
 
   async function understood(words: string) {
@@ -93,17 +89,16 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
     if (!toSave.length) return;
     setPhase("saving");
     const acknowledge = captureCommitFeedback();
-    const saved: string[] = [];
+    let saved: string[] = [];
     let ctx = context.current;
     try {
       // One context read when the cards were made, advanced by his own saves (as Alfred's sheet does),
-      // so an outside change since the readback is still refused.
+      // so an outside change since the readback is still refused. GRAYSON-DICTATE-001: the shared loop.
       ctx = ctx ?? await buildPlanningContext(false);
-      for (const card of toSave) {
-        const done = await confirmContextProposal(card, ctx, false);
-        ctx = { ...ctx, personalVersion: done.personalVersion, ...(done.recordVersion ? { recordVersion: done.recordVersion } : {}) };
-        saved.push(describeProposal(card));
-      }
+      const done = await confirmProposals(toSave, ctx, false);
+      saved = toSave.slice(0, done.saved).map(describeProposal);
+      ctx = done.context;
+      if (done.error) throw done.error;
       context.current = null;
       acknowledge("LIGHT");
       savedCount.current += saved.length; pending.current = []; setCards([]); setLog((all) => [...all, ...saved]); onSaved();
@@ -130,7 +125,7 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
   }
   function close() {
     alive.current = false;
-    rec.current?.abort?.(); rec.current = null;
+    dictation.abort();
     setPhase("idle"); setCards([]); pending.current = []; setHeard("");
     onClose();
   }
@@ -142,7 +137,7 @@ export function DriveHome({ open, onClose, onSaved }: { open: boolean; onClose: 
     alive.current = true; savedCount.current = 0; setLog([]); setCards([]); pending.current = []; setHeard("");
     if (supported) { setPhase("starting"); say("Ready. Tell me what to log.", () => listen("log")); }
     farewell.current = false;
-    return () => { returnTo?.focus?.(); alive.current = false; rec.current?.abort?.(); if (!farewell.current && typeof speechSynthesis !== "undefined") speechSynthesis.cancel(); };
+    return () => { returnTo?.focus?.(); alive.current = false; dictation.abort(); if (!farewell.current && typeof speechSynthesis !== "undefined") speechSynthesis.cancel(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
