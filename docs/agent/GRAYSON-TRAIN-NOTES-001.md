@@ -10,7 +10,7 @@
   stop and ask (it would become PROTECTED). Another builder's PASS, green CI; Gavin merges.
 - **Starting commit:** `origin/master` `e43ba36` (#659 merged). Re-fetch before starting.
 - **Builder:** Claude Code. Branch `claude/grayson-train-notes-001`. Reviewer: Grok Bot. **Active PR:** pending.
-- **Order and overlap:** after GRAYSON-TRAIN-HOWTO-001, which adds the template-id to library-id map and the HOW TO
+- **Order and overlap:** Claude Code **#6** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after GRAYSON-TRAIN-HOWTO-001, which adds the template-id to library-id map and the HOW TO
   entry in the live workout. This brief reuses that map and sits next to that entry. It shares
   `ui/screens/train/TrainScreen.tsx` and `ui/screens/more/ExerciseLibraryScreen.tsx` with HOWTO-001, BODYMAP-001
   and EDIT-001: rebase on whichever merges first. Tracker to the oldest open PR.

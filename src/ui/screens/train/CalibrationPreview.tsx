@@ -1,28 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExercisePrescription } from "../../../domain/workout/types";
 import type { LastSetInfo } from "../../../application/trainQueries";
+import { howToFor, type Guide } from "../../../domain/workout/exerciseHowTo";
 
-interface Guide {
-  role: string;
-  setup: string;
-  cues: string[];
-  mistakes: string[];
-  alternatives: string;
-}
-
-const GUIDES: Record<string, Guide> = {
-  "machine-chest-press": { role: "Horizontal press · chest and triceps", setup: "Set the seat so the handles begin around mid-chest. Keep your upper back supported and feet planted.", cues: ["Shoulders stay down and back", "Press without bouncing", "Finish under control"], mistakes: ["Seat too high or low", "Shoulders rolling forward"], alternatives: "Dumbbell or barbell bench press · at home: an appropriate push-up level" },
-  "pec-deck": { role: "Chest isolation", setup: "Adjust the seat so your upper arms line up near chest height. Begin with a comfortable stretch.", cues: ["Chest stays tall", "Move the upper arms together", "Return slowly"], mistakes: ["Reaching with the hands", "Forcing an excessive stretch"], alternatives: "Cable fly · at home: push-up" },
-  "leg-press": { role: "Knee-dominant legs", setup: "Place both feet securely on the platform and choose a depth you can control without your hips lifting.", cues: ["Knees follow the toes", "Keep the whole foot planted", "Do not slam the stops"], mistakes: ["Knees collapsing inward", "Lower back leaving the pad"], alternatives: "Squat or supported lunge · at home: chair squat" },
-  "triceps-pressdown": { role: "Direct triceps work", setup: "Stand stable with elbows beside your body and the cable under control before starting.", cues: ["Elbows stay quiet", "Extend without swinging", "Return with control"], mistakes: ["Using the torso for momentum", "Letting elbows drift forward"], alternatives: "Overhead cable extension · at home: close-grip incline push-up" },
-  "lat-pulldown": { role: "Vertical pull · back and arms", setup: "Secure your thighs, take a comfortable grip and begin with your torso tall.", cues: ["Pull elbows toward your sides", "Keep the chest tall", "Control the return"], mistakes: ["Pulling behind the neck", "Turning it into a large body swing"], alternatives: "Assisted pull-up · no honest equipment-free loaded-pull equivalent" },
-  "seated-cable-row": { role: "Horizontal pull · back and arms", setup: "Sit braced with a neutral torso and begin with the cable taut.", cues: ["Lead with the elbows", "Finish without shrugging", "Reach forward under control"], mistakes: ["Repeatedly rocking the torso", "Shoulders rising toward the ears"], alternatives: "One-arm dumbbell row · at home: prone Y-T-W for scapular movement, not equivalent load" },
-  "leg-curl": { role: "Knee flexion · hamstrings", setup: "Align the machine pivot with your knee and secure the pad without pinching.", cues: ["Keep hips against the pad", "Curl smoothly", "Control the return"], mistakes: ["Lifting the hips", "Dropping the weight stack"], alternatives: "Romanian deadlift · at home: bridge walkout" },
-  "preacher-curl": { role: "Direct elbow flexion · arms", setup: "Set the seat so your upper arms rest fully on the pad without reaching.", cues: ["Upper arms stay planted", "Curl without bouncing", "Lower under control"], mistakes: ["Lifting the elbows", "Snapping into full extension"], alternatives: "Dumbbell or hammer curl · at home: defer direct loaded curl work" },
-  "machine-shoulder-press": { role: "Vertical press · shoulders and triceps", setup: "Set the seat so the handles begin around shoulder height and your back remains supported.", cues: ["Ribs stay controlled", "Press smoothly", "Lower to a comfortable depth"], mistakes: ["Overarching the lower back", "Forcing painful depth"], alternatives: "Dumbbell shoulder press · at home: elevated pike push-up if appropriate" },
-  "reverse-pec-deck": { role: "Rear shoulders and upper back", setup: "Face the pad with handles near shoulder height and keep the chest supported.", cues: ["Move from the shoulders", "Keep the neck relaxed", "Return slowly"], mistakes: ["Shrugging", "Using momentum"], alternatives: "Face pull or rear-delt raise · at home: prone Y-T-W" },
-};
-
+// GRAYSON-TRAIN-HOWTO-001: the ten guides moved, unchanged, into the one shared how-to module.
 const FALLBACK: Guide = {
   role: "Current programme exercise",
   setup: "Use the machine or equipment instructions and begin with a load you can control comfortably.",
@@ -42,7 +23,7 @@ export function CalibrationPreview({ exercise, templateLabel, lastSet, personalC
   const [step, setStep] = useState(0);
   const [feedback, setFeedback] = useState<"LIGHT" | "RIGHT" | "HARD" | null>(null);
   const root = useRef<HTMLDivElement>(null);
-  const guide = GUIDES[exercise.exerciseId] ?? FALLBACK;
+  const guide = howToFor(exercise.exerciseId) ?? FALLBACK;
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
