@@ -2,6 +2,9 @@ import { getSchedulePattern } from "./queries";
 import { getUnresolvedObligations } from "./intentQueries";
 import { getKeyMomentAlerts } from "./keyMomentAlerts";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
+import { dayKindFor, getEatingWindowSettings, plannedOpening } from "./eatingWindow";
+import { deriveLifeState, lifeStateInput } from "./lifeState";
+import { getConfirmedKinds } from "./scheduleExceptions";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import type { KeyMomentAlertSettings, KeyMomentKind } from "../domain/common/types";
 
@@ -27,8 +30,10 @@ export const HORIZON_DAYS = 28;
  * Which kinds win when a lived day has more than three: highest first, then the earlier moment.
  * Before the shift is the one that must not be missed; the end of the shift opens Alfred's debrief and the days-off
  * handover; a task due is a real commitment but also sits on TODAY; the wake prompt only asks for a sleep log.
+ * GRAYSON-WINDOW-ALERT-001: the eating window opening comes last, so it never pushes out an alert he already gets;
+ * on a day with three others it waits (TODAY's Eating Window card and the logging nudge still cover it).
  */
-export const KIND_PRIORITY: readonly KeyMomentKind[] = ["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE"];
+export const KIND_PRIORITY: readonly KeyMomentKind[] = ["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE", "WINDOW_OPEN"];
 
 function minutesOf(clock: string): number {
   const [h, m] = clock.split(":").map(Number) as [number, number];
@@ -112,7 +117,33 @@ async function planCandidates(now: Date, tasks: PlanTask[]) {
     const text = titles.length === 1 ? titles[0]!.slice(0, 120) : `${titles[0]!.slice(0, 100)} + ${titles.length - 1} more`;
     moments.push({ at, kind: "TASK_DUE", title: timed ? "Reminder" : "Due today", text, go: "" });
   }
+  moments.push(...await windowMoments(now, pattern));
   return { settings, shifts: [...shifts.values()], moments: moments.filter((m) => m.at > now.getTime()) };
+}
+
+const clock12 = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+/**
+ * GRAYSON-WINDOW-ALERT-001 (Gavin, 2026-11-24: "I don't want it to be annoying and pester me"): with the Eating Window
+ * on, one moment per lived day in the horizon at that day kind's opening, the kind named from the saved rotation and
+ * his confirmed schedule changes the way TODAY names it (WORK_RUN → WORK, RECOVERY, FREE or FLIP → OFF). A day whose
+ * kind can't be named gets none. The tap opens Delta ready for the first meal. Planned ahead: a SKIP TODAY or an early
+ * OPENED mark reaches the phone only at the next SYNC GARMIN, when the plan is rebuilt.
+ */
+async function windowMoments(now: Date, pattern: Awaited<ReturnType<typeof getSchedulePattern>>): Promise<BridgeMoment[]> {
+  const settings = await getEatingWindowSettings().catch(() => null);
+  if (!settings?.enabled) return [];
+  const confirmed = await getConfirmedKinds().catch(() => new Map<string, "WORK" | "OFF">());
+  const out: BridgeMoment[] = [];
+  for (let d = 0; d <= HORIZON_DAYS; d++) {
+    const livedStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d - 1, 16, 30);
+    const kind = dayKindFor(deriveLifeState(lifeStateInput(livedStart, pattern, null, null, undefined, confirmed))?.state);
+    if (!kind) continue;
+    const opens = plannedOpening(livedStart, settings.opensAt[kind]);
+    const closes = new Date(opens.getTime() + settings.eatingHours * 3_600_000);
+    out.push({ at: opens.getTime(), kind: "WINDOW_OPEN", title: "Eating window open", text: `Your window is open until ${clock12(closes)}. Tap to tell Delta your first meal.`, go: "?alfred=meal" });
+  }
+  return out;
 }
 
 export async function buildBridgePlan(home: string, brief: string, now = new Date()): Promise<BridgePlan> {

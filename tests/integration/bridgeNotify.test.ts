@@ -31,7 +31,8 @@ const perLivedDay = (moments: BridgeMoment[]) => {
 describe("BRIDGE-NOTIFY-001 — the notification contract", () => {
   it("keeps at most 3 a lived day, chosen by kind priority, then time", () => {
     expect(MAX_PER_DAY).toBe(3);
-    expect(KIND_PRIORITY).toEqual(["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE"]);
+    // GRAYSON-WINDOW-ALERT-001 adds WINDOW_OPEN, last.
+    expect(KIND_PRIORITY).toEqual(["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE", "WINDOW_OPEN"]);
     // One lived day (Nov 2 16:30 to Nov 3 16:30) with five candidates.
     const day = [
       moment(at(2, 17, 30), "BEFORE_SHIFT"), moment(at(3, 6), "SHIFT_DONE"), moment(at(3, 15), "WAKE"),
