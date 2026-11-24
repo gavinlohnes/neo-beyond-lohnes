@@ -1,14 +1,18 @@
-# Current state — C8.1 in review (2026-11-24)
+# Current state — C4.1 in review (2026-11-24)
 
-- **Master:** includes TRAIN finish 1–3 (#625/#626, #627, #628), C4.6 water target (#629), TRAIN placements (#630),
-  C9.2 for DATA home (#632) and the tidy-up (#631). Builder: Claude Code.
-- **Open:** C8.1 settings travel with the backup (Protected; Gavin merges; brief
-  [GRAYSON-C8.1-SETTINGS-001](GRAYSON-C8.1-SETTINGS-001.md)). #606 (C3.4b + C3.4c; Gavin's merge).
+- **Master:** includes TRAIN finish 1–3 and placements (#625–#628, #630), C4.6 water target (#629), C9.2 (#628,
+  #632), tidy-up (#631), C8.1 settings travel with the backup (#633), Codex's Q5 protein tap (#634) and TIMEBOX-001
+  (#635).
+- **Open:** C4.1 (verified and locked; tests and records only; brief [GRAYSON-C4.1-001](GRAYSON-C4.1-001.md); Claude
+  Code). #606 (C3.4b + C3.4c; Gavin's merge).
 - **TRAIN:** planned work complete, except programme adaptation, which waits for 3–4 weeks of real use by design.
 - **C9.2:** done for TRAIN (#628) and DATA home (#632). Small follow-up noted in #632's review: "RECORDED THIS DAY"
   wraps to two lines inside the History frame at 320 px.
-- **Next after C8.1:** C8.2 restore drill fits next; also offered: C4.1 body-clock fix, C4.5 monthly review, Q5,
-  or making a dropped LOG tap visible/retried (see MealRoundTrip below).
+- **Energy curve:** C4.1 found the low already in the waking night on real inputs and locked it with a test. The
+  body-clock model (fully adjusted to nights) is still an unvalidated assumption. Partial adjustment, or anchoring
+  to days off, would be a new owner-approved objective.
+- **Next:** Gavin's choice. Offered: fixing the MealRoundTrip and SleepMetric flakes (recommended; they slow every
+  builder's CI), C8.2 restore drill, C4.5 monthly review.
 - **Flaky tests:** FieldRehearsal TRAIN contrast (axe during a late fade-in) fixed (#631).
   **Still known: MealRoundTrip** (~2 in 5 paired runs; fails in `openMealInBody` waiting for the MEAL sheet). The failure screenshots show LOG open:
   the MEAL tap inside LOG is lost. Suspected (unconfirmed; 4 instrumented paired runs did not reproduce) cause: App's
