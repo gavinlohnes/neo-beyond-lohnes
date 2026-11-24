@@ -61,6 +61,20 @@ const MOMENTS = {
 } as const;
 
 const overflow = () => document.documentElement.scrollWidth > window.innerWidth;
+/**
+ * Waits for a screen to finish arriving: nothing still loading (aria-busy) and no animation running, checked again
+ * after each round, since content that finishes loading starts new fade-ins (the TRAIN contrast flake: axe ran while
+ * TRAIN's START panel was still fading in).
+ */
+async function settle() {
+  await expect.poll(() => document.querySelector('[aria-busy="true"]'), { timeout: 5000 }).toBeNull();
+  for (let round = 0; round < 20; round++) {
+    const running = document.getAnimations().filter((a) => a.playState === "running");
+    if (running.length === 0) break;
+    await Promise.all(running.map((a) => a.finished.catch(() => undefined)));
+  }
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+}
 async function axeClean() {
   const result = await axe.run(document.body, { runOnly: ["wcag2a", "wcag2aa"] });
   return result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
@@ -144,7 +158,7 @@ it.each([
   for (const tab of ["TRAIN", "MORE"]) {
     await screen.getByRole("button", { name: tab, exact: true }).click();
     await new Promise((done) => setTimeout(done, 300));
-    await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
+    await settle();
     expect(overflow(), `${tab} overflows`).toBe(false);
     expect(await axeClean(), tab).toEqual([]);
     await shot(`${moment}-${tab.toLowerCase()}-${width}`);

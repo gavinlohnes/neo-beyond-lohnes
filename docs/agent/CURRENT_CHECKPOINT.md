@@ -1,14 +1,15 @@
-# Current state — after #627 (2026-11-23)
+# Current state — after #629 (2026-11-24)
 
-- **Master:** includes TRAIN finish 1 (#625/#626: SHORT forms, PROGRESS) and TRAIN finish 2 (#627: Delta during
-  training, training feeds the night, train window). Builder: Claude Code.
-- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). TRAIN finish 3 (Delta in Gym mode + C9.2 TRAIN visual
-  finish; Protected; Gavin merges).
-- **TRAIN left after finish 3:** programme adaptation (after field evidence). Open question for Gavin: MY PROGRAMME
-  above the live workout (hiding it mid-workout removes editing it during a session).
-- **Known load-sensitive test not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation).
-- **Field check pending:** the logger (WHEN, catch-up), eating window, SHORT, PROGRESS, Delta and the train window
-  on real shifts.
+- **Master:** includes TRAIN finish 1–3 (#625/#626, #627, #628) and C4.6 water target (#629). Builder: Claude Code.
+- **Open:** #630 (TRAIN placements: MY PROGRAMME below the live workout; Gym-mode Delta above SET DETAILS;
+  Protected; Gavin merges). #606 (C3.4b + C3.4c; Gavin's merge). This tidy-up (Routine).
+- **TRAIN:** planned work complete once #630 merges, except programme adaptation, which waits for 3–4 weeks of real
+  use by design.
+- **Next (Gavin, 2026-11-24: "Tidy up and we will do 9.2"):** C9.2 for DATA home (Protected).
+- **Flaky tests:** MealRoundTrip (sheet reopened while the last one was closing) and FieldRehearsal TRAIN contrast
+  (axe during a late fade-in) fixed in this tidy-up. No other known flakes.
+- **Field check pending:** logger (WHEN, catch-up), eating window, water target, SHORT, PROGRESS, Delta and the train
+  window on real shifts.
 
 ---
 
