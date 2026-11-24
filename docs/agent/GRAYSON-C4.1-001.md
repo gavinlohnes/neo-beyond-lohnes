@@ -15,12 +15,13 @@
     | 07:30–14:00 | 04:30–07:30 | 07:30–16:30 (in or after the day sleep, drive line absent) |
     | 08:00–15:30 | 05:15–08:00 | 08:45–16:30 |
 
-  - The production query always takes the first path when it has 3+ main sleeps.
+  - With 3+ main sleeps, the production query supplies the planned or usual sleep. When a recorded sleep overlaps
+    that assumption, the record stands in for it.
 - **Change:** no runtime code. A property test locks it, and the records are corrected.
 - **Operator benefit:** the energy curve on TODAY keeps showing the night-time low on steady nights. A future change
   that dropped the assumed sleep would now fail CI instead of quietly moving the low into his day sleep.
 - **Out of scope:** the circadian anchor (1.5 h before habitual wake) assumes a body clock fully adjusted to nights.
-  Studies of permanent night workers (Folkard) mostly find incomplete adjustment, but nothing measures his. Replacing
+  Studies of permanent night workers (Folkard) report incomplete adjustment in many participants, but nothing measures his. Replacing
   the anchor (partial adjustment, or an off-day anchor) is a separate owner-approved objective with its own
   validation.
 - **REUSE:** the existing `getEnergyToday` query and its mocks in `tests/alertnessQueries.test.ts`. **OWN:** the
@@ -28,7 +29,7 @@
 - **Acceptance:**
   - `tests/alertnessQueries.test.ts`, "C4.1 steady nights": 48 day-sleep patterns (start 06:30–10:00, length
     5.5–8 h, 3 nights), each with and without a shift plan. The low starts after midnight on the shift night, ends
-    before the day sleep, and contains no sleep.
+    before the day sleep, and (by construction) contains no sleep. The first two checks do the work.
   - Passes in America/Chicago, UTC, Europe/London and America/Los_Angeles.
   - All 48 fail if the query stops supplying planned sleep (mutation check, not committed).
   - The existing curve tests pass. Copy unchanged.

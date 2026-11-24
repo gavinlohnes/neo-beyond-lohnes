@@ -132,7 +132,7 @@ status of its own.
 | C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
 | **Quick wins outside the campaigns** | | | |
 | Q3 | Finish workouts on the metric page | In progress (#584) | Conflicts with master on the checkpoint file; no review yet |
-| Q5 | BODY protein tap (roadmap Next #2) | Not started | |
+| Q5 | BODY protein tap (roadmap Next #2) | Done (#634, Codex) | |
 
 Last status update: 2026-11-20.
 
@@ -256,7 +256,7 @@ partial, **M** missing. Paths are under `src/` unless shown. Campaign column say
 | Watch-recorded workouts, weight, body fat | **M** | Not in Bridge permissions (AndroidManifest) | V | C4.7 (Protected) |
 | Personal baselines and "unusual for you" | **B** | `engine/personalBaselines.ts`, `domain/health/unusual.ts` | V | — |
 | Sleep owed vs his own usual | **B** | `application/sleepDebt.ts` | V | — |
-| Night energy curve | **P** | `application/alertness.ts`; #592 reports the circadian low lands too early on steady nights | V / A | C4.1 |
+| Night energy curve | **P** | `application/alertness.ts`; #592's early-low claim withdrawn (research audit); shown low locked in the waking night by C4.1 (#636); body-clock anchor unvalidated | V / A | C4.1 |
 | Caffeine timing | **P** | Owner-editable cutoff, default 6 h (`application/sleepPlanSettings.ts`, C4.2a); no automated proposal or exposure/adherence measurement | V | C4.2–C4.3 |
 | Light timing | **P** | LIGHT card on night shifts only (`shiftSleepPlan.ts`) | V | C2.4 |
 | Meals, protein, water, barcode, USDA | **B** | `nutritionCommands.ts`, `foodLookupQueries.ts`, `barcodeLookup.ts`, `ui/components/BarcodeScanner.tsx` | V | — |

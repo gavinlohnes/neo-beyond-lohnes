@@ -229,7 +229,10 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
     {!simple && <label className="field">Name<input className="input" aria-label={`${prefix} name`} value={value.name} onChange={(event) => update({ ...value, name: event.target.value })} /></label>}
     {(Object.entries(FIELDS) as [keyof typeof FIELDS, string][]).filter(([key]) => !simple || key === "calories" || key === "proteinG").map(([key, label]) => <label className="field" key={key}>{label}<input className="input" aria-label={`${prefix} ${label}`} type="number" min="0" step="any" value={value[key]} onChange={(event) => update({ ...value, [key]: event.target.value })} /></label>)}
   </>;
-  const bodyVisible = target === "protein" || target === "sleep" || target === "weight" || target === "urge" || (target === "water" && page === "waterDetails") || target === "foodLookup" && hiddenFeatures.foodLookup || page === "mealTools" || target === "record" && !!correctionRequest;
+  const bodyVisible = target === "protein" || target === "sleep" || target === "weight" || target === "urge" || (target === "water" && page === "waterDetails") || target === "foodLookup" && hiddenFeatures.foodLookup
+    // Meal tools only inside a meal sheet: opening LOG renders once with the old page before it resets, and that stale
+    // render woke the hidden meal tools' recovery read, whose "meal in flight" made App ignore the MEAL tap.
+    || (target === "meal" || target === "myMeals") && page === "mealTools" || target === "record" && !!correctionRequest;
   let title: string = target ? TITLE[target] : "LOG";
   if (target === "meal" || target === "myMeals") title = target === "myMeals" && page === "list" ? "MY MEALS" : { list: "MEAL", new: "NEW MEAL", quick: "QUICK ADD", portion: "SERVINGS", edit: "EDIT SAVED MEAL", waterDetails: "MEAL", mealTools: "MEAL TOOLS", food: "FOOD", scan: "SCAN BARCODE" }[page];
   return <>

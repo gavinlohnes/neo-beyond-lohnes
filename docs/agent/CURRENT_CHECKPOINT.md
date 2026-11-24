@@ -1,24 +1,25 @@
-# Current state — C4.1 in review (2026-11-24)
+# Current state — CI flakes fix in review (2026-11-24)
 
 - **Master:** includes TRAIN finish 1–3 and placements (#625–#628, #630), C4.6 water target (#629), C9.2 (#628,
-  #632), tidy-up (#631), C8.1 settings travel with the backup (#633), Codex's Q5 protein tap (#634) and TIMEBOX-001
-  (#635).
-- **Open:** C4.1 (verified and locked; tests and records only; brief [GRAYSON-C4.1-001](GRAYSON-C4.1-001.md); Claude
-  Code). #606 (C3.4b + C3.4c; Gavin's merge).
+  #632), tidy-up (#631), C8.1 settings travel with the backup (#633), Codex's Q5 protein tap (#634), TIMEBOX-001
+  (#635) and C4.1 verified and locked (#636).
+- **Open:** CI flakes fix (Routine; brief [GRAYSON-FLAKES-002](GRAYSON-FLAKES-002.md); Claude Code). #606 (C3.4b +
+  C3.4c; Gavin's merge).
 - **TRAIN:** planned work complete, except programme adaptation, which waits for 3–4 weeks of real use by design.
 - **C9.2:** done for TRAIN (#628) and DATA home (#632). Small follow-up noted in #632's review: "RECORDED THIS DAY"
   wraps to two lines inside the History frame at 320 px.
-- **Energy curve:** C4.1 found the low already in the waking night on real inputs and locked it with a test. The
-  body-clock model (fully adjusted to nights) is still an unvalidated assumption. Partial adjustment, or anchoring
-  to days off, would be a new owner-approved objective.
-- **Next:** Gavin's choice. Offered: fixing the MealRoundTrip and SleepMetric flakes (recommended; they slow every
-  builder's CI), C8.2 restore drill, C4.5 monthly review.
-- **Flaky tests:** FieldRehearsal TRAIN contrast (axe during a late fade-in) fixed (#631).
-  **Still known: MealRoundTrip** (~2 in 5 paired runs; fails in `openMealInBody` waiting for the MEAL sheet). The failure screenshots show LOG open:
-  the MEAL tap inside LOG is lost. Suspected (unconfirmed; 4 instrumented paired runs did not reproduce) cause: App's
-  `canNavigate()` silently ignores the tap while the previous step's meal read/write is still in flight
-  (`mealInFlight`). If confirmed, the fix is a behaviour change (a visible busy state on LOG's options, or queuing the
-  tap) for owner decision, not a test tidy-up. The helper's wait for no open dialog stays (harmless).
+- **Energy curve:** C4.1 (#636) locked the steady-night low in the waking night. The body-clock model (fully adjusted
+  to nights) is still an unvalidated assumption. Partial adjustment, or anchoring to days off, would be a new
+  owner-approved objective.
+- **Next (Gavin, 2026-11-24: "Go"):** a week of field use while this flakes fix lands, then C6.4 "Why am I seeing
+  this?".
+- **Flaky tests:**
+  - FieldRehearsal TRAIN contrast: fixed (#631).
+  - MealRoundTrip: cause found and fixed in GRAYSON-FLAKES-002. A stale render counted the hidden meal tools as
+    visible when LOG opened; their recovery read set "meal in flight", and App ignored the MEAL tap. A deterministic
+    regression test now holds that read open.
+  - SleepMetric (#635 CI): the test now waits for `todaySettled()` before tapping (#624 rule). The exact focus thief
+    is unconfirmed; the failure did not reproduce locally.
 - **Field check pending:** logger (WHEN, catch-up), eating window, water target, SHORT, PROGRESS, Delta and the train
   window on real shifts.
 
