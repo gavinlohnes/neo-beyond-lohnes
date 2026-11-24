@@ -190,6 +190,7 @@ export async function createObligation(
       ...(parsed.dueAt ? { dueAt: parsed.dueAt } : {}),
       ...(parsed.plannedAt ? { plannedAt: parsed.plannedAt } : {}),
       ...(parsed.remindAt ? { remindAt: parsed.remindAt } : {}),
+      ...(parsed.estimateMinutes !== undefined ? { estimateMinutes: parsed.estimateMinutes } : {}),
       ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}),
       ...(parsed.projectId ? { projectId: parsed.projectId } : {}),
       source: "USER",
@@ -260,11 +261,17 @@ export async function modifyObligation(obligationId: string, changes: Obligation
       if (!mission) throw notFound("MISSION", parsed.missionId);
       assertMissionActive(mission);
     }
-    const { remindAt: _previousTime, ...rest } = existing;
+    // TIMEBOX-001: a resolved task's estimate is history; it is never quietly rewritten.
+    if (parsed.estimateMinutes !== undefined && (existing.status === "SATISFIED" || existing.status === "RELEASED")) {
+      throw new Error(`OBLIGATION_ALREADY_RESOLVED: obligation is already ${existing.status}; its estimate can't change.`);
+    }
+    const { remindAt: _previousTime, estimateMinutes: _previousEstimate, ...rest } = existing;
     const remindAt = parsed.remindAt === null ? undefined : (parsed.remindAt ?? existing.remindAt);
+    const estimateMinutes = parsed.estimateMinutes === null ? undefined : (parsed.estimateMinutes ?? existing.estimateMinutes);
     const updated: Obligation = {
       ...rest,
       ...(remindAt ? { remindAt } : {}),
+      ...(estimateMinutes !== undefined ? { estimateMinutes } : {}),
       ...(parsed.title !== undefined ? { title: parsed.title } : {}),
       ...(parsed.description !== undefined ? { description: parsed.description } : {}),
       ...(parsed.missionId !== undefined ? { missionId: parsed.missionId } : {}),
@@ -372,6 +379,8 @@ async function materializeNextOccurrence(existing: Obligation): Promise<void> {
     dueAt: nextDueAt,
     // REMIND-AT-001: the next occurrence keeps its reminder time, on its own due date.
     ...(existing.remindAt ? { remindAt: existing.remindAt } : {}),
+    // TIMEBOX-001: and his estimate.
+    ...(existing.estimateMinutes !== undefined ? { estimateMinutes: existing.estimateMinutes } : {}),
     recurrence: existing.recurrence,
   });
 }

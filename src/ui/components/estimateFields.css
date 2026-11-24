@@ -1,0 +1,8 @@
+/* TIMEBOX-001: his optional time estimate (hours + minutes). Shared by Intent, Plan Today, Week planner and capture. */
+.estimate-fields { border: 0; padding: 0; margin: 0 0 8px; min-width: 0; }
+.estimate-fields legend { padding: 0; margin-bottom: 4px; max-width: 100%; white-space: normal; }
+.estimate-fields__boxes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.estimate-fields__boxes > div { min-width: 0; }
+.estimate-fields__boxes label { display: block; margin-bottom: 4px; }
+.estimate-fields .input { width: 100%; min-width: 0; min-height: 44px; font-size: 16px; }
+.estimate-fields__help { margin: 4px 0 0; }

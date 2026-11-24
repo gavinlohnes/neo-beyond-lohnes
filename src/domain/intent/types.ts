@@ -106,6 +106,12 @@ export interface Obligation {
    * unindexed: no schema version change. The task-due alert then fires at this time instead of 16:00.
    */
   remindAt?: string;
+  /**
+   * TIMEBOX-001 (Gavin, 2026-11-18): his own estimate of how long the task takes, whole minutes 1–480. Only ever typed
+   * by him, never inferred; missing means "no estimate", never zero. Not a timer, not a schedule, not capacity.
+   * Optional and unindexed: no schema version change. A repeating task's next occurrence keeps it.
+   */
+  estimateMinutes?: number;
   /** ISO timestamp. Set only by satisfyObligation/releaseObligation — actual occurrence, distinct from dueAt/plannedAt. */
   resolvedAt?: string;
   /** Freeform evidence of how it was resolved — set only alongside resolvedAt. */

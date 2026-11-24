@@ -845,6 +845,8 @@ export interface ObligationModifiedPayload {
     recurrence?: { freq: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number };
     /** REMIND-AT-001: HH:MM on the due date; null removed it. */
     remindAt?: string | null;
+    /** TIMEBOX-001: his estimate in whole minutes; null removed it. */
+    estimateMinutes?: number | null;
   };
 }
 
