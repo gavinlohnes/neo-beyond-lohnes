@@ -5,9 +5,7 @@ import { DRIVE_HOME_EVENT } from "../../driveHomeEvent";
 import { WorkPreparation } from "../../components/WorkPreparation";
 import { TodayRoutine } from "../../components/TodayRoutine";
 import { routineMomentFor } from "../../../application/routineCommands";
-import { SleepMetricSheet } from "./SleepMetricSheet";
 import { useHiddenFeatures } from "../../hiddenFeatures";
-import { LogSheet } from "../../components/LogSheet";
 import { TodayReviewSupport } from "../../components/TodayReviewSupport";
 import { WeeklyReviewReadyLine } from "../../components/WeeklyReviewReadyLine";
 import { DeltaNewsLine } from "../../components/DeltaViews";
@@ -44,7 +42,7 @@ import type {
 } from "../../../domain/common/types";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
-import { TodayToasts } from "./TodayToasts";
+import { TodaySheets } from "./TodaySheets";
 import { useCheckInForm } from "./useCheckInForm";
 import { useResetSession } from "./useResetSession";
 import { useShiftDownSession } from "./useShiftDownSession";
@@ -94,9 +92,7 @@ import { unusualAria, unusualTileLabel } from "./unusualCopy";
 import { ConsoleControls } from "./ConsoleControls";
 import { EarlyStartRow } from "./EarlyStartRow";
 import { SmallSteps } from "./SmallSteps";
-import { MetricDetailSheet } from "../../metrics/MetricDetailSheet";
-import { LogEntrySheet, type LogEntryTarget } from "../../components/LogEntrySheet";
-import { ShiftMarkSheet } from "../../components/ShiftMarkSheet";
+import type { LogEntryTarget } from "../../components/LogEntrySheet";
 import type { DetailMetric } from "../../../application/metricDetail";
 import "./smallSteps.css";
 import "../../foundation/foundation.css";
@@ -1378,17 +1374,12 @@ export function TodayScreen({
     {(lifeState === "WORK_RUN" || lifeState === "FLIP" ? ["support", "life"] : ["life", "support"]).map((part) => <Fragment key={part}>{part === "support" ? supportSection : lifeLink}</Fragment>)}
     {brief}
     <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} />
-    <LogSheet open={fastCaptureOpen} title="NOTE" onClose={closeFastCapture} canClose={() => !busyRef.current}>{renderToolsItem("CAPTURE")}</LogSheet>
-    <SleepMetricSheet open={measuredOpen === "sleep"} onClose={() => setMeasuredOpen(null)}
-      onAllRecords={onOpenHealthEvidence ? () => { setMeasuredOpen(null); onOpenHealthEvidence("sleep"); } : undefined} />
-    <LogEntrySheet target={editTarget} onClose={() => setEditTarget(null)} onChanged={() => refresh()} />
-    <ShiftMarkSheet target={shiftTarget} onClose={() => setShiftTarget(null)} onChanged={() => refresh()} />
-    <MetricDetailSheet open={detailOpen !== null} metric={detailOpen ?? "water"} onClose={() => setDetailOpen(null)} refreshKey={refreshVersion}
-      onRecords={(detailOpen === "water" || detailOpen === "weight" || detailOpen === "protein") && onOpenHealthEvidence ? () => onOpenHealthEvidence(detailOpen) : undefined}
-      onLog={(detailOpen === "water" || detailOpen === "weight" || detailOpen === "protein") && onOpenRecord ? () => onOpenRecord(detailOpen) : undefined} />
-    <CheckInSheet previous={activeCheckInDraft} open={checkInFormOpen} close={() => setCheckInFormOpen(false)} values={values} setValues={setValues} busy={busy} isInFlight={() => busyRef.current} submit={() => void handleCheckIn()} quick={() => void handleQuickCheckIn()} sameAsLast={activeCheckInDraft ? () => void handleSameAsLast() : undefined} quickValues={quickCheckInValues} error={checkInError} />
-    {/* TODAY-SPLIT-002 slice 2: the "recorded" confirmations live in TodayToasts; TODAY still decides when they show. */}
-    <TodayToasts waterOz={hydrationConfirmation?.amount} mealMessage={mealConfirmation?.message} sleepMinutes={sleepConfirmation?.amount} proteinG={proteinConfirmation?.amount} />
+    {/* GRAYSON-TODAY-SPLIT-003 slice D3: the sheets and toasts at the foot of TODAY live in TodaySheets; TODAY still owns when each opens. */}
+    <TodaySheets actions={actions} checkInForm={checkInForm} local={{
+      busy, refresh, refreshVersion, fastCaptureOpen, closeFastCapture, captureTool: renderToolsItem("CAPTURE"), measuredOpen, setMeasuredOpen,
+      editTarget, setEditTarget, shiftTarget, setShiftTarget, detailOpen, setDetailOpen, checkInFormOpen, setCheckInFormOpen,
+      hydrationConfirmation, mealConfirmation, sleepConfirmation, proteinConfirmation, onOpenHealthEvidence, onOpenRecord,
+    }} />
   </div>;
   return (
     <div
