@@ -15,7 +15,8 @@
   **Active PR:** pending.
 - **Overlap check (2026-11-24):** #642 (set fixes) and #643 (check-in fixes) also add to `CORRECTION_TYPES` in
   `dayLedger.ts` and add event types in `src/domain/common/types.ts`, as does #639. Each keeps its additions in
-  one block; whichever builds later rebases. While other PRs are open, leave the tracker and checkpoint to the
+  one block; whichever builds later rebases. #639 also edits
+  `src/ui/screens/history/historyCopy.ts`, which is in scope here. While other PRs are open, leave the tracker and checkpoint to the
   oldest open PR (DEV-FLOW-002, 2026-11-23 amendment, rule 2).
 
 ## Objective and benefit
@@ -134,6 +135,20 @@ clean days; Delta's own 10 s undo (`ACT_UNDO_MS`); any Engine rule; a Dexie vers
   and a put-back entry.
 - **Device check (Gavin):** log a water and remove it from TODAY, then Undo; remove a meal in BODY and put it
   back from History; fix a protein amount, then Undo. Then KEEP / REFINE / RETHINK.
+
+## Decision record
+
+The build PR records the approved defaults in `docs/decisions/GRAYSON-FIX-UNDO.md`, as TIMEBOX-001 and C4.1 did
+(DEV-FLOW-002, 2026-11-23 amendment).
+
+## Stop and ask Gavin if
+
+- the work needs a Dexie version bump or a new index;
+- a reader of the six log voids has to see raw voids;
+- it would change a hold outside log removal (finishing a workout, ending the day, clean days, progress photos);
+- it would add Undo to a routine new log (OWNER-GO-001);
+- a put-back sleep log changes whether an imported Garmin night steps aside in a way the old log didn't;
+- it needs a change to `backup.ts`, `restore.ts` or `backupKeys.ts`.
 
 ## Risks and checks
 
