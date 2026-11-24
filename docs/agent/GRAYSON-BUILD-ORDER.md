@@ -32,7 +32,7 @@
 | 2 | [GRAYSON-TRAIN-RUN-CUES-001](GRAYSON-TRAIN-RUN-CUES-001.md) | B3 | The hardest TRAIN piece: an Android foreground service. First Health Bridge change; PLAN-FRESH-001 rebases on it. | PROTECTED |
 | 3 | [GRAYSON-TRAIN-STANDARDS-001](GRAYSON-TRAIN-STANDARDS-001.md) | B4 | One new event for all three standards tests. | PROTECTED |
 | 4 | [GRAYSON-TRAIN-LOCKSCREEN-001](GRAYSON-TRAIN-LOCKSCREEN-001.md) | C7.5 | Two-way notification into a logged set; after TRAIN-EDIT so those sets can be fixed. | PROTECTED |
-| 5 | [GRAYSON-TRAIN-HOWTO-001](GRAYSON-TRAIN-HOWTO-001.md) | B5 | Quick: content. Adds the library map NOTES and BODYMAP use. | FEATURE |
+| 5 | [GRAYSON-TRAIN-HOWTO-001](GRAYSON-TRAIN-HOWTO-001.md) | B5 | Quick: content. Adds the library map NOTES and BODYMAP use. Built early under the old order; open as #681. | FEATURE |
 | 6 | [GRAYSON-TRAIN-NOTES-001](GRAYSON-TRAIN-NOTES-001.md) | B10 | Quick: after HOWTO. | FEATURE |
 | 7 | [GRAYSON-TRAIN-BODYMAP-001](GRAYSON-TRAIN-BODYMAP-001.md) | B7 | Quick: after HOWTO. | FEATURE |
 | 8 | [GRAYSON-WHAT-MOVES-001](GRAYSON-WHAT-MOVES-001.md) | C6.3 | DATA, read only. | FEATURE |
