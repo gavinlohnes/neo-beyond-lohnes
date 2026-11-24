@@ -57,3 +57,9 @@
 /* The rest timer: the remaining time as a foundation numeral. */
 .train-operator .train-live-rest { font-family: var(--font-display, sans-serif); font-size: 46px; font-weight: 700; line-height: 1;
   font-variant-numeric: tabular-nums; color: var(--p-t1, #f2f2f2); }
+
+/* GRAYSON-TRAIN-REST-001: one short highlight on REST COMPLETE when he reaches it; none under reduced motion. */
+@keyframes train-rest-done { 0% { background: var(--text-1); color: var(--surface-1, #000); } 100% { background: transparent; } }
+.train-rest-done { animation: train-rest-done 900ms ease-out 1; }
+@media (prefers-reduced-motion: reduce) { .train-rest-done { animation: none; } }
+.train-rest-buzz { width: 100%; min-height: 44px; margin-top: 8px; font-size: 16px; }

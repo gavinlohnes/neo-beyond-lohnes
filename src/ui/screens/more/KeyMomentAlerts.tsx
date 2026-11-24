@@ -16,6 +16,8 @@ const KINDS: { kind: KeyMomentKind; label: string; when: string }[] = [
   { kind: "SHIFT_DONE", label: "Shift's done", when: "At its end; the last of a run says days off start" },
   { kind: "TASK_DUE", label: "Task due", when: "16:00 on its day" },
   { kind: "WAKE", label: "Up for the shift", when: "3 hours before it starts" },
+  // GRAYSON-WINDOW-ALERT-001: only fires once the Eating Window is on.
+  { kind: "WINDOW_OPEN", label: "Eating window opens", when: "When your eating window opens, if the Eating Window is on. Lowest priority: on a day with three other alerts, this one waits." },
 ];
 const DEFAULT_QUIET = { quietFrom: "08:00", quietTo: "14:00" };
 type Update = (current: KeyMomentAlertSettings) => KeyMomentAlertSettings;

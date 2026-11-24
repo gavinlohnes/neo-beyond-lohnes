@@ -12,7 +12,8 @@
 - **Starting commit:** `origin/master` `e43ba36` (#659 merged). Re-fetch before starting.
 - **Builder:** Claude Code (TRAIN while Codex is offline). Branch `claude/grayson-train-run-cues-001`.
   Reviewer: Grok Bot. **Active PR:** pending.
-- **Order and overlap:** builds **after GRAYSON-TRAIN-RUN-001 is merged**, because it consumes RUN-001's
+- **Order and overlap:** Claude Code **#2** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after TRAIN-EDIT-001. It is the first Health
+  Bridge change; PLAN-FRESH-001 (Grok Bot) waits for it or rebases on it. It builds **after GRAYSON-TRAIN-RUN-001 is merged** (#666 is), because it consumes RUN-001's
   `runningCueTimeline()`, the running session record and the running screen. If RUN-001 is not on master when
   you start, stop and say so. Android files are touched by no other open brief. The running screen file is
   RUN-001's; if TRAIN-EDIT-001 or STANDARDS-001 is open on the same file, rebase on whichever merges first.

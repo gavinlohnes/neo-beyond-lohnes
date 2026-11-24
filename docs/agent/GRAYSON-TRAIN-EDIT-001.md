@@ -16,7 +16,7 @@
   Gavin merges. No Builder merge.
 - **Starting commit:** `origin/master` `7e61e02`. Re-fetch before starting.
 - **Builder:** Codex. Branch `codex/grayson-train-edit-001`. **Active PR:** pending.
-- **Order:** after GRAYSON-TRAIN-RUN-001 (#640) is built, because both edit `TrainScreen.tsx`,
+- **Order:** Claude Code **#1** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24); open as #675. Originally: after GRAYSON-TRAIN-RUN-001 (#640) is built, because both edit `TrainScreen.tsx`,
   `trainCopy.ts` and `src/domain/common/types.ts`. Gavin can swap the order.
 - **Overlap check (2026-11-24, rechecked):** #639 (C6.1 + C6.2) edits `src/domain/common/types.ts` and
   `src/ui/screens/history/historyCopy.ts`; #643 (check-in fixes) and #645 (remove and undo) also add event types,

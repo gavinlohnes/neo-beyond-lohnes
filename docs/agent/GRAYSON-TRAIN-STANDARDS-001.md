@@ -9,7 +9,8 @@
 - **Starting commit:** `origin/master` `439129c`. Re-fetch before starting.
 - **Builder:** Claude Code (TRAIN while Codex is offline). Branch `claude/grayson-train-standards-001`. Reviewer:
   Grok Bot. **Active PR:** pending.
-- **Order and overlap:** after GRAYSON-TRAIN-RUN-001 (which adds the running table and history) and
+- **Order and overlap:** Claude Code **#3** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after RUN-CUES-001. It also needs
+  GRAYSON-TRAIN-RUN-001 (which adds the running table and history; #666) and
   GRAYSON-TRAIN-EDIT-001 (corrections model). This brief touches `application/trainProgress.ts`,
   `trainProgressQueries.ts`, `ui/screens/train/TrainProgress.tsx` and `domain/common/types.ts`. Recheck open PRs at
   build time; tracker to the oldest open PR.

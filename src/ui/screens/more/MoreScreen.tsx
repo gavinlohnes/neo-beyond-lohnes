@@ -50,6 +50,7 @@ import {
   setCheckInReminderPreference,
   type CheckInReminderPreference,
 } from "../../../application/checkInReminderQueries";
+import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
 import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
@@ -386,6 +387,9 @@ export function MoreScreen({
   // never throws, so no loading state is needed) — every change writes through
   // setCheckInReminderPreference immediately, matching this screen's other
   // immediate-action controls rather than a separate SAVE step.
+  // GRAYSON-TRAIN-REST-001: the rest-end buzz, beside the check-in reminder.
+  const [restBuzz, setRestBuzzState] = useState<RestBuzzPreference>(getRestBuzzPreference);
+  const updateRestBuzz = (next: RestBuzzPreference) => { setRestBuzzPreference(next); setRestBuzzState(next); };
   const [reminderPreference, setReminderPreference] = useState<CheckInReminderPreference>(() =>
     getCheckInReminderPreference(),
   );
@@ -1029,6 +1033,27 @@ export function MoreScreen({
               use this.
             </p>
           )}
+        </div>
+        <div className="equipment-row" data-rest-buzz-setting>
+          <p className="tool-label" style={{ marginBottom: 4 }}>BUZZ WHEN REST ENDS</p>
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {restBuzz.enabled ? `On, ${restBuzz.strength === "LONG" ? "long" : "short"} buzz.` : "Off."}
+          </p>
+          <p className="meta" style={{ marginBottom: 8 }}>While TRAIN is open with the screen on.</p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button className="btn-secondary" aria-pressed={restBuzz.enabled} aria-label={`Buzz when rest ends: ${restBuzz.enabled ? "turn off" : "turn on"}`}
+              onClick={() => updateRestBuzz({ ...restBuzz, enabled: !restBuzz.enabled })}>
+              {restBuzz.enabled ? "TURN OFF" : "TURN ON"}
+            </button>
+            {restBuzz.enabled && (
+              // 16 px text and a 44 px target, like every MORE control (MORE-OPERATOR-001's readable-text check).
+              <select aria-label="Buzz strength" value={restBuzz.strength} style={{ fontSize: 16, minHeight: 44 }}
+                onChange={(e) => updateRestBuzz({ ...restBuzz, strength: e.target.value === "LONG" ? "LONG" : "SHORT" })}>
+                <option value="SHORT">Short</option>
+                <option value="LONG">Long</option>
+              </select>
+            )}
+          </div>
         </div>
       </section>
 

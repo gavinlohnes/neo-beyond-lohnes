@@ -7,7 +7,8 @@ import type { KeyMomentAlertSettings } from "../domain/common/types";
  * validates and falls back to the defaults (every kind on, no quiet hours) on anything malformed.
  */
 const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "use HH:MM");
-export const KEY_MOMENT_KINDS = ["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE"] as const;
+// GRAYSON-WINDOW-ALERT-001: WINDOW_OPEN joins, so its own switch can be turned off.
+export const KEY_MOMENT_KINDS = ["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE", "WINDOW_OPEN"] as const;
 
 export const keyMomentAlertSettingsSchema = z
   .object({
