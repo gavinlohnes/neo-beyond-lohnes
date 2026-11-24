@@ -7,6 +7,8 @@ import { getActiveDay, getSchedulePattern } from "./queries";
 import { getConfirmedKinds } from "./scheduleExceptions";
 import { shiftRun } from "./shiftRun";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
+import { getBodyweightHistory } from "./bodyTrendQueries";
+import { getLogNudge, usualTimesFor, type LogNudgeSettings } from "./logNudge";
 
 /**
  * GRAYSON C1.3 + C1.4 (Gavin, 2026-11-20): the close. It follows SHIFT DOWN, his getting-home ritual ("shifting down
@@ -80,4 +82,63 @@ export async function getDayClose(now: Date = new Date()): Promise<{ dayId: stri
   // Review of #599: the lived day's own date, even for a day started after midnight.
   const label = mostRecentBoundaryAtOrBefore(new Date(day.startedAt)).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   return { dayId: day.id, label, next: tomorrowDiffers({ now, dayStartedAt: day.startedAt, today: day.workContext, pattern, confirmed }) };
+}
+
+/**
+ * GRAYSON-CLOSE-GAPS-001 (Gavin, 2026-11-24: "I don't want it to be annoying and pester me"; "I should be able to edit
+ * and tweak or correct everything in this app"): one muted line at the top of the close naming what didn't get logged,
+ * at most two gaps, meals then weight. No counts, no streaks, no "you forgot". Tapping it opens Delta with the words
+ * ready; nothing is sent until he sends it.
+ */
+export const CLOSE_GAP_WEIGH_DEFAULT = 3;
+export const CLOSE_GAP_WEIGH_MIN = 1;
+export const CLOSE_GAP_WEIGH_MAX = 14;
+export interface CloseGapSettings { enabled: boolean; weighGapDays: number }
+export const DEFAULT_CLOSE_GAPS: CloseGapSettings = { enabled: true, weighGapDays: CLOSE_GAP_WEIGH_DEFAULT };
+export type CloseGapKind = "MEALS" | "WEIGHT";
+export interface CloseGaps { gaps: { kind: CloseGapKind; text: string }[]; ask: string }
+export const CLOSE_GAP_ASK: Record<CloseGapKind, string> = { MEALS: "I ate ", WEIGHT: "My weight this morning was " };
+
+const localDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+const calendarDaysBetween = (from: Date, to: Date) => Math.round((localDay(to) - localDay(from)) / 86_400_000);
+
+/**
+ * Pure. Meals: when this day kind has usual meal times (learned, or his own) and no live meal of this lived day falls
+ * outside the shift window. Weight: no weigh-in for `weighGapDays` calendar days (his local dates), or none ever.
+ */
+export function deriveCloseGaps(input: {
+  settings: CloseGapSettings; now: Date; hasUsualTimes: boolean; meals: readonly string[];
+  shift: { start: Date; end: Date } | null; lastWeighIn: string | null;
+}): CloseGaps | null {
+  const { settings, now } = input;
+  if (!settings.enabled) return null;
+  const gaps: CloseGaps["gaps"] = [];
+  if (input.hasUsualTimes) {
+    const outside = input.meals.map((m) => Date.parse(m)).filter((t) => Number.isFinite(t)
+      && !(input.shift && t >= input.shift.start.getTime() && t <= input.shift.end.getTime()));
+    if (outside.length === 0) gaps.push({ kind: "MEALS", text: input.shift ? "No meals logged today outside your shift." : "No meals logged today." });
+  }
+  const last = input.lastWeighIn ? new Date(input.lastWeighIn) : null;
+  if (!last || Number.isNaN(last.getTime())) gaps.push({ kind: "WEIGHT", text: "No weigh-in yet." });
+  else if (calendarDaysBetween(last, now) >= settings.weighGapDays) {
+    gaps.push({ kind: "WEIGHT", text: `No weigh-in since ${last.toLocaleDateString("en-US", { month: "short", day: "numeric" })}.` });
+  }
+  if (gaps.length === 0) return null;
+  const shown = gaps.slice(0, 2);
+  return { gaps: shown, ask: CLOSE_GAP_ASK[shown[0]!.kind] };
+}
+
+/** Read only. The gaps for this day's close. `nudge` is his logging-nudge settings, so his own meal times count too. */
+export async function getCloseGaps(dayId: string, settings: CloseGapSettings, nudge: LogNudgeSettings, now: Date = new Date()): Promise<CloseGaps | null> {
+  if (!settings.enabled) return null;
+  const [day, pattern, read, history] = await Promise.all([
+    db.beyondDays.get(dayId), getSchedulePattern(), getLogNudge(dayId, now), getBodyweightHistory().catch(() => []),
+  ]);
+  if (!day || !read) return null;
+  const shift = day.workContext === "OFF" ? null : livedDayShiftWindow(new Date(day.startedAt), pattern);
+  const latest = history.reduce<string | null>((a, w) => (a === null || Date.parse(w.recordedAt) > Date.parse(a) ? w.recordedAt : a), null);
+  return deriveCloseGaps({
+    settings, now, meals: read.meals, shift, lastWeighIn: latest,
+    hasUsualTimes: read.kind !== null && usualTimesFor(read.kind, read.learned, nudge).length > 0,
+  });
 }

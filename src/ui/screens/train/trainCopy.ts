@@ -379,3 +379,44 @@ export function describeSetFix(f: { kind: "CORRECTED" | "REMOVED" | "ADDED"; bef
   if (f.kind === "REMOVED") return "Removed";
   return f.before && f.after ? `Was ${describeSetValues(f.before)}, now ${describeSetValues(f.after)}` : "Corrected";
 }
+// ---------------------------------------------------------------------------------------------------------------
+// GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running copy. "run" only in words he reads; identifiers say "running".
+
+/** "28 min 30 s", "25 min", "45 s". */
+export function describeRunningLength(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const min = Math.floor(s / 60);
+  const sec = s % 60;
+  if (min === 0) return `${sec} s`;
+  return sec === 0 ? `${min} min` : `${min} min ${sec} s`;
+}
+
+/** A countdown: "4:05", "0:09", "1:02:00". */
+export function formatRunningClock(totalSeconds: number): string {
+  const s = Math.max(0, Math.ceil(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+}
+
+export const describeRunningPosition = (p: { week: number; run: number }) => `Week ${p.week}, run ${p.run}`;
+
+export const RUNNING_SEGMENT_LABEL = { WARMUP: "WARM-UP WALK", RUN: "RUN", WALK: "WALK", COOLDOWN: "COOL-DOWN WALK" } as const;
+export const RUNNING_KIND_NAME = { WARMUP: "Warm-up walk", RUN: "Run", WALK: "Walk", COOLDOWN: "Cool-down walk" } as const;
+
+const ORDINAL = ["", "a first", "a second", "a third", "a fourth", "a fifth"];
+/** "2 of 2 done · a third is optional". Information only: never "missed" or behind. */
+export function describeRunningWeek(week: { done: number; expected: number; showOptional: boolean }): string {
+  const base = `${week.done} of ${week.expected} done this week`;
+  return week.showOptional ? `${base} · ${ORDINAL[week.expected + 1] ?? "one more"} is optional` : base;
+}
+
+export const RUNNING_SCREEN_ON = "Keep the screen on. Voice cues with the phone locked come next.";
+export const RUNNING_FIRST_TIME = "Every run starts and ends with a 5-minute walk. Repeat any run or week whenever you like, and aim for a rest day between runs.";
+export const RUNNING_FOUNDATION_DONE = "Foundation done: 30 minutes running. The 1.5-mile phase comes next.";
+export const RUNNING_PAIN_LINE = "The run is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before running again.";
+export const RUNNING_LIFT_ACTIVE = "Finish or stop your workout before starting a run.";
+export const RUNNING_HISTORY_EMPTY = "Runs you start will appear here.";
+
+export const RUNNING_STATUS_LABEL = { ACTIVE: "In progress", COMPLETED: "Completed", PARTIAL: "Partial", ABANDONED: "Stopped" } as const;

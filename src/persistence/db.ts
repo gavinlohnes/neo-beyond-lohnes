@@ -6,6 +6,7 @@ import type {
   NutritionTargets,
   QuitHabit,
   Outcome,
+  RunningSession,
   PerformedSetRaw,
   Recommendation,
   SavedMeal,
@@ -70,6 +71,7 @@ export class BeyondDB extends Dexie {
   collectionItems!: Table<CollectionItem, string>;
   highlights!: Table<Highlight, string>;
   scheduleExceptions!: Table<ScheduleException, string>;
+  runningSessions!: Table<RunningSession, string>;
 
   constructor() {
     super("beyond");
@@ -411,6 +413,9 @@ export class BeyondDB extends Dexie {
     // standing rotation. Additive only; nothing prior to migrate. Native Dexie backups include it; older backups
     // simply restore with none.
     this.version(26).stores({ scheduleExceptions: "id, date, status, swapId, createdAt" });
+    // GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24, Protected persistence): running sessions. Additive only; nothing prior
+    // to migrate. Native Dexie backups include it; older backups simply restore with no running history.
+    this.version(27).stores({ runningSessions: "id, beyondDayId, status, startedAt" });
   }
 }
 

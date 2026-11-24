@@ -1,0 +1,59 @@
+/* GRAYSON-TRAIN-RUN-001: running card, live run, finish sheet, plan and history. TRAIN's look: neutral ink,
+   1px lines, square corners, 44 px controls, 16 px text. Run and walk differ by label and fill weight, never
+   colour alone. Reduced motion: nothing here animates. */
+.running-card, .running-live, .running-finish, .running-plan, .running-editor { margin: 12px 0; }
+.running-card__next { margin: 6px 0 4px; }
+.running-card__acts, .running-live__acts, .running-finish__acts, .running-plan__acts, .running-editor__acts, .running-correct__acts {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+}
+.running-card__acts > button, .running-finish__acts > button, .running-editor__acts > button, .running-correct__acts > button { flex: 1 1 140px; min-height: 44px; font-size: 16px; }
+
+.running-live__where { margin: 0; }
+.running-live__kind { margin: 6px 0 0; font-size: 40px; line-height: 1.05; letter-spacing: .04em; color: var(--text-1); overflow-wrap: anywhere; }
+.running-live__left { margin: 4px 0 0; font-family: var(--font-mono, monospace); font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text-1); }
+.running-live__total { margin: 8px 0 4px; font-size: 16px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.running-live__acts > .btn-primary, .running-live__acts > .btn-secondary { flex: 1 1 120px; min-height: 56px; font-size: 18px; }
+.running-live__confirm { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+.running-live__confirm > p { flex-basis: 100%; margin: 0; }
+.running-live__confirm > button { flex: 1 1 120px; min-height: 44px; }
+.running-live__pain { flex-basis: 100%; margin: 4px 0 0; text-align: left; }
+
+.running-strip { display: flex; gap: 2px; height: 14px; margin: 12px 0 8px; padding: 0; list-style: none; }
+.running-strip__seg { min-width: 2px; border: 1px solid var(--text-3); background: transparent; }
+.running-strip__seg--run { background: var(--text-2); border-color: var(--text-2); }
+.running-strip__seg[data-done="true"] { opacity: .35; }
+.running-strip__seg[aria-current="step"] { outline: 2px solid var(--text-1); outline-offset: 1px; opacity: 1; }
+
+.running-weeks { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
+.running-runs { list-style: none; margin: 6px 0 8px; padding: 0; display: grid; gap: 8px; }
+.running-run { border-top: 1px solid var(--p-line, #2a2a2a); padding-top: 8px; }
+.running-run[data-next] .running-run__title { color: var(--text-1); }
+.running-run__title { margin: 0 0 6px; font-size: 16px; color: var(--text-2); }
+.running-run__acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.running-inline { width: auto; min-height: 44px; padding: 6px 12px; font-size: 14px; }
+.running-saved { margin: 8px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.running-settings { margin: 16px 0 0; padding: 0; border: 0; display: grid; gap: 8px; }
+.running-field { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; min-height: 44px; }
+.running-field select, .running-field input {
+  min-height: 44px; font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--p-line-2, #3a3a3a); border-radius: 0;
+  background: var(--p-bg, #000); color: var(--text-1); color-scheme: dark;
+}
+.running-field :is(select, input):focus-visible { outline: 2px solid var(--focus, var(--text-1)); outline-offset: 2px; }
+.running-option { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
+.running-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--text-1); }
+
+.running-segments { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 12px; }
+.running-segment { border-top: 1px solid var(--p-line, #2a2a2a); padding-top: 8px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px 8px; }
+.running-segment .running-field { min-height: 44px; }
+.running-segment__time { font-family: var(--font-mono, monospace); font-size: 20px; font-variant-numeric: tabular-nums; }
+.running-segment__steps { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.running-segment__remove { width: auto; padding: 4px 8px; }
+.running-segment .running-field select { min-width: 0; flex: 1 1 120px; }
+.running-step { width: 100%; min-height: 44px; min-width: 0; padding: 4px 2px; font-size: 13px; letter-spacing: .02em; margin: 0; }
+
+.running-history { margin-top: 18px; }
+.running-correct { display: grid; gap: 8px; padding: 4px 0; }
+.running-correct__status { margin: 0; padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.running-week__summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 16px; letter-spacing: .06em; color: var(--text-2); border-bottom: 1px solid var(--p-line, #2a2a2a); }
+.running-week details[open] > .running-week__summary { color: var(--text-1); }

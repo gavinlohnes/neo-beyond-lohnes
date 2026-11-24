@@ -1,6 +1,7 @@
 import { WorkoutRecap } from "./WorkoutRecap";
 import { SetFixHistory, SetFixSheet, useSetFixUndo } from "./SetFixSheet";
 import { undoSetFix } from "../../../application/trainFixCommands";
+import { RunningHistory } from "./RunningSession";
 import { useEffect, useRef, useState } from "react";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import {
@@ -105,6 +106,8 @@ export function TrainingHistory({
       {entries && !readError && entries.length > limit && (
         <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 10)}>SHOW MORE SESSIONS</button>
       )}
+      {/* GRAYSON-TRAIN-RUN-001: running sessions, read-only, each correctable. */}
+      <RunningHistory active={active} />
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={onClose}>
         BACK TO WORKOUT
       </button>

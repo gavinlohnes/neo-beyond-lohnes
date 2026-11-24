@@ -108,6 +108,12 @@
 .today-field.redesign-today .today-close__acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .today-field.redesign-today .today-close__acts .btn-secondary { width: auto; min-height: 44px; }
 .today-field.redesign-today .today-close__change { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
+/* GRAYSON-CLOSE-GAPS-001: the "what's missing" line. Muted, never red; the whole line is the 44 px tap. */
+.today-field.redesign-today .today-close__gaps { display: block; width: 100%; min-height: 44px; margin: 0; padding: 8px 0; text-align: left; background: transparent; border: 0; color: var(--tf-quiet); font: inherit; font-size: 16px; line-height: 1.4; cursor: pointer; }
+.today-field.redesign-today .today-close__gaps span { color: var(--p-t1, #f2f2f2); font-family: var(--font-mono, monospace); letter-spacing: .08em; white-space: nowrap; }
+.today-field.redesign-today .today-close__gaps:focus-visible { outline: 2px solid var(--p-t1, #f2f2f2); outline-offset: 2px; }
+.today-field.redesign-today .today-close__gapdays { display: grid; gap: 4px; }
+.today-field.redesign-today .today-close__gapdays input { width: 96px; min-height: 44px; font: inherit; font-size: 16px; color: var(--p-t1, #f2f2f2); background: var(--p-s2, #0f0f0f); border: 1px solid var(--tf-line); padding: 0 8px; }
 
 /* GRAYSON C4.8a: the Eating Window card. Framed like TODAY's other panels; no red, it never outranks the day. */
 .today-field.redesign-today .today-eating {
