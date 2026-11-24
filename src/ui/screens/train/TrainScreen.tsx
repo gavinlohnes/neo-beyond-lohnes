@@ -1,3 +1,5 @@
+import { LockScreenSwitch, useLockScreenSets } from "./LockScreenSets";
+import type { PlannedSet } from "../../../application/lockScreenSets";
 import { WorkoutRecap } from "./WorkoutRecap";
 import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
@@ -1061,6 +1063,13 @@ export function TrainScreen({
   const activeExercises = session
     ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates)
     : [];
+  // GRAYSON-TRAIN-LOCKSCREEN-001: what the LOG button would save for each working set, for the lock screen.
+  const lockScreenPlanned: PlannedSet[] = activeExercises.flatMap((ex) => Array.from({ length: ex.sets }, (_, i) => {
+    const display = getInputDisplay(ex.exerciseId, i + 1);
+    return { exerciseId: ex.exerciseId, name: subs[ex.exerciseId] || ex.name, ...(subs[ex.exerciseId] ? { substitutedName: subs[ex.exerciseId] } : {}),
+      setNumber: i + 1, total: ex.sets, weight: Number(display.weight) || 0, reps: Number(display.reps) || 0, kind: display.setKind };
+  }).filter((p) => p.kind !== "WARMUP").map(({ kind: _kind, ...p }) => p));
+  const lockScreen = useLockScreenSets({ session, sets, planned: lockScreenPlanned, onApplied: async () => { await refresh(true); } });
   const variantSuggestion = suggestSessionVariant(capacity, shortSleep);
   const suggestedExercises = exercisesFor(
     chosenTemplate,
@@ -1824,6 +1833,7 @@ export function TrainScreen({
                           {!loggedSet.skipped && <ConfirmIcon size={20} />}
                           #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
                           {loggedSet.repsInReserve !== undefined && <span className="meta"> · {loggedSet.repsInReserve} reps left</span>}
+                          {loggedSet.from === "LOCK_SCREEN" && <span className="meta" data-from-lock-screen> · from lock screen</span>}
                         </p>
                         {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
                             offered for the exact set this session just committed —
@@ -2196,6 +2206,8 @@ export function TrainScreen({
                 lets a button's own text wrap onto a second line instead.
                 Pre-existing gap (no browser test previously verified
                 this), not a Phase 2 regression. */}
+            {/* GRAYSON-TRAIN-LOCKSCREEN-001: the current set on the lock screen, off until he turns it on. */}
+            <LockScreenSwitch state={lockScreen} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {/* Drop 4: finishing is a big moment, so COMPLETE and PARTIAL are
                   press-and-hold (ROADMAP 1.0 design rule). Logging a set stays one tap.

@@ -37,7 +37,7 @@ export default defineConfig({
         cacheId: "beyond-mark-v3",
         cleanupOutdatedCaches: true,
         // GARMIN-002 SEND TO BEYOND: receives Health Bridge files shared to the installed app.
-        importScripts: ["share-target-sw.js"],
+        importScripts: ["share-target-sw.js", "lockscreen-sw.js"],
       },
       manifest: {
         // PWA-001: the installed app's identity, pinned to what Chrome already derives from start_url, so a future

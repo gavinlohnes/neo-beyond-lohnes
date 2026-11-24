@@ -31,6 +31,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond:runningHalfwayCue": "Running halfway cue",
   "beyond:runningKeepAwake": "Running keeps the screen on",
   "beyond.runCues.v1": "Run cue words and voice",
+  "beyond.lockScreenSets.v1": "Lock-screen sets",
   "beyond:weightTrendPreference": "Weight trend",
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",
