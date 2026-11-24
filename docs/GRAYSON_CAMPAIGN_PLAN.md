@@ -130,7 +130,7 @@ status of its own.
 | C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M |
 | C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
 | **Campaign 7 — Capture and Attention** | | | |
-| C7.1 | Voice into capture everywhere | Not started |  |
+| C7.1 | Voice into capture everywhere | Not started | [brief](agent/GRAYSON-DICTATE-001.md); Grok Bot |
 | C7.2 | Plan stays fresh | Not started |  |
 | C7.3 | New moment kinds | Not started |  |
 | C7.4 | Widget quick actions | Not started |  |
