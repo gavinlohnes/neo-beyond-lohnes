@@ -14,6 +14,10 @@
   `docs/GRAYSON_CAMPAIGN_PLAN.md` (the run track paragraph under Campaign 4).
 - **Starting commit:** `origin/master` `7e61e02` (#638 merged). Re-fetch before starting.
 - **Builder:** Codex. Branch `codex/grayson-train-run-001`. **Active PR:** pending.
+- **Parked partial start (Claude Code, 2026-11-24, Gavin: "Park TRAIN"):** branch `claude/grayson-train-run-001`
+  holds unverified first-draft code from `1fd2c47`: `runningPlan.ts`, `runningCues.ts`, the types block, the db.ts
+  v27 line, `runningSessionValidation.ts`, `runningCommands.ts`, `runningQueries.ts`. No UI, no tests, not
+  typechecked. Codex may reuse any of it or ignore it. Nothing is open as a PR; Claude Code will not touch it again.
 - **Overlap check (2026-11-24):** open PRs #639 (C6.1 + C6.2, Delta learning) and #606 (C3.4b/c, recurrence)
   touch none of the files below. Two of #639's files (`src/domain/common/types.ts`,
   `src/application/deltaFacts.ts`) are shared ground: rebase on whichever merges first. While other PRs are
