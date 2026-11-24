@@ -16,6 +16,7 @@ import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
 import { ShiftCatchUpCard, type CatchUpPresence } from "./ShiftCatchUpCard";
 import { LogNudgeLine, TodayQuietLines } from "./TodayQuietLines";
+import { PhoneAlertsBehindLine } from "./PhoneAlertsBehindLine";
 import { deriveQuietLines, type QuietLineId } from "./attentionPolicy";
 import { effectiveQuietOff, markQuietMoreOpened, quietMoreOpened, readTodayQuietSettings } from "./todayQuietStore";
 import { markOrientationSeen, orientationSeen } from "./orientationStore";
@@ -555,7 +556,7 @@ export function TodayScreen({
   const [closeSeenTick, setCloseSeenTick] = useState(0);
   // GRAYSON-TODAY-CALM-001: what the self-loading quiet lines and the shift catch-up say they have to show, and a
   // tick for "N MORE" (its opened state is kept for the lived day in todayQuietStore).
-  const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false });
+  const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean; PHONE_ALERTS_BEHIND: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false, PHONE_ALERTS_BEHIND: false });
   const [catchUpPresence, setCatchUpPresence] = useState<CatchUpPresence>("LOADING");
   const [quietMoreTick, setQuietMoreTick] = useState(0);
   useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
@@ -1095,13 +1096,15 @@ export function TodayScreen({
   const quietCandidates: QuietLineId[] = [];
   if (driveHomeDue) quietCandidates.push("DRIVE_HOME");
   if (logNudge) quietCandidates.push("LOG_NUDGE");
+  // GRAYSON-PLAN-FRESH-001: the line decides for itself (Android, behind, outside a shift, once a lived day).
+  if (quietPresence.PHONE_ALERTS_BEHIND) quietCandidates.push("PHONE_ALERTS_BEHIND");
   if (quietPresence.ROUTINE) quietCandidates.push("ROUTINE");
   if (day && dayRead && quietPresence.EXPERIMENT) quietCandidates.push("EXPERIMENT");
   if (quietPresence.REVIEW) quietCandidates.push("REVIEW");
   const quiet = deriveQuietLines(quietCandidates, { ...quietSettings, off: effectiveQuietOff(quietSettings) }, quietOperation);
   const quietMoreOpen = quietMoreTick >= 0 && quietMoreOpened(now);
   const quietVisible = (id: QuietLineId) => quiet.shown.includes(id) || (quietMoreOpen && quiet.tucked.includes(id));
-  const reportQuiet = (id: "ROUTINE" | "EXPERIMENT" | "REVIEW") => (shown: boolean) => setQuietPresence((p) => (p[id] === shown ? p : { ...p, [id]: shown }));
+  const reportQuiet = (id: "ROUTINE" | "EXPERIMENT" | "REVIEW" | "PHONE_ALERTS_BEHIND") => (shown: boolean) => setQuietPresence((p) => (p[id] === shown ? p : { ...p, [id]: shown }));
   // One after-shift card at a time (on by default): the catch-up first, the close once catch-up is done or skipped
   // (or had nothing to ask), then the after-the-run section. Off, they show together as before.
   const afterShiftBlocked = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId;
@@ -1403,8 +1406,9 @@ export function TodayScreen({
     {/* GRAYSON-TODAY-CALM-001 (C9.6): the quiet lines, together, right under the numbers, in his order. */}
     {dayRead && <TodayQuietLines tuckedCount={quietMoreOpen ? 0 : quiet.tucked.length}
       onMore={() => { markQuietMoreOpened(new Date()); setQuietMoreTick((n) => n + 1); }}
-      lines={quietSettings.order.filter((id): id is "LOG_NUDGE" | "EXPERIMENT" => id === "LOG_NUDGE" || id === "EXPERIMENT").map((id) => ({ id, node:
+      lines={quietSettings.order.filter((id): id is "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" => id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND").map((id) => ({ id, node:
         id === "LOG_NUDGE" ? (logNudge && quietVisible("LOG_NUDGE") ? <LogNudgeLine nudge={logNudge} busy={busy} /> : null)
+        : id === "PHONE_ALERTS_BEHIND" ? <PhoneAlertsBehindLine now={now} tucked={!quietVisible("PHONE_ALERTS_BEHIND")} onPresence={reportQuiet("PHONE_ALERTS_BEHIND")} />
         : (day ? <ActiveExperimentLine now={now} tucked={!quietVisible("EXPERIMENT")} onPresence={reportQuiet("EXPERIMENT")} /> : null) }))} />}
     {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>CAPTURE</button></div>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your

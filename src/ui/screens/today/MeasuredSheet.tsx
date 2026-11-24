@@ -25,7 +25,8 @@ export function formatMeasured(metric: MeasuredMetric, value: number): string {
 }
 import { markGarminSyncRequested } from "../../healthSyncRequest";
 import { askAlfred } from "../../components/AlfredSheet";
-import { buildBridgePlan, helperSyncUrl } from "../../../application/bridgePlan";
+import { helperSyncUrl, writePlanSent, type BridgePlan } from "../../../application/bridgePlan";
+import { currentBridgePlan } from "../../bridgeHandoff";
 
 /** SYNC-001: opens BEYOND Health Bridge (beyond-bridge://sync), which reads Health Connect and sends to BEYOND. */
 export const HELPER_SYNC_URL = "intent://sync#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end";
@@ -34,19 +35,31 @@ export function isAndroid(): boolean {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
 /** BRIDGE-MOMENTS-001: the link also hands the Bridge this week's key moments and Alfred's brief. */
-export async function bridgeSyncUrl(): Promise<string> {
+export async function bridgeSync(): Promise<{ url: string; plan?: BridgePlan }> {
   try {
-    let brief = "";
-    try { brief = (JSON.parse(localStorage.getItem("beyond.alfredBrief") ?? "null") as { text?: string } | null)?.text ?? ""; } catch { /* none */ }
-    return helperSyncUrl(await buildBridgePlan(new URL(import.meta.env.BASE_URL, window.location.origin).toString(), brief));
-  } catch { return HELPER_SYNC_URL; }
+    const plan = await currentBridgePlan();
+    const url = helperSyncUrl(plan);
+    builtPlans.set(url, plan);
+    return { url, plan };
+  } catch { return { url: HELPER_SYNC_URL }; }
+}
+export async function bridgeSyncUrl(): Promise<string> {
+  return (await bridgeSync()).url;
+}
+/** GRAYSON-PLAN-FRESH-001: the plans behind the sync links built this visit, so a tapped link can be recorded as sent. */
+const builtPlans = new Map<string, BridgePlan>();
+/** SYNC GARMIN was opened with this link: remember its plan as the one the phone has. */
+export function recordSyncSent(url: string): void {
+  const plan = builtPlans.get(url);
+  if (plan) writePlanSent(plan);
 }
 export function SyncGarminLink() {
-  const [href, setHref] = useState(HELPER_SYNC_URL);
-  useEffect(() => { let live = true; void bridgeSyncUrl().then((url) => { if (live) setHref(url); }); return () => { live = false; }; }, []);
+  const [link, setLink] = useState<{ url: string; plan?: BridgePlan }>({ url: HELPER_SYNC_URL });
+  useEffect(() => { let live = true; void bridgeSync().then((next) => { if (live) setLink(next); }); return () => { live = false; }; }, []);
   if (!isAndroid()) return null;
   // SYNC-002: remember the tap, so what the helper sends back imports straight away.
-  return <a className="btn-secondary measured-sync" href={href} onClick={() => markGarminSyncRequested()}>SYNC GARMIN</a>;
+  // GRAYSON-PLAN-FRESH-001: SYNC GARMIN hands the plan over too, so it's remembered as sent.
+  return <a className="btn-secondary measured-sync" href={link.url} onClick={() => { markGarminSyncRequested(); if (link.plan) writePlanSent(link.plan); }}>SYNC GARMIN</a>;
 }
 
 /** "Garmin as of 14:20" today, otherwise with the date. */

@@ -78,6 +78,13 @@ The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.
 
+0.13.0 (GRAYSON-PLAN-FRESH-001, Gavin 2026-11-24): BEYOND can hand the alert plan over without a SYNC GARMIN. Its
+update link (`beyond-bridge://plan?plan=…`), opened when he saves alert settings, his schedule or a confirmed schedule
+change, or taps UPDATE ALERTS, lands on `PlanActivity`: it saves the plan with the same `MomentAlerts.save`, re-arms
+the moments and finishes at once with no screen. It reads nothing, sends nothing and asks for no permission; no new
+service. A Bridge older than 0.13.0 doesn't know the link, and Chrome goes back to BEYOND's KEY MOMENT ALERTS, which
+says to update the Bridge.
+
 ## Build and provenance
 
 Java 17, Gradle 8.11.1, Android compile SDK 36 (target 35; minimum 28). Run:

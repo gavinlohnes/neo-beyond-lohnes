@@ -39,6 +39,9 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.close.gaps.v1": "Evening close gaps",
   "beyond.logNudge.v1": "Logging nudge",
   "beyond.todayQuiet.v1": "TODAY quiet lines",
+  // GRAYSON-PLAN-FRESH-001: his two phone-alert switches. What was last sent to the phone (beyond.bridgePlan.sent.v1)
+  // is this phone's state and doesn't travel.
+  "beyond.bridgePlan.settings.v1": "Phone alert updates",
 };
 
 const MAX_VALUE_LENGTH = 16_384;
