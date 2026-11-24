@@ -8,7 +8,7 @@ export async function openMealInBody(screen: Screen) {
   const primary = screen.getByRole("navigation", { name: "Primary", exact: true });
   await expect.poll(() => primary.elements().length + mealButton(screen).elements().length).toBeGreaterThan(0);
   const appShell = primary.elements().length > 0;
-  // A sheet still closing can swallow the next tap (MealRoundTrip flake): open only once none is open.
+  // Defensive: open only once no sheet is open. (MealRoundTrip is still a known flake: a lost MEAL tap inside LOG.)
   await expect.poll(() => document.querySelector("dialog[open]")).toBeNull();
   if (appShell) {
     await primary.getByRole("button", { name: "Open LOG", exact: true }).click();
