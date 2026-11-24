@@ -53,6 +53,11 @@ import type {
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { TodayToasts } from "./TodayToasts";
+import { useCheckInForm } from "./useCheckInForm";
+import { useResetSession } from "./useResetSession";
+import { useShiftDownSession } from "./useShiftDownSession";
+import { useConfirmFlows } from "./useConfirmFlows";
+import { useSmallSteps } from "./useSmallSteps";
 import { SLEEP_DRAFT_ADJUST_MAX, SLEEP_DRAFT_ADJUST_MIN, quickCheckInValues, readSleepDraftDismissal, useTodayActions, type LoggedEntry } from "./todayActions";
 export { quickCheckInValues };
 import { EMPTY_TODAY_SNAPSHOT, installTodaySnapshot, readTodaySnapshot, type TodaySnapshot } from "./todayRead";
@@ -74,7 +79,6 @@ import { CommitmentQuickActions } from "./CommitmentQuickActions";
 import { formatLocalDate } from "../../../engine/scheduledContext";
 import { getCurrentlyEligibleUnresolvedObligations } from "../../../application/intentQueries";
 import type { Mission, Obligation } from "../../../domain/intent/types";
-import { type PartialCheckInValues } from "./checkInFields";
 import { describeCapacity, describeCapacityUnknown } from "./capacityCopy";
 import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import {
@@ -85,10 +89,10 @@ import {
 import { deriveCapacity } from "../../../engine/capacity";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
-import { FIX_UNDO_MS, useUndoOpen, useUndoWindow } from "../../hooks/useUndoWindow";
+import { useUndoOpen } from "../../hooks/useUndoWindow";
 import { CheckInFixSheet, FixUndoBanner } from "./CheckInFix";
 import type { BodyFocus } from "../../shortcuts";
-import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
+import { isPrimaryReset, isPrimaryShiftDown } from "./resetShiftDownCopy";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
 import { WorkoutCall, useWorkoutCallQuestion } from "./WorkoutCall";
 import { QuickLog } from "./QuickLog";
@@ -100,8 +104,6 @@ import { ShiftDownCard } from "./ShiftDownCard";
 import { EndDayCard } from "./EndDayCard";
 import { CommitmentsCard } from "./CommitmentsCard";
 import { CaptureListRow, CaptureToolsCard } from "./CaptureSection";
-import { emptyCapturePromotionDraft, type CapturePromotionDraft } from "../../components/CapturePromotionForm";
-import type { CaptureDateSuggestion } from "../../../domain/capture/types";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
 import { CheckInCard } from "./CheckInCard";
 import { WorkContextCard } from "./WorkContextCard";
@@ -310,14 +312,23 @@ export function TodayScreen({
   // frame instead of "Mode not set / START DAY" flashing before the real day appears.
   const [dayRead, setDayRead] = useState(false);
   const [recommendationDraftPresent, setRecommendationDraftPresent] = useState(false);
-  const [values, setValues] = useState<PartialCheckInValues>({});
-  const [checkInError, setCheckInError] = useState<string | null>(null);
-  useSessionDraft(operationsOnly ? "command-check-in" : "check-in", Object.keys(values).length > 0);
-  // Drop 5: the check-in draft (the operator's previous answers), and whether they chose START BLANK.
-  const [checkInDraftDismissed, setCheckInDraftDismissed] = useState(false);
-  const activeCheckInDraft = checkInDraft && !checkInDraftDismissed ? checkInDraft : undefined;
-  // What the form shows and submits: taps win over the draft.
-  const checkInFormValues: PartialCheckInValues = values;
+  // GRAYSON-TODAY-SPLIT-003 slice C (small local state): the check-in form, RESET and SHIFT DOWN sessions, the
+  // confirm flows and Small Steps live in their own hooks (useCheckInForm.ts and its neighbours). The names below
+  // are unchanged, so the rest of TODAY reads them as before.
+  const {
+    values,
+    setValues,
+    checkInError,
+    setCheckInError,
+    checkInDraftDismissed,
+    setCheckInDraftDismissed,
+    activeCheckInDraft,
+    checkInFormValues,
+    fixCheckInId,
+    setFixCheckInId,
+    fixUndo,
+    setFixUndo,
+  } = useCheckInForm(operationsOnly, checkInDraft);
   const [busy, setBusy] = useState(false);
   // LAUNCH-VISION-003 (2026-09-15, direct owner ruling): fires the
   // power-on sweep exactly once per START DAY — "the one real power-on
@@ -326,21 +337,14 @@ export function TodayScreen({
   // back to false. Same one-shot-on-mount convention as .fade-in/
   // .set-earned elsewhere in this codebase.
   const [justStartedDay, setJustStartedDay] = useState(false);
-  const [activeResetId, setActiveResetId] = useState<string | null>(null);
-  const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [openResetStartedAt, setOpenResetStartedAt] = useState<string | null>(null);
-  const [lastResetOutcome, setLastResetOutcome] = useState<SessionOutcome | null>(null);
-  const [activeShiftDownId, setActiveShiftDownId] = useState<string | null>(null);
-  const [shiftDownDuration, setShiftDownDuration] = useState(10);
-  const [openShiftDownStartedAt, setOpenShiftDownStartedAt] = useState<string | null>(null);
-  const [lastShiftDownOutcome, setLastShiftDownOutcome] = useState<SessionOutcome | null>(null);
+  const resetSession = useResetSession();
+  const { activeResetId, resetIntensity, setResetIntensity, openResetStartedAt, lastResetOutcome, setLastResetOutcome } = resetSession;
+  const shiftDownSession = useShiftDownSession();
+  const { activeShiftDownId, shiftDownDuration, setShiftDownDuration, openShiftDownStartedAt, lastShiftDownOutcome, setLastShiftDownOutcome } = shiftDownSession;
   const [endDayBlockedByWorkout, setEndDayBlockedByWorkout] = useState(false);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
   // OWNER-GO-001: after a check-in, one plain line on what it changed and what holds the answer.
   const [checkInOutcome, setCheckInOutcome] = useState<string | null>(null);
-  // GRAYSON-CHECKIN-EDIT-001: which check-in the fix sheet is open on, and the Undo shown for FIX_UNDO_MS after a fix.
-  const [fixCheckInId, setFixCheckInId] = useState<string | null>(null);
-  const [fixUndo, setFixUndo] = useUndoWindow<{ message: string; correctionEventId?: string }>(FIX_UNDO_MS);
   // Current Operational Context V1 (bounded proof): feeds the STATUS
   // context strip only — every other read above (day, scheduledContext,
   // unresolvedPostShift) stays exactly as-is for its own other uses
@@ -387,33 +391,24 @@ export function TodayScreen({
   const [captureText, setCaptureText] = useState("");
   useSessionDraft(operationsOnly ? "command-capture" : "capture", captureText.length > 0);
   const [captureFeedback, setCaptureFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
-  // Overdrive Phase 17 (Capture 1.1): reopenCaptureItem already existed
-  // (application/commands.ts) and was already tested
-  // (captureInbox.test.ts, "reopening undoes an accidental resolve") but
-  // had no UI wired to it — an accidental RESOLVE tap had no way back.
-  // Tracks only the single most-recently-resolved item, mirroring how
-  // BODY's own confirmation-with-undo banners work (each new one simply
-  // replaces the last) — not a resolved-items history browser, which
-  // would start pulling Capture toward task management.
-  const [justResolvedCapture, setJustResolvedCapture] = useState<{ id: string; text: string } | null>(null);
-  // Capture Processing, Slice 3: the inline "-> OBLIGATION" confirm panel
-  // for a specific capture row (id null when closed), the editable title
-  // (pre-filled from the capture's own text, never auto-submitted), and a
-  // one-line result — same non-undoable SUCCESS/ERROR shape as
-  // commitmentFeedback below, since undoing would mean deleting an
-  // Obligation, which Drop 01 doctrine has no operation for.
-  const [captureConversion, setCaptureConversion] = useState<{ id: string; text: string } | null>(null);
-  // CAPTURE-PARITY-001: title, planned day and due date are one draft shared
-  // with quick capture's form (components/CapturePromotionForm.tsx).
-  const [conversionDraft, setConversionDraft] = useState<CapturePromotionDraft>(emptyCapturePromotionDraft());
-  // Capture Intelligence layer (2026-09-02): a chrono-node/Compromise-derived
-  // due-date proposal (see engine/captureIntelligence.ts), pre-filled into
-  // this same editable field the moment the conversion panel opens — never
-  // applied on its own. conversionDateSuggestion is kept only to show the
-  // evidence line ("Detected from ..."); conversionDraft.dueAt is the actual,
-  // freely editable/clearable form value that gets submitted.
-  const [conversionDateSuggestion, setConversionDateSuggestion] = useState<CaptureDateSuggestion | null>(null);
-  const [captureConversionFeedback, setCaptureConversionFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
+  const {
+    justResolvedCapture,
+    setJustResolvedCapture,
+    captureConversion,
+    setCaptureConversion,
+    conversionDraft,
+    setConversionDraft,
+    conversionDateSuggestion,
+    setConversionDateSuggestion,
+    captureConversionFeedback,
+    setCaptureConversionFeedback,
+    commitmentConfirmation,
+    setCommitmentConfirmation,
+    commitmentFeedback,
+    setCommitmentFeedback,
+    commitmentFeedbackRef,
+    commitmentSatisfactionPendingRef,
+  } = useConfirmFlows();
   const [mdWaterInput, setMdWaterInput] = useState("");
   const [mdProteinInput, setMdProteinInput] = useState("");
   // Product Experience Sprint, P3: RESET/SHIFT DOWN/check-in each default
@@ -468,10 +463,6 @@ export function TodayScreen({
   const mealUndoOpen = useUndoOpen(mealConfirmation);
   const [undoFailure, setUndoFailure] = useState<string | null>(null);
   const [commitmentsOpen, setCommitmentsOpen] = useState(false);
-  const [commitmentConfirmation, setCommitmentConfirmation] = useState<{ id: string; title: string } | null>(null);
-  const [commitmentFeedback, setCommitmentFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
-  const commitmentFeedbackRef = useRef<HTMLParagraphElement>(null);
-  const commitmentSatisfactionPendingRef = useRef(false);
   const shiftDownStartRef = useRef<HTMLButtonElement>(null);
   // Drop 6: the quit tracker's post-shift plan, shown inside SHIFT DOWN.
   const [postShiftPlan, setPostShiftPlan] = useState<string | undefined>(undefined);
@@ -551,14 +542,11 @@ export function TodayScreen({
   }, [toolsOpen, active, toolsRequest]);
   // Optional session-local presentation, never a capacity/plan/Minimum Day write.
   const hiddenFeatures = useHiddenFeatures();
-  const [smallSteps, setSmallSteps] = useState(false);
-  const [smallTool, setSmallTool] = useState<"MINIMUM_DAY" | "CAPTURE" | null>(null);
+  const { smallSteps, setSmallSteps, smallTool, setSmallTool, smallStepsRef, smallStepsEntryRef, returnToSmallSteps, exitSmallSteps } = useSmallSteps(setToolsOpen);
   useEffect(() => {
     if (!hiddenFeatures.minimumDay) { setMinimumDayOpen(false); setHydrationOperationOpen(false); }
     if (!hiddenFeatures.smallSteps) { setSmallSteps(false); setSmallTool(null); }
   }, [hiddenFeatures.minimumDay, hiddenFeatures.smallSteps]);
-  const smallStepsRef = useRef<HTMLDivElement>(null);
-  const smallStepsEntryRef = useRef<HTMLButtonElement>(null);
 
   // ---- SLEEP DRAFT (2026-10-03) ----
   // ±15-minute nudges applied to the draft before logging it.
@@ -777,23 +765,8 @@ export function TodayScreen({
     setSnapshot((prev) => installTodaySnapshot(prev, read, { isOwner }));
     if (read.day) {
       // The RESET and SHIFT DOWN sessions are seeded from this read, in the same render.
-      const { openReset, openShiftDown } = read;
-      if (openReset) {
-        setActiveResetId(openReset.eventId);
-        setResetIntensity(openReset.intensity);
-        setOpenResetStartedAt(openReset.startedAt);
-      } else {
-        setActiveResetId(null);
-        setOpenResetStartedAt(null);
-      }
-      if (openShiftDown) {
-        setActiveShiftDownId(openShiftDown.eventId);
-        setShiftDownDuration(openShiftDown.durationMinutes);
-        setOpenShiftDownStartedAt(openShiftDown.startedAt);
-      } else {
-        setActiveShiftDownId(null);
-        setOpenShiftDownStartedAt(null);
-      }
+      resetSession.seedFromRead(read.openReset);
+      shiftDownSession.seedFromRead(read.openShiftDown);
     }
     setRefreshVersion((v) => v + 1);
     // GARMIN-004: off the critical path; a failed Garmin read hides the Garmin tiles, nothing else.
@@ -1238,23 +1211,6 @@ export function TodayScreen({
       const control = target?.querySelector<HTMLElement>(tool === "CAPTURE" ? "input" : "button, input");
       control?.focus({ preventScroll: true });
       target?.scrollIntoView({ block: "start", behavior: "instant" });
-    });
-  }
-
-  function returnToSmallSteps() {
-    setSmallTool(null);
-    const trigger = smallStepsRef.current?.querySelector<HTMLElement>("button");
-    trigger?.focus({ preventScroll: true });
-    smallStepsRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
-  }
-
-  function exitSmallSteps() {
-    setSmallSteps(false);
-    setSmallTool(null);
-    setToolsOpen(true);
-    window.requestAnimationFrame(() => {
-      smallStepsEntryRef.current?.focus({ preventScroll: true });
-      smallStepsEntryRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
     });
   }
 
