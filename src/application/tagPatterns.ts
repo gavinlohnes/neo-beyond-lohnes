@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { getEffectiveCheckIns } from "./queries";
 import type { DaySummary } from "../engine/dayLedger";
 import type { StateCheckIn } from "../domain/common/types";
 import { getDaySummaries } from "./dayLedgerQueries";
@@ -75,6 +76,6 @@ export function dayFacts(notes: readonly { dayId: string; text: string }[], summ
 }
 
 export async function getTagPatterns(): Promise<TagPatterns> {
-  const [notes, summaries, checkIns] = await Promise.all([db.dailyNotes.toArray(), getDaySummaries(), db.checkIns.toArray()]);
+  const [notes, summaries, checkIns] = await Promise.all([db.dailyNotes.toArray(), getDaySummaries(), getEffectiveCheckIns()]);
   return compareTags(dayFacts(notes, summaries, checkIns));
 }

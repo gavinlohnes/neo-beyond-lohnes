@@ -10,7 +10,7 @@ import { getUndoneSetIds } from "./trainQueries";
 import { getExerciseNames } from "./exerciseLibraryQueries";
 import { getWeekAhead } from "./weekAheadQueries";
 import { getWeeklyReviewRecords, findWeekReview } from "./weeklyReviewQueries";
-import { getActiveDay, getSchedulePattern } from "./queries";
+import { getActiveDay, getSchedulePattern, getEffectiveCheckIns } from "./queries";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import type { DomainEvent, SleepLoggedPayload } from "../domain/common/types";
 import type { ExternalSleepRevision } from "../domain/health/sleepImport";
@@ -35,7 +35,7 @@ export interface PictureLift {
 export async function getWholePicture(now = new Date()) {
   return db.transaction("r", db.tables, async () => {
     const [summaries, weights, checkIns, hours, resting, missions, obligations, journal, sets, undone, names, weekAhead, reviews, activeDay, eligible] = await Promise.all([
-      getDaySummaries(), getBodyweightHistoryWithSources(), db.checkIns.toArray(),
+      getDaySummaries(), getBodyweightHistoryWithSources(), getEffectiveCheckIns(),
       db.externalActivityHours.toArray(), db.externalRestingHeartRates.toArray(),
       getMissions(), getObligations(), getReviewedDecisionJournalEntries(),
       db.performedSets.toArray(), getUndoneSetIds(), getExerciseNames(),

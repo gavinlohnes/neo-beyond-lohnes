@@ -8,7 +8,6 @@ import type {
   BodyLogVoidedPayload,
   RecommendationKind,
   SchedulePattern,
-  StateCheckIn,
   UrgeTrigger,
   WorkContextSetPayload,
   WorkContextSource,
@@ -16,6 +15,7 @@ import type {
 } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { deriveCapacity } from "./capacity";
+import { checkInChains } from "../domain/checkInCorrections";
 import { effectiveWorkMarks } from "./workMarks";
 import { mostRecentBoundaryAtOrBefore } from "./dayRollover";
 import { findSessionRecords } from "./personalRecords";
@@ -195,6 +195,9 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   // SHIFT-CORRECT-001: an explicit correction of a work mark.
   "WORK_PERIOD_RETIMED",
   "WORK_PERIOD_VOIDED",
+  // GRAYSON-CHECKIN-EDIT-001: a check-in fix is one correction; undoing it is another.
+  "CHECK_IN_CORRECTED",
+  "CHECK_IN_CORRECTION_UNDONE",
 ]);
 
 const TRAINING_SET_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(["SET_LOGGED", "SET_SKIPPED"]);
@@ -403,9 +406,10 @@ function summarizeDay(
     );
 
   // Check-in → the locked capacity rule
-  const checkIns = ofType(events, "STATE_CHECKED_IN");
+  // GRAYSON-CHECKIN-EDIT-001: a fixed check-in counts with its fixed answers; a fix is not a second check-in.
+  const checkIns = checkInChains(events);
   const latestCheckIn = checkIns[checkIns.length - 1];
-  const capacity = latestCheckIn ? deriveCapacity(latestCheckIn.payload as StateCheckIn) : undefined;
+  const capacity = latestCheckIn ? deriveCapacity(latestCheckIn.current) : undefined;
 
   // Latest recommendation and the operator's decision on it
   const issued = ofType(events, "RECOMMENDATION_ISSUED");
@@ -464,7 +468,7 @@ function summarizeDay(
             capacity: capacity.capacity,
             reasonCodes: capacity.reasonCodes,
             count: checkIns.length,
-            at: latestCheckIn.occurredAt,
+            at: latestCheckIn.at,
           },
         }
       : {}),

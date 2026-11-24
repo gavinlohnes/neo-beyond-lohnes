@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { getEffectiveCheckIns } from "./queries";
 import { getImportedSleep } from "./externalSleepQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
@@ -133,7 +134,7 @@ function tagLearnedOn(notes: Inputs["notes"], summaries: readonly DaySummary[], 
 }
 
 export async function getDeltaKnowledge(now = new Date()): Promise<DeltaKnowledge> {
-  const [records, summaries, notes, checkIns, experiments, snapshot] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), db.checkIns.toArray(), getExperiments(), getMeasuredSnapshot(now.getTime()).catch(() => null)]);
+  const [records, summaries, notes, checkIns, experiments, snapshot] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), getEffectiveCheckIns(), getExperiments(), getMeasuredSnapshot(now.getTime()).catch(() => null)]);
   return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, experiments, unusual: snapshot?.unusual ?? {}, now });
 }
 

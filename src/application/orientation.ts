@@ -9,10 +9,9 @@ import { groupLivedDays } from "../engine/livedDaySeries";
 import { projectPersonalBaselines } from "../engine/personalBaselines";
 import { formatLocalDate, isOperatorSavedSchedule, livedDayShiftWindow } from "../engine/scheduledContext";
 import { say, type DeltaLineKey, type DeltaVoice } from "./deltaVoice";
-import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getMinimumDayStatus, getSchedulePattern, getWorkContextSource } from "./queries";
+import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getMinimumDayStatus, getSchedulePattern, getWorkContextSource, getEffectiveCheckIns } from "./queries";
 import { RECOVERY_CONTRACT } from "./recoveryContract";
 import { hasPlanItem, livedDayDates } from "./lifeTransition";
-import { db } from "../persistence/db";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getRecommendationDraft } from "./recommendationDraftQueries";
 import { getPreparation } from "./preparation";
@@ -418,7 +417,7 @@ async function plannedRecovery(at: Date): Promise<string[]> {
 /** C1.2: the latest submitted mood for each of the recent lived days (7), oldest first. Read only. */
 async function latestMoods(at: Date): Promise<number[]> {
   const since = new Date(mostRecentBoundaryAtOrBefore(at).getTime() - 7 * 24 * 3_600_000).toISOString();
-  const rows = (await db.checkIns.toArray()).filter((c) => c.recordedAt >= since);
+  const rows = (await getEffectiveCheckIns()).filter((c) => c.recordedAt >= since);
   const byDay = new Map<string, { at: string; mood: number }>();
   for (const c of rows) {
     const key = c.beyondDayId;

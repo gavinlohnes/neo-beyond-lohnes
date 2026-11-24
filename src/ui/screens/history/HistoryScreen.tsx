@@ -2,7 +2,27 @@ import { useEffect, useRef, useState } from "react";
 import { describeError } from "../../errorMessage";
 import { getHistoryDays, type HistoryDay } from "../../../application/historyQueries";
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
-import { describeEvent, describeHistoryDayMeta } from "./historyCopy";
+import { describeCheckInFix, describeEvent, describeHistoryDayMeta } from "./historyCopy";
+import { checkInChains } from "../../../domain/checkInCorrections";
+import type { CheckInCorrectedPayload, DomainEvent, StateCheckIn } from "../../../domain/common/types";
+import { undoCheckInCorrection, type CheckInCorrectionResult } from "../../../application/checkInCorrectionCommands";
+import { FIX_UNDO_MS, useUndoWindow } from "../../hooks/useUndoWindow";
+import { captureCommitFeedback } from "../../feel/feedback";
+import { CheckInFixSheet, FixUndoBanner } from "../today/CheckInFix";
+
+/** GRAYSON-CHECKIN-EDIT-001: FIX's name says which check-in it fixes; the fix row's FIX says "again". */
+function fixLabel(event: DomainEvent): string {
+  const time = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  if (event.type === "CHECK_IN_CORRECTED") return `Fix the check-in from ${time((event.payload as CheckInCorrectedPayload).checkIn.recordedAt)} again`;
+  return `Fix the check-in from ${time((event.payload as StateCheckIn).recordedAt)}`;
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: the check-in row id a History row stands for, if it is a check-in or a fix of one. */
+function checkInRowId(event: DomainEvent): string | undefined {
+  if (event.type === "STATE_CHECKED_IN") return (event.payload as StateCheckIn).id;
+  if (event.type === "CHECK_IN_CORRECTED") return (event.payload as CheckInCorrectedPayload).checkIn.id;
+  return undefined;
+}
 
 export function HistoryScreen({ focusDayId = null, focusEventId = null, active = true, requestKey = 0 }: { focusDayId?: string | null; focusEventId?: string | null; active?: boolean; requestKey?: number } = {}) {
   const [days, setDays] = useState<HistoryDay[]>([]);
@@ -17,6 +37,34 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
     if (focusDayId) setExpanded((previous) => ({ ...previous, [focusDayId]: true }));
   }, [focusDayId, requestKey]);
   const [exerciseNames, setExerciseNames] = useState<Record<string, string>>({});
+  // GRAYSON-CHECKIN-EDIT-001: any check-in row opens fix mode on that check-in's current answers.
+  const [fixCheckInId, setFixCheckInId] = useState<string | null>(null);
+  const [fixUndo, setFixUndo] = useUndoWindow<{ message: string; correctionEventId?: string }>(FIX_UNDO_MS);
+  const [undoing, setUndoing] = useState(false);
+
+  async function handleFixed(result: CheckInCorrectionResult) {
+    if (result.status === "CORRECTED") setFixUndo({ message: "Check-in fixed.", correctionEventId: result.correctionEventId });
+    else if (result.status === "UNDONE") setFixUndo({ message: "Fix put back." });
+    else if (result.status === "NO_OP") setFixUndo({ message: "Nothing changed." });
+    await refresh();
+  }
+
+  async function handleUndo() {
+    const acknowledge = captureCommitFeedback();
+    const target = fixUndo?.correctionEventId;
+    if (!target || undoing) return;
+    setUndoing(true);
+    try {
+      const result = await undoCheckInCorrection(target);
+      if (result.status === "UNDONE") acknowledge("MEDIUM");
+      setFixUndo({ message: result.status === "UNDONE" ? "Fix undone." : "That fix was already changed." });
+      await refresh();
+    } catch (error) {
+      setFixUndo({ message: describeError(error, "Undo didn't save. Try again.") });
+    } finally {
+      setUndoing(false);
+    }
+  }
 
   useEffect(() => {
     if (!active) return;
@@ -65,8 +113,10 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
           that needs its own big display title. */}
       <h1 className="eyebrow">MORE // HISTORY</h1>
       <p className="card-body" style={{ marginBottom: 16 }}>
-        Every day and every event, exactly as it happened. Read-only.
+        Every day and every event, exactly as it happened. A check-in can be fixed; the original stays here.
       </p>
+      <CheckInFixSheet checkInId={fixCheckInId} onClose={() => setFixCheckInId(null)} onChanged={handleFixed} />
+      {fixUndo && <FixUndoBanner message={fixUndo.message} busy={undoing} onUndo={fixUndo.correctionEventId ? () => void handleUndo() : undefined} />}
 
       {loading && <p className="empty-state" role="status">Loading…</p>}
       {readError && <div><p role="alert">{readError} History is unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void refresh()}>RETRY HISTORY</button></div>}
@@ -78,6 +128,7 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
 
       {shown.map(({ day, events }) => {
         const isOpen = expanded[day.id] ?? false;
+        const editedCheckIns = new Set(checkInChains(events).filter((c) => c.fixes.length > 0).map((c) => c.originalCheckInId));
         return (
           <div className="card" key={day.id} id={`history-day-${day.id}`} tabIndex={-1}>
             <div
@@ -118,9 +169,16 @@ export function HistoryScreen({ focusDayId = null, focusEventId = null, active =
                     key={event.id} id={`history-event-${event.id}`} tabIndex={-1} className={focusEventId === event.id ? "health-history-focus" : undefined}
                     style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0" }}
                   >
-                    <span className="card-body" style={{ margin: 0, minWidth: 0, overflowWrap: "anywhere" }}>{describeEvent(event, exerciseNames)}</span>
-                    <span className="meta" style={{ whiteSpace: "nowrap" }}>
-                      {new Date(event.occurredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                    <span className="card-body" style={{ margin: 0, minWidth: 0, overflowWrap: "anywhere" }}>
+                      {event.type === "CHECK_IN_CORRECTED" ? describeCheckInFix(event, events) : describeEvent(event, exerciseNames)}
+                      {event.type === "STATE_CHECKED_IN" && editedCheckIns.has((event.payload as StateCheckIn).id) ? " · edited" : ""}
+                    </span>
+                    <span className="history-event-end">
+                      <span className="meta" style={{ whiteSpace: "nowrap" }}>
+                        {new Date(event.occurredAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                      </span>
+                      {checkInRowId(event) && <button type="button" className="btn-secondary history-fix" aria-label={fixLabel(event)}
+                        onClick={() => setFixCheckInId(checkInRowId(event) ?? null)}>FIX</button>}
                     </span>
                   </div>
                 ))}
