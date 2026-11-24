@@ -14,4 +14,4 @@
 .howto-sheet__watch { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .howto-edit__field { display: grid; gap: 4px; margin-top: 10px; font-size: 16px; color: var(--text-2); }
 .howto-edit__field :is(input, textarea) { min-height: 44px; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--p-line-2, #3a3a3a); border-radius: 0; background: var(--p-bg, #000); color: var(--text-1); min-width: 0; }
-.howto-open { width: auto; min-height: 44px; padding: 4px 10px; font-size: 14px; flex-shrink: 0; }
+.howto-open { width: auto; min-height: 44px; padding: 4px 10px; font-size: 16px; flex-shrink: 0; }
