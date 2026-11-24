@@ -63,6 +63,17 @@ describe("C8.1 settings travel with the backup", () => {
     expect(await db.events.count()).toBeGreaterThan(0); // the data restored as before
   });
 
+  it("GRAYSON-TODAY-CALM-001: TODAY's quiet-line settings travel; the day's \"N MORE\" opened state stays on the phone", async () => {
+    const quiet = JSON.stringify({ max: 3, order: ["ROUTINE", "LOG_NUDGE"], off: ["EXPERIMENT"], oneAfterShift: false });
+    setAll({ "beyond.todayQuiet.v1": quiet, "beyond.todayQuiet.opened.v1": "2026-11-23" });
+    const text = await (await exportNativeBackup(false)).text();
+    expect(text).not.toContain("todayQuiet.opened");
+    localStorage.clear();
+    await applyAnyRestore(asFile(text));
+    expect(localStorage.getItem("beyond.todayQuiet.v1")).toBe(quiet);
+    expect(localStorage.getItem("beyond.todayQuiet.opened.v1")).toBeNull();
+  });
+
   it("is replace-only for the allowlist: a preference the backup lacks returns to its default", async () => {
     setAll({ "beyond.vision": "NIGHT" });
     const text = await (await exportNativeBackup(false)).text();
@@ -133,7 +144,7 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.garminBridgeTrusted": "device trust", "beyond:stealth": "screen privacy (SUIT-001)",
       "beyond.alfredSpend": "counter", "beyond.ifttt.sends": "counter", "beyond.alfredBrief": "cache",
       "beyond.alfredReviewSeen": "seen", "beyond.bootShownFor": "seen", "beyond.reportSeen": "seen", "beyond:deltaSeen": "seen",
-      "beyond.orientation.v1": "seen", "beyond.shiftChange": "seen", "beyond.today.lastLook.v1": "seen",
+      "beyond.orientation.v1": "seen", "beyond.todayQuiet.opened.v1": "seen", "beyond.shiftChange": "seen", "beyond.today.lastLook.v1": "seen",
       "beyond.more.recents.v1": "history", "beyond.catchup.done.v1": "done flag", "beyond.close.done.v1": "done flag",
       "beyond.coach.skips.v1": "dismissal", "beyond.eating.dismissed.v1": "dismissal", "beyond.logNudge.dismissed.v1": "dismissal", "beyond.workRunRedraft.dismissed.v1": "dismissal",
       "beyond.weeklyReviewLater": "snooze", "beyond.workoutCallLater.": "snooze", "beyond.shiftSleepPlan.skip.": "dismissal",

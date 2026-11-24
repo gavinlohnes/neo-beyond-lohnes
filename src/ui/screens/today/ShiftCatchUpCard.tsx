@@ -3,6 +3,9 @@ import { getShiftCatchUp, waterLabel, type CatchUpItem } from "../../../applicat
 import { logWater } from "../../../application/commands";
 import { logMeal } from "../../../application/nutritionCommands";
 import { catchUpDone, markCatchUpDone } from "./closeStore";
+import { useReportPresence } from "../../components/usePresence";
+
+export type CatchUpPresence = "LOADING" | "SHOWN" | "NONE";
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
@@ -11,7 +14,9 @@ const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour:
  * on shift that isn't logged tonight; nothing is ticked for him. LOG writes each ticked item at its usual point in the
  * shift through the existing commands. Shown only when there is something to ask; no red, below the day's next step.
  */
-export function ShiftCatchUpCard({ dayId, busy, onDone }: { dayId: string; busy: boolean; onDone: () => void }) {
+// GRAYSON-TODAY-CALM-001: it tells TODAY whether it is still reading, showing, or has nothing to ask, so the close waits
+// for it (one after-shift card at a time) and never waits for a catch-up that has nothing to show.
+export function ShiftCatchUpCard({ dayId, busy, onDone, onPresence }: { dayId: string; busy: boolean; onDone: () => void; onPresence?: (state: CatchUpPresence) => void }) {
   const [items, setItems] = useState<CatchUpItem[] | null>(null);
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set());
   const [saving, setSaving] = useState(false);
@@ -23,6 +28,7 @@ export function ShiftCatchUpCard({ dayId, busy, onDone }: { dayId: string; busy:
     return () => { cancelled = true; };
   }, [dayId]);
 
+  useReportPresence<CatchUpPresence>(catchUpDone(dayId) ? "NONE" : items === null ? "LOADING" : items.length > 0 ? "SHOWN" : "NONE", onPresence);
   if (catchUpDone(dayId) || !items || items.length === 0) return null;
   const finish = () => { markCatchUpDone(dayId); onDone(); };
   const toggle = (key: string) => setTicked((t) => { const n = new Set(t); if (n.has(key)) n.delete(key); else n.add(key); return n; });
