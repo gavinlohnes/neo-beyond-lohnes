@@ -64,7 +64,7 @@ status of its own.
 | C2.4 | Flip-day plan | Not started | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Grok Bot |
 | C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
-| C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
+| C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Briefed ([WORK-RECORD-001](agent/GRAYSON-WORK-RECORD-001.md)) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
 | C3.1 (Q7) | Last done and evidence | Not started | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Grok Bot |
 | C3.2 | Lead time and "coming up" | Not started |  |
@@ -111,7 +111,7 @@ status of its own.
 | C4.16 | Reorder exercises mid-workout (backlog B9, after Hevy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S; Codex |
 | C4.17 | Pinned note per exercise (backlog B10, after Hevy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored field), S; Codex |
 | C4.18 | Nutrition-label scan (backlog B13, after MacroFactor) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new OCR dependency), M |
-| C4.19 | Short sleep trims TRAIN to the SHORT or RECOVERY form; sleep and Garmin only ever lower it, and his check-in wins (backlog B14) | Done (SLEEP-ENGINE-001) | Added 2026-11-24 from the GRAYSON research backlog, then found already built: [SLEEP-ENGINE-001](agent/SLEEP-ENGINE-001.md) (2026-10-27) turns the standard session into the reduced one after two short nights, and his check-in still wins. Tuning is backlog E9 |
+| C4.19 | Short sleep trims TRAIN to the SHORT or RECOVERY form; sleep and Garmin only ever lower it, and his check-in wins (backlog B14) | Done (SLEEP-ENGINE-001) | Added 2026-11-24 from the GRAYSON research backlog, then found already built: [SLEEP-ENGINE-001](agent/SLEEP-ENGINE-001.md) (2026-10-27) turns the standard session into the reduced one after two short nights, and his check-in still wins. Tuning is backlog E9, briefed as [YOUR-NUMBERS-001](agent/GRAYSON-YOUR-NUMBERS-001.md) |
 | **Campaign 5 — Inner Day** | | | |
 | C5.1 | Feeling word (optional) | Not started |  |
 | C5.2 | Help mode | Not started |  |
@@ -125,7 +125,7 @@ status of its own.
 | C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
-| C6.7 | One memory store | Not started |  |
+| C6.7 | One memory store | Briefed ([ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md)) |  |
 | C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
 | C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M. [Brief](agent/GRAYSON-ASKS-COUNT-001.md); Claude Code |
 | C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |

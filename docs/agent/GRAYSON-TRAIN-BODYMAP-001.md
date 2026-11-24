@@ -10,7 +10,7 @@
 - **Starting commit:** `origin/master` `439129c`. Re-fetch before starting.
 - **Builder:** Claude Code (TRAIN while Codex is offline). Branch `claude/grayson-train-bodymap-001`. Reviewer:
   Grok Bot. **Active PR:** pending.
-- **Order and overlap:** Claude Code **#7** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after NOTES-001 and GRAYSON-TRAIN-HOWTO-001, whose shared module (`domain/workout/exerciseHowTo.ts`,
+- **Order and overlap:** Claude Code **#8** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after NOTES-001 and GRAYSON-TRAIN-HOWTO-001, whose shared module (`domain/workout/exerciseHowTo.ts`,
   with the template-to-library map) this reads, and whose HOW TO sheet each map result opens. Both touch
   `ExerciseLibraryScreen.tsx` and the substitution area of `TrainScreen.tsx`. Recheck open PRs at build time;
   tracker to the oldest open PR.

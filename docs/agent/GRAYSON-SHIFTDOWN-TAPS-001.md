@@ -10,7 +10,7 @@
 - **Starting commit:** `origin/master` `92f46cf3` (#667). Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-shiftdown-taps-001`. **Reviewer:** Claude Code (Codex is offline).
   **Active PR:** pending.
-- **Order and overlap:** Grok Bot **#6** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after CARRY-001. Touches `ShiftDownCard.tsx` and
+- **Order and overlap:** Grok Bot **#7** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after CARRY-001. Touches `ShiftDownCard.tsx` and
   `TodayScreen.tsx` (one line above `ShiftCatchUpCard`). CARRY-001 changes `CloseCard.tsx`, not these, so no shared
   file except `TodayScreen.tsx`; rebase on whichever merges first.
 - **Amended by GRAYSON-TODAY-CALM-001 (2026-11-24):** build after it. The "First at home" line is the quiet-line candidate `FIRST_AT_HOME` (default place 2) rendered by `TodayQuietLines`, not its own block in `TodayScreen.tsx`.

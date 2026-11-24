@@ -9,8 +9,8 @@
 - **Starting commit:** `origin/master` `fed6b84` (#662). Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-carry-001`. **Reviewer:** Claude Code (Codex is offline).
   **Active PR:** pending.
-- **Order and overlap:** Grok Bot **#5** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after TODAY-SPLIT-003, TODAY-CALM-001,
-  PLAN-FRESH-001 and DICTATE-001. CLOSE-GAPS-001 (#667) is merged and adds a line at the top of `CloseCard`. This brief
+- **Order and overlap:** Grok Bot **#6** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after TODAY-SPLIT-003, TODAY-CALM-001,
+  PLAN-FRESH-001, DICTATE-001 and WORK-RECORD-001. CLOSE-GAPS-001 (#667) is merged and adds a line at the top of `CloseCard`. This brief
   adds its block under that line. Shares `CloseCard.tsx` and `application/dayClose.ts`; rebase on whichever merges
   first. Tracker to the oldest open PR.
 
