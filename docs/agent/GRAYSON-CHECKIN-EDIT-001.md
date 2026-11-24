@@ -4,6 +4,9 @@
   everything in this app."** He said yes to the YOURS track and its ranked rows (01:34 and 01:36 CT), and at
   01:53 CT: **"I think we just keep working as long and much as we can."** This brief is backlog row **E2**.
   Merging this brief is his approval of the defaults below; Grok Bot builds once it merges.
+- **Undo rule (Gavin, 2026-11-24 02:02 CT, option 1 of three):** routine logs stay as OWNER-GO-001 left them
+  (`docs/UX_DECISIONS.md`, 2026-10-29: the confirmation is the message only, with no UNDO). Undo shows only
+  after a fix or a removal, where a slip costs more. The Undo in this brief is that case, so it stays.
 - **Lane: Protected.** The check-in feeds the Engine's capacity rule and the Day Ledger. This adds a correction
   event, a corrected check-in row, a bounded edit to `src/engine/dayLedger.ts`, and a re-issued recommendation
   through the existing `evaluate()` path. No Engine rule changes, no Dexie version bump, no new table,
@@ -47,7 +50,7 @@ kept.
 ## Design principles check (Vision, Nov 24)
 
 1. Yours to change: this brief is that rule for the check-in.
-2. Undo, don't ask: Undo toast plus "Put it back"; no dialogs.
+2. Fix, don't ask (undo after a fix or removal only): Undo toast plus "Put it back"; no dialogs.
 3. One tap for the usual: the sheet opens with his answers filled in; the usual fix is one tap and Save.
 4. Built around your shift: "today" is the lived day, which can cross midnight.
 5. Calm: no prompt to fix, no count of fixes shown to him.
