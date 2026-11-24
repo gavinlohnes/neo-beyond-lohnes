@@ -7,8 +7,21 @@ import { describeError } from "../errorMessage";
 import { useSessionDraft } from "../sessionDrafts";
 import { CapturePromotionForm, capturePromotionError, capturePromotionInput, capturePromotionSuccess, emptyCapturePromotionDraft, type CapturePromotionDraft } from "./CapturePromotionForm";
 import "./fastCapture.css";
+import { TalkButton } from "../speech/TalkButton";
+import { readDictationSettings } from "../speech/dictationSettings";
+import { HeardPreview } from "./HeardPreview";
+import { interpret, isQuestion } from "../../application/helper/freeHelper";
+import { readHelperContext } from "../../application/helper/helperContext";
+import { buildPlanningContext } from "../../application/alfred/personalContext";
+import type { AlfredProposal } from "../../application/alfred/alfredActions";
+import type { ProposalContext } from "../../application/alfred/contextActions";
 
-/** Raw capture and deliberate promotion use the same canonical commands as Capture tools. */
+/**
+ * Raw capture and deliberate promotion use the same canonical commands as Capture tools.
+ * GRAYSON-DICTATE-001: TALK beside CAPTURE. What he says fills the box; when he stops, what the free helper understands
+ * becomes an "I heard" preview (anything it wasn't sure of is one note, word for word), saved only with SAVE ALL.
+ * Typed text still saves raw with CAPTURE; a question, or words it finds nothing in, just stay in the box.
+ */
 export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
   busy: boolean; onBusy: (busy: boolean) => void; onSaved: () => void; onOpenCapture: () => void;
 }) {
@@ -19,13 +32,15 @@ export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [promoted, setPromoted] = useState(false);
+  const [heard, setHeard] = useState<{ words: string; cards: AlfredProposal[]; context: ProposalContext } | null>(null);
   const lock = useRef(false), input = useRef<HTMLTextAreaElement>(null), taskTitle = useRef<HTMLTextAreaElement>(null);
   useSessionDraft("record-sheet-note", Boolean(text || promoting));
   function notifySaved() {
     try { onSaved(); }
     catch { setMessage("Saved. The surrounding view could not refresh; close and reopen it to read the latest records."); }
   }
-  async function saveRaw() {
+  async function saveRaw() { await saveRawText(text); }
+  async function saveRawText(text: string) {
     if (lock.current || busy || !text.trim()) return;
     lock.current = true; onBusy(true); setError(null); setMessage(null);
     const acknowledge = captureCommitFeedback();
@@ -50,6 +65,16 @@ export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
       setError(capturePromotionError(cause, "Could not create the task. Your raw capture and choices are kept."));
     } finally { lock.current = false; onBusy(false); }
   }
+  async function sortWords(words: string) {
+    if (!readDictationSettings().sort || isQuestion(words)) return;
+    try {
+      const result = interpret(words, await readHelperContext());
+      if (!result.cards.length) return;
+      const cards: AlfredProposal[] = [...result.cards, ...(result.unknown.length ? [{ kind: "capture_note", text: result.unknown.join("; ") } as AlfredProposal] : [])];
+      setHeard({ words, cards, context: await buildPlanningContext(false) });
+      setSaved(null); setMessage(null); setError(null);
+    } catch { /* the words stay in the box; CAPTURE saves them raw */ }
+  }
   function startPromotion() {
     if (!saved || busy || lock.current || promoted) return;
     setDraft(emptyCapturePromotionDraft(saved.text)); setError(null); setPromoting(true);
@@ -61,10 +86,17 @@ export function FastCapture({ busy, onBusy, onSaved, onOpenCapture }: {
     requestAnimationFrame(() => input.current?.focus());
   }
   return <div className="fast-capture">
-    {!promoting && <>
+    {heard && <HeardPreview key={heard.words} cards={heard.cards} context={heard.context} busy={busy} onBusy={onBusy}
+      onSaved={(n) => { setHeard(null); setText(""); setMessage(`Saved ${n}.`); notifySaved(); }}
+      onChangeWords={() => { setText(heard.words); setHeard(null); requestAnimationFrame(() => input.current?.focus()); }}
+      onKeepOne={() => { const words = heard.words; setHeard(null); setText(words); void saveRawText(words); }} />}
+    {!promoting && !heard && <>
       <label className="field">Capture a thought<textarea ref={input} className="input" aria-label="Capture a thought" rows={4} value={text} disabled={busy} placeholder="Get it down. Decide what it means later." onChange={(e) => setText(e.target.value)} /></label>
       <p className="meta">Raw by default. No destination, type or date needed.</p>
-      <button type="button" className="btn-primary" disabled={busy || !text.trim()} onClick={() => void saveRaw()}>CAPTURE</button>
+      <div className="fast-capture__actions">
+        <button type="button" className="btn-primary" disabled={busy || !text.trim()} onClick={() => void saveRaw()}>CAPTURE</button>
+        <TalkButton disabled={busy} onWords={setText} onHeard={(words) => { setText(words); void sortWords(words); }} />
+      </div>
     </>}
     {message && <p role="status" className="fast-capture__message">{message}</p>}
     {saved && <div className="fast-capture__saved">

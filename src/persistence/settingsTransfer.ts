@@ -42,6 +42,8 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   // GRAYSON-PLAN-FRESH-001: his two phone-alert switches. What was last sent to the phone (beyond.bridgePlan.sent.v1)
   // is this phone's state and doesn't travel.
   "beyond.bridgePlan.settings.v1": "Phone alert updates",
+  // GRAYSON-DICTATE-001: the TALK buttons and "sort what I say into logs".
+  "beyond.dictation.v1": "Voice (TALK buttons)",
 };
 
 const MAX_VALUE_LENGTH = 16_384;

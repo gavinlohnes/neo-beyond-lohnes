@@ -7,6 +7,7 @@ import { exportNativeBackup } from "../../src/persistence/backup";
 import { applyAnyRestore, previewAnyRestore } from "../../src/persistence/restore";
 import { applySettingsBlock, parseSettingsBlock, TRAVELLING_SETTINGS } from "../../src/persistence/settingsTransfer";
 import { logBodyweight, startDay } from "../../src/application/commands";
+import { readDictationSettings } from "../../src/ui/speech/dictationSettings";
 
 /**
  * GRAYSON C8.1 (Q6): the non-secret preferences on the allowlist travel with every native backup and come back on
@@ -87,6 +88,21 @@ describe("C8.1 settings travel with the backup", () => {
     expect(localStorage.getItem("beyond.bridgePlan.lineDay.v1")).toBeNull();
   });
 
+  it("GRAYSON-DICTATE-001: the voice switches travel; a bad value falls back to the defaults", async () => {
+    const voice = JSON.stringify({ talk: false, sort: true });
+    setAll({ "beyond.dictation.v1": voice, "beyond.dictation.privacySeen.v1": "1" });
+    const text = await (await exportNativeBackup(false)).text();
+    expect(text).not.toContain("dictation.privacySeen");
+    localStorage.clear();
+    await applyAnyRestore(asFile(text));
+    expect(localStorage.getItem("beyond.dictation.v1")).toBe(voice);
+    expect(readDictationSettings()).toEqual({ talk: false, sort: true });
+    localStorage.setItem("beyond.dictation.v1", JSON.stringify({ talk: "yes", sort: 0 }));
+    expect(readDictationSettings()).toEqual({ talk: true, sort: true });
+    localStorage.setItem("beyond.dictation.v1", "{broken");
+    expect(readDictationSettings()).toEqual({ talk: true, sort: true });
+  });
+
   it("is replace-only for the allowlist: a preference the backup lacks returns to its default", async () => {
     setAll({ "beyond.vision": "NIGHT" });
     const text = await (await exportNativeBackup(false)).text();
@@ -165,7 +181,7 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond:modePin:": "temporary pin", "beyond:autoBackupSnoozedUntil": "snooze", "beyond:lastBackupAt": "clock",
       "beyond:lastRestoreCheckAt": "clock", "beyond:checkInReminderLastSentDate": "clock", "beyond.garminSyncRequestedAt": "clock",
       "beyond.bridgePlan.sent.v1": "device state (what this phone handed Health Bridge)", "beyond.bridgePlan.lineDay.v1": "seen",
-      "beyond.bridgePlan.outdated": "this visit only (session)",
+      "beyond.bridgePlan.outdated": "this visit only (session)", "beyond.dictation.privacySeen.v1": "seen",
       "beyond.daily-note.draft.": "draft", "beyond:gym-draft:": "draft", "beyond:decrypt:": "animation state",
     };
     const EVENTS = new Set(["beyond:ask-alfred", "beyond:do", "beyond:drive-home", "beyond:find-food", "beyond:hidden-features",
