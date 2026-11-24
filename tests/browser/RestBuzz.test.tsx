@@ -151,7 +151,7 @@ describe("GRAYSON-TRAIN-REST-001 buzz when rest ends", () => {
     const row = () => document.querySelector("[data-rest-buzz-setting]")!;
     await expect.poll(() => document.querySelector("[data-rest-buzz-setting]")).not.toBeNull();
     expect(row().textContent).toContain("On, short buzz.");
-    await userEvent.selectOptions(row().querySelector('select[aria-label="Buzz strength"]')!, "LONG");
+    await userEvent.selectOptions(row().querySelector('select[aria-label="Buzz strength"]') as HTMLSelectElement, "LONG");
     await expect.poll(() => row().textContent).toContain("On, long buzz.");
     await axeClean("MORE row", row());
     await shot("360-more-settings-row", row());
