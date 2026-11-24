@@ -134,8 +134,9 @@ sequence, capacity, STANDARD/REDUCED/RECOVERY, Gym mode or C4.4; a Dexie version
   `src/application/trainHistoryQueries.ts` (fix history on the record); `src/application/workoutIntegrityQueries.ts`
   (count fix events); `dayRolloverQueries.ts`, `commands.ts` rollover read and `alfred/alfredSearch.ts` (filter
   only); `src/engine/dayLedger.ts` (as above only); `src/ui/screens/train/SetFixSheet.tsx` (new),
-  `TrainingHistory.tsx`, `TrainScreen.tsx` (open the sheet from a set row only), `trainCopy.ts`; tests;
-  `docs/agent/screenshots/GRAYSON-TRAIN-EDIT-001/`.
+  `TrainingHistory.tsx`, `TrainScreen.tsx` (open the sheet from a set row only), `trainCopy.ts`;
+  `src/ui/hooks/useUndoWindow.ts` (`FIX_UNDO_MS` only); tests; `docs/agent/screenshots/GRAYSON-TRAIN-EDIT-001/`;
+  `docs/decisions/GRAYSON-TRAIN-EDIT.md` (new).
 - **Off limits:** the rest of `src/engine/`; `WORKOUT_TEMPLATES`; `trainingProgramme*.ts`; progression,
   PR and stall rules; `GymMode.tsx`; `src/persistence/db.ts`; `android/**`; `package.json`.
 
