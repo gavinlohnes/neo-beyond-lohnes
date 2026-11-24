@@ -1,3 +1,6 @@
+import { BodyMap } from "../../components/BodyMap";
+import { groupForExercise } from "../../../application/exerciseByMuscle";
+import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { WorkoutRecap } from "./WorkoutRecap";
 import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
@@ -228,6 +231,9 @@ export function TrainScreen({
   const [fixingSetId, setFixingSetId] = useState<string | null>(null);
   const liveFixUndo = useSetFixUndo(async () => { await refresh(true); });
   const [howToOpen, setHowToOpen] = useState<{ id: string; name: string } | null>(null);
+  // GRAYSON-TRAIN-BODYMAP-001: FIND BY MUSCLE in the swap, opened on the current exercise's group.
+  const [findByMuscle, setFindByMuscle] = useState(false);
+  const [customExercisesForMap, setCustomExercisesForMap] = useState<CustomExercise[]>([]);
   const setWriteRef = useRef(false);
   const draftSessionRef = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -456,7 +462,9 @@ export function TrainScreen({
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
-    setCustomExerciseNames((await getCustomExercises()).map((e) => e.name));
+    const customs = await getCustomExercises();
+    setCustomExerciseNames(customs.map((e) => e.name));
+    setCustomExercisesForMap(customs);
 
     const suggestion = suggestSessionVariant(cap, sleepShort);
     setNoCheckIn(suggestion.noCheckIn);
@@ -2035,9 +2043,11 @@ export function TrainScreen({
                     // merged, deduplicated suggestion row.
                     const recent = recentSubstitutions[currentExercise.exerciseId] ?? [];
                     const suggestions = [...recent, ...customExerciseNames.filter((n) => !recent.includes(n))];
-                    if (suggestions.length === 0) return null;
                     return (
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                        {/* GRAYSON-TRAIN-BODYMAP-001: another exercise for the same muscle, filled in like a quick-pick. */}
+                        <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
+                          aria-expanded={findByMuscle} onClick={() => setFindByMuscle((v) => !v)}>FIND BY MUSCLE</button>
                         {suggestions.map((name) => (
                           <button
                             key={name}
@@ -2052,6 +2062,9 @@ export function TrainScreen({
                       </div>
                     );
                   })()}
+                  {findByMuscle && <BodyMap initialGroup={groupForExercise(currentExercise.exerciseId, customExercisesForMap)}
+                    onPick={(name) => { setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: name })); setFindByMuscle(false); }}
+                    onHowTo={(entry) => setHowToOpen({ id: entry.howToId ?? entry.id, name: entry.name })} />}
                 </>
               )}
 
