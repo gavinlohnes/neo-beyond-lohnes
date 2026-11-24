@@ -26,6 +26,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond:autoBackupPreference": "Automatic backup preference",
   "beyond:restSecondsByExercise": "Rest timer per exercise",
   "beyond.exerciseHowTo.v1": "Exercise how-to edits",
+  "beyond:restBuzzPreference": "Rest timer buzz",
   "beyond:runningBuzz": "Running buzz",
   "beyond:runningHalfwayCue": "Running halfway cue",
   "beyond:runningKeepAwake": "Running keeps the screen on",
