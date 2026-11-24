@@ -11,6 +11,7 @@ import { describeSchedulePreview } from "../today/workContextCopy";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { describeError } from "../../errorMessage";
 import { KeyMomentAlerts } from "./KeyMomentAlerts";
+import { LogNudgeSettings } from "./LogNudgeSettings";
 
 /**
  * Drop 02a (Daily Intelligence / Context, first slice). MORE -> Work
@@ -228,6 +229,7 @@ export function WorkScheduleScreen() {
       </button>
       {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
       <KeyMomentAlerts />
+      <LogNudgeSettings />
     </div>
   );
 }
