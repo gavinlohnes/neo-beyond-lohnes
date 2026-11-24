@@ -51,7 +51,10 @@ import { useShiftDownSession } from "./useShiftDownSession";
 import { useConfirmFlows } from "./useConfirmFlows";
 import { useSmallSteps } from "./useSmallSteps";
 import { deriveTodayView } from "./todayView";
-import { SLEEP_DRAFT_ADJUST_MAX, SLEEP_DRAFT_ADJUST_MIN, quickCheckInValues, readSleepDraftDismissal, useTodayActions, type LoggedEntry } from "./todayActions";
+import { todayTools } from "./TodayTools";
+import { todayPhaseRows } from "./TodayPhaseRows";
+import type { TodaySectionsInput } from "./todaySections";
+import { quickCheckInValues, readSleepDraftDismissal, useTodayActions, type LoggedEntry } from "./todayActions";
 export { quickCheckInValues };
 import { EMPTY_TODAY_SNAPSHOT, installTodaySnapshot, readTodaySnapshot, type TodaySnapshot } from "./todayRead";
 import { TodayRecommendationDraft } from "./TodayRecommendationDraft";
@@ -60,7 +63,6 @@ import { EatingWindowCard } from "./EatingWindowCard";
 import { OperatorHeader } from "../../components/OperatorHeader";
 import { SignalRow } from "../../components/SignalRow";
 import { CommandSurface } from "../../components/CommandSurface";
-import { AdvisorySection } from "./AdvisorySection";
 import { CommitmentQuickActions } from "./CommitmentQuickActions";
 import { getCurrentlyEligibleUnresolvedObligations } from "../../../application/intentQueries";
 import type { Mission, Obligation } from "../../../domain/intent/types";
@@ -74,22 +76,17 @@ import {
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
 import { useUndoOpen } from "../../hooks/useUndoWindow";
-import { CheckInFixSheet, FixUndoBanner } from "./CheckInFix";
 import type { BodyFocus } from "../../shortcuts";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
-import { WorkoutCall, useWorkoutCallQuestion } from "./WorkoutCall";
-import { QuickLog } from "./QuickLog";
-import { NightClosed } from "./NightClosed";
+import { useWorkoutCallQuestion } from "./WorkoutCall";
 import type { TrainDestination } from "../train/TrainScreen";
 import { getRecentSavedMeals } from "../../../application/nutritionQueries";
 import { ResetCard } from "./ResetCard";
 import { ShiftDownCard } from "./ShiftDownCard";
 import { EndDayCard } from "./EndDayCard";
 import { CommitmentsCard } from "./CommitmentsCard";
-import { CaptureListRow, CaptureToolsCard } from "./CaptureSection";
+import { CaptureListRow } from "./CaptureSection";
 import { HydrationOperationCard, MinimumDayCard } from "./MinimumDaySection";
-import { CheckInCard } from "./CheckInCard";
-import { WorkContextCard } from "./WorkContextCard";
 import { RecommendationCard, describeAllClearHeadline } from "./RecommendationCard";
 import { getMeasuredSnapshot, type MeasuredSnapshot } from "../../../application/measuredQueries";
 import { SyncGarminLink, describeGarminAsOf, measuredClock, type MeasuredMetric } from "./MeasuredSheet";
@@ -124,8 +121,6 @@ import { getQuitHabit } from "../../../application/quitQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { templateLabel } from "../train/trainCopy";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
-import { sleepDraftWindow } from "../../../engine/sleepDraft";
-import { getAppOpenedAt } from "../../appSession";
 import { formatDuration } from "../body/bodyScreenCopy";
 import {
   predictedWorkPhase,
@@ -135,14 +130,10 @@ import {
   describeToolsSummary,
   TOOLS_ORDER,
   type ShiftClockPhase,
-  type ShiftClockRow,
   type ToolsItem,
 } from "./shiftClock";
 import { DecryptNumber } from "./DecryptNumber";
-import { TodayNumbers } from "./TodayNumbers";
-import { askAlfred } from "../../components/AlfredSheet";
-import { deriveLogNudge, getLogNudge, usualTimesFor, type LogNudgeRead } from "../../../application/logNudge";
-import { dismissNudge, readLogNudgeSettings, readNudgeDismissed } from "./logNudgeStore";
+import { getLogNudge, type LogNudgeRead } from "../../../application/logNudge";
 import { ModeCity, ModeScene, SuitMode } from "./ModeIdentity";
 import { ModeHeader } from "./ModeHeader";
 import { ActiveExperimentLine } from "./ActiveExperimentLine";
@@ -255,20 +246,16 @@ export function TodayScreen({
     openCaptureItems,
     systemStatus,
     lastMainSleepMinutes,
-    lastMainSleepFromGarmin,
     backupDue,
     minimumDay,
     minimumDayHydrateOz,
     minimumDayProteinG,
     lastWaterAmount,
-    latestWeightLbs,
-    waterLogCount,
     tonight,
     unresolvedObligations,
     headlineCommitmentMission,
     mainSleepRecordedAt,
     proteinTargetG,
-    waterTargetOz,
   } = todaySnapshot;
   /** A handler or a slower read updating one piece of the snapshot (same as its own setter did before). */
   function patchSnapshot(patch: Partial<TodaySnapshot>) {
@@ -285,6 +272,7 @@ export function TodayScreen({
   // GRAYSON-TODAY-SPLIT-003 slice C (small local state): the check-in form, RESET and SHIFT DOWN sessions, the
   // confirm flows and Small Steps live in their own hooks (useCheckInForm.ts and its neighbours). The names below
   // are unchanged, so the rest of TODAY reads them as before.
+  const checkInForm = useCheckInForm(operationsOnly, checkInDraft);
   const {
     values,
     setValues,
@@ -294,11 +282,9 @@ export function TodayScreen({
     setCheckInDraftDismissed,
     activeCheckInDraft,
     checkInFormValues,
-    fixCheckInId,
-    setFixCheckInId,
     fixUndo,
     setFixUndo,
-  } = useCheckInForm(operationsOnly, checkInDraft);
+  } = checkInForm;
   const [busy, setBusy] = useState(false);
   // LAUNCH-VISION-003 (2026-09-15, direct owner ruling): fires the
   // power-on sweep exactly once per START DAY — "the one real power-on
@@ -361,6 +347,7 @@ export function TodayScreen({
   const [captureText, setCaptureText] = useState("");
   useSessionDraft(operationsOnly ? "command-capture" : "capture", captureText.length > 0);
   const [captureFeedback, setCaptureFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
+  const confirmFlows = useConfirmFlows();
   const {
     justResolvedCapture,
     setJustResolvedCapture,
@@ -378,7 +365,7 @@ export function TodayScreen({
     setCommitmentFeedback,
     commitmentFeedbackRef,
     commitmentSatisfactionPendingRef,
-  } = useConfirmFlows();
+  } = confirmFlows;
   const [mdWaterInput, setMdWaterInput] = useState("");
   const [mdProteinInput, setMdProteinInput] = useState("");
   // Product Experience Sprint, P3: RESET/SHIFT DOWN/check-in each default
@@ -811,7 +798,6 @@ export function TodayScreen({
     remainingPhaseRows,
     toolsItems,
     checkInIsRow,
-    sleepDraft,
     shiftDownIsRow,
     behindPace,
     nextActionContext,
@@ -821,20 +807,16 @@ export function TodayScreen({
     endDayInAttention,
     pendingOutcomeInAttention,
     captureInAttention,
-    captureRowsInAttention,
     commitmentInAttention,
     recommendationInAttention,
     workEndInAttention,
     checkInInAttention,
     minimumDayInAttention,
-    fuelLine,
     suggestedVariant,
-    workoutLine,
     liftedShiftDown,
     liftedReset,
     liftedCheckIn,
     liftedWorkContext,
-    shownAdvisoryNotes,
     liftedAdvisory,
   } = view;
   // REAL-DATA-001: close the named task right on the card.
@@ -941,8 +923,6 @@ export function TodayScreen({
     handleSameAsLast,
     handleCheckIn,
     handleQuickCheckIn,
-    handleCheckInFixed,
-    handleUndoCheckInFix,
     handleRecord,
     actuallyDecline,
     handleDecline,
@@ -955,10 +935,7 @@ export function TodayScreen({
     handleEndDay,
     handleSetWorkContext,
     handleChangeStandingWorkContext,
-    handleLogSleepDraft,
-    dismissSleepDraft,
     handleMarkWorkEnded,
-    handleCapture,
     handleResolveCapture,
     requestCommitmentSatisfaction,
     cancelCommitmentSatisfaction,
@@ -978,37 +955,6 @@ export function TodayScreen({
     handleStaleRefresh,
   } = actions;
 
-  function toolHasContent(item: ToolsItem): boolean {
-    switch (item) {
-      case "CHECK_IN":
-        return (
-          !liftedCheckIn &&
-          !!day &&
-          ((!checkInInAttention || checkInFormOpen) ||
-            (!!recommendation && attentionPlan.recommendationPlacement === "SUPPORT"))
-        );
-      case "SHIFT_DOWN":
-        // TONIGHT-001: after the shift SHIFT DOWN waits here (no longer a RECOVER row), with or without a check-in.
-        return !liftedShiftDown && !!day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT";
-      case "RESET":
-        return !liftedReset && !!day && !!recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT";
-      case "WORK_CONTEXT":
-        return !liftedWorkContext && !!day && !!scheduledContext && (!workEndInAttention || workContextOpen);
-      case "FUEL":
-        return false;
-      case "MINIMUM_DAY":
-        return !!day && !!minimumDay && (commandTools || minimumDay.enabled) && !minimumDayInAttention && dominant !== "HYDRATION_ACTIVE";
-      case "CAPTURE":
-        return true;
-      case "COMMITMENTS":
-        return !commitmentInAttention && !!headlineCommitment;
-      case "END_DAY":
-        return !endDayInAttention;
-      case "ADVISORY":
-        return !liftedAdvisory && shownAdvisoryNotes.length > 0;
-    }
-  }
-  const visibleTools = toolsItems.filter((tool) => tool !== "MINIMUM_DAY" || hiddenFeatures.minimumDay).filter(toolHasContent);
 
   useEffect(() => {
     // If an existing operation takes foreground authority, exit tool isolation
@@ -1038,489 +984,79 @@ export function TodayScreen({
     });
   }
 
-  function renderRecoverSleepPrompt() {
-    if (!day) return null;
-    // SLEEP-001: the drafted night is the question itself, so logging it is one tap.
-    if (sleepDraft && sleepDraftDismissedDayId !== day.id) return <div data-recover-sleep-prompt>{renderPhaseRow("MAIN_SLEEP", true)}</div>;
-    return <div className="equipment-row" data-recover-sleep-prompt>
-      <h2 className="card-title">Did you sleep?</h2>
-      {sleepNotYetDay === day.id && <p className="meta">Log main sleep when you're ready.</p>}
-      <button type="button" className="btn-primary" disabled={busy} onClick={() => onOpenBody?.("sleep")}>LOG MAIN SLEEP</button>
-      {sleepNotYetDay !== day.id && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setSleepNotYetDay(day.id)}>NOT YET</button>}
-    </div>;
-  }
-
-  function renderShiftDownTool() {
-    if (lateRecoverWithoutSleep && !activeShiftDownId) return shiftDownIsRow ? renderRecoverSleepPrompt() : null;
-    return (
-      <>
-      {day && (!!recommendation || shiftClock.displayPhase === "EXPECTED_POST_WORK") && dominant !== "SHIFT_DOWN_ACTIVE" && dominant !== "OPERATION_CONFLICT" && (
-        <ShiftDownCard
-          prominent={shiftDownIsPrimary}
-          isDominant={false}
-          activeShiftDownId={activeShiftDownId}
-          shiftDownDuration={shiftDownDuration}
-          setShiftDownDuration={setShiftDownDuration}
-          openShiftDownStartedAt={openShiftDownStartedAt}
-          lastShiftDownOutcome={lastShiftDownOutcome}
-          shiftDownOpen={shiftDownOpen}
-          setShiftDownOpen={setShiftDownOpen}
-          busy={busy}
-          onStartShiftDown={() => void handleStartShiftDown()}
-          onCompleteShiftDown={() => void handleCompleteShiftDown()}
-          onCancelShiftDown={() => void handleCancelShiftDown()}
-          startButtonRef={shiftDownStartRef}
-          postShiftPlan={postShiftPlan}
-          onMarkWorkEnded={
-            day.workContext === "WORK" && workPeriodEndedAt === null ? () => void handleMarkWorkEnded() : undefined
-          }
-        />
-      )}
-      </>
-    );
-  }
-
-  function renderResetTool() {
-    return (
-      <>
-      {day && (commandFocus !== undefined || recommendation && dominant !== "RESET_ACTIVE" && dominant !== "OPERATION_CONFLICT") && (
-        <ResetCard
-          prominent={resetIsPrimary}
-          isDominant={false}
-          activeResetId={activeResetId}
-          resetIntensity={resetIntensity}
-          setResetIntensity={setResetIntensity}
-          openResetStartedAt={openResetStartedAt}
-          lastResetOutcome={lastResetOutcome}
-          resetOpen={resetOpen}
-          setResetOpen={setResetOpen}
-          busy={busy}
-          onStartReset={() => void handleStartReset()}
-          onCompleteReset={() => void handleCompleteReset()}
-          onCancelReset={() => void handleCancelReset()}
-        />
-      )}
-      </>
-    );
-  }
-
-  const checkInFixArea = <>
-    <CheckInFixSheet checkInId={fixCheckInId} onClose={() => setFixCheckInId(null)} onChanged={(result) => handleCheckInFixed(result)} />
-    {fixUndo && <FixUndoBanner message={fixUndo.message} busy={busy} onUndo={fixUndo.correctionEventId ? () => void handleUndoCheckInFix() : undefined} />}
-  </>;
-
-  function renderCheckInTool() {
-    return (
-      <div id="today-check-in">
-
-      {(!checkInInAttention || checkInFormOpen) && (
-        <CheckInCard isInFlight={() => busyRef.current}
-          busy={busy}
-          checkIn={checkIn}
-          checkInFormOpen={checkInFormOpen}
-          setCheckInFormOpen={setCheckInFormOpen}
-          values={checkInFormValues}
-          setValues={setValues}
-          draft={activeCheckInDraft}
-          onStartBlank={() => {
-            setCheckInDraftDismissed(true);
-            setValues({});
-          }}
-          quickCheckInValues={quickCheckInValues}
-          onQuickCheckIn={() => void handleQuickCheckIn()}
-          onSubmitCheckIn={() => void handleCheckIn()}
-          onFix={checkIn ? () => setFixCheckInId(checkIn.id) : undefined}
-          fixArea={checkInFixArea}
-        />
-      )}
-
-      </div>
-    );
-  }
-
-  function renderWorkContextTool() {
-    return (
-      <>
-      {/* Overdrive Phase 18 (TODAY PRIORITY COMPRESSION): once work
-          context is settled for the day — OFF, or WORK with the shift
-          already marked ended — there's nothing left to decide here, so
-          it collapses to the same compact summary-row pattern RESET/
-          SHIFT DOWN already use rather than staying a permanently
-          full-weight card. Still WORK and not yet ended keeps the full
-          card open, since MARK WORK ENDED is a real pending action. */}
-      {(commandFocus !== undefined || !workEndInAttention || workContextOpen) && day && scheduledContext && (
-        <WorkContextCard
-          day={day}
-          scheduledContext={scheduledContext}
-          workContextOpen={workContextOpen}
-          setWorkContextOpen={setWorkContextOpen}
-          workPeriodEndedAt={workPeriodEndedAt}
-          busy={busy}
-          onSetWorkContext={(value) => void handleSetWorkContext(value)}
-          onMarkWorkEnded={() => void handleMarkWorkEnded()}
-          perSchedule={workContextPerSchedule}
-          // Shift Clock (Drop 2): the per-schedule one-tap change lives in the
-          // status strip; here the card keeps its ordinary controls.
-        />
-      )}
-      </>
-    );
-  }
-
-  /** POLISH-002: the prototype's four number tiles. Missing stays "—"; each opens its history. */
-  // BEYOND 4.0-a: AT A GLANCE lives in TodayNumbers.tsx; TODAY keeps the in-flight guard and what each tap opens.
-  function renderFuel() {
-    // GRAYSON-LOG-NUDGE-001: silent on the clock (the catch-up owns shift meals) and in operations-only mode.
-    const nudgeSettings = readLogNudgeSettings();
-    const nudge = day && logNudgeRead?.kind ? deriveLogNudge({
-      settings: nudgeSettings, usual: usualTimesFor(logNudgeRead.kind, logNudgeRead.learned, nudgeSettings), livedStart: logNudgeRead.livedStart,
-      meals: logNudgeRead.meals, operationsOnly, dismissed: readNudgeDismissed(day.id),
-      onClock: scheduledClock.phase === "SCHEDULED_SHIFT" || (!!workPeriodStartedAt && workPeriodEndedAt === null),
-    }, now) : null;
-    const nudgeDayId = day?.id;
-    return <TodayNumbers logNudge={nudge && nudgeDayId ? {
-        text: nudge.text,
-        onTell: () => { if (!busyRef.current) askAlfred("I ate "); },
-        onNotNow: () => { dismissNudge(nudgeDayId, nudge.usualMinute); setNudgeAnswered((v) => v + 1); },
-      } : null}
-      measured={measured} operationsOnly={operationsOnly} minimumDayProteinG={minimumDayProteinG} proteinTargetG={proteinTargetG}
-      minimumDayHydrateOz={minimumDayHydrateOz} waterTargetOz={waterTargetOz} waterLogCount={waterLogCount} latestWeightLbs={latestWeightLbs} lastMainSleepMinutes={lastMainSleepMinutes}
-      lastMainSleepFromGarmin={lastMainSleepFromGarmin} paceHistories={paceHistories} now={now} dayId={day?.id} busy={busy} fuelLine={fuelLine}
-      recordsAvailable={!!onOpenHealthEvidence}
-      // METRIC-PAGE-001: WATER opens its metric page (records one tap further); sleep keeps its own page.
-      onOpenTile={(metric) => { if (!busyRef.current) { if (metric === "sleep") setMeasuredOpen("sleep"); else setDetailOpen(metric); } }}
-      // METRIC-PAGE-001: steps, resting heart rate and calories open the shared metric page; sleep keeps its own page.
-      onOpenMeasured={(metric) => { if (busyRef.current) return; if (metric === "steps" || metric === "resting" || metric === "calories") setDetailOpen(metric); else if (metric) setMeasuredOpen(metric); else onOpenHealthEvidence?.("sleep"); }}
-      onOpenBody={onOpenBody ? () => onOpenBody() : undefined} />;
-  }
-
-  function renderToolsItem(item: ToolsItem) {
-    switch (item) {
-      case "CHECK_IN":
-        return liftedCheckIn ? null : renderCheckInTool();
-      case "SHIFT_DOWN":
-        return commandFocus === undefined && liftedShiftDown ? null : renderShiftDownTool();
-      case "RESET":
-        return commandFocus === undefined && liftedReset ? null : renderResetTool();
-      case "WORK_CONTEXT":
-        return commandFocus === undefined && liftedWorkContext ? null : renderWorkContextTool();
-      case "FUEL":
-        // The tiles above own the history links; TOOLS repeats the totals as one line.
-        return day ? <div className="equipment-row"><p className="tool-label" style={{ marginBottom: 4 }}>FUEL</p><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div> : null;
-      case "MINIMUM_DAY":
-        if (!hiddenFeatures.minimumDay) return null;
-        return (
-          <>
-      {day && minimumDay && (commandFocus !== undefined || !minimumDayInAttention) && dominant !== "HYDRATION_ACTIVE" && (
-        <MinimumDayCard
-          prominent={false}
-          minimumDay={minimumDay}
-          minimumDayOpen={minimumDayOpen}
-          onOpenCollapsed={() => {
-            if (minimumDay.enabled && !minimumDay.hydrate && minimumDayHydrateOz > 0) {
-              setHydrationConfirmation(null);
-              setHydrationOperationOpen(true);
-            } else {
-              setMinimumDayOpen(true);
-            }
-          }}
-          minimumDayHydrateOz={minimumDayHydrateOz}
-          minimumDayProteinG={minimumDayProteinG}
-          mdWaterInput={mdWaterInput}
-          setMdWaterInput={setMdWaterInput}
-          mdProteinInput={mdProteinInput}
-          setMdProteinInput={setMdProteinInput}
-          busy={busy}
-          onEnable={() => void handleEnableMinimumDay()}
-          onMarkMinimum={(kind) => void handleMarkMinimum(kind)}
-          onLogWater={() => void handleMinimumDayLogWater()}
-          onLogProtein={() => void handleMinimumDayLogProtein()}
-        />
-      )}
-          </>
-        );
-      case "CAPTURE":
-        return (
-          <CaptureToolsCard
-        openCaptureItems={openCaptureItems}
-        captureInAttention={captureRowsInAttention}
-        captureText={captureText}
-        feedback={captureFeedback}
-        setCaptureText={setCaptureText}
-        busy={busy}
-        onCapture={() => void handleCapture()}
-        justResolvedCapture={justResolvedCapture}
-        onUndoResolve={() => void handleUndoResolveCapture()}
-        captureConversion={captureConversion}
-        conversionDraft={conversionDraft}
-        setConversionDraft={setConversionDraft}
-        conversionDateSuggestion={conversionDateSuggestion}
-        onRequestConversion={requestCaptureConversion}
-        onCancelConversion={cancelCaptureConversion}
-        onConfirmConversion={() => void confirmCaptureConversion()}
-        onResolve={(item) => void handleResolveCapture(item)}
-      />
-        );
-      case "COMMITMENTS":
-        return (
-          <>
-      {!commitmentInAttention && (
-        <CommitmentsCard
-          otherDueCommitments={otherDueCommitments}
-          headlineCommitment={headlineCommitment}
-          unresolvedObligationsCount={unresolvedObligations.length}
-          commitmentsOpen={commitmentsOpen}
-          setCommitmentsOpen={setCommitmentsOpen}
-          headlineCommitmentMission={headlineCommitmentMission}
-          commitmentConfirmation={commitmentConfirmation}
-          busy={busy}
-          onViewCommitments={onViewCommitments ? () => onViewCommitments(headlineCommitment?.obligation.id) : undefined}
-          onRequestSatisfaction={requestCommitmentSatisfaction}
-          onCancelSatisfaction={cancelCommitmentSatisfaction}
-          onConfirmSatisfaction={() => void confirmCommitmentSatisfaction()}
-        />
-      )}
-          </>
-        );
-      case "END_DAY":
-        return (
-          <>
-      {(commandFocus !== undefined || !endDayInAttention) && (
-        <EndDayCard
-          hasDay={!!day}
-          suggestEndDay={suggestEndDay}
-          endDayOpen={endDayOpen}
-          setEndDayOpen={setEndDayOpen}
-          endDayBlockedByWorkout={endDayBlockedByWorkout}
-          busy={busy}
-          onOpenTrain={onOpenTrain}
-          onEndDay={() => void handleEndDay()}
-        />
-      )}
-          </>
-        );
-      case "ADVISORY":
-        return (
-          <AdvisorySection
-        notes={shownAdvisoryNotes}
-        busy={busy}
-        waterControlVisible={waterControlsVisible}
-        {...(!waterControlsVisible && dominant !== "HYDRATION_ACTIVE" ? { onLogWater: (amountOz: number) => void handleMinimumDayLogWater(amountOz) } : {})}
-        {...(hiddenFeatures.minimumDay ? { onOpenMinimumDay: () => setMinimumDayOpen(true) } : {})}
-      />
-        );
-    }
-  }
-
-  function renderPhaseRow(row: ShiftClockRow, sleepPromptBody = false) {
-    if (!day) return null;
-    switch (row) {
-      case "WORK_QUESTION":
-        return renderWorkContextTool();
-      case "TONIGHT":
-        return (
-          <div className="equipment-row">
-            <p className="tool-label" style={{ marginBottom: 4 }}>AFTER SHIFT</p>
-            <p className="card-title" style={{ margin: 0 }}>{workoutLine ?? "Workout suggestion loading…"}</p>
-          </div>
-        );
-      case "FUEL":
-        return <div className="equipment-row"><p className="card-body" style={{ margin: 0 }}>{fuelLine}</p></div>;
-      case "WORKOUT_CALL":
-        // An active workout already owns Operate above.
-        if (activeWorkout || (shiftClock.displayPhase !== "EXPECTED_POST_WORK" && shiftClock.displayPhase !== "OFF")) return null;
-        return (
-          <WorkoutCall
-            phase={shiftClock.displayPhase}
-            day={day}
-            tonight={tonight}
-            question={workoutQuestion}
-            workoutLabel={nextWorkout?.label ?? null}
-            minutes={nextWorkout?.minutes ?? {}}
-            suggestedVariant={suggestedVariant}
-            lastMainSleepMinutes={lastMainSleepMinutes}
-            checkInLevel={checkIn && capacityResult ? capacityResult.capacity : null}
-            busy={busy}
-            onCheckIn={() => setCheckInFormOpen(true)}
-            onOpenTrain={onOpenTrain}
-            onAnswered={() => void refresh()}
-          />
-        );
-      case "QUICK_LOG":
-        return (
-          <QuickLog
-            refreshKey={tonight}
-            lastWaterAmount={lastWaterAmount}
-            busy={busy}
-            onLogMeal={handleLogSavedMeal}
-            onLogWater={(amount) => handleMinimumDayLogWater(amount)}
-          />
-        );
-      case "NIGHT_CLOSED":
-        return (
-          <NightClosed
-            tonight={tonight}
-            proteinG={minimumDayProteinG}
-            proteinTargetG={proteinTargetG}
-            waterOz={minimumDayHydrateOz}
-            trainedLabel={tonight?.trained
-              ? `${templateLabel(tonight.trained.templateId as Parameters<typeof templateLabel>[0], customTemplateList)} · ${tonight.trained.sessionType.toLowerCase()}, ${tonight.trained.status.toLowerCase()}`
-              : null}
-          />
-        );
-      case "SHIFT_HANDOFF":
-        return shiftHandoffRefreshKey !== undefined ? <ShiftHandoff refreshKey={shiftHandoffRefreshKey} /> : null;
-      case "SHIFT_DOWN":
-        if (lateRecoverWithoutSleep && !activeShiftDownId) return renderRecoverSleepPrompt();
-        // An in-progress SHIFT DOWN already owns Operate above.
-        if (dominant === "SHIFT_DOWN_ACTIVE" || dominant === "OPERATION_CONFLICT") return null;
-        return (
-          <ShiftDownCard
-            prominent={shiftDownIsPrimary}
-            isDominant={false}
-            forceOpen
-            activeShiftDownId={activeShiftDownId}
-            shiftDownDuration={shiftDownDuration}
-            setShiftDownDuration={setShiftDownDuration}
-            openShiftDownStartedAt={openShiftDownStartedAt}
-            lastShiftDownOutcome={lastShiftDownOutcome}
-            shiftDownOpen={shiftDownOpen}
-            setShiftDownOpen={setShiftDownOpen}
-            busy={busy}
-            onStartShiftDown={() => void handleStartShiftDown()}
-            onCompleteShiftDown={() => void handleCompleteShiftDown()}
-            onCancelShiftDown={() => void handleCancelShiftDown()}
-            startButtonRef={shiftDownStartRef}
-            postShiftPlan={postShiftPlan}
-            onMarkWorkEnded={
-              day.workContext === "WORK" && workPeriodEndedAt === null ? () => void handleMarkWorkEnded() : undefined
-            }
-          />
-        );
-      case "CHECK_IN":
-        if (!checkIn && !checkInFormOpen) {
-          return (
-            <div className="equipment-row day-line-check-in">
-              <p className="tool-label" style={{ marginBottom: 4 }}>CHECK-IN</p>
-              <h2 className="card-title">Check in</h2>
-              <button className="btn-secondary" disabled={busy} onClick={() => void handleQuickCheckIn()}>
-                ALL GOOD
-              </button>
-              <button className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setCheckInFormOpen(true)}>
-                MANUAL CHECK-IN
-              </button>
-            </div>
-          );
-        }
-        if (!checkIn || checkInFormOpen || !recommendation || attentionPlan.recommendationPlacement === "ATTENTION") {
-          return (
-            <CheckInCard isInFlight={() => busyRef.current}
-              busy={busy}
-              checkIn={checkIn}
-              checkInFormOpen={checkInFormOpen}
-              setCheckInFormOpen={setCheckInFormOpen}
-              values={checkInFormValues}
-              setValues={setValues}
-              draft={activeCheckInDraft}
-              onStartBlank={() => {
-                setCheckInDraftDismissed(true);
-                setValues({});
-              }}
-              quickCheckInValues={quickCheckInValues}
-              onQuickCheckIn={() => void handleQuickCheckIn()}
-              onSubmitCheckIn={() => void handleCheckIn()}
-              onFix={checkIn ? () => setFixCheckInId(checkIn.id) : undefined}
-              fixArea={checkInFixArea}
-            />
-          );
-        }
-        // The console shows guidance once; the contextual row keeps the completed check-in and UPDATE.
-        return (
-          <>
-
-            <CheckInCard isInFlight={() => busyRef.current}
-              busy={busy}
-              checkIn={checkIn}
-              checkInFormOpen={false}
-              setCheckInFormOpen={setCheckInFormOpen}
-              values={checkInFormValues}
-              setValues={setValues}
-              draft={activeCheckInDraft}
-              onStartBlank={() => {
-                setCheckInDraftDismissed(true);
-                setValues({});
-              }}
-              quickCheckInValues={quickCheckInValues}
-              onQuickCheckIn={() => void handleQuickCheckIn()}
-              onSubmitCheckIn={() => void handleCheckIn()}
-              onFix={checkIn ? () => setFixCheckInId(checkIn.id) : undefined}
-              fixArea={checkInFixArea}
-            />
-          </>
-        );
-      case "WORKOUT":
-        // An active workout already owns Operate above.
-        if (activeWorkout) return null;
-        return (
-          <div className="equipment-row">
-            <p className="tool-label" style={{ marginBottom: 4 }}>WORKOUT</p>
-            <p className="card-title" style={{ marginBottom: onOpenTrain ? 12 : 0 }}>{workoutLine ?? "Workout suggestion loading…"}</p>
-            {onOpenTrain && (
-              <button className="btn-secondary" onClick={() => onOpenTrain("WORKOUT")}>
-                OPEN TRAIN
-              </button>
-            )}
-          </div>
-        );
-      case "MAIN_SLEEP":
-        if (lateRecoverWithoutSleep && (!shiftDownIsRow || activeShiftDownId !== null) && !sleepPromptBody) return renderRecoverSleepPrompt();
-        if (sleepDraft && sleepDraftDismissedDayId !== day.id) {
-          const minutes = Math.min(SLEEP_DRAFT_ADJUST_MAX, Math.max(SLEEP_DRAFT_ADJUST_MIN, sleepDraft.value + sleepDraftAdjust));
-          return (
-            <div className="equipment-row">
-              <p className="tool-label" style={{ marginBottom: 4 }}>MAIN SLEEP</p>
-              {/* SLEEP-001: said as the window you slept, ending when you opened the app. */}
-              <h2 className="card-title" style={{ marginBottom: 2 }}>Slept {sleepDraftWindow(minutes, getAppOpenedAt())}?</h2>
-              <p className="meta" style={{ marginBottom: 12 }}>
-                Up to {formatDuration(minutes)} · {sleepDraft.reason}
-                {sleepDraftAdjust !== 0 ? ` · adjusted ${sleepDraftAdjust > 0 ? "+" : "−"}${Math.abs(sleepDraftAdjust)} min` : ""}
-              </p>
-              <button className="btn-primary" disabled={busy} onClick={() => void handleLogSleepDraft(minutes, sleepDraftAdjust !== 0)}>
-                LOG {formatDuration(minutes).toUpperCase()}
-              </button>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                <button type="button" className="chip" aria-label="15 minutes less" disabled={busy || minutes <= SLEEP_DRAFT_ADJUST_MIN} onClick={() => setSleepDraftAdjust((a) => a - 15)}>
-                  −15
-                </button>
-                <button type="button" className="chip" aria-label="15 minutes more" disabled={busy || minutes >= SLEEP_DRAFT_ADJUST_MAX} onClick={() => setSleepDraftAdjust((a) => a + 15)}>
-                  +15
-                </button>
-                <button type="button" className="chip" disabled={busy} onClick={dismissSleepDraft}>
-                  NOT NOW
-                </button>
-                {onOpenBody && (
-                  <button type="button" className="chip" onClick={() => onOpenBody("sleep")}>
-                    ENTER IN DATA
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        }
-        return (
-          <div className="equipment-row">
-            <p className="tool-label" style={{ marginBottom: 4 }}>MAIN SLEEP</p>
-            <p className="card-body" style={{ marginBottom: onOpenBody ? 12 : 0 }}>Log it when you wake.</p>
-            {onOpenBody && (
-              <button className="btn-secondary" onClick={() => onOpenBody("sleep")}>
-                LOG MAIN SLEEP
-              </button>
-            )}
-          </div>
-        );
-    }
-  }
-
+  // GRAYSON-TODAY-SPLIT-003 slice D2 (sections out): TOOLS live in todayTools (TodayTools.tsx) and the phase rows in
+  // todayPhaseRows (TodayPhaseRows.tsx). Each takes the read, the view, the actions and the local state it shows; the
+  // names below are the helpers TODAY used before, called in the same places.
+  const sections: TodaySectionsInput = {
+    snapshot: todaySnapshot,
+    view,
+    actions,
+    resetSession,
+    shiftDownSession,
+    checkInForm,
+    confirmFlows,
+    local: {
+      busy,
+      captureFeedback,
+      captureText,
+      checkInFormOpen,
+      commandFocus,
+      commandTools,
+      commitmentsOpen,
+      customTemplateList,
+      endDayBlockedByWorkout,
+      endDayOpen,
+      hiddenFeatures,
+      logNudgeRead,
+      mdProteinInput,
+      mdWaterInput,
+      measured,
+      minimumDayOpen,
+      nextWorkout,
+      now,
+      onOpenBody,
+      onOpenHealthEvidence,
+      onOpenTrain,
+      onViewCommitments,
+      operationsOnly,
+      paceHistories,
+      postShiftPlan,
+      refresh,
+      resetOpen,
+      scheduledContext,
+      setCaptureText,
+      setCheckInFormOpen,
+      setCommitmentsOpen,
+      setDetailOpen,
+      setEndDayOpen,
+      setHydrationConfirmation,
+      setHydrationOperationOpen,
+      setMdProteinInput,
+      setMdWaterInput,
+      setMeasuredOpen,
+      setMinimumDayOpen,
+      setNudgeAnswered,
+      setResetOpen,
+      setShiftDownOpen,
+      setSleepDraftAdjust,
+      setSleepNotYetDay,
+      setWorkContextOpen,
+      shiftDownOpen,
+      shiftDownStartRef,
+      shiftHandoffRefreshKey,
+      sleepDraftAdjust,
+      sleepDraftDismissedDayId,
+      sleepNotYetDay,
+      waterControlsVisible,
+      workContextOpen,
+      workoutQuestion,
+    },
+  };
+  const tools = todayTools(sections, () => phaseRowSection.renderRecoverSleepPrompt());
+  const phaseRowSection = todayPhaseRows(sections, tools);
+  const { toolHasContent, renderShiftDownTool, renderResetTool, renderCheckInTool, renderWorkContextTool, renderFuel, renderToolsItem } = tools;
+  const { renderRecoverSleepPrompt, renderPhaseRow } = phaseRowSection;
+  const visibleTools = toolsItems.filter((tool) => tool !== "MINIMUM_DAY" || hiddenFeatures.minimumDay).filter(toolHasContent);
 
   if (operationsOnly && commandFocus != null) return <div className="screen command-daily">
     <OperatorHeader destination="command">{commandFocus === "CAPTURE" ? "CAPTURE" : commandFocus === "SHIFT_HANDOFF" ? "SHIFT HANDOFF NOTES" : "DAILY CONTROLS"}</OperatorHeader>
