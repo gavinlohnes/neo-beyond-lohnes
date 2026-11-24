@@ -14,6 +14,7 @@
   (Claude Code) plans 0.12.0 / versionCode 15 and a `RunCueActivity`; take the next free minor version and versionCode
   at build time, and rebase on whichever Bridge change merges first (both edit `AndroidManifest.xml`,
   `build.gradle(.kts)` and `.github/workflows/health-bridge.yml`).
+- **Amended by GRAYSON-TODAY-CALM-001 (2026-11-24):** build after it. "Phone alerts are behind your plan." is the quiet-line candidate `PHONE_ALERTS_BEHIND` (default place 4) rendered by `TodayQuietLines`; its TODAY switch is that line's switch in MORE → TODAY.
 
 ## Objective and benefit
 The phone's key-moment alerts (before the shift, shift's done, task due, up for the shift) come from a plan BEYOND
