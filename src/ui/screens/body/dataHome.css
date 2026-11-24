@@ -1,0 +1,13 @@
+/* GRAYSON C9.2 (Quiet Command finish) for DATA home: the shortcuts and History under the dashboard take the
+   grammar of VISUAL-FOUNDATION-001. Tokens only; no new red beyond the structural bracket.
+   VIEWS is a rule, not a box: the full width keeps SHORTCUT-GRID-001's two readable columns at 320 px. */
+.data-home__views { position: relative; display: grid; gap: 4px; padding-top: 8px; border-top: 1px solid var(--bf-line); }
+.data-home__views::before { content: ""; position: absolute; left: 0; top: -1px; width: 22px; height: 22px; border-left: 2px solid var(--bf-red); border-top: 2px solid var(--bf-red); pointer-events: none; }
+.data-home__views .bf-panel__head { padding-left: 10px; }
+.data-home__views .sys-area-nav { border-bottom: 0; }
+.sys-home .data-home__views .sys-area-nav button { border-bottom: 1px solid var(--bf-line); }
+
+.body-home .data-history { gap: 8px; padding: 10px 12px 12px; margin-bottom: 24px; }
+.data-history > .bf-panel__label { margin: 6px 0 4px 6px; }
+.data-history .health-record-row { border-color: var(--bf-line); padding-inline: 8px; }
+.data-history button:focus-visible { outline-offset: -2px; }
