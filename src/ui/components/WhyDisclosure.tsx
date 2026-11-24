@@ -14,14 +14,17 @@ import type { CSSProperties, ReactNode } from "react";
 export function WhyDisclosure({
   summary,
   style,
+  className,
   children,
 }: {
   summary: string;
   style?: CSSProperties;
+  /** GRAYSON C6.4: an extra class, e.g. the WHY THIS? trace's 44 px summary. */
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <details className="why" style={style}>
+    <details className={className ? `why ${className}` : "why"} style={style}>
       <summary>{summary}</summary>
       {children}
     </details>

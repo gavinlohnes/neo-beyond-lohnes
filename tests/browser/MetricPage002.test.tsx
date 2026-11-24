@@ -6,6 +6,7 @@ import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { db } from "../../src/persistence/db";
 import { seedLivedMonth, MONTH_FIRST_DAY, MONTH_NOW } from "./helpers/livedMonth";
+import { todaySettled } from "./helpers/todaySettled";
 import { logProtein } from "../../src/application/commands";
 import { getEffectiveProteinTargetG } from "../../src/application/nutritionTargetQueries";
 import { abandonWorkout, completeWorkout, startWorkout } from "../../src/application/trainCommands";
@@ -33,7 +34,7 @@ describe("METRIC-PAGE-002 slice 1: weight", () => {
   it("TODAY's WEIGHT opens WEIGHT: your weigh-ins, the latest one, BODY's weight trend, dots with honest gaps, and its records one tap away", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Weight 205\.2 lb/ }).click();
     await expect.element(sheet()).toBeVisible();
     await expect.poll(() => text("[data-md-hero]")).toContain("205.2");
@@ -78,7 +79,7 @@ describe("METRIC-PAGE-002 slice 1: weight", () => {
   it("WEIGHT's LOG WEIGHT opens the existing weight sheet", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Weight 205\.2 lb/ }).click();
     await sheet().getByRole("button", { name: "LOG WEIGHT", exact: true }).click();
     await expect.poll(() => window.history.state?.recordSheet).toBe("weight");
@@ -87,7 +88,7 @@ describe("METRIC-PAGE-002 slice 1: weight", () => {
   it("BODY's WEIGHT opens the same page, and its records go to BODY's weight history", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
     await screen.getByRole("button", { name: "Open weight", exact: true }).click();
     await expect.element(sheet()).toBeVisible();
@@ -100,7 +101,7 @@ describe("METRIC-PAGE-002 slice 1: weight", () => {
     await seedLivedMonth();
     await db.events.where("type").equals("BODYWEIGHT_LOGGED").delete();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Weight not logged/ }).click();
     await expect.poll(() => text("[data-md-hero]")).toBe("— no weigh-ins recorded yet");
     expect(document.querySelector("dialog[open] .weight-trend")).toBeNull();
@@ -112,7 +113,7 @@ describe("METRIC-PAGE-002 slice 1: weight", () => {
   it("nothing spills, sentences keep 16 px, and WEIGHT passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth();
     await page.viewport(360, 900);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Weight 205\.2 lb/ }).click();
     await expect.poll(() => text("[data-md-hero]")).not.toBe("");
     for (const r of ["Latest weigh-in", "Last 30 lived days", "Last year, by week"]) {
@@ -155,7 +156,7 @@ describe("METRIC-PAGE-002 slice 2: protein", () => {
     await seedLivedMonth(); await seedPastProtein();
     const target = await getEffectiveProteinTargetG();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Protein 48 .*explore records$/ }).click();
     await expect.element(sheet("PROTEIN")).toBeVisible();
     await expect.poll(() => text("[data-md-hero]")).toBe("48 g so far · since 16:30");
@@ -191,7 +192,7 @@ describe("METRIC-PAGE-002 slice 2: protein", () => {
   it("PROTEIN's LOG PROTEIN opens the existing protein sheet", async () => {
     await seedLivedMonth();
     await page.viewport(360, 800);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Protein 48 .*explore records$/ }).click();
     await sheet("PROTEIN").getByRole("button", { name: "LOG PROTEIN", exact: true }).click();
     await expect.poll(() => window.history.state?.recordSheet).toBe("protein");
@@ -200,7 +201,7 @@ describe("METRIC-PAGE-002 slice 2: protein", () => {
   it("nothing spills, sentences keep 16 px, and PROTEIN passes axe from 320 to 1024 px", async () => {
     await seedLivedMonth(); await seedPastProtein();
     await page.viewport(360, 900);
-    const screen = await render(<App />);
+    const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
     await screen.getByRole("button", { name: /^Protein 48 .*explore records$/ }).click();
     await expect.poll(() => text("[data-md-hero]")).not.toBe("");
     for (const r of ["Today, this lived day", "Last 7 lived days", "Last 30 lived days", "Last year, by week"]) {
@@ -242,7 +243,7 @@ async function seedWorkouts() {
   vi.setSystemTime(MONTH_NOW);
 }
 const openWorkouts = async () => {
-  const screen = await render(<App />);
+  const screen = await render(<App />); await todaySettled(); // #624 rule (CI flake on #638: tapped WEIGHT before TODAY settled)
   await screen.getByRole("navigation").getByRole("button", { name: "DATA", exact: true }).click();
   // DATA's progress (where BODY already shows finished workouts over time) opens from DATA's Weight shortcut.
   await screen.getByRole("navigation", { name: "DATA shortcuts", exact: true }).getByRole("button", { name: "Weight", exact: true }).click();

@@ -1,0 +1,12 @@
+/* GRAYSON C6.4: WHY THIS? content. Mono keys over --bf-line rows, text 16 px, tokens only (no red). */
+.why-trace { display: grid; gap: 6px; margin-top: 8px; }
+.why-trace__rule { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, var(--text-1)); }
+.why-trace__key { font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .1em; color: var(--p-t2, var(--text-2)); margin-right: 6px; }
+.why-trace__facts { margin: 0; display: grid; }
+.why-trace__fact { display: grid; grid-template-columns: minmax(0, 7.5em) minmax(0, 1fr); gap: 4px 10px; padding: 6px 0; border-top: 1px solid var(--bf-line, var(--border-subtle)); }
+.why-trace__fact dt { font-family: var(--font-mono, monospace); font-size: 16px; color: var(--p-t2, var(--text-2)); overflow-wrap: anywhere; }
+.why-trace__fact dd { margin: 0; font-size: 16px; line-height: 1.35; color: var(--p-t1, var(--text-1)); overflow-wrap: anywhere; }
+.why-trace__records { justify-self: start; min-height: 44px; }
+@container (max-width: 300px) { .why-trace__fact { grid-template-columns: 1fr; } }
+/* #638 review: WHY THIS? is a 44 px target, like TODAY's other disclosures. */
+.why--trace > summary { min-height: 44px; display: flex; align-items: center; }
