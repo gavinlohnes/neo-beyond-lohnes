@@ -117,3 +117,13 @@ export interface Draft<T> {
 
 /** How a drafted value became a fact — recorded on the fact itself. */
 export type DraftDecision = "CONFIRMED" | "ADJUSTED";
+
+/**
+ * GRAYSON C6.4 ("Why am I seeing this?" everywhere): the shared shape behind every WHY THIS? disclosure on a Delta
+ * line, a coach card or an advisory note. The rule that produced the line, in plain words, and the facts it read,
+ * each a short label and value (dates included where the fact has one). Facts only: never a score, never a guess.
+ */
+export interface WhyTrace {
+  rule: string;
+  facts: { label: string; value: string }[];
+}

@@ -107,7 +107,7 @@ status of its own.
 | C6.1 | Learning lifecycle | Not started |  |
 | C6.2 | "What I think I'm learning" weekly | Not started |  |
 | C6.3 | What moves your numbers | Not started |  |
-| C6.4 | "Why am I seeing this?" everywhere | Not started |  |
+| C6.4 | "Why am I seeing this?" everywhere | In review | [brief](agent/GRAYSON-C6.4-001.md) |
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |

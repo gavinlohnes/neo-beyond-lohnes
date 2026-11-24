@@ -5,8 +5,10 @@ import { CoachCard } from "../../src/ui/screens/today/CoachCard";
 vi.mock("../../src/application/coachCards", async (original) => ({ ...await original<typeof import("../../src/application/coachCards")>(), getCoachCards: vi.fn() }));
 afterEach(async () => { await cleanup(); vi.clearAllMocks(); });
 const cards: Card[] = [
-  { id: "lift-1", key: "lift-evidence-1", title: "One lighter session", evidence: "Four recorded sessions at 100 lb. Suggests 90 lb.", destination: "TRAIN" },
-  { id: "experiment-1", key: "experiment-1", title: "Review your test", evidence: "Your 14-day test ended.", destination: "JOURNAL" },
+  { id: "lift-1", key: "lift-evidence-1", title: "One lighter session", evidence: "Four recorded sessions at 100 lb. Suggests 90 lb.", destination: "TRAIN",
+    why: { rule: "Deload: 4 sessions in a row without a record, so about 90% of the stalled load, once.", facts: [{ label: "Lift", value: "Squat · standard session" }, { label: "Last sets", value: "100 lb × 5 (Nov 20)" }] } },
+  { id: "experiment-1", key: "experiment-1", title: "Review your test", evidence: "Your 14-day test ended.", destination: "JOURNAL",
+    why: { rule: "A test you started has reached its end date; only you give the verdict.", facts: [] } },
 ];
 it("shows only one suggestion, opens its existing flow and skips locally until evidence changes", async () => {
   vi.mocked(getCoachCards).mockResolvedValue(cards);
@@ -66,4 +68,14 @@ it("a skip preserves temporarily ineligible evidence and storage failures stay e
   get.mockRestore();
   await screen.getByRole("button", { name: "RETRY COACH" }).click();
   await expect.element(screen.getByRole("heading", { name: cards[0]!.title })).toBeVisible();
+});
+
+// GRAYSON C6.4: a coach card says why: its rule and the dated facts. REVIEW SUGGESTION stays the way to the records.
+it("WHY THIS? opens to the card's rule and dated facts", async () => {
+  vi.mocked(getCoachCards).mockResolvedValue(cards);
+  const screen = await render(<CoachCard active refreshKey={0} onOpen={vi.fn()} />);
+  await screen.getByText("WHY THIS?", { exact: true }).click();
+  await expect.element(screen.getByText("Deload: 4 sessions in a row without a record, so about 90% of the stalled load, once.")).toBeVisible();
+  await expect.element(screen.getByText("100 lb × 5 (Nov 20)")).toBeVisible();
+  await expect.element(screen.getByRole("button", { name: "REVIEW SUGGESTION" })).toBeVisible();
 });

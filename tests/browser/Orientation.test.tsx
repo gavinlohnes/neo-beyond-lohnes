@@ -81,6 +81,24 @@ describe("Orientation states", () => {
     }
   }
 
+  // GRAYSON C6.4: Delta's line says why, one tap down: the rule and the facts it read. Closed until asked.
+  it("Delta's WHY THIS? opens to the rule and the facts, readable at 320 px", async () => {
+    await page.viewport(320, 900);
+    vi.mocked(getOrientation).mockResolvedValue(deriveOrientation(STATES["work-draft"]!));
+    const screen = await render(<Orientation active busy={false} refreshKey={0} routes={routes()} />);
+    const delta = screen.getByRole("article", { name: "DELTA" });
+    const why = delta.getByText("WHY THIS?", { exact: true });
+    await expect.element(why).toBeVisible();
+    expect(delta.element().querySelector("details")!.open).toBe(false);
+    await why.click();
+    await expect.element(delta.getByText("A recover draft from your recent nights, before your check-in; the Engine decides after it.")).toBeVisible();
+    await expect.element(delta.getByText("Draft before check-in: Protect recovery")).toBeVisible();
+    await expect.element(delta.getByText("night 2 of 3")).toBeVisible();
+    for (const el of delta.element().querySelectorAll<HTMLElement>("[data-why-trace] dt, [data-why-trace] dd, .why-trace__rule")) expect(parseFloat(getComputedStyle(el).fontSize), el.textContent!).toBeGreaterThanOrEqual(16);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+  });
+
   it("work day before check-in: tonight, your range, Delta, the draft, the runway and the actions route to existing surfaces", async () => {
     await page.viewport(360, 900);
     vi.mocked(getOrientation).mockResolvedValue(deriveOrientation(STATES["work-draft"]!));

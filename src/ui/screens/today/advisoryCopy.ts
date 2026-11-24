@@ -15,6 +15,17 @@ import { PLAIN_OBLIGATION_DUE_TITLE } from "./recommendationCopy";
 
 export const MAX_ADVISORY_ROWS = 3;
 
+/** GRAYSON C6.4: which rule produced an advisory note, in plain words (its WHY THIS? rule line). */
+export const ADVISORY_RULE: Record<AdvisoryNote["sourceModule"], string> = {
+  obligationRelevance: "Your commitments: something set aside before that still fits today.",
+  progression: "Progression (locked): advisory only; your load never changes unless you change it.",
+  decisionJournal: "A reviewed Decision Journal entry that matches today.",
+  shiftProtection: "Shift protection: water or protein not yet logged before a shift.",
+  continuity: "Continuity: your recent outcomes, read back as they were recorded.",
+  patternProposal: "A pattern in your own records, offered as a proposal only.",
+  dayRolloverAmbiguity: "Day rollover: a sleep logged on a day that started on its own at 16:30.",
+};
+
 export interface AdvisoryItem {
   note: AdvisoryNote;
   /** What the item is, e.g. the lift's name. */
