@@ -9,7 +9,8 @@
 - **Starting commit:** `origin/master` `92f46cf3` (#667). Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-dictate-001`. **Reviewer:** Claude Code (Codex is offline).
   **Active PR:** pending.
-- **Order and overlap:** after GRAYSON-PLAN-FRESH-001 in Grok Bot's queue. `RecordSheets.tsx` (meal list) and
+- **Order and overlap:** Grok Bot **#4** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after
+  TODAY-SPLIT-003, TODAY-CALM-001 and PLAN-FRESH-001, because its shared voice hook is a piece later features reuse. `RecordSheets.tsx` (meal list) and
   `CheckInSheet.tsx` may also change in Grok Bot's logging work (LOG-NUDGE, WINDOW-ALERT), so rebase on master first
   and keep these edits to the spots named below.
 
