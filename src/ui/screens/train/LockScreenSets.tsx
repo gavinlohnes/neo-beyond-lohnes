@@ -4,7 +4,7 @@ import {
 } from "../../../application/lockScreenSets";
 import type { WorkoutSession } from "../../../domain/common/types";
 import type { PerformedSet } from "../../../domain/workout/types";
-import { requestCheckInNotificationPermission } from "../../../persistence/checkInReminder";
+import { requestCheckInNotificationPermission } from "../../../application/checkInReminderQueries";
 
 /**
  * GRAYSON-TRAIN-LOCKSCREEN-001 (Gavin, 2026-11-24): the LOCK SCREEN switch on the live workout, and the glue to
