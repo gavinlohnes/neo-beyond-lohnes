@@ -78,3 +78,8 @@
 .set-fix-history ul { margin: 0 0 6px; padding-left: 18px; }
 .set-fix-removed { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .train-set-fix-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* GRAYSON-TRAIN-REST-001: one short highlight on REST COMPLETE when he reaches it; none under reduced motion. */
+@keyframes train-rest-done { 0% { background: var(--text-1); color: var(--surface-1, #000); } 100% { background: transparent; } }
+.train-rest-done { animation: train-rest-done 900ms ease-out 1; }
+@media (prefers-reduced-motion: reduce) { .train-rest-done { animation: none; } }
+.train-rest-buzz { width: 100%; min-height: 44px; margin-top: 8px; font-size: 16px; }

@@ -8,7 +8,9 @@
   localStorage. No domain event, no stored record, no Engine, persistence schema, Dexie, Android, permission,
   notification or navigation change.
 - **Starting commit:** `origin/master` `7e61e02`. Re-fetch before starting.
-- **Builder:** Codex. Branch `codex/grayson-train-rest-001`. **Active PR:** pending.
+- **Builder:** Claude Code (TRAIN while Codex is offline; Gavin, 04:38 CT: "Work on finishing train"). Was Codex; no
+  Codex branch or PR existed. Branch `claude/grayson-train-rest-001`, from `e43ba36`. Reviewer: Grok Bot.
+  **Active PR:** linked in GitHub once opened.
 - **Order:** small enough to build alongside or after GRAYSON-TRAIN-RUN-001 (#640). Both touch
   `TrainScreen.tsx`, and so does GRAYSON-TRAIN-EDIT-001 (#642): whichever builds second rebases. Keep the edit
   to `TrainScreen.tsx` to the rest block. While other PRs are open, leave the tracker and checkpoint to the

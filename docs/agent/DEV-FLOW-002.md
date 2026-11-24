@@ -252,6 +252,17 @@ charter. Until he revokes it, the Builder of record for a PR may merge that PR w
 The merge uses `expectedHeadSha` (no force, no admin bypass), and the checkpoint records each merge. Everything else
 above still applies, and Gavin can revoke this delegation at any time by saying so.
 
+**Red master: whoever broke it fixes it (amendment, Gavin, 2026-11-24).** After #666 turned master's CI red, two
+builders opened the same fix within two minutes (#676 and #677; Gavin merged #677). Gavin: "Add the rule and fix
+whatever is best." So:
+1. When required CI goes red on master, the Builder of record of the PR whose merge first turned it red owns the fix.
+2. Every other Builder leaves it alone: no second fix PR. Before opening any fix PR, check open PRs for one that
+   already fixes master; if one exists, review it instead.
+3. If the owning Builder is offline or says it can't fix it, Gavin names who does. The research and planning lead
+   may point out the red master and who owns it, but never writes the fix.
+4. A fix that stays inside the breaking PR's approved objective is ROUTINE; it still needs green CI and merges under
+   the rules above. A fix that changes what the original PR was approved to do is not a fix: stop and ask Gavin.
+
 ## Product identity and engineering safeguards
 
 Preserve the Operator Interface Doctrine, UX Decision Register, engineering contract, path rules,

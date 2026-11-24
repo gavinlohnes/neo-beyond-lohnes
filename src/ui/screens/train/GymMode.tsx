@@ -24,6 +24,8 @@ export interface GymModeProps {
   /** The session's exercise ids in order (the warm-up ramp goes on the first barbell one). */
   sessionExerciseIds: readonly string[];
   restLabel: string | null;
+  /** GRAYSON-TRAIN-REST-001: the rest he just finished, for the one-time REST COMPLETE highlight (TRAIN detects it). */
+  restDone?: boolean;
   notice: string | null;
   busy: boolean;
   onAdjustWeight: (deltaLbs: number) => void;
@@ -186,7 +188,7 @@ export function GymMode(props: GymModeProps) {
       )}
 
       {props.restLabel && (
-        <p className="gym-mode__rest" role="status">
+        <p className={`gym-mode__rest${props.restDone ? " train-rest-done" : ""}`} role="status">
           {props.restLabel}
         </p>
       )}

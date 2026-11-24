@@ -34,6 +34,8 @@ import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
 import { SetFixSheet, useSetFixUndo } from "./SetFixSheet";
+import { restEndBuzz, shouldBuzzRestEnd } from "../../feel/restEndBuzz";
+import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
 import { RunningPanel } from "./RunningSession";
 import { GymMode } from "./GymMode";
 import { CalibrationPreview } from "./CalibrationPreview";
@@ -343,6 +345,27 @@ export function TrainScreen({
     const interval = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [session?.activeRestEndsAt]);
+
+  // GRAYSON-TRAIN-REST-001 (Gavin, 2026-11-24): one buzz when rest reaches zero, read off the same 1 s tick. Once per
+  // `activeRestEndsAt` (the ref holds the last end buzzed), only seen live (TRAIN visible, within ~3 s of the end).
+  const [restBuzz, setRestBuzz] = useState<RestBuzzPreference>(getRestBuzzPreference);
+  const lastBuzzedRestEndRef = useRef<string | null>(null);
+  const [restDoneEnd, setRestDoneEnd] = useState<string | null>(null);
+  useEffect(() => {
+    const endsAt = session?.activeRestEndsAt ?? null;
+    if (!endsAt || endsAt === lastBuzzedRestEndRef.current || Date.parse(endsAt) > nowTick) return;
+    const buzz = shouldBuzzRestEnd({ endsAt, nowMs: nowTick, lastBuzzedEnd: lastBuzzedRestEndRef.current,
+      visible: typeof document === "undefined" || document.visibilityState === "visible", enabled: restBuzz.enabled });
+    // Seen once, buzzed or not: a late or silenced end never buzzes on a later tick.
+    lastBuzzedRestEndRef.current = endsAt;
+    if (Date.parse(endsAt) + 3000 >= nowTick) setRestDoneEnd(endsAt);
+    if (buzz) restEndBuzz(restBuzz.strength);
+  }, [nowTick, session?.activeRestEndsAt, restBuzz]);
+  const toggleRestBuzz = () => {
+    const next = { ...restBuzz, enabled: !restBuzz.enabled };
+    setRestBuzzPreference(next);
+    setRestBuzz(next);
+  };
 
   useEffect(() => {
     if (active) void refresh(hasReadRef.current);
@@ -1153,6 +1176,8 @@ export function TrainScreen({
   const isResting = restRemainingMs !== null;
   const restComplete = isResting && restRemainingMs <= 0;
   const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
+  // GRAYSON-TRAIN-REST-001: the one-time highlight and announcement belong to the end he just reached.
+  const restJustDone = restComplete && restDoneEnd !== null && restDoneEnd === session?.activeRestEndsAt;
 
   const programmePanel = (
     <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm, programmeContext) => {
@@ -1214,9 +1239,6 @@ export function TrainScreen({
       {visitedRecords && <div hidden={trainView !== "RECORDS"}><RecordsList active={active && trainView === "RECORDS"} focusExerciseId={recordsFocus} onClose={() => openTrainView("WORKOUT")} /></div>}
       {/* GRAYSON-TRAIN-PROGRESS-001: one tap from today's workout, read only. */}
       {trainView === "PROGRESS" && <TrainProgress active={active} />}
-      {/* GRAYSON-TRAIN-RUN-001: the running card, live run and plan. While a run is live (or its finish sheet is open)
-          the lift content steps aside, so a lift can't start mid-run; the running command refuses mid-lift. */}
-      {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
       <div hidden={trainView !== "WORKOUT" || runningActive}>
       <ConfirmPanel />
 
@@ -1662,6 +1684,7 @@ export function TrainScreen({
               ghost={lastPerformedSets[currentExercise.exerciseId]}
               exerciseUntouched={loggedSetNumbers(currentExercise.exerciseId).size === 0}
               sessionExerciseIds={activeExercises.map((ex) => ex.exerciseId)}
+              restDone={restJustDone}
               restLabel={
                 isResting && restRemainingMs !== null
                   ? restComplete
@@ -2048,6 +2071,7 @@ export function TrainScreen({
               expand/compress the widget drives itself. */}
           {isResting && restRemainingMs !== null && (
             <div className="equipment-row" style={{ marginBottom: 16 }}>
+              <p className="visually-hidden" role="status">{restJustDone ? "Rest complete." : ""}</p>
               {restCompressed ? (
                 <button
                   type="button"
@@ -2056,7 +2080,7 @@ export function TrainScreen({
                   aria-label="Expand rest timer controls"
                   onClick={handleTouchRest}
                 >
-                  <p className="meta" style={{ margin: 0 }}>
+                  <p className={`meta${restJustDone ? " train-rest-done" : ""}`} style={{ margin: 0 }}>
                     {restComplete ? "REST COMPLETE" : `RESTING · ${formatRestRemaining(restRemainingMs)}`}
                     {currentExercise && currentSetNumber !== null
                       ? ` — Next: ${currentExercise.name} Set ${currentSetNumber}`
@@ -2065,7 +2089,7 @@ export function TrainScreen({
                 </button>
               ) : (
                 <>
-                  <p className="tool-label" style={{ marginBottom: 4 }}>{restComplete ? "REST COMPLETE" : "RESTING"}</p>
+                  <p className={`tool-label${restJustDone ? " train-rest-done" : ""}`} style={{ marginBottom: 4 }}>{restComplete ? "REST COMPLETE" : "RESTING"}</p>
                   <p className="meta-strong train-live-rest" style={{ marginBottom: 8 }}>{formatRestRemaining(restRemainingMs)}</p>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
@@ -2090,6 +2114,10 @@ export function TrainScreen({
                       SKIP REST
                     </button>
                   </div>
+                  {/* GRAYSON-TRAIN-REST-001: one tap to silence (or bring back) the buzz mid-workout. */}
+                  <button type="button" className="btn-secondary train-rest-buzz" aria-pressed={restBuzz.enabled} onClick={toggleRestBuzz}>
+                    Buzz when rest ends: {restBuzz.enabled ? "On" : "Off"}
+                  </button>
                 </>
               )}
             </div>
@@ -2209,6 +2237,12 @@ export function TrainScreen({
       )}
       </>}
       </div>
+      {/* GRAYSON-TRAIN-RUN-001: the running card, live run and plan. While a run is live (or its finish sheet is open)
+          the lift content steps aside, so a lift can't start mid-run; the running command refuses mid-lift.
+          It sits after the lift content (one mount point, so a live run keeps its state): TRAIN-HOME keeps START
+          WORKOUT on the first screen at 360 px and TRAIN opening at the top; a live run still leads, as the lift
+          content above it is hidden then. */}
+      {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
       {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
       {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>

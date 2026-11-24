@@ -13,6 +13,7 @@
 - **Order and overlap:** after GRAYSON-CARRY-001 in Grok Bot's queue. Touches `ShiftDownCard.tsx` and
   `TodayScreen.tsx` (one line above `ShiftCatchUpCard`). CARRY-001 changes `CloseCard.tsx`, not these, so no shared
   file except `TodayScreen.tsx`; rebase on whichever merges first.
+- **Amended by GRAYSON-TODAY-CALM-001 (2026-11-24):** build after it. The "First at home" line is the quiet-line candidate `FIRST_AT_HOME` (default place 2) rendered by `TodayQuietLines`, not its own block in `TodayScreen.tsx`.
 
 ## Objective and benefit
 SHIFT DOWN today is a timer: pick minutes, start, complete. The campaign plan's 06:00 moment asks for more: "park
