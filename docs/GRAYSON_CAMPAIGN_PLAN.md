@@ -73,7 +73,7 @@ status of its own.
 | C3.5 | Seasonal packs | Not started |  |
 | C3.6 | Home inventory light | Not started |  |
 | **Campaign 4 — Body Engine** | | | |
-| C4.1 | Energy curve body-clock fix | Not started |  |
+| C4.1 | Energy curve body-clock fix | Done (verified and locked; no runtime change) | [brief](agent/GRAYSON-C4.1-001.md); the body-clock model itself stays unvalidated |
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
 | C4.2a | Owner-editable caffeine cut-off, source, SAVE / UNDO | Done (#595) | Narrowed by Gavin 2026-11-20: no automated suggestion, confidence or suppression. Explicit experiment deferred to separate authorization |
 | C4.3 | Optional one-tap caffeine log | Not started |  |
@@ -120,7 +120,7 @@ status of its own.
 | C7.5 | Lock-screen workout (HARVEST-003 later) | Not started |  |
 | C7.6 | Search on MiniSearch | Not started |  |
 | **Campaign 8 — Data You Own** | | | |
-| C8.1 (Q6) | Settings travel with the backup | In review | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
+| C8.1 (Q6) | Settings travel with the backup | Done (#633) | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
 | C8.2 | Restore drill | Not started |  |
 | C8.3 | Export everything readable | Not started |  |
 | C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
@@ -551,6 +551,12 @@ Health Bridge.
 
 - **C4.1 DEEPEN · Energy curve body-clock fix.** Place the circadian low from his actual sleep
   pattern on steady night runs (#592 finding C1; its simulation put the low at 12:30, inside day sleep).
+  - **Correction (Gavin, 2026-11-24: "Lock it in"):** the research audit withdrew #592's finding. Its simulation
+    left out the planned/usual sleep the production query supplies. With it, the shown low on steady nights is in
+    the waking night (for example 04:30–07:30 for a 07:30–14:00 day sleep). C4.1 therefore locked that behaviour
+    with a property test and changed no runtime code. The circadian anchor (1.5 h before habitual wake, which
+    assumes a body clock fully adjusted to nights) stays an unvalidated assumption. Changing it (partial
+    adjustment, or an off-day anchor) is a separate, owner-approved objective.
   - Done when: a property test with a 3-night synthetic run puts the low inside the waking night
     window; existing curve tests pass; copy unchanged.
   - Builds on: `application/alertness.ts` (circadian low 1.5 h before habitual wake).
