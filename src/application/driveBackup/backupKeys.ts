@@ -1,4 +1,4 @@
-import { db } from "../../persistence/db";
+import { exportNativeBackup } from "../../persistence/backup";
 import { clearDriveKey, readDriveKey, saveDriveKey } from "../../persistence/driveKeyStore";
 import { createKeySet, decryptBackup, decryptWithDataKey, encryptBackup, generateRecoveryCode, KDF_ITERATIONS } from "./backupCrypto";
 
@@ -17,11 +17,11 @@ export async function setUpBackupKey(passphrase: string, iterations = KDF_ITERAT
 export async function hasBackupKey(): Promise<boolean> { return Boolean(await readDriveKey()); }
 export const forgetBackupKey = clearDriveKey;
 
-/** The current native backup (db.export, unchanged), encrypted with this phone's key. */
+/** The current native backup (with its travelling preferences, GRAYSON C8.1), encrypted with this phone's key. */
 export async function encryptCurrentBackup(): Promise<Uint8Array<ArrayBuffer>> {
   const key = await readDriveKey();
   if (!key) throw new Error("BACKUP_KEY_NOT_SET_UP");
-  const plain = new Uint8Array(await (await db.export({ prettyJson: false })).arrayBuffer());
+  const plain = new Uint8Array(await (await exportNativeBackup(false)).arrayBuffer());
   return encryptBackup(plain, key.dataKey, key.wraps, key.iterations);
 }
 

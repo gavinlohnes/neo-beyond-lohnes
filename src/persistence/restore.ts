@@ -26,6 +26,8 @@ export type RestorePreview =
       databaseName: string;
       databaseVersion: number;
       tables: { name: string; rowCount: number }[];
+      /** GRAYSON C8.1: preferences carried; null for a backup made before C8.1. */
+      settingsCount: number | null;
     }
   | {
       format: "LEGACY";

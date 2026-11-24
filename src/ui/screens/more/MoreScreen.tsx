@@ -883,6 +883,12 @@ export function MoreScreen({
             {preview.tables.map((t) => (
               <p key={t.name} className="meta" style={{ paddingLeft: 8 }}>{t.name}: {t.rowCount} rows</p>
             ))}
+            {/* GRAYSON C8.1: say what happens to this phone's preferences; keys and sign-ins never travel. */}
+            <p className="meta" style={{ marginTop: 8 }} data-restore-settings>
+              {preview.format === "NATIVE" && preview.settingsCount !== null
+                ? `Settings: ${preview.settingsCount} ${preview.settingsCount === 1 ? "preference" : "preferences"} replace this phone's. Keys and sign-ins stay as they are.`
+                : "Settings: this backup has none, so this phone keeps its own."}
+            </p>
             <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>
               A backup of what's currently here will be downloaded automatically before this replaces it.
             </p>
