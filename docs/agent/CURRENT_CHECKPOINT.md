@@ -1,14 +1,21 @@
-# Current state — after #627 (2026-11-23)
+# Current state — after #632 (2026-11-24)
 
-- **Master:** includes TRAIN finish 1 (#625/#626: SHORT forms, PROGRESS) and TRAIN finish 2 (#627: Delta during
-  training, training feeds the night, train window). Builder: Claude Code.
-- **Open:** #606 (C3.4b + C3.4c; Protected; Gavin's merge). TRAIN finish 3 (Delta in Gym mode + C9.2 TRAIN visual
-  finish; Protected; Gavin merges).
-- **TRAIN left after finish 3:** programme adaptation (after field evidence). Open question for Gavin: MY PROGRAMME
-  above the live workout (hiding it mid-workout removes editing it during a session).
-- **Known load-sensitive test not yet fixed:** FieldRehearsal TRAIN color-contrast (axe during an animation).
-- **Field check pending:** the logger (WHEN, catch-up), eating window, SHORT, PROGRESS, Delta and the train window
-  on real shifts.
+- **Master:** includes TRAIN finish 1–3 (#625/#626, #627, #628), C4.6 water target (#629), TRAIN placements (#630)
+  and C9.2 for DATA home (#632). Builder: Claude Code.
+- **Open:** #606 (C3.4b + C3.4c; Gavin's merge). This tidy-up (#631, Routine).
+- **TRAIN:** planned work complete, except programme adaptation, which waits for 3–4 weeks of real use by design.
+- **C9.2:** done for TRAIN (#628) and DATA home (#632). Small follow-up noted in #632's review: "RECORDED THIS DAY"
+  wraps to two lines inside the History frame at 320 px.
+- **Next:** Gavin's choice. Offered: C4.3 caffeine log (needs a rule-change approval), C4.5 monthly review, or making
+  a dropped LOG tap visible/retried (see MealRoundTrip below).
+- **Flaky tests:** FieldRehearsal TRAIN contrast (axe during a late fade-in) fixed in this tidy-up (#631).
+  **Still known: MealRoundTrip** (~2 in 5 paired runs, `helpers/mealSheet.ts:20`). The failure screenshots show LOG open:
+  the MEAL tap inside LOG is lost. Suspected (unconfirmed; 4 instrumented paired runs did not reproduce) cause: App's
+  `canNavigate()` silently ignores the tap while the previous step's meal read/write is still in flight
+  (`mealInFlight`). If confirmed, the fix is a behaviour change (a visible busy state on LOG's options, or queuing the
+  tap) for owner decision, not a test tidy-up. The helper's wait for no open dialog stays (harmless).
+- **Field check pending:** logger (WHEN, catch-up), eating window, water target, SHORT, PROGRESS, Delta and the train
+  window on real shifts.
 
 ---
 

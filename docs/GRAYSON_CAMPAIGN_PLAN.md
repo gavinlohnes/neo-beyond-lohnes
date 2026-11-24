@@ -88,11 +88,11 @@ status of its own.
 | C4.4w | Exact bodyweight HOME links | Done (#616) | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
 | C4.4x | Linked SHORT forms | Done (#625, fix #626) | Exact loaded SHORT per member, mirrors HOME; completed advances, partial holds; [brief](agent/GRAYSON-TRAIN-FINISH-1.md) |
 | C4.4y | TRAIN Progress & Direction (read only) | Done (#625, fix #626) | WORKING / UNCERTAIN / NEEDS ATTENTION with evidence floors and WHY; no adaptation |
-| C4.4z | Delta during training (guided execution) | Done (#627; Gym mode in TRAIN finish 3) | Quiet on normal sets; one owner-decided load proposal on clear evidence; pain stop without diagnosis; one end review |
+| C4.4z | Delta during training (guided execution) | Done (#627; Gym mode #628) | Quiet on normal sets; one owner-decided load proposal on clear evidence; pain stop without diagnosis; one end review |
 | LOG-WHEN-001 | Logger: DAY and SHIFT on WHEN | Done (#621) | Protected (amends LOG-TIME-001); water and meal sheets; brief `docs/agent/GRAYSON-LOG-WHEN-001.md` |
 | LOG-CATCHUP-001 | Post-shift catch-up | Done (#622) | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
 | C4.5 | Mission review (monthly) | Not started |  |
-| C4.6 | Water target | In progress | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
+| C4.6 | Water target | Done (#629) | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
 | C4.8 | Optional fasting window | Not started | Design in #601; no implementation authorized |
 | C4.8a | Eating Window foundation | Done (#619) | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |
@@ -126,7 +126,7 @@ status of its own.
 | C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
 | C9.1 | TodayScreen split (TODAY-SPLIT-002) | Not started |  |
-| C9.2 | Quiet Command finish | In progress (TRAIN in TRAIN finish 3; DATA home left) | [brief](agent/GRAYSON-TRAIN-FINISH-3.md) |
+| C9.2 | Quiet Command finish | Done (TRAIN #628; DATA home #632) | [TRAIN brief](agent/GRAYSON-TRAIN-FINISH-3.md), [DATA brief](agent/GRAYSON-C9.2-DATA-001.md) |
 | C9.3 | Navigation study | Not started |  |
 | C9.4 | Accessibility and motion pass | Not started |  |
 | C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
