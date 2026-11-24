@@ -61,14 +61,14 @@ export function LearningAnswer({ item, statement, onAnswered }: { item: Lifecycl
         </div>
       )}
       {narrowing && (
-        <div className="learning-answer__narrow" role="group" aria-label="When it applies">
-          <p className="learning-answer__state">Only when?</p>
+        <div className="learning-answer__narrow" role="group" aria-labelledby={`narrow-${item.learningId}`}>
+          <p className="learning-answer__state" id={`narrow-${item.learningId}`}>Only when?</p>
           <div className="learning-answer__presets">
             {NARROW_PRESETS.map((p) => <button key={p} type="button" className="btn-secondary" aria-pressed={preset === p} onClick={() => setPreset(preset === p ? null : p)}>{NARROW_LABELS[p]}</button>)}
           </div>
           <label className="field">In your words (optional)<input className="input" maxLength={140} value={words} onChange={(e) => setWords(e.target.value)} /></label>
           <div className="learning-answer__actions">
-            <button type="button" className="btn-primary" disabled={busy || (!preset && !words.trim())} onClick={() => void send("NARROW")}>SAVE</button>
+            <button type="button" className="btn-secondary" disabled={busy || (!preset && !words.trim())} onClick={() => void send("NARROW")}>SAVE</button>
             <button type="button" className="btn-secondary" disabled={busy} onClick={() => { setNarrowing(false); setError(null); }}>CANCEL</button>
           </div>
         </div>

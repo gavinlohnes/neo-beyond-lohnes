@@ -4,6 +4,8 @@ import {
   TIMELINE_TAG, type InterviewQuestion, type TimelineDay, type WeeklyInterview,
 } from "../../../application/weeklyInterview";
 import { describeLearning, useDeltaKnowledge } from "../../components/DeltaViews";
+import { LearningAnswer } from "../../components/LearningAnswer";
+import { weeklyLearnings } from "../../../application/learningLifecycle";
 
 /**
  * BIG-IDEAS-001 item 5: the week as recorded, then a short interview. Nothing is written until CONFIRM: the answers
@@ -31,7 +33,13 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns, onOpenPl
   const [done, setDone] = useState<{ note?: string; plan?: string; planId?: string }>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const knowledge = useDeltaKnowledge(true);
+  const [learningRefresh, setLearningRefresh] = useState(0);
+  const knowledge = useDeltaKnowledge(true, learningRefresh);
+  // C6.2: this visit's picks stay on screen once answered, showing his answer and its UNDO.
+  const [asked, setAsked] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (asked === null && knowledge && knowledge !== "ERROR") setAsked(weeklyLearnings([...knowledge.states.values()]).map((i) => i.learningId));
+  }, [knowledge, asked]);
 
   const loadEntries = () => void getTimelineEntries().then(setEntries).catch(() => {});
   useEffect(() => {
@@ -93,6 +101,23 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns, onOpenPl
         })()}
       </section>
 
+      {/* GRAYSON C6.2: at most three of Delta's patterns a week for his answer. Only patterns at their evidence floor,
+          only unanswered ones or ones newer evidence turned against. Silent when there's nothing to ask. */}
+      {knowledge && knowledge !== "ERROR" && (() => {
+        const ask = (asked ?? []).flatMap((id) => { const i = knowledge.states.get(id); return i?.learning ? [i] : []; });
+        if (!ask.length) return null;
+        return <section aria-labelledby="week-learning-heading" className="week-learning" style={{ marginBottom: 12 }}>
+          <p id="week-learning-heading" className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>WHAT I THINK I'M LEARNING</p>
+          <p className="meta" style={{ margin: "2px 0 6px" }}>Patterns from your records, not causes. Keep what's true, narrow what's only sometimes true, drop the rest. Nothing changes your plans or advice.</p>
+          <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {ask.map((item) => { const words = describeLearning(item.learning!); return (
+              <li key={item.learningId} className="equipment-row" data-week-learning={item.learningId} style={{ marginBottom: 6, padding: "8px 12px" }}>
+                <p className="card-body" style={{ margin: 0 }}>{words}</p>
+                <LearningAnswer item={item} statement={words} onAnswered={() => setLearningRefresh((n) => n + 1)} />
+              </li>); })}
+          </ol>
+        </section>;
+      })()}
       <section aria-labelledby="week-interview-heading">
         <p id="week-interview-heading" className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>WEEKLY INTERVIEW</p>
         <p className="meta" style={{ margin: "2px 0 8px" }}>Four short questions from this week's records. Answer any you like; nothing is saved until you confirm.</p>

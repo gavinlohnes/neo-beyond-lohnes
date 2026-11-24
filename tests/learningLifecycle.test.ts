@@ -88,3 +88,19 @@ describe("C6.2 the weekly pick", () => {
     expect(weeklyLearnings(life([unusual, experiment]))).toEqual([]);
   });
 });
+
+describe("C6.1 Alfred's context", () => {
+  it("never includes a dropped learning, and says when he confirmed, narrowed or disputed one", async () => {
+    const { deltaFacts } = await import("../src/application/deltaFacts");
+    const a = tag("kept", 360, 420), b = tag("dropped", 360, 420), c = tag("narrow", 360, 420), d = tag("disputed", 360, 420), e = tag("open", 360, 420);
+    const events = [answer(a, "KEEP", null), answer(b, "DROP", null), answer(c, "NARROW", null, { context: { preset: "AFTER_NIGHTS", words: "after the 3rd" } }), answer(d, "NOT_TRUE", null)];
+    const items = life([a, b, c, d, e], events);
+    const k = { topics: [], learnings: [a, b, c, d, e], suggestion: null, needle: { ready: false as const, judgedWeeks: 0, need: 4 } };
+    const facts = deltaFacts(k, true, new Map(items.map((i) => [i.learningId, i] as const)));
+    expect(facts.map((f) => f.id)).toEqual(["tag-kept", "tag-narrow", "tag-disputed", "tag-open"]);
+    expect(facts[0]!.text).toMatch(/HE CONFIRMED THIS\.$/);
+    expect(facts[1]!.text).toMatch(/HE SAYS IT APPLIES ONLY: after night shifts; after the 3rd\.$/);
+    expect(facts[2]!.text).toMatch(/HE SAYS THIS IS NOT TRUE; do not rely on it\.$/);
+    expect(facts[3]!.text).toMatch(/A pattern, not a cause\.$/);
+  });
+});
