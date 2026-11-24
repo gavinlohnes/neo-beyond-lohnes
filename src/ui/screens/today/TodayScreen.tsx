@@ -20,35 +20,31 @@ import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
 import { ShiftCatchUpCard } from "./ShiftCatchUpCard";
 import { markOrientationSeen, orientationSeen } from "./orientationStore";
-import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { deriveAhead } from "../../../application/ahead";
-import { getLivedDayMap, placeMarks, plannedMarks, type MapMark } from "../../../application/livedDayMap";
-import { getShiftSleepPlan, type ShiftSleepPlan } from "../../../application/shiftSleepPlan";
+import { placeMarks, plannedMarks } from "../../../application/livedDayMap";
 import { diffLook, firstKnown, markKey, mergeLook, newMarkKeys, sinceLabel, type LookSnapshot } from "../../../application/sinceLastLook";
 import { readLastLook, writeLastLook } from "./lastLookStore";
 import { sleepMinutes as externalSleepMinutes } from "../../../domain/health/measuredSeries";
-import { deriveLifeState, getRecordedDayBefore, getRecordedYesterday, lifeStateInput } from "../../../application/lifeState";
+import { deriveLifeState, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
 import { recordedBy } from "../../../application/workContextResolution";
-import { getConfirmedExceptions } from "../../../application/scheduleExceptions";
-import { contractDate, hasRecoveryContract } from "../../../application/recoveryContract";
+import { contractDate } from "../../../application/recoveryContract";
 import { PostRunReportDisclosure, RecoveryContractOffer } from "./RecoveryContract";
 import { createObligation } from "../../../application/intentCommands";
 import { livedDayStartOf } from "../../../application/reflect";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import { getLastMainSleep, getSystemStatus, type SystemStatus } from "../../../application/systemStatus";
+import type { SystemStatus } from "../../../application/systemStatus";
 import { SystemsLine } from "../systems/SystemsLine";
 import { SuitLines } from "./SuitLines";
 import { ShiftChangeMoment, StartedWork } from "./ShiftChange";
 import { getPaceHistories, minuteOfDay, paceReading, type PaceHistories, type PaceReading } from "../../../application/pace";
 import { Signal } from "../../components/Signal";
 import { useOnline } from "../../hooks/useOnline";
-import { getBackupPrompt } from "../../../application/autoBackupQueries";
 import { performDueDayRollover } from "../../../application/commands";
-import { getEarlyDayStart, livedReadAt, type EarlyDayStart } from "../../../application/earlyDayStart";
+import { livedReadAt } from "../../../application/earlyDayStart";
 import { describeSystemStatus } from "./statusCopy";
 import { describePlainRecommendationTitle, describeRecommendationReason } from "./recommendationCopy";
 import { TickNumber } from "../../feel/TickNumber";
@@ -57,12 +53,11 @@ import type {
   CaptureItem,
   Recommendation,
   StateCheckIn,
-  WorkContextSource,
-  WorkoutSession,
 } from "../../../domain/common/types";
 import { ConfirmIcon, Icon } from "../../icons/Icon";
 import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { TodayToasts } from "./TodayToasts";
+import { EMPTY_TODAY_SNAPSHOT, installTodaySnapshot, readTodaySnapshot, type TodaySnapshot } from "./todayRead";
 import { TodayRecommendationDraft } from "./TodayRecommendationDraft";
 import { TodayEnergy } from "./TodayEnergy";
 import { EatingWindowCard } from "./EatingWindowCard";
@@ -76,10 +71,7 @@ import {
   hasObligationRequiringAttention,
   isAttentionWorthyTier,
 } from "../../../engine/obligationRelevance";
-import { getCurrentlyEligibleUnresolvedObligations, getMissionForObligation } from "../../../application/intentQueries";
-import { getAdvisoryNotes } from "../../../application/advisoryQueries";
-import { wasRecommendationMateriallyRepeated } from "../../../application/continuityQueries";
-import type { AdvisoryNote } from "../../../domain/intelligence/types";
+import { getCurrentlyEligibleUnresolvedObligations } from "../../../application/intentQueries";
 import { AdvisorySection } from "./AdvisorySection";
 import { convertCaptureToObligation, satisfyObligation } from "../../../application/intentCommands";
 import { CommitmentQuickActions } from "./CommitmentQuickActions";
@@ -107,7 +99,6 @@ import { WorkoutCall, useWorkoutCallQuestion } from "./WorkoutCall";
 import { QuickLog } from "./QuickLog";
 import { NightClosed } from "./NightClosed";
 import type { TrainDestination } from "../train/TrainScreen";
-import { getTonightState, type TonightState } from "../../../application/tonightQueries";
 import { logMeal, voidMealLog } from "../../../application/nutritionCommands";
 import { getRecentSavedMeals } from "../../../application/nutritionQueries";
 import type { SavedMeal } from "../../../domain/common/types";
@@ -170,33 +161,9 @@ import {
 } from "../../../application/commands";
 import {
   getActiveDay,
-  getLatestCheckIn,
-  getLatestRecommendation,
-  getRecommendationDecision,
-  getRecommendationHandoff,
-  shouldSuggestEndDay,
-  getPendingOutcomeRating,
-  getPriorOutcomeMemory,
   getScheduledContext,
-  getMinimumDayStatus,
-  getEffectiveHydrationTotal,
-  getHydrationEntries,
-  getMostRecentBodyweight,
-  getDayProteinTotalG,
-  getOpenReset,
-  getOpenShiftDown,
-  getLastShiftDownCompletedAt,
-  getWorkPeriodEnded,
-  getWorkPeriodStarted,
-  getWorkContextSource,
   hasUnresolvedPostShift,
-  getOpenCaptureItems,
   getSchedulePattern,
-  getSleepEntries,
-  getSleepDraftEvidence,
-  type MinimumDayStatus,
-  type PriorOutcomeMemory,
-  type RecommendationDecision,
   type RecommendationHandoffTarget,
 } from "../../../application/queries";
 import type { ScheduledContext } from "../../../engine/scheduledContext";
@@ -207,17 +174,14 @@ import {
   suggestTemplateForNextWorkout,
 } from "../../../application/trainQueries";
 import { getQuitHabit } from "../../../application/quitQueries";
-import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { livedDayShiftWindow } from "../../../engine/scheduledContext";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import { traceShortSleepStreak } from "../../../engine/evaluate";
-import type { SchedulePattern } from "../../../domain/common/types";
 import { templateLabel } from "../train/trainCopy";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { deriveSleepDraft, sleepDraftWindow } from "../../../engine/sleepDraft";
-import { checkInDraftDecision, type CheckInDraft } from "../../../engine/checkInDraft";
-import { getCheckInDraft } from "../../../application/checkInDraftQueries";
+import { checkInDraftDecision } from "../../../engine/checkInDraft";
 import { getAppOpenedAt } from "../../appSession";
 import { formatDuration } from "../body/bodyScreenCopy";
 import {
@@ -244,8 +208,6 @@ import { dismissNudge, readLogNudgeSettings, readNudgeDismissed } from "./logNud
 import { ModeCity, ModeScene, SuitMode } from "./ModeIdentity";
 import { ModeHeader } from "./ModeHeader";
 import { ActiveExperimentLine } from "./ActiveExperimentLine";
-import { getRecommendationMemory, type RecommendationMemory, type RememberedLesson } from "../../../application/remember";
-import type { DecisionJournalEntry } from "../../../domain/journal/types";
 import { ShiftHandoff } from "../../components/ShiftHandoff";
 import { clearModePin, getModePin, setModePin } from "../../../application/modePinQueries";
 import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../../../engine/dayRollover";
@@ -368,7 +330,55 @@ export function TodayScreen({
   /** Re-read canonical totals after BODY without resetting TODAY's disclosures. */
   mealRefreshKey?: number;
 } = {}) {
-  const [day, setDay] = useState<BeyondDay | null>(null);
+  // GRAYSON-TODAY-SPLIT-003 slice A (one read): everything refresh() reads is one typed snapshot of the day,
+  // installed in one render. The names below read from it, so the rest of TODAY is unchanged.
+  const [snapshot, setSnapshot] = useState<TodaySnapshot | null>(null);
+  const {
+    day,
+    checkIn,
+    recommendation,
+    decision,
+    recommendationHandoff,
+    priorOutcomeMemory,
+    rememberedLesson,
+    pendingReflection,
+    materiallyRepeated,
+    checkInDraft,
+    activeWorkout,
+    shiftDownCompletedAt,
+    suggestEndDay,
+    pendingOutcome,
+    workPeriodEndedAt,
+    workPeriodStartedAt,
+    workContextSource,
+    unresolvedPostShift,
+    earlyStart,
+    yesterdayRecorded,
+    openCaptureItems,
+    advisoryNotes,
+    systemStatus,
+    lastMainSleepMinutes,
+    lastMainSleepFromGarmin,
+    backupDue,
+    minimumDay,
+    minimumDayHydrateOz,
+    minimumDayProteinG,
+    lastWaterAmount,
+    latestWeightLbs,
+    waterLogCount,
+    tonight,
+    unresolvedObligations,
+    headlineCommitmentMission,
+    schedulePattern,
+    mainSleepRecordedAt,
+    proteinTargetG,
+    waterTargetOz,
+    sleepDraftEvidence,
+  } = snapshot ?? EMPTY_TODAY_SNAPSHOT;
+  /** A handler or a slower read updating one piece of the snapshot (same as its own setter did before). */
+  function patchSnapshot(patch: Partial<TodaySnapshot>) {
+    setSnapshot((prev) => ({ ...(prev ?? EMPTY_TODAY_SNAPSHOT), ...patch }));
+  }
   // TIMELINE-EDIT-001: the logged meal or water entry open for a fix (time, amount, remove).
   const [editTarget, setEditTarget] = useState<LogEntryTarget | null>(null);
   // SHIFT-CORRECT-001: the shift sheet a work mark on the timeline opens.
@@ -376,21 +386,11 @@ export function TodayScreen({
   // LAUNCH-STEADY-001: until the first read settles, "no day" is unknown, not a fact. TODAY shows a quiet reading
   // frame instead of "Mode not set / START DAY" flashing before the real day appears.
   const [dayRead, setDayRead] = useState(false);
-  const [checkIn, setCheckIn] = useState<StateCheckIn | null>(null);
   const [recommendationDraftPresent, setRecommendationDraftPresent] = useState(false);
-  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
-  const [decision, setDecision] = useState<RecommendationDecision | undefined>(undefined);
-  const [recommendationHandoff, setRecommendationHandoff] = useState<RecommendationHandoffTarget | null>(null);
-  const [priorOutcomeMemory, setPriorOutcomeMemory] = useState<PriorOutcomeMemory | null>(null);
-  // LOOP step 4 — REMEMBER: your own earlier conclusions, read with the rest of TODAY so nothing pops in later.
-  const [rememberedLesson, setRememberedLesson] = useState<RememberedLesson | null>(null);
-  const [pendingReflection, setPendingReflection] = useState<DecisionJournalEntry | null>(null);
-  const [materiallyRepeated, setMateriallyRepeated] = useState(false);
   const [values, setValues] = useState<PartialCheckInValues>({});
   const [checkInError, setCheckInError] = useState<string | null>(null);
   useSessionDraft(operationsOnly ? "command-check-in" : "check-in", Object.keys(values).length > 0);
   // Drop 5: the check-in draft (the operator's previous answers), and whether they chose START BLANK.
-  const [checkInDraft, setCheckInDraft] = useState<CheckInDraft | undefined>(undefined);
   const [checkInDraftDismissed, setCheckInDraftDismissed] = useState(false);
   const activeCheckInDraft = checkInDraft && !checkInDraftDismissed ? checkInDraft : undefined;
   // What the form shows and submits: taps win over the draft.
@@ -414,7 +414,6 @@ export function TodayScreen({
   // back to false. Same one-shot-on-mount convention as .fade-in/
   // .set-earned elsewhere in this codebase.
   const [justStartedDay, setJustStartedDay] = useState(false);
-  const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
   const [activeResetId, setActiveResetId] = useState<string | null>(null);
   const [resetIntensity, setResetIntensity] = useState<1 | 2 | 3 | 4 | 5>(3);
   const [openResetStartedAt, setOpenResetStartedAt] = useState<string | null>(null);
@@ -423,23 +422,13 @@ export function TodayScreen({
   const [shiftDownDuration, setShiftDownDuration] = useState(10);
   const [openShiftDownStartedAt, setOpenShiftDownStartedAt] = useState<string | null>(null);
   const [lastShiftDownOutcome, setLastShiftDownOutcome] = useState<SessionOutcome | null>(null);
-  // Soak fix (2026-10-04): when this day's latest SHIFT DOWN completed, from history, so a reload knows too.
-  const [shiftDownCompletedAt, setShiftDownCompletedAt] = useState<string | null>(null);
-  const [suggestEndDay, setSuggestEndDay] = useState(false);
   const [endDayBlockedByWorkout, setEndDayBlockedByWorkout] = useState(false);
-  const [pendingOutcome, setPendingOutcome] = useState<Recommendation | null>(null);
   const [scheduledContext, setScheduledContext] = useState<ScheduledContext | null>(null);
-  const [workPeriodEndedAt, setWorkPeriodEndedAt] = useState<string | null>(null);
-  // OWNER-GO-001: STARTED WORK puts TODAY on shift at once, even before the scheduled start.
-  const [workPeriodStartedAt, setWorkPeriodStartedAt] = useState<string | null>(null);
   // OWNER-GO-001: after a check-in, one plain line on what it changed and what holds the answer.
   const [checkInOutcome, setCheckInOutcome] = useState<string | null>(null);
   // GRAYSON-CHECKIN-EDIT-001: which check-in the fix sheet is open on, and the Undo shown for FIX_UNDO_MS after a fix.
   const [fixCheckInId, setFixCheckInId] = useState<string | null>(null);
   const [fixUndo, setFixUndo] = useUndoWindow<{ message: string; correctionEventId?: string }>(FIX_UNDO_MS);
-  // DROP 0: where the day's work context came from — "per schedule" only while the saved schedule's value stands.
-  const [workContextSource, setWorkContextSource] = useState<WorkContextSource | undefined>(undefined);
-  const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
   // Current Operational Context V1 (bounded proof): feeds the STATUS
   // context strip only — every other read above (day, scheduledContext,
   // unresolvedPostShift) stays exactly as-is for its own other uses
@@ -461,9 +450,6 @@ export function TodayScreen({
   const refreshRequestIdRef = useRef(0);
   // SHIFT-CHANGE-001: a STARTED WORK tap anywhere re-reads TODAY's start line at once.
   const [workStartTick, setWorkStartTick] = useState(0);
-  // LIFE-STATE-001: yesterday's recorded work context (read in refresh); the state is derived in render.
-  const [earlyStart, setEarlyStart] = useState<EarlyDayStart | null>(null);
-  const [yesterdayRecorded, setYesterdayRecorded] = useState<{ livedDay: number; kind: "WORK" | "OFF" | null; dayBefore: "WORK" | "OFF" | null; contractPlanned: boolean; confirmed: ReadonlyMap<string, "WORK" | "OFF">; week: WeekAhead | null; map: MapMark[]; sleepPlan: ShiftSleepPlan | null } | null>(null);
   // Which day `currentContext` was installed for — private to this
   // component, never exposed (CurrentOperationalContext carries no day
   // identity). Request-ownership alone stops a stale request from
@@ -482,16 +468,9 @@ export function TodayScreen({
       mountedRef.current = false;
     };
   }, []);
-  const [openCaptureItems, setOpenCaptureItems] = useState<CaptureItem[]>([]);
-  const [advisoryNotes, setAdvisoryNotes] = useState<AdvisoryNote[]>([]);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
-  // SUIT-001: the SYSTEMS line's sleep reading — System Status's own last-main-sleep rule.
-  const [lastMainSleepMinutes, setLastMainSleepMinutes] = useState<number | null>(null);
-  const [lastMainSleepFromGarmin, setLastMainSleepFromGarmin] = useState(false);
   // SUIT-001 signals: the browser's connection flag and the existing backup-due rule (same
   // setting and threshold as BackupDueLine), re-read whenever TODAY refreshes.
   const online = useOnline();
-  const [backupDue, setBackupDue] = useState<{ days: number | null } | null>(null);
   const [staleRefresh, setStaleRefresh] = useState<"IDLE" | "RUNNING" | "HELD" | "FAILED">("IDLE");
   const [captureText, setCaptureText] = useState("");
   useSessionDraft(operationsOnly ? "command-capture" : "capture", captureText.length > 0);
@@ -523,9 +502,6 @@ export function TodayScreen({
   // freely editable/clearable form value that gets submitted.
   const [conversionDateSuggestion, setConversionDateSuggestion] = useState<CaptureDateSuggestion | null>(null);
   const [captureConversionFeedback, setCaptureConversionFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
-  const [minimumDay, setMinimumDay] = useState<MinimumDayStatus | null>(null);
-  const [minimumDayHydrateOz, setMinimumDayHydrateOz] = useState(0);
-  const [minimumDayProteinG, setMinimumDayProteinG] = useState(0);
   const [mdWaterInput, setMdWaterInput] = useState("");
   const [mdProteinInput, setMdProteinInput] = useState("");
   // Product Experience Sprint, P3: RESET/SHIFT DOWN/check-in each default
@@ -563,14 +539,10 @@ export function TodayScreen({
   const [hydrationManualOpen, setHydrationManualOpen] = useState(false);
   // UNDO-001: a just-logged entry, UNDO for its first UNDO_WINDOW_MS, then CORRECT IN DATA.
   const [waterControlsVisible, setWaterControlsVisible] = useState(true);
-  const [lastWaterAmount, setLastWaterAmount] = useState<number | null>(null);
-  // POLISH-002: TODAY's four number tiles — the latest weigh-in and today's water-log count.
-  const [latestWeightLbs, setLatestWeightLbs] = useState<number | undefined>(undefined);
   // GARMIN-004: measured Garmin values for TODAY's tiles and their sheets (display only).
   const [measured, setMeasured] = useState<MeasuredSnapshot | null>(null);
   const [measuredOpen, setMeasuredOpen] = useState<MeasuredMetric | null>(null);
   const [detailOpen, setDetailOpen] = useState<DetailMetric | null>(null);
-  const [waterLogCount, setWaterLogCount] = useState(0);
   // FIELD-REHEARSAL-002: bumped by every finished refresh, so the suit bands re-read after a save
   // (the comms line said "Water 0 oz" for five minutes after a drink was logged).
   const [refreshVersion, setRefreshVersion] = useState(0);
@@ -578,24 +550,11 @@ export function TodayScreen({
   const [proteinConfirmation, setProteinConfirmation] = useState<LoggedEntry | null>(null);
   // TONIGHT-001: a meal logged from QUICK LOG or the MEAL sheet, with the same UNDO window.
   const [mealConfirmation, setMealConfirmation] = useState<(LoggedEntry & { message: string }) | null>(null);
-  const [tonight, setTonight] = useState<TonightState | null>(null);
   const workoutQuestion = useWorkoutCallQuestion(day?.id, tonight);
   const hydrationUndoOpen = useUndoOpen(hydrationConfirmation);
   const proteinUndoOpen = useUndoOpen(proteinConfirmation);
   const mealUndoOpen = useUndoOpen(mealConfirmation);
   const [undoFailure, setUndoFailure] = useState<string | null>(null);
-  // Intent & Commitment Spine, Drop 02: currently-eligible unresolved
-  // Obligations, fetched unconditionally like openCaptureItems above —
-  // Obligations are not day-scoped either (see application/intentQueries.ts).
-  // Intent Lifecycle Integrity (2026-08-23): sourced from
-  // getCurrentlyEligibleUnresolvedObligations, not getUnresolvedObligations
-  // directly — an Obligation whose parent Mission is ARCHIVED must not
-  // participate in COMMITMENT/ATTENTION (see docs/UX_DECISIONS.md).
-  const [unresolvedObligations, setUnresolvedObligations] = useState<Obligation[]>([]);
-  const [headlineCommitmentMission, setHeadlineCommitmentMission] = useState<{
-    obligationId: string;
-    mission: Mission;
-  } | null>(null);
   const [commitmentsOpen, setCommitmentsOpen] = useState(false);
   const [commitmentConfirmation, setCommitmentConfirmation] = useState<{ id: string; title: string } | null>(null);
   const [commitmentFeedback, setCommitmentFeedback] = useState<{ kind: "SUCCESS" | "ERROR"; message: string } | null>(null);
@@ -629,14 +588,8 @@ export function TodayScreen({
     void getLogNudge(day.id, new Date()).then((r) => { if (current) setLogNudgeRead(r); }).catch(() => {});
     return () => { current = false; };
   }, [day?.id, refreshVersion]);
-  const [schedulePattern, setSchedulePattern] = useState<SchedulePattern | null>(null);
-  // Recorded times of this day's main-sleep logs (see mainSleepEndsPostShift).
-  const [mainSleepRecordedAt, setMainSleepRecordedAt] = useState<string[]>([]);
   // COMMAND-CENTER-001: the mode pin for this BeyondDay (placement only; see modePinQueries).
   const [modePin, setModePinState] = useState<{ dayId: string; phase: ShiftClockPhase | null } | null>(null);
-  const [proteinTargetG, setProteinTargetG] = useState<number | undefined>(undefined);
-  // GRAYSON C4.6: his own water target, when he set one.
-  const [waterTargetOz, setWaterTargetOz] = useState<number | undefined>(undefined);
   // The next workout TRAIN would suggest, with Time-Fit estimates per variant.
   const [nextWorkout, setNextWorkout] = useState<{
     label: string;
@@ -696,7 +649,6 @@ export function TodayScreen({
   const smallStepsEntryRef = useRef<HTMLButtonElement>(null);
 
   // ---- SLEEP DRAFT (2026-10-03) ----
-  const [sleepDraftEvidence, setSleepDraftEvidence] = useState<Awaited<ReturnType<typeof getSleepDraftEvidence>> | null>(null);
   // ±15-minute nudges applied to the draft before logging it.
   const [sleepNotYetDay, setSleepNotYetDay] = useState<string | null>(null);
   const [sleepDraftAdjust, setSleepDraftAdjust] = useState(0);
@@ -789,7 +741,8 @@ export function TodayScreen({
    */
   async function loadShiftClockSetup() {
     try {
-      setSchedulePattern(await getSchedulePattern());
+      const schedulePattern = await getSchedulePattern();
+      patchSnapshot({ schedulePattern });
       const [templateId, customTemplates] = await Promise.all([suggestTemplateForNextWorkout(), getCustomTemplates()]);
       setCustomTemplateList(customTemplates);
       const [standard, reduced] = await Promise.all([
@@ -820,14 +773,44 @@ export function TodayScreen({
     // after a newer refresh's and be mistaken for the latest, regressing
     // `day`/`currentContext` back to stale values.
     const myRequestId = ++refreshRequestIdRef.current;
-    let activeDay: BeyondDay | null;
-    let activeWorkoutSession: WorkoutSession | null;
+    // GRAYSON-TODAY-SPLIT-003 slice A: the reads themselves live in readTodaySnapshot (todayRead.ts), unchanged and in
+    // the same order. `onDayRead` runs the moment the first read (getActiveDay()/getActiveWorkoutSession()) resolves,
+    // before any other read starts, so ownership and the currentContext read start at the same moment as before.
+    const first: { done: boolean; isOwner: boolean; contextPromise: ReturnType<typeof getCurrentOperationalContext> | null } = { done: false, isOwner: false, contextPromise: null };
+    let next: TodaySnapshot;
     try {
-      [activeDay, activeWorkoutSession] = await Promise.all([
-        getActiveDay().then((result) => result ?? null),
-        getActiveWorkoutSession().then((result) => result ?? null),
-      ]);
+      next = await readTodaySnapshot(() => new Date(), {
+        onDayRead: (activeDay) => {
+          first.done = true;
+          // Ownership decided HERE, immediately after the read above resolves —
+          // same timing as before this fix — and reused as-is below rather than
+          // re-derived after the many further awaits this function makes. A
+          // refresh that owns the render at this instant must apply everything
+          // it composes even if a newer refresh starts partway through; deciding
+          // ownership again later, after those further awaits, could reach a
+          // different (stricter) answer than this one and silently drop an
+          // update this refresh was always entitled to make.
+          first.isOwner = mountedRef.current && myRequestId === refreshRequestIdRef.current;
+          // The one deliberate exception to the batching below is `currentContext`: its fetch is
+          // kicked off here (so its latency overlaps with everything else this
+          // function awaits below) but its *result* is still consumed via its
+          // own request-id-guarded `.then()/.catch()`, landing whenever it
+          // resolves — unchanged from before, and still correct, since nothing
+          // in this component treats `currentContext` as available synchronously
+          // with `day`; every consumer already falls back to
+          // `day`/`scheduledContext`/`unresolvedPostShift` while it's in flight.
+          first.contextPromise = first.isOwner
+            ? getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
+            : null;
+          // Subscribe immediately: other canonical reads below may still be pending when
+          // this view rejects or the screen is hidden/unmounted. The owning handler below
+          // still installs the result/fallback; this prevents an unhandled-rejection gap.
+          void first.contextPromise?.catch(() => {});
+        },
+      });
     } catch (err) {
+      // A later read's failure is unchanged: it rejects refresh().
+      if (first.done) throw err;
       // A superseded refresh's failed read must vanish silently — it may
       // never regress `day`, and it must never surface as an unhandled
       // rejection. A still-current refresh's failure is unchanged from
@@ -837,164 +820,29 @@ export function TodayScreen({
       setDayRead(true);
       throw err;
     }
-    // Ownership decided HERE, immediately after the read above resolves —
-    // same timing as before this fix — and reused as-is below rather than
-    // re-derived after the many further awaits this function makes. A
-    // refresh that owns the render at this instant must apply everything
-    // it composes even if a newer refresh starts partway through; deciding
-    // ownership again later, after those further awaits, could reach a
-    // different (stricter) answer than this one and silently drop an
-    // update this refresh was always entitled to make.
-    const isOwner = mountedRef.current && myRequestId === refreshRequestIdRef.current;
-    // CI-timing-flake fix (2026-09-02): every read this function needs —
-    // starting with `activeDay`/`activeWorkoutSession` above, through every
-    // read below — is gathered into a local BEFORE any of it is committed
-    // via setState. Every setter for all of it then fires together at the
-    // very end, in one synchronous run with no `await` between them, so
-    // React batches the whole thing into a single render.
+    const { isOwner, contextPromise } = first;
+    // CI-timing-flake fix (2026-09-02): every read this function needs is
+    // gathered (now by readTodaySnapshot) BEFORE any of it is committed via
+    // setState. Every setter for all of it then fires together here, in one
+    // synchronous run with no `await` between them, so React batches the
+    // whole thing into a single render.
     //
-    // The previous shape here was a long run of individual
-    // `await X(); setY(...)` pairs (plus one early, separately-committed
-    // `setDay`/`setActiveWorkout` block), each committing its own render.
-    // A test polling for one early piece of this state (e.g. the "Orient"
-    // heading, gated on `day`, or the Attention section, gated on
-    // `unresolvedObligations`/`pendingOutcome`) could observe a DOM
-    // snapshot where that one piece had landed but a later piece in the
-    // same chain (e.g. `checkIn`, which drives the STATUS strip's capacity
-    // modifier) had not — a real, reproducible CI-only race (never
-    // reproduced locally) since it depends on exactly how the scheduler
-    // interleaves each render commit with the polling test's own retries.
-    // A prior fix ("Fix CI-only timing flake in AdvisoryNotes refresh()
-    // ordering") narrowly reordered one field to dodge one instance of
-    // this; two different fields in the same chain hit the identical race
-    // days later (PR #67's CI), which is exactly the whack-a-mole outcome
-    // a per-field reorder was always going to produce. Batching the whole
-    // function removes the gap instead of relocating it.
+    // The earlier shape was a long run of individual
+    // `await X(); setY(...)` pairs, each committing its own render. A test
+    // polling for one early piece of this state (e.g. the "Orient" heading,
+    // gated on `day`, or the Attention section, gated on
+    // `unresolvedObligations`/`pendingOutcome`) could observe a DOM snapshot
+    // where that one piece had landed but a later piece in the same chain
+    // (e.g. `checkIn`, which drives the STATUS strip's capacity modifier)
+    // had not — a real, CI-only race. Batching the whole function removes
+    // the gap instead of relocating it.
     //
-    // The one deliberate exception is `currentContext`: its fetch is
-    // kicked off here (so its latency overlaps with everything else this
-    // function awaits below) but its *result* is still consumed via its
-    // own request-id-guarded `.then()/.catch()`, landing whenever it
-    // resolves — unchanged from before, and still correct, since nothing
-    // in this component treats `currentContext` as available synchronously
-    // with `day`; every consumer already falls back to
-    // `day`/`scheduledContext`/`unresolvedPostShift` while it's in flight.
-    const contextPromise = isOwner
-      ? getCurrentOperationalContext(activeDay ? { id: activeDay.id, workContext: activeDay.workContext } : null)
-      : null;
-    // Subscribe immediately: other canonical reads below may still be pending when
-    // this view rejects or the screen is hidden/unmounted. The owning handler below
-    // still installs the result/fallback; this prevents an unhandled-rejection gap.
-    void contextPromise?.catch(() => {});
-
-    // Overdrive Phase 10: capture is deliberately not day-scoped ("inbox
-    // age is not urgency," and jotting something down shouldn't require a
-    // BeyondDay to already exist), so this refreshes unconditionally.
-    const openCaptureItems = await getOpenCaptureItems();
-    // Intent & Commitment Spine, Drop 02: same reasoning — Obligations are
-    // not day-scoped either.
-    const obligations = await getCurrentlyEligibleUnresolvedObligations();
-    const headline = getMostRelevantUnresolvedObligation(obligations, formatLocalDate(new Date()));
-    const mission = headline ? await getMissionForObligation(headline.obligation) : undefined;
-    const headlineCommitmentMission = headline && mission ? { obligationId: headline.obligation.id, mission } : null;
-
-    let checkIn: StateCheckIn | null = null;
-    let rec: Recommendation | null = null;
-    let decision: RecommendationDecision | undefined;
-    let recommendationHandoff: RecommendationHandoffTarget | null = null;
-    let priorOutcomeMemory: PriorOutcomeMemory | null = null;
-    let rememberedLesson: RememberedLesson | null = null;
-    let pendingReflection: DecisionJournalEntry | null = null;
-    let materiallyRepeated = false;
-    let suggestEndDay = false;
-    let pendingOutcome: Awaited<ReturnType<typeof getPendingOutcomeRating>> | null = null;
-    let minimumDay: MinimumDayStatus | null = null;
-    let minimumDayHydrateOz = 0;
-    let lastWater: number | null = null;
-    let waterLogs = 0;
-    let latestWeight: number | undefined;
-    let minimumDayProteinG = 0;
-    let openReset: Awaited<ReturnType<typeof getOpenReset>> | undefined;
-    let openShiftDown: Awaited<ReturnType<typeof getOpenShiftDown>> | undefined;
-    let shiftDownCompletedAtValue: string | null = null;
-    let workPeriodEndedAt: string | null = null;
-    let workPeriodStartedAt: string | null = null;
-    let unresolvedPostShift = false;
-    let workContextSource: WorkContextSource | undefined;
-    let mainSleepTimes: string[] = [];
-    let draftEvidence: Awaited<ReturnType<typeof getSleepDraftEvidence>> | null = null;
-    // Drop 5: the check-in draft reads the operator's latest check-in on any day.
-    const nextCheckInDraft = await getCheckInDraft();
-
-    if (activeDay) {
-      checkIn = (await getLatestCheckIn(activeDay.id)) ?? null;
-      rec = (await getLatestRecommendation(activeDay.id)) ?? null;
-      decision = rec ? await getRecommendationDecision(activeDay.id, rec.id) : undefined;
-      recommendationHandoff = rec ? (await getRecommendationHandoff(rec)) ?? null : null;
-      priorOutcomeMemory = rec ? (await getPriorOutcomeMemory(rec)) ?? null : null;
-      // Optional context: a failed read leaves it out rather than failing TODAY.
-      const memory: RecommendationMemory = rec && rec.kind !== "NO_ACTION_REQUIRED" ? await getRecommendationMemory(rec).catch(() => ({})) : {};
-      rememberedLesson = memory.lesson ?? null;
-      pendingReflection = memory.pending ?? null;
-      materiallyRepeated = rec ? await wasRecommendationMateriallyRepeated(rec) : false;
-      suggestEndDay = await shouldSuggestEndDay(activeDay.id);
-      pendingOutcome = rec ? (await getPendingOutcomeRating(rec)) ?? null : null;
-      minimumDay = await getMinimumDayStatus(activeDay.id);
-      minimumDayHydrateOz = await getEffectiveHydrationTotal(activeDay.id);
-      const waterEntries = await getHydrationEntries(activeDay.id);
-      lastWater = waterEntries.at(-1)?.effectiveAmountOz ?? null;
-      waterLogs = waterEntries.length;
-      latestWeight = await getMostRecentBodyweight();
-      // DROP 1.5: the one shared day total (protein-only logs + meals), same as BODY and Nutrition Targets.
-      minimumDayProteinG = await getDayProteinTotalG(activeDay.id);
-      openReset = await getOpenReset(activeDay.id);
-      openShiftDown = await getOpenShiftDown(activeDay.id);
-      shiftDownCompletedAtValue = (await getLastShiftDownCompletedAt(activeDay.id)) ?? null;
-      const workPeriodEnded = await getWorkPeriodEnded(activeDay.id);
-      workPeriodEndedAt = workPeriodEnded ? workPeriodEnded.occurredAt : null;
-      workPeriodStartedAt = (await getWorkPeriodStarted(activeDay.id))?.occurredAt ?? null;
-      unresolvedPostShift = await hasUnresolvedPostShift(activeDay.id);
-      workContextSource = await getWorkContextSource(activeDay.id);
-      mainSleepTimes = (await getSleepEntries(activeDay.id)).filter((e) => e.kind === "PRIMARY").map((e) => e.recordedAt);
-      draftEvidence = await getSleepDraftEvidence(activeDay.id, getAppOpenedAt());
-    }
-    // Intelligence Spine consumption (2026-09-02): advisory notes are pure
-    // SUPPORT-tier background context with no ordering dependency on
-    // anything else refresh() loads — gathered here alongside everything
-    // above rather than separately, now that everything commits together
-    // anyway.
-    const advisoryNotes = await getAdvisoryNotes();
-    // STATUS-001: the one System Status line (read only; never reaches the Engine), composed from
-    // THIS refresh's own activeDay and installed only by the refresh that owns the screen.
-    const nextSystemStatus = await getSystemStatus(activeDay ?? null).catch(() => null);
-    const nextLastMainSleep = activeDay ? await getLastMainSleep(activeDay.id).catch(() => null) : null;
-    const effectiveProteinTarget = await getEffectiveProteinTargetG();
-    const nextWaterTarget = await getNutritionTargets().then((t) => t.waterTargetOz, () => undefined);
-    // TONIGHT-001: the morning call, wake card and night summary read one small fact set.
-    const tonightState = activeDay ? await getTonightState(activeDay.id).catch(() => null) : null;
-    // LIFE-STATE-001: yesterday's recorded work context, read with everything else so the state band lands in the
-    // same render as the rest of TODAY (no layout jump after load).
-    // The schedule too (loadShiftClockSetup also reads it), so the band never appears after the tiles. Yesterday is
-    // kept with the lived day it was read for (review of #494), so after 16:30 a stale read is ignored, not used.
-    // EARLY-DAY-START-001: a day opened early is read as the 16:30 day it is.
-    const readAt = livedReadAt(activeDay, new Date());
-    const nextEarlyStart = await getEarlyDayStart(new Date()).catch(() => null);
-    // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
-    // whether the run-over follow-up is already planned, so it isn't offered twice.
-    const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-      Promise.all([getRecordedYesterday(readAt), getRecordedDayBefore(readAt, 2), hasRecoveryContract(readAt), getConfirmedExceptions(), getWeekAhead(readAt).catch(() => null), getLivedDayMap(activeDay, readAt).catch(() => [] as MapMark[]), getShiftSleepPlan(readAt).catch(() => null)])
-        .then(([kind, dayBefore, contractPlanned, exceptions, week, map, sleepPlan]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned, week, map, sleepPlan,
-          // SCHEDULE-EXCEPTIONS-001: confirmed changes, for the state, its moments and the shift run (FIELD-READINESS-001).
-          confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) }), () => null),
-      getSchedulePattern().catch(() => null),
-    ]) : [null, null];
-
-    // Everything on the active-day/context path is gated on this single
+    // Everything on the active-day/context path is gated on the single
     // ownership check: a refresh superseded by the time its getActiveDay()
     // resolves must not install `day`, and must not let its own composed
-    // state become authoritative.
+    // state become authoritative (installTodaySnapshot keeps those fields).
     if (isOwner) {
-      const newDayId = activeDay ? activeDay.id : null;
+      const newDayId = next.day ? next.day.id : null;
       if (newDayId !== currentContextDayIdRef.current) {
         // This accepted refresh is adopting a different day (including a
         // transition to/from no active day) than whatever `currentContext`
@@ -1011,30 +859,13 @@ export function TodayScreen({
         setCurrentContext(null);
       }
       currentContextDayIdRef.current = newDayId;
-      setDay(activeDay);
       setDayRead(true);
-      setActiveWorkout(activeWorkoutSession);
-      setYesterdayRecorded(nextYesterday);
-      setEarlyStart(nextEarlyStart);
-      if (nextSchedule) setSchedulePattern(nextSchedule);
     }
-    setOpenCaptureItems(openCaptureItems);
-    setUnresolvedObligations(obligations);
-    setHeadlineCommitmentMission(headlineCommitmentMission);
-    if (activeDay) {
-      setCheckIn(checkIn);
-      setRecommendation(rec);
-      setDecision(decision);
-      setRecommendationHandoff(recommendationHandoff);
-      setPriorOutcomeMemory(priorOutcomeMemory);
-      setRememberedLesson(rememberedLesson);
-      setPendingReflection(pendingReflection);
-      setMateriallyRepeated(materiallyRepeated);
-      setSuggestEndDay(suggestEndDay);
-      setPendingOutcome(pendingOutcome);
-      setMinimumDay(minimumDay);
-      setMinimumDayHydrateOz(minimumDayHydrateOz);
-      setMinimumDayProteinG(minimumDayProteinG);
+    const read = next;
+    setSnapshot((prev) => installTodaySnapshot(prev, read, { isOwner }));
+    if (read.day) {
+      // The RESET and SHIFT DOWN sessions are seeded from this read, in the same render.
+      const { openReset, openShiftDown } = read;
       if (openReset) {
         setActiveResetId(openReset.eventId);
         setResetIntensity(openReset.intensity);
@@ -1043,7 +874,6 @@ export function TodayScreen({
         setActiveResetId(null);
         setOpenResetStartedAt(null);
       }
-      setShiftDownCompletedAt(shiftDownCompletedAtValue);
       if (openShiftDown) {
         setActiveShiftDownId(openShiftDown.eventId);
         setShiftDownDuration(openShiftDown.durationMinutes);
@@ -1052,31 +882,10 @@ export function TodayScreen({
         setActiveShiftDownId(null);
         setOpenShiftDownStartedAt(null);
       }
-      setWorkPeriodEndedAt(workPeriodEndedAt);
-      setWorkPeriodStartedAt(workPeriodStartedAt);
-      setUnresolvedPostShift(unresolvedPostShift);
-      setWorkContextSource(workContextSource);
-      setMainSleepRecordedAt(mainSleepTimes);
-      setSleepDraftEvidence(draftEvidence);
-      setCheckInDraft(nextCheckInDraft);
-    } else {
-      setRecommendation(null);
-      setDecision(undefined);
-      setRecommendationHandoff(null);
     }
-    setAdvisoryNotes(advisoryNotes);
-    setLastWaterAmount(lastWater);
-    setWaterLogCount(waterLogs);
     setRefreshVersion((v) => v + 1);
-    setLatestWeightLbs(latestWeight);
-    if (isOwner) { setSystemStatus(nextSystemStatus); setLastMainSleepMinutes(nextLastMainSleep?.minutes ?? null); setLastMainSleepFromGarmin(nextLastMainSleep?.fromGarmin ?? false); }
     // GARMIN-004: off the critical path; a failed Garmin read hides the Garmin tiles, nothing else.
     if (isOwner && !operationsOnly) void getMeasuredSnapshot().then((next) => { if (mountedRef.current && myRequestId === refreshRequestIdRef.current) setMeasured(next); }, () => { if (mountedRef.current) setMeasured(null); });
-    const prompt = getBackupPrompt();
-    setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
-    setProteinTargetG(effectiveProteinTarget);
-    setWaterTargetOz(nextWaterTarget);
-    setTonight(tonightState);
 
     // A fresh, independently-composed view each refresh — never memoized
     // across calls, matching every other piece of state in this function.
@@ -1755,7 +1564,7 @@ export function TodayScreen({
       const eventId = await logWater(activeDay.id, amount);
       acknowledge("LIGHT");
       setMdWaterInput("");
-      setLastWaterAmount(amount);
+      patchSnapshot({ lastWaterAmount: amount });
       try { await refresh(); } catch { setUndoFailure("Water saved. Readings didn’t refresh. Reopen TODAY."); }
       setHydrationConfirmation({ amount, eventId, dayId: activeDay.id });
       setHydrationOperationOpen(false);
@@ -1795,7 +1604,7 @@ export function TodayScreen({
     try {
       await rateOutcome(pendingOutcome.beyondDayId, pendingOutcome.id, rating);
       acknowledge("LIGHT");
-      setPendingOutcome(null);
+      patchSnapshot({ pendingOutcome: null });
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -1805,7 +1614,7 @@ export function TodayScreen({
   function handleDismissOutcome() {
     if (!pendingOutcome) return;
     dismissOutcome(pendingOutcome.id);
-    setPendingOutcome(null);
+    patchSnapshot({ pendingOutcome: null });
   }
 
   const capacityResult = checkIn ? deriveCapacity(checkIn) : null;
