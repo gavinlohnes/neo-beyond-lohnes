@@ -33,6 +33,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.vision": "Vision mode",
   "beyond.more.favorites.v1": "MORE favorites",
   "beyond.close.prompts.v1": "Evening close prompts",
+  "beyond.close.gaps.v1": "Evening close gaps",
   "beyond.logNudge.v1": "Logging nudge",
 };
 

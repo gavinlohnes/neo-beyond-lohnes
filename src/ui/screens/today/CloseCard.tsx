@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { CLOSE_PROMPTS, MAX_CLOSE_PROMPTS, closeNoteText, getDayClose, saveCloseNote, type ClosePromptId } from "../../../application/dayClose";
-import { closeDone, markCloseDone, readClosePrompts, writeClosePrompts } from "./closeStore";
+import { CLOSE_GAP_WEIGH_MAX, CLOSE_GAP_WEIGH_MIN, CLOSE_PROMPTS, MAX_CLOSE_PROMPTS, closeNoteText, getCloseGaps, getDayClose, saveCloseNote, type CloseGaps, type ClosePromptId } from "../../../application/dayClose";
+import { askAlfred } from "../../components/AlfredSheet";
+import { closeDone, markCloseDone, readCloseGapSettings, readClosePrompts, writeCloseGapSettings, writeClosePrompts } from "./closeStore";
+import { readLogNudgeSettings } from "./logNudgeStore";
 
 /**
  * GRAYSON C1.3 + C1.4 (Gavin, 2026-11-20): after SHIFT DOWN, a quiet, optional close. What's next when it differs,
@@ -14,12 +16,20 @@ export function CloseCard({ dayId, busy, onClosed }: { dayId: string; busy: bool
   const [choosing, setChoosing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // GRAYSON-CLOSE-GAPS-001: what didn't get logged, read when the close opens and whenever his gap settings change.
+  const [gapSettings, setGapSettings] = useState(() => readCloseGapSettings());
+  const [gaps, setGaps] = useState<CloseGaps | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     void getDayClose().then((c) => { if (!cancelled && c && c.dayId === dayId) setView({ label: c.label, next: c.next }); }, () => { if (!cancelled) setView({ label: "", next: null }); });
     return () => { cancelled = true; };
   }, [dayId]);
+  useEffect(() => {
+    let cancelled = false;
+    void getCloseGaps(dayId, gapSettings, readLogNudgeSettings()).then((g) => { if (!cancelled) setGaps(g); }, () => { if (!cancelled) setGaps(null); });
+    return () => { cancelled = true; };
+  }, [dayId, gapSettings.enabled, gapSettings.weighGapDays]);
 
   if (closeDone(dayId)) return null;
   const finish = () => { markCloseDone(dayId); onClosed(); };
@@ -37,6 +47,8 @@ export function CloseCard({ dayId, busy, onClosed }: { dayId: string; busy: bool
     if (next.length === 0) return;
     setPrompts(next); writeClosePrompts(next);
   };
+  const changeGaps = (next: typeof gapSettings) => { setGapSettings(next); writeCloseGapSettings(next); };
+  const gapText = gaps?.gaps.map((g) => g.text).join(" ");
 
   return (
     <section className="today-close" aria-label="Close the day">
@@ -44,6 +56,9 @@ export function CloseCard({ dayId, busy, onClosed }: { dayId: string; busy: bool
         <h2 className="today-close__label">CLOSE THE DAY</h2>
         <span className="today-close__hint">Under a minute. Skip anytime.</span>
       </div>
+      {/* GRAYSON-CLOSE-GAPS-001: one muted line, no red, no counts; the tap opens Delta with the words ready, nothing sent. */}
+      {gapSettings.enabled && gaps && gapText && <button type="button" className="today-close__gaps" aria-label={`${gapText} Tell Delta`}
+        onClick={() => askAlfred(gaps.ask)}>{gapText} <span aria-hidden="true">TELL DELTA</span></button>}
       {view?.next && <p className="today-close__next">{view.next}</p>}
       {choosing ? (
         <fieldset className="today-close__choose">
@@ -51,6 +66,10 @@ export function CloseCard({ dayId, busy, onClosed }: { dayId: string; busy: bool
           {(Object.keys(CLOSE_PROMPTS) as ClosePromptId[]).map((id) => (
             <label key={id}><input type="checkbox" checked={prompts.includes(id)} onChange={() => toggle(id)} /> {CLOSE_PROMPTS[id]}</label>
           ))}
+          <label><input type="checkbox" checked={gapSettings.enabled} onChange={() => changeGaps({ ...gapSettings, enabled: !gapSettings.enabled })} /> Tell me what's missing</label>
+          {gapSettings.enabled && <label className="today-close__gapdays">Weigh-in gap, days ({CLOSE_GAP_WEIGH_MIN}–{CLOSE_GAP_WEIGH_MAX})
+            <input type="number" inputMode="numeric" min={CLOSE_GAP_WEIGH_MIN} max={CLOSE_GAP_WEIGH_MAX} value={gapSettings.weighGapDays}
+              onChange={(e) => { const v = Number(e.target.value); if (Number.isInteger(v) && v >= CLOSE_GAP_WEIGH_MIN && v <= CLOSE_GAP_WEIGH_MAX) changeGaps({ ...gapSettings, weighGapDays: v }); }} /></label>}
           <button type="button" className="btn-secondary" onClick={() => setChoosing(false)}>DONE</button>
         </fieldset>
       ) : prompts.map((id) => (
