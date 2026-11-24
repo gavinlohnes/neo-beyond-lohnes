@@ -1205,6 +1205,12 @@ below, this entry wins; the older entry is kept for history.
   and protein target's latest weight, and the end-the-day suggestion after main sleep — and can't
   be corrected afterwards. Undoing twice is a no-op. No schema change; backups carry the new events
   like any other.
+  **Amended (GRAYSON-FIX-UNDO-001, Gavin 2026-11-24 02:02 CT, option 1: undo shows only after a fix
+  or a removal):** "can't be corrected afterwards" holds only while the void stands. A removal can be
+  put back (`LOG_VOID_UNDONE`, one tap on UNDO for 8 s, or PUT IT BACK in History later); every
+  reader goes through `domain/logVoids.activeVoids`, so a put-back entry is back everywhere and can be
+  corrected and removed again. TODAY's log sheet removes on one tap with no "Remove …?" step. See
+  `docs/decisions/GRAYSON-FIX-UNDO-001.md`.
 
 - **As built: duplicate-meal prompt (DUP-MEAL-001, owner brief 2026-10-04, PR #155).** Field case:
   dinner logged twice doubled the day's protein and kcal. Right after a meal is logged on BODY, an

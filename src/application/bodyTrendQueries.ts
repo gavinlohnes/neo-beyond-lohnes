@@ -29,7 +29,7 @@ export async function getBodyweightHistoryWithSources(): Promise<SourceWeighIn[]
   const [logged, corrections, voids] = await Promise.all([
     db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray(),
     db.events.where("type").equals("BODYWEIGHT_LOG_CORRECTED").toArray(),
-    db.events.where("type").equals("BODYWEIGHT_LOG_VOIDED").toArray(),
+    db.events.where("type").anyOf(["BODYWEIGHT_LOG_VOIDED", "LOG_VOID_UNDONE"]).toArray(),
   ]);
   const undone = voidedLogIds(voids, "BODYWEIGHT_LOG_VOIDED");
   return logged

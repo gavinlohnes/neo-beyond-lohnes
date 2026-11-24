@@ -24,6 +24,12 @@ export function describeHistoryDayMeta(status: string, workContext: string, even
   return `${state} · ${work} · ${eventCount} ${eventCount === 1 ? "event" : "events"}`;
 }
 
+/** GRAYSON-FIX-UNDO-001: the log a put-back names, by the removal it takes back. */
+const PUT_BACK_NAMES: Record<string, string> = {
+  MEAL_LOG_VOIDED: "Meal", PROTEIN_LOG_VOIDED: "Protein", WATER_LOG_VOIDED: "Water",
+  SLEEP_LOG_VOIDED: "Sleep", BODYWEIGHT_LOG_VOIDED: "Bodyweight", MEASUREMENT_LOG_VOIDED: "Measurement",
+};
+
 /**
  * Priority 1 (HISTORY screen): one-line, human-readable summary per
  * event type — purely presentational, reads the exact payload shapes
@@ -76,6 +82,9 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return "Sleep log undone.";
     case "BODYWEIGHT_LOG_VOIDED":
       return "Bodyweight log undone.";
+    // GRAYSON-FIX-UNDO-001: a removal taken back; the removal stays above it.
+    case "LOG_VOID_UNDONE":
+      return `${PUT_BACK_NAMES[String(p.voidedType)] ?? "Log"} log put back.`;
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
     case "WORK_PERIOD_ENDED":

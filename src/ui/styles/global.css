@@ -2825,3 +2825,6 @@ html { overflow-anchor: none; }
 .train-set-details { border: 1px solid var(--border-subtle); border-radius: var(--radius-md, 8px); padding: 12px; margin: 12px 0; min-width: 0; display: grid; gap: 10px; }
 .train-set-details label { display: grid; gap: 6px; min-width: 0; }
 .train-set-details select { width: 100%; min-height: 44px; font-size: 16px; }
+
+/* GRAYSON-FIX-UNDO-001: History's PUT IT BACK sits where a check-in row's FIX does (.history-fix). 16px text. */
+.history-event-end .history-put-back { font-size: 16px; white-space: nowrap; }

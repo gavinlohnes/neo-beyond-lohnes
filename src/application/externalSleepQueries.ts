@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds } from "../domain/logVoids";
 import { compareSleepInstants } from "../domain/health/sleepImport";
 import { classifyGarminSleep, type ExternalSleepRevision, type GarminSleepUnfiled } from "../domain/health/sleepImport";
 import { getWorkedShiftWindows } from "./garminSleep";
@@ -27,8 +28,8 @@ export async function getSleepImportDays() {
 export async function getUnfiledGarminSleep(): Promise<Map<string, GarminSleepUnfiled>> {
   return db.transaction("r", [db.beyondDays, db.externalSleepRecords, db.externalSleepRevisions, db.schedulePatterns, db.events], async () => {
     const [days, pointers, sleepEvents] = await Promise.all([db.beyondDays.toArray(), db.externalSleepRecords.toArray(),
-      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_VOIDED"]).toArray()]);
-    const voided = new Set(sleepEvents.filter((e) => e.type === "SLEEP_LOG_VOIDED").map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
+      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_VOIDED", "LOG_VOID_UNDONE"]).toArray()]);
+    const voided = activeVoidedIds(sleepEvents, "SLEEP_LOG_VOIDED");
     const counted = new Set(sleepEvents.flatMap((e) => {
       const source = (e.payload as { source?: { kind: string; recordKey: string } }).source;
       return e.type === "SLEEP_LOGGED" && source?.kind === "GARMIN" && !voided.has(e.id) ? [source.recordKey] : [];
