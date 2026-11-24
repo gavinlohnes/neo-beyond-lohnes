@@ -15,7 +15,9 @@
   no new table, dependency, provider, permission or navigation change. Independent exact-head review, green CI;
   Gavin merges. No Builder merge.
 - **Starting commit:** `origin/master` `7e61e02`. Re-fetch before starting.
-- **Builder:** Codex. Branch `codex/grayson-train-edit-001`. **Active PR:** pending.
+- **Builder:** Claude Code (TRAIN while Codex is offline; Gavin, 04:38 CT: "Work on finishing train"). Was Codex; no
+  Codex branch or PR existed. Branch `claude/grayson-train-edit-001`, from `e43ba36` (RUN-001 is #666, not yet merged;
+  the shared files rebase on whichever merges first). Reviewer: Grok Bot. **Active PR:** linked in GitHub once opened.
 - **Order:** after GRAYSON-TRAIN-RUN-001 (#640) is built, because both edit `TrainScreen.tsx`,
   `trainCopy.ts` and `src/domain/common/types.ts`. Gavin can swap the order.
 - **Overlap check (2026-11-24, rechecked):** #639 (C6.1 + C6.2) edits `src/domain/common/types.ts` and

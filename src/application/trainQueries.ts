@@ -1,3 +1,4 @@
+import { projectSetFixes, SET_RETRACTION_TYPES } from "../domain/workout/setFixes";
 import { isWorkingSet } from "../domain/workout/types";
 /**
  * Leverage Implementation 001 (deterministic ordering hardening,
@@ -122,8 +123,14 @@ export async function getRecentSubstitutions(exerciseId: string, limit = 3): Pro
  * why the raw performedSets row itself is never touched.
  */
 export async function getUndoneSetIds(): Promise<Set<string>> {
-  const events = (await db.events.where("type").equals("SET_UNDONE").toArray()) as DomainEvent<SetUndonePayload>[];
-  return new Set(events.map((e) => e.payload.performedSetId));
+  // GRAYSON-TRAIN-EDIT-001: every retracted set — the live last-set undo as before, plus rows a standing set fix
+  // replaced or removed and rows a cancelled fix created. Same one filter, so every reader sees fixed sets.
+  return projectSetFixes(await getSetFixEvents()).retractedSetIds;
+}
+
+/** GRAYSON-TRAIN-EDIT-001: the events projectSetFixes reads (SET_UNDONE and the four fix types). */
+export async function getSetFixEvents(): Promise<DomainEvent[]> {
+  return db.events.where("type").anyOf([...SET_RETRACTION_TYPES]).toArray();
 }
 
 export async function getPerformedSets(sessionId: string): Promise<PerformedSet[]> {

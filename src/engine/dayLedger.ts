@@ -1,3 +1,4 @@
+import { projectSetFixes } from "../domain/workout/setFixes";
 import { activeVoidedIds } from "../domain/logVoids";
 import type {
   BeyondDay,
@@ -201,6 +202,11 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   "CHECK_IN_CORRECTION_UNDONE",
   // GRAYSON-FIX-UNDO-001: putting a removed log back is a correction, like the removal before it.
   "LOG_VOID_UNDONE",
+  // GRAYSON-TRAIN-EDIT-001: each set fix, and undoing one, is a correction.
+  "SET_CORRECTED",
+  "SET_REMOVED",
+  "SET_ADDED",
+  "SET_FIX_UNDONE",
 ]);
 
 const TRAINING_SET_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(["SET_LOGGED", "SET_SKIPPED"]);
@@ -232,6 +238,14 @@ function deriveBurden(dayEvents: readonly DomainEvent[]): LedgerBurden {
     } else if (CORRECTION_TYPES.has(e.type)) corrections += 1;
     else if (TRAINING_SET_TYPES.has(e.type)) trainingSets += 1;
     else if (e.type === "SET_UNDONE") trainingSets -= 1;
+    // GRAYSON-TRAIN-EDIT-001: an added set is one more training set, a removed one one fewer; undoing either reverses it.
+    if (e.type === "SET_ADDED") trainingSets += 1;
+    else if (e.type === "SET_REMOVED") trainingSets -= 1;
+    else if (e.type === "SET_FIX_UNDONE") {
+      const cancelled = dayEvents.find((d) => d.id === (e.payload as { fixEventId?: string })?.fixEventId);
+      if (cancelled?.type === "SET_ADDED") trainingSets -= 1;
+      else if (cancelled?.type === "SET_REMOVED") trainingSets += 1;
+    }
   }
   return { manualEntries, corrections, trainingSets: Math.max(0, trainingSets), ...(firstEntryAt ? { firstEntryAt } : {}) };
 }
@@ -287,12 +301,8 @@ export function projectDaySummaries(input: DayLedgerInput): DaySummary[] {
   }
   for (const list of eventsByDay.values()) list.sort(byOccurrence);
 
-  const undoneSetIds = new Set(
-    input.events
-      .filter((e) => e.type === "SET_UNDONE")
-      .map((e) => (e.payload as { performedSetId?: string }).performedSetId)
-      .filter((id): id is string => id !== undefined),
-  );
+  // GRAYSON-TRAIN-EDIT-001: the same retraction every set reader uses (undone, replaced or removed sets).
+  const undoneSetIds = projectSetFixes(input.events).retractedSetIds;
   const setsBySession = new Map<string, PerformedSet[]>();
   for (const set of input.performedSets) {
     if (undoneSetIds.has(set.id) || set.setKind === "WARMUP") continue;

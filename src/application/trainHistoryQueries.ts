@@ -1,8 +1,9 @@
+import { newestStandingFix, projectSetFixes, type SetFixEntry } from "../domain/workout/setFixes";
 import { isWorkingSet } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import type { WorkoutSession } from "../domain/common/types";
 import type { PerformedSet, WorkoutTemplateId } from "../domain/workout/types";
-import { getPerformedSets, getUndoneSetIds } from "./trainQueries";
+import { getPerformedSets, getSetFixEvents, getUndoneSetIds } from "./trainQueries";
 import { byLoggedOrder, getAllRecords, type PersonalRecord } from "./personalRecordQueries";
 import { getExerciseNames } from "./exerciseLibraryQueries";
 
@@ -104,12 +105,30 @@ export interface SessionRecordSet {
   record?: PersonalRecord;
   setKind?: PerformedSet["setKind"];
   repsInReserve?: number;
+  /** GRAYSON-TRAIN-EDIT-001: this set's fixes, oldest first (corrections, an add, a removal put back). */
+  fixes?: SetFixEntry[];
+  /** GRAYSON-TRAIN-EDIT-001: the newest standing fix, which Undo / Put it back cancels. */
+  newestFixEventId?: string;
+}
+
+/** GRAYSON-TRAIN-EDIT-001: a removed set, still stored, offered back with "Put it back". */
+export interface SessionRecordRemovedSet {
+  id: string;
+  setNumber: number;
+  weight: number;
+  reps: number;
+  skipped: boolean;
+  setKind?: PerformedSet["setKind"];
+  removalEventId: string;
+  removedAt: string;
 }
 
 export interface SessionRecordExercise {
   exerciseId: string;
   name: string;
   sets: SessionRecordSet[];
+  /** GRAYSON-TRAIN-EDIT-001: removed sets of this exercise. */
+  removed?: SessionRecordRemovedSet[];
 }
 
 export interface WorkoutSessionRecord {
@@ -122,8 +141,18 @@ export interface WorkoutSessionRecord {
 export async function getWorkoutSessionRecord(sessionId: string): Promise<WorkoutSessionRecord | null> {
   const session = await db.workoutSessions.get(sessionId);
   if (!session || !isHistorySession(session)) return null;
-  const [performed, records, names] = await Promise.all([getPerformedSets(sessionId), getAllRecords(), getExerciseNames()]);
+  const [performed, records, names, fixEvents, rawRows] = await Promise.all([
+    getPerformedSets(sessionId), getAllRecords(), getExerciseNames(), getSetFixEvents(),
+    db.performedSets.where("sessionId").equals(sessionId).toArray(),
+  ]);
   const sets = [...performed].sort(byLoggedOrder);
+  const fixes = projectSetFixes(fixEvents);
+  const fixesFor = (id: string) => {
+    const list = fixes.historyByRoot.get(fixes.rootOf.get(id) ?? id);
+    if (!list?.length) return {};
+    const newest = newestStandingFix(fixes, id);
+    return { fixes: list, ...(newest ? { newestFixEventId: newest.eventId } : {}) };
+  };
   const recordBySet = new Map(records.filter((r) => r.sessionId === sessionId).map((r) => [r.setId, r.record]));
 
   const exercises = new Map<string, SessionRecordExercise>();
@@ -140,8 +169,19 @@ export async function getWorkoutSessionRecord(sessionId: string): Promise<Workou
       ...(set.repsInReserve !== undefined ? { repsInReserve: set.repsInReserve } : {}),
       ...(set.substitutedName ? { substitutedName: set.substitutedName } : {}),
       ...(record ? { record } : {}),
+      ...fixesFor(set.id),
     });
     exercises.set(set.exerciseId, exercise);
+  }
+  for (const raw of rawRows as unknown as PerformedSet[]) {
+    const removal = fixes.removed.get(raw.id);
+    if (!removal || newestStandingFix(fixes, raw.id)?.eventId !== removal.eventId) continue;
+    const exercise = exercises.get(raw.exerciseId) ?? { exerciseId: raw.exerciseId, name: names[raw.exerciseId] ?? raw.exerciseId, sets: [] };
+    exercise.removed = [...(exercise.removed ?? []), {
+      id: raw.id, setNumber: raw.setNumber, weight: raw.weight, reps: raw.reps, skipped: raw.skipped,
+      ...(raw.setKind ? { setKind: raw.setKind } : {}), removalEventId: removal.eventId, removedAt: removal.at,
+    }];
+    exercises.set(raw.exerciseId, exercise);
   }
 
   return { entry: toEntry(session, sets, recordBySet.size), exercises: [...exercises.values()] };

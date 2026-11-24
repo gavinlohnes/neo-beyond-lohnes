@@ -37,6 +37,9 @@ export const WORKOUT_EVENT_TYPES = [
   "WORKOUT_ABANDONED",
   "SET_LOGGED",
   "SET_SKIPPED",
+  // GRAYSON-TRAIN-EDIT-001: a correction and an added set each record one new row.
+  "SET_CORRECTED",
+  "SET_ADDED",
 ] as const satisfies readonly DomainEvent["type"][];
 
 export interface WorkoutRecordSnapshot {
@@ -146,6 +149,17 @@ export function findWorkoutMismatches({ sessions, sets, events }: WorkoutRecordS
   for (const set of sets) {
     const row = set as Record<string, unknown>;
     entry(String(row.sessionId ?? ""), String(row.exerciseId ?? ""), row.setNumber ?? 0, row.skipped === true, row.recordedAt).rows += 1;
+  }
+  // GRAYSON-TRAIN-EDIT-001: SET_CORRECTED and SET_ADDED are the recording events for the rows they write (a fix never
+  // deletes a row either), so a fixed workout never shows as a mismatch. A cancelled fix's row stays stored too.
+  for (const event of eventsOfType("SET_CORRECTED")) {
+    const fields = payloadFields(event);
+    const after = fields.after !== null && typeof fields.after === "object" ? (fields.after as Record<string, unknown>) : {};
+    entry(stringField(fields, "sessionId") ?? "", stringField(fields, "exerciseId") ?? "", fields.setNumber ?? 0, after.skipped === true, event.occurredAt).events += 1;
+  }
+  for (const event of eventsOfType("SET_ADDED")) {
+    const fields = payloadFields(event);
+    entry(stringField(fields, "sessionId") ?? "", stringField(fields, "exerciseId") ?? "", fields.setNumber ?? 0, false, event.occurredAt).events += 1;
   }
   for (const event of [...eventsOfType("SET_LOGGED"), ...eventsOfType("SET_SKIPPED")]) {
     const fields = payloadFields(event);

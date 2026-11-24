@@ -285,6 +285,12 @@ export type DomainEventType =
   // GRAYSON-FIX-UNDO-001 (Gavin, 2026-11-24): a removal of a meal, protein, water, sleep, bodyweight or measurement log
   // put back. USER-sourced, under the entry's own beyondDayId (measurements: unscoped). Payload in domain/logVoids.ts.
   | "LOG_VOID_UNDONE"
+  // GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): fix any logged set, live or past. USER-sourced, under the set's own
+  // session's beyondDayId. Append-only: the replaced row stays, retracted. Payloads in the block at the end.
+  | "SET_CORRECTED"
+  | "SET_REMOVED"
+  | "SET_ADDED"
+  | "SET_FIX_UNDONE"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"
@@ -1157,3 +1163,56 @@ export interface CaptureItem {
   /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
   seq?: number;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): set fixes. Projected by domain/workout/setFixes.ts into the one
+// retracted-set filter every set reader already uses (getUndoneSetIds).
+
+/** The values a fix can change on a set. */
+export interface SetFixValues {
+  weight: number;
+  reps: number;
+  skipped: boolean;
+  setKind?: "WORKING" | "WARMUP";
+  repsInReserve?: number;
+}
+
+/**
+ * A set corrected: `newPerformedSetId` is a new performedSets row with the `after` values and the replaced row's
+ * sessionId, exerciseId, setNumber, recordedAt and seq. `replacesSetId` is retracted while this fix stands.
+ */
+export interface SetCorrectedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  replacesSetId: string;
+  newPerformedSetId: string;
+  before: SetFixValues;
+  after: SetFixValues;
+}
+
+/** A set removed: `performedSetId` is retracted while this fix stands. */
+export interface SetRemovedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  performedSetId: string;
+}
+
+/** A forgotten set added to a finished session, as a new performedSets row inside the session's window. */
+export interface SetAddedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  performedSetId: string;
+  weight: number;
+  reps: number;
+  setKind?: "WORKING" | "WARMUP";
+  repsInReserve?: number;
+}
+
+/** Cancels one fix (the newest on its set): its retraction is lifted, and a row it created is retracted. */
+export interface SetFixUndonePayload { commandId: string; fixEventId: string }
