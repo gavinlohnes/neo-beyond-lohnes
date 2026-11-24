@@ -1,3 +1,4 @@
+import { AskingLessPanel } from "./AskingLessPanel";
 import { WeekInNumbers } from "./WeekInNumbers";
 import { DeltaWeek } from "../../components/DeltaViews";
 import { useEffect, useRef, useState } from "react";
@@ -144,6 +145,8 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
       </div>
 
       {monthlyReview?.body && <MonthlyBodyReview body={monthlyReview.body} />}
+      {/* GRAYSON-ASKS-COUNT-001: under BODY COMPOSITION, so it never pushes that down. Hidden by his setting. */}
+      {monthlyReview?.monthly && <AskingLessPanel />}
       {monthlyError && <p className="meta" role="status">Body composition for this month couldn’t be read. The weekly review below is unaffected.</p>}
 
       {/* The seven lived days */}

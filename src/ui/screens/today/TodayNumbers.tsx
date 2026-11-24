@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import type { ReactNode } from "react";
 import type { MeasuredSnapshot } from "../../../application/measuredQueries";
 import { minuteOfDay, paceReading, type PaceHistories, type PaceReading } from "../../../application/pace";
@@ -40,6 +41,8 @@ export interface TodayNumbersProps {
 export function TodayNumbers({ measured, operationsOnly, minimumDayProteinG, proteinTargetG, minimumDayHydrateOz, waterTargetOz, waterLogCount, latestWeightLbs,
   lastMainSleepMinutes, lastMainSleepFromGarmin, paceHistories, now, dayId, busy, fuelLine, recordsAvailable, onOpenTile, onOpenMeasured, onOpenBody, logNudge }: TodayNumbersProps) {
   const day = dayId === undefined ? undefined : { id: dayId };
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("TODAY", "CONFIRM", "logNudge", Boolean(logNudge));
   const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
   const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
   // GARMIN-004: with Garmin data, STEPS and RESTING HR join the numbers and SLEEP shows your usual.

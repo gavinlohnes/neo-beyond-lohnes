@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { useEffect, useState } from "react";
 import { getShiftCatchUp, waterLabel, type CatchUpItem } from "../../../application/shiftCatchUp";
 import { logWater } from "../../../application/commands";
@@ -23,6 +24,8 @@ export function ShiftCatchUpCard({ dayId, busy, onDone }: { dayId: string; busy:
     return () => { cancelled = true; };
   }, [dayId]);
 
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("FOOD", "FIELD", (items ?? []).map((i) => `catchup.${i.kind.toLowerCase()}`), !catchUpDone(dayId) && Boolean(items?.length));
   if (catchUpDone(dayId) || !items || items.length === 0) return null;
   const finish = () => { markCatchUpDone(dayId); onDone(); };
   const toggle = (key: string) => setTicked((t) => { const n = new Set(t); if (n.has(key)) n.delete(key); else n.add(key); return n; });

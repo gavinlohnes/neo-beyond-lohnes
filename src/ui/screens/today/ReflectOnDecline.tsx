@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useId, useState } from "react";
 import type { DecisionJournalEntry } from "../../../domain/journal/types";
@@ -24,6 +25,8 @@ export function ReflectOnDecline({ recommendationId, title, why }: { recommendat
     return () => { live = false; };
   }, [recommendationId]);
 
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("TODAY", "CHOICE", "reflect.whyNot", saved === null);
   if (saved === undefined) return null;
   if (saved) return <p className="meta" data-reflect-saved>Saved to your journal: {saved.decision}. From the next lived day, your journal asks how it went.</p>;
 

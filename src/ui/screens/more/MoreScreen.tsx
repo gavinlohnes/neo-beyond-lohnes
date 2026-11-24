@@ -1,3 +1,4 @@
+import { AskCountSettings } from "./AskCountSettings";
 import type { CaveVitalId } from "../../../application/caveVitals";
 import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
 import { MemoryPanel } from "../../components/MemoryPanel";
@@ -1055,6 +1056,8 @@ export function MoreScreen({
             )}
           </div>
         </div>
+        {/* GRAYSON-ASKS-COUNT-001: counting GRAYSON's questions: on/off, clear with UNDO, hide the panel. */}
+        <AskCountSettings />
       </section>
 
 

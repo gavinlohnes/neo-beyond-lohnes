@@ -1,3 +1,4 @@
+import { useNoteAsk } from "../../hooks/useNoteAsk";
 import { useEffect, useRef, useState } from "react";
 import { importSleepSnapshot, previewSleepImport } from "../../../application/externalSleepCommands";
 import { getSleepImportDays } from "../../../application/externalSleepQueries";
@@ -18,6 +19,8 @@ export function HealthImportScreen({ active = true }: { active?: boolean }) {
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [error, setError] = useState("");
   const [activity, setActivity] = useState<ActivitySnapshot | null>(null);
   const [sleepDetailsOpen, setSleepDetailsOpen] = useState(false);
+  // GRAYSON-ASKS-COUNT-001: counted when shown, once per lived day.
+  useNoteAsk("BODY", "CONFIRM", [snapshot ? "healthImport.sleep" : "", activity ? "healthImport.activity" : ""]);
   const locked = useRef(false), selection = useRef(0), result = useRef<HTMLParagraphElement>(null);
   const fileInput = useRef<HTMLInputElement>(null), chooseButton = useRef<HTMLButtonElement>(null);
   useEffect(() => () => { selection.current++; }, []);

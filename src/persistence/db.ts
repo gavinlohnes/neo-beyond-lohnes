@@ -1,3 +1,4 @@
+import type { AskCount } from "../domain/askCounts";
 import Dexie, { type Table } from "dexie";
 import type {
   BeyondDay,
@@ -72,6 +73,7 @@ export class BeyondDB extends Dexie {
   highlights!: Table<Highlight, string>;
   scheduleExceptions!: Table<ScheduleException, string>;
   runningSessions!: Table<RunningSession, string>;
+  askCounts!: Table<AskCount, string>;
 
   constructor() {
     super("beyond");
@@ -416,6 +418,10 @@ export class BeyondDB extends Dexie {
     // GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24, Protected persistence): running sessions. Additive only; nothing prior
     // to migrate. Native Dexie backups include it; older backups simply restore with no running history.
     this.version(27).stores({ runningSessions: "id, beyondDayId, status, startedAt" });
+    // GRAYSON-ASKS-COUNT-001 (Gavin, 2026-11-24, Protected persistence): how many questions GRAYSON put to him, one row
+    // per lived date, area, kind and key. Additive only; nothing prior to migrate. Native Dexie backups include it;
+    // older backups simply restore with no counts. Read only by the monthly review's ASKING LESS panel.
+    this.version(28).stores({ askCounts: "id, date, area, key" });
   }
 }
 
