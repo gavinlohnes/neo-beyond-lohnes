@@ -2,8 +2,10 @@
 
 - **Authorization:** Gavin, 2026-11-24, picked backlog B1 ("Running") for the first build brief. TRAIN must fully
   replace Couch to 5K (his role brief). Run cues through Health Bridge come later as B3 (his pick 1A); the
-  1.5-mile standard follows as B4 (his pick 4A). **This brief authorizes nothing by itself:** it is Protected, so
-  Codex starts only after Gavin's explicit go on this brief and its defaults below.
+  1.5-mile standard follows as B4 (his pick 4A). Go: Gavin, 2026-11-24 01:26 CT, on the eight defaults: **"Yes.
+  Those are good defaults. But remember I want this to be customisable as well. I should be able to edit and
+  tweak or correct everything in this app."** That condition is default 9 and the "Everything is his to change"
+  section below; it is part of the approved scope, not a later slice. Codex builds once this brief merges.
 - **Lane: Protected.** New stored records (one additive Dexie table), new event types, and a new TRAIN
   session kind. No Engine or recommendation change, no dependency, provider, permission or navigation change.
   Independent exact-head review, green CI; Gavin merges. No Builder merge.
@@ -48,6 +50,35 @@ move on or repeat. He never plans a run, counts weeks or keeps a second app.
 8. **Naming:** in this codebase "run" already means a **work run** (shift; `workRunPlan.ts`, C2.5 "run
    debrief"). Use **running** in every identifier, event and table (`runningSession`, `RUNNING_…`), and
    "run" only in operator-facing copy where TRAIN context makes it clear.
+
+9. **Everything is his to change.** Every default above is a starting point he can edit, and every record he
+   makes he can correct, from the screen where he sees it. See the next section.
+
+## Everything is his to change (Gavin's condition, part of this scope)
+
+Rule for the Builder: if a running screen shows it, he can change it or correct it there, and the change is
+an append-only event (no silent overwrite), so history stays honest and backups carry it.
+
+- **His plan:** edit any run's intervals: add, remove or resize a segment (5 s steps), change warm-up or
+  cool-down, or add a run to a week. Saved as **his version** of the plan (`RUNNING_PLAN_EDITED`, with the
+  full plan snapshot, like a programme revision). The NHS pattern stays available: **Reset this run** and
+  **Reset the whole plan** return to it, and the reset is itself an edit he can undo. Past sessions keep the
+  segments they ran with (they hold a snapshot), so an edit never rewrites history.
+- **Runs per week:** how many he expects (1–4, default 2) and whether a further one shows as optional
+  (default on). Information only, as default 2.
+- **Where he is in the plan:** jump to any week and run, forward or back, at any time
+  (`RUNNING_PLAN_POSITION_SET`), besides Move on and Repeat. **Undo** on the finish sheet takes back a Move on
+  he just tapped.
+- **Correct a past run:** change its status (completed or partial), its minutes, or which day it belongs to,
+  or remove it. Corrections use `RUNNING_SESSION_CORRECTED` and `RUNNING_SESSION_VOIDED`, matching the
+  existing `MEAL_LOG_CORRECTED` / `*_VOIDED` pattern in `src/application/nutritionCommands.ts`. History shows
+  "corrected" on a changed run. A removed run stops counting toward the week and the plan position.
+- **Cues:** buzz on or off; the halfway cue on or off; keep-screen-awake on or off. These are preferences,
+  added to `TRAVELLING_SETTINGS` in `src/persistence/settingsTransfer.ts` so they travel with the backup
+  (the C8.1 pattern).
+- **The weekly count's start day:** Monday by default, editable to any day.
+- **Not editable in B1, and why:** the cue *wording* (B3 owns speech), and what a run counts toward beyond
+  TRAIN (default 7; each is its own later decision).
 
 ## Scope
 
@@ -126,7 +157,7 @@ Builder re-reads the page at build time and flags any change.
 GPS, distance or pace; maps; audio or speech; Android/Health Bridge changes; notifications; placement into
 TODAY, Week planner or the Engine; any change to lift progression, PRs, A/B/C sequence, capacity,
 STANDARD/REDUCED/RECOVERY, Gym mode, C4.4, MINIMUM DAY or Garmin import; Delta proposals about running;
-streaks, badges, certificates or scores; a 1.5-mile phase; editing the plan's intervals.
+streaks, badges, certificates or scores; a 1.5-mile phase.
 
 ## Files
 
@@ -134,7 +165,8 @@ streaks, badges, certificates or scores; a 1.5-mile phase; editing the plan's in
   `src/domain/common/types.ts` (RunningSession + event types/payloads only), `src/persistence/db.ts` (v27 line
   only), `src/persistence/runningSessionValidation.ts` (new), `src/application/runningCommands.ts` (new),
   `src/application/runningQueries.ts` (new), `src/ui/screens/train/RunningSession.tsx` and `running.css`
-  (new), `src/ui/screens/train/TrainScreen.tsx` (entry card and route only), `TrainingHistory.tsx` (read-only
+  (new), `src/ui/screens/train/RunningPlanEditor.tsx` (new), `src/persistence/settingsTransfer.ts` (three
+  allowlist keys only), `src/ui/screens/train/TrainScreen.tsx` (entry card and route only), `TrainingHistory.tsx` (read-only
   list), `trainCopy.ts` (copy), tests, `docs/agent/screenshots/GRAYSON-TRAIN-RUN-001/`.
 - **Off limits:** everything under `src/engine/`; `src/domain/workout/types.ts` (`WORKOUT_TEMPLATES` and the
   lift session model); `src/application/trainCommands.ts` lift semantics; `trainingProgramme*.ts`;
@@ -146,7 +178,8 @@ streaks, badges, certificates or scores; a 1.5-mile phase; editing the plan's in
 - **REUSE:** NHS Couch to 5K's interval structure (data, cited); `activeRestEndsAt`'s absolute-time recovery;
   Gym mode's screen wake lock; `feedback()` for the buzz; the additive optional-table pattern of
   SCHEDULE-EXCEPTIONS-001 (`db.ts` v26) and its backup round-trip tests; TRAIN's pain-stop wording.
-- **OWN:** the running session record and events, plan position derived from events, the two-plus-optional
+- **OWN:** the running session record and events, his editable plan version and corrections, plan position
+  derived from events, the two-plus-optional
   weekly count, the cue timeline contract, and the TRAIN screens.
 - **BUILD FROM SCRATCH:** the timeline and session model, because no interval-timer library fits BEYOND's
   event log, lived day and offline backup without adding a dependency.
@@ -163,17 +196,27 @@ streaks, badges, certificates or scores; a 1.5-mile phase; editing the plan's in
   Monday–Sunday in his zone across a lived day that crosses midnight; backup round trip; older backup restores
   with none; a malformed row doesn't break TRAIN; lift progression, PRs and sequence next-member unchanged
   with running sessions present.
+- `tests/integration/runningEdits.test.ts` (both zones): edit a run's segments, start it, and the session
+  runs the edited segments; reset one run and the whole plan, then undo the reset; past sessions keep their
+  snapshot after an edit; runs-per-week and week-start changes move the weekly count; jump position forward
+  and back; undo a Move on; correct status, minutes and day of a past run; void a run and the week count and
+  position drop it; corrections and plan edits survive a native backup round trip; the three cue preferences
+  travel in `beyondSettings`; an edit that leaves a run with no RUN segment, a segment under 5 s or over
+  90 min is refused with a plain message.
 - `tests/browser/RunningSession.test.tsx`: TRAIN card → Start run → interval changes (fake timers) → buzz
   called once per change → finish sheet → Move on / Repeat; pain control; empty state (no runs yet); plan list;
-  week 9 done state; keyboard path; 320/360/412 px no overflow; axe clean.
+  week 9 done state; plan editor (resize, add, remove, reset, undo) and the correct-a-run sheet by keyboard;
+  buzz off means no buzz; 320/360/412 px no overflow; axe clean.
 - New tests fail on master. `typecheck`, `check:architecture`, `check:risk`, build, focused tests in both
   zones, full `TZ=UTC npm run verify`.
 - **Screenshots** in `docs/agent/screenshots/GRAYSON-TRAIN-RUN-001/` at 360 px (key ones also 320 and 412):
   TRAIN with the next-run card (first time and mid-plan), live RUN interval, live WALK interval, paused, after
-  a reload mid-run, finish sheet after a completed run, after a PARTIAL, plan list, week 9 done.
+  a reload mid-run, finish sheet after a completed run (with Undo), after a PARTIAL, plan list, plan editor,
+  a corrected run in history, cue settings, week 9 done.
 - **Device check (Gavin):** start Week 1, run 1 on the phone, screen on. The phone buzzes when the first
   run interval starts; pull down to reload at minute 3 and the timer is still right; end early and see only
-  **Repeat this run**. Then KEEP / REFINE / RETHINK.
+  **Repeat this run**. Edit week 1 run 2 to a 2-minute first run, start it and see the change; correct the run
+  you ended early to 10 minutes. Then KEEP / REFINE / RETHINK.
 
 ## Risks and checks
 
@@ -183,4 +226,9 @@ streaks, badges, certificates or scores; a 1.5-mile phase; editing the plan's in
 - **Injury:** no pace or speed targets; advancing always needs his tap; the pain control is always visible.
 - **Shared types file:** `src/domain/common/types.ts` is edited by #639 too; keep additions in one block.
 - **The "run" name clash** (default 8): a review blocker if any identifier says `run` for a running session.
+- **Size:** editing and correcting make this an L. If review would be slow, the Builder may ship it as two PRs
+  (session first, editing and correcting second). Say so when asking Gavin to merge: he approved them together,
+  so the first should not ship to his phone alone.
+- **Correction model is Protected ground:** corrections follow the existing append-only pattern; no new
+  correction semantics beyond running sessions.
 - **Stale facts to recheck at build time:** Dexie version (v26 today), open PRs, the NHS page.
