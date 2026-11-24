@@ -14,7 +14,7 @@
   `docs/GRAYSON_CAMPAIGN_PLAN.md` (the run track paragraph under Campaign 4).
 - **Starting commit:** `origin/master` `7e61e02` (#638 merged). Re-fetch before starting.
 - **Builder:** Claude Code (TRAIN while Codex is offline; Gavin, 04:38 CT: "Work on finishing train"; the later
-  HOWTO, BODYMAP and STANDARDS briefs queue after this one). Branch `claude/grayson-train-run-001`, rebased on
+  HOWTO, BODYMAP and STANDARDS briefs queue after this one). Branch `claude/grayson-train-run-001-build` (the parked `claude/grayson-train-run-001` keeps its old pre-rebase history), from
   `e43ba36`. Was Codex; no Codex branch or PR existed. **Active PR:** linked in GitHub once opened.
 - **Overlap check (2026-11-24):** open PRs #639 (C6.1 + C6.2, Delta learning) and #606 (C3.4b/c, recurrence)
   touch none of the files below. Two of #639's files (`src/domain/common/types.ts`,
