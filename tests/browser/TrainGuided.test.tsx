@@ -111,3 +111,21 @@ for (const width of [320, 412]) {
     await expect.poll(async () => (await db.performedSets.toArray()).filter((s) => s.skipped).length).toBe(2);
   });
 }
+
+it("placements (Gavin: 'Move the Train my Program down'): mid-workout MY PROGRAMME sits below the live set; Gym-mode Delta sits above SET DETAILS", async () => {
+  const screen = await start(320);
+  const live = document.querySelector(".command-surface")!;
+  const programme = screen.getByRole("region", { name: "My programme" });
+  await expect.element(programme).toBeInTheDocument();
+  expect(live.compareDocumentPosition(programme.element()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  await expect.element(programme.getByRole("button", { name: "EDIT PROGRAMME", exact: true })).toBeVisible(); // still usable
+  await screen.getByRole("button", { name: "GYM MODE" }).click();
+  const gym = screen.getByRole("dialog", { name: "Gym mode" });
+  await gym.getByRole("spinbutton", { name: "Weight", exact: true }).fill("135");
+  await gym.getByRole("spinbutton", { name: "Reps", exact: true }).fill("14");
+  await gym.getByRole("button", { name: "LOG SET 1" }).click();
+  const delta = gym.getByRole("group", { name: "Delta's suggestion" });
+  await expect.element(delta).toBeVisible();
+  const details = gym.element().querySelector("details, .set-details, [aria-label='Set details']") ?? gym.getByText("SET DETAILS").element();
+  expect(delta.element().compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});

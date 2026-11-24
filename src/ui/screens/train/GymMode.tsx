@@ -158,11 +158,12 @@ export function GymMode(props: GymModeProps) {
           <button type="button" className="btn-secondary gym-mode__skip" hidden={props.setDetails?.setKind === "WARMUP"} disabled={props.busy} onClick={props.onSkip}>
             SKIP
           </button>
+          {/* GRAYSON C4.6 batch (#628 review note): Delta right after LOG / SKIP, visible at 320 px without scrolling. */}
+          {props.delta && <div className="gym-mode__delta">{props.delta}</div>}
           {props.onSetDetails && <SetDetails value={props.setDetails ?? {}} disabled={props.busy} onChange={props.onSetDetails} />}
         </>
       )}
 
-      {props.delta && <div className="gym-mode__delta">{props.delta}</div>}
       {props.lastSet && (
         <div className="gym-mode__last">
           <div className="gym-mode__last-text">
