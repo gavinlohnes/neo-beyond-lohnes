@@ -116,6 +116,19 @@ starts; any cue for personal records.
   buzz at zero; tap +15 after zero and feel it again; switch to Long; turn it off from the rest widget. Then
   KEEP / REFINE / RETHINK.
 
+## Decision record
+
+The build PR records the approved defaults in `docs/decisions/GRAYSON-TRAIN-REST.md`, as TIMEBOX-001 and C4.1 did
+(DEV-FLOW-002, 2026-11-23 amendment).
+
+## Stop and ask Gavin if
+
+- the work needs a notification, a background timer, a service worker change or an Android permission;
+- it needs sound;
+- it would change rest length, rest memory, how rest starts, or the existing commit pulses in `feedback.ts`;
+- it needs a stored record or a domain event;
+- the buzz can't be kept to once per rest without changing the 1 s rest tick.
+
 ## Risks and checks
 
 - **Vibration support:** Android Chrome supports it; some browsers ignore it. The on-screen cue still shows.
