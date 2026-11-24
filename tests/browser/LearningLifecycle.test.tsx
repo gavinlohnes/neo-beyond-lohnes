@@ -19,14 +19,16 @@ const NOW = new Date();
 const ago = (d: number) => new Date(NOW.getTime() - d * 86_400_000).toISOString();
 const TAG: Learning = { id: "tag-caffeine", kind: "TAG", learnedOn: ago(2), tag: "caffeine", taggedDays: 5,
   comparison: { id: "NEXT_SLEEP", withTag: { value: 360, days: 5 }, without: { value: 420, days: 9 } }, evidence: { days: [{ id: "d1", at: ago(2) }] } };
+let LEARNINGS: Learning[] = [TAG];
 vi.mock("../../src/application/learningQueries", async (original) => ({ ...await original<typeof import("../../src/application/learningQueries")>(), getReasoningKnowledge: vi.fn() }));
 vi.mock("../../src/application/weeklyInterview", async (original) => ({ ...await original<typeof import("../../src/application/weeklyInterview")>(), getWeeklyInterview: vi.fn(), getTimelineEntries: vi.fn(async () => []) }));
 beforeEach(async () => {
   await db.events.clear();
+  LEARNINGS = [TAG];
   vi.mocked(getReasoningKnowledge).mockImplementation(async () => {
-    const items = deriveLifecycle({ learnings: [TAG], responses: projectResponses(await db.events.where("type").equals("LEARNING_RESPONDED").toArray()), runningTags: new Set(), now: NOW });
+    const items = deriveLifecycle({ learnings: LEARNINGS, responses: projectResponses(await db.events.where("type").equals("LEARNING_RESPONDED").toArray()), runningTags: new Set(), now: NOW });
     const states = new Map(items.map((i) => [i.learningId, i] as const));
-    return { topics: [], learnings: [TAG].filter((l) => states.get(l.id)?.state !== "RETIRED"), suggestion: null, needle: { ready: false, judgedWeeks: 0, need: 4 }, states };
+    return { topics: [], learnings: LEARNINGS.filter((l) => states.get(l.id)?.state !== "RETIRED"), suggestion: null, needle: { ready: false, judgedWeeks: 0, need: 4 }, states };
   });
   const date = (d: number) => ago(d).slice(0, 10);
   vi.mocked(getWeeklyInterview).mockResolvedValue({ from: date(6), to: date(0), days: [{ date: date(0), dayId: null, tags: [] } as never], questions: [] });
@@ -59,6 +61,27 @@ describe("C6.2 weekly: what I think I'm learning", () => {
     await save.click();
     await expect.element(section.getByText("Only sometimes: work days — after the 3rd night.")).toBeVisible();
     expect(await answers()).toEqual(["KEEP", "UNDO", "NARROW"]);
+  });
+});
+
+describe("C6.2 three a week", () => {
+  it("answering all three and coming back the same week brings no new ones (#639 review)", async () => {
+    LEARNINGS = ["a", "b", "c", "d"].map((t, i) => ({ ...TAG, id: `tag-${t}`, tag: t, learnedOn: ago(i + 1) }) as Learning);
+    let screen = await render(<WeeklyInterviewView />);
+    let section = screen.getByRole("region", { name: "WHAT I THINK I'M LEARNING" });
+    await expect.element(section.getByText(/#a lines up/)).toBeVisible();
+    for (const t of ["a", "b", "c"]) {
+      const row = section.element().querySelector(`[data-week-learning="tag-${t}"]`) as HTMLElement;
+      (row.querySelector("button:nth-child(1)") as HTMLButtonElement).click(); // KEEP
+      await expect.poll(() => row.textContent).toContain("You confirmed it.");
+    }
+    await cleanup();
+    screen = await render(<WeeklyInterviewView />);
+    section = screen.getByRole("region", { name: "WHAT I THINK I'M LEARNING" });
+    await expect.element(section.getByText(/#a lines up/)).toBeVisible();
+    expect([...section.element().querySelectorAll("[data-week-learning]")].map((e) => e.getAttribute("data-week-learning"))).toEqual(["tag-a", "tag-b", "tag-c"]);
+    expect(section.element().textContent).not.toMatch(/#d lines up/);
+    expect((await db.events.toArray()).every((e) => (e.payload as { via?: string }).via === "WEEKLY")).toBe(true);
   });
 });
 

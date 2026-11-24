@@ -30,6 +30,7 @@ const payloadSchema = z.object({
   }).strict(),
   context: z.object({ preset: z.enum(NARROW_PRESETS).optional(), words: z.string().trim().min(1).max(140).optional() }).strict().optional(),
   supersedes: z.string().min(1).nullable(),
+  via: z.literal("WEEKLY").optional(),
 }).strict().refine((p) => p.action === "NARROW" ? Boolean(p.context?.preset || p.context?.words) : p.context === undefined, "NARROW needs a context; other answers have none.");
 export { payloadSchema as learningResponseSchema };
 
@@ -79,7 +80,9 @@ export function evidenceOf(l: Learning): LearningEvidence {
 }
 /** Whether evidence now points the other way from what he kept. */
 export function reversed(kept: LearningEvidence, now: LearningEvidence): boolean {
-  if (kept.kind === "TAG" && now.kind === "TAG" && kept.measure === now.measure)
+  // #639 review: if the pattern now compares a different measure, it is no longer the sentence he kept.
+  if (kept.kind === "TAG" && now.kind === "TAG" && kept.measure !== now.measure) return true;
+  if (kept.kind === "TAG" && now.kind === "TAG")
     return (kept.direction === "MORE" && now.direction === "LESS") || (kept.direction === "LESS" && now.direction === "MORE");
   if (kept.kind === "SLEEP_WINDOW" && now.kind === "SLEEP_WINDOW" && kept.midpoint !== undefined && now.midpoint !== undefined) {
     const d = Math.abs(kept.midpoint - now.midpoint) % 1440;
@@ -100,8 +103,11 @@ export interface LifecycleItem {
   /** The latest answer of any kind (UNDO included), for the next answer's `supersedes`. */
   headId: string | null;
   lastEvidenceAt: string | null;
+  /** C6.2: when the weekly check last asked about it (his latest answer given there), or null. */
+  askedWeeklyAt: string | null;
 }
 
+const weeklyAt = (chain: readonly LearningResponse[]): string | null => chain.filter((r) => r.via === "WEEKLY").map((r) => r.recordedAt).sort().at(-1) ?? null;
 const lastEvidence = (l: Learning): string => {
   const days = l.evidence && "days" in l.evidence ? l.evidence.days.map((d) => d.at) : [];
   return [l.learnedOn, ...days].sort().at(-1)!;
@@ -115,7 +121,7 @@ export function deriveLifecycle(input: { learnings: readonly Learning[]; respons
     seen.add(l.id);
     const chain = input.responses.get(l.id) ?? [];
     const verdict = verdictOf(chain);
-    const base = { learningId: l.id, learning: l, statement: null, verdict, headId: chain.at(-1)?.id ?? null, lastEvidenceAt: lastEvidence(l) };
+    const base = { learningId: l.id, learning: l, statement: null, verdict, headId: chain.at(-1)?.id ?? null, lastEvidenceAt: lastEvidence(l), askedWeeklyAt: weeklyAt(chain) };
     if (verdict?.action === "DROP") { items.push({ ...base, state: "RETIRED", by: "YOU" }); continue; }
     if (verdict?.action === "NOT_TRUE") { items.push({ ...base, state: "CONTESTED", by: "YOU" }); continue; }
     if (verdict?.action === "KEEP" || verdict?.action === "NARROW") {
@@ -135,7 +141,7 @@ export function deriveLifecycle(input: { learnings: readonly Learning[]; respons
     const verdict = verdictOf(chain);
     if (!verdict) continue;
     const state: LearningState = verdict.action === "DROP" ? "RETIRED" : verdict.action === "NOT_TRUE" ? "CONTESTED" : "OUTDATED";
-    items.push({ learningId: id, learning: null, statement: verdict.statement, state, by: state === "OUTDATED" ? "EVIDENCE" : "YOU", verdict, headId: chain.at(-1)!.id, lastEvidenceAt: null });
+    items.push({ learningId: id, learning: null, statement: verdict.statement, state, by: state === "OUTDATED" ? "EVIDENCE" : "YOU", verdict, headId: chain.at(-1)!.id, lastEvidenceAt: null, askedWeeklyAt: weeklyAt(chain) });
   }
   return items;
 }
@@ -144,15 +150,23 @@ export function deriveLifecycle(input: { learnings: readonly Learning[]; respons
 export const inReasoning = (item: LifecycleItem) => item.state !== "RETIRED";
 
 /**
- * C6.2: at most WEEKLY_MAX learnings worth his answer this week. Only patterns Delta derived (never an observation,
- * never his own experiment), only at their evidence floor (delta.ts only derives them there), only unanswered ones
- * or ones whose evidence turned against his answer or went stale. Reversed first, then newest.
+ * C6.2: the week's "What I think I'm learning", at most WEEKLY_MAX in any WEEK_DAYS. What the weekly check already
+ * asked in that window stays (shown with his answer and UNDO) and counts toward the three; only the rest of the
+ * three are new picks (#639 review: a cap per visit let a backlog through on repeat visits). New picks are only
+ * patterns Delta derived (never an observation, never his own experiment), only at their evidence floor (delta.ts
+ * only derives them there), only unanswered ones or ones newer evidence turned against. Reversed first, then newest.
  */
-export function weeklyLearnings(items: readonly LifecycleItem[]): LifecycleItem[] {
-  const ask = items.filter((i) => i.learning && (i.learning.kind === "TAG" || i.learning.kind === "SLEEP_WINDOW")
+export const WEEK_DAYS = 7;
+export function weeklyLearnings(items: readonly LifecycleItem[], now: Date): LifecycleItem[] {
+  const since = now.getTime() - WEEK_DAYS * DAY;
+  const asked = items.filter((i) => i.learning && i.askedWeeklyAt && Date.parse(i.askedWeeklyAt) > since)
+    .sort((a, b) => a.askedWeeklyAt!.localeCompare(b.askedWeeklyAt!) || a.learningId.localeCompare(b.learningId)).slice(0, WEEKLY_MAX);
+  const room = WEEKLY_MAX - asked.length;
+  const ask = items.filter((i) => !asked.includes(i) && i.learning && (i.learning.kind === "TAG" || i.learning.kind === "SLEEP_WINDOW")
     && (i.state === "HYPOTHESIZED" || i.state === "PROVISIONAL" || (i.by === "EVIDENCE" && (i.state === "CONTESTED" || i.state === "OUTDATED"))));
   const rank = (i: LifecycleItem) => (i.by === "EVIDENCE" ? 0 : 1);
-  return [...ask].sort((a, b) => rank(a) - rank(b) || b.learning!.learnedOn.localeCompare(a.learning!.learnedOn) || a.learningId.localeCompare(b.learningId)).slice(0, WEEKLY_MAX);
+  const fresh = [...ask].sort((a, b) => rank(a) - rank(b) || b.learning!.learnedOn.localeCompare(a.learning!.learnedOn) || a.learningId.localeCompare(b.learningId)).slice(0, Math.max(0, room));
+  return [...asked, ...fresh];
 }
 
 export type { LearningAction };

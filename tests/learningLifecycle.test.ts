@@ -54,6 +54,11 @@ describe("C6.1 his answers", () => {
     expect(stateOf(life([tag("caffeine", 470, 420)], [kept]), l.id)).toMatchObject({ state: "CONTESTED", by: "EVIDENCE" });
     expect(stateOf(life([tag("caffeine", 410, 420)], [kept]), l.id)).toMatchObject({ state: "CONFIRMED", by: "YOU" });
   });
+  it("a kept pattern that now compares a different measure is CONTESTED by EVIDENCE (#639 review)", () => {
+    const kept = answer(l, "KEEP", null);
+    const changed: Learning = { ...l, comparison: { id: "NEXT_ENERGY", withTag: { value: 3, days: 5 }, without: { value: 3.8, days: 9 } } } as Learning;
+    expect(stateOf(life([changed], [kept]), l.id)).toMatchObject({ state: "CONTESTED", by: "EVIDENCE" });
+  });
   it("a kept sleep window that moves two hours or more is CONTESTED by EVIDENCE, across midnight too", () => {
     const w = window(700), kept = answer(w, "KEEP", null);
     expect(stateOf(life([window(760)], [kept]), w.id).state).toBe("CONFIRMED");
@@ -77,15 +82,28 @@ describe("C6.1 his answers", () => {
 });
 
 describe("C6.2 the weekly pick", () => {
+  it("is three a WEEK, not three a visit (#639 review): answered weekly asks hold their places for 7 days", () => {
+    const ls = ["a", "b", "c", "d", "e"].map((t, i) => tag(t, 360, 420, i + 1));
+    const first = weeklyLearnings(life(ls), NOW).map((i) => i.learningId);
+    expect(first).toEqual(["tag-a", "tag-b", "tag-c"]);
+    const answered = [answer(ls[0]!, "KEEP", null, { via: "WEEKLY" }, ago(1)), answer(ls[1]!, "DROP", null, { via: "WEEKLY" }, ago(1)), answer(ls[2]!, "NOT_TRUE", null, { via: "WEEKLY" }, ago(1))];
+    const again = weeklyLearnings(life(ls, answered), NOW);
+    expect(again.map((i) => [i.learningId, i.state])).toEqual([["tag-a", "CONFIRMED"], ["tag-b", "RETIRED"], ["tag-c", "CONTESTED"]]); // no new ones
+    const later = weeklyLearnings(life(ls, answered), new Date(NOW.getTime() + 7 * 86_400_000));
+    expect(later.map((i) => i.learningId)).toEqual(["tag-d", "tag-e"]);
+    // An answer given in the notebook isn't one of the week's asks.
+    expect(weeklyLearnings(life(ls, [answer(ls[0]!, "KEEP", null)]), NOW).map((i) => i.learningId)).toEqual(["tag-b", "tag-c", "tag-d"]);
+  });
+
   it("asks at most three: reversed first, then the newest unanswered patterns; never observations, experiments or answered ones", () => {
     const a = tag("a", 360, 420, 1), b = tag("b", 360, 420, 2), c = tag("c", 360, 420, 3), d = tag("d", 360, 420, 4), flipped = tag("e", 480, 420, 9);
     const keptE = answer({ ...flipped, comparison: { ...(flipped as Extract<Learning, { kind: "TAG" }>).comparison, withTag: { value: 360, days: 5 } } } as Learning, "KEEP", null);
     const keptA = answer(a, "KEEP", null);
-    const pick = weeklyLearnings(life([a, b, c, d, flipped, unusual, experiment], [keptE, keptA]));
+    const pick = weeklyLearnings(life([a, b, c, d, flipped, unusual, experiment], [keptE, keptA]), NOW);
     expect(pick.map((i) => i.learningId)).toEqual(["tag-e", "tag-b", "tag-c"]);
   });
   it("is empty when there's nothing at its floor to ask", () => {
-    expect(weeklyLearnings(life([unusual, experiment]))).toEqual([]);
+    expect(weeklyLearnings(life([unusual, experiment]), NOW)).toEqual([]);
   });
 });
 
@@ -102,5 +120,18 @@ describe("C6.1 Alfred's context", () => {
     expect(facts[1]!.text).toMatch(/HE SAYS IT APPLIES ONLY: after night shifts; after the 3rd\.$/);
     expect(facts[2]!.text).toMatch(/HE SAYS THIS IS NOT TRUE; do not rely on it\.$/);
     expect(facts[3]!.text).toMatch(/A pattern, not a cause\.$/);
+  });
+  it("his Narrow words follow the personal opt-in (#639 review): without it, only the preset reaches Alfred", async () => {
+    const { deltaFacts } = await import("../src/application/deltaFacts");
+    const w = window(700), narrowed = answer(w, "NARROW", null, { context: { preset: "AFTER_NIGHTS", words: "only after the drive home" } });
+    const k = { topics: [], learnings: [w], suggestion: null, needle: { ready: false as const, judgedWeeks: 0, need: 4 } };
+    const states = new Map(life([w], [narrowed]).map((i) => [i.learningId, i] as const));
+    const off = deltaFacts(k, false, states), on = deltaFacts(k, true, states);
+    expect(off[0]!.text).toMatch(/HE SAYS IT APPLIES ONLY: after night shifts\.$/);
+    expect(off[0]!.text).not.toMatch(/drive home/);
+    expect(on[0]!.text).toMatch(/after night shifts; only after the drive home\.$/);
+    const wordsOnly = answer(w, "NARROW", null, { context: { words: "only after the drive home" } });
+    const off2 = deltaFacts(k, false, new Map(life([w], [wordsOnly]).map((i) => [i.learningId, i] as const)));
+    expect(off2[0]!.text).toMatch(/APPLIES ONLY SOMETIMES \(his words are private\)\.$/);
   });
 });

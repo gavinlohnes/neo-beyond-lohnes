@@ -41,3 +41,13 @@ it("never offers a test on a tag he dropped", async () => {
   await respondToLearning({ learningId: "tag-late", action: "DROP", statement: "Learned what #late lines up with.", evidence: { kind: "TAG", days: 4 }, expectedHeadId: null });
   expect((await getCoachCards(new Date(2026, 10, 15))).some((c) => c.destination === "DELTA")).toBe(false);
 });
+
+// #639 review: if his answers can't be read, only the DELTA card is withheld; the other cards still show.
+it("a broken answer chain withholds only the DELTA card", async () => {
+  vi.mocked(getDeltaKnowledge).mockResolvedValue({ learnings: [], suggestion: { tag: "late", what: "Try earlier", days: 14, minutesLess: 40, withDays: 4, withoutDays: 5, taggedDays: 4 } } as unknown as Awaited<ReturnType<typeof getDeltaKnowledge>>);
+  vi.mocked(getExperiments).mockResolvedValue([{ what: "Earlier coffee", days: 14, from: new Date(2025, 11, 18), to: new Date(2026, 0, 1), entry: { id: "test", status: "OPEN", title: "Try: Earlier coffee" } }] as Awaited<ReturnType<typeof getExperiments>>);
+  await db.events.add({ id: "bad", type: "LEARNING_RESPONDED", occurredAt: new Date().toISOString(), recordedAt: new Date().toISOString(), source: "SYSTEM", correlationId: "x", payload: {} } as never);
+  const cards = await getCoachCards(new Date(2026, 10, 15));
+  expect(cards.some((c) => c.destination === "JOURNAL")).toBe(true);
+  expect(cards.some((c) => c.destination === "DELTA")).toBe(false);
+});

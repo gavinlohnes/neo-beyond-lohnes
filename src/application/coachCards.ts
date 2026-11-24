@@ -60,8 +60,10 @@ export async function getCoachCards(now = new Date(), suggestedVariant: "STANDAR
     cards.push({ id: "WEEKLY:calories", key: key("WEEKLY", p), title: `Review ${p.kcal} kcal a day`, evidence: `Your existing weekly proposal uses a burn estimate of ${p.maintenance.lowKcal}–${p.maintenance.highKcal} kcal and your goal of ${p.goalWeightLbs} lb. Review its evidence and limits before saving.`, destination: "WEEKLY",
       why: { rule: "Weekly calorie proposal: your burn estimate and your goal weight, saved only if you choose.", facts: [{ label: "Proposal", value: `${p.kcal} kcal a day` }, ...(p.kcal !== p.aimKcal ? [{ label: "Aim", value: `${p.aimKcal} kcal a day; this week's step is capped` }] : []), { label: "Burn estimate", value: `${p.maintenance.lowKcal}–${p.maintenance.highKcal} kcal` }, ...(p.weight ? [{ label: "Weight", value: `${p.weight.lbs} lb (${p.weight.basis === "WEEK_AVERAGE" ? "week average" : "latest"})` }] : []), { label: "Goal", value: `${p.goalWeightLbs} lb` }] } });
   }
-  const delta = await getReasoningKnowledge(now); // C6.1: never offer a test on a tag he dropped or disputed
-  if (delta.suggestion) {
+  // C6.1: never offer a test on a tag he dropped or disputed. #639 review: if his answers can't be read, only the
+  // DELTA card is withheld; the other cards still show.
+  const delta = await getReasoningKnowledge(now).catch(() => null);
+  if (delta?.suggestion) {
     const s = delta.suggestion;
     cards.push({ id: `DELTA:${s.tag}`, key: key("DELTA", s), title: s.what, evidence: `After ${s.withDays} noted days with #${s.tag}, next-day sleep was ${s.minutesLess} minutes shorter than after ${s.withoutDays} other noted days. A pattern, not proof of a cause. Review the ${s.days}-day test before starting.`, destination: "DELTA",
       why: { rule: "A tag pattern in your notes and next-day sleep. A pattern, not proof of a cause.", facts: [{ label: "Tag", value: `#${s.tag}` }, { label: "Days with it", value: `${s.withDays} noted days` }, { label: "Other days", value: `${s.withoutDays} noted days` }, { label: "Next-day sleep", value: `${s.minutesLess} minutes shorter with it` }] } });

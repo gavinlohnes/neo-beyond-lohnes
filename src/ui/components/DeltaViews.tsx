@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { newLearnings, type DeltaKnowledge, type ExperimentSuggestion, type Learning, type Topic } from "../../application/delta";
-import { getReasoningKnowledge, type ReasoningKnowledge } from "../../application/learningQueries";
+import { disputedByHim, getReasoningKnowledge, type ReasoningKnowledge } from "../../application/learningQueries";
 import { LearningAnswer } from "./LearningAnswer";
 import { startExperiment } from "../../application/tryExperiment";
 import { hoursMinutes } from "../screens/health/healthFormat";
@@ -52,7 +52,7 @@ export function DeltaPanel({ active }: { active: boolean }) {
     <h2 className="tool-label">DELTA · WHAT I KNOW ABOUT YOU</h2>
     <p className="card-body">I know {known} of {knowledge.topics.length} things so far. I learn from what you log; I never guess.</p>
     <ul className="delta-topics" aria-label="What DELTA knows">
-      {knowledge.topics.map((t) => <li key={t.id} data-state={t.state}><strong>{t.label}</strong><span className="meta"> · {describeTopic(t)}</span></li>)}
+      {knowledge.topics.map((t) => <li key={t.id} data-state={t.state}><strong>{t.label}</strong><span className="meta"> · {knowledge.states.get(t.id)?.state === "RETIRED" ? "Dropped by you." : describeTopic(t)}</span></li>)}
     </ul>
     {knowledge.suggestion && <ExperimentOffer suggestion={knowledge.suggestion} />}
     <DeltaAhead active={active} />
@@ -98,8 +98,9 @@ function DroppedLearnings({ knowledge, onAnswered }: { knowledge: ReasoningKnowl
  * SUPERCHARGE-001 item 6: DELTA's notebook handed to Alfred for a conversational explanation, on a tap. Worded as
  * an instruction (not a question DELTA's free answers would catch), with every line's counts kept exact.
  */
-export function deltaTalkAsk(k: DeltaKnowledge): string {
-  const lines = k.learnings.slice(0, 8).map((l) => `- ${describeLearning(l)}`);
+export function deltaTalkAsk(k: DeltaKnowledge | ReasoningKnowledge): string {
+  // C6.1 (#639 review): one he said isn't true is not handed to Alfred as learned.
+  const lines = k.learnings.filter((l) => !("states" in k) || !disputedByHim(k, l.id)).slice(0, 8).map((l) => `- ${describeLearning(l)}`);
   return `Talk me through DELTA's notebook below, in plain words, like a calm coach who knows my records. Keep every number and day count exactly as written, say what each one is based on, treat them as patterns and never causes, and end with one thing worth watching this week. No advice that overrides BEYOND's recommendation.\n\n${lines.join("\n")}`;
 }
 
@@ -124,7 +125,8 @@ export function DeltaNewsLine({ active }: { active: boolean }) {
   const [hidden, setHidden] = useState(false);
   if (hidden || !knowledge || knowledge === "ERROR") return null;
   const since = readSeen() ?? new Date(Date.now() - 2 * 86_400_000).toISOString();
-  const fresh = newLearnings(knowledge, since);
+  // C6.1: never announce one he said isn't true.
+  const fresh = newLearnings(knowledge, since).filter((l) => !disputedByHim(knowledge, l.id));
   if (!fresh.length) return null;
   return <section className="backup-due delta-news" aria-label="DELTA learned something new">
     <div className="backup-due__row">
@@ -244,7 +246,8 @@ export async function deltaAnswer(question: string): Promise<string | null> {
   const asksNeedle = /\b(good weeks|moves? the needle|best weeks)\b/.test(q);
   if (!asksLearned && !asksUnusual && !tagAsk && !asksSleepTime && !asksExperiment && !asksNeedle) return null;
   const k = await getReasoningKnowledge(); // GRAYSON C6.1: a dropped learning is never offered back
-  const line = (l: Learning) => describeLearning(l);
+  // C6.1: say when he disputed one, rather than offering it back as learned.
+  const line = (l: Learning) => describeLearning(l) + (disputedByHim(k, l.id) ? " You said this isn't true." : "");
   if (asksLearned) {
     const known = k.topics.filter((t) => t.state === "KNOWN").length;
     return [`DELTA knows ${known} of ${k.topics.length} things so far.`, ...k.learnings.slice(0, 3).map(line), k.learnings.length > 3 ? `${k.learnings.length - 3} more in DELTA's notebook (Review → Personal Understanding).` : ""].filter(Boolean).join("\n");
@@ -257,6 +260,7 @@ export async function deltaAnswer(question: string): Promise<string | null> {
     const tag = tagAsk[1]!.replace(/-/g, "").length ? tagAsk[1]! : "";
     const learned = k.learnings.find((l) => l.kind === "TAG" && l.tag === tag);
     if (learned) return line(learned);
+    if (k.states.get(`tag-${tag}`)?.state === "RETIRED") return `You dropped what DELTA learned about #${tag}. It's under "Dropped by you" in DELTA's notebook if you want it back.`;
     const topic = k.topics.find((t) => t.id === `tag-${tag}`);
     return topic ? `Still learning #${tag}: ${topic.have} of ${topic.need} ${topic.unit}.` : `You haven't tagged #${tag} yet. Tag it in your daily note and DELTA will compare.`;
   }

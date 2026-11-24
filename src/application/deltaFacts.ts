@@ -37,12 +37,16 @@ export function deltaFact(l: Learning): { text: string; personal: boolean } {
 
 /** The facts Alfred may see: measured ones always, note- and journal-based ones only with the personal opt-in. */
 /** GRAYSON C6.1: what he said about a learning, in Alfred's terms. Nothing when he hasn't answered. */
-export function stance(item: LifecycleItem | undefined): string {
+export function stance(item: LifecycleItem | undefined, includeWords = true): string {
   if (!item) return "";
   const v = item.verdict;
   switch (item.state) {
     case "CONFIRMED": return item.learning?.kind === "EXPERIMENT" ? "" : " HE CONFIRMED THIS.";
-    case "CONTEXT_SPECIFIC": return ` HE SAYS IT APPLIES ONLY: ${[v?.context?.preset ? NARROW_LABELS[v.context.preset].toLowerCase() : "", v?.context?.words ?? ""].filter(Boolean).join("; ")}.`;
+    // #639 review: his own words follow the personal opt-in like his notes do; the preset is a plain category.
+    case "CONTEXT_SPECIFIC": {
+      const when = [v?.context?.preset ? NARROW_LABELS[v.context.preset].toLowerCase() : "", includeWords ? v?.context?.words ?? "" : ""].filter(Boolean).join("; ");
+      return when ? ` HE SAYS IT APPLIES ONLY: ${when}.` : " HE SAYS IT APPLIES ONLY SOMETIMES (his words are private).";
+    }
     case "CONTESTED": return item.by === "YOU" ? " HE SAYS THIS IS NOT TRUE; do not rely on it." : " He confirmed this earlier, but newer records point the other way; treat as uncertain.";
     case "OUTDATED": return " He confirmed this earlier; no fresh evidence for 8 weeks, so it may be out of date.";
     case "PROVISIONAL": return " Being tested in a running experiment.";
@@ -52,7 +56,7 @@ export function stance(item: LifecycleItem | undefined): string {
 
 export function deltaFacts(k: DeltaKnowledge, includePersonal: boolean, states?: ReadonlyMap<string, LifecycleItem>): { id: string; text: string; at: string }[] {
   const facts = k.learnings.filter((l) => states?.get(l.id)?.state !== "RETIRED")
-    .map((l) => { const f = deltaFact(l); return { id: l.id, at: l.learnedOn, personal: f.personal, text: f.text + stance(states?.get(l.id)) }; })
+    .map((l) => { const f = deltaFact(l); return { id: l.id, at: l.learnedOn, personal: f.personal, text: f.text + stance(states?.get(l.id), includePersonal) }; })
     .filter((f) => includePersonal || !f.personal);
   if (includePersonal && k.needle.ready) for (const h of k.needle.habits) facts.push({
     id: `needle-${h.habit}`, at: new Date().toISOString(), personal: true,

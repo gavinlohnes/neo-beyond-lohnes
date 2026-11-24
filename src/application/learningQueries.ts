@@ -14,7 +14,7 @@ export async function getLearningLifecycle(now = new Date(), knowledge?: DeltaKn
 
 /** GRAYSON C6.2: this week's "What I think I'm learning" (at most three). */
 export async function getWeeklyLearnings(now = new Date()): Promise<LifecycleItem[]> {
-  return weeklyLearnings(await getLearningLifecycle(now));
+  return weeklyLearnings(await getLearningLifecycle(now), now);
 }
 
 /**
@@ -35,4 +35,10 @@ export async function getReasoningKnowledge(now = new Date()): Promise<Reasoning
     learnings: k.learnings.filter((l) => !out(l.id)),
     suggestion: k.suggestion && !disputed(`tag-${k.suggestion.tag}`) ? k.suggestion : null,
   };
+}
+
+/** GRAYSON C6.1: a learning he said isn't true (or dropped): never offered back as plainly learned. */
+export function disputedByHim(k: ReasoningKnowledge, learningId: string): boolean {
+  const i = k.states.get(learningId);
+  return i?.state === "RETIRED" || (i?.state === "CONTESTED" && i.by === "YOU");
 }

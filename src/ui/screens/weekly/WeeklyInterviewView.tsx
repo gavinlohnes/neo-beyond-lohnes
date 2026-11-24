@@ -35,11 +35,7 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns, onOpenPl
   const [error, setError] = useState<string | null>(null);
   const [learningRefresh, setLearningRefresh] = useState(0);
   const knowledge = useDeltaKnowledge(true, learningRefresh);
-  // C6.2: this visit's picks stay on screen once answered, showing his answer and its UNDO.
-  const [asked, setAsked] = useState<string[] | null>(null);
-  useEffect(() => {
-    if (asked === null && knowledge && knowledge !== "ERROR") setAsked(weeklyLearnings([...knowledge.states.values()]).map((i) => i.learningId));
-  }, [knowledge, asked]);
+
 
   const loadEntries = () => void getTimelineEntries().then(setEntries).catch(() => {});
   useEffect(() => {
@@ -104,7 +100,8 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns, onOpenPl
       {/* GRAYSON C6.2: at most three of Delta's patterns a week for his answer. Only patterns at their evidence floor,
           only unanswered ones or ones newer evidence turned against. Silent when there's nothing to ask. */}
       {knowledge && knowledge !== "ERROR" && (() => {
-        const ask = (asked ?? []).flatMap((id) => { const i = knowledge.states.get(id); return i?.learning ? [i] : []; });
+        // What this week's check already asked stays, with his answer and UNDO; the rest of the three are new.
+        const ask = weeklyLearnings([...knowledge.states.values()], now ?? new Date());
         if (!ask.length) return null;
         return <section aria-labelledby="week-learning-heading" className="week-learning" style={{ marginBottom: 12 }}>
           <p id="week-learning-heading" className="meta-strong" style={{ margin: 0, color: "var(--text-1)" }}>WHAT I THINK I'M LEARNING</p>
@@ -113,7 +110,7 @@ export function WeeklyInterviewView({ now, onOpenDelta, onOpenPatterns, onOpenPl
             {ask.map((item) => { const words = describeLearning(item.learning!); return (
               <li key={item.learningId} className="equipment-row" data-week-learning={item.learningId} style={{ marginBottom: 6, padding: "8px 12px" }}>
                 <p className="card-body" style={{ margin: 0 }}>{words}</p>
-                <LearningAnswer item={item} statement={words} onAnswered={() => setLearningRefresh((n) => n + 1)} />
+                <LearningAnswer item={item} statement={words} via="WEEKLY" onAnswered={() => setLearningRefresh((n) => n + 1)} />
               </li>); })}
           </ol>
         </section>;

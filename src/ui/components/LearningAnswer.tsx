@@ -25,7 +25,7 @@ export function describeState(item: LifecycleItem): string {
  * GRAYSON C6.1/C6.2: his answer to one of Delta's learnings. KEEP · NARROW · NOT TRUE · DROP, and UNDO for the answer
  * in force. Nothing is assumed from silence. Every tap is one LEARNING_RESPONDED; nothing else changes.
  */
-export function LearningAnswer({ item, statement, onAnswered }: { item: LifecycleItem; statement: string; onAnswered: () => void }) {
+export function LearningAnswer({ item, statement, onAnswered, via }: { item: LifecycleItem; statement: string; onAnswered: () => void; via?: "WEEKLY" | undefined }) {
   const [narrowing, setNarrowing] = useState(false);
   const [preset, setPreset] = useState<NarrowPreset | null>(null);
   const [words, setWords] = useState("");
@@ -39,7 +39,7 @@ export function LearningAnswer({ item, statement, onAnswered }: { item: Lifecycl
     if (busy) return;
     setBusy(true); setError(null);
     try {
-      await respondToLearning({ learningId: item.learningId, action, statement, evidence, context: action === "NARROW" ? { preset: preset ?? undefined, words } : undefined, expectedHeadId: item.headId });
+      await respondToLearning({ learningId: item.learningId, action, statement, evidence, context: action === "NARROW" ? { preset: preset ?? undefined, words } : undefined, expectedHeadId: item.headId, via });
       setNarrowing(false); setPreset(null); setWords(""); onAnswered();
     } catch (cause) { setError(describeError(cause, "That answer couldn't be saved. Nothing was changed.")); } finally { setBusy(false); }
   };

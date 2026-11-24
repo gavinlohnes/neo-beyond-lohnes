@@ -34,20 +34,26 @@
     - **Retired:** Drop.
   - From evidence against his answer:
     - **Contested:** a kept #tag lean reverses past a "same" band (sleep ±15 min, energy/mood ±0.25, workouts ±10%),
-      or a kept sleep window's midpoint moves 2 h or more.
+      a kept #tag pattern now compares a different measure (no longer the sentence he kept), or a kept sleep
+      window's midpoint moves 2 h or more.
     - **Outdated:** a kept learning has no fresh evidence for 56 days, or can no longer be derived at all.
 - **Retired never reaches reasoning:**
   - Alfred's context (`operatorContext` → `deltaFacts`) leaves it out.
-  - Remaining lines say when he confirmed, narrowed or disputed one.
+  - Remaining lines say when he confirmed, narrowed or disputed one. His own Narrow words follow the personal
+    opt-in, like his notes: without it, Alfred gets only the preset.
+  - A learning he said isn't true is never announced on TODAY or put in the "talk it through" draft. The free helper
+    says he disputed it, and a dropped tag is answered as dropped.
+  - If his answers can't be read, only the coach card's experiment offer is withheld; other cards still show.
   - The free helper's answers, TODAY's "Delta learned" line and coach cards use the same filtered read
     (`getReasoningKnowledge`). A dropped or disputed tag is never offered as an experiment.
   - If his answers can't be read, Delta's knowledge is withheld rather than shown without them.
 - **C6.2 weekly** (`WeeklyInterviewView`):
-  - "WHAT I THINK I'M LEARNING", at most three a week.
+  - "WHAT I THINK I'M LEARNING", at most three in any 7 days. Answers given there carry `via: "WEEKLY"`. What it
+    asked in the last 7 days keeps its place (with his answer and UNDO) and counts toward the three. Coming back the
+    same week brings nothing new.
   - Only #tag patterns and sleep windows, only at their floor, only unanswered ones or ones evidence turned against.
   - Reversed ones come first, then the newest.
   - Silent when there's nothing to ask.
-  - This visit's picks stay on screen after answering, showing his answer and UNDO.
 - **Notebook:** each pattern shows its state and the same answer control. Dropped learnings sit under "Dropped by
   you" with UNDO.
 - **Nothing here changes recommendations, plans or the Engine.**

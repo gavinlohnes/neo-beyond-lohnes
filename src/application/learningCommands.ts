@@ -13,6 +13,8 @@ export async function respondToLearning(input: {
   learningId: string; action: LearningAction; statement: string; evidence: LearningEvidence;
   context?: { preset?: NarrowPreset | undefined; words?: string | undefined } | undefined;
   expectedHeadId: string | null;
+  /** C6.2: answered in the weekly check. */
+  via?: "WEEKLY" | undefined;
 }): Promise<LearningResponse> {
   return writeAtomically([], async () => {
     const chain = projectResponses(await db.events.where("type").equals("LEARNING_RESPONDED").toArray()).get(input.learningId) ?? [];
@@ -22,6 +24,7 @@ export async function respondToLearning(input: {
       learningId: input.learningId, action: input.action, statement: input.statement, evidence: input.evidence,
       ...(input.action === "NARROW" ? { context: { ...(input.context?.preset ? { preset: input.context.preset } : {}), ...(words ? { words } : {}) } } : {}),
       supersedes: input.expectedHeadId,
+      ...(input.via ? { via: input.via } : {}),
     });
     if (!payload.success) throw new Error(input.action === "NARROW" ? "Pick when it applies, or say it in a few words. Nothing was saved." : "That answer couldn't be saved. Nothing was changed.");
     if ((head?.id ?? null) !== input.expectedHeadId) {

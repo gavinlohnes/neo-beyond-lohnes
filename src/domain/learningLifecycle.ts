@@ -34,6 +34,8 @@ export interface LearningResponsePayload {
   context?: { preset?: NarrowPreset | undefined; words?: string | undefined } | undefined;
   /** The previous response for this learning, or null for the first. */
   supersedes: string | null;
+  /** C6.2: given in the weekly "What I think I'm learning", so it counts toward that week's three. */
+  via?: "WEEKLY" | undefined;
 }
 
 export const LEARNING_STATES = ["OBSERVED", "HYPOTHESIZED", "PROVISIONAL", "CONFIRMED", "CONTEXT_SPECIFIC", "CONTESTED", "OUTDATED", "RETIRED"] as const;
