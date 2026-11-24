@@ -7,6 +7,8 @@
 - **Undo rule (Gavin, 2026-11-24 02:02 CT, option 1 of three):** routine logs stay as OWNER-GO-001 left them
   (`docs/UX_DECISIONS.md`, 2026-10-29: the confirmation is the message only, with no UNDO). Undo shows only
   after a fix or a removal, where a slip costs more. The Undo in this brief is that case, so it stays.
+  Its 8 s window is one shared constant, `FIX_UNDO_MS = 8000` in `src/ui/hooks/useUndoWindow.ts`, also used by
+  GRAYSON-FIX-UNDO-001; add it if it isn't there yet.
 - **Lane: Protected.** The check-in feeds the Engine's capacity rule and the Day Ledger. This adds a correction
   event, a corrected check-in row, a bounded edit to `src/engine/dayLedger.ts`, and a re-issued recommendation
   through the existing `evaluate()` path. No Engine rule changes, no Dexie version bump, no new table,
