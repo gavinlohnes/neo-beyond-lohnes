@@ -119,6 +119,13 @@ it("placements (Gavin: 'Move the Train my Program down'): mid-workout MY PROGRAM
   await expect.element(programme).toBeInTheDocument();
   expect(live.compareDocumentPosition(programme.element()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   await expect.element(programme.getByRole("button", { name: "EDIT PROGRAMME", exact: true })).toBeVisible(); // still usable
+  // #630 review: switching views mid-workout hides MY PROGRAMME without unmounting it (an open edit survives).
+  const panelNode = programme.element();
+  const views = screen.getByRole("group", { name: "Training views" });
+  await views.getByRole("button", { name: "HISTORY", exact: true }).click();
+  expect(panelNode.isConnected && (panelNode.closest(".train-programme-after") as HTMLElement).hidden).toBe(true);
+  await views.getByRole("button", { name: "WORKOUT", exact: true }).click();
+  expect(programme.element()).toBe(panelNode);
   await screen.getByRole("button", { name: "GYM MODE" }).click();
   const gym = screen.getByRole("dialog", { name: "Gym mode" });
   await gym.getByRole("spinbutton", { name: "Weight", exact: true }).fill("135");
@@ -126,6 +133,6 @@ it("placements (Gavin: 'Move the Train my Program down'): mid-workout MY PROGRAM
   await gym.getByRole("button", { name: "LOG SET 1" }).click();
   const delta = gym.getByRole("group", { name: "Delta's suggestion" });
   await expect.element(delta).toBeVisible();
-  const details = gym.element().querySelector("details, .set-details, [aria-label='Set details']") ?? gym.getByText("SET DETAILS").element();
+  const details = gym.getByText("SET DETAILS").element();
   expect(delta.element().compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

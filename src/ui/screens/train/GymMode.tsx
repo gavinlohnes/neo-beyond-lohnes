@@ -163,6 +163,8 @@ export function GymMode(props: GymModeProps) {
           {props.onSetDetails && <SetDetails value={props.setDetails ?? {}} disabled={props.busy} onChange={props.onSetDetails} />}
         </>
       )}
+      {/* #630 review: once the exercise or the workout is logged, Delta (the pain stop included) still shows here. */}
+      {props.delta && (props.allComplete || setNumber === null) && <div className="gym-mode__delta">{props.delta}</div>}
 
       {props.lastSet && (
         <div className="gym-mode__last">

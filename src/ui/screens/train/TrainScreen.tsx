@@ -2190,7 +2190,8 @@ export function TrainScreen({
       )}
       </>}
       </div>
-      {session && trainView === "WORKOUT" && <div className="train-programme-after">{programmePanel}</div>}
+      {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
+      {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>
   );
 }
