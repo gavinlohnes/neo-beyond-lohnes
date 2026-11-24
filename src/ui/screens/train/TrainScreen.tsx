@@ -1210,9 +1210,6 @@ export function TrainScreen({
       {visitedRecords && <div hidden={trainView !== "RECORDS"}><RecordsList active={active && trainView === "RECORDS"} focusExerciseId={recordsFocus} onClose={() => openTrainView("WORKOUT")} /></div>}
       {/* GRAYSON-TRAIN-PROGRESS-001: one tap from today's workout, read only. */}
       {trainView === "PROGRESS" && <TrainProgress active={active} />}
-      {/* GRAYSON-TRAIN-RUN-001: the running card, live run and plan. While a run is live (or its finish sheet is open)
-          the lift content steps aside, so a lift can't start mid-run; the running command refuses mid-lift. */}
-      {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
       <div hidden={trainView !== "WORKOUT" || runningActive}>
       <ConfirmPanel />
 
@@ -2195,6 +2192,10 @@ export function TrainScreen({
       )}
       </>}
       </div>
+      {/* GRAYSON-TRAIN-RUN-001: the running card, live run and plan, after the lift content so START WORKOUT keeps the
+          first screen. While a run is live (or its finish sheet is open) the lift content above is hidden, so the run
+          sits at the top and a lift can't start mid-run; the running command refuses mid-lift. */}
+      {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
       {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
       {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>
