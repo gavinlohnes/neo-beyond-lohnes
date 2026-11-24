@@ -1,4 +1,5 @@
 import { PREPARATION_LABELS, type PreparationValue } from "../../../domain/preparation";
+import { formatStandardValue, isStandardTestKind, STANDARD_TEST } from "../../../domain/workout/standardTests";
 import type { CheckInCorrectedPayload, DomainEvent, StateCheckIn, UrgeTrigger } from "../../../domain/common/types";
 import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
 import { formatDuration } from "../body/bodyScreenCopy";
@@ -28,6 +29,7 @@ export function describeHistoryDayMeta(status: string, workContext: string, even
 const PUT_BACK_NAMES: Record<string, string> = {
   MEAL_LOG_VOIDED: "Meal", PROTEIN_LOG_VOIDED: "Protein", WATER_LOG_VOIDED: "Water",
   SLEEP_LOG_VOIDED: "Sleep", BODYWEIGHT_LOG_VOIDED: "Bodyweight", MEASUREMENT_LOG_VOIDED: "Measurement",
+  STANDARD_TEST_VOIDED: "Standards test",
 };
 
 /**
@@ -82,6 +84,13 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return "Sleep log undone.";
     case "BODYWEIGHT_LOG_VOIDED":
       return "Bodyweight log undone.";
+    // GRAYSON-TRAIN-STANDARDS-001: a standards test result, and its removal (a fix is a removal plus a new result).
+    case "STANDARD_TEST_RECORDED":
+      return isStandardTestKind(p.test)
+        ? `${STANDARD_TEST[p.test].name} ${p.correctsEventId ? "fixed to" : "test:"} ${formatStandardValue(p.test, Number(p.value))}.`
+        : "Standards test recorded.";
+    case "STANDARD_TEST_VOIDED":
+      return "Standards test result removed.";
     // GRAYSON-FIX-UNDO-001: a removal taken back; the removal stays above it.
     case "LOG_VOID_UNDONE":
       return `${PUT_BACK_NAMES[String(p.voidedType)] ?? "Log"} log put back.`;

@@ -4,15 +4,16 @@ import { getStrengthReview } from "./strengthReviewQueries";
 import { getProgrammeView } from "./trainingProgrammeQueries";
 import { getBodyweightHistoryWithSources } from "./bodyTrendQueries";
 import { getUndoneSetIds } from "./trainQueries";
+import { getStandardResults, readStandardTargets } from "./standardTestQueries";
 import { deriveTrainProgress, type FinishedSession, type Form, type NextState, type TrainProgress } from "./trainProgress";
 
 const SIT_UPS = new Set(["one-minute-sit-up-practice", "sit-up-practice"]);
 
 /** Read only. TRAIN → PROGRESS. */
 export async function getTrainProgress(now: Date = new Date()): Promise<TrainProgress> {
-  const [review, view, sessions, sets, undone, weights] = await Promise.all([
+  const [review, view, sessions, sets, undone, weights, standardResults] = await Promise.all([
     getStrengthReview(now), getProgrammeView(now).catch(() => null), db.workoutSessions.toArray(), db.performedSets.toArray(),
-    getUndoneSetIds(), getBodyweightHistoryWithSources(),
+    getUndoneSetIds(), getBodyweightHistoryWithSources(), getStandardResults(),
   ]);
   const formOf = (s: (typeof sessions)[number]): Form =>
     s.programmeContext?.form ?? (s.sessionType === "REDUCED" ? "MINIMUM" : s.sessionType === "RECOVERY" ? "RECOVERY" : "FULL");
@@ -38,5 +39,6 @@ export async function getTrainProgress(now: Date = new Date()): Promise<TrainPro
     bodyweights: weights.map((w) => ({ recordedAt: w.recordedAt, weightLbs: w.weightLbs })),
     benchRelative: benchRow ? { weight: benchRow.weight, reps: benchRow.reps, bodyweightLbs: weighInNear(benchRow.at)! } : null,
     sitUpBestReps: sitUps.length ? Math.max(...sitUps.map((s) => s.reps)) : null,
+    standardResults, standardTargets: readStandardTargets(),
   });
 }

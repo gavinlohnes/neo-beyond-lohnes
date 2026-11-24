@@ -1,4 +1,8 @@
 import type { LiftStrengthReview } from "../engine/strengthReview";
+import type { StandardTestKind } from "../domain/common/types";
+import {
+  describeStandardChange, describeStandardTarget, formatStandardValue, STANDARD_TEST, standardDate, type StandardResult,
+} from "../domain/workout/standardTests";
 
 /**
  * GRAYSON-TRAIN-PROGRESS-001 (Gavin, 2026-11-23: "Forms + Progress", design GRAYSON_TRAIN_INTELLIGENCE §8): TRAIN's
@@ -17,7 +21,17 @@ export const MIN_SESSIONS_28D = 6;
 export const MIN_COMPARABLE_LIFTS = 2;
 
 export interface FinishedSession { at: string; form: Form; status: "COMPLETED" | "PARTIAL" }
-export interface Standard { name: string; evidence: EvidenceClass; text: string }
+export interface Standard {
+  name: string;
+  evidence: EvidenceClass;
+  text: string;
+  /** GRAYSON-TRAIN-STANDARDS-001: set on the three tests he records; bench has none (it's observed from his sets). */
+  test?: StandardTestKind;
+  /** Every standing result for this test, newest first. */
+  results?: StandardResult[];
+  /** His own target, if he set one. */
+  target?: number;
+}
 /** Where the A → B → C stands: none active, unknown (with the programme's own reason), or a named next member. */
 export type NextState = { kind: "NONE" } | { kind: "UNKNOWN"; why: string } | { kind: "KNOWN"; label: string };
 export interface TrainProgress {
@@ -42,6 +56,33 @@ export function weeklyCounts(sessions: readonly FinishedSession[], now: Date): n
   }).length);
 }
 
+/**
+ * GRAYSON-TRAIN-STANDARDS-001: one test's row: the last result and its date, the one before and the change in plain
+ * words, and his target if he set one. Sit-up practice stays practice: it's shown beside the test, never as one.
+ */
+function standardRow(test: StandardTestKind, input: {
+  now: Date; sitUpBestReps: number | null;
+  standardResults?: readonly StandardResult[]; standardTargets?: Partial<Record<StandardTestKind, number>>;
+}): Standard {
+  const results = (input.standardResults ?? []).filter((r) => r.test === test && Date.parse(r.at) <= input.now.getTime())
+    .sort((a, b) => b.at.localeCompare(a.at) || b.seq - a.seq);
+  const target = input.standardTargets?.[test];
+  const [last, previous] = results;
+  const parts: string[] = [];
+  if (last) {
+    parts.push(`Last: ${formatStandardValue(test, last.value)} on ${standardDate(last.at)}.`);
+    if (previous) parts.push(`Before: ${formatStandardValue(test, previous.value)} on ${standardDate(previous.at)}. ${describeStandardChange(test, last, previous)}.`);
+  } else parts.push("Not recorded yet.");
+  if (target !== undefined) parts.push(`Target: ${formatStandardValue(test, target)}, set by you.${last ? ` ${describeStandardTarget(test, last.value, target)}.` : ""}`);
+  if (test === "SIT_UPS_1MIN" && input.sitUpBestReps !== null) parts.push(`Best practice set: ${input.sitUpBestReps} reps. Practice isn't a timed test.`);
+  return {
+    // A practice set is still something observed (as before), but the words say it isn't a test.
+    name: STANDARD_TEST[test].name, test, text: parts.join(" "), results,
+    evidence: last || (test === "SIT_UPS_1MIN" && input.sitUpBestReps !== null) ? "OBSERVED" : "UNKNOWN",
+    ...(target !== undefined ? { target } : {}),
+  };
+}
+
 /** Pure. The whole page from already-read records. */
 export function deriveTrainProgress(input: {
   now: Date;
@@ -54,6 +95,9 @@ export function deriveTrainProgress(input: {
   bodyweights: readonly { recordedAt: string; weightLbs: number }[];
   benchRelative: { weight: number; reps: number; bodyweightLbs: number } | null;
   sitUpBestReps: number | null;
+  /** GRAYSON-TRAIN-STANDARDS-001: recorded test results (any order) and his own targets. */
+  standardResults?: readonly StandardResult[];
+  standardTargets?: Partial<Record<StandardTestKind, number>>;
 }): TrainProgress {
   const { now } = input;
   const recent = input.sessions.filter((s) => now.getTime() - Date.parse(s.at) < 28 * DAY && Date.parse(s.at) <= now.getTime());
@@ -66,11 +110,9 @@ export function deriveTrainProgress(input: {
     input.benchRelative
       ? { name: "Bench, relative to bodyweight", evidence: "OBSERVED", text: `${lb(input.benchRelative.weight)} × ${input.benchRelative.reps} at ${lb(input.benchRelative.bodyweightLbs)} bodyweight (${(input.benchRelative.weight / input.benchRelative.bodyweightLbs).toFixed(2)}× bodyweight), last 4 weeks, with a weigh-in from within 2 weeks of the set.` }
       : { name: "Bench, relative to bodyweight", evidence: "UNKNOWN", text: "Needs a bench set from the last 4 weeks and a weigh-in from within 2 weeks of it." },
-    input.sitUpBestReps !== null
-      ? { name: "One-minute sit-ups", evidence: "OBSERVED", text: `Best recorded practice set: ${input.sitUpBestReps} reps. Practice isn't a timed test.` }
-      : { name: "One-minute sit-ups", evidence: "UNKNOWN", text: "Not recorded yet." },
-    { name: "Sit-and-reach", evidence: "UNKNOWN", text: "BEYOND doesn't record this test yet." },
-    { name: "1.5-mile run", evidence: "UNKNOWN", text: "BEYOND doesn't record a timed run yet." },
+    standardRow("SIT_UPS_1MIN", input),
+    standardRow("SIT_AND_REACH", input),
+    standardRow("RUN_1_5_MILE", input),
   ];
 
   const lifts = input.lifts.filter((l) => l.status !== "BUILDING").map((l) => ({

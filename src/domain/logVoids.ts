@@ -13,6 +13,8 @@ export const LOG_VOID_TYPES = [
   "SLEEP_LOG_VOIDED",
   "BODYWEIGHT_LOG_VOIDED",
   "MEASUREMENT_LOG_VOIDED",
+  // GRAYSON-TRAIN-STANDARDS-001: a standards test result removed (payload: BodyLogVoidedPayload, loggedEventId).
+  "STANDARD_TEST_VOIDED",
 ] as const;
 export type LogVoidType = (typeof LOG_VOID_TYPES)[number];
 

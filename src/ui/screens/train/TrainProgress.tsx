@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { StandardTestKind } from "../../../domain/common/types";
+import { undoStandardFix, undoStandardRemove } from "../../../application/standardTestCommands";
+import { FIX_UNDO_MS, useUndoWindow } from "../../hooks/useUndoWindow";
+import { describeError } from "../../errorMessage";
+import { StandardTestSheet, type StandardChange, type StandardSheetMode } from "./StandardTestSheet";
 import { getTrainProgress } from "../../../application/trainProgressQueries";
 import type { TrainProgress as Progress, EvidenceClass } from "../../../application/trainProgress";
 import { Activity, Compass, Dumbbell, Target } from "lucide-react";
@@ -13,12 +18,31 @@ const EVIDENCE: Record<EvidenceClass, string> = { OBSERVED: "RECORDED", ESTIMATE
  */
 export function TrainProgress({ active }: { active: boolean }) {
   const [data, setData] = useState<Progress | null | "ERROR">(null);
+  // GRAYSON-TRAIN-STANDARDS-001: the open standards sheet, and the 8 s Undo after a fix or a removal.
+  const [open, setOpen] = useState<{ test: StandardTestKind; mode: StandardSheetMode } | null>(null);
+  const [undo, setUndo] = useUndoWindow<{ label: string; run: () => Promise<void> }>(FIX_UNDO_MS);
+  const [undoError, setUndoError] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    try { setData(await getTrainProgress()); } catch { setData("ERROR"); }
+  }, []);
   useEffect(() => {
     if (!active) return;
     let live = true;
     void getTrainProgress().then((d) => { if (live) setData(d); }, () => { if (live) setData("ERROR"); });
     return () => { live = false; };
   }, [active]);
+  const focusOpener = (test: StandardTestKind, which: "record" | "records" | "target") =>
+    requestAnimationFrame(() => document.getElementById(`standard-${which}-${test}`)?.focus());
+  const changed = async (change: StandardChange, test: StandardTestKind) => {
+    setUndoError(null);
+    if (change.kind === "FIXED") setUndo({ label: "Result fixed.", run: () => undoStandardFix(change.fix) });
+    else if (change.kind === "REMOVED") setUndo({ label: "Result removed.", run: () => undoStandardRemove(change.voidEventId) });
+    else setUndo(null);
+    // A fix or a removal goes back to the list; a new result or a target closes the sheet.
+    if (change.kind === "FIXED" || change.kind === "REMOVED") setOpen({ test, mode: { kind: "RECORDS" } });
+    else { setOpen(null); focusOpener(test, change.kind === "TARGET" ? "target" : "record"); }
+    await load();
+  };
   if (data === null) return <section className="train-progress" aria-label="Progress" aria-busy="true"><p className="train-progress__note">Reading your training…</p></section>;
   if (data === "ERROR") return <section className="train-progress" aria-label="Progress"><p role="alert" className="train-progress__note">Progress couldn't be read. Your records are unchanged.</p></section>;
   const { assessment: a, where, standards, lifts, bodyweight } = data;
@@ -46,9 +70,36 @@ export function TrainProgress({ active }: { active: boolean }) {
       </div>
     </Panel>
     <Panel headingId="train-progress-standards" icon={<Target size={18} />} label="STANDARDS" wide>
-      <div className="train-progress__rows">{standards.map((x) => <div key={x.name} className="train-progress__row">
+      {undo && <p className="standard-undo" role="status">{undo.label}{" "}
+        <button type="button" className="btn-secondary" onClick={() => {
+          const u = undo; setUndo(null);
+          void u.run().then(load, (e) => setUndoError(describeError(e, "That couldn't be undone. Nothing changed.")));
+        }}>UNDO</button></p>}
+      {undoError && <p className="standard-undo" role="alert">{undoError}</p>}
+      <div className="train-progress__rows">{standards.map((x) => <div key={x.name} className="train-progress__row" data-standard={x.test}>
         <p className="train-progress__name">{x.name} <span className={`train-progress__tag${x.evidence === "UNKNOWN" ? " train-progress__tag--quiet" : ""}`}>{EVIDENCE[x.evidence]}</span></p>
-        <p className="train-progress__text">{x.text}</p></div>)}</div>
+        <p className="train-progress__text">{x.text}</p>
+        {x.test && (() => {
+          const test = x.test;
+          const close = (which: "record" | "records" | "target") => () => { setOpen(null); focusOpener(test, which); };
+          const isOpen = open?.test === test ? open.mode : null;
+          return <>
+            <div className="standard-acts">
+              <button id={`standard-record-${test}`} type="button" className="btn-secondary" aria-label={`Record ${x.name}`}
+                onClick={() => setOpen({ test, mode: { kind: "RECORD" } })}>RECORD</button>
+              {(x.results?.length ?? 0) > 0 && <button id={`standard-records-${test}`} type="button" className="btn-secondary" aria-label={`${x.name} records`}
+                onClick={() => setOpen({ test, mode: { kind: "RECORDS" } })}>RECORDS</button>}
+              <button id={`standard-target-${test}`} type="button" className="btn-secondary" aria-label={`${x.name} target`}
+                onClick={() => setOpen({ test, mode: { kind: "TARGET" } })}>TARGET</button>
+            </div>
+            {isOpen && <StandardTestSheet key={isOpen.kind === "FIX" ? isOpen.result.eventId : isOpen.kind} test={test} mode={isOpen}
+              results={x.results ?? []} target={x.target}
+              onMode={(mode) => setOpen({ test, mode })}
+              onChanged={(change) => void changed(change, test)}
+              onClose={close(isOpen.kind === "TARGET" ? "target" : isOpen.kind === "RECORD" ? "record" : (x.results?.length ? "records" : "record"))} />}
+          </>;
+        })()}
+      </div>)}</div>
     </Panel>
     <Panel headingId="train-progress-strength" icon={<Dumbbell size={18} />} label="STRENGTH" wide>
       <div className="train-progress__rows">
