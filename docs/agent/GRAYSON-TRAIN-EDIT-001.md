@@ -18,9 +18,10 @@
 - **Builder:** Codex. Branch `codex/grayson-train-edit-001`. **Active PR:** pending.
 - **Order:** after GRAYSON-TRAIN-RUN-001 (#640) is built, because both edit `TrainScreen.tsx`,
   `trainCopy.ts` and `src/domain/common/types.ts`. Gavin can swap the order.
-- **Overlap check (2026-11-24):** open PRs #639 (C6.1 + C6.2) and #606 (C3.4b/c) touch none of the files
-  below except `src/domain/common/types.ts` (#639): keep additions in one block and rebase on whichever merges
-  first. While other PRs are open, leave the tracker and checkpoint to the oldest open PR (DEV-FLOW-002,
+- **Overlap check (2026-11-24, rechecked):** #639 (C6.1 + C6.2) edits `src/domain/common/types.ts` and
+  `src/ui/screens/history/historyCopy.ts`; #643 (check-in fixes) and #645 (remove and undo) also add event types,
+  add to `CORRECTION_TYPES` in `src/engine/dayLedger.ts` and add `FIX_UNDO_MS` to `src/ui/hooks/useUndoWindow.ts`.
+  #606 touches none of the files below. Keep additions in one block and rebase on whichever merges first. While other PRs are open, leave the tracker and checkpoint to the oldest open PR (DEV-FLOW-002,
   2026-11-23 amendment, rule 2).
 - **Second part (E1b, separate brief):** correcting a whole session's status or length, removing a whole
   session, moving it to another day, and changing which exercise a set belongs to. Those change which workout
@@ -170,6 +171,19 @@ sequence, capacity, STANDARD/REDUCED/RECOVERY, Gym mode or C4.4; a Dexie version
 - **Device check (Gavin):** open a past workout, change one set's weight, then check that lift's next
   suggestion and PRs; tap Undo once; remove a set and put it back; add a set you forgot. Mid-workout, fix your
   first set after logging the second. Then KEEP / REFINE / RETHINK.
+
+## Decision record
+
+The build PR records the approved defaults in `docs/decisions/GRAYSON-TRAIN-EDIT.md`, as TIMEBOX-001 and C4.1 did
+(DEV-FLOW-002, 2026-11-23 amendment).
+
+## Stop and ask Gavin if
+
+- the work needs a Dexie version bump or a new index;
+- it needs any change to progression, PR detection or `trainSuggestion` rules beyond reading fixed sets;
+- a reader of sets has to see raw rows, beyond `getUndoneSetIds`'s own definition and workout integrity;
+- it would change what logging a set, the last-set UNDO or finishing a workout do today;
+- it needs a change to `backup.ts`, `restore.ts` or `backupKeys.ts`.
 
 ## Risks and checks
 
