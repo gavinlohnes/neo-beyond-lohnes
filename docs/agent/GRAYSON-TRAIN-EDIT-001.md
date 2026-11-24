@@ -79,7 +79,7 @@ Nothing asks "Are you sure?", every fix can be undone, and the original is alway
   retracted set ids (from `SET_UNDONE`, `SET_REMOVED`, `SET_CORRECTED.replacesSetId`, and rows whose `SET_ADDED`
   or `SET_CORRECTED` was undone) and, per set, its fix history for the "edited" detail.
 - **Readers pick it up through the existing filter:** `getUndoneSetIds()` (`trainQueries.ts:124`) returns
-  `projectSetFixes(...).retractedSetIds`, so its 14 callers need no change. Rename is optional; behaviour must
+  `projectSetFixes(...).retractedSetIds`, so its 13 callers in other files need no change. Rename is optional; behaviour must
   match.
 - **The one engine edit:** `src/engine/dayLedger.ts` uses `projectSetFixes` in place of its own `SET_UNDONE`
   filter (line 286); counts `SET_ADDED` as a training set and `SET_REMOVED` as minus one (beside line 228);
