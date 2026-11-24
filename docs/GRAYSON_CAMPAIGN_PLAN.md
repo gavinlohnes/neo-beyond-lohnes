@@ -127,7 +127,7 @@ status of its own.
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |
 | C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
-| C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M |
+| C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M. [Brief](agent/GRAYSON-ASKS-COUNT-001.md); Claude Code |
 | C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Not started |  |
