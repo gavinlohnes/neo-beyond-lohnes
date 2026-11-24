@@ -1,4 +1,6 @@
 import type { DeltaKnowledge, Learning } from "./delta";
+import type { LifecycleItem } from "./learningLifecycle";
+import { NARROW_LABELS } from "../domain/learningLifecycle";
 
 /**
  * SUPERCHARGE-001 (item 2): DELTA's learnings as plain, counted facts for Alfred's context, so Alfred uses
@@ -34,8 +36,24 @@ export function deltaFact(l: Learning): { text: string; personal: boolean } {
 }
 
 /** The facts Alfred may see: measured ones always, note- and journal-based ones only with the personal opt-in. */
-export function deltaFacts(k: DeltaKnowledge, includePersonal: boolean): { id: string; text: string; at: string }[] {
-  const facts = k.learnings.map((l) => ({ id: l.id, at: l.learnedOn, ...deltaFact(l) })).filter((f) => includePersonal || !f.personal);
+/** GRAYSON C6.1: what he said about a learning, in Alfred's terms. Nothing when he hasn't answered. */
+export function stance(item: LifecycleItem | undefined): string {
+  if (!item) return "";
+  const v = item.verdict;
+  switch (item.state) {
+    case "CONFIRMED": return item.learning?.kind === "EXPERIMENT" ? "" : " HE CONFIRMED THIS.";
+    case "CONTEXT_SPECIFIC": return ` HE SAYS IT APPLIES ONLY: ${[v?.context?.preset ? NARROW_LABELS[v.context.preset].toLowerCase() : "", v?.context?.words ?? ""].filter(Boolean).join("; ")}.`;
+    case "CONTESTED": return item.by === "YOU" ? " HE SAYS THIS IS NOT TRUE; do not rely on it." : " He confirmed this earlier, but newer records point the other way; treat as uncertain.";
+    case "OUTDATED": return " He confirmed this earlier; no fresh evidence for 8 weeks, so it may be out of date.";
+    case "PROVISIONAL": return " Being tested in a running experiment.";
+    default: return "";
+  }
+}
+
+export function deltaFacts(k: DeltaKnowledge, includePersonal: boolean, states?: ReadonlyMap<string, LifecycleItem>): { id: string; text: string; at: string }[] {
+  const facts = k.learnings.filter((l) => states?.get(l.id)?.state !== "RETIRED")
+    .map((l) => { const f = deltaFact(l); return { id: l.id, at: l.learnedOn, personal: f.personal, text: f.text + stance(states?.get(l.id)) }; })
+    .filter((f) => includePersonal || !f.personal);
   if (includePersonal && k.needle.ready) for (const h of k.needle.habits) facts.push({
     id: `needle-${h.habit}`, at: new Date().toISOString(), personal: true,
     text: `DELTA (good weeks = top third by check-in energy, ${k.needle.goodWeeks} of ${k.needle.judgedWeeks} weeks): ${h.habit} ${h.unit === "DAYS_PER_WEEK" ? `${h.good.toFixed(1)} vs ${h.other.toFixed(1)} days a week` : `on ${Math.round(h.good * 100)}% vs ${Math.round(h.other * 100)}% of noted days`} (${h.goodWeeks} vs ${h.otherWeeks} weeks). A pattern, not proof.`,

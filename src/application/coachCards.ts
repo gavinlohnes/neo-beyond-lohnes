@@ -5,7 +5,7 @@ import { resolveTemplateExercises } from "./customTemplateQueries";
 import { suggestNextTemplate } from "../engine/trainSuggestion";
 import { getExperiments } from "./tryExperiment";
 import { getWeeklySummary } from "./weeklyQueries";
-import { getDeltaKnowledge } from "./delta";
+import { getReasoningKnowledge } from "./learningQueries";
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
 import { isWorkingSet } from "../domain/workout/types";
@@ -42,7 +42,7 @@ export async function getCoachCards(now = new Date(), suggestedVariant: "STANDAR
     const p = weekly.calorieProposal;
     cards.push({ id: "WEEKLY:calories", key: key("WEEKLY", p), title: `Review ${p.kcal} kcal a day`, evidence: `Your existing weekly proposal uses a burn estimate of ${p.maintenance.lowKcal}–${p.maintenance.highKcal} kcal and your goal of ${p.goalWeightLbs} lb. Review its evidence and limits before saving.`, destination: "WEEKLY" });
   }
-  const delta = await getDeltaKnowledge(now);
+  const delta = await getReasoningKnowledge(now); // C6.1: never offer a test on a tag he dropped or disputed
   if (delta.suggestion) {
     const s = delta.suggestion;
     cards.push({ id: `DELTA:${s.tag}`, key: key("DELTA", s), title: s.what, evidence: `After ${s.withDays} noted days with #${s.tag}, next-day sleep was ${s.minutesLess} minutes shorter than after ${s.withoutDays} other noted days. A pattern, not proof of a cause. Review the ${s.days}-day test before starting.`, destination: "DELTA" });

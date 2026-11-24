@@ -1,0 +1,7 @@
+/* GRAYSON C6.1/C6.2: answering a learning. 16 px, 44 px targets, two columns that never squeeze words. Tokens only. */
+.learning-answer { display: grid; gap: 6px; margin-top: 6px; }
+.learning-answer__state { margin: 0; font-size: 16px; color: var(--text-2); }
+.learning-answer__actions, .learning-answer__presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.learning-answer__actions .btn-secondary, .learning-answer__actions .btn-primary, .learning-answer__presets .btn-secondary,
+.learning-answer__undo { min-height: 44px; width: 100%; font-size: 16px; overflow-wrap: anywhere; }
+.learning-answer__presets .btn-secondary[aria-pressed="true"] { border-color: var(--text-1); color: var(--text-1); }
