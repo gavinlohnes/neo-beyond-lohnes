@@ -1046,7 +1046,8 @@ export function MoreScreen({
               {restBuzz.enabled ? "TURN OFF" : "TURN ON"}
             </button>
             {restBuzz.enabled && (
-              <select aria-label="Buzz strength" value={restBuzz.strength}
+              // 16 px text and a 44 px target, like every MORE control (MORE-OPERATOR-001's readable-text check).
+              <select aria-label="Buzz strength" value={restBuzz.strength} style={{ fontSize: 16, minHeight: 44 }}
                 onChange={(e) => updateRestBuzz({ ...restBuzz, strength: e.target.value === "LONG" ? "LONG" : "SHORT" })}>
                 <option value="SHORT">Short</option>
                 <option value="LONG">Long</option>
