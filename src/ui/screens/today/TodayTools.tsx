@@ -326,7 +326,9 @@ export function todayTools({ snapshot, view, actions, resetSession, shiftDownSes
 
   /** POLISH-002: the prototype's four number tiles. Missing stays "—"; each opens its history. */
   // BEYOND 4.0-a: AT A GLANCE lives in TodayNumbers.tsx; TODAY keeps the in-flight guard and what each tap opens.
-  function renderFuel() {
+  // GRAYSON-TODAY-CALM-001: the logging nudge is a quiet line (LOG_NUDGE); TODAY renders it with the others, under the
+  // numbers, instead of inside them. Its condition and buttons are unchanged.
+  function logNudgeLine(): { text: string; onTell: () => void; onNotNow: () => void } | null {
     // GRAYSON-LOG-NUDGE-001: silent on the clock (the catch-up owns shift meals) and in operations-only mode.
     const nudgeSettings = readLogNudgeSettings();
     const nudge = day && logNudgeRead?.kind ? deriveLogNudge({
@@ -335,11 +337,16 @@ export function todayTools({ snapshot, view, actions, resetSession, shiftDownSes
       onClock: scheduledClock.phase === "SCHEDULED_SHIFT" || (!!workPeriodStartedAt && workPeriodEndedAt === null),
     }, now) : null;
     const nudgeDayId = day?.id;
-    return <TodayNumbers logNudge={nudge && nudgeDayId ? {
-        text: nudge.text,
-        onTell: () => { if (!busyRef.current) askAlfred("I ate "); },
-        onNotNow: () => { dismissNudge(nudgeDayId, nudge.usualMinute); setNudgeAnswered((v) => v + 1); },
-      } : null}
+    return nudge && nudgeDayId ? {
+      text: nudge.text,
+      onTell: () => { if (!busyRef.current) askAlfred("I ate "); },
+      onNotNow: () => { dismissNudge(nudgeDayId, nudge.usualMinute); setNudgeAnswered((v) => v + 1); },
+    } : null;
+  }
+
+  /** POLISH-002: the prototype's four number tiles (see above). */
+  function renderFuel() {
+    return <TodayNumbers
       measured={measured} operationsOnly={operationsOnly} minimumDayProteinG={minimumDayProteinG} proteinTargetG={proteinTargetG}
       minimumDayHydrateOz={minimumDayHydrateOz} waterTargetOz={waterTargetOz} waterLogCount={waterLogCount} latestWeightLbs={latestWeightLbs} lastMainSleepMinutes={lastMainSleepMinutes}
       lastMainSleepFromGarmin={lastMainSleepFromGarmin} paceHistories={paceHistories} now={now} dayId={day?.id} busy={busy} fuelLine={fuelLine}
@@ -469,7 +476,7 @@ export function todayTools({ snapshot, view, actions, resetSession, shiftDownSes
     }
   }
 
-  return { toolHasContent, renderShiftDownTool, renderResetTool, checkInFixArea, renderCheckInTool, renderWorkContextTool, renderFuel, renderToolsItem };
+  return { toolHasContent, renderShiftDownTool, renderResetTool, checkInFixArea, renderCheckInTool, renderWorkContextTool, renderFuel, logNudgeLine, renderToolsItem };
 }
 
 export type TodayTools = ReturnType<typeof todayTools>;

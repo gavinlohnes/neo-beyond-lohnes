@@ -38,6 +38,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.close.prompts.v1": "Evening close prompts",
   "beyond.close.gaps.v1": "Evening close gaps",
   "beyond.logNudge.v1": "Logging nudge",
+  "beyond.todayQuiet.v1": "TODAY quiet lines",
 };
 
 const MAX_VALUE_LENGTH = 16_384;

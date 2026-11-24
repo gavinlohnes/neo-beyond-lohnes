@@ -14,7 +14,10 @@ import { LifeStateBand } from "./LifeStateBand";
 import { Orientation } from "./Orientation";
 import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
-import { ShiftCatchUpCard } from "./ShiftCatchUpCard";
+import { ShiftCatchUpCard, type CatchUpPresence } from "./ShiftCatchUpCard";
+import { LogNudgeLine, TodayQuietLines } from "./TodayQuietLines";
+import { deriveQuietLines, type QuietLineId } from "./attentionPolicy";
+import { effectiveQuietOff, markQuietMoreOpened, quietMoreOpened, readTodayQuietSettings } from "./todayQuietStore";
 import { markOrientationSeen, orientationSeen } from "./orientationStore";
 import { WeekAheadView } from "../weekly/WeekAheadView";
 import { placeMarks, plannedMarks } from "../../../application/livedDayMap";
@@ -550,6 +553,11 @@ export function TodayScreen({
   const [orientationOpen, setOrientationOpen] = useState(false);
   const [orientationSeenTick, setOrientationSeenTick] = useState(0);
   const [closeSeenTick, setCloseSeenTick] = useState(0);
+  // GRAYSON-TODAY-CALM-001: what the self-loading quiet lines and the shift catch-up say they have to show, and a
+  // tick for "N MORE" (its opened state is kept for the lived day in todayQuietStore).
+  const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false });
+  const [catchUpPresence, setCatchUpPresence] = useState<CatchUpPresence>("LOADING");
+  const [quietMoreTick, setQuietMoreTick] = useState(0);
   useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
 
   useEffect(() => {
@@ -1050,7 +1058,7 @@ export function TodayScreen({
   };
   const tools = todayTools(sections, () => phaseRowSection.renderRecoverSleepPrompt());
   const phaseRowSection = todayPhaseRows(sections, tools);
-  const { toolHasContent, renderShiftDownTool, renderResetTool, renderCheckInTool, renderWorkContextTool, renderFuel, renderToolsItem } = tools;
+  const { toolHasContent, renderShiftDownTool, renderResetTool, renderCheckInTool, renderWorkContextTool, renderFuel, logNudgeLine, renderToolsItem } = tools;
   const { renderRecoverSleepPrompt, renderPhaseRow } = phaseRowSection;
   const visibleTools = toolsItems.filter((tool) => tool !== "MINIMUM_DAY" || hiddenFeatures.minimumDay).filter(toolHasContent);
 
@@ -1078,12 +1086,39 @@ export function TodayScreen({
     || lateRecoverWithoutSleep || shiftClock.phase === "EXPECTED_POST_WORK" || (!!recommendation && recommendation.kind !== "NO_ACTION_REQUIRED");
   const statusSignal = !!systemStatus && systemStatus.level !== "GREEN" && systemStatus.level !== "NO_READ" && !nextIsReal;
   const checkInOwnedHere = !!day && !checkIn && dominant !== "OPERATION_CONFLICT" && !activeWorkout && !activeResetId && !activeShiftDownId && !lateRecoverWithoutSleep;
+  // GRAYSON-TODAY-CALM-001 (C9.6): the quiet lines go through one budget (attentionPolicy.ts deriveQuietLines): at most
+  // his number at once, in his order, the rest behind "N MORE". Each line's own condition below is unchanged.
+  const quietSettings = readTodayQuietSettings();
+  const quietOperation = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId || lateRecoverWithoutSleep;
+  const driveHomeDue = !!day && scheduledClock.phase === "EXPECTED_POST_WORK" && !activeWorkout && !activeResetId && !activeShiftDownId;
+  const logNudge = dayRead ? logNudgeLine() : null;
+  const quietCandidates: QuietLineId[] = [];
+  if (driveHomeDue) quietCandidates.push("DRIVE_HOME");
+  if (logNudge) quietCandidates.push("LOG_NUDGE");
+  if (quietPresence.ROUTINE) quietCandidates.push("ROUTINE");
+  if (day && dayRead && quietPresence.EXPERIMENT) quietCandidates.push("EXPERIMENT");
+  if (quietPresence.REVIEW) quietCandidates.push("REVIEW");
+  const quiet = deriveQuietLines(quietCandidates, { ...quietSettings, off: effectiveQuietOff(quietSettings) }, quietOperation);
+  const quietMoreOpen = quietMoreTick >= 0 && quietMoreOpened(now);
+  const quietVisible = (id: QuietLineId) => quiet.shown.includes(id) || (quietMoreOpen && quiet.tucked.includes(id));
+  const reportQuiet = (id: "ROUTINE" | "EXPERIMENT" | "REVIEW") => (shown: boolean) => setQuietPresence((p) => (p[id] === shown ? p : { ...p, [id]: shown }));
+  // One after-shift card at a time (on by default): the catch-up first, the close once catch-up is done or skipped
+  // (or had nothing to ask), then the after-the-run section. Off, they show together as before.
+  const afterShiftBlocked = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId;
+  const catchUpDue = !!day && !!shiftWindow && !!shiftDownCompletedAt && Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime() && closeSeenTick >= 0 && !catchUpDone(day.id) && !afterShiftBlocked;
+  const closeDue = !!day && !!shiftDownCompletedAt && (!shiftWindow || Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime()) && closeSeenTick >= 0 && !closeDone(day.id) && !afterShiftBlocked;
+  const runOverDue = !!day && lifeMoment?.moment === "RUN_OVER" && !(afterShiftBlocked || lateRecoverWithoutSleep);
+  const catchUpShowing = catchUpDue && catchUpPresence !== "NONE";
+  const closeShows = closeDue && (!quietSettings.oneAfterShift || !catchUpShowing);
+  const runOverShows = runOverDue && (!quietSettings.oneAfterShift || (!catchUpShowing && !closeShows));
   const supportSection = <div className="today-context-support">
       <WorkPreparation dayId={day?.id ?? null} beforeWork={Boolean(day && day.workContext === "WORK" && scheduledClock.phase === "PRE_WORK" && !startedEarly)} onShift={scheduledClock.phase === "SCHEDULED_SHIFT"} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
       {/* POST-SHIFT-001 (#373): right after a shift, hands-free logging is one tap. Quiet; never a prompt. */}
-      {day && scheduledClock.phase === "EXPECTED_POST_WORK" && !activeWorkout && !activeResetId && !activeShiftDownId && <button type="button" className="btn-secondary today-drive-home" disabled={busy} onClick={() => window.dispatchEvent(new Event(DRIVE_HOME_EVENT))}>DRIVE HOME · HANDS-FREE</button>}
+      {/* GRAYSON-TODAY-CALM-001: a quiet line (DRIVE_HOME); it stays here, and counts toward the budget. */}
+      {driveHomeDue && quietVisible("DRIVE_HOME") && <button type="button" className="btn-secondary today-drive-home" disabled={busy} onClick={() => window.dispatchEvent(new Event(DRIVE_HOME_EVENT))}>DRIVE HOME · HANDS-FREE</button>}
       {/* ROUTINES-001 (owner ruling 2026-10-31): one quiet row, only the current moment's routines. */}
-      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: predictedWorkPhase(shiftClockInput), workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId} />
+      <TodayRoutine dayId={day?.id ?? null} moment={day ? routineMomentFor({ phase: scheduledClock.phase, predictedPhase: predictedWorkPhase(shiftClockInput), workContext: day.workContext, workStarted: !!workPeriodStartedAt, workEnded: !!workPeriodEndedAt }) : null} active={active} busy={busy || !!activeWorkout || !!activeResetId || !!activeShiftDownId}
+        tucked={!quietVisible("ROUTINE")} onPresence={reportQuiet("ROUTINE")} />
   </div>;
   const lifeLink = onOpenLife && <button type="button" className="today-life-link" aria-label="Open your life" onClick={onOpenLife} disabled={busy}>
       <div><strong>YOUR LIFE</strong><span>Plans, projects, routines and people.</span></div><span aria-hidden="true">↗</span>
@@ -1314,7 +1349,6 @@ export function TodayScreen({
                   ).replace(" — shift ended, not yet shifted down", " · shift down pending").replace(" — after your shift", " · after shift")}
             </p>
             {shiftClock.countdown && <p className="visually-hidden status-strip__detail">{workContextPerSchedule ? WORKING_PER_SCHEDULE : "Working today"}</p>}
-            <ActiveExperimentLine now={now} />
           </ModeHeader></section> : !dayRead
       // LAUNCH-STEADY-001: until the first read settles, "no day" is unknown: a quiet reading frame, never "Mode not set".
       ? <section className="today-situation cc-hero-wrap" aria-label="Reading today" aria-busy="true"><div className="cc-mode mode-empty today-reading"><p role="status" className="cc-mode-meta">Reading your day…</p><ModeCity now={now} workDay={false} /></div></section>
@@ -1328,17 +1362,16 @@ export function TodayScreen({
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* GRAYSON LOG-CATCHUP-001: after SHIFT DOWN on a shift day, what didn't get logged at work, before the close. */}
-    {day && shiftWindow && shiftDownCompletedAt && Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime() && closeSeenTick >= 0 && !catchUpDone(day.id)
-      && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId) && (
-      <ShiftCatchUpCard dayId={day.id} busy={busy} onDone={() => { setCloseSeenTick((n) => n + 1); void refresh(); }} />
+    {day && catchUpDue && (
+      <ShiftCatchUpCard dayId={day.id} busy={busy} onDone={() => { setCloseSeenTick((n) => n + 1); void refresh(); }} onPresence={setCatchUpPresence} />
     )}
     {/* GRAYSON C1.3: after SHIFT DOWN (his getting-home ritual), a quiet, optional close, below the next card. */}
-    {day && shiftDownCompletedAt && (!shiftWindow || Date.parse(shiftDownCompletedAt) >= shiftWindow.start.getTime()) && closeSeenTick >= 0 && !closeDone(day.id)
-      && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId) && (
+    {/* GRAYSON-TODAY-CALM-001: with one after-shift card at a time, it waits for the catch-up above. */}
+    {day && closeShows && (
       <CloseCard dayId={day.id} busy={busy} onClosed={() => setCloseSeenTick((n) => n + 1)} />
     )}
     {/* LIFE-STATE-003: below the next card, so the day's real next thing still leads (FIELD-AUTHORITY-001). */}
-    {day && lifeMoment?.moment === "RUN_OVER" && !(dominant === "OPERATION_CONFLICT" || activeWorkout || activeResetId || activeShiftDownId || lateRecoverWithoutSleep) && <section className="today-run-over" aria-label="After the run">
+    {day && runOverShows && <section className="today-run-over" aria-label="After the run">
         {/* LIFE-STATE-003: the run that just ended, and an optional recovery contract for the first full day off. */}
         <PostRunReportDisclosure />
         <RecoveryContractOffer dayLabel={new Date(`${contractDate(now)}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" })} planned={!!recordedNow?.contractPlanned} busy={busy}
@@ -1367,13 +1400,20 @@ export function TodayScreen({
       </button>}
 
     </section>}
+    {/* GRAYSON-TODAY-CALM-001 (C9.6): the quiet lines, together, right under the numbers, in his order. */}
+    {dayRead && <TodayQuietLines tuckedCount={quietMoreOpen ? 0 : quiet.tucked.length}
+      onMore={() => { markQuietMoreOpened(new Date()); setQuietMoreTick((n) => n + 1); }}
+      lines={quietSettings.order.filter((id): id is "LOG_NUDGE" | "EXPERIMENT" => id === "LOG_NUDGE" || id === "EXPERIMENT").map((id) => ({ id, node:
+        id === "LOG_NUDGE" ? (logNudge && quietVisible("LOG_NUDGE") ? <LogNudgeLine nudge={logNudge} busy={busy} /> : null)
+        : (day ? <ActiveExperimentLine now={now} tucked={!quietVisible("EXPERIMENT")} onPresence={reportQuiet("EXPERIMENT")} /> : null) }))} />}
     {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>CAPTURE</button></div>}
     {/* LIFE-STATE-001: in a work run or on a flip day, the day's own preparation and routines come before your
         wider life; on a recovery or free day (or when the state is unknown) the usual order stays. Nothing is hidden. */}
     {/* Keyed, so React moves the two sections instead of remounting them (FIELD-AUTHORITY-001: reorder without remount). */}
     {(lifeState === "WORK_RUN" || lifeState === "FLIP" ? ["support", "life"] : ["life", "support"]).map((part) => <Fragment key={part}>{part === "support" ? supportSection : lifeLink}</Fragment>)}
     {brief}
-    <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} />
+    {/* GRAYSON-TODAY-CALM-001: a quiet line (REVIEW); it stays below the brief, and counts toward the budget. */}
+    <TodayReviewSupport phase={scheduledClock.phase} now={now} active={active} review={review} onOpen={onOpenWeeklyReview} tucked={!quietVisible("REVIEW")} onPresence={reportQuiet("REVIEW")} />
     {/* GRAYSON-TODAY-SPLIT-003 slice D3: the sheets and toasts at the foot of TODAY live in TodaySheets; TODAY still owns when each opens. */}
     <TodaySheets actions={actions} checkInForm={checkInForm} local={{
       busy, refresh, refreshVersion, fastCaptureOpen, closeFastCapture, captureTool: renderToolsItem("CAPTURE"), measuredOpen, setMeasuredOpen,
