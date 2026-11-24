@@ -159,10 +159,13 @@ export const inReasoning = (item: LifecycleItem) => item.state !== "RETIRED";
 export const WEEK_DAYS = 7;
 export function weeklyLearnings(items: readonly LifecycleItem[], now: Date): LifecycleItem[] {
   const since = now.getTime() - WEEK_DAYS * DAY;
-  const asked = items.filter((i) => i.learning && i.askedWeeklyAt && Date.parse(i.askedWeeklyAt) > since)
-    .sort((a, b) => a.askedWeeklyAt!.localeCompare(b.askedWeeklyAt!) || a.learningId.localeCompare(b.learningId)).slice(0, WEEKLY_MAX);
-  const room = WEEKLY_MAX - asked.length;
-  const ask = items.filter((i) => !asked.includes(i) && i.learning && (i.learning.kind === "TAG" || i.learning.kind === "SLEEP_WINDOW")
+  // #639 review nit: every weekly ask in the window counts toward the three, even one whose learning can no longer be
+  // derived (it can't be shown, but its slot stays used, so a fourth isn't offered).
+  const askedAll = items.filter((i) => i.askedWeeklyAt && Date.parse(i.askedWeeklyAt) > since)
+    .sort((a, b) => a.askedWeeklyAt!.localeCompare(b.askedWeeklyAt!) || a.learningId.localeCompare(b.learningId));
+  const asked = askedAll.filter((i) => i.learning).slice(0, WEEKLY_MAX);
+  const room = WEEKLY_MAX - Math.min(WEEKLY_MAX, askedAll.length);
+  const ask = items.filter((i) => !askedAll.includes(i) && i.learning && (i.learning.kind === "TAG" || i.learning.kind === "SLEEP_WINDOW")
     && (i.state === "HYPOTHESIZED" || i.state === "PROVISIONAL" || (i.by === "EVIDENCE" && (i.state === "CONTESTED" || i.state === "OUTDATED"))));
   const rank = (i: LifecycleItem) => (i.by === "EVIDENCE" ? 0 : 1);
   const fresh = [...ask].sort((a, b) => rank(a) - rank(b) || b.learning!.learnedOn.localeCompare(a.learning!.learnedOn) || a.learningId.localeCompare(b.learningId)).slice(0, Math.max(0, room));

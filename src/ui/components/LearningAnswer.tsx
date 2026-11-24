@@ -12,7 +12,12 @@ const LEAN: Record<string, string> = { MORE: "more", LESS: "less", SAME: "about 
 /** What his answer says now, in his terms. */
 export function describeState(item: LifecycleItem): string {
   const label = LEARNING_STATE_LABELS[item.state];
-  if (item.by === "EVIDENCE" && item.state === "CONTESTED") return `${label}: you kept this, but newer records point the other way.`;
+  if (item.by === "EVIDENCE" && item.state === "CONTESTED") {
+    // #639 review nit: a TAG pattern that now compares a different measure changed, it didn't reverse.
+    const now = item.learning ? evidenceOf(item.learning) : null;
+    if (now?.kind === "TAG" && item.verdict?.evidence.measure && now.measure !== item.verdict.evidence.measure) return `${label}: you kept this, but Delta now compares something different.`;
+    return `${label}: you kept this, but newer records point the other way.`;
+  }
   if (item.by === "EVIDENCE" && item.state === "OUTDATED") return `${label}: you kept this, but there's been no fresh evidence for 8 weeks.`;
   if (item.state === "CONTEXT_SPECIFIC" && item.verdict?.context) {
     const c = item.verdict.context;

@@ -47,7 +47,8 @@ export function DeltaPanel({ active }: { active: boolean }) {
   const knowledge = useDeltaKnowledge(active, refresh);
   if (knowledge === "ERROR") return <p className="meta">DELTA couldn't read your records. Nothing was changed.</p>;
   if (!knowledge) return <p className="meta" role="status">DELTA is reading…</p>;
-  const known = knowledge.topics.filter((t) => t.state === "KNOWN").length;
+  // #639 review nit: a topic he dropped isn't one Delta "knows".
+  const known = knowledge.topics.filter((t) => t.state === "KNOWN" && knowledge.states.get(t.id)?.state !== "RETIRED").length;
   return <section className="delta-panel" aria-label="DELTA">
     <h2 className="tool-label">DELTA · WHAT I KNOW ABOUT YOU</h2>
     <p className="card-body">I know {known} of {knowledge.topics.length} things so far. I learn from what you log; I never guess.</p>
