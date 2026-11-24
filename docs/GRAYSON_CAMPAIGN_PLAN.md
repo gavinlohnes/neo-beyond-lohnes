@@ -56,15 +56,17 @@ status of its own.
 | C1.4 (Q4) | "Tomorrow differs" line | Done (#599) | Ships inside C1.3's close |
 | C1.5 | Re-entry thread | Not started |  |
 | C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
+| C1.7 | Carry or drop unfinished plans at the close (backlog B6, after Sunsama) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S |
 | **Campaign 2 — Shift Transitions** | | | |
-| C2.1 | Arrival in two taps | In progress | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
+| C2.1 | Arrival in two taps | Done (#617) | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |
 | C2.3 | Home moment | Not started |  |
 | C2.4 | Flip-day plan | Not started |  |
-| C2.5 (Q8) | Two-tap run debrief | Not started |  |
+| C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
+| C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
-| C3.1 (Q7) | Last done and evidence | Not started |  |
+| C3.1 (Q7) | Last done and evidence | Not started | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Grok Bot |
 | C3.2 | Lead time and "coming up" | Not started |  |
 | C3.3 | Day-off shape | Not started |  |
 | C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
@@ -72,6 +74,8 @@ status of its own.
 | C3.4b | Yearly repeats editable in Plans | Not started | Added 2026-11-20 on Gavin's go; touches `engine/recurrence.ts`, so his merge |
 | C3.5 | Seasonal packs | Not started |  |
 | C3.6 | Home inventory light | Not started |  |
+| C3.7 | Group home jobs by room (backlog B12, after Sweepy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored field), S |
+| C3.8 | Days off with Elle: where their schedules overlap, from a calendar she shares (backlog B17) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new provider and another person's data; needs Elle's OK too), L |
 | **Campaign 4 — Body Engine** | | | |
 | C4.1 | Energy curve body-clock fix | Done (verified and locked; no runtime change) | [brief](agent/GRAYSON-C4.1-001.md); the body-clock model itself stays unvalidated |
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
@@ -94,9 +98,20 @@ status of its own.
 | C4.5 | Mission review (monthly) | Not started |  |
 | C4.6 | Water target | Done (#629) | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
-| C4.8 | Optional fasting window | Not started | Design in #601; no implementation authorized |
+| C4.8 | Optional fasting window | In progress (#619, #623) | Design in #601. Slices C4.8a and C4.8b are done; no further slice is authorized |
 | C4.8a | Eating Window foundation | Done (#619) | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |
 | C4.8b | Eating Window meets the meal log | Done (#623) | Offers END FAST AT / FAST FROM a logged meal (never automatic); protein against the open window; [brief](agent/GRAYSON-C4.8B-001.md) |
+| C4.9 | Running sessions: the 9-week run/walk plan in TRAIN (backlog B1, after Couch to 5K) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new session kind, stored runs, events), L. [brief](agent/GRAYSON-TRAIN-RUN-001.md) (#640); Codex |
+| C4.10 | Buzz when rest ends, screen on (backlog B2, after Hevy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S. Reuses `src/ui/feel/feedback.ts`; [brief](agent/GRAYSON-TRAIN-REST-001.md) (#644); Codex |
+| C4.11 | Spoken run/walk cues and buzz with the phone locked, through Health Bridge (backlog B3) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; Gavin's pick 1A. Lane, size: PROTECTED (Android permissions, background service), L. After C4.9; Codex |
+| C4.12 | Record the standards tests: timed 1.5-mile run, sit-and-reach, one-minute sit-ups (backlog B4) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; benchmarks per Gavin's pick 4A. Lane, size: PROTECTED (new stored records), M. After C4.9; Codex |
+| C4.13 | Written setup, cues and mistakes for every library exercise, plus a link to a free official video (backlog B5, after MuscleWiki) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; Gavin's pick 2B. Lane, size: FEATURE, M; Codex |
+| C4.14 | Body map: tap a muscle to see its exercises, coverage only (backlog B7, after MuscleWiki) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, M; Codex |
+| C4.15 | Smoothed trend weight beside the 60-day line (backlog B8, after MacroFactor) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S. [brief](agent/GRAYSON-WEIGHT-TREND-001.md) (#648); Claude Code |
+| C4.16 | Reorder exercises mid-workout (backlog B9, after Hevy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S; Codex |
+| C4.17 | Pinned note per exercise (backlog B10, after Hevy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored field), S; Codex |
+| C4.18 | Nutrition-label scan (backlog B13, after MacroFactor) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new OCR dependency), M |
+| C4.19 | Short sleep trims TRAIN to the SHORT or RECOVERY form; sleep and Garmin only ever lower it, and his check-in wins (backlog B14) | Done (SLEEP-ENGINE-001) | Added 2026-11-24 from the GRAYSON research backlog, then found already built: [SLEEP-ENGINE-001](agent/SLEEP-ENGINE-001.md) (2026-10-27) turns the standard session into the reduced one after two short nights, and his check-in still wins. Tuning is backlog E9 |
 | **Campaign 5 — Inner Day** | | | |
 | C5.1 | Feeling word (optional) | Not started |  |
 | C5.2 | Help mode | Not started |  |
@@ -104,14 +119,16 @@ status of its own.
 | C5.4 | Pattern review (monthly, private) | Not started |  |
 | C5.5 | Sensitive-data controls | Not started |  |
 | **Campaign 6 — Delta** | | | |
-| C6.1 | Learning lifecycle | In review | [brief](agent/GRAYSON-C6.1-C6.2-001.md); answers are a new LEARNING_RESPONDED event |
-| C6.2 | "What I think I'm learning" weekly | In review | Ships with C6.1; [brief](agent/GRAYSON-C6.1-C6.2-001.md) |
-| C6.3 | What moves your numbers | Not started |  |
+| C6.1 | Learning lifecycle | Done (#639) | [brief](agent/GRAYSON-C6.1-C6.2-001.md); answers are a new LEARNING_RESPONDED event |
+| C6.2 | "What I think I'm learning" weekly | Done (#639) | Ships with C6.1; [brief](agent/GRAYSON-C6.1-C6.2-001.md) |
+| C6.3 | What moves your numbers | Not started | [brief](agent/GRAYSON-WHAT-MOVES-001.md) (#649); Claude Code |
 | C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
 | C6.5 | Override as evidence | Not started |  |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Not started |  |
 | C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
+| C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M |
+| C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Not started |  |
 | C7.2 | Plan stays fresh | Not started |  |
@@ -131,10 +148,10 @@ status of its own.
 | C9.4 | Accessibility and motion pass | Not started |  |
 | C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
 | **Quick wins outside the campaigns** | | | |
-| Q3 | Finish workouts on the metric page | In progress (#584) | Conflicts with master on the checkpoint file; no review yet |
+| Q3 | Finish workouts on the metric page | Done (#584) | Merged 2026-11-22 |
 | Q5 | BODY protein tap (roadmap Next #2) | Done (#634, Codex) | |
 
-Last status update: 2026-11-20.
+Last status update: 2026-11-24.
 
 ### Guided Operating Loop overlay
 
