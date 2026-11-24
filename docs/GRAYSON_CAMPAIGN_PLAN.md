@@ -61,7 +61,7 @@ status of its own.
 | C2.1 | Arrival in two taps | Done (#617) | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |
 | C2.3 | Home moment | Not started |  |
-| C2.4 | Flip-day plan | Not started |  |
+| C2.4 | Flip-day plan | Not started | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Grok Bot |
 | C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
 | C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
