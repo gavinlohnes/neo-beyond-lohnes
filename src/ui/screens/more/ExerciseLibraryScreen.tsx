@@ -1,3 +1,4 @@
+import { ExerciseHowToSheet } from "../../components/ExerciseHowToSheet";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
@@ -50,6 +51,7 @@ function ExerciseRow({ exercise, onArchive }: { exercise: CustomExercise; onArch
 }
 
 export function ExerciseLibraryScreen() {
+  const [howTo, setHowTo] = useState<{ id: string; name: string } | null>(null);
   const [exercises, setExercises] = useState<CustomExercise[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +141,7 @@ export function ExerciseLibraryScreen() {
 
   return (
     <div className="intent-field">
+      {howTo && <ExerciseHowToSheet exerciseId={howTo.id} name={howTo.name} onClose={() => setHowTo(null)} />}
       <header className="intent-field__intro">
         <p className="tool-label">EXERCISE LIBRARY</p>
         <p className="card-body">
@@ -189,6 +192,9 @@ export function ExerciseLibraryScreen() {
                         {lib.muscleGroup} · {lib.equipment} · {lib.repRangeLow}-{lib.repRangeHigh} reps
                       </p>
                     </div>
+                    {/* GRAYSON-TRAIN-HOWTO-001: how to do it, beside ADD. */}
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${lib.name}`} onClick={() => setHowTo(lib)}>HOW TO</button>
                     <button
                       type="button"
                       className="btn-secondary"
@@ -198,6 +204,7 @@ export function ExerciseLibraryScreen() {
                     >
                       ADD
                     </button>
+                    </div>
                   </div>
                 </div>
               ))}

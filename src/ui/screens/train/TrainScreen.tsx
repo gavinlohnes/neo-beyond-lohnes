@@ -37,6 +37,8 @@ import { SetFixSheet, useSetFixUndo } from "./SetFixSheet";
 import { restEndBuzz, shouldBuzzRestEnd } from "../../feel/restEndBuzz";
 import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
 import { RunningPanel } from "./RunningSession";
+import { ExerciseHowToSheet } from "../../components/ExerciseHowToSheet";
+import { howToFor } from "../../../domain/workout/exerciseHowTo";
 import { GymMode } from "./GymMode";
 import { CalibrationPreview } from "./CalibrationPreview";
 import { TrainPlanDraft } from "./TrainPlanDraft";
@@ -225,6 +227,7 @@ export function TrainScreen({
   // GRAYSON-TRAIN-EDIT-001: the logged set whose fix sheet is open, and the 8 s Undo after a fix.
   const [fixingSetId, setFixingSetId] = useState<string | null>(null);
   const liveFixUndo = useSetFixUndo(async () => { await refresh(true); });
+  const [howToOpen, setHowToOpen] = useState<{ id: string; name: string } | null>(null);
   const setWriteRef = useRef(false);
   const draftSessionRef = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -1735,6 +1738,10 @@ export function TrainScreen({
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
               <h2 ref={exerciseHeadingRef} tabIndex={-1} className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
+              {/* GRAYSON-TRAIN-HOWTO-001: how to do it, over the workout; rest keeps counting behind the sheet. */}
+              {howToFor(currentExercise.exerciseId) && <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${currentExercise.name}`}
+                onClick={() => setHowToOpen({ id: currentExercise.exerciseId, name: currentExercise.name })}>HOW TO</button>}
+              {howToOpen && <ExerciseHowToSheet exerciseId={howToOpen.id} name={howToOpen.name} onClose={() => setHowToOpen(null)} />}
               {/* SUPERSET-001: a plain cue; it changes no order, rest or logging. */}
               {(() => { const prev = activeExercises[currentExerciseIndex - 1]; const next = activeExercises[currentExerciseIndex + 1];
                 return currentExercise.supersetWithNext && next ? <p className="meta train-plates">Superset: then {next.name}, back to back</p>

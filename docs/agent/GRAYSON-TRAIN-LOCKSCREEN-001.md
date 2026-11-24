@@ -10,8 +10,9 @@
   review, green CI; Gavin merges.
 - **Starting commit:** `origin/master` `e43ba36`. Re-fetch before starting.
 - **Builder:** Claude Code. Branch `claude/grayson-train-lockscreen-001`. Reviewer: Grok Bot. **Active PR:** pending.
-- **Order and overlap:** last in Claude Code's TRAIN queue, after TRAIN-EDIT-001 (so a set logged from the lock
-  screen can be corrected like any other) and NOTES-001. Shares `TrainScreen.tsx`; rebase on whichever merges first.
+- **Order and overlap:** Claude Code **#4** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after STANDARDS-001 and before the quick content
+  briefs. It still comes after TRAIN-EDIT-001 (so a set logged from the lock screen can be corrected like any other).
+  It no longer waits for NOTES-001. Shares `TrainScreen.tsx`; rebase on whichever merges first.
 
 ## Objective and benefit
 Between sets his phone is locked in his hand or pocket. The lock screen shows "Leg Press · set 2 of 3 · 180 × 10"
