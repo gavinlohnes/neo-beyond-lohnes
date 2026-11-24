@@ -17,6 +17,8 @@ export interface TodayNumbersProps {
   minimumDayProteinG: number;
   proteinTargetG: number | undefined;
   minimumDayHydrateOz: number;
+  /** GRAYSON C4.6: his own daily water target; undefined shows no target. */
+  waterTargetOz?: number | undefined;
   waterLogCount: number;
   latestWeightLbs: number | undefined;
   lastMainSleepMinutes: number | null;
@@ -33,7 +35,7 @@ export interface TodayNumbersProps {
   onOpenBody?: (() => void) | undefined;
 }
 
-export function TodayNumbers({ measured, operationsOnly, minimumDayProteinG, proteinTargetG, minimumDayHydrateOz, waterLogCount, latestWeightLbs,
+export function TodayNumbers({ measured, operationsOnly, minimumDayProteinG, proteinTargetG, minimumDayHydrateOz, waterTargetOz, waterLogCount, latestWeightLbs,
   lastMainSleepMinutes, lastMainSleepFromGarmin, paceHistories, now, dayId, busy, fuelLine, recordsAvailable, onOpenTile, onOpenMeasured, onOpenBody }: TodayNumbersProps) {
   const day = dayId === undefined ? undefined : { id: dayId };
   const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
@@ -82,9 +84,10 @@ export function TodayNumbers({ measured, operationsOnly, minimumDayProteinG, pro
           <span className="cc-flab">{burnedToday === null ? "BURNED —" : `BURNED ${burnedToday.toLocaleString("en-US")}`}</span>
         </button>}
         {/* LIFE-PATTERN-001: nothing logged reads "—" / NOT LOGGED, as WEIGHT and SLEEP already do, never a bare 0. */}
-        {tile("water", "WATER", waterLogCount === 0 ? <b>—</b> : <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>oz</small></>,
-          behind(waterPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : <span className="cc-flab">{waterLogCount === 0 ? "NOT LOGGED" : waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>,
-          `Water ${minimumDayHydrateOz} oz${paceWords(waterPace)}`, steady(waterPace))}
+        {/* GRAYSON C4.6: with his own target, "48 / 100 oz" and TARGET MET once reached; pace words are unchanged. */}
+        {tile("water", "WATER", waterLogCount === 0 ? <b>—</b> : <><b><DecryptNumber value={minimumDayHydrateOz} dayId={day?.id ?? "unstarted"} reading="water" /></b><small>{waterTargetOz !== undefined ? ` / ${waterTargetOz} oz` : "oz"}</small></>,
+          behind(waterPace) ? <span className="cc-flab cc-flab--unusual">BEHIND PACE</span> : <span className="cc-flab">{waterLogCount === 0 ? "NOT LOGGED" : waterTargetOz !== undefined && minimumDayHydrateOz >= waterTargetOz ? "TARGET MET" : waterLogCount === 1 ? "1 LOG" : `${waterLogCount} LOGS`}</span>,
+          `Water ${minimumDayHydrateOz}${waterTargetOz !== undefined ? ` of ${waterTargetOz}` : ""} oz${paceWords(waterPace)}`, steady(waterPace))}
         {tile("weight", "WEIGHT", <b>{latestWeightLbs === undefined ? "—" : latestWeightLbs.toFixed(1)}</b>,
           <span className="cc-flab">{latestWeightLbs === undefined ? "NOT LOGGED" : "LATEST"}</span>, latestWeightLbs === undefined ? "Weight not logged" : `Weight ${latestWeightLbs} lb`)}
         {garminTiles ? <button type="button" data-source={sleepSource === "GARMIN" ? "garmin" : undefined} className={measured!.usual.sleep.value !== null && !measured!.unusual.sleep && visibleSleep ? "cc-steady" : undefined} disabled={busy} aria-label={`${visibleSleep ? `Sleep ${visibleSleep}, ${sleepSource.toLowerCase()}` : "Sleep not logged or measured"}${measured!.usual.sleep.value !== null ? `, usual ${measuredClock(measured!.usual.sleep.value)}` : ""}${measured!.unusual.sleep ? unusualAria(measured!.unusual.sleep) : ""}, open sleep`} onClick={() => onOpenMeasured("sleep")}>

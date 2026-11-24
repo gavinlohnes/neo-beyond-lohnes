@@ -205,7 +205,7 @@ import {
   suggestTemplateForNextWorkout,
 } from "../../../application/trainQueries";
 import { getQuitHabit } from "../../../application/quitQueries";
-import { getEffectiveProteinTargetG } from "../../../application/nutritionTargetQueries";
+import { getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
 import { livedDayShiftWindow } from "../../../engine/scheduledContext";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
@@ -617,6 +617,8 @@ export function TodayScreen({
   // COMMAND-CENTER-001: the mode pin for this BeyondDay (placement only; see modePinQueries).
   const [modePin, setModePinState] = useState<{ dayId: string; phase: ShiftClockPhase | null } | null>(null);
   const [proteinTargetG, setProteinTargetG] = useState<number | undefined>(undefined);
+  // GRAYSON C4.6: his own water target, when he set one.
+  const [waterTargetOz, setWaterTargetOz] = useState<number | undefined>(undefined);
   // The next workout TRAIN would suggest, with Time-Fit estimates per variant.
   const [nextWorkout, setNextWorkout] = useState<{
     label: string;
@@ -949,6 +951,7 @@ export function TodayScreen({
     const nextSystemStatus = await getSystemStatus(activeDay ?? null).catch(() => null);
     const nextLastMainSleep = activeDay ? await getLastMainSleep(activeDay.id).catch(() => null) : null;
     const effectiveProteinTarget = await getEffectiveProteinTargetG();
+    const nextWaterTarget = await getNutritionTargets().then((t) => t.waterTargetOz, () => undefined);
     // TONIGHT-001: the morning call, wake card and night summary read one small fact set.
     const tonightState = activeDay ? await getTonightState(activeDay.id).catch(() => null) : null;
     // LIFE-STATE-001: yesterday's recorded work context, read with everything else so the state band lands in the
@@ -1054,6 +1057,7 @@ export function TodayScreen({
     const prompt = getBackupPrompt();
     setBackupDue(prompt?.kind === "BACKUP_DUE" ? { days: prompt.daysSinceLastBackup } : null);
     setProteinTargetG(effectiveProteinTarget);
+    setWaterTargetOz(nextWaterTarget);
     setTonight(tonightState);
 
     // A fresh, independently-composed view each refresh — never memoized
@@ -2210,7 +2214,7 @@ export function TodayScreen({
   // BEYOND 4.0-a: AT A GLANCE lives in TodayNumbers.tsx; TODAY keeps the in-flight guard and what each tap opens.
   function renderFuel() {
     return <TodayNumbers measured={measured} operationsOnly={operationsOnly} minimumDayProteinG={minimumDayProteinG} proteinTargetG={proteinTargetG}
-      minimumDayHydrateOz={minimumDayHydrateOz} waterLogCount={waterLogCount} latestWeightLbs={latestWeightLbs} lastMainSleepMinutes={lastMainSleepMinutes}
+      minimumDayHydrateOz={minimumDayHydrateOz} waterTargetOz={waterTargetOz} waterLogCount={waterLogCount} latestWeightLbs={latestWeightLbs} lastMainSleepMinutes={lastMainSleepMinutes}
       lastMainSleepFromGarmin={lastMainSleepFromGarmin} paceHistories={paceHistories} now={now} dayId={day?.id} busy={busy} fuelLine={fuelLine}
       recordsAvailable={!!onOpenHealthEvidence}
       // METRIC-PAGE-001: WATER opens its metric page (records one tap further); sleep keeps its own page.

@@ -92,7 +92,7 @@ status of its own.
 | LOG-WHEN-001 | Logger: DAY and SHIFT on WHEN | Done (#621) | Protected (amends LOG-TIME-001); water and meal sheets; brief `docs/agent/GRAYSON-LOG-WHEN-001.md` |
 | LOG-CATCHUP-001 | Post-shift catch-up | Done (#622) | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
 | C4.5 | Mission review (monthly) | Not started |  |
-| C4.6 | Water target | Not started |  |
+| C4.6 | Water target | In progress | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
 | C4.8 | Optional fasting window | Not started | Design in #601; no implementation authorized |
 | C4.8a | Eating Window foundation | Done (#619) | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |

@@ -34,6 +34,9 @@ const nutritionTargetFields = {
   // TARGET-PROPOSAL-002 (owner approval 2026-11-15): optional and additive, like goalWeightLbs; older rows and backups
   // without it stay valid and read as the 1,500 default.
   calorieFloorKcal: z.number().int().min(1000).max(4000).optional(),
+  // GRAYSON C4.6 (owner approval 2026-11-23): optional and additive, like calorieFloorKcal; rows and backups without it
+  // stay valid and read as "no target".
+  waterTargetOz: z.number().int().min(16).max(300).optional(),
 };
 
 /** Input to updateNutritionTargets — id/createdAt/updatedAt are assigned by the command, not the caller. At least one field must be present. */
@@ -46,9 +49,10 @@ export const nutritionTargetsInputSchema = z
     muscleSetsTargetPerWeek: nutritionTargetFields.muscleSetsTargetPerWeek.nullable(),
     strengthSessionsTargetPerWeek: nutritionTargetFields.strengthSessionsTargetPerWeek.nullable(),
     calorieFloorKcal: nutritionTargetFields.calorieFloorKcal.nullable(),
+    waterTargetOz: nutritionTargetFields.waterTargetOz.nullable(),
   })
   .refine(
-    (v) => v.calorieTargetKcal !== undefined || v.proteinMultiplierGPerLb !== undefined || v.goalWeightLbs !== undefined || v.weightChangeTargetPercentPerWeek !== undefined || v.muscleSetsTargetPerWeek !== undefined || v.strengthSessionsTargetPerWeek !== undefined || v.calorieFloorKcal !== undefined,
+    (v) => v.calorieTargetKcal !== undefined || v.proteinMultiplierGPerLb !== undefined || v.goalWeightLbs !== undefined || v.weightChangeTargetPercentPerWeek !== undefined || v.muscleSetsTargetPerWeek !== undefined || v.strengthSessionsTargetPerWeek !== undefined || v.calorieFloorKcal !== undefined || v.waterTargetOz !== undefined,
     "At least one field must change",
   );
 export type NutritionTargetsInput = z.infer<typeof nutritionTargetsInputSchema>;
@@ -62,6 +66,7 @@ export const nutritionTargetsSchema = z.object({
   muscleSetsTargetPerWeek: nutritionTargetFields.muscleSetsTargetPerWeek,
   strengthSessionsTargetPerWeek: nutritionTargetFields.strengthSessionsTargetPerWeek,
   calorieFloorKcal: nutritionTargetFields.calorieFloorKcal,
+  waterTargetOz: nutritionTargetFields.waterTargetOz,
   createdAt: z.string(),
   updatedAt: z.string(),
 });

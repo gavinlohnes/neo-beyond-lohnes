@@ -5,6 +5,8 @@ import { useHiddenFeatures } from "../hiddenFeatures";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LogSheet } from "./LogSheet";
 import { getEatingWindowView, windowFuelLine } from "../../application/eatingWindow";
+import { getNutritionTargets } from "../../application/nutritionTargetQueries";
+import { waterTargetLine } from "../../application/waterTarget";
 import { resolveWhen, shiftPointAt, type ShiftPoint, type WhenChoice } from "../../application/logTimes";
 import { getLoggableDays, type LoggableDay } from "../../application/loggableDays";
 import { BodyScreen } from "../screens/body/BodyScreen";
@@ -143,6 +145,17 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       .catch(() => { if (current) setReadState("error"); });
     return () => { current = false; };
   }, [target, retry]);
+  // GRAYSON C4.6: on the water sheet, today's total against his own target (only when he set one).
+  const [waterTarget, setWaterTarget] = useState<string | null>(null);
+  useEffect(() => {
+    if (target !== "water") return;
+    let current = true;
+    void Promise.all([getNutritionTargets(), getActiveDay()]).then(async ([targets, day]) => {
+      const total = day ? (await getHydrationEntries(day.id)).reduce((sum, e) => sum + e.effectiveAmountOz, 0) : 0;
+      if (current) setWaterTarget(waterTargetLine(total, targets.waterTargetOz));
+    }, () => { if (current) setWaterTarget(null); });
+    return () => { current = false; };
+  }, [target, retry]);
   // GRAYSON C4.8b · 8: while logging a meal, where the eating window stands and protein against it.
   const [windowLine, setWindowLine] = useState<string | null>(null);
   useEffect(() => {
@@ -225,6 +238,7 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
       {busy && <p role="status">Saving…</p>}
       {error && <p role="alert">{error}</p>}
       {target === "water" && page !== "waterDetails" && <>
+        {waterTarget && <p className="meta log-water-target" data-water-target>{waterTarget}</p>}
         <WhenRow when={when} onChange={setWhen} disabled={busy} days={loggableDays} dayId={logDayId} onDay={(id) => { setLogDayId(id); setWhen({ kind: "NOW" }); }} shift={chosenDay ? chosenDay.shift : todayShift} />
         <div className="cc-amounts">{[8, 12, 16, 24].map((amount) => <button type="button" key={amount} className="today-sheet__option" disabled={busy} onClick={() => void commit(async () => { const day = await place(); const at = day.at; const id = await logWater(day.id, amount, at); resetWhen(); return { message: `${amount} oz recorded${day.on}${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>+{amount} oz</button>)}</div>
         <button type="button" className="today-sheet__option" disabled={busy || lastWater === null || readState !== "ready"} onClick={() => lastWater !== null && void commit(async () => { const day = await place(); const amount = lastWater; const at = day.at; const id = await logWater(day.id, amount, at); resetWhen(); return { message: `${amount} oz recorded${day.on}${at ? ` at ${clockOf(at)}` : ""}.`, history: "water" as const, undo: () => voidWaterLog(day.id, id) }; })}>Repeat last{lastWater === null ? "" : ` (${lastWater} oz)`}</button>
