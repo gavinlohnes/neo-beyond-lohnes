@@ -49,6 +49,8 @@ Quiet-line candidates, with today's code and the default order (1 shows first):
 5. **ROUTINE** — the current moment's routine row (`TodayRoutine`, ROUTINES-001).
 6. **EXPERIMENT** — the active experiment line (`ActiveExperimentLine` inside the mode header).
 7. **REVIEW** — the weekly review disclosure on days off (`TodayReviewSupport`).
+8. **WORK_DUE** — the nearest work record item inside its reminder window, like "Court Thursday 9:00 AM" (queued,
+   [WORK-RECORD-001](GRAYSON-WORK-RECORD-001.md); added 2026-11-24).
 
 Not candidates (they stay where they are): the check-in line (already in the attention policy), ORIENT TODAY, the
 early-start row, TodayEnergy and the Eating Window card (both opt-in panels he turned on), CAPTURE, YOUR LIFE, work
@@ -78,7 +80,7 @@ preparation.
 ## Everything is his to change
 In MORE → Settings, a new **TODAY** section (`<details id="command-today-lines">`):
 - **Quiet lines at once:** 1, 2 or 3 (default 2), as chips.
-- **Order:** the seven lines in his order, each with UP and DOWN, and **RESET ORDER**.
+- **Order:** every quiet line in his order, each with UP and DOWN, and **RESET ORDER**.
 - **Show:** an on/off switch per line, linked to that line's existing switch where it has one (LOG-NUDGE's, PLAN-FRESH's),
   so there is one switch per line, not two.
 - **One after-shift card at a time** on or off (default on). Off shows catch-up and the close together, as today.

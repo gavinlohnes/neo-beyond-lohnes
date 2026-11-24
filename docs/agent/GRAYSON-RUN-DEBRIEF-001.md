@@ -10,7 +10,7 @@
   Engine input, notification or navigation change. The campaign plan's lane for C2.5 is "Feature · S".
 - **Starting commit:** `origin/master` `1fd2c47`. Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-run-debrief-001`. **Active PR:** pending.
-- **Order:** Grok Bot **#9** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after HOME-LASTDONE-001. After TODAY-SPLIT-003 the RUN OVER
+- **Order:** Grok Bot **#10** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after HOME-LASTDONE-001. After TODAY-SPLIT-003 the RUN OVER
   section may live in its own file; edit it there. Overlap check on `1fd2c47`: the only open PR is
   #641 (campaign plan text). CHECKIN-EDIT-001 also edits `TodayScreen.tsx`, in the check-in block; keep this
   edit to the RUN OVER section (`TodayScreen.tsx` near line 2835) and rebase if CHECKIN-EDIT-001 lands first.

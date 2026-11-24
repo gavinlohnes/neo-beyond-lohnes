@@ -11,7 +11,7 @@
   C3.1 ("Feature (read + existing fields) · S").
 - **Starting commit:** `origin/master` `1fd2c47`. Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-home-lastdone-001`. **Active PR:** pending.
-- **Order:** Grok Bot **#8** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after FLIP-PLAN-001. CHECKIN-EDIT-001 (#651) and
+- **Order:** Grok Bot **#9** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after FLIP-PLAN-001. CHECKIN-EDIT-001 (#651) and
   FIX-UNDO-001 slice 1 (#653) are merged. Overlap check on
   `1fd2c47`: the only open PR is #641 (campaign plan text). CHECKIN-EDIT-001 touches `CheckInCard.tsx`, not
   `CommitmentQuickActions.tsx`; FIX-UNDO-001 touches void readers, `LogEntrySheet` and History, not intent or

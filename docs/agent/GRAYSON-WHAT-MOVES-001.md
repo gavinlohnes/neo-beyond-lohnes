@@ -12,7 +12,7 @@
 - **Starting commit:** `origin/master` `1fd2c47`. Re-fetch before starting.
 - **Builder:** Claude Code (Gavin runs it from this brief on master). Branch `claude-code/grayson-what-moves-001`.
   **Active PR:** pending.
-- **Order:** Claude Code **#8** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after BODYMAP-001. WEIGHT-TREND-001 (#652) is merged. Overlap check on `1fd2c47`:
+- **Order:** Claude Code **#9** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after BODYMAP-001. WEIGHT-TREND-001 (#652) is merged. Overlap check on `1fd2c47`:
   - The only open PR is #641 (campaign plan text).
   - GRAYSON-FIX-UNDO-001 (Grok Bot) changes void reads inside `wholePictureQueries.ts`. This brief only calls
     `getWholePicture` and leaves that file alone.

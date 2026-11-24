@@ -10,7 +10,7 @@
 - **Starting commit:** `origin/master` `92f46cf3` (#667). Re-fetch before starting.
 - **Builder:** Claude Code (its lane: DATA, Weekly, Delta's read-only learning). Branch
   `claude/grayson-asks-count-001`. **Reviewer:** Grok Bot. **Active PR:** pending.
-- **Order and overlap:** Claude Code **#9** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after GRAYSON-WHAT-MOVES-001. It adds one call at each ask site, so it
+- **Order and overlap:** Claude Code **#10** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after GRAYSON-WHAT-MOVES-001. It adds one call at each ask site, so it
   touches many UI files lightly; build it on the latest master and rebase last. Dexie: take the next free version at
   build time (27 is `runningSessions`, #666; a TRAIN brief may take 28 first).
 
