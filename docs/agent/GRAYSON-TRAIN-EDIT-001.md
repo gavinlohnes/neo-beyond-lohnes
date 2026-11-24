@@ -5,6 +5,9 @@
   workouts, and at 01:36 CT yes to the eight design principles in the Vision ("Yes, add those to the track as
   well"). This brief is backlog row **E1** (YOURS track), first part. Merging this brief is his approval of the
   defaults below; Codex builds once it merges.
+- **Undo rule (Gavin, 2026-11-24 02:02 CT, option 1 of three):** routine logs stay as OWNER-GO-001 left them
+  (`docs/UX_DECISIONS.md`, 2026-10-29: the confirmation is the message only, with no UNDO). Undo shows only
+  after a fix or a removal, where a slip costs more. The Undo in this brief is that case, so it stays.
 - **Lane: Protected.** New event types, a new correction model for performed sets, and corrected sets feeding
   progression, PRs and the Day Ledger (one bounded edit in `src/engine/dayLedger.ts`). No Dexie version bump,
   no new table, dependency, provider, permission or navigation change. Independent exact-head review, green CI;
@@ -48,7 +51,7 @@ Nothing asks "Are you sure?", every fix can be undone, and the original is alway
 ## Design principles check (Vision, Nov 24)
 
 1. Yours to change: this brief is that rule for TRAIN sets.
-2. Undo, don't ask: no confirmation dialogs; Undo toast plus "Put it back".
+2. Fix, don't ask (undo after a fix or removal only): no confirmation dialogs; Undo toast plus "Put it back".
 3. One tap for the usual: the fix sheet opens filled with the set's current values; the common fix (weight or
    reps) is one change and Save.
 4. Built around your shift: fixes land on the workout's lived day, which can cross midnight.
