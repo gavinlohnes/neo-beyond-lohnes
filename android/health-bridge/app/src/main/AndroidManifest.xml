@@ -11,12 +11,21 @@
     <!-- BRIDGE-MOMENTS-001: notifications at the key moments BEYOND sends, re-armed after a restart. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- GRAYSON-TRAIN-RUN-CUES-001: spoken run and walk cues and a buzz with the phone locked, from a foreground
+         service of type health. ACTIVITY_RECOGNITION is the runtime permission Android requires for that type
+         (Android 14+); the Bridge reads no activity or sensor data with it. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
         <!-- BRIDGE-CHECK-001: OPEN GARMIN CONNECT, for a watch sync before reading. -->
         <package android:name="com.garmin.android.apps.connectmobile" />
         <!-- SYNC-002: find the installed BEYOND that takes shared JSON files, to send straight to it. -->
         <intent><action android:name="android.intent.action.SEND_MULTIPLE" /><data android:mimeType="application/json" /></intent>
+        <!-- GRAYSON-TRAIN-RUN-CUES-001: find the phone's text-to-speech engine. -->
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
     </queries>
     <application android:allowBackup="false" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:label="BEYOND Health Bridge" android:supportsRtl="true" android:theme="@android:style/Theme.Material.NoActionBar" android:usesCleartextTraffic="false">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop">
@@ -28,6 +37,12 @@
         <activity-alias android:name="ViewPermissionUsageActivity" android:exported="true" android:targetActivity=".MainActivity" android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
             <intent-filter><action android:name="android.intent.action.VIEW_PERMISSION_USAGE" /><category android:name="android.intent.category.HEALTH_PERMISSIONS" /></intent-filter>
         </activity-alias>
+        <!-- GRAYSON-TRAIN-RUN-CUES-001: BEYOND's run link (beyond-bridge://run) lands here, hands the cues to the
+             service and finishes at once, so he goes straight back to BEYOND. -->
+        <activity android:name=".RunCueActivity" android:exported="true" android:excludeFromRecents="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="beyond-bridge" android:host="run" /></intent-filter>
+        </activity>
+        <service android:name=".RunCueService" android:exported="false" android:foregroundServiceType="health" />
         <receiver android:name=".MomentReceiver" android:exported="false">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
         </receiver>
