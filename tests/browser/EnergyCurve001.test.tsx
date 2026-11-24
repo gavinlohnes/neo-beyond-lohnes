@@ -32,10 +32,13 @@ describe("ENERGY-CURVE-001", () => {
     expect(el.querySelector(".today-energy__now")).not.toBeNull();
     expect(el.querySelector("[data-energy-low]")?.textContent).toMatch(/^Lowest stretch \d\d:\d\d–\d\d:\d\d\.$/);
     expect(el.textContent).toContain("Not a measurement or a score");
+    // GRAYSON-C4.1-ENERGY-CURVE-001 (Gavin, 2026-11-24: "Yes, rewrite that clause").
+    expect(el.textContent).toContain("a 24-hour rhythm whose low sits about 1.5 hours before you wake from a night-time sleep and, on a run of day sleeps, moves later by at most half an hour a day, because most night workers' body clocks lag.");
+    expect(el.textContent).not.toContain("before your usual wake.");
     expect(el.textContent).not.toMatch(/\d+ ?%|score of|\/100/);
     expect(await db.events.count()).toBe(before);
     if (SHOTS) { await settle(); await page.screenshot({ path: `${SHOTS}/energy-curve.png`, element: el }); }
-    for (const width of [320, 412, 1024]) {
+    for (const width of [320, 360, 412, 1024]) {
       await page.viewport(width, 900); await settle();
       expect(el.scrollWidth, `${width}`).toBeLessThanOrEqual(el.clientWidth + 1);
       for (const p of el.querySelectorAll("p")) if (p.getClientRects().length) expect(parseFloat(getComputedStyle(p).fontSize), p.textContent ?? "").toBeGreaterThanOrEqual(16);

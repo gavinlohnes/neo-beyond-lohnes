@@ -1,8 +1,9 @@
-# GRAYSON-C4.1-ENERGY-CURVE-001 — where the energy curve puts the body clock on night runs (DRAFT)
+# GRAYSON-C4.1-ENERGY-CURVE-001 — where the energy curve puts the body clock on night runs
 
-**Status: draft for Gavin. Nothing here is locked until he chooses.** Gavin, 2026-11-23 22:01 CT: "Go on C4.1, the
-energy-curve fix", with the brief and this draft coming to him before any model code changes.
-[Brief](../agent/GRAYSON-C4.1-ENERGY-CURVE-001.md). PR: pending. Amends ENERGY-CURVE-001's model line "a 24-hour
+**Status: decided.** Gavin, 2026-11-23 22:01 CT: "Go on C4.1, the energy-curve fix"; the brief and this draft went to
+him before any model code changed. Gavin, 2026-11-24 02:16 CT: **"Option R"**, **"Yes, rewrite that clause"** and
+**"Accept the wider stretch in C4.1"**. [Brief](../agent/GRAYSON-C4.1-ENERGY-CURVE-001.md). PR: on branch
+`codex/c41-energy-curve`. Amends ENERGY-CURVE-001's model line "a 24-hour
 circadian rhythm C has its low 1.5 h before your habitual wake" only as decided below.
 
 ## The question
@@ -22,7 +23,7 @@ any rule is a proxy, labelled an estimate as today.
 
 ## Options
 
-**R. Lagging body clock (recommended).** Walk main sleeps of the last 28 days oldest first from the oldest one's own
+**R. Lagging body clock (chosen).** Walk main sleeps of the last 28 days oldest first from the oldest one's own
 target (wake − 1.5 h). A later target moves the low at most 30 min per main sleep; an earlier target (a night-time
 sleep) is followed at once.
 - His 2-2-3 (18–06, nights off 23–07): nights 1/2/3 → 05:30 / 06:00 / 06:30 (now 05:30 or 12:30, flipping).
@@ -58,11 +59,14 @@ restore, protected fixture, dependency or provider change; everything is derived
 `EnergyCurve.basis` gains an additive `lowMinutes` (application → UI only). Existing tests and fixtures are
 expected to be unchanged because their histories hold day sleeps only.
 
-## To decide
+## Decided (Gavin, 2026-11-24 02:16 CT)
 
-1. Option R, N or 0.
-2. The explanation sentence (C4.1 said "copy unchanged"). Draft amendment, replacing "against a 24-hour rhythm whose
-   low sits about 1.5 hours before your usual wake":
-   "against a 24-hour rhythm whose low sits about 1.5 hours before you wake from a night-time sleep and, on a run of
-   day sleeps, moves later by at most half an hour a day, because most night workers' body clocks lag."
-3. Accept the wider lowest stretch on short runs in C4.1, or tighten it as a separate follow-up.
+1. **Option R** ("Option R"). `BODY_CLOCK_DELAY_H_PER_SLEEP = 0.5`; an earlier target is followed at once; 28 days of
+   main sleeps (≥ 180 min); the oldest sleep's own target is the start; no invented starting clock. N, P, C and 0 are
+   not taken.
+2. **The explanation sentence is rewritten** ("Yes, rewrite that clause"), amending C4.1's "copy unchanged": "against a
+   24-hour rhythm whose low sits about 1.5 hours before your usual wake" becomes "against a 24-hour rhythm whose low
+   sits about 1.5 hours before you wake from a night-time sleep and, on a run of day sleeps, moves later by at most half
+   an hour a day, because most night workers' body clocks lag."
+3. **The wider lowest stretch on short runs is accepted in C4.1** ("Accept the wider stretch in C4.1"). The lowest
+   third rule (`LOW_FRACTION`) and the drive rule are unchanged.

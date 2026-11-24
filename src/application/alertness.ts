@@ -29,12 +29,29 @@ export const SOURCES = {
     quote: "approximately 1.5 ± 1.0 hours before their habitual waketime",
     checked: "search-confirmed 2026-11-19; a rule of thumb, varies by person",
   },
+  BODY_CLOCK_LAG: {
+    label: "Stone et al., Temporal dynamics of circadian phase shifting response to consecutive night shifts in healthcare workers (J Physiol, 2018)",
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6002215/",
+    quote: "From baseline to the final night shift, 19 participants phase delayed (shift -1:40 ± 1:00 h)", // after 3 or 4 nights
+    checked: "search-confirmed 2026-11-23; about 0.5 h a night, varies widely by person",
+  },
+  NIGHT_ADAPTATION: {
+    label: "Boivin, Boudreau & Kosmadopoulos, Disturbance of the circadian system in shift work and its health impact (J Biol Rhythms, 2022)",
+    url: "https://doi.org/10.1177/07487304211064218",
+    quote: "most night workers are unlikely to demonstrate signs of substantial adaptation in melatonin or cortisol rhythms within three consecutive night shifts",
+    checked: "search-confirmed 2026-11-23",
+  },
 } satisfies Record<string, Source>;
 
 /** Sleep pressure's time constant while awake, and while asleep (hours). */
 export const TAU_WAKE_H = 18.2, TAU_SLEEP_H = 4.2;
 /** The circadian low sits this long before your habitual wake time (hours). */
 export const LOW_BEFORE_WAKE_H = 1.5;
+/**
+ * C4.1 (Gavin, 2026-11-24: Option R): on a run of day sleeps the body clock lags. Each later main sleep moves the
+ * circadian low at most this much later (hours); an earlier one (a night-time sleep) brings it back at once.
+ */
+export const BODY_CLOCK_DELAY_H_PER_SLEEP = 0.5;
 /** The circadian rhythm's amplitude on S's 0–1 scale (the model's classic value). */
 export const CIRCADIAN_AMPLITUDE = 0.12;
 /** At least this many recent main sleeps before the curve is drawn; fewer, and BEYOND says so instead. */
@@ -55,8 +72,11 @@ export interface EnergyCurve {
   low: { start: number; end: number } | null;
   /** When the drive home (the hour after the shift ends) falls in the low stretch. */
   drive: { start: number; end: number } | null;
-  /** The habitual wake time the circadian low was placed from (local minutes after midnight), and how many nights. */
-  basis: { wakeMinutes: number; nights: number };
+  /**
+   * The habitual wake time (local minutes after midnight) and how many nights it came from, and where the circadian
+   * low was placed (local minutes after midnight, from `bodyClockLow`).
+   */
+  basis: { wakeMinutes: number; nights: number; lowMinutes: number };
 }
 
 /** Median of local wake clock times, handling the wrap at midnight by working around the first night's wake. */
@@ -70,21 +90,44 @@ export function habitualWake(nights: readonly SleepSpan[]): number | null {
   return ((Math.round(med) % 1440) + 1440) % 1440;
 }
 
+const clockOf = (t: number) => { const d = new Date(t); return d.getHours() * 60 + d.getMinutes(); };
+const wrap = (m: number) => ((Math.round(m) % 1440) + 1440) % 1440;
+
+/**
+ * C4.1: where the body clock's low sits now (local minutes after midnight), from main sleeps oldest to newest. It
+ * starts at the oldest sleep's own low (LOW_BEFORE_WAKE_H before its wake). A sleep whose low would be later moves it at
+ * most BODY_CLOCK_DELAY_H_PER_SLEEP later; one whose low would be earlier, a night-time sleep, brings it back at once.
+ * So nights 1–3 of a run keep the low in the waking night, a long run of nights adapts at about half an hour a day,
+ * and steady sleep gives exactly LOW_BEFORE_WAKE_H before that wake. Null with no sleeps.
+ */
+export function bodyClockLow(history: readonly SleepSpan[]): number | null {
+  const sleeps = [...history].sort((a, b) => a.end - b.end);
+  if (!sleeps.length) return null;
+  const target = (s: SleepSpan) => wrap(clockOf(s.end) - LOW_BEFORE_WAKE_H * 60);
+  let low = target(sleeps[0]!);
+  for (const s of sleeps.slice(1)) {
+    const ahead = ((target(s) - low) % 1440 + 1440) % 1440, d = ahead > 720 ? ahead - 1440 : ahead; // later is positive
+    low = wrap(low + (d < 0 ? d : Math.min(d, BODY_CLOCK_DELAY_H_PER_SLEEP * 60)));
+  }
+  return low;
+}
+
 /**
  * The lived day's curve. `sleeps` are main sleeps and naps already slept (from records). `planned` is sleep expected
  * later in the window (your usual post-shift sleep), so the curve after it reflects waking rested. Sleep pressure starts
- * from the model's midpoint three days back so the curve has settled by the window.
+ * from the model's midpoint three days back so the curve has settled by the window. `history` is the main sleeps the
+ * body clock is placed from (C4.1: the last 28 days); without it, `nights`.
  */
 export function energyCurve(input: {
   from: number; to: number; sleeps: readonly SleepSpan[]; planned?: readonly SleepSpan[]; nights: readonly SleepSpan[];
-  shiftEnd?: number | null | undefined;
+  shiftEnd?: number | null | undefined; history?: readonly SleepSpan[];
 }): EnergyCurve | null {
   const wake = habitualWake(input.nights);
   if (wake === null) return null;
+  const lowMinutes = bodyClockLow(input.history?.length ? input.history : input.nights)!;
   const spans = [...input.sleeps, ...(input.planned ?? [])].sort((a, b) => a.start - b.start);
   const asleep = (t: number) => spans.some((s) => t >= s.start && t < s.end);
-  // Circadian low: LOW_BEFORE_WAKE_H before the habitual wake, each day. C peaks 12 h later.
-  const lowMinutes = ((wake - LOW_BEFORE_WAKE_H * 60) % 1440 + 1440) % 1440;
+  // Circadian low: where the body clock sits (bodyClockLow), each day. C peaks 12 h later.
   const circadian = (t: number) => {
     const d = new Date(t), m = d.getHours() * 60 + d.getMinutes();
     return -CIRCADIAN_AMPLITUDE * Math.cos((2 * Math.PI * (m - lowMinutes)) / 1440);
@@ -110,7 +153,7 @@ export function energyCurve(input: {
   const shiftEnd = input.shiftEnd ?? null;
   const drive = shiftEnd !== null && best && shiftEnd < best.end && shiftEnd + DRIVE_MINUTES * 60_000 > best.start
     ? { start: shiftEnd, end: shiftEnd + DRIVE_MINUTES * 60_000 } : null;
-  return { from: input.from, to: input.to, points, low: best, drive, basis: { wakeMinutes: wake, nights: input.nights.length } };
+  return { from: input.from, to: input.to, points, low: best, drive, basis: { wakeMinutes: wake, nights: input.nights.length, lowMinutes } };
 }
 
 /**

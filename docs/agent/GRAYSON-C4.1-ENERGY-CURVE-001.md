@@ -2,12 +2,14 @@
 
 - **Owner authorization:** Gavin, 2026-11-23 22:01 CT: "Go on C4.1, the energy-curve fix" (choosing C4.1 from the
   offered next objectives). This phase is **investigation and paperwork only**: the brief and the
-  [decision draft](../decisions/GRAYSON-C4.1-ENERGY-CURVE-001.md) go to Gavin before any model code changes.
-  Implementation starts only on his approval of an option and the open questions below.
+  [decision](../decisions/GRAYSON-C4.1-ENERGY-CURVE-001.md) went to Gavin before any model code changed.
+  Gavin, 2026-11-24 02:16 CT: **"Option R"**; on the explanation sentence, **"Yes, rewrite that clause"**; on the wider
+  lowest stretch, **"Accept the wider stretch in C4.1"**. That approves implementation of option R as below.
 - **Lane:** PROTECTED (TODAY panel guidance, campaign plan C4.1). Independent exact-head review, green required CI,
   Gavin merges. No Builder merge.
-- **Builder:** Grok Bot. **Starting commit:** `origin/master` `82a927e5bb599b4531825a67865e6f1b0a63130f` (#633, #634,
-  #635 merged). **Branch:** `codex/c41-energy-curve`. **PR:** pending (not opened in this phase).
+- **Builder:** Grok Bot. **Starting commit:** investigation on `82a927e5`; implementation rebased onto `origin/master`
+  `1fd2c47f` (includes `a870b63a`). **Branch:** `codex/c41-energy-curve`. **PR:** see the branch's PR (status lives in
+  the PR body while #606 is the oldest open PR, per DEV-FLOW-002).
 - **Operator benefit:** on a night run the curve's 24-hour rhythm stops assuming his body clock has already flipped to
   his day sleep. The rhythm's low stays in the waking night (late shift, drive home) on nights 1–3, then drifts later
   at a realistic pace, instead of jumping 7 hours into day sleep whenever day sleeps become the majority of the week.
@@ -40,7 +42,7 @@ What the #592 reconciliation already corrected still holds: with planned sleep s
 05:00–08:00; 22–06:30: 04:30–07:30, drive line present). So this is a shape fix (the rhythm under the line, and its
 mid-shift "peak"), not a missing warning.
 
-## Proposed fix (recommended option R in the decision draft; awaits Gavin)
+## The fix (option R, approved 2026-11-24)
 
 In `application/alertness.ts`, replace the fixed anchor with a pure `bodyClockLow(history)`:
 - Walk main sleeps (≥ 180 min) of the last 28 days oldest first, starting at the oldest sleep's own target
@@ -50,6 +52,10 @@ In `application/alertness.ts`, replace the fixed anchor with a pure `bodyClockLo
   it at once.
 - `energyCurve` takes the history separately; `nights` (7-day, MIN_NIGHTS gate, "usual wake" shown) is unchanged.
   `EnergyCurve.basis` gains `lowMinutes`.
+- TODAY's "How this is worked out" sentence: "against a 24-hour rhythm whose low sits about 1.5 hours before your usual
+  wake" becomes "against a 24-hour rhythm whose low sits about 1.5 hours before you wake from a night-time sleep and,
+  on a run of day sleeps, moves later by at most half an hour a day, because most night workers' body clocks lag."
+  The two new sources join the panel's source list. Nothing else on the panel changes.
 
 Exclusions: no change to sleep pressure, `LOW_FRACTION`, the lowest-stretch rule, the drive rule, caffeine, nap,
 shift plan, Garmin import, schema, backup, Engine/`evaluate`, recommendations, dependencies or providers. `src/engine/**`
@@ -62,7 +68,7 @@ and `test-fixtures/protected/**` are not touched.
   night-shift adaptation at this size; full phase-response-curve models (Kronauer/Forger) need light data BEYOND
   doesn't record.
 
-## Acceptance (to run in the build phase)
+## Acceptance
 
 - New `tests/alertness.test.ts` cases, run in UTC and America/Chicago (and across both DST dates):
   1. **Property (C4.1 done-when):** for shifts 18–06, 19–07 and 22–06:30, each preceded by ≥ 2 night sleeps
@@ -79,14 +85,14 @@ and `test-fixtures/protected/**` are not touched.
   are unchanged.
 - Existing `alertness`, `alertnessQueries`, `EnergyCurve001` and TODAY suites pass unchanged (their histories are day
   sleeps only, so their anchor does not move). No protected fixture or snapshot changes.
+- `tests/browser/EnergyCurve001.test.tsx` asserts the approved sentence and adds 360 px to its overflow/16 px widths.
 - Typecheck, `check:architecture`, `check:risk` (expect PROTECTED), build, full `TZ=UTC npm run verify`; TODAY panel
-  before/after screenshots at 320/360/412 px if the explanation sentence changes.
+  before/after screenshots at 320/360/412 px with "How this is worked out" open:
+  [`screenshots/GRAYSON-C4.1-ENERGY-CURVE-001/`](screenshots/GRAYSON-C4.1-ENERGY-CURVE-001/) (seeded lived month,
+  2026-10-21 22:10 CT: "Lowest stretch 03:45–06:45" before, "03:30–06:45" after; drive line unchanged).
 
-## Open for Gavin before the build
+## Gavin's answers (2026-11-24 02:16 CT)
 
-1. **Option:** R (recommended), N (no adaptation), or 0 (no maths change, only correct C4.1's wording). See decision.
-2. **Copy:** C4.1's done-when says "copy unchanged", but "a 24-hour rhythm whose low sits about 1.5 hours before your
-   usual wake" would no longer be true. Approve a one-clause amendment (draft in the decision), or keep it word for
-   word and accept it as approximate.
-3. **Wider lowest stretch:** with the rhythm's low in the night, "Lowest stretch" widens on short runs (night 3 of
-   18–06: 04:00–07:00 → 01:15–07:00). Accept in C4.1, or tighten it in a separate follow-up.
+1. Option: **"Option R"**.
+2. Copy: **"Yes, rewrite that clause"**: the amendment above replaces C4.1's "copy unchanged".
+3. Wider lowest stretch on short runs: **"Accept the wider stretch in C4.1"**. No `LOW_FRACTION` change.
