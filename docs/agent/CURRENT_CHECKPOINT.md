@@ -1,11 +1,13 @@
-# Current state — after #629 (2026-11-24)
+# Current state — after #632 (2026-11-24)
 
-- **Master:** includes TRAIN finish 1–3 (#625/#626, #627, #628) and C4.6 water target (#629). Builder: Claude Code.
-- **Open:** #630 (TRAIN placements: MY PROGRAMME below the live workout; Gym-mode Delta above SET DETAILS;
-  Protected; Gavin merges). #606 (C3.4b + C3.4c; Gavin's merge). This tidy-up (Routine).
-- **TRAIN:** planned work complete once #630 merges, except programme adaptation, which waits for 3–4 weeks of real
-  use by design.
-- **Next (Gavin, 2026-11-24: "Tidy up and we will do 9.2"):** C9.2 for DATA home (Protected).
+- **Master:** includes TRAIN finish 1–3 (#625/#626, #627, #628), C4.6 water target (#629), TRAIN placements (#630)
+  and C9.2 for DATA home (#632). Builder: Claude Code.
+- **Open:** #606 (C3.4b + C3.4c; Gavin's merge). This tidy-up (#631, Routine).
+- **TRAIN:** planned work complete, except programme adaptation, which waits for 3–4 weeks of real use by design.
+- **C9.2:** done for TRAIN (#628) and DATA home (#632). Small follow-up noted in #632's review: "RECORDED THIS DAY"
+  wraps to two lines inside the History frame at 320 px.
+- **Next:** Gavin's choice. Offered: C4.3 caffeine log (needs a rule-change approval), C4.5 monthly review, or making
+  a dropped LOG tap visible/retried (see MealRoundTrip below).
 - **Flaky tests:** FieldRehearsal TRAIN contrast (axe during a late fade-in) fixed in this tidy-up (#631).
   **Still known: MealRoundTrip** (~2 in 5 paired runs, `helpers/mealSheet.ts:20`). The failure screenshots show LOG open:
   the MEAL tap inside LOG is lost. Suspected (unconfirmed; 4 instrumented paired runs did not reproduce) cause: App's

@@ -126,7 +126,7 @@ status of its own.
 | C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
 | C9.1 | TodayScreen split (TODAY-SPLIT-002) | Not started |  |
-| C9.2 | Quiet Command finish | In progress (TRAIN done #628; DATA home next) | [TRAIN brief](agent/GRAYSON-TRAIN-FINISH-3.md) |
+| C9.2 | Quiet Command finish | Done (TRAIN #628; DATA home #632) | [TRAIN brief](agent/GRAYSON-TRAIN-FINISH-3.md), [DATA brief](agent/GRAYSON-C9.2-DATA-001.md) |
 | C9.3 | Navigation study | Not started |  |
 | C9.4 | Accessibility and motion pass | Not started |  |
 | C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
