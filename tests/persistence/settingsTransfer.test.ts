@@ -135,7 +135,7 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.alfredReviewSeen": "seen", "beyond.bootShownFor": "seen", "beyond.reportSeen": "seen", "beyond:deltaSeen": "seen",
       "beyond.orientation.v1": "seen", "beyond.shiftChange": "seen", "beyond.today.lastLook.v1": "seen",
       "beyond.more.recents.v1": "history", "beyond.catchup.done.v1": "done flag", "beyond.close.done.v1": "done flag",
-      "beyond.coach.skips.v1": "dismissal", "beyond.eating.dismissed.v1": "dismissal", "beyond.workRunRedraft.dismissed.v1": "dismissal",
+      "beyond.coach.skips.v1": "dismissal", "beyond.eating.dismissed.v1": "dismissal", "beyond.logNudge.dismissed.v1": "dismissal", "beyond.workRunRedraft.dismissed.v1": "dismissal",
       "beyond.weeklyReviewLater": "snooze", "beyond.workoutCallLater.": "snooze", "beyond.shiftSleepPlan.skip.": "dismissal",
       "beyond:sleepDraftDismissedDay": "dismissal", "beyond:outcomeDismissed:": "dismissal", "beyond:shiftHandoffSkipped:": "dismissal",
       "beyond:modePin:": "temporary pin", "beyond:autoBackupSnoozedUntil": "snooze", "beyond:lastBackupAt": "clock",
