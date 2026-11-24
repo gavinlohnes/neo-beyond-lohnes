@@ -117,7 +117,10 @@ describe("GRAYSON-FIX-UNDO-001 on TODAY's log sheet", () => {
     await screen.getByRole("button", { name: "Edit Water 16 oz at 19:15", exact: true }).click();
     const remove = waterSheet().getByRole("button", { name: "REMOVE", exact: true });
     await expect.element(remove).toBeVisible();
-    (remove.element() as HTMLElement).focus();
+    // Let the sheet place its own opening focus first, then Tab to REMOVE as a keyboard user would.
+    await settle();
+    for (let i = 0; i < 30 && document.activeElement !== remove.element(); i++) await userEvent.tab();
+    expect(document.activeElement).toBe(remove.element());
     await userEvent.keyboard("{Enter}");
     const undo = waterSheet().getByRole("button", { name: "Undo the removal", exact: true });
     await expect.element(undo).toBeVisible();
