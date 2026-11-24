@@ -25,9 +25,10 @@ describe("DATA-HOME-001", () => {
     for (const label of ["Weight", "Photos", "Measurements", "Whole picture", "Your rotation", "History"]) {
       await expect.element(nav.getByRole("button", { name: label, exact: true })).toBeVisible();
     }
+    // GRAYSON C9.2: the VIEWS rule's short mono-capital label follows the dashboard's label amendment (2026-11-14).
     const small: string[] = [];
     const walker = document.createTreeWalker(document.querySelector(".data-home")!, NodeFilter.SHOW_TEXT);
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.textContent?.trim() && parseFloat(getComputedStyle(n.parentElement!).fontSize) < 16) small.push(n.textContent.trim());
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) if (n.textContent?.trim() && !n.parentElement!.closest(".bf-panel__label") && parseFloat(getComputedStyle(n.parentElement!).fontSize) < 16) small.push(n.textContent.trim());
     expect(small).toEqual([]);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
     // Each view shortcut opens its view, and BACK TO DATA returns to the top.

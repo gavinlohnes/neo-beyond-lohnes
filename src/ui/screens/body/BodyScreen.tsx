@@ -2514,7 +2514,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       </FieldDisclosure></div>
       {/* GRAYSON C4.8a: Eating Window setup; off until he turns it on. */}
       <EatingWindowSetup active={visible} />
-      <section aria-label="History"><h2 className="section-label">HISTORY</h2>
+      {/* GRAYSON C9.2: History wears the panel frame the dashboard uses; its contents are unchanged. */}
+      <section aria-label="History" className="bf bf-panel bf-panel--wide data-history"><h2 className="bf-panel__label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}
           days={{ selected: healthDay, disabled: busy, refreshKey: dataRevision, onHistory: onHealthHistory, onSelect: setHealthDay, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
