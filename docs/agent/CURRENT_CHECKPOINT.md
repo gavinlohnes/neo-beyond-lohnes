@@ -7,10 +7,11 @@
   use by design.
 - **Next (Gavin, 2026-11-24: "Tidy up and we will do 9.2"):** C9.2 for DATA home (Protected).
 - **Flaky tests:** FieldRehearsal TRAIN contrast (axe during a late fade-in) fixed in this tidy-up (#631).
-  **Still known: MealRoundTrip** (~2 in 5 paired runs, `helpers/mealSheet.ts:20`). The MEAL tap inside LOG is dropped
-  while a meal read/write from the previous step is still in flight: App's `canNavigate()` silently ignores it
-  (`mealInFlight`). Fixing it means either a visible "busy" state on LOG's options or queuing the tap, which is a
-  behaviour change for owner decision, not a test tidy-up. The helper's wait for no open dialog stays (harmless).
+  **Still known: MealRoundTrip** (~2 in 5 paired runs, `helpers/mealSheet.ts:20`). The failure screenshots show LOG open:
+  the MEAL tap inside LOG is lost. Suspected (unconfirmed; 4 instrumented paired runs did not reproduce) cause: App's
+  `canNavigate()` silently ignores the tap while the previous step's meal read/write is still in flight
+  (`mealInFlight`). If confirmed, the fix is a behaviour change (a visible busy state on LOG's options, or queuing the
+  tap) for owner decision, not a test tidy-up. The helper's wait for no open dialog stays (harmless).
 - **Field check pending:** logger (WHEN, catch-up), eating window, water target, SHORT, PROGRESS, Delta and the train
   window on real shifts.
 
