@@ -1,4 +1,5 @@
 import type { DailyNote } from "../domain/dailyNotes";
+import { getEffectiveCheckIns } from "./queries";
 import { clockDifference, deriveSleepRhythm, type SleepRhythm } from "../engine/sleepRhythm";
 import { db } from "../persistence/db";
 import { wikiLabels, personNames } from "./dailyNoteQueries";
@@ -141,7 +142,7 @@ export async function getMonthRecap(year: number, month: number, now: Date = new
   const days = await getMonth(year, month);
   const ids = days.flatMap((d) => (d.dayId ? [d.dayId] : []));
   const [checkIns, notes, view, experiments, records, summaries] = await Promise.all([
-    db.checkIns.where("beyondDayId").anyOf(ids).toArray(), db.dailyNotes.bulkGet(ids), getPeopleView(now).catch(() => null),
+    getEffectiveCheckIns(ids), db.dailyNotes.bulkGet(ids), getPeopleView(now).catch(() => null),
     getExperiments(), getImportedSleep(), getDaySummaries(),
   ]);
   const energy = new Map<string, number>();

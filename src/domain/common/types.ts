@@ -49,6 +49,11 @@ export interface StateCheckIn {
    */
   draft?: DraftDecision;
   /**
+   * GRAYSON-CHECKIN-EDIT-001: set only on a corrected row, naming the check-in row it supersedes. The corrected row
+   * keeps the original's `recordedAt` and carries no `draft` (that describes how the original was submitted).
+   */
+  correctsCheckInId?: string;
+  /**
    * Deterministic same-instant tie-break (event-ordering redesign,
    * following Drop 02b): recordedAt stays the real, unmodified moment this
    * was recorded — seq only disambiguates two records that are otherwise
@@ -273,6 +278,10 @@ export type DomainEventType =
   | "EATING_WINDOW_MARKED"
   | "EATING_WINDOW_DAY_SKIPPED"
   | "EATING_WINDOW_MARK_VOIDED"
+  // GRAYSON-CHECKIN-EDIT-001 (Gavin, 2026-11-24): a sent check-in corrected, and that fix undone. USER-sourced, under the
+  // check-in's own beyondDayId. Append-only: no check-in row is edited or deleted. Payloads below.
+  | "CHECK_IN_CORRECTED"
+  | "CHECK_IN_CORRECTION_UNDONE"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"
@@ -1053,6 +1062,20 @@ export interface SetUndonePayload {
   exerciseId: string;
   setNumber: number;
   performedSetId: string;
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: `checkIn` is the corrected row, also stored in `checkIns`. */
+export interface CheckInCorrectedPayload {
+  commandId: string;
+  supersedesCheckInId: string;
+  originalCheckInId: string;
+  checkIn: StateCheckIn;
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: only the newest standing fix of a check-in can be undone. */
+export interface CheckInCorrectionUndonePayload {
+  commandId: string;
+  correctionEventId: string;
 }
 
 /** SHIFT DOWN mirrors RESET's shape: duration input, then a two-step START/COMPLETE flow. */

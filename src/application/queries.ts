@@ -1,6 +1,7 @@
 import { db } from "../persistence/db";
 import { effectiveWorkMarks, type EffectiveWorkMark } from "../engine/workMarks";
 import { effectiveLogTimes } from "./logTimes";
+import { checkInChains, chainForCheckIn, hiddenCheckInIds, type CheckInChain } from "../domain/checkInCorrections";
 import type {
   BeyondDay,
   CaptureItem,
@@ -83,8 +84,43 @@ export async function getActiveDay(): Promise<BeyondDay | undefined> {
 export async function getLatestCheckIn(
   beyondDayId: string,
 ): Promise<StateCheckIn | undefined> {
-  const all = await db.checkIns.where("beyondDayId").equals(beyondDayId).toArray();
-  return all.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq)).at(-1);
+  const [all, hidden] = await Promise.all([
+    db.checkIns.where("beyondDayId").equals(beyondDayId).toArray(),
+    hiddenCheckInRows(),
+  ]);
+  return all
+    .filter((c) => !hidden.has(c.id))
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
+    .at(-1);
+}
+
+const CHECK_IN_CHAIN_TYPES = ["STATE_CHECKED_IN", "CHECK_IN_CORRECTED", "CHECK_IN_CORRECTION_UNDONE"] as const;
+
+/** GRAYSON-CHECKIN-EDIT-001: check-in rows a fix superseded, or fixes that were undone. Empty when nothing was fixed. */
+async function hiddenCheckInRows(): Promise<Set<string>> {
+  const corrections = await db.events.where("type").anyOf(["CHECK_IN_CORRECTED", "CHECK_IN_CORRECTION_UNDONE"]).toArray();
+  if (corrections.length === 0) return new Set();
+  return hiddenCheckInIds(await db.events.where("type").anyOf([...CHECK_IN_CHAIN_TYPES]).toArray());
+}
+
+/**
+ * GRAYSON-CHECKIN-EDIT-001: every check-in that counts, with fixed answers in place of the ones they replaced. The one
+ * reader for anything that summarises check-ins; only `currentMaxSeq` and record integrity read raw rows.
+ */
+export async function getEffectiveCheckIns(beyondDayIds?: readonly string[]): Promise<StateCheckIn[]> {
+  const [rows, hidden] = await Promise.all([
+    beyondDayIds ? db.checkIns.where("beyondDayId").anyOf([...beyondDayIds]).toArray() : db.checkIns.toArray(),
+    hiddenCheckInRows(),
+  ]);
+  return rows.filter((c) => !hidden.has(c.id));
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: the chain any check-in row belongs to, so the original row opens the current version. */
+export async function getCheckInChain(checkInId: string): Promise<CheckInChain | undefined> {
+  const row = await db.checkIns.get(checkInId);
+  if (!row) return undefined;
+  const events = await db.events.where("beyondDayId").equals(row.beyondDayId).toArray();
+  return chainForCheckIn(checkInChains(events), checkInId);
 }
 
 /** See getLatestCheckIn's note — same fix, sorted by issuedAt. */

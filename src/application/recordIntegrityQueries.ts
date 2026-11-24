@@ -27,7 +27,9 @@ import {
  *   - days: DAY_STARTED for every day row and the reverse; DAY_ENDED for
  *     every ENDED day, and no DAY_ENDED on a day still saved ACTIVE;
  *   - check-ins: every check-in row has its STATE_CHECKED_IN event (one
- *     direction — the oldest backups kept check-ins as events only);
+ *     direction — the oldest backups kept check-ins as events only); a fixed
+ *     check-in row (GRAYSON-CHECKIN-EDIT-001) has its CHECK_IN_CORRECTED event,
+ *     and the reverse;
  *   - recommendations: every row has RECOMMENDATION_ISSUED and the reverse;
  *   - missions, obligations, journal entries: created events both ways, and
  *     ARCHIVED / SATISFIED / RELEASED / REVIEWED status both ways.
@@ -51,6 +53,7 @@ const CHECKED_EVENT_TYPES = [
   "DAY_STARTED",
   "DAY_ENDED",
   "STATE_CHECKED_IN",
+  "CHECK_IN_CORRECTED",
   "RECOMMENDATION_ISSUED",
   "MISSION_CREATED",
   "MISSION_ARCHIVED",
@@ -71,6 +74,12 @@ export interface RecordSnapshot {
   obligations: readonly Obligation[];
   journal: readonly DecisionJournalEntry[];
   events: readonly DomainEvent[];
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: the corrected row a CHECK_IN_CORRECTED event added. */
+function correctedRowId(event: DomainEvent): string | undefined {
+  const checkIn = payloadFields(event).checkIn;
+  return checkIn && typeof checkIn === "object" ? stringField(checkIn as Record<string, unknown>, "id") : undefined;
 }
 
 function idsOf(events: readonly DomainEvent[], type: DomainEvent["type"], idOf: (e: DomainEvent) => string | undefined): Map<string, DomainEvent> {
@@ -172,18 +181,28 @@ export function findRecordMismatches(snapshot: RecordSnapshot): RecordMismatch[]
     message: m.message,
   }));
 
+  const correctedIds = new Set(idsOf(events, "CHECK_IN_CORRECTED", correctedRowId).keys());
   const dayLabel = (d: BeyondDay | undefined) => (d ? `Day from ${localDay(d.startedAt)}` : "A day");
   mismatches.push(
     ...pairCreated({ area: "DAY", rows: days, events, type: "DAY_STARTED", idOf: (e) => e.beyondDayId, label: dayLabel }),
     ...pairStatus({ area: "DAY", rows: days, events, type: "DAY_ENDED", status: "ENDED", idOf: (e) => e.beyondDayId, label: dayLabel, verb: "ended" }),
     ...pairCreated({
       area: "DAY",
-      rows: checkIns,
+      rows: checkIns.filter((c) => !correctedIds.has(c.id)),
       events,
       type: "STATE_CHECKED_IN",
       idOf: (e) => stringField(payloadFields(e), "id"),
       label: (c) => `Check-in from ${localDay(c.recordedAt)}`,
       bothWays: false,
+    }),
+    // GRAYSON-CHECKIN-EDIT-001: a corrected check-in row is paired with its CHECK_IN_CORRECTED event, both ways.
+    ...pairCreated({
+      area: "DAY",
+      rows: checkIns.filter((c) => correctedIds.has(c.id) || c.correctsCheckInId !== undefined),
+      events,
+      type: "CHECK_IN_CORRECTED",
+      idOf: correctedRowId,
+      label: (c) => `Fixed check-in from ${localDay(c.recordedAt)}`,
     }),
     ...pairCreated({
       area: "DAY",

@@ -97,7 +97,9 @@ import { deriveCapacity } from "../../../engine/capacity";
 import { dismissOutcome } from "../../../persistence/outcomeDismissals";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
-import { useUndoOpen } from "../../hooks/useUndoWindow";
+import { FIX_UNDO_MS, useUndoOpen, useUndoWindow } from "../../hooks/useUndoWindow";
+import { CheckInFixSheet, FixUndoBanner } from "./CheckInFix";
+import { undoCheckInCorrection, type CheckInCorrectionResult } from "../../../application/checkInCorrectionCommands";
 import type { BodyFocus } from "../../shortcuts";
 import { isPrimaryReset, isPrimaryShiftDown, type SessionOutcome } from "./resetShiftDownCopy";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
@@ -429,6 +431,9 @@ export function TodayScreen({
   const [workPeriodStartedAt, setWorkPeriodStartedAt] = useState<string | null>(null);
   // OWNER-GO-001: after a check-in, one plain line on what it changed and what holds the answer.
   const [checkInOutcome, setCheckInOutcome] = useState<string | null>(null);
+  // GRAYSON-CHECKIN-EDIT-001: which check-in the fix sheet is open on, and the Undo shown for FIX_UNDO_MS after a fix.
+  const [fixCheckInId, setFixCheckInId] = useState<string | null>(null);
+  const [fixUndo, setFixUndo] = useUndoWindow<{ message: string; correctionEventId?: string }>(FIX_UNDO_MS);
   // DROP 0: where the day's work context came from — "per schedule" only while the saved schedule's value stands.
   const [workContextSource, setWorkContextSource] = useState<WorkContextSource | undefined>(undefined);
   const [unresolvedPostShift, setUnresolvedPostShift] = useState(false);
@@ -1197,6 +1202,37 @@ export function TodayScreen({
       await refresh();
       setValues({});
       setCheckInFormOpen(false);
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  /** GRAYSON-CHECKIN-EDIT-001: a fix saved (or put back) in the fix sheet. Today's advice was re-worked by the command. */
+  async function handleCheckInFixed(result: CheckInCorrectionResult, before: string | null = recommendation?.kind ?? null) {
+    if (result.status === "NO_OP") { setFixUndo({ message: "Nothing changed." }); return; }
+    if (result.status !== "CORRECTED" && result.status !== "UNDONE") return;
+    const outcome = result.recommendation ? ` ${describeCheckInOutcome(before, result.recommendation).replace(" This check-in didn't change it.", "")}` : "";
+    setCheckInOutcome(null);
+    setFixUndo(result.status === "CORRECTED"
+      ? { message: `Check-in fixed.${outcome}`, correctionEventId: result.correctionEventId }
+      : { message: `Fix put back.${outcome}` });
+    await refresh();
+  }
+
+  async function handleUndoCheckInFix() {
+    const acknowledge = captureCommitFeedback();
+    const target = fixUndo?.correctionEventId;
+    if (!target || busy || busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      const result = await undoCheckInCorrection(target);
+      if (result.status === "UNDONE") acknowledge("MEDIUM");
+      setFixUndo({ message: result.status === "UNDONE" ? "Fix undone." : "That fix was already changed." });
+      await refresh();
+    } catch (cause) {
+      setCheckInError(describeError(cause, "Undo didn't save. Try again."));
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -2154,6 +2190,11 @@ export function TodayScreen({
     );
   }
 
+  const checkInFixArea = <>
+    <CheckInFixSheet checkInId={fixCheckInId} onClose={() => setFixCheckInId(null)} onChanged={(result) => handleCheckInFixed(result)} />
+    {fixUndo && <FixUndoBanner message={fixUndo.message} busy={busy} onUndo={fixUndo.correctionEventId ? () => void handleUndoCheckInFix() : undefined} />}
+  </>;
+
   function renderCheckInTool() {
     return (
       <div id="today-check-in">
@@ -2174,6 +2215,8 @@ export function TodayScreen({
           quickCheckInValues={quickCheckInValues}
           onQuickCheckIn={() => void handleQuickCheckIn()}
           onSubmitCheckIn={() => void handleCheckIn()}
+          onFix={checkIn ? () => setFixCheckInId(checkIn.id) : undefined}
+          fixArea={checkInFixArea}
         />
       )}
 
@@ -2459,6 +2502,8 @@ export function TodayScreen({
               quickCheckInValues={quickCheckInValues}
               onQuickCheckIn={() => void handleQuickCheckIn()}
               onSubmitCheckIn={() => void handleCheckIn()}
+              onFix={checkIn ? () => setFixCheckInId(checkIn.id) : undefined}
+              fixArea={checkInFixArea}
             />
           );
         }
@@ -2481,6 +2526,8 @@ export function TodayScreen({
               quickCheckInValues={quickCheckInValues}
               onQuickCheckIn={() => void handleQuickCheckIn()}
               onSubmitCheckIn={() => void handleCheckIn()}
+              onFix={checkIn ? () => setFixCheckInId(checkIn.id) : undefined}
+              fixArea={checkInFixArea}
             />
           </>
         );

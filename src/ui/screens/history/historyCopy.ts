@@ -1,5 +1,5 @@
 import { PREPARATION_LABELS, type PreparationValue } from "../../../domain/preparation";
-import type { DomainEvent, UrgeTrigger } from "../../../domain/common/types";
+import type { CheckInCorrectedPayload, DomainEvent, StateCheckIn, UrgeTrigger } from "../../../domain/common/types";
 import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
 import { formatDuration } from "../body/bodyScreenCopy";
 
@@ -107,6 +107,11 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Check-in: energy ${p.energy}, stress ${p.stress}, mood ${p.mood}, soreness ${p.soreness}, urge ${p.alcoholUrge}${
         p.draft === "CONFIRMED" ? " (BEYOND's draft, as proposed)" : p.draft === "ADJUSTED" ? " (BEYOND's draft, adjusted)" : ""
       }.`;
+    // GRAYSON-CHECKIN-EDIT-001: HistoryScreen adds the before and after from the day's events (describeCheckInFix).
+    case "CHECK_IN_CORRECTED":
+      return "Check-in fixed.";
+    case "CHECK_IN_CORRECTION_UNDONE":
+      return "Check-in fix undone: the answers before it count again.";
     case "RECOMMENDATION_ISSUED":
       return `Recommendation: ${kindLabel(p.kind)}.`;
     case "RECOMMENDATION_ACCEPTED":
@@ -171,4 +176,22 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
     default:
       return event.type;
   }
+}
+
+const CHECK_IN_LABELS = [["energy", "energy"], ["stress", "stress"], ["mood", "mood"], ["soreness", "soreness"], ["alcoholUrge", "urge"]] as const;
+
+/**
+ * GRAYSON-CHECKIN-EDIT-001: "Check-in fixed: energy 2 → 4." The before comes from the row the fix superseded, found in
+ * the same day's events; falls back to the fixed answers alone if that row isn't there.
+ */
+export function describeCheckInFix(event: DomainEvent, dayEvents: readonly DomainEvent[]): string {
+  const { supersedesCheckInId, checkIn: after } = event.payload as CheckInCorrectedPayload;
+  let before: StateCheckIn | undefined;
+  for (const e of dayEvents) {
+    if (e.type === "STATE_CHECKED_IN" && (e.payload as StateCheckIn).id === supersedesCheckInId) before = e.payload as StateCheckIn;
+    if (e.type === "CHECK_IN_CORRECTED" && (e.payload as CheckInCorrectedPayload).checkIn.id === supersedesCheckInId) before = (e.payload as CheckInCorrectedPayload).checkIn;
+  }
+  if (!before) return `Check-in fixed: ${CHECK_IN_LABELS.map(([key, label]) => `${label} ${after[key]}`).join(", ")}.`;
+  const changed = CHECK_IN_LABELS.filter(([key]) => before[key] !== after[key]).map(([key, label]) => `${label} ${before[key]} → ${after[key]}`);
+  return changed.length ? `Check-in fixed: ${changed.join(", ")}.` : "Check-in fixed.";
 }
