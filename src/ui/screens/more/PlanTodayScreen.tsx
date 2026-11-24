@@ -13,6 +13,8 @@ import { OperatorHeader } from "../../components/OperatorHeader";
 import { Section, SectionEmpty, SectionUnavailable } from "../../components/Section";
 import { EMPTY_RECURRENCE, RecurrencePicker, recurrenceInputFor, sameRecurrence } from "./IntentScreen";
 import type { IntentFocus } from "./IntentScreen";
+import { EstimateFields } from "../../components/EstimateFields";
+import { EMPTY_ESTIMATE, estimateTotalLine, formatEstimate, readEstimateForm } from "../../../domain/intent/estimate";
 
 /** FORECAST-DECIDE-001: listRequest opens a given list (a new key opens it again), e.g. No date from the forecast. */
 export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapture }: { active?: boolean; onOpenCapture?: (() => void) | undefined; onOpen: (focus: IntentFocus | null) => void; listRequest?: { key: number; list: "today" | "next7" | "noDate" | "week" } | null }) {
@@ -24,10 +26,12 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
   const [due, setDue] = useState("");
   const [mission, setMission] = useState("");
   const [recurrence, setRecurrence] = useState(EMPTY_RECURRENCE);
+  // TIMEBOX-001: his optional estimate for the new task.
+  const [estimate, setEstimate] = useState(EMPTY_ESTIMATE);
   // QUICK-ADD-001: one tap keeps the words exactly as typed, for today.
   const [asTyped, setAsTyped] = useState(false);
   // Review blocker 2: a due date, Mission or repetition alone is unfinished input too.
-  useSessionDraft("plan-create", [title, due, mission].some((value) => value.length > 0) || !sameRecurrence(recurrence, EMPTY_RECURRENCE));
+  useSessionDraft("plan-create", [title, due, mission, estimate.hours, estimate.minutes].some((value) => value.length > 0) || !sameRecurrence(recurrence, EMPTY_RECURRENCE));
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,6 +61,8 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
   async function addTask() {
     const acknowledge = captureCommitFeedback();
     if (inFlight.current || !title.trim() || !plan) return;
+    const estimateRead = readEstimateForm(estimate);
+    if (!estimateRead.ok) { setError(estimateRead.message); return; }
     inFlight.current = true; setBusy(true); setError(null); setReceipt(null);
     const name = title.trim();
     try {
@@ -67,9 +73,10 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
       const quick = !due && !rule && !asTyped ? parseQuickAdd(name) : null;
       await createObligation({ title: quick?.title ?? name, plannedAt: quick?.date ?? current.date, ...(due ? { dueAt: due } : {}),
         ...(quick?.time ? { description: `At ${quick.time}` } : {}),
-        ...(mission ? { missionId: mission } : {}), ...(rule ? { recurrence: rule } : {}) });
+        ...(mission ? { missionId: mission } : {}), ...(rule ? { recurrence: rule } : {}),
+        ...(estimateRead.minutes !== null ? { estimateMinutes: estimateRead.minutes } : {}) });
       acknowledge("LIGHT");
-      setTitle(""); setDue(""); setMission(""); setRecurrence(EMPTY_RECURRENCE); setAsTyped(false);
+      setTitle(""); setDue(""); setMission(""); setRecurrence(EMPTY_RECURRENCE); setEstimate(EMPTY_ESTIMATE); setAsTyped(false);
       setReceipt(quick ? `Added “${quick.title}” for ${planDate(quick.date)}${quick.time ? ` at ${quick.time}` : ""}.` : `Added “${name}” to your plan.`);
       await refresh();
       titleInput.current?.focus({ preventScroll: true });
@@ -103,6 +110,7 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
           item.plannedAt ? item.plannedAt === plan!.date ? "Planned today" : `Planned · ${planDate(item.plannedAt)}` : undefined,
           item.dueAt ? item.dueAt < plan!.date ? `Due · from ${planDate(item.dueAt)}` : item.dueAt === plan!.date ? "Due today" : `Due · ${planDate(item.dueAt)}` : undefined,
           !item.plannedAt && !item.dueAt ? "No due or planned date" : undefined,
+          item.estimateMinutes !== undefined ? `Est. ${formatEstimate(item.estimateMinutes)}` : undefined,
           plan!.missions.find((parent) => parent.id === item.missionId)?.title].filter(Boolean).join(" · ")}</span>
         <span className="visually-hidden">Open task</span>
       </button>
@@ -120,6 +128,8 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
     <Section id="plan-commitments" eyebrow="YOUR COMMITMENTS" title={list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}
       wayIn={{ label: "All missions", ariaLabel: "Open all missions and obligations", onClick: () => onOpen(null) }}>
       <p className="more-section-purpose">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${plan ? planDate(plan.through) : "the next seven days"}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date."}</p>
+      {/* TIMEBOX-001: the sum of his own estimates for today, never free time or a full day. */}
+      {list === "today" && plan && !readError && (() => { const line = estimateTotalLine(plan.today); return line && <p className="meta" data-estimate-total>{line}</p>; })()}
       {readError ? <div role="alert"><SectionUnavailable>{readError} Tasks are unavailable, not empty.</SectionUnavailable><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>
         : !plan ? <p role="status">Reading your plan…</p> : rows(plan[list], list === "today"
           ? { line: "A little breathing room.", detail: "No tasks are planned or due today." }
@@ -129,16 +139,17 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
     </Section>
     <form className="plan-composer" onSubmit={(event) => { event.preventDefault(); void addTask(); }}>
       <Section id="plan-add-task" eyebrow="YOUR PLAN" title="Add a task"
-        wayIn={{ label: quick ? `ADD FOR ${planDate(quick.date).toUpperCase()}` : "ADD TO TODAY", type: "submit", disabled: busy || !title.trim() || !plan }}>
+        wayIn={{ label: quick ? `ADD FOR ${planDate(quick.date).toUpperCase()}` : "ADD TO TODAY", type: "submit", disabled: busy || !title.trim() || !plan || !readEstimateForm(estimate).ok }}>
         <label htmlFor="plan-task-title">Add a task for today</label>
         <input ref={titleInput} id="plan-task-title" className="input" value={title} disabled={busy} onChange={(event) => { setTitle(event.target.value); setAsTyped(false); }} placeholder="e.g. dentist Tue 3pm" />
         {quick && <p className="meta" role="status" aria-live="polite">Understood: “{quick.title}” on {planDate(quick.date)}{quick.time ? ` at ${quick.time}` : ""}. Choose a date below to override. <button type="button" className="text-button" onClick={() => setAsTyped(true)}>Keep as typed, today</button></p>}
-        <details className="more-inspection"><summary>Date, Mission & repeat</summary>
+        <details className="more-inspection"><summary>Date, Mission, repeat & estimate</summary>
           <label htmlFor="plan-due">Due date (optional)</label><input id="plan-due" className="input" type="date" value={due} disabled={busy} onChange={(event) => setDue(event.target.value)} />
           <label htmlFor="plan-mission">Mission (optional)</label><select id="plan-mission" className="input" value={mission} disabled={busy} onChange={(event) => setMission(event.target.value)}>
             <option value="">No Mission</option>{plan?.missions.filter((item) => item.status === "ACTIVE").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
           </select>
           <RecurrencePicker form={recurrence} onChange={setRecurrence} idPrefix="plan-recurrence" disabled={busy} />
+          <EstimateFields idPrefix="plan-new" form={estimate} onChange={setEstimate} disabled={busy} />
         </details>
         {error && <p role="alert">{error}</p>}{receipt && <p role="status">{receipt}</p>}
       </Section>

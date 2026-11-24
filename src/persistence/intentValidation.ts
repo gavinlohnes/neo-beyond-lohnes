@@ -1,3 +1,4 @@
+import { ESTIMATE_MAX_MINUTES, ESTIMATE_MIN_MINUTES } from "../domain/intent/estimate";
 import { z } from "zod";
 import type { Mission, Obligation, Project } from "../domain/intent/types";
 
@@ -66,6 +67,13 @@ const obligationInputFields = {
   plannedAt: z.string().regex(DATE_ONLY, "plannedAt must be YYYY-MM-DD").optional(),
   recurrence: recurrenceRuleSchema.optional(),
   remindAt: z.string().regex(CLOCK_HHMM, "remindAt must be HH:MM").optional(),
+  /** TIMEBOX-001: whole minutes, 1 minute to 8 hours. */
+  estimateMinutes: z
+    .number()
+    .int("ESTIMATE_INVALID: an estimate is whole minutes")
+    .min(ESTIMATE_MIN_MINUTES, "ESTIMATE_INVALID: an estimate is 1 minute to 8 hours")
+    .max(ESTIMATE_MAX_MINUTES, "ESTIMATE_INVALID: an estimate is 1 minute to 8 hours")
+    .optional(),
 };
 
 /** Input to createObligation. PROJECTS-001: may name its Project at creation; later moves use setObligationProject. */
@@ -85,6 +93,8 @@ export const obligationModifyInputSchema = z
     recurrence: obligationInputFields.recurrence,
     /** REMIND-AT-001: null removes the reminder time. */
     remindAt: obligationInputFields.remindAt.or(z.null()).optional(),
+    /** TIMEBOX-001: null removes the estimate. */
+    estimateMinutes: obligationInputFields.estimateMinutes.or(z.null()).optional(),
   })
   .refine((v) => Object.values(v).some((value) => value !== undefined), "At least one field must change");
 export type ObligationModifyInput = z.infer<typeof obligationModifyInputSchema>;
@@ -99,6 +109,8 @@ export const obligationSchema = z.object({
   plannedAt: obligationInputFields.plannedAt,
   // REMIND-AT-001: a malformed time on a restored row is dropped, never the whole task.
   remindAt: obligationInputFields.remindAt.catch(undefined),
+  // TIMEBOX-001: a malformed restored estimate is dropped, never the whole task (and never read as zero).
+  estimateMinutes: obligationInputFields.estimateMinutes.catch(undefined),
   resolvedAt: z.string().optional(),
   resolutionNote: z.string().optional(),
   recurrence: recurrenceRuleSchema.optional(),

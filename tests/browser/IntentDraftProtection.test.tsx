@@ -137,18 +137,18 @@ describe("blocker 2 — Intent drafts reach reload and update protection", () =>
     }],
     ["Plan Today composer with only a due date", async (screen) => {
       await openPlan(screen);
-      await screen.getByText("Date, Mission & repeat", { exact: true }).click();
+      await screen.getByText("Date, Mission, repeat & estimate", { exact: true }).click();
       await screen.getByLabelText("Due date (optional)").fill("2026-10-20");
     }],
     ["Plan Today composer with only a Mission", async (screen) => {
       const mission = await createMission({ title: "Health" });
       await openPlan(screen);
-      await screen.getByText("Date, Mission & repeat", { exact: true }).click();
+      await screen.getByText("Date, Mission, repeat & estimate", { exact: true }).click();
       await screen.getByLabelText("Mission (optional)").selectOptions(mission.id);
     }],
     ["Plan Today composer with only a repeat", async (screen) => {
       await openPlan(screen);
-      await screen.getByText("Date, Mission & repeat", { exact: true }).click();
+      await screen.getByText("Date, Mission, repeat & estimate", { exact: true }).click();
       await screen.getByRole("combobox", { name: "Repeats" }).selectOptions("MONTHLY");
     }],
     ["an Obligation edit that only changes the planned date", async (screen) => {

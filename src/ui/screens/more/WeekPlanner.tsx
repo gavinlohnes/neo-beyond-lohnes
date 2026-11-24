@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Obligation } from "../../../domain/intent/types";
 import { getWeekPlanner, plannerDates, type WeekPlanner as Planner } from "../../../application/weekPlannerQueries";
 import { moveWeekTask } from "../../../application/weekPlannerCommands";
+import { EstimateFields } from "../../components/EstimateFields";
+import { EMPTY_ESTIMATE, estimateFormFor, estimateTotalLine, formatEstimate, readEstimateForm } from "../../../domain/intent/estimate";
 import { createObligation } from "../../../application/intentCommands";
 import { LogSheet } from "../../components/LogSheet";
 import { describeError } from "../../errorMessage";
@@ -16,6 +18,7 @@ export function WeekPlanner({ active, onOpen, onChanged }: { active: boolean; on
   const [receipt, setReceipt] = useState<string | null>(null);
   const [moving, setMoving] = useState<Obligation | null>(null);
   const [moveDate, setMoveDate] = useState("");
+  const [moveEstimate, setMoveEstimate] = useState(EMPTY_ESTIMATE);
   const [title, setTitle] = useState("");
   const [draftDate, setDraftDate] = useState("");
   const [moveDays, setMoveDays] = useState<Planner["days"]>([]);
@@ -46,10 +49,13 @@ export function WeekPlanner({ active, onOpen, onChanged }: { active: boolean; on
   }, [active]);
   async function saveMove() {
     if (lock.current || !moving || !moveDate) return;
+    const estimate = readEstimateForm(moveEstimate);
+    if (!estimate.ok) { setError(estimate.message); return; }
     lock.current = true; setBusy(true); setError(null); setReceipt(null);
     try {
-      const result = await moveWeekTask(moving.id, moveDate, moving);
-      setReceipt(`Planned “${result.title}” for ${label(moveDate)}. ${result.dueAt ? `Deadline unchanged: ${label(result.dueAt)}.` : "No deadline added."}`);
+      const result = await moveWeekTask(moving.id, moveDate, moving, undefined, { estimateMinutes: estimate.minutes });
+      const estimateNote = (moving.estimateMinutes ?? null) === estimate.minutes ? "" : estimate.minutes === null ? " Estimate removed." : ` Your estimate: ${formatEstimate(estimate.minutes)}.`;
+      setReceipt(`Planned “${result.title}” for ${label(moveDate)}. ${result.dueAt ? `Deadline unchanged: ${label(result.dueAt)}.` : "No deadline added."}${estimateNote}`);
       setMoving(null); setSelected(moveDate);
       await refresh(); onChanged();
       requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
@@ -72,9 +78,9 @@ export function WeekPlanner({ active, onOpen, onChanged }: { active: boolean; on
     return <li key={item.id} className="week-planner__task">
       <button type="button" className="plan-task" onClick={() => onOpen(item.id)}>
         <strong>{item.title}</strong>
-        <span>{item.status === "WAITING" ? "Waiting · " : ""}{item.plannedAt ? `Planned ${label(item.plannedAt)}` : "Not planned"}{item.dueAt ? ` · Due ${label(item.dueAt)}` : " · No deadline"}</span>
+        <span>{item.status === "WAITING" ? "Waiting · " : ""}{item.plannedAt ? `Planned ${label(item.plannedAt)}` : "Not planned"}{item.dueAt ? ` · Due ${label(item.dueAt)}` : " · No deadline"}{item.estimateMinutes !== undefined ? ` · Est. ${formatEstimate(item.estimateMinutes)}` : ""}</span>
       </button>
-      <button type="button" className="btn-secondary" disabled={busy || !!readError} aria-label={`Plan ${item.title}`} onClick={() => { setMoving(item); setMoveDays(plan?.days ?? []); setMoveDate(item.plannedAt && plan?.days.some((d) => d.date === item.plannedAt) ? item.plannedAt : selected); setError(null); }}>PLAN DAY</button>
+      <button type="button" className="btn-secondary" disabled={busy || !!readError} aria-label={`Plan ${item.title}`} onClick={() => { setMoving(item); setMoveDays(plan?.days ?? []); setMoveDate(item.plannedAt && plan?.days.some((d) => d.date === item.plannedAt) ? item.plannedAt : selected); setMoveEstimate(estimateFormFor(item.estimateMinutes)); setError(null); }}>PLAN DAY</button>
     </li>;
   }
   const day = plan?.days.find((d) => d.date === selected);
@@ -105,6 +111,8 @@ export function WeekPlanner({ active, onOpen, onChanged }: { active: boolean; on
         {day.events.length > 0 && <><h4 className="tool-label">SAVED CALENDAR EVENTS</h4><ul className="plan-list">{day.events.map((event) => <li key={event.id} className="week-planner__event"><strong>{event.title}</strong><span>{event.allDay ? "All day" : `${new Date(event.start).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })} – ${new Date(event.end).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}`} · Google, read only</span></li>)}</ul></>}
         <p className="meta">{plan.calendar.lastSyncAt ? `Calendar snapshot last synced ${new Date(plan.calendar.lastSyncAt).toLocaleString()}.` : "No synced calendar snapshot available."} {plan.calendar.connected ? "Refresh the connection in Week Ahead for newer events." : "Calendar is not connected."}</p>
         <h4 className="tool-label">TASKS PLANNED OR DUE</h4>
+        {/* TIMEBOX-001 (narrow WEEK-PLANNER-002 exception): the sum of his own estimates, never free time or a full day. */}
+        {(() => { const line = estimateTotalLine(day.tasks); return line && <p className="meta" data-estimate-total>{line}</p>; })()}
         {day.tasks.length ? <ul className="plan-list">{day.tasks.map(task)}</ul> : <p className="meta">No tasks planned or due on this date. This does not mean the day is free.</p>}
         <form onSubmit={(e) => { e.preventDefault(); void add(); }} className="week-planner__add">
           <label htmlFor="week-plan-title">Add a task for {label(day.date)}</label>
@@ -122,9 +130,10 @@ export function WeekPlanner({ active, onOpen, onChanged }: { active: boolean; on
         <p className="card-body">{moving.title}</p>
         <p className="meta">{moving.dueAt ? `Deadline stays ${label(moving.dueAt)}.` : "This adds a planned day, not a deadline."}</p>
         <label htmlFor="week-move-day">Planned day</label><select id="week-move-day" className="input" disabled={busy} value={moveDate} onChange={(e) => setMoveDate(e.target.value)}>{(plan?.days ?? moveDays).map((d) => <option key={d.date} value={d.date}>{label(d.date)} · {d.basis === "UNKNOWN" ? "Work unknown" : d.work === "WORK" ? "Work" : "Off"} · {d.tasks.length} tasks</option>)}</select>
+        <EstimateFields idPrefix="week-move" form={moveEstimate} onChange={setMoveEstimate} disabled={busy} />
         {readError && <div role="alert"><p>{readError} Your selected day is kept. Refresh the week before saving.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => void refresh()}>RETRY WEEK IN FORM</button></div>}
         {error && <div role="alert"><p>{error}</p><button type="button" className="btn-secondary" disabled={busy} onClick={async () => { setMoving(null); setError(null); await refresh(); }}>REFRESH WEEK</button></div>}
-        <button type="button" className="btn-primary" disabled={busy || !moveDate || !!readError} onClick={() => void saveMove()}>SAVE PLANNED DAY</button>
+        <button type="button" className="btn-primary" disabled={busy || !moveDate || !!readError || !readEstimateForm(moveEstimate).ok} onClick={() => void saveMove()}>SAVE PLANNED DAY</button>
       </>}
     </LogSheet>
   </section>;
