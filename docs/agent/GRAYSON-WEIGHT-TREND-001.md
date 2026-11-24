@@ -9,8 +9,8 @@
   preference in localStorage. No stored record, event, Dexie version, Engine input, target change, notification
   or navigation change.
 - **Starting commit:** `origin/master` `1fd2c47`. Re-fetch before starting.
-- **Builder:** Claude Code (Gavin runs it from this brief on master). Branch `claude-code/grayson-weight-trend-001`.
-  **Active PR:** pending.
+- **Builder:** Claude Code (Gavin runs it from this brief on master). Branch `claude-code/grayson-weight-trend-001`,
+  started from `ee97d4d` (fresh master, #648 and #649 merged). **Active PR:** linked in GitHub once opened.
 - **Order:** Claude Code's first brief. Overlap check on `1fd2c47`:
   - The only open PR is #641 (campaign plan text).
   - GRAYSON-FIX-UNDO-001 (Grok Bot) routes `bodyTrendQueries.ts`'s void read through `activeVoids` and changes

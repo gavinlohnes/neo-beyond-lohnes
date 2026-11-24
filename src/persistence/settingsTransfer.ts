@@ -25,6 +25,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond:checkInReminderPreference": "Check-in reminder",
   "beyond:autoBackupPreference": "Automatic backup preference",
   "beyond:restSecondsByExercise": "Rest timer per exercise",
+  "beyond:weightTrendPreference": "Weight trend",
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",
   "beyond.more.favorites.v1": "MORE favorites",
