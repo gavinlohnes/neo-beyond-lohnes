@@ -1148,6 +1148,15 @@ export function TrainScreen({
   const restComplete = isResting && restRemainingMs <= 0;
   const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
 
+  const programmePanel = (
+    <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm, programmeContext) => {
+        const requested = requestedForm ?? chosenVariant;
+        const variant = requestedForm ? requested : requested === "RECOVERY" ? "STANDARD" : requested;
+        templateChosenRef.current = true; variantChosenRef.current = true;
+        setChosenTemplate(templateId); setChosenVariant(variant);
+        void handleStart(templateId, variant, programmeContext);
+      }} />
+  );
   return (
     <div className="screen fade-in train-field train-operator bf" data-training-view={trainView} data-workout-active={Boolean(session)}>
       {calibrationPreview && <CalibrationPreview
@@ -1486,13 +1495,8 @@ export function TrainScreen({
         );
       })()}
 
-      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm, programmeContext) => {
-        const requested = requestedForm ?? chosenVariant;
-        const variant = requestedForm ? requested : requested === "RECOVERY" ? "STANDARD" : requested;
-        templateChosenRef.current = true; variantChosenRef.current = true;
-        setChosenTemplate(templateId); setChosenVariant(variant);
-        void handleStart(templateId, variant, programmeContext);
-      }} />
+      {/* Gavin, 2026-11-23: "Move the Train my Program down." Before a workout it leads here; during one it sits below the live workout. */}
+      {!session && programmePanel}
 
 
       {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
@@ -2186,6 +2190,8 @@ export function TrainScreen({
       )}
       </>}
       </div>
+      {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
+      {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>
   );
 }
