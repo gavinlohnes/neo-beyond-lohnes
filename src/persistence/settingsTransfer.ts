@@ -1,0 +1,81 @@
+/**
+ * GRAYSON C8.1 (Q6), "Settings travel with the backup" (Gavin, 2026-11-24: "Go ahead and start"): the non-secret
+ * preferences this phone keeps in localStorage ride along in every native backup and come back on restore, so a new
+ * phone gets the whole setup, not only the records.
+ *
+ * The backup stays the unchanged dexie-export-import document; the preferences sit beside it in one extra top-level
+ * block, `beyondSettings`, which dexie-export-import and every older BEYOND build ignore. Only the keys below travel.
+ * Everything else in localStorage stays on the phone by design:
+ * - secrets and sign-ins: the Alfred API key, the IFTTT config (holds its webhook key), the Google Calendar store,
+ *   the Drive backup link (its key lives in IndexedDB outside db.export, see driveKeyStore.ts);
+ * - screen privacy (stealth: "never an event or backup record", SUIT-001);
+ * - device bookkeeping: drafts, seen/snooze flags, last-backup and last-sent clocks, spend counters, caches.
+ *
+ * Values travel as the exact strings the app stored. Each reader already falls back to its default on a missing or
+ * malformed value, so a damaged block can never break a screen; values are still bounded here.
+ */
+export const SETTINGS_BLOCK_VERSION = 1;
+
+/** The allowlist: key → what it is, for the restore preview and the docs. */
+export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
+  "beyond.alfredCap": "Alfred monthly spend cap",
+  "beyond.alfredAuto": "Alfred automatic mode",
+  "beyond.alfredSpeak": "Alfred spoken replies",
+  "beyond.delta.voice.v1": "Delta's voice",
+  "beyond:checkInReminderPreference": "Check-in reminder",
+  "beyond:autoBackupPreference": "Automatic backup preference",
+  "beyond:restSecondsByExercise": "Rest timer per exercise",
+  "beyond.hiddenFeatures": "Hidden features",
+  "beyond.vision": "Vision mode",
+  "beyond.more.favorites.v1": "MORE favorites",
+};
+
+const MAX_VALUE_LENGTH = 16_384;
+
+export interface SettingsBlock { version: number; values: Record<string, string> }
+
+/** This phone's travelling preferences, as stored. Keys never set are left out. */
+export function readTravellingSettings(): SettingsBlock {
+  const values: Record<string, string> = {};
+  for (const key of Object.keys(TRAVELLING_SETTINGS)) {
+    try {
+      const value = localStorage.getItem(key);
+      if (value !== null && value.length <= MAX_VALUE_LENGTH) values[key] = value;
+    } catch { /* Storage unavailable: nothing to carry. */ }
+  }
+  return { version: SETTINGS_BLOCK_VERSION, values };
+}
+
+/** A backup's settings block if it is one this build understands, else null (older backups have none). */
+export function parseSettingsBlock(raw: unknown): SettingsBlock | null {
+  if (!raw || typeof raw !== "object") return null;
+  const block = raw as { version?: unknown; values?: unknown };
+  if (block.version !== SETTINGS_BLOCK_VERSION || !block.values || typeof block.values !== "object" || Array.isArray(block.values)) return null;
+  const values: Record<string, string> = {};
+  for (const [key, value] of Object.entries(block.values as Record<string, unknown>)) {
+    if (Object.hasOwn(TRAVELLING_SETTINGS, key) && typeof value === "string" && value.length <= MAX_VALUE_LENGTH) values[key] = value;
+  }
+  return { version: SETTINGS_BLOCK_VERSION, values };
+}
+
+/**
+ * Replace-only, like the data: the block is authoritative for the travelling keys. A key it holds is written; a
+ * travelling key it lacks returns to its default. Keys outside the allowlist are never touched. A backup with no
+ * block (made before C8.1) leaves this phone's preferences as they are.
+ */
+export function applySettingsBlock(block: SettingsBlock | null): void {
+  if (!block) return;
+  for (const key of Object.keys(TRAVELLING_SETTINGS)) {
+    try {
+      if (Object.hasOwn(block.values, key)) localStorage.setItem(key, block.values[key]!);
+      else localStorage.removeItem(key);
+    } catch { /* Storage unavailable: the data restore still stands. */ }
+  }
+}
+
+/** The native export with the settings block added beside it. The dexie document itself is unchanged. */
+export function withSettingsBlock(exported: Blob): Blob {
+  const head = `{"beyondSettings":${JSON.stringify(readTravellingSettings())},`;
+  // dexie-export-import always writes one JSON object; its first character is "{".
+  return new Blob([head, exported.slice(1)], { type: exported.type });
+}

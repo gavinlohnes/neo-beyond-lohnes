@@ -120,7 +120,7 @@ status of its own.
 | C7.5 | Lock-screen workout (HARVEST-003 later) | Not started |  |
 | C7.6 | Search on MiniSearch | Not started |  |
 | **Campaign 8 — Data You Own** | | | |
-| C8.1 (Q6) | Settings travel with the backup | Not started |  |
+| C8.1 (Q6) | Settings travel with the backup | In review | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
 | C8.2 | Restore drill | Not started |  |
 | C8.3 | Export everything readable | Not started |  |
 | C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
