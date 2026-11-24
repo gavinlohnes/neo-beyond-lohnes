@@ -10,7 +10,9 @@
 - **Starting commit:** `origin/master` `92f46cf3` (#667). Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-plan-fresh-001`. **Reviewer:** Claude Code (Codex is offline).
   **Active PR:** pending.
-- **Order and overlap:** after GRAYSON-FLIP-PLAN-001 in Grok Bot's queue. Health Bridge: GRAYSON-TRAIN-RUN-CUES-001
+- **Order and overlap:** Grok Bot **#3** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after TODAY-SPLIT-003 and TODAY-CALM-001 and
+  **before** FLIP-PLAN-001; FLIP-PLAN's flip days reach the phone through this hand-off when they land. One Health
+  Bridge change open at a time: if RUN-CUES-001 is open, wait for it or rebase on it. Health Bridge: GRAYSON-TRAIN-RUN-CUES-001
   (Claude Code) plans 0.12.0 / versionCode 15 and a `RunCueActivity`; take the next free minor version and versionCode
   at build time, and rebase on whichever Bridge change merges first (both edit `AndroidManifest.xml`,
   `build.gradle(.kts)` and `.github/workflows/health-bridge.yml`).

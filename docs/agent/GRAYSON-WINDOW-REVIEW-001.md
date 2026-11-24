@@ -11,7 +11,8 @@
 - **Starting commit:** `origin/master` `fed6b84` (#662 merged). Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-window-review-001`. **Reviewer:** Claude Code (Codex, Grok Bot's usual
   reviewer, is offline). **Active PR:** pending.
-- **Order and overlap:** after Grok Bot's queued WINDOW-ALERT-001 (#656), which also touches the eating window. This
+- **Order and overlap:** Grok Bot **#10** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after RUN-DEBRIEF-001. WINDOW-ALERT-001 (#672) is
+  merged and also touches the eating window. This
   brief touches `application/eatingWindow.ts` (read helpers only), a new `application/eatingWindowReview.ts`,
   `ui/screens/body/` and `BodyScreen.tsx`. Rebase on whichever merges first; tracker to the oldest open PR.
 

@@ -9,7 +9,9 @@
 - **Starting commit:** `origin/master` `92f46cf3` or later. Re-fetch before starting; build on whatever has merged.
 - **Builder:** Grok Bot. Branch `grok/grayson-today-calm-001`. **Reviewer:** Claude Code (Codex is offline).
   **Active PR:** pending.
-- **Order:** in Grok Bot's queue **after GRAYSON-CARRY-001 and before GRAYSON-SHIFTDOWN-TAPS-001**, so the two queued
+- **Order:** Grok Bot **#2** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24): **after GRAYSON-TODAY-SPLIT-003**, whose snapshot this reads its
+  candidates from, and before CARRY-001 and SHIFTDOWN-TAPS-001. The close's place (after the catch-up) is set here, and
+  CARRY-001 later adds its block inside the close. The two queued
   briefs that add a TODAY line (SHIFTDOWN-TAPS-001's "First at home", PLAN-FRESH-001's "Phone alerts are behind") plug
   into this instead of adding their own. Both briefs carry an amendment note pointing here.
 

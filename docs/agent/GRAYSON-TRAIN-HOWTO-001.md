@@ -10,7 +10,8 @@
 - **Starting commit:** `origin/master` `439129c`. Re-fetch before starting.
 - **Builder:** Claude Code (TRAIN while Codex is offline). Branch `claude/grayson-train-howto-001`. Reviewer:
   Grok Bot. **Active PR:** pending.
-- **Order and overlap:** after GRAYSON-TRAIN-RUN-001, -REST-001 and -EDIT-001, which all touch `TrainScreen.tsx`.
+- **Order and overlap:** Claude Code **#5** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after LOCKSCREEN-001. RUN-001, REST-001 and
+  EDIT-001 all touch `TrainScreen.tsx` too.
   This brief touches `TrainScreen.tsx` only to add a HOW TO entry beside each exercise, so rebase on whatever has
   merged. GRAYSON-TRAIN-BODYMAP-001 follows and reads this brief's data. Recheck open PRs at build time; tracker
   to the oldest open PR.

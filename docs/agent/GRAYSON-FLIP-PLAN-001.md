@@ -10,7 +10,8 @@
 - **Starting commit:** `origin/master` `92f46cf3` (#667). Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-flip-plan-001`. **Reviewer:** Claude Code (Codex is offline).
   **Active PR:** pending.
-- **Order and overlap:** after GRAYSON-SHIFTDOWN-TAPS-001 in Grok Bot's queue. Shares `TodayScreen.tsx` only through
+- **Order and overlap:** Grok Bot **#7** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after SHIFTDOWN-TAPS-001. PLAN-FRESH-001 is
+  built before this now; make sure the flip-day plan reaches the phone through its hand-off. Shares `TodayScreen.tsx` only through
   `LifeStateBand`'s props; touches `application/shiftSleepPlan.ts`, `application/sleepPlanSettings.ts` and
   `persistence/sleepPlanSettingsValidation.ts`, which no queued brief changes. Rebase on whichever merges first.
 
