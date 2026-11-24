@@ -18,7 +18,7 @@ export type CoachDestination = "TRAIN" | "JOURNAL" | "WEEKLY" | "DELTA";
 export interface CoachCard { id: string; key: string; title: string; evidence: string; destination: CoachDestination; why: WhyTrace }
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 const shortDate = (iso: string | Date) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-const TRAIN_RULE: Record<string, string> = {
+export const TRAIN_RULE: Record<string, string> = {
   REDUCE: "Progression (locked): every required set came in under the rep range, so the next increment down.",
   RE_ENTRY: `Re-entry: ${RE_ENTRY_DAYS} or more days since this lift, so about ${pct(RE_ENTRY_FRACTION)} of the last load.`,
   DELOAD: `Deload: ${STALL_SESSIONS} sessions in a row without a record, so about ${pct(DELOAD_FRACTION)} of the stalled load, once.`,
@@ -52,13 +52,13 @@ export async function getCoachCards(now = new Date(), suggestedVariant: "STANDAR
   const experiments = await getExperiments();
   for (const experiment of experiments.filter((e) => e.entry.status === "OPEN" && now >= e.to).sort((a, b) => a.to.getTime() - b.to.getTime() || a.entry.id.localeCompare(b.entry.id))) {
     cards.push({ id: `JOURNAL:${experiment.entry.id}`, key: key("JOURNAL", experiment.entry), title: `Review your test: ${experiment.what}`, evidence: `Your ${experiment.days}-day test ended ${experiment.to.toLocaleDateString()}. Review the recorded results and choose your verdict in Journal.`, destination: "JOURNAL",
-      why: { rule: "A test you started has reached its end date; only you give the verdict.", facts: [{ label: "Test", value: experiment.what }, { label: "Ran", value: `${shortDate(experiment.from)} – ${shortDate(experiment.to)} (${experiment.days} days)` }] } });
+      why: { rule: "A test you started has reached its end date; only you give the verdict.", facts: [{ label: "Test", value: experiment.what }, { label: "Ran", value: `${shortDate(experiment.from)} – ${shortDate(new Date(experiment.to.getTime() - 86_400_000))} (${experiment.days} days)` }] } });
   }
   const weekly = await getWeeklySummary(now);
   if (weekly.calorieProposal.kind === "PROPOSAL") {
     const p = weekly.calorieProposal;
     cards.push({ id: "WEEKLY:calories", key: key("WEEKLY", p), title: `Review ${p.kcal} kcal a day`, evidence: `Your existing weekly proposal uses a burn estimate of ${p.maintenance.lowKcal}–${p.maintenance.highKcal} kcal and your goal of ${p.goalWeightLbs} lb. Review its evidence and limits before saving.`, destination: "WEEKLY",
-      why: { rule: "Weekly calorie proposal: your burn estimate and your goal weight, saved only if you choose.", facts: [{ label: "Proposal", value: `${p.kcal} kcal a day` }, { label: "Burn estimate", value: `${p.maintenance.lowKcal}–${p.maintenance.highKcal} kcal` }, { label: "Goal", value: `${p.goalWeightLbs} lb` }] } });
+      why: { rule: "Weekly calorie proposal: your burn estimate and your goal weight, saved only if you choose.", facts: [{ label: "Proposal", value: `${p.kcal} kcal a day` }, ...(p.kcal !== p.aimKcal ? [{ label: "Aim", value: `${p.aimKcal} kcal a day; this week's step is capped` }] : []), { label: "Burn estimate", value: `${p.maintenance.lowKcal}–${p.maintenance.highKcal} kcal` }, ...(p.weight ? [{ label: "Weight", value: `${p.weight.lbs} lb (${p.weight.basis === "WEEK_AVERAGE" ? "week average" : "latest"})` }] : []), { label: "Goal", value: `${p.goalWeightLbs} lb` }] } });
   }
   const delta = await getDeltaKnowledge(now);
   if (delta.suggestion) {

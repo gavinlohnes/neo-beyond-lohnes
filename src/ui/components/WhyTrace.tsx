@@ -9,7 +9,7 @@ import "./whyTrace.css";
  */
 export function WhyTraceDisclosure({ why, records }: { why: WhyTrace; records?: { label: string; onOpen: () => void } | undefined }) {
   return (
-    <WhyDisclosure summary="WHY THIS?">
+    <WhyDisclosure summary="WHY THIS?" className="why--trace">
       <WhyTraceBody why={why} records={records} />
     </WhyDisclosure>
   );

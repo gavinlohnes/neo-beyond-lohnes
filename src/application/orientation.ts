@@ -192,7 +192,7 @@ export function deltaRead(input: {
   if (checkIn.state === "DONE" && rec?.source === "ENGINE") {
     if (rec.kind === "EXECUTE_PLANNED_WORK") return out(v(input.shortNights >= 2 ? "EXEC_SHORT" : "EXEC_OK"), input.shortNights >= 2 ? "The Engine says do the planned work; two or more short nights in a row, so Delta says so." : "The Engine says do the planned work, after your check-in.");
     // A fact, not advice: a short night stays visible even when the Engine asks for nothing more.
-    if (rec.kind === "NO_ACTION_REQUIRED") return out(v("NO_ACTION", { where: work ? "before the shift" : "today" }) + short, "The Engine asks for nothing more after your check-in; a short night is still named.");
+    if (rec.kind === "NO_ACTION_REQUIRED") return out(v("NO_ACTION", { where: work ? "before the shift" : "today" }) + short, "The Engine asks for nothing more after your check-in; a short night, if there was one, is still named.");
     // Kept short: on a sustained drop, that sentence replaces the sleep fact (YOU still shows the sleep).
     if (rec.kind === "STABILIZE") return out(say("PLAIN", "STABILIZE") + (sustained || shortIn("PLAIN")), "The Engine says stabilize after your check-in; a hard day, so plain words.");
     const key: DeltaLineKey | null = rec.kind === "RECOVER" ? "ENGINE_RECOVER" : rec.kind === "POST_SHIFT_TRANSITION" ? "ENGINE_POST_SHIFT"
@@ -206,7 +206,7 @@ export function deltaRead(input: {
   if (rec?.source === "DRAFT" && rec.kind === "POST_SHIFT_TRANSITION") return out(v("DRAFT_POST_SHIFT") + askCheckIn, "A post-shift draft, before your check-in; the Engine decides after it.");
   const due = input.dueCount ?? 0;
   if (purpose === "RECOVERY") return out(v("RECOVERY") + short + askCheckIn, "The first day after a run of shifts: a recovery day.");
-  if (purpose === "OFF") return out(v(due === 0 ? "OFF_NONE" : due === 1 ? "OFF_ONE" : "OFF_MANY", { n: due }) + short + askCheckIn, "A day off: Delta names what is due, and nothing else.");
+  if (purpose === "OFF") return out(v(due === 0 ? "OFF_NONE" : due === 1 ? "OFF_ONE" : "OFF_MANY", { n: due }) + short + askCheckIn, "A day off: Delta names what is due.");
   if (purpose === "FLIP") return out(v("FLIP") + short + askCheckIn, "A flip day between nights and days.");
   if (!sleep.band) return out(v("SLEEP_LEARNING", { hm: hm(sleep.minutes) }) + askCheckIn, "Your usual sleep range isn\u2019t learned yet, so there\u2019s no comparison.");
   if (sleep.under) return out(v("SLEEP_UNDER", { kind: sleep.band.kind }) + askCheckIn, "Last sleep was under your usual range for this kind of day.");

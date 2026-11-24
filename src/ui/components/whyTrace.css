@@ -8,3 +8,5 @@
 .why-trace__fact dd { margin: 0; font-size: 16px; line-height: 1.35; color: var(--p-t1, var(--text-1)); overflow-wrap: anywhere; }
 .why-trace__records { justify-self: start; min-height: 44px; }
 @container (max-width: 300px) { .why-trace__fact { grid-template-columns: 1fr; } }
+/* #638 review: WHY THIS? is a 44 px target, like TODAY's other disclosures. */
+.why--trace > summary { min-height: 44px; display: flex; align-items: center; }

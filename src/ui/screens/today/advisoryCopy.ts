@@ -17,11 +17,11 @@ export const MAX_ADVISORY_ROWS = 3;
 
 /** GRAYSON C6.4: which rule produced an advisory note, in plain words (its WHY THIS? rule line). */
 export const ADVISORY_RULE: Record<AdvisoryNote["sourceModule"], string> = {
-  obligationRelevance: "Your commitments: something set aside before that still fits today.",
-  progression: "Progression (locked): advisory only; your load never changes unless you change it.",
+  obligationRelevance: "Your commitments: one that is overdue, due today or soon, or planned for today.",
+  progression: "Progression: advisory only (including re-entry and deload); your load never changes unless you change it.",
   decisionJournal: "A reviewed Decision Journal entry that matches today.",
-  shiftProtection: "Shift protection: water or protein not yet logged before a shift.",
-  continuity: "Continuity: your recent outcomes, read back as they were recorded.",
+  shiftProtection: "Shift protection: water or protein still short of the Minimum Day amount before a shift.",
+  continuity: "Continuity: last time's recommendation, brought back because it still applies today.",
   patternProposal: "A pattern in your own records, offered as a proposal only.",
   dayRolloverAmbiguity: "Day rollover: a sleep logged on a day that started on its own at 16:30.",
 };

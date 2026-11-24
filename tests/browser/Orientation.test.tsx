@@ -89,6 +89,7 @@ describe("Orientation states", () => {
     const delta = screen.getByRole("article", { name: "DELTA" });
     const why = delta.getByText("WHY THIS?", { exact: true });
     await expect.element(why).toBeVisible();
+    expect(delta.element().querySelector("details > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44); // #638 review
     expect(delta.element().querySelector("details")!.open).toBe(false);
     await why.click();
     await expect.element(delta.getByText("A recover draft from your recent nights, before your check-in; the Engine decides after it.")).toBeVisible();
