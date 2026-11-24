@@ -1,4 +1,5 @@
 import type { DraftDecision } from "../intelligence/types";
+import type { RunningPhase, RunningPlanVersion, RunningPosition, RunningSegment } from "../workout/runningPlan";
 // Domain layer must not import React, Dexie, or UI code.
 
 export type Capacity = "GREEN" | "YELLOW" | "RED";
@@ -285,6 +286,18 @@ export type DomainEventType =
   // GRAYSON-FIX-UNDO-001 (Gavin, 2026-11-24): a removal of a meal, protein, water, sleep, bodyweight or measurement log
   // put back. USER-sourced, under the entry's own beyondDayId (measurements: unscoped). Payload in domain/logVoids.ts.
   | "LOG_VOID_UNDONE"
+  // GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running sessions and his editable run/walk plan. "RUNNING", never
+  // "RUN": a run is a work run in this codebase. Session events are day-scoped to the session's lived day; plan
+  // edits and position jumps are global configuration (like TRAIN_PROGRAM_SET). Payloads in the block at the end.
+  | "RUNNING_SESSION_STARTED"
+  | "RUNNING_SESSION_PAUSED"
+  | "RUNNING_SESSION_RESUMED"
+  | "RUNNING_SESSION_ENDED"
+  | "RUNNING_SESSION_CORRECTED"
+  | "RUNNING_SESSION_VOIDED"
+  | "RUNNING_PLAN_ADVANCED"
+  | "RUNNING_PLAN_POSITION_SET"
+  | "RUNNING_PLAN_EDITED"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"
@@ -975,7 +988,7 @@ export interface SleepPlanSettings {
 }
 
 /** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */
-export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE";
+export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE" | "WINDOW_OPEN";
 
 /** BRIDGE-NOTIFY-001: which kinds are off, and the owner's quiet hours ("HH:MM" local, may cross midnight). */
 export interface KeyMomentAlertSettings {
@@ -1156,4 +1169,81 @@ export interface CaptureItem {
   resolvedAt?: string;
   /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
   seq?: number;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running sessions. One additive table (db.ts v27); every change is an
+// append-only event, so history stays honest and backups carry it.
+
+export type RunningSessionStatus = "ACTIVE" | "COMPLETED" | "PARTIAL" | "ABANDONED";
+export type RunningEndReason = "FINISHED" | "STOPPED" | "PAIN";
+
+/**
+ * One running session. `segments` is a snapshot of what he ran, so a later plan edit never rewrites history.
+ * Timing is absolute (`startedAt` + `pausedMs`, like WorkoutSession.activeRestEndsAt): a reload or backgrounding
+ * recovers the right interval from Date.now(). (B4 standards tests are a separate event, per GRAYSON-TRAIN-STANDARDS-001.)
+ * Status and minutes as recorded; corrections are RUNNING_SESSION_CORRECTED / _VOIDED events, never row edits.
+ */
+export interface RunningSession {
+  id: string;
+  beyondDayId: string;
+  schemaVersion: 1;
+  kind: "PLAN_RUN";
+  planId: string;
+  phase: RunningPhase;
+  week: number;
+  run: number;
+  segments: RunningSegment[];
+  status: RunningSessionStatus;
+  startedAt: string;
+  endedAt?: string;
+  /** Set while paused; cleared on resume. */
+  pausedAt?: string;
+  /** Total time spent paused before the current pause. */
+  pausedMs: number;
+  /** Seconds of the plan he completed (warm-up and cool-down included). */
+  completedSeconds: number;
+  endReason?: RunningEndReason;
+}
+
+export interface RunningSessionStartedPayload {
+  commandId: string;
+  runningSessionId: string;
+  planId: string;
+  phase: RunningPhase;
+  week: number;
+  run: number;
+  segments: RunningSegment[];
+}
+export interface RunningSessionPausedPayload { commandId: string; runningSessionId: string }
+export interface RunningSessionResumedPayload { commandId: string; runningSessionId: string; pausedMs: number }
+export interface RunningSessionEndedPayload {
+  commandId: string;
+  runningSessionId: string;
+  status: Exclude<RunningSessionStatus, "ACTIVE">;
+  completedSeconds: number;
+  endReason: RunningEndReason;
+}
+/**
+ * His correction of a finished run: any of status, minutes or the day it belongs to (a local YYYY-MM-DD date).
+ * The latest correction of each field wins; `supersedesEventId` is the correction it replaces, if any.
+ */
+export interface RunningSessionCorrectedPayload {
+  commandId: string;
+  runningSessionId: string;
+  supersedesEventId?: string;
+  status?: "COMPLETED" | "PARTIAL";
+  completedSeconds?: number;
+  dayDate?: string;
+}
+export interface RunningSessionVoidedPayload { commandId: string; runningSessionId: string }
+/** Only from his tap on Move on, after a COMPLETED run. */
+export interface RunningPlanAdvancedPayload { commandId: string; runningSessionId: string; from: RunningPosition; to: RunningPosition }
+export interface RunningPlanPositionSetPayload { commandId: string; to: RunningPosition; reason: "JUMP" | "UNDO_MOVE_ON" }
+/** The full plan snapshot after an edit, a reset, a weekly-count change or an undo of one of those. */
+export interface RunningPlanEditedPayload {
+  commandId: string;
+  plan: RunningPlanVersion;
+  reason: "EDIT_RUN" | "ADD_RUN" | "RESET_RUN" | "RESET_PLAN" | "WEEK_SETTINGS" | "UNDO";
+  previousEventId?: string;
 }

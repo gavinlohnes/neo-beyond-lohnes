@@ -35,6 +35,7 @@ import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
 import { restEndBuzz, shouldBuzzRestEnd } from "../../feel/restEndBuzz";
 import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
+import { RunningPanel } from "./RunningSession";
 import { GymMode } from "./GymMode";
 import { CalibrationPreview } from "./CalibrationPreview";
 import { TrainPlanDraft } from "./TrainPlanDraft";
@@ -218,6 +219,7 @@ export function TrainScreen({
   // CLEANUP-003 (walk-through finding 10): no "Planning to train today?" once today's workout is done.
   const [workoutFinishedToday, setWorkoutFinishedToday] = useState(false);
   const [session, setSession] = useState<WorkoutSession | null>(null);
+  const [runningActive, setRunningActive] = useState(false);
   const [sets, setSets] = useState<PerformedSet[]>([]);
   const setWriteRef = useRef(false);
   const draftSessionRef = useRef<string | null>(null);
@@ -1233,7 +1235,10 @@ export function TrainScreen({
       {visitedRecords && <div hidden={trainView !== "RECORDS"}><RecordsList active={active && trainView === "RECORDS"} focusExerciseId={recordsFocus} onClose={() => openTrainView("WORKOUT")} /></div>}
       {/* GRAYSON-TRAIN-PROGRESS-001: one tap from today's workout, read only. */}
       {trainView === "PROGRESS" && <TrainProgress active={active} />}
-      <div hidden={trainView !== "WORKOUT"}>
+      {/* GRAYSON-TRAIN-RUN-001: the running card, live run and plan. While a run is live (or its finish sheet is open)
+          the lift content steps aside, so a lift can't start mid-run; the running command refuses mid-lift. */}
+      {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
+      <div hidden={trainView !== "WORKOUT" || runningActive}>
       <ConfirmPanel />
 
       {reading && <p role="status" className="meta">Reading your workout…</p>}

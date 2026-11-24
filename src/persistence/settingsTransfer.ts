@@ -26,11 +26,16 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond:autoBackupPreference": "Automatic backup preference",
   "beyond:restSecondsByExercise": "Rest timer per exercise",
   "beyond:restBuzzPreference": "Rest timer buzz",
+  "beyond:runningBuzz": "Running buzz",
+  "beyond:runningHalfwayCue": "Running halfway cue",
+  "beyond:runningKeepAwake": "Running keeps the screen on",
   "beyond:weightTrendPreference": "Weight trend",
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",
   "beyond.more.favorites.v1": "MORE favorites",
   "beyond.close.prompts.v1": "Evening close prompts",
+  "beyond.close.gaps.v1": "Evening close gaps",
+  "beyond.logNudge.v1": "Logging nudge",
 };
 
 const MAX_VALUE_LENGTH = 16_384;

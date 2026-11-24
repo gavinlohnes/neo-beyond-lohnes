@@ -238,6 +238,9 @@ import {
 } from "./shiftClock";
 import { DecryptNumber } from "./DecryptNumber";
 import { TodayNumbers } from "./TodayNumbers";
+import { askAlfred } from "../../components/AlfredSheet";
+import { deriveLogNudge, getLogNudge, usualTimesFor, type LogNudgeRead } from "../../../application/logNudge";
+import { dismissNudge, readLogNudgeSettings, readNudgeDismissed } from "./logNudgeStore";
 import { ModeCity, ModeScene, SuitMode } from "./ModeIdentity";
 import { ModeHeader } from "./ModeHeader";
 import { ActiveExperimentLine } from "./ActiveExperimentLine";
@@ -616,6 +619,16 @@ export function TodayScreen({
     if (day) void getPaceHistories(day).then((h) => { if (current) setPaceHistories(h); }).catch(() => {});
     return () => { current = false; };
   }, [day?.id, day?.workContext]);
+  // GRAYSON-LOG-NUDGE-001: what the quiet "tell Delta" line under the tiles reads (today's kind, its meals, his usual
+  // times), re-read with TODAY's refresh; whether it shows follows the minute clock in render.
+  const [logNudgeRead, setLogNudgeRead] = useState<LogNudgeRead | null>(null);
+  const [, setNudgeAnswered] = useState(0);
+  useEffect(() => {
+    let current = true;
+    if (!day) { setLogNudgeRead(null); return; }
+    void getLogNudge(day.id, new Date()).then((r) => { if (current) setLogNudgeRead(r); }).catch(() => {});
+    return () => { current = false; };
+  }, [day?.id, refreshVersion]);
   const [schedulePattern, setSchedulePattern] = useState<SchedulePattern | null>(null);
   // Recorded times of this day's main-sleep logs (see mainSleepEndsPostShift).
   const [mainSleepRecordedAt, setMainSleepRecordedAt] = useState<string[]>([]);
@@ -2256,7 +2269,20 @@ export function TodayScreen({
   /** POLISH-002: the prototype's four number tiles. Missing stays "—"; each opens its history. */
   // BEYOND 4.0-a: AT A GLANCE lives in TodayNumbers.tsx; TODAY keeps the in-flight guard and what each tap opens.
   function renderFuel() {
-    return <TodayNumbers measured={measured} operationsOnly={operationsOnly} minimumDayProteinG={minimumDayProteinG} proteinTargetG={proteinTargetG}
+    // GRAYSON-LOG-NUDGE-001: silent on the clock (the catch-up owns shift meals) and in operations-only mode.
+    const nudgeSettings = readLogNudgeSettings();
+    const nudge = day && logNudgeRead?.kind ? deriveLogNudge({
+      settings: nudgeSettings, usual: usualTimesFor(logNudgeRead.kind, logNudgeRead.learned, nudgeSettings), livedStart: logNudgeRead.livedStart,
+      meals: logNudgeRead.meals, operationsOnly, dismissed: readNudgeDismissed(day.id),
+      onClock: scheduledClock.phase === "SCHEDULED_SHIFT" || (!!workPeriodStartedAt && workPeriodEndedAt === null),
+    }, now) : null;
+    const nudgeDayId = day?.id;
+    return <TodayNumbers logNudge={nudge && nudgeDayId ? {
+        text: nudge.text,
+        onTell: () => { if (!busyRef.current) askAlfred("I ate "); },
+        onNotNow: () => { dismissNudge(nudgeDayId, nudge.usualMinute); setNudgeAnswered((v) => v + 1); },
+      } : null}
+      measured={measured} operationsOnly={operationsOnly} minimumDayProteinG={minimumDayProteinG} proteinTargetG={proteinTargetG}
       minimumDayHydrateOz={minimumDayHydrateOz} waterTargetOz={waterTargetOz} waterLogCount={waterLogCount} latestWeightLbs={latestWeightLbs} lastMainSleepMinutes={lastMainSleepMinutes}
       lastMainSleepFromGarmin={lastMainSleepFromGarmin} paceHistories={paceHistories} now={now} dayId={day?.id} busy={busy} fuelLine={fuelLine}
       recordsAvailable={!!onOpenHealthEvidence}

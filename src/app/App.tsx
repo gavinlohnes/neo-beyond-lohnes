@@ -175,7 +175,8 @@ function AppWorkspaces() {
   // ALFRED-001: the man in the chair, from the header or LOG.
   // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
   const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
-  const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
+  // GRAYSON-WINDOW-ALERT-001: the "Eating window open" notification opens BEYOND on ?alfred=meal, Delta ready for the meal.
+  const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief" || alfredLaunch === "meal");
   const [driveOpen, setDriveOpen] = useState(false);
   useEffect(() => { const open = () => setDriveOpen(true); window.addEventListener(DRIVE_HOME_EVENT, open); return () => window.removeEventListener(DRIVE_HOME_EVENT, open); }, []);
   // CONNECT-002: a tapped link opens where its record lives.
@@ -191,7 +192,7 @@ function AppWorkspaces() {
     else openMore("HIGHLIGHTS");
   };
   useEffect(() => { const open = (e: Event) => openRecordRef.current((e as CustomEvent<OpenRecordTarget>).detail); window.addEventListener(OPEN_RECORD_EVENT, open); return () => window.removeEventListener(OPEN_RECORD_EVENT, open); }, []);
-  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : alfredLaunch === "meal" ? { key: 1, text: "I ate " } : undefined);
   useEffect(() => {
     if (!alfredLaunch) return;
     const url = new URL(window.location.href);
