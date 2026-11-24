@@ -5,10 +5,10 @@
 - **Lane:** PROTECTED (backup contract). Independent exact-head review, green CI, Gavin's merge. **Builder:** Claude
   Code. **Starting commit:** master `d2a1616a`. **Branch:** `ccr-380c4225-1es42i`.
 - **Operator benefit:** a new or reset phone restored from a backup gets his setup back (Alfred cap and modes, Delta's
-  voice, reminders, rest timers, hidden features, vision mode, MORE favorites), not only his records. Keys and
+  voice, reminders, rest timers, hidden features, vision mode, MORE favorites, evening close prompts), not only his records. Keys and
   sign-ins never leave the phone.
 - **Rules:**
-  - Ten allowlisted localStorage keys travel (`src/persistence/settingsTransfer.ts`, `TRAVELLING_SETTINGS`).
+  - Eleven allowlisted localStorage keys travel (`src/persistence/settingsTransfer.ts`, `TRAVELLING_SETTINGS`).
   - **Stays on the phone:** secrets and sign-ins (Alfred key, IFTTT config with its key, Google Calendar store, Drive
     backup link); stealth (SUIT-001: never a backup record); device bookkeeping (drafts, seen and snooze flags,
     clocks, spend counters, caches).
@@ -21,7 +21,9 @@
     - The block is authoritative for the allowlist: a key it holds is written; an allowlisted key it lacks returns
       to its default.
     - A backup with no block (made before C8.1) leaves this phone's preferences as they are.
-    - Keys outside the allowlist, non-string or oversized (>16 KB) values, and unknown block versions are ignored.
+    - Keys outside the allowlist, non-string values, and unknown block versions are ignored.
+    - A value over 16 KB is skipped on both sides, and the target keeps its own value for that key. The block lists
+      it under `oversized`.
   - **The restore preview says what happens:** "Settings: N preferences replace this phone's. Keys and sign-ins stay
     as they are.", or that the backup has none.
 - **REUSE:** the existing native export and replace-only restore (`backup.ts`, `restore.ts`). Each preference's own
@@ -36,7 +38,9 @@
     - replace-only semantics;
     - a pre-C8.1 backup leaves preferences alone;
     - hostile blocks are ignored;
-    - allowlist drift guard: every key must be one the app really uses.
+    - allowlist drift guard: every key must be one the app really uses;
+    - completeness guard (#633 review): every `beyond`-prefixed string in `src` is classified as travelling, kept on
+      the phone for a stated reason, or an event name. A new preference cannot be left behind silently.
   - `DriveBackupKey`: the encrypted backup carries the settings and not the Alfred key.
   - `RestoreCompat`: the preview line, both ways.
   - Existing restore-compat, backup and MORE suites still pass.

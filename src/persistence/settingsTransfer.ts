@@ -28,34 +28,41 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",
   "beyond.more.favorites.v1": "MORE favorites",
+  "beyond.close.prompts.v1": "Evening close prompts",
 };
 
 const MAX_VALUE_LENGTH = 16_384;
 
-export interface SettingsBlock { version: number; values: Record<string, string> }
+/** `oversized`: travelling keys left out for size (over 16 KB); restore leaves those as they are on the target. */
+export interface SettingsBlock { version: number; values: Record<string, string>; oversized?: string[] }
 
 /** This phone's travelling preferences, as stored. Keys never set are left out. */
 export function readTravellingSettings(): SettingsBlock {
   const values: Record<string, string> = {};
+  const oversized: string[] = [];
   for (const key of Object.keys(TRAVELLING_SETTINGS)) {
     try {
       const value = localStorage.getItem(key);
-      if (value !== null && value.length <= MAX_VALUE_LENGTH) values[key] = value;
+      if (value === null) continue;
+      if (value.length <= MAX_VALUE_LENGTH) values[key] = value; else oversized.push(key);
     } catch { /* Storage unavailable: nothing to carry. */ }
   }
-  return { version: SETTINGS_BLOCK_VERSION, values };
+  return oversized.length ? { version: SETTINGS_BLOCK_VERSION, values, oversized } : { version: SETTINGS_BLOCK_VERSION, values };
 }
 
 /** A backup's settings block if it is one this build understands, else null (older backups have none). */
 export function parseSettingsBlock(raw: unknown): SettingsBlock | null {
   if (!raw || typeof raw !== "object") return null;
-  const block = raw as { version?: unknown; values?: unknown };
+  const block = raw as { version?: unknown; values?: unknown; oversized?: unknown };
   if (block.version !== SETTINGS_BLOCK_VERSION || !block.values || typeof block.values !== "object" || Array.isArray(block.values)) return null;
   const values: Record<string, string> = {};
+  // A value too large to trust is skipped like one the backup left out for size: the target keeps its own.
+  const oversized = Array.isArray(block.oversized) ? block.oversized.filter((key): key is string => typeof key === "string" && Object.hasOwn(TRAVELLING_SETTINGS, key)) : [];
   for (const [key, value] of Object.entries(block.values as Record<string, unknown>)) {
-    if (Object.hasOwn(TRAVELLING_SETTINGS, key) && typeof value === "string" && value.length <= MAX_VALUE_LENGTH) values[key] = value;
+    if (!Object.hasOwn(TRAVELLING_SETTINGS, key) || typeof value !== "string") continue;
+    if (value.length <= MAX_VALUE_LENGTH) values[key] = value; else oversized.push(key);
   }
-  return { version: SETTINGS_BLOCK_VERSION, values };
+  return oversized.length ? { version: SETTINGS_BLOCK_VERSION, values, oversized } : { version: SETTINGS_BLOCK_VERSION, values };
 }
 
 /**
@@ -68,7 +75,7 @@ export function applySettingsBlock(block: SettingsBlock | null): void {
   for (const key of Object.keys(TRAVELLING_SETTINGS)) {
     try {
       if (Object.hasOwn(block.values, key)) localStorage.setItem(key, block.values[key]!);
-      else localStorage.removeItem(key);
+      else if (!block.oversized?.includes(key)) localStorage.removeItem(key);
     } catch { /* Storage unavailable: the data restore still stands. */ }
   }
 }

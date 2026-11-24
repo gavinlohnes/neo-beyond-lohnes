@@ -2,6 +2,6 @@
 
 Gavin: "Go ahead and start." [Brief](../agent/GRAYSON-C8.1-SETTINGS-001.md).
 
-- Ten non-secret preferences travel in every native backup, in a `beyondSettings` block beside the unchanged dexie
+- Eleven non-secret preferences travel in every native backup, in a `beyondSettings` block beside the unchanged dexie
   export. Restore applies them after the data; a backup without the block leaves the phone's preferences alone.
 - Keys, sign-ins, screen privacy and device bookkeeping never leave the phone.
