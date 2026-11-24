@@ -988,7 +988,7 @@ export interface SleepPlanSettings {
 }
 
 /** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */
-export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE";
+export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE" | "WINDOW_OPEN";
 
 /** BRIDGE-NOTIFY-001: which kinds are off, and the owner's quiet hours ("HH:MM" local, may cross midnight). */
 export interface KeyMomentAlertSettings {
