@@ -16,9 +16,10 @@
   merges. No Builder merge.
 - **Starting commit:** `origin/master` `7e61e02`. Re-fetch before starting.
 - **Builder:** Grok Bot. Branch `grok/grayson-checkin-edit-001`. **Active PR:** pending.
-- **Overlap check (2026-11-24):** #639 (C6.1 + C6.2) edits `src/domain/common/types.ts` and
-  `src/application/delta.ts`, both in scope here: rebase on whichever merges first and keep additions in one
-  block. #606, #640, #641 and #642 touch none of the code below. GRAYSON-TRAIN-EDIT-001 (#642, Codex) also edits
+- **Overlap check (2026-11-24, rechecked after review):** #639 (C6.1 + C6.2) edits `src/domain/common/types.ts`
+  and `src/ui/screens/history/historyCopy.ts`, both in scope here: rebase on whichever merges first and keep
+  additions in one block. #645 (GRAYSON-FIX-UNDO-001) also adds `FIX_UNDO_MS` to `src/ui/hooks/useUndoWindow.ts`
+  and an event to `types.ts`. #606, #640 and #641 touch none of the code below. GRAYSON-TRAIN-EDIT-001 (#642, Codex) also edits
   `src/engine/dayLedger.ts`, in its training-set lines; this brief edits only the check-in lines. Whichever
   builds second rebases. While other PRs are open, leave the tracker and checkpoint to the oldest open PR
   (DEV-FLOW-002, 2026-11-23 amendment, rule 2).
@@ -33,8 +34,12 @@ kept.
 
 ## Recommended defaults (approved when Gavin merges this brief)
 
-1. **Fix it where you see it:** TODAY's check-in card (`CheckInCard.tsx`) and each check-in in History open
-   the same check-in sheet, filled with that check-in's answers, titled **Fix this check-in**.
+1. **Fix it where you see it, without losing UPDATE:** TODAY's check-in card keeps **UPDATE**, which still
+   submits a new check-in, and keeps SAME AS LAST and ALL GOOD as they are. A separate **FIX** control, at
+   least 44 px tall, sits on the "Checked in HH:MM" line and opens the sheet in fix mode for today's latest
+   check-in. Each check-in in History opens fix mode too. Fix mode is titled **Fix this check-in**, is filled
+   with that check-in's answers, hides SAME AS LAST, ALL GOOD and the "Previous check-in · reference" block,
+   and its main button reads **SAVE FIX**.
 2. **What can change:** energy, stress, mood, soreness and urge. Not the time it was made.
 3. **Today's latest check-in:** saving a fix re-works today's advice through the same path a new check-in
    uses, and TODAY shows the new recommendation. The old recommendation and anything he decided on it stay in
@@ -46,8 +51,9 @@ kept.
    advice again.
 6. **The original is never lost:** a fixed check-in shows a small "edited" mark; tapping it shows the before
    and after.
-7. **Counts:** a fix is not a second check-in. The day's check-in count stays the same. It counts as one
-   correction in the Day Ledger's burden.
+7. **Counts:** a fix is not a second check-in. The day's check-in count stays the same. A fix counts as one
+   correction in the Day Ledger's burden, and undoing it counts as another, as `URGE_UNDONE` already does: a fix
+   is +1, a fix and its undo is +2.
 
 ## Design principles check (Vision, Nov 24)
 
@@ -74,7 +80,7 @@ kept.
 - **One pure function** `effectiveCheckIns(events)` in `src/domain/checkInCorrections.ts` (new): the
   check-ins that count, from `STATE_CHECKED_IN` and `CHECK_IN_CORRECTED`, minus superseded ones and minus fixes
   that were undone; plus each check-in's fix history.
-- **Readers:** `getLatestCheckIn` (`queries.ts:83`, 36 uses) filters to effective check-ins, so its callers
+- **Readers:** `getLatestCheckIn` (`queries.ts:83`, about 15 call sites in `src/`) filters to effective check-ins, so its callers
   need no change. These read `db.checkIns` directly and are routed through one helper,
   `getEffectiveCheckIns()`: `delta.ts`, `wholePictureQueries.ts`, `checkInDraftQueries.ts` (the next draft
   carries the fixed answers), `yearReview.ts`, `orientation.ts`, `tagPatterns.ts`, `monthRecap.ts`. The
@@ -95,13 +101,21 @@ urge 0–5). `NO_OP` when nothing changes; `STALE` when the check-in was already
 latest effective check-in of the ACTIVE day, the command re-runs the same evaluation `submitCheckIn` uses
 (`commands.ts:460`) and issues a recommendation with the same `RECOMMENDATION_ISSUED` event. That shared step
 is pulled into one internal function so both commands call it; `submitCheckIn`'s behaviour stays the same.
+The short-sleep read (`deriveShortSleepStreak(await getDaySummaries(), …)`) stays **before** `writeAtomically`
+in both commands, as it is in `submitCheckIn` today, because the ledger reads tables outside
+`DAY_WRITE_TABLES`.
+
+**The corrected row** carries no `draft` marker: `draft` (CONFIRMED or ADJUSTED) describes how the original
+was submitted, so it stays on the original row, and History shows it there. The corrected row shows "edited".
 
 ### Screens
 
 - `CheckInSheet.tsx`: a fix mode, opened with a check-in's answers, titled **Fix this check-in**, with Save.
-- `CheckInCard.tsx`: tap opens the sheet in fix mode for today's latest check-in; shows the "edited" mark.
-- History (`HistoryScreen.tsx`, `historyCopy.ts`): a check-in row opens fix mode; a `CHECK_IN_CORRECTED` row
-  reads "Check-in fixed" with the before and after.
+- `CheckInCard.tsx`: UPDATE, SAME AS LAST and ALL GOOD unchanged; a FIX control on the "Checked in" line opens
+  fix mode for today's latest effective check-in; shows the "edited" mark.
+- History (`HistoryScreen.tsx`, `historyCopy.ts`): a check-in row, the original included, opens fix mode on
+  that chain's **current effective** check-in, never on a superseded row and never with a STALE refusal; a
+  `CHECK_IN_CORRECTED` row reads "Check-in fixed" with the before and after.
 - Undo toast for 8 seconds with the existing save-receipt pattern and `feedback()`.
 
 ## Excluded
@@ -118,7 +132,8 @@ talking to Delta (E11); a Dexie version bump; notifications.
   (`getLatestCheckIn` and the new `getEffectiveCheckIns`); the seven readers named above (routing only);
   `src/application/recordIntegrityQueries.ts` (accept the correction event); `src/engine/dayLedger.ts` (the
   check-in block and `CORRECTION_TYPES` only); `CheckInSheet.tsx`, `CheckInCard.tsx`, `HistoryScreen.tsx`,
-  `historyCopy.ts`; tests; `docs/agent/screenshots/GRAYSON-CHECKIN-EDIT-001/`.
+  `historyCopy.ts`; `src/ui/hooks/useUndoWindow.ts` (`FIX_UNDO_MS` only); tests;
+  `docs/agent/screenshots/GRAYSON-CHECKIN-EDIT-001/`; `docs/decisions/GRAYSON-CHECKIN-EDIT.md` (new).
 - **Off limits:** the rest of `src/engine/` (including `evaluate.ts` and `capacity.ts`); recommendation and
   draft rules; `TrainScreen.tsx` (its quick check-in keeps calling `submitCheckIn`); `src/persistence/db.ts`;
   `android/**`; `package.json`.
@@ -127,7 +142,7 @@ talking to Delta (E11); a Dexie version bump; notifications.
 
 - **REUSE:** the supersede chain and stale/no-op refusals of `correctSingleValueLog`; `submitCheckIn`'s
   evaluate-and-issue step, shared, not copied; `CheckInSheet.tsx`; `getLatestCheckIn` as the one filter for its
-  36 callers; the save receipt and `feedback()`.
+  callers; the save receipt and `feedback()`.
 - **OWN:** the two correction events, `effectiveCheckIns`, fix mode and the edited detail.
 - **BUILD FROM SCRATCH:** nothing beyond those; no library.
 
@@ -141,10 +156,11 @@ talking to Delta (E11); a Dexie version bump; notifications.
   its decision still in history; fix an earlier check-in today and see no new recommendation; fix a past day's
   check-in and see the Day Ledger's capacity, trends, Delta's reading, orientation, month recap and the next
   draft all use the fixed answers, with no past recommendation re-issued; undo each; the day's check-in count
-  is unchanged and its correction count is up by one; record integrity raises no warning; a lived day that
+  is unchanged, and its correction count is up by one after a fix and by two after a fix and its undo; record integrity raises no warning; a lived day that
   crosses midnight; a native backup round trip keeps the fix and the edited mark; `submitCheckIn` behaves
   exactly as before.
-- `tests/browser/CheckInFix.test.tsx`: open fix mode from TODAY and from History; change energy, Save, Undo
+- `tests/browser/CheckInFix.test.tsx`: UPDATE still creates a second check-in, and SAME AS LAST and ALL GOOD
+  still work; open fix mode from TODAY's FIX control and from History, the original row included; change energy, Save, Undo
   within 8 s; put it back from the edited detail; keyboard only; 320/360/412 px no overflow; axe clean.
 - New tests fail on master. `typecheck`, `check:architecture`, `check:risk`, build, focused tests in both
   zones, full `TZ=UTC npm run verify`.
@@ -153,6 +169,19 @@ talking to Delta (E11); a Dexie version bump; notifications.
   its detail, a fixed check-in in History.
 - **Device check (Gavin):** check in with low energy, then fix it to high and watch TODAY's advice change; tap
   Undo; fix yesterday's check-in from History. Then KEEP / REFINE / RETHINK.
+
+## Decision record
+
+The build PR records the 7 approved defaults, the undo rule and the 8 s window in
+`docs/decisions/GRAYSON-CHECKIN-EDIT.md`, as TIMEBOX-001 and C4.1 did (DEV-FLOW-002, 2026-11-23 amendment).
+
+## Stop and ask Gavin if
+
+- the work needs a Dexie version bump or a new index;
+- it needs any change to `evaluate()`, `capacity.ts` or recommendation kinds;
+- a `db.checkIns` reader has to stay raw beyond `currentMaxSeq` and record integrity;
+- it would change what UPDATE, SAME AS LAST, ALL GOOD or TRAIN's quick check-in do;
+- it needs a change to `backup.ts`, `restore.ts` or `backupKeys.ts`.
 
 ## Risks and checks
 
