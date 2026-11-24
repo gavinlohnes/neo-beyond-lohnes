@@ -1181,7 +1181,7 @@ export type RunningEndReason = "FINISHED" | "STOPPED" | "PAIN";
 /**
  * One running session. `segments` is a snapshot of what he ran, so a later plan edit never rewrites history.
  * Timing is absolute (`startedAt` + `pausedMs`, like WorkoutSession.activeRestEndsAt): a reload or backgrounding
- * recovers the right interval from Date.now(). B4 adds `kind: "TIMED_TEST"` to the same table without migration.
+ * recovers the right interval from Date.now(). (B4 standards tests are a separate event, per GRAYSON-TRAIN-STANDARDS-001.)
  * Status and minutes as recorded; corrections are RUNNING_SESSION_CORRECTED / _VOIDED events, never row edits.
  */
 export interface RunningSession {

@@ -48,8 +48,8 @@ export const RUNNING_RUNS_PER_WEEK_MAX = 4;
 export const RUNNING_RUNS_IN_WEEK_MAX = 7;
 
 const m = (minutes: number) => Math.round(minutes * 60);
-const run = (minutes: number): RunningSegment => ({ kind: "RUN", seconds: m(minutes) });
-const walk = (minutes: number): RunningSegment => ({ kind: "WALK", seconds: m(minutes) });
+const running = (minutes: number): RunningSegment => ({ kind: "RUN", seconds: m(minutes) });
+const walking = (minutes: number): RunningSegment => ({ kind: "WALK", seconds: m(minutes) });
 
 /** Warm-up walk + main set + cool-down walk. */
 function session(main: readonly RunningSegment[]): RunningSegment[] {
@@ -64,15 +64,15 @@ export const RUNNING_PLAN_FOUNDATION: RunningPlan = {
   planId: RUNNING_PLAN_ID,
   phase: "FOUNDATION",
   weeks: [
-    same(repeat(7, [run(1), walk(1.5)], run(1))),
-    same(repeat(5, [run(1.5), walk(2)], run(1.5))),
-    same([run(1.5), walk(1.5), run(3), walk(3), run(1.5), walk(1.5), run(3)]),
-    same([run(3), walk(1.5), run(5), walk(2.5), run(3), walk(1.5), run(5)]),
-    [session([run(5), walk(3), run(5), walk(3), run(5)]), session([run(8), walk(5), run(8)]), session([run(20)])],
-    [session([run(5), walk(3), run(8), walk(3), run(5)]), session([run(10), walk(3), run(10)]), session([run(25)])],
-    same([run(25)]),
-    same([run(28)]),
-    same([run(30)]),
+    same(repeat(7, [running(1), walking(1.5)], running(1))),
+    same(repeat(5, [running(1.5), walking(2)], running(1.5))),
+    same([running(1.5), walking(1.5), running(3), walking(3), running(1.5), walking(1.5), running(3)]),
+    same([running(3), walking(1.5), running(5), walking(2.5), running(3), walking(1.5), running(5)]),
+    [session([running(5), walking(3), running(5), walking(3), running(5)]), session([running(8), walking(5), running(8)]), session([running(20)])],
+    [session([running(5), walking(3), running(8), walking(3), running(5)]), session([running(10), walking(3), running(10)]), session([running(25)])],
+    same([running(25)]),
+    same([running(28)]),
+    same([running(30)]),
   ],
 };
 

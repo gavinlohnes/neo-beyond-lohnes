@@ -233,7 +233,7 @@ function weekOf(plan: RunningPlanVersion, week: number): RunningSegment[][] {
 }
 
 /** Saves his version of one run's intervals. Past sessions keep the segments they ran with. */
-export function editRunningRun(position: RunningPosition, segments: readonly RunningSegment[]): Promise<RunningPlanEditResult> {
+export function editRunningPlanEntry(position: RunningPosition, segments: readonly RunningSegment[]): Promise<RunningPlanEditResult> {
   const problem = validateRunningSegments(segments);
   if (problem) return Promise.reject(new Error(`RUNNING_PLAN_INVALID: ${problem}`));
   return savePlan((plan) => {
@@ -245,7 +245,7 @@ export function editRunningRun(position: RunningPosition, segments: readonly Run
 }
 
 /** Adds a run to a week, starting as a copy of that week's last run. */
-export function addRunningRun(week: number): Promise<RunningPlanEditResult> {
+export function addRunningPlanEntry(week: number): Promise<RunningPlanEditResult> {
   return savePlan((plan) => {
     const runs = weekOf(plan, week);
     if (runs.length >= RUNNING_RUNS_IN_WEEK_MAX) throw new Error(`RUNNING_PLAN_INVALID: A week can hold at most ${RUNNING_RUNS_IN_WEEK_MAX} runs.`);
@@ -255,7 +255,7 @@ export function addRunningRun(week: number): Promise<RunningPlanEditResult> {
 }
 
 /** Back to the NHS pattern for one run. A run he added has no NHS version. */
-export function resetRunningRun(position: RunningPosition): Promise<RunningPlanEditResult> {
+export function resetRunningPlanEntry(position: RunningPosition): Promise<RunningPlanEditResult> {
   const original = foundationSegmentsAt(position);
   if (!original) return Promise.reject(new Error("RUNNING_RESET_NONE: You added this run, so there's no plan version to reset it to."));
   return savePlan((plan) => {

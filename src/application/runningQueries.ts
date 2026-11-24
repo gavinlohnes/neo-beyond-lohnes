@@ -219,13 +219,13 @@ async function readRunningEvents(): Promise<DomainEvent[]> {
   return db.events.where("type").anyOf([...RUNNING_EVENT_TYPES]).toArray();
 }
 
-export interface RunningNextRun {
+export interface RunningNext {
   position: RunningPosition;
   segments: RunningSegment[];
   totalSeconds: number;
 }
 
-export interface RunningPlanListRun {
+export interface RunningPlanListEntry {
   week: number;
   run: number;
   totalSeconds: number;
@@ -238,12 +238,12 @@ export interface RunningPlanListRun {
 
 export interface RunningHome {
   active: RunningSession | null;
-  next: RunningNextRun | null;
+  next: RunningNext | null;
   done: boolean;
   week: RunningWeekCount;
   plan: RunningPlanState;
   latestPositionEventId: string | null;
-  list: RunningPlanListRun[][];
+  list: RunningPlanListEntry[][];
   history: RunningHistoryEntry[];
 }
 
@@ -285,7 +285,7 @@ export async function getActiveRunningSession(): Promise<RunningSession | null> 
 }
 
 /** RUN-002 seam: the next run, or null when the foundation is done. */
-export async function nextRun(): Promise<RunningNextRun | null> {
+export async function nextRun(): Promise<RunningNext | null> {
   return (await getRunningHome()).next;
 }
 
