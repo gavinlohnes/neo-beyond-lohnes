@@ -23,7 +23,7 @@ export const QUIET_LINE_LABELS: Record<QuietLineId, string> = {
   WORK_DUE: "Work record due",
 };
 /** Lines whose own brief hasn't been built yet: they keep their place in the order and show once they exist. */
-const NOT_BUILT: ReadonlySet<QuietLineId> = new Set(["FIRST_AT_HOME"]);
+const NOT_BUILT: ReadonlySet<QuietLineId> = new Set([]);
 
 export function TodayQuietSettings() {
   const [settings, setSettings] = useState<QuietLineSettings>(() => readTodayQuietSettings());

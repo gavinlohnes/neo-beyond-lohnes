@@ -59,7 +59,7 @@ status of its own.
 | C1.7 | Carry or drop unfinished plans at the close (backlog B6, after Sunsama) | Done (#720 + follow-up; [CARRY-001](agent/GRAYSON-CARRY-001.md); Claude Code ccr-380c4225) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S |
 | **Campaign 2 — Shift Transitions** | | | |
 | C2.1 | Arrival in two taps | Done (#617) | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
-| C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Briefed ([SHIFTDOWN-TAPS-001](agent/GRAYSON-SHIFTDOWN-TAPS-001.md)) | [brief](agent/GRAYSON-SHIFTDOWN-TAPS-001.md); Grok Bot |
+| C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | In review ([SHIFTDOWN-TAPS-001](agent/GRAYSON-SHIFTDOWN-TAPS-001.md)) | [brief](agent/GRAYSON-SHIFTDOWN-TAPS-001.md); Claude Code (ccr-380c4225), queue moved from Grok Bot |
 | C2.3 | Home moment | Not started |  |
 | C2.4 | Flip-day plan | Briefed ([FLIP-PLAN-001](agent/GRAYSON-FLIP-PLAN-001.md)) | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Grok Bot |
 | C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
