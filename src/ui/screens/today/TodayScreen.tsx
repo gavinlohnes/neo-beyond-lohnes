@@ -16,6 +16,7 @@ import { Orientation } from "./Orientation";
 import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
 import { focusFlipCard } from "../systems/flipFocus";
+import { readSkip, skipKey } from "../systems/planSkips";
 import { FirstAtHomeLine } from "./ShiftDownBridge";
 import { HOME_FIRST_EVENT, homeFirstFor } from "./shiftDownBridgeStore";
 import { ShiftCatchUpCard, type CatchUpPresence } from "./ShiftCatchUpCard";
@@ -1384,8 +1385,8 @@ export function TodayScreen({
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={bandHidden}>
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
-        flip={recordedNow?.flipPlan && Date.parse(recordedNow.flipPlan.showFrom) <= now.getTime() && now.getTime() < Date.parse(recordedNow.flipPlan.showUntil)
-          ? { line: recordedNow.flipPlan.line, onOpen: onOpenCave ? () => { if (!busyRef.current) { focusFlipCard(); onOpenCave("route"); } } : undefined } : null}
+        flip={recordedNow?.flipPlan && Date.parse(recordedNow.flipPlan.showFrom) <= now.getTime() && now.getTime() < Date.parse(recordedNow.flipPlan.showUntil) && !readSkip(skipKey(recordedNow.flipPlan.date, recordedNow.flipPlan.kind))
+          ? { line: recordedNow.flipPlan.short, onOpen: onOpenCave ? () => { if (!busyRef.current) { focusFlipCard(); onOpenCave("route"); } } : undefined } : null}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* GRAYSON LOG-CATCHUP-001: after SHIFT DOWN on a shift day, what didn't get logged at work, before the close. */}

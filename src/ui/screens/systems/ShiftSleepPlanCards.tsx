@@ -12,9 +12,7 @@ import { getFlipSettingsView } from "../../../application/sleepPlanSettings";
  * device. Nothing else is written, and the Engine never sees the cards. C4.2a: the CAFFEINE card also shows where its
  * number comes from, lets him CHANGE it explicitly; a change redraws the cards.
  */
-const skipKey = (date: string, kind: PlanCardKind) => `beyond.shiftSleepPlan.skip.${date}.${kind}`;
-const readSkip = (key: string) => { try { return localStorage.getItem(key) === "1"; } catch { return false; } };
-const writeSkip = (key: string) => { try { localStorage.setItem(key, "1"); } catch { /* the card simply comes back next time */ } };
+import { readSkip, skipKey, writeSkip } from "./planSkips";
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const day = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 

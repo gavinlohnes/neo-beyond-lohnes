@@ -28,9 +28,9 @@ const moment = () => document.querySelector("[aria-label='Operating state'] .tod
 
 describe("TODAY: one muted line under the moment", () => {
   for (const [day, label, starts] of [
-    [19, "LAST SHIFT", "Sleep soon after this shift and get up by 13:00."],
-    [20, "RUN OVER", "Sleep soon after this shift and get up by 13:00."],
-    [22, "FLIP DAY", "Tonight, stay up later than usual (a couple of hours later than usual) and sleep in."],
+    [19, "LAST SHIFT", "Flip back: up by 13:00, daylight 14:00–16:00, bed at your usual time."],
+    [20, "RUN OVER", "Flip back: up by 13:00, daylight 14:00–16:00, bed at your usual time."],
+    [22, "FLIP DAY", "Tonight stay up a couple of hours later than usual; nap before your 18:00 shift."],
   ] as const) {
     it(`Nov ${day} under ${label}`, async () => {
       vi.setSystemTime(new Date(2026, 10, day, 18));
@@ -56,6 +56,29 @@ describe("TODAY: one muted line under the moment", () => {
       expect(sessionStorage.getItem("beyond.flipPlan.focus.v1")).toBe("1");
     });
   }
+  it("#723 review: at 360 px the day's next action stays on the first screen under the long LAST SHIFT line", async () => {
+    vi.setSystemTime(new Date(2026, 10, 19, 18));
+    await startDay();
+    await render(<TodayScreen onOpenLife={() => {}} onOpenCave={() => {}} />);
+    await expect.poll(() => flipLine()?.textContent ?? "").toMatch(/^Flip back:/);
+    // Measure once the band and the week strip have settled, against the same screen with the line skipped.
+    await new Promise((r) => setTimeout(r, 1500));
+    window.scrollTo(0, 0);
+    const top = () => document.querySelector("[aria-label='Next action']")!.getBoundingClientRect().top;
+    const withLine = top(), height = flipLine()!.getBoundingClientRect().height;
+    expect(height).toBeLessThanOrEqual(2 * 16 * 1.4 + 10); // at most two lines at 360 px
+    expect(withLine).toBeGreaterThan(0);
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/today-last-shift-full-360.png` });
+  });
+  it("#723 review: SKIP in ROUTE hides the TODAY line too", async () => {
+    vi.setSystemTime(new Date(2026, 10, 20, 18));
+    await startDay();
+    localStorage.setItem("beyond.shiftSleepPlan.skip.2026-11-19.FLIP_BACK", "1");
+    await render(<TodayScreen onOpenLife={() => {}} onOpenCave={() => {}} />);
+    await expect.poll(moment).toMatch(/^RUN OVER /);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(flipLine()).toBeNull();
+  });
   it("not on a free day in the middle of the break", async () => {
     vi.setSystemTime(new Date(2026, 10, 21, 18));
     await startDay();
