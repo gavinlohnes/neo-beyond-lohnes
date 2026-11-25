@@ -9,9 +9,10 @@
 - **Lane: PROTECTED** (the design doc's own lane for C4.8c). It reads more data into a health surface and offers plan
   changes. No new table, Dexie version, event type, Engine input, TODAY composition or notification.
 - **Starting commit:** `origin/master` `fed6b84` (#662 merged). Re-fetch before starting.
-- **Builder:** Grok Bot. Branch `grok/grayson-window-review-001`. **Reviewer:** Claude Code (Codex, Grok Bot's usual
-  reviewer, is offline). **Active PR:** pending.
-- **Order and overlap:** Grok Bot **#11** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after RUN-DEBRIEF-001. WINDOW-ALERT-001 (#672) is
+- **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
+  2026-11-25). Branch `ccr-380c4225-window-review`, or the branch name its session allows. **Reviewer:** a fresh-context
+  reviewer. **Active PR:** pending.
+- **Order and overlap:** Delta-track session **#6** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after RUN-DEBRIEF-001. WINDOW-ALERT-001 (#672) is
   merged and also touches the eating window. This
   brief touches `application/eatingWindow.ts` (read helpers only), a new `application/eatingWindowReview.ts`,
   `ui/screens/body/` and `BodyScreen.tsx`. Rebase on whichever merges first; tracker to the oldest open PR.
