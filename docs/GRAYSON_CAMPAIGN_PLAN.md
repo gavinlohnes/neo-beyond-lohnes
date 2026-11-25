@@ -64,7 +64,7 @@ status of its own.
 | C2.4 | Flip-day plan | Briefed ([FLIP-PLAN-001](agent/GRAYSON-FLIP-PLAN-001.md)) | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Grok Bot |
 | C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
-| C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Briefed ([WORK-RECORD-001](agent/GRAYSON-WORK-RECORD-001.md)) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
+| C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Done (#706) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
 | C3.1 (Q7) | Last done and evidence | Not started | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Grok Bot |
 | C3.2 | Lead time and "coming up" | Not started |  |
@@ -95,7 +95,7 @@ status of its own.
 | C4.4z | Delta during training (guided execution) | Done (#627; Gym mode #628) | Quiet on normal sets; one owner-decided load proposal on clear evidence; pain stop without diagnosis; one end review |
 | LOG-WHEN-001 | Logger: DAY and SHIFT on WHEN | Done (#621) | Protected (amends LOG-TIME-001); water and meal sheets; brief `docs/agent/GRAYSON-LOG-WHEN-001.md` |
 | LOG-CATCHUP-001 | Post-shift catch-up | Done (#622) | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
-| C4.5 | Mission review (monthly) | Not started |  |
+| C4.5 | Mission review (monthly) | Briefed ([MISSION-REVIEW-001](agent/GRAYSON-MISSION-REVIEW-001.md)) |  |
 | C4.6 | Water target | Done (#629) | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
 | C4.8 | Optional fasting window | In progress (#619, #623, #672; [WINDOW-REVIEW-001](agent/GRAYSON-WINDOW-REVIEW-001.md) briefed) | Design in #601. Slices C4.8a and C4.8b are done; no further slice is authorized |
@@ -139,7 +139,7 @@ status of its own.
 | **Campaign 8 — Data You Own** | | | |
 | C8.1 (Q6) | Settings travel with the backup | Done (#633) | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
 | C8.2 | Restore drill | Done (BACKUP-AUTO-001: the monthly restore check reads the backup through the real restore, offline and without writing, and compares per-table counts) |  |
-| C8.3 | Export everything readable | Partly built (CSV for weight, workouts, meals, days with sleep minutes, and measurements; not check-ins, journal, home or people) |  |
+| C8.3 | Export everything readable | Partly built; rest briefed ([EXPORT-ALL-001](agent/GRAYSON-EXPORT-ALL-001.md)) | CSV today for weight, workouts, meals, days with sleep minutes, and measurements |
 | C8.4 | Second-device sync | Deferred (only if he gets a tablet or wants lists shared with Elle; Drive backup is built) | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
 | C9.1 | TodayScreen split (TODAY-SPLIT-002 slice 2 shipped as #575; the rest is TODAY-SPLIT-003) | Done (#685, #687, #690, #692, #695, #696; TODAY is 2,076 lines, down from 3,604) | 2026-11-24, Gavin: hard pieces others plug into go first. [brief](agent/GRAYSON-TODAY-SPLIT-003.md); Grok Bot, first in its queue ([build order](agent/GRAYSON-BUILD-ORDER.md)). No visible change; Gavin merges each slice |
