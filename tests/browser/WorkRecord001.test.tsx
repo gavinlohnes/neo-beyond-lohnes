@@ -89,7 +89,7 @@ describe("MORE · Work record", () => {
       await expect.element(screen.getByRole("listitem", { name: "CPR card" }).getByText("Earned Dec 15, 2024 · expires Jan 5, 2027 · Remind 60 days before")).toBeVisible();
       fits(screen.container, width);
       await aa(`${width} work record`, screen.container);
-      if (SHOTS && width === 360) await page.screenshot({ path: `${SHOTS}/after-360-work-record.png`, element: screen.container as HTMLElement });
+      if (SHOTS && width === 360) { await page.viewport(360, 2200); await page.screenshot({ path: `${SHOTS}/after-360-work-record.png`, element: screen.container as HTMLElement }); }
     });
   }
 
