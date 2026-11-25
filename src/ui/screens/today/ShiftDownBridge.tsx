@@ -29,7 +29,7 @@ export function ShiftDownBridge({ dayId, dayStartedAt }: { dayId: string; daySta
   if (!settings.show && !editing) return <p className="meta shiftdown-bridge__off">Before you go is off. <button type="button" className="shiftdown-bridge__link" onClick={() => setEditing(true)}>CHANGE</button></p>;
   return <section className="shiftdown-bridge" aria-labelledby={`${uid}-h`}>
     <div className="shiftdown-bridge__head">
-      <h3 id={`${uid}-h`} className="tool-label">BEFORE YOU GO</h3>
+      <p id={`${uid}-h`} className="tool-label">BEFORE YOU GO</p>
       <button type="button" className="shiftdown-bridge__link" aria-expanded={editing} onClick={() => setEditing(!editing)}>{editing ? "DONE" : "CHANGE"}</button>
     </div>
     {editing ? <BridgeSettingsPanel settings={settings} onChange={save} /> : <>

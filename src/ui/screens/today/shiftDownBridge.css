@@ -1,7 +1,7 @@
 /* GRAYSON-SHIFTDOWN-TAPS-001: "Before you go". Quiet, 16 px, 44 px targets, tokens only, never red, no sound. */
 .shiftdown-bridge { display: grid; gap: 12px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle, #2a2a2a); min-width: 0; }
 .shiftdown-bridge__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.shiftdown-bridge__head h3 { margin: 0; }
+.shiftdown-bridge__head p { margin: 0; }
 .shiftdown-bridge__link { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--text-2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
 .shiftdown-bridge__off { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
 .shiftdown-bridge__row { display: grid; gap: 8px; min-width: 0; font-size: 16px; }
