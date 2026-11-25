@@ -58,7 +58,8 @@ describe("GRAYSON-TRAIN-NOTES-001 exercise notes", { timeout: 60_000 }, () => {
     await typeInto(input, "Seat 4, handles at chest height");
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByText("Your note: Seat 4, handles at chest height")).toBeVisible();
-    expect(document.activeElement?.getAttribute("aria-label")).toBe("Note for Machine Chest Press");
+    // Focus returns on the next animation frame (ExerciseNoteLine close()); wait for it rather than racing it on a busy runner.
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Note for Machine Chest Press");
     const row = () => screen.getByText("Your note: Seat 4, handles at chest height").element().closest(".equipment-row");
     await fits("library row", row, "library-row-with-note");
     await cleanup();

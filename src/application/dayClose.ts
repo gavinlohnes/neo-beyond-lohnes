@@ -158,6 +158,7 @@ export interface UnfinishedPlans { closingDate: string; nextDate: string; rows: 
 const dateOf = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y!, m! - 1, d!, 12); };
 const addDays = (date: string, n: number) => { const d = dateOf(date); return formatLocalDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, 12)); };
 const shortDay = (date: string) => dateOf(date).toLocaleDateString("en-US", { weekday: "short" });
+const monthDay = (date: string) => dateOf(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 /** Pure: open tasks planned on or before the closing lived day's first date, up to 7 days back, oldest planned first. */
 export function deriveUnfinishedPlans(tasks: readonly Obligation[], closingDate: string): UnfinishedPlans {
@@ -165,7 +166,8 @@ export function deriveUnfinishedPlans(tasks: readonly Obligation[], closingDate:
   const rows = tasks
     .filter((t) => t.status === "OPEN" && t.plannedAt !== undefined && t.plannedAt <= closingDate && t.plannedAt >= earliest)
     .sort((a, b) => a.plannedAt!.localeCompare(b.plannedAt!) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
-    .map((task) => ({ task, plannedLabel: shortDay(task.plannedAt!) }));
+    // #720 review: only a task exactly 7 days back shares today's weekday; it says "Nov 9", never a second "Mon".
+    .map((task) => ({ task, plannedLabel: task.plannedAt! >= addDays(closingDate, -6) ? shortDay(task.plannedAt!) : monthDay(task.plannedAt!) }));
   return { closingDate, nextDate: addDays(closingDate, 1), rows };
 }
 

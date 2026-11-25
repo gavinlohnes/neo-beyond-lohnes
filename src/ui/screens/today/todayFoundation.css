@@ -147,3 +147,5 @@
 .today-field.redesign-today .today-close__carry-day { font-size: 16px; color: var(--tf-quiet); }
 .today-field.redesign-today .today-close__carry-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; color: var(--tf-quiet); }
 .today-field.redesign-today .today-close__carry-acts .btn-secondary { width: auto; min-height: 44px; }
+/* #720 review: the three choices share one line at 320 px, so five rows don't push the questions far down. */
+.today-field.redesign-today .today-close__carry-acts[aria-label^="What to do"] .btn-secondary { flex: 1 1 0; min-width: 0; padding-inline: 6px; white-space: nowrap; }
