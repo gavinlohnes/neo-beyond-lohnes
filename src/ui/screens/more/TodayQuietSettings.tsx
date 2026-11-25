@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getActiveHabits } from "../../../application/habitQueries";
+import { readLadderOff, setLadderHabitOff } from "../../../application/habitLadder";
 import "../today/todayQuietLines.css";
 import { QUIET_LINE_DEFAULT_ORDER, QUIET_MAX_CHOICES, type QuietLineId, type QuietLineSettings } from "../today/attentionPolicy";
 import { quietLineOn, readTodayQuietSettings, setQuietLineOn, writeTodayQuietSettings } from "../today/todayQuietStore";
@@ -17,6 +19,7 @@ export const QUIET_LINE_LABELS: Record<QuietLineId, string> = {
   ROUTINE: "Routine row",
   EXPERIMENT: "Experiment line",
   REVIEW: "Review",
+  HABIT_LADDER: "Habit check-ins (when a habit keeps slipping)",
   WORK_DUE: "Work record due",
 };
 /** Lines whose own brief hasn't been built yet: they keep their place in the order and show once they exist. */
@@ -66,5 +69,21 @@ export function TodayQuietSettings() {
         onClick={() => save({ ...settings, oneAfterShift: !settings.oneAfterShift })}>{settings.oneAfterShift ? "ON" : "OFF"}</button>
     </div>
     <p className="meta">On: after SHIFT DOWN, the catch-up comes first and the close after it. Off: both show together.</p>
+    <LadderPausedHabits />
+  </div>;
+}
+
+/** GRAYSON-CHALLENGE-LADDER-001: habits he told Delta to stop asking about, each one tap to turn back on. */
+function LadderPausedHabits() {
+  const [paused, setPaused] = useState<{ id: string; name: string }[]>([]);
+  const load = () => { const off = readLadderOff(); void getActiveHabits().then((all) => setPaused(all.filter((h) => off.has(h.id)).map((h) => ({ id: h.id, name: h.name }))), () => setPaused([])); };
+  useEffect(load, []);
+  if (!paused.length) return null;
+  return <div role="group" aria-label="Habit check-ins turned off">
+    <p className="tool-label">Habit check-ins turned off</p>
+    {paused.map((h) => <div key={h.id} className="today-quiet-settings__row">
+      <span>{h.name}</span>
+      <button type="button" className="btn-secondary" aria-label={`Ask about ${h.name} again`} onClick={() => { setLadderHabitOff(h.id, false); load(); }}>ASK AGAIN</button>
+    </div>)}
   </div>;
 }

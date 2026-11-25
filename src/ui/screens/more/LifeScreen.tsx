@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useState, type KeyboardEvent } from "react";
 import { OperatorContextPanel } from "../../components/OperatorContextPanel";
 import { MemoryPanel } from "../../components/MemoryPanel";
 import { AlfredMemoryList } from "../../components/AlfredMemoryList";
@@ -28,13 +28,14 @@ const BLURB: Record<LifeTab, string> = {
   Memory: "What BEYOND and Alfred keep for you.",
 };
 
-export function LifeScreen({ active, initialTab = "Direction", startAtOverview = false, onNavigate, onTask }: { active: boolean; initialTab?: LifeTab; startAtOverview?: boolean } & Partial<Pick<WholeLifeActions, "onNavigate" | "onTask">>) {
+export function LifeScreen({ active, initialTab = "Direction", startAtOverview = false, tabRequest = null, onNavigate, onTask }: { active: boolean; initialTab?: LifeTab; startAtOverview?: boolean; /** C6.6: open one tab (e.g. Habits from TODAY's habit check-in). */ tabRequest?: { tab: LifeTab; key: number } | null } & Partial<Pick<WholeLifeActions, "onNavigate" | "onTask">>) {
   const [overview, setOverview] = useState(startAtOverview);
   const [memoryFocus, setMemoryFocus] = useState<string | null>(null);
   const [tab, setTab] = useState<LifeTab>(initialTab);
   const [visited, setVisited] = useState<Set<LifeTab>>(() => new Set([initialTab]));
   const open = (next: LifeTab) => { setTab(next); setVisited((v) => (v.has(next) ? v : new Set([...v, next]))); };
   const on = (t: LifeTab) => active && !overview && tab === t;
+  useEffect(() => { if (tabRequest) { setOverview(false); open(tabRequest.tab); } }, [tabRequest?.key]);
   const uid = useId();
   // Review of #362: the WAI-ARIA tabs pattern. One Tab stop; arrows, Home and End move between tabs.
   function onKey(e: KeyboardEvent<HTMLButtonElement>) {

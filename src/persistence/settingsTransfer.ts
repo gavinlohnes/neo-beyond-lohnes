@@ -48,6 +48,8 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.bridgePlan.settings.v1": "Phone alert updates",
   // GRAYSON-DICTATE-001: the TALK buttons and "sort what I say into logs".
   "beyond.dictation.v1": "Voice (TALK buttons)",
+  // GRAYSON-CHALLENGE-LADDER-001: the habits he told Delta to stop asking about.
+  "beyond.habitLadder.v1": "Habit check-ins: habits Delta doesn't ask about",
 };
 
 const MAX_VALUE_LENGTH = 16_384;

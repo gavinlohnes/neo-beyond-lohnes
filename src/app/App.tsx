@@ -351,6 +351,7 @@ function AppWorkspaces() {
   const [toolsRequest, setToolsRequest] = useState(0);
   const [captureOrigin, setCaptureOrigin] = useState<Tab | null>(null);
   const [moreRequest, setMoreRequest] = useState(0);
+  const [lifeTabRequest, setLifeTabRequest] = useState<{ tab: "Habits"; key: number } | null>(null);
   /** CAVE-DATA D1: TODAY's bands and SYSTEMS rows open DATA's cave on a view; each request counts up across mounts. */
   const [caveRequest, setCaveRequest] = useState<CaveRequest | undefined>(undefined);
   const [memoryFocusId, setMemoryFocusId] = useState<string | null>(null);
@@ -793,6 +794,7 @@ function AppWorkspaces() {
               onViewCommitments={(id) => openMore("INTENT", id ? { kind: "OBLIGATION", obligationId: id } : null)}
               onOpenPlan={() => openMore("PLAN")}
               onOpenLife={() => openMore("LIFE")}
+              onOpenHabits={() => { if (openMore("LIFE")) setLifeTabRequest((r) => ({ tab: "Habits", key: (r?.key ?? 0) + 1 })); }}
               onOpenTrain={openTrain}
               openToolsOnMount={todayToolsOpen}
               onOpenBody={openBody}
@@ -825,7 +827,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} lifeTabRequest={lifeTabRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}

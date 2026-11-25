@@ -1,0 +1,6 @@
+/* GRAYSON-CHALLENGE-LADDER-001: one quiet line. 16 px text, 44 px targets, tokens only, never red. */
+.habit-ladder { display: grid; gap: 8px; min-width: 0; }
+.habit-ladder__text, .habit-ladder__notice { margin: 0; font-size: 16px; color: var(--text-1); overflow-wrap: anywhere; }
+.habit-ladder__chips, .habit-ladder__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.habit-ladder__chips .chip, .habit-ladder__actions button { min-height: 44px; font-size: 16px; flex: 1 1 140px; }
+.habit-ladder__off { min-height: 44px; font-size: 16px; justify-self: start; text-align: start; }

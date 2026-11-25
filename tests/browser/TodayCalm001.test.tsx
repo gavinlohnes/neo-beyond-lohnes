@@ -188,7 +188,7 @@ describe("GRAYSON-TODAY-CALM-001 in MORE → Settings → TODAY", () => {
     const more = await render(<TodayQuietSettings />);
     await more.getByRole("button", { name: "Move Routine row up" }).click();
     await more.getByRole("button", { name: "RESET ORDER" }).click();
-    expect(JSON.parse(localStorage.getItem("beyond.todayQuiet.v1")!).order).toEqual(["DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "WORK_DUE"]);
+    expect(JSON.parse(localStorage.getItem("beyond.todayQuiet.v1")!).order).toEqual(["DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "HABIT_LADDER", "WORK_DUE"]);
     await more.getByRole("button", { name: "Show Drive home · hands-free" }).click();
     await cleanup();
     await fixture();

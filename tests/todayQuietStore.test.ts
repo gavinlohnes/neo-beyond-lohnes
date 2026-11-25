@@ -29,8 +29,8 @@ describe("todayQuietStore", () => {
     expect(s.order).toHaveLength(QUIET_LINE_DEFAULT_ORDER.length);
     expect(new Set(s.order).size).toBe(QUIET_LINE_DEFAULT_ORDER.length);
     // His two stay in his order; each missing line joins right after the line that comes before it by default
-    // (WORK_DUE after REVIEW; DRIVE_HOME's followers after DRIVE_HOME).
-    expect(s.order).toEqual(["REVIEW", "WORK_DUE", "DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT"]);
+    // (HABIT_LADDER then WORK_DUE after REVIEW; DRIVE_HOME's followers after DRIVE_HOME).
+    expect(s.order).toEqual(["REVIEW", "HABIT_LADDER", "WORK_DUE", "DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT"]);
     expect(normalizeQuietOrder([])).toEqual([...QUIET_LINE_DEFAULT_ORDER]);
   });
   it("damaged JSON reads as the defaults", () => {

@@ -1,4 +1,5 @@
 import { CoachCard } from "./CoachCard";
+import { HabitLadderLine } from "./HabitLadderLine";
 import type { CoachDestination } from "../../../application/coachCards";
 import "../more/wholeLife.css";
 import { DRIVE_HOME_EVENT } from "../../driveHomeEvent";
@@ -161,6 +162,7 @@ export function TodayScreen({
   onReturnFromCapture,
   onOpenPlan,
   onOpenLife,
+  onOpenHabits,
   onViewCommitments,
   onOpenTrain,
   onOpenBody,
@@ -187,6 +189,8 @@ export function TodayScreen({
   onReturnFromCapture?: (() => void) | undefined;
   onOpenPlan?: () => void;
   onOpenLife?: () => void;
+  /** GRAYSON-CHALLENGE-LADDER-001: CHANGE THE PLAN opens LIFE · Habits. */
+  onOpenHabits?: () => void;
   onViewCommitments?: (id?: string) => void;
   onOpenTrain?: (destination: TrainDestination) => void;
   onOpenWeeklyReview?: () => void;
@@ -556,7 +560,7 @@ export function TodayScreen({
   const [closeSeenTick, setCloseSeenTick] = useState(0);
   // GRAYSON-TODAY-CALM-001: what the self-loading quiet lines and the shift catch-up say they have to show, and a
   // tick for "N MORE" (its opened state is kept for the lived day in todayQuietStore).
-  const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean; PHONE_ALERTS_BEHIND: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false, PHONE_ALERTS_BEHIND: false });
+  const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean; PHONE_ALERTS_BEHIND: boolean; HABIT_LADDER: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false, PHONE_ALERTS_BEHIND: false, HABIT_LADDER: false });
   const [catchUpPresence, setCatchUpPresence] = useState<CatchUpPresence>("LOADING");
   const [quietMoreTick, setQuietMoreTick] = useState(0);
   useEffect(() => { if (!active) { lookPrevRef.current = undefined; lookBaseRef.current = null; setSince(null); setFreshMarks(new Set()); } }, [active]);
@@ -1101,10 +1105,11 @@ export function TodayScreen({
   if (quietPresence.ROUTINE) quietCandidates.push("ROUTINE");
   if (day && dayRead && quietPresence.EXPERIMENT) quietCandidates.push("EXPERIMENT");
   if (quietPresence.REVIEW) quietCandidates.push("REVIEW");
+  if (day && dayRead && quietPresence.HABIT_LADDER) quietCandidates.push("HABIT_LADDER");
   const quiet = deriveQuietLines(quietCandidates, { ...quietSettings, off: effectiveQuietOff(quietSettings) }, quietOperation);
   const quietMoreOpen = quietMoreTick >= 0 && quietMoreOpened(now);
   const quietVisible = (id: QuietLineId) => quiet.shown.includes(id) || (quietMoreOpen && quiet.tucked.includes(id));
-  const reportQuiet = (id: "ROUTINE" | "EXPERIMENT" | "REVIEW" | "PHONE_ALERTS_BEHIND") => (shown: boolean) => setQuietPresence((p) => (p[id] === shown ? p : { ...p, [id]: shown }));
+  const reportQuiet = (id: "ROUTINE" | "EXPERIMENT" | "REVIEW" | "PHONE_ALERTS_BEHIND" | "HABIT_LADDER") => (shown: boolean) => setQuietPresence((p) => (p[id] === shown ? p : { ...p, [id]: shown }));
   // One after-shift card at a time (on by default): the catch-up first, the close once catch-up is done or skipped
   // (or had nothing to ask), then the after-the-run section. Off, they show together as before.
   const afterShiftBlocked = dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId;
@@ -1406,8 +1411,10 @@ export function TodayScreen({
     {/* GRAYSON-TODAY-CALM-001 (C9.6): the quiet lines, together, right under the numbers, in his order. */}
     {dayRead && <TodayQuietLines tuckedCount={quietMoreOpen ? 0 : quiet.tucked.length}
       onMore={() => { markQuietMoreOpened(new Date()); setQuietMoreTick((n) => n + 1); }}
-      lines={quietSettings.order.filter((id): id is "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" => id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND").map((id) => ({ id, node:
+      lines={quietSettings.order.filter((id): id is "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" | "HABIT_LADDER" => id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND" || id === "HABIT_LADDER").map((id) => ({ id, node:
         id === "LOG_NUDGE" ? (logNudge && quietVisible("LOG_NUDGE") ? <LogNudgeLine nudge={logNudge} busy={busy} /> : null)
+        // GRAYSON-CHALLENGE-LADDER-001: mounted while tucked (it reports presence), not while his TODAY switch has it off.
+        : id === "HABIT_LADDER" ? (day && !effectiveQuietOff(quietSettings).includes("HABIT_LADDER") ? <HabitLadderLine now={now} tucked={!quietVisible("HABIT_LADDER")} onPresence={reportQuiet("HABIT_LADDER")} onOpenHabits={onOpenHabits} /> : null)
         : id === "PHONE_ALERTS_BEHIND" ? <PhoneAlertsBehindLine now={now} tucked={!quietVisible("PHONE_ALERTS_BEHIND")} onPresence={reportQuiet("PHONE_ALERTS_BEHIND")} />
         : (day ? <ActiveExperimentLine now={now} tucked={!quietVisible("EXPERIMENT")} onPresence={reportQuiet("EXPERIMENT")} /> : null) }))} />}
     {dayRead && onOpenRecord && <div className="today-note-shortcut"><button type="button" className="btn-secondary" disabled={busy} aria-label="Capture a note" aria-haspopup="dialog" onClick={() => { if (!busyRef.current) onOpenRecord("note"); }}>CAPTURE</button></div>}
