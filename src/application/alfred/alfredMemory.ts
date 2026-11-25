@@ -3,7 +3,7 @@ import { newId } from "../commands";
 import { getMemoryFacts, recordMemory } from "../memory";
 import { writeAtomically } from "../atomicWrite";
 import type { AlfredMemory, MemoryTopic, MemoryReference } from "../../domain/alfred/types";
-import type { MemoryFact, MemoryVia } from "../../domain/memory";
+import { MEMORY_MAX, type MemoryFact, type MemoryVia } from "../../domain/memory";
 
 /** C6.7: a kept old entry keeps the date he first said it, so Delta reads the same date after his review. */
 const asMemory = (f: MemoryFact): AlfredMemory => ({ id: f.factId, text: f.statement, topic: f.topic!, savedAt: f.origin?.savedAt ?? f.createdAt, recordedAt: f.recordedAt, lastConfirmedAt: f.lastConfirmedAt,
@@ -57,7 +57,7 @@ export async function convertLegacyMemory(source: AlfredMemory, statement: strin
 }
 
 /** The longest words a memory holds (memory.ts snapshot). */
-export const MEMORY_MAX = 280;
+export { MEMORY_MAX };
 /**
  * C6.7 review, DON'T KEEP: converts the old entry and stops it in one write, so it leaves Delta's context but stays
  * restorable under Stopped. Nothing is deleted; the original words stay as evidence. An entry too long to be a fact

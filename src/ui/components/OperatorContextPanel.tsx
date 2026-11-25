@@ -10,7 +10,7 @@ export function ContextSourceDetails({ source }: { source: ContextSource }) {
     {source.at && <p className="meta">Source date: {format(source.at)}</p>}
     {source.confirmedAt && <p className="meta">Last confirmed: {format(source.confirmedAt)}</p>}
     <p className="meta">{source.freshness}</p>
-    {source.kind === "ALFRED_MEMORY" && <p className="meta">This legacy entry has no revision history. Forget deletes the local entry; old exports and earlier external requests are not recalled.</p>}
+    {source.kind === "ALFRED_MEMORY" && <p className="meta">Old Delta entry, not reviewed yet: no revision history. Review it in MORE · Memory. DON'T KEEP stops it; nothing is deleted.</p>}
     {(source.kind === "MEMORY" || source.kind === "PERSONAL_FACT") && <p className="meta">Corrections and no-longer-relevant status retain revision history.</p>}
   </div>;
 }

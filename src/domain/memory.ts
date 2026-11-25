@@ -1,5 +1,7 @@
 import type { MemoryTopic } from "./alfred/types";
 /** MEMORY-001: operator-authored facts; never inferred or recommendation inputs. */
+/** The longest a memory's words can be; the one source for the schema and the old-entry review. */
+export const MEMORY_MAX = 280;
 export const MEMORY_KINDS = ["PREP_FOOD", "PREP_BOTTLE", "PREP_OTHER", "RECOVERY", "DIRECTION", "CONSTRAINT", "PERSONAL_FACT"] as const;
 export type MemoryKind = typeof MEMORY_KINDS[number];
 export const MEMORY_LABELS: Record<MemoryKind, string> = {

@@ -31,7 +31,7 @@ it("inspects both local memory contracts offline without a key or writes, with a
   await expect.poll(() => document.activeElement?.textContent).toBe("INSPECT Keep the morning quiet");
   await screen.getByRole("button", { name: "INSPECT An old Alfred fact", exact: true }).click();
   await expect.element(detail).toHaveTextContent("no revision history");
-  await expect.element(detail).toHaveTextContent("Forget deletes the local entry");
+  await expect.element(detail).toHaveTextContent("nothing is deleted");
   expect(screen.getByRole("button", { name: /^INSPECT / }).elements()).toHaveLength(5);
   await screen.getByRole("button", { name: "SHOW MORE SOURCES", exact: true }).click();
   expect(screen.getByRole("button", { name: /^INSPECT / }).elements()).toHaveLength(10);
