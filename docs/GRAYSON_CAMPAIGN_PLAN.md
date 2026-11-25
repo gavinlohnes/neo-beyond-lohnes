@@ -80,7 +80,7 @@ status of its own.
 | C4.1 | Energy curve body-clock fix | Done (verified and locked; no runtime change) | [brief](agent/GRAYSON-C4.1-001.md); the body-clock model itself stays unvalidated |
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
 | C4.2a | Owner-editable caffeine cut-off, source, SAVE / UNDO | Done (#595) | Narrowed by Gavin 2026-11-20: no automated suggestion, confidence or suppression. Explicit experiment deferred to separate authorization |
-| C4.3 | Optional one-tap caffeine log | Not started |  |
+| C4.3 | Optional one-tap caffeine log | Briefed | Log only, Gavin 2026-11-25: no "still in your system" estimate and no monthly sleep comparison. [Brief](agent/GRAYSON-CAFFEINE-LOG-001.md) |
 | C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Done (#627) | Hard/late session adds "Protect sleep tonight"; train window from usual wake to 2 h before the shift; [brief](agent/GRAYSON-TRAIN-FINISH-2.md) |
 | C4.4p | Guided exercise/calibration preview | Done (#608) | Read-only first Training Intelligence slice; no programme, Engine or C4.4 training-to-sleep/window behavior |
 | C4.4d | Guided three-session plan draft | Done (#609) | Ephemeral A/B/C and reality-form preview; no save/activation and does not start C4.4 |
@@ -605,6 +605,8 @@ Health Bridge.
   - Builds on: water log pattern (`commands.ts`), `tagPatterns.ts`/`tryExperiment.ts` for the comparison.
   - Lane, size: **Protected** (new event + backup; amends the locked "caffeine never recorded") · **M**.
   - Borrow: same half-life code as C4.2. **Needs Gavin's answer (Q2 in section 7).**
+  - **Narrowed by Gavin, 2026-11-25 ("Yes" to log only):** the log only. No "still in his system" estimate and no
+    monthly sleep comparison, per his Nov 20 C4.2a ruling. [Brief](agent/GRAYSON-CAFFEINE-LOG-001.md).
 - **C4.4 EXPAND · Training feeds the night (HARVEST-003 W2) and a train window.** A hard or late
   session adds "protect sleep tonight" to the plan; TRAIN shows when to train today from shift and
   sleep windows (#592's TRAIN-WINDOW-001).
