@@ -83,3 +83,12 @@ it("a native backup keeps converted, declined and unreviewed entries; an older b
   await db.import(new File([older], "older.json", { type: "application/json" }), { clearTablesBeforeImport: true });
   expect((await getMemoryFacts()).map((f) => f.statement).sort()).toEqual(before.facts.map((f) => f[0]).sort());
 });
+
+it("a chain whose via changes partway (imported or hand-edited) is refused, like a changed origin", async () => {
+  const first = await recordMemory({ factId: "f1", expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", topic: "WORK", statement: "Locker 12", via: "DELTA" });
+  await recordMemory({ factId: "f1", expectedPreviousId: first.id, action: "CONFIRMED" });
+  const events = await db.events.where("type").equals("MEMORY_RECORDED").toArray();
+  expect(() => projectMemory(events)).not.toThrow();
+  const tampered = events.map((e, i) => i === 1 ? { ...e, payload: { ...(e.payload as object), via: "HOME" } } : e);
+  expect(() => projectMemory(tampered)).toThrow();
+});

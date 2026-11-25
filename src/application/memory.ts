@@ -2,7 +2,7 @@ import type { WriteReceipt } from "./writeReceipt";
 import { z } from "zod";
 import { db } from "../persistence/db";
 import type { DomainEvent } from "../domain/common/types";
-import { MEMORY_KINDS, MEMORY_VIAS, type MemoryAction, type MemoryFact, type MemoryKind, type MemoryRevision, type MemoryVia } from "../domain/memory";
+import { MEMORY_KINDS, MEMORY_MAX, MEMORY_VIAS, type MemoryAction, type MemoryFact, type MemoryKind, type MemoryRevision, type MemoryVia } from "../domain/memory";
 import { writeAtomically } from "./atomicWrite";
 import { MEMORY_TOPICS } from "../domain/alfred/types";
 import { logIntentEvent } from "./intentCommands";
@@ -12,7 +12,7 @@ import { computeDueRollover } from "../engine/dayRollover";
 
 const originSchema = z.object({ kind: z.literal("ALFRED_MEMORY"), id: z.string().min(1), text: z.string().min(1), topic: z.enum(MEMORY_TOPICS), savedAt: z.string().datetime() }).strict();
 const snapshot = z.object({
-  factId: z.string().min(1).max(100), kind: z.enum(MEMORY_KINDS), statement: z.string().trim().min(1).max(280),
+  factId: z.string().min(1).max(100), kind: z.enum(MEMORY_KINDS), statement: z.string().trim().min(1).max(MEMORY_MAX),
   topic: z.enum(MEMORY_TOPICS).optional(), origin: originSchema.optional(),
   // C6.7: optional, so every event saved before it still parses.
   via: z.enum(MEMORY_VIAS).optional(),
@@ -43,7 +43,7 @@ export function projectMemory(events: readonly DomainEvent[]): MemoryFact[] {
       const same = previous && payload.kind === previous.kind && payload.statement === previous.statement && payload.topic === previous.topic;
       if (!previous) { if (payload.action !== "CREATED" || payload.status !== "ACTIVE") throw broken(); }
       else {
-        if ((payload.kind === "PERSONAL_FACT") !== (previous.kind === "PERSONAL_FACT") || JSON.stringify(payload.origin) !== JSON.stringify(previous.origin)) throw broken();
+        if ((payload.kind === "PERSONAL_FACT") !== (previous.kind === "PERSONAL_FACT") || JSON.stringify(payload.origin) !== JSON.stringify(previous.origin) || payload.via !== previous.via) throw broken();
         if (payload.action === "CREATED") throw broken();
         if (payload.action === "CORRECTED" && payload.status !== previous.status) throw broken();
         if (payload.action === "CONFIRMED" && (!same || previous.status !== "ACTIVE" || payload.status !== "ACTIVE")) throw broken();
