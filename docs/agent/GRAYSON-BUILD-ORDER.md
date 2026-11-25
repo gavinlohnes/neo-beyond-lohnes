@@ -37,6 +37,20 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 
 ## Claude Code (TRAIN, then DATA)
 
+### First: TRAIN basics (Gavin, 2026-11-25: "get the basics pretty close to perfect before we start building all of this ontop of it")
+
+These five go ahead of every unstarted row below, in this order. Each builds on the one before.
+
+| # | Brief | Why here | Lane |
+|---|---|---|---|
+| B1 | [GRAYSON-ROUTINE-EDIT-001](GRAYSON-ROUTINE-EDIT-001.md) | One routine editor in TRAIN, A, B and C included, with UNDO and RESET TO ORIGINAL; the programme stays in step. The rest save through it. | PROTECTED |
+| B2 | [GRAYSON-WORKOUT-CHANGES-001](GRAYSON-WORKOUT-CHANGES-001.md) | ADD EXERCISE and SWAP mid-workout, then one KEEP FOR NEXT TIME. Replaces TRAIN-ORDER-001 (row 20). | PROTECTED |
+| B3 | [GRAYSON-ONE-OFF-001](GRAYSON-ONE-OFF-001.md) | Empty workout, SAVE AS ROUTINE, and START on TODAY. A TODAY change: one TODAY PR open at a time across both sessions. | PROTECTED |
+| B4 | [GRAYSON-WEEK-PLAN-001](GRAYSON-WEEK-PLAN-001.md) | The week laid on his Week A and Week B, one day or every week. | PROTECTED |
+| B5 | [GRAYSON-BLOCK-CYCLE-001](GRAYSON-BLOCK-CYCLE-001.md) | 4 to 6 week blocks, a lighter last week, and the block review he decides by tap. Amends TRAIN Intelligence §7. | PROTECTED |
+
+### Then the queue below
+
 | # | Brief | Row | Why here | Lane |
 |---|---|---|---|---|
 | 1 | [GRAYSON-TRAIN-EDIT-001](GRAYSON-TRAIN-EDIT-001.md) | E1 | Already open as #675. Every later set (lock screen, notes) can then be corrected. | PROTECTED |
@@ -58,7 +72,7 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | 17 | [GRAYSON-STARTER-HABITS-001](GRAYSON-STARTER-HABITS-001.md) | NHS Drink Free Days | Quick: one-tap starters in Add a habit, including drink-free days. Shares no files with the rows above. | FEATURE |
 | 18 | [GRAYSON-MONTH-PATTERNS-001](GRAYSON-MONTH-PATTERNS-001.md) | C5.4 | Energy, mood and stress by shift-week position, short sleep and training over 28 days; floors of 5 a side; Delta only with personal opt-in. After DELTA-READS. | PROTECTED |
 | 19 | [GRAYSON-EDITED-MARK-001](GRAYSON-EDITED-MARK-001.md) | E4 | Quick: one "edited" mark on every fixed value, with what it was a tap away. Display only. | FEATURE |
-| 20 | [GRAYSON-TRAIN-ORDER-001](GRAYSON-TRAIN-ORDER-001.md) | B9 | KEEP THIS ORDER at the end of a workout done in a different order. Rebases on any open TRAIN PR. | PROTECTED |
+| 20 | ~~[GRAYSON-TRAIN-ORDER-001](GRAYSON-TRAIN-ORDER-001.md)~~ | B9 | **Folded into WORKOUT-CHANGES-001 (B2); skip it.** | PROTECTED |
 | 21 | [GRAYSON-CAFFEINE-LOG-001](GRAYSON-CAFFEINE-LOG-001.md) | C4.3 | One-tap caffeine log, log only (Gavin's "Yes", 2026-11-25). After HABIT-EDIT if open (both add a removal type). | PROTECTED |
 | 22 | [GRAYSON-TELL-DELTA-FIX-001](GRAYSON-TELL-DELTA-FIX-001.md) | E11 | Fix sleep, weight, check-ins and sets from the last 7 days by telling Delta, through the existing correction commands, each on a card he confirms. | PROTECTED |
 | 23 | [GRAYSON-RESTORE-DRILL-001](GRAYSON-RESTORE-DRILL-001.md) | C8.2 | A full trial restore into a scratch copy that's then deleted; his data is never written. Shares no files with the rows above. | PROTECTED |

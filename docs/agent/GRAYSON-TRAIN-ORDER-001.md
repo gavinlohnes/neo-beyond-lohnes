@@ -1,5 +1,7 @@
 # GRAYSON-TRAIN-ORDER-001 — keep the order you lifted in, for next time
 
+> **Replaced (2026-11-25):** folded into [GRAYSON-WORKOUT-CHANGES-001](GRAYSON-WORKOUT-CHANGES-001.md), whose one end-of-workout choice covers a changed order. Don't build this brief.
+
 - **Authorization:** Gavin, 2026-11-24. Backlog row **B9** (SHAPE): "Mostly built: the jump rail already lets him do
   exercises in any order. Left: the new order isn't saved for next time" (`/mnt/project-files/grayson/BACKLOG.md`, TRAIN
   row 27). His rule: **"I should be able to edit and tweak or correct everything in this app."** 04:38 CT: **"Work on
