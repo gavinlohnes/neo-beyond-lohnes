@@ -43,5 +43,14 @@
 .redesign-today .today-week-strip__day[data-work="OFF"] .today-week-strip__glyph { border-bottom: 1px solid var(--border-subtle, var(--border-strong)); height: 4px; }
 
 /* GRAYSON-FLIP-PLAN-001: the flip plan's one quiet line. Muted, 16 px, never red; a 44 px tap target. */
-.today-flip-line { display: block; width: 100%; min-height: 44px; margin: 0 0 4px; padding: 4px 0; text-align: left; background: transparent; border: 0; color: var(--text-2, #a8a8a8); font: inherit; font-size: 16px; line-height: 1.4; cursor: pointer; }
-.today-flip-line:focus-visible { outline: 2px solid var(--text-1, #f2f2f2); outline-offset: 2px; }
+.redesign-today .today-flip-line { display: block; width: 100%; min-height: 44px; margin: 0 0 4px; padding: 4px 0; text-align: left; background: transparent; border: 0; color: var(--text-2, #a8a8a8); font: inherit; font-size: 16px; line-height: 1.4; cursor: pointer; }
+.redesign-today .today-flip-line:focus-visible { outline: 2px solid var(--text-1, #f2f2f2); outline-offset: 2px; }
+/* GRAYSON-RUN-DEBRIEF-001: the run debrief inside RUN OVER, between the report and the contract. */
+.redesign-today .today-run-debrief { margin-top: 8px; }
+.redesign-today .today-run-debrief__title { margin: 0; color: var(--text-1); }
+.redesign-today .today-run-debrief .reflect-chips { margin-top: 4px; }
+.redesign-today .today-run-debrief__row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.redesign-today .today-run-debrief__row > button { min-height: 44px; width: auto; flex: 0 0 auto; padding-inline: 16px; }
+.redesign-today .today-run-debrief__row > .today-run-debrief__title { flex: 1 1 auto; }
+.redesign-today .today-run-debrief__field { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.redesign-today .today-run-debrief__field input { min-height: 44px; font-size: 16px; width: 100%; box-sizing: border-box; }

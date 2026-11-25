@@ -33,6 +33,7 @@ import { diffLook, firstKnown, markKey, mergeLook, newMarkKeys, sinceLabel, type
 import { readLastLook, writeLastLook } from "./lastLookStore";
 import { contractDate } from "../../../application/recoveryContract";
 import { PostRunReportDisclosure, RecoveryContractOffer } from "./RecoveryContract";
+import { RunDebrief } from "./RunDebrief";
 import { createObligation } from "../../../application/intentCommands";
 import { CheckInSheet } from "./CheckInSheet";
 import { useSessionDraft } from "../../sessionDrafts";
@@ -1405,6 +1406,8 @@ export function TodayScreen({
     {day && runOverShows && <section className="today-run-over" aria-label="After the run">
         {/* LIFE-STATE-003: the run that just ended, and an optional recovery contract for the first full day off. */}
         <PostRunReportDisclosure />
+        {/* GRAYSON-RUN-DEBRIEF-001 (C2.5): how the run went, once per run, between the report and the contract. */}
+        <RunDebrief busy={busy} />
         <RecoveryContractOffer dayLabel={new Date(`${contractDate(now)}T12:00:00`).toLocaleDateString("en-US", { weekday: "short" })} planned={!!recordedNow?.contractPlanned} busy={busy}
           onSave={async (item) => { await createObligation({ title: item.title, plannedAt: contractDate(new Date()), description: item.description }); }}
           onSaved={() => void refresh()} />

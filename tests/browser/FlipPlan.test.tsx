@@ -60,18 +60,20 @@ describe("TODAY: one muted quiet line on the flip days", () => {
   it("Gavin's quiet-line call: the day's next action doesn't move at 360 px on LAST SHIFT", async () => {
     vi.setSystemTime(new Date(2026, 10, 19, 18));
     await startDay();
-    const topOfNext = async () => {
+    const topOfNext = async (lineShown: boolean) => {
       await render(<TodayScreen onOpenLife={() => {}} onOpenCave={() => {}} />);
       await expect.poll(moment).toMatch(/^LAST SHIFT /);
       await new Promise((r) => setTimeout(r, 1500));
       window.scrollTo(0, 0);
       const top = Math.round(document.querySelector("[aria-label='Next action']")!.getBoundingClientRect().top);
+      // #725 review: the comparison only means something if the line really rendered in the with-line pass.
+      expect(flipLine() !== null).toBe(lineShown);
       await cleanup();
       return top;
     };
-    const withLine = await topOfNext();
+    const withLine = await topOfNext(true);
     localStorage.setItem("beyond.shiftSleepPlan.skip.2026-11-19.FLIP_BACK", "1");
-    const without = await topOfNext();
+    const without = await topOfNext(false);
     expect(withLine).toBe(without);
   });
   it("#723 review: SKIP in ROUTE hides the TODAY line too", async () => {

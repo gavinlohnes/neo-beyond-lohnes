@@ -61,12 +61,12 @@ status of its own.
 | C2.1 | Arrival in two taps | Done (#617) | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Done (#722, [SHIFTDOWN-TAPS-001](agent/GRAYSON-SHIFTDOWN-TAPS-001.md)) | [brief](agent/GRAYSON-SHIFTDOWN-TAPS-001.md); Claude Code (ccr-380c4225), queue moved from Grok Bot |
 | C2.3 | Home moment | Not started |  |
-| C2.4 | Flip-day plan | Done (#723, [FLIP-PLAN-001](agent/GRAYSON-FLIP-PLAN-001.md)) | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Claude Code (ccr-380c4225), queue moved from Grok Bot; Protected, Gavin merges |
-| C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
+| C2.4 | Flip-day plan | Done (#723, review follow-up #725, [FLIP-PLAN-001](agent/GRAYSON-FLIP-PLAN-001.md)) | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Claude Code (ccr-380c4225), queue moved from Grok Bot; Protected, Gavin merges |
+| C2.5 (Q8) | Two-tap run debrief | In review | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Claude Code (ccr-380c4225), queue moved from Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
 | C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Done (#706) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
-| C3.1 (Q7) | Last done and evidence | In review | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Claude Code (ccr-380c4225), queue moved from Grok Bot |
+| C3.1 (Q7) | Last done and evidence | Done (#724) | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Claude Code (ccr-380c4225), queue moved from Grok Bot |
 | C3.2 | Lead time and "coming up" | Briefed (GRAYSON-COMING-UP-001, 2026-11-25) |  |
 | C3.3 | Day-off shape | Briefed (GRAYSON-DAY-OFF-SHAPE-001, 2026-11-25) |  |
 | C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
