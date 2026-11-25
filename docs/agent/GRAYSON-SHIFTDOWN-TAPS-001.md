@@ -11,7 +11,7 @@
 - **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
   2026-11-25). Branch `ccr-380c4225-shiftdown-taps`, or the branch name its session allows. **Reviewer:** a fresh-context
   reviewer.
-  **Active PR:** pending.
+  **Active PR:** branch `ccr-380c4225-shiftdown-taps` (2026-11-25).
 - **Order and overlap:** Delta-track session **#2** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after CARRY-001. Touches `ShiftDownCard.tsx` and
   `TodayScreen.tsx` (one line above `ShiftCatchUpCard`). CARRY-001 changes `CloseCard.tsx`, not these, so no shared
   file except `TodayScreen.tsx`; rebase on whichever merges first.
@@ -126,6 +126,16 @@ state, like the close's done marker).
 - The home pick is one day's note, never an input: the campaign plan says it "lives only for the lived day and is
   never an Engine input".
 - One minute, not five: the bridge has to fit in two minutes; the source's 5 minutes is one tap away in settings.
+
+## Status (2026-11-25)
+Built on `ccr-380c4225-shiftdown-taps`; screenshots in `docs/agent/screenshots/GRAYSON-SHIFTDOWN-TAPS-001/`.
+- **Placement (stop-and-ask check):** default 1 says "under the in progress line". Placed there, the section would push
+  COMPLETE SHIFT DOWN down the screen, which is this brief's first stop condition. So it sits inside the same
+  in-progress card **below COMPLETE / CANCEL**; the buttons don't move at any width.
+- `captureItem` needed no change. "First at home" is the `FIRST_AT_HOME` quiet line (TODAY-CALM), so it never sits
+  above the day's next step; its TODAY switch is the existing quiet-line switch.
+- The "under two minutes" line isn't timed in a test; the three rows are one field and two one-tap actions, and the
+  default breath is one minute.
 
 ## Stop and ask Gavin if
 - SHIFT DOWN's in-progress card can't take the section without pushing COMPLETE SHIFT DOWN below the fold at 360 px.

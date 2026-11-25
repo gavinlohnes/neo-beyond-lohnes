@@ -187,9 +187,11 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.bodyMap.v1": "view setting",
       // GRAYSON-FLIP-PLAN-001: TODAY's flip line asks ROUTE to open at the card (this visit only).
       "beyond.flipPlan.focus.v1": "this visit only (session)",
+      // GRAYSON-SHIFTDOWN-TAPS-001: tonight's "first at home" pick, one lived day's state (the brief: doesn't travel).
+      "beyond.shiftDownHomeFirst.v1": "one lived day's state",
     };
     const EVENTS = new Set(["beyond:ask-alfred", "beyond:do", "beyond:drive-home", "beyond:find-food", "beyond:hidden-features",
-      "beyond:memory-changed", "beyond:open-record", "beyond:routines-changed", "beyond:snippets-changed", "beyond:weekly-review-saved"]);
+      "beyond:home-first-changed", "beyond:memory-changed", "beyond:open-record", "beyond:routines-changed", "beyond:snippets-changed", "beyond:weekly-review-saved"]);
     const files: string[] = [];
     const walk = (dir: string) => { for (const name of readdirSync(dir)) { const p = join(dir, name); if (statSync(p).isDirectory()) walk(p); else if (/\.tsx?$/.test(p)) files.push(p); } };
     walk("src");
