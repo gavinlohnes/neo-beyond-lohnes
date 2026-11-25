@@ -2,7 +2,7 @@ import type { WriteReceipt } from "./writeReceipt";
 import { z } from "zod";
 import { db } from "../persistence/db";
 import type { DomainEvent } from "../domain/common/types";
-import { MEMORY_KINDS, type MemoryAction, type MemoryFact, type MemoryKind, type MemoryRevision } from "../domain/memory";
+import { MEMORY_KINDS, MEMORY_VIAS, type MemoryAction, type MemoryFact, type MemoryKind, type MemoryRevision, type MemoryVia } from "../domain/memory";
 import { writeAtomically } from "./atomicWrite";
 import { MEMORY_TOPICS } from "../domain/alfred/types";
 import { logIntentEvent } from "./intentCommands";
@@ -14,6 +14,8 @@ const originSchema = z.object({ kind: z.literal("ALFRED_MEMORY"), id: z.string()
 const snapshot = z.object({
   factId: z.string().min(1).max(100), kind: z.enum(MEMORY_KINDS), statement: z.string().trim().min(1).max(280),
   topic: z.enum(MEMORY_TOPICS).optional(), origin: originSchema.optional(),
+  // C6.7: optional, so every event saved before it still parses.
+  via: z.enum(MEMORY_VIAS).optional(),
   status: z.enum(["ACTIVE", "IRRELEVANT"]), supersedes: z.string().min(1).nullable(),
   action: z.enum(["CREATED", "CORRECTED", "CONFIRMED", "IRRELEVANT", "RESTORED"]),
 }).strict().refine((p) => p.kind === "PERSONAL_FACT" ? Boolean(p.topic) : p.topic === undefined && p.origin === undefined);
@@ -72,7 +74,9 @@ export async function getMemoryWorkspace() {
     return { facts, dayId: day?.id ?? null };
   });
 }
-type Write = { dayId?: string | null | undefined; factId: string; expectedPreviousId: string | null; action: MemoryAction; kind?: MemoryKind; statement?: string; topic?: MemoryFact["topic"]; origin?: MemoryFact["origin"] };
+type Write = { dayId?: string | null | undefined; factId: string; expectedPreviousId: string | null; action: MemoryAction; kind?: MemoryKind; statement?: string; topic?: MemoryFact["topic"]; origin?: MemoryFact["origin"];
+  /** C6.7: where a new fact came from; later revisions carry the fact's own forward. */
+  via?: MemoryVia | undefined };
 /** A revision never consumes food/water or changes tasks/plans/recommendations. */
 export async function recordMemory(input: Write, receipt?: WriteReceipt): Promise<MemoryFact> {
   return writeAtomically(["beyondDays", "alfredMemories"], async () => {
@@ -84,6 +88,7 @@ export async function recordMemory(input: Write, receipt?: WriteReceipt): Promis
     const payload = snapshot.safeParse({ factId: input.factId, action: input.action,
       ...(input.topic ?? current?.topic ? { topic: input.topic ?? current?.topic } : {}),
       ...(input.origin ?? current?.origin ? { origin: input.origin ?? current?.origin } : {}),
+      ...((current ? current.via : input.via) ? { via: current ? current.via : input.via } : {}),
       kind: input.kind ?? current?.kind, statement: input.statement ?? current?.statement,
       status: input.action === "IRRELEVANT" ? "IRRELEVANT" : input.action === "RESTORED" || input.action === "CREATED" ? "ACTIVE" : current?.status,
       supersedes: input.expectedPreviousId });

@@ -183,6 +183,7 @@ function AppWorkspaces() {
   // CONNECT-002: a tapped link opens where its record lives.
   const [dailyNoteDayId, setDailyNoteDayId] = useState<string | null>(null);
   const [personFocus, setPersonFocus] = useState<string | null>(null);
+  const [workRecordFocus, setWorkRecordFocus] = useState<string | null>(null);
   const openRecordRef = useRef<(target: OpenRecordTarget) => void>(() => {});
   openRecordRef.current = (target) => {
     if (target.kind === "TASK") openMore("INTENT", { kind: "OBLIGATION", obligationId: target.id });
@@ -190,6 +191,7 @@ function AppWorkspaces() {
     else if (target.kind === "DAY") { if (openMore("DAILY_NOTE")) setDailyNoteDayId(target.id); }
     else if (target.kind === "PERSON") { if (openMore("PEOPLE")) setPersonFocus(target.id); }
     else if (target.kind === "JOURNAL") openMore("JOURNAL");
+    else if (target.kind === "WORK_RECORD") { if (openMore("WORK_RECORD")) setWorkRecordFocus(target.id); }
     else openMore("HIGHLIGHTS");
   };
   useEffect(() => { const open = (e: Event) => openRecordRef.current((e as CustomEvent<OpenRecordTarget>).detail); window.addEventListener(OPEN_RECORD_EVENT, open); return () => window.removeEventListener(OPEN_RECORD_EVENT, open); }, []);
@@ -605,7 +607,7 @@ function AppWorkspaces() {
     if (!canNavigate()) return false;
     setCommandTodayOrigin(tab === "TODAY" && view !== "MENU");
     setHealthHistoryOrigin(false); setHealthHistory(null);
-    setIntentFocus(focus); setMemoryFocusId(null); setDailyNoteDayId(null); setPersonFocus(null);
+    setIntentFocus(focus); setMemoryFocusId(null); setDailyNoteDayId(null); setPersonFocus(null); setWorkRecordFocus(null);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
     showTab("COMMAND", false);
@@ -827,7 +829,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} lifeTabRequest={lifeTabRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} lifeTabRequest={lifeTabRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} workRecordFocus={workRecordFocus} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}

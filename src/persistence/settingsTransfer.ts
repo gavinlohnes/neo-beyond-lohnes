@@ -48,6 +48,8 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.bridgePlan.settings.v1": "Phone alert updates",
   // GRAYSON-DICTATE-001: the TALK buttons and "sort what I say into logs".
   "beyond.dictation.v1": "Voice (TALK buttons)",
+  // GRAYSON-WORK-RECORD-001: his yearly training-hours goal, the month his year starts, per-kind reminder days.
+  "beyond.workRecord.v1": "Work record",
   // GRAYSON-CHALLENGE-LADDER-001: the habits he told Delta to stop asking about.
   "beyond.habitLadder.v1": "Habit check-ins: habits Delta doesn't ask about",
 };

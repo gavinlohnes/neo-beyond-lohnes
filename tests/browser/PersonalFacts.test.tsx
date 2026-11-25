@@ -3,7 +3,6 @@ import { cleanup, render } from "vitest-browser-react";
 import { page } from "vitest/browser";
 import axe from "axe-core";
 import { MemoryPanel } from "../../src/ui/components/MemoryPanel";
-import { AlfredMemoryList } from "../../src/ui/components/AlfredMemoryList";
 import { getMemoryFacts } from "../../src/application/memory";
 import { getMemories } from "../../src/application/alfred/alfredMemory";
 import { db } from "../../src/persistence/db";
@@ -37,21 +36,25 @@ it("saves and corrects global facts offline without a day, then stops using and 
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   }
 });
-it("requires a reviewed individual conversion, keeps long drafts and rejects stale original evidence", async () => {
+it("an old entry too long to keep as written offers FIX and DON'T KEEP, never cuts it, keeps the draft and rejects stale evidence", async () => {
   await db.alfredMemories.add({ id: "legacy", text: "z".repeat(400), topic: "PERSON", savedAt: "2026-01-01T12:00:00.000Z" });
-  const screen = await render(<><MemoryPanel /><AlfredMemoryList active /></>);
-  await screen.getByText("Original Alfred entries (1)", { exact: true }).click();
-  await screen.getByRole("button", { name: "REVIEW CONVERSION" }).click();
-  await expect.element(screen.getByRole("button", { name: "CONVERT & CONFIRM THIS ENTRY" })).toBeDisabled();
-  await screen.getByRole("textbox", { name: "Destination wording" }).fill("Operator chooses shorter words");
+  const screen = await render(<MemoryPanel />);
+  await screen.getByRole("button", { name: "REVIEW", exact: true }).click();
+  const row = screen.getByRole("listitem").filter({ hasText: "Too long to keep as written" });
+  expect(row.getByRole("button", { name: "KEEP", exact: true }).elements()).toHaveLength(0);
+  await row.getByRole("button", { name: "FIX", exact: true }).click();
+  await expect.element(screen.getByRole("textbox", { name: "Your words" })).toHaveValue("z".repeat(400));
+  await expect.element(screen.getByRole("button", { name: "SAVE", exact: true })).toBeDisabled();
+  await screen.getByRole("textbox", { name: "Your words" }).fill("Operator chooses shorter words");
   expect(await getMemoryFacts()).toEqual([]);
   await db.alfredMemories.update("legacy", { text: "Changed elsewhere" });
-  await screen.getByRole("button", { name: "CONVERT & CONFIRM THIS ENTRY" }).click();
+  await screen.getByRole("button", { name: "SAVE", exact: true }).click();
   await expect.element(screen.getByRole("alert")).toHaveTextContent("Original memory changed");
-  await expect.element(screen.getByRole("textbox", { name: "Destination wording" })).toHaveValue("Operator chooses shorter words");
-  await screen.getByRole("button", { name: "DISCARD CONVERSION DRAFT" }).click();
-  await screen.getByRole("button", { name: "REVIEW CONVERSION" }).click();
-  await screen.getByRole("button", { name: "CONVERT & CONFIRM THIS ENTRY" }).click();
+  await expect.element(screen.getByRole("textbox", { name: "Your words" })).toHaveValue("Operator chooses shorter words");
+  await screen.getByRole("button", { name: "CANCEL", exact: true }).click();
+  await screen.getByRole("button", { name: "FIX", exact: true }).click();
+  await screen.getByRole("textbox", { name: "Your words" }).fill("Operator chooses shorter words");
+  await screen.getByRole("button", { name: "SAVE", exact: true }).click();
   await expect.poll(() => getMemoryFacts().then((f) => f.length)).toBe(1);
   expect(await db.alfredMemories.count()).toBe(1);
   expect((await getMemories())[0]!.reference!.source).toBe("PERSONAL_FACT");

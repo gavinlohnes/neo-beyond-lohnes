@@ -12,7 +12,7 @@ import { getProject } from "../projectQueries";
 import { createRoutine, getRoutines, matchSteps, modifyRoutine, setRoutineStep } from "../routineCommands";
 import { ROUTINE_MOMENTS, ROUTINE_MOMENT_LABELS } from "../../domain/routines";
 import { logCleanDay, logUrge } from "../quitCommands";
-import { forgetFact, rememberFact, stopUsingMemory, restoreMemory } from "./alfredMemory";
+import { declineLegacyMemory, getMemories, rememberFact, stopUsingMemory, restoreMemory } from "./alfredMemory";
 import { addPersonDate, anchorRule, describeMonthDay } from "../peopleCommands";
 import { addHomeItem, describeRepeat, isRealDate, REPEAT_UNITS } from "../homeCommands";
 import { formatLocalDate } from "../../engine/scheduledContext";
@@ -665,15 +665,21 @@ export const REGISTRY: Registry = {
       input_schema: obj(["text", "topic"], { text: s("the fact"), topic: { type: "string", enum: [...MEMORY_TOPICS], description: "what it's about" } }) },
     parse: (i) => { const t = str(i.text); const topic = MEMORY_TOPICS.find((m) => m === i.topic) ?? "OTHER"; return t ? { kind: "remember", text: t, topic } : null; },
     describe: (p) => `Remember (${p.topic.toLowerCase()}): ${p.text}`,
-    confirm: async (p) => { await rememberFact(p.text, p.topic); return {}; },
+    confirm: async (p) => { const m = await rememberFact(p.text, p.topic, "DELTA"); return { memoryFactId: m.id }; },
   },
   forget: {
     autonomy: "confirm",
-    tool: { description: "Propose physical deletion of an unconverted ALFRED_MEMORY legacy entry only. For PERSONAL_FACT use memory_retire, which retains history.",
+    tool: { description: "Propose no longer keeping an unconverted ALFRED_MEMORY legacy entry (it is stopped, restorable, never deleted). For PERSONAL_FACT use memory_retire, which retains history.",
       input_schema: obj(["memory_id", "text", "source"], { source: { type: "string", enum: ["ALFRED_MEMORY"] }, memory_id: s("id from WHAT HE ASKED YOU TO REMEMBER"), text: s("the fact") }) },
     parse: (i) => { const id = str(i.memory_id), t = str(i.text); return id && t && (i.source === undefined || i.source === "ALFRED_MEMORY") ? { kind: "forget", source: "ALFRED_MEMORY", memory_id: id, text: t } : null; },
-    describe: (p) => `Forget: ${p.text}`,
-    confirm: async (p) => { await forgetFact(p.memory_id, undefined, p.text); return {}; },
+    describe: (p) => `Don't keep: ${p.text} · Restorable from Stopped in MORE · Memory.`,
+    // C6.7: nothing old is deleted any more; "forget" stops the entry (convert + stop), undoable.
+    confirm: async (p) => {
+      const source = (await getMemories()).find((m) => m.reference?.source === "ALFRED_MEMORY" && m.id === p.memory_id);
+      if (!source) throw new Error(`MEMORY_NOT_FOUND: ${p.memory_id}`);
+      if (source.text !== p.text) throw new Error("Memory changed. Reopen it before forgetting.");
+      await declineLegacyMemory(source); return {};
+    },
   },
   memory_retire: {
     autonomy: "confirm",

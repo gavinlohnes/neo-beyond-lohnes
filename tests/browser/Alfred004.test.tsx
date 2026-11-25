@@ -10,6 +10,7 @@ import { getDays, searchRecords } from "../../src/application/alfred/alfredSearc
 import { getMemories } from "../../src/application/alfred/alfredMemory";
 import { getMemoryFacts } from "../../src/application/memory";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
+import { db } from "../../src/persistence/db";
 
 /** ALFRED-004: Alfred remembers, searches the whole history, reads periods, talks back, and debriefs. */
 let requests: Record<string, unknown>[] = [];
@@ -41,21 +42,26 @@ async function openAlfred() {
 }
 
 describe("ALFRED-004 memory", () => {
-  it("keeps a fact on SAVE, carries it into his records, and forgets it on the owner's word", async () => {
+  it("keeps a fact on SAVE, carries it into his records, opens it in MORE · Memory and stops it on the owner's word", async () => {
     await startDay();
     localStorage.setItem("beyond.alfredKey", "sk-ant-test-key");
     replies = [() => reply([{ type: "tool_use", id: "t1", name: "remember", input: { text: "Sam's birthday is March 3", topic: "PERSON" } }])];
-    const { sheet } = await openAlfred();
+    const { screen, sheet } = await openAlfred();
     await sheet.getByRole("textbox", { name: "Message Alfred" }).fill("remember Sam's birthday is March 3");
     await sheet.getByRole("button", { name: "SEND", exact: true }).click();
     await sheet.getByRole("group", { name: "Remember (person): Sam's birthday is March 3" }).getByRole("button", { name: "SAVE" }).click();
     await expect.poll(() => getMemories().then((m) => m.length)).toBe(1);
     expect(await buildAlfredContext()).toMatch(/WHAT HE ASKED YOU TO REMEMBER.*PERSON: Sam's birthday is March 3/);
-    await sheet.getByRole("button", { name: "Memory" }).click();
-    const list = sheet.getByRole("group", { name: "What Alfred remembers" });
-    await expect.element(list).toHaveTextContent("Sam's birthday is March 3");
+    // GRAYSON-ONE-MEMORY-001: the card says "Remembered." and OPEN goes to the one list, MORE · Memory.
+    await expect.element(sheet.getByText("Remembered.", { exact: true })).toBeVisible();
     expect((await axe.run(sheet.element())).violations).toEqual([]);
-    await list.getByRole("button", { name: "Stop using: Sam's birthday is March 3" }).click();
+    await sheet.getByRole("button", { name: /^Open in Memory: / }).click();
+    await expect.element(sheet).not.toBeInTheDocument();
+    const fact = screen.getByRole("article").filter({ hasText: "Sam's birthday is March 3" });
+    await expect.element(fact).toBeVisible();
+    await expect.element(fact).toHaveTextContent("You told Delta");
+    // OPEN lands on this fact with its editor already open.
+    await fact.getByRole("button", { name: "STOP USING", exact: true }).click();
     await expect.poll(() => getMemories().then((m) => m.length)).toBe(0);
     expect((await getMemoryFacts())[0]!.status).toBe("IRRELEVANT");
     expect((await getMemoryFacts())[0]!.history).toHaveLength(2);
@@ -134,5 +140,17 @@ describe("ALFRED-004 talk mode and starters", () => {
     expect(COACH_REVIEW_ASK).toContain("optional question");
     expect(PLAN_MY_WEEK_ASK).toContain("I'll save the ones I want");
     expect((await axe.run(sheet.element())).violations).toEqual([]);
+  });
+});
+
+describe("GRAYSON-ONE-MEMORY-001 the sheet's Memory link", () => {
+  it("opens MORE · Memory, the one list, instead of a list of its own", async () => {
+    await startDay();
+    await db.alfredMemories.add({ id: "old-1", text: "Garage code is 4471", topic: "HOME", savedAt: "2026-01-01T12:00:00.000Z" });
+    const { screen, sheet } = await openAlfred();
+    expect(sheet.getByRole("group", { name: "What Alfred remembers" }).elements()).toHaveLength(0);
+    await sheet.getByRole("button", { name: "Memory", exact: true }).click();
+    await expect.element(sheet).not.toBeInTheDocument();
+    await expect.element(screen.getByText("1 old Delta entry to review", { exact: true })).toBeVisible();
   });
 });

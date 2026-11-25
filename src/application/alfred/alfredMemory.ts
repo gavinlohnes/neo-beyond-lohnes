@@ -3,14 +3,15 @@ import { newId } from "../commands";
 import { getMemoryFacts, recordMemory } from "../memory";
 import { writeAtomically } from "../atomicWrite";
 import type { AlfredMemory, MemoryTopic, MemoryReference } from "../../domain/alfred/types";
-import type { MemoryFact } from "../../domain/memory";
+import type { MemoryFact, MemoryVia } from "../../domain/memory";
 
-const asMemory = (f: MemoryFact): AlfredMemory => ({ id: f.factId, text: f.statement, topic: f.topic!, savedAt: f.createdAt, recordedAt: f.recordedAt, lastConfirmedAt: f.lastConfirmedAt,
+/** C6.7: a kept old entry keeps the date he first said it, so Delta reads the same date after his review. */
+const asMemory = (f: MemoryFact): AlfredMemory => ({ id: f.factId, text: f.statement, topic: f.topic!, savedAt: f.origin?.savedAt ?? f.createdAt, recordedAt: f.recordedAt, lastConfirmedAt: f.lastConfirmedAt,
   reference: { source: "PERSONAL_FACT", id: f.factId, revision: f.id } });
 const legacyRevision = (m: AlfredMemory) => JSON.stringify([m.id, m.text, m.topic, m.savedAt]);
 /** New facts share the existing confirmed event lifecycle; no lived day is created. */
-export async function rememberFact(text: string, topic: MemoryTopic): Promise<AlfredMemory> {
-  return asMemory(await recordMemory({ factId: newId(), expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", statement: text, topic }));
+export async function rememberFact(text: string, topic: MemoryTopic, via: MemoryVia = "DELTA"): Promise<AlfredMemory> {
+  return asMemory(await recordMemory({ factId: newId(), expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", statement: text, topic, via }));
 }
 
 /** Legacy-only physical deletion. A converted source is retained evidence, never a second active fact. */
@@ -50,9 +51,46 @@ export async function convertLegacyMemory(source: AlfredMemory, statement: strin
       if (root.statement === statement.trim() && root.topic === topic) return existing;
       throw new Error("Already converted with different words. Correct the saved personal fact instead.");
     }
-    return recordMemory({ factId: newId(), expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", statement, topic,
+    return recordMemory({ factId: newId(), expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", statement, topic, via: "OLD_ENTRY",
       origin: { kind: "ALFRED_MEMORY", id: row.id, text: row.text, topic: row.topic, savedAt: row.savedAt } });
   });
+}
+
+/** The longest words a memory holds (memory.ts snapshot). */
+export const MEMORY_MAX = 280;
+/**
+ * C6.7 review, DON'T KEEP: converts the old entry and stops it in one write, so it leaves Delta's context but stays
+ * restorable under Stopped. Nothing is deleted; the original words stay as evidence. An entry too long to be a fact
+ * as written is stored shortened with an ellipsis (it is stopped, so Delta never reads it; the origin keeps the whole).
+ */
+export async function declineLegacyMemory(source: AlfredMemory): Promise<MemoryFact> {
+  return writeAtomically(["alfredMemories", "beyondDays"], async () => {
+    const words = source.text.trim();
+    // Already converted (e.g. kept, then declined): stop that fact rather than converting again. Checked first, never
+    // caught, because a failed nested write would abort this one.
+    const fact = (await getMemoryFacts()).find((f) => f.origin?.id === source.id)
+      ?? await convertLegacyMemory(source, words.length <= MEMORY_MAX ? words : `${words.slice(0, MEMORY_MAX - 1)}…`, source.topic);
+    if (fact.status === "IRRELEVANT") return fact;
+    return recordMemory({ factId: fact.factId, expectedPreviousId: fact.id, action: "IRRELEVANT" });
+  });
+}
+/** C6.7 review, KEEP THE REST AS WRITTEN: every given old entry that fits as written, in one write. */
+export async function keepLegacyMemories(sources: readonly AlfredMemory[]): Promise<number> {
+  return writeAtomically(["alfredMemories", "beyondDays"], async () => {
+    let kept = 0;
+    for (const s of sources) if (s.text.trim().length <= MEMORY_MAX) { await convertLegacyMemory(s, s.text.trim(), s.topic); kept++; }
+    return kept;
+  });
+}
+/** C6.7 review, UNDO after FIX: a correction back to the old words (only when they fit as a fact). */
+export async function undoLegacyFix(fact: MemoryFact): Promise<MemoryFact> {
+  const words = fact.origin?.text.trim();
+  if (!words || words.length > MEMORY_MAX) throw new Error("The old words are too long to put back. Correct the memory instead.");
+  return recordMemory({ factId: fact.factId, expectedPreviousId: fact.id, action: "CORRECTED", statement: words, topic: fact.origin!.topic });
+}
+/** C6.7: the old entries not yet reviewed (converted ones are retained evidence, never listed). */
+export async function getUnreviewedLegacyMemories(): Promise<AlfredMemory[]> {
+  return (await getMemories()).filter((m) => m.reference?.source === "ALFRED_MEMORY");
 }
 /** Compatibility view for People, Home and Alfred. No inactive history/original evidence escapes. */
 export async function getMemories(): Promise<AlfredMemory[]> {
