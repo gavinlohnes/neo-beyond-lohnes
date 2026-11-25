@@ -1,3 +1,4 @@
+import { ExerciseNoteBlock } from "../../components/ExerciseNoteLine";
 import { BodyMap } from "../../components/BodyMap";
 import { groupForExercise } from "../../../application/exerciseByMuscle";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
@@ -1746,9 +1747,11 @@ export function TrainScreen({
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
               <h2 ref={exerciseHeadingRef} tabIndex={-1} className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
-              {/* GRAYSON-TRAIN-HOWTO-001: how to do it, over the workout; rest keeps counting behind the sheet. */}
-              {howToFor(currentExercise.exerciseId) && <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${currentExercise.name}`}
-                onClick={() => setHowToOpen({ id: currentExercise.exerciseId, name: currentExercise.name })}>HOW TO</button>}
+              {/* GRAYSON-TRAIN-NOTES-001: his note under the name, NOTE beside HOW TO. GRAYSON-TRAIN-HOWTO-001: how to do it,
+                  over the workout; rest keeps counting behind the sheet. */}
+              <ExerciseNoteBlock exerciseId={currentExercise.exerciseId} name={currentExercise.name}
+                beside={howToFor(currentExercise.exerciseId) && <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${currentExercise.name}`}
+                  onClick={() => setHowToOpen({ id: currentExercise.exerciseId, name: currentExercise.name })}>HOW TO</button>} />
               {howToOpen && <ExerciseHowToSheet exerciseId={howToOpen.id} name={howToOpen.name} onClose={() => setHowToOpen(null)} />}
               {/* SUPERSET-001: a plain cue; it changes no order, rest or logging. */}
               {(() => { const prev = activeExercises[currentExerciseIndex - 1]; const next = activeExercises[currentExerciseIndex + 1];
