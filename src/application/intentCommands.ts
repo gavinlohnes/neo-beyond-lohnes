@@ -265,7 +265,9 @@ export async function modifyObligation(obligationId: string, changes: Obligation
     if (parsed.estimateMinutes !== undefined && (existing.status === "SATISFIED" || existing.status === "RELEASED")) {
       throw new Error(`OBLIGATION_ALREADY_RESOLVED: obligation is already ${existing.status}; its estimate can't change.`);
     }
-    const { remindAt: _previousTime, estimateMinutes: _previousEstimate, ...rest } = existing;
+    const { remindAt: _previousTime, estimateMinutes: _previousEstimate, plannedAt: _previousPlanned, ...rest } = existing;
+    // GRAYSON-CARRY-001: null clears the planned day, the same "null removes" pattern as remindAt and estimateMinutes.
+    const plannedAt = parsed.plannedAt === null ? undefined : (parsed.plannedAt ?? existing.plannedAt);
     const remindAt = parsed.remindAt === null ? undefined : (parsed.remindAt ?? existing.remindAt);
     const estimateMinutes = parsed.estimateMinutes === null ? undefined : (parsed.estimateMinutes ?? existing.estimateMinutes);
     const updated: Obligation = {
@@ -276,7 +278,7 @@ export async function modifyObligation(obligationId: string, changes: Obligation
       ...(parsed.description !== undefined ? { description: parsed.description } : {}),
       ...(parsed.missionId !== undefined ? { missionId: parsed.missionId } : {}),
       ...(parsed.dueAt !== undefined ? { dueAt: parsed.dueAt } : {}),
-      ...(parsed.plannedAt !== undefined ? { plannedAt: parsed.plannedAt } : {}),
+      ...(plannedAt !== undefined ? { plannedAt } : {}),
       ...(parsed.recurrence !== undefined ? { recurrence: parsed.recurrence } : {}),
       updatedAt: new Date().toISOString(),
     };

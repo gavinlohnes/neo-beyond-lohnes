@@ -1,7 +1,7 @@
 import type { SchedulePattern } from "../domain/common/types";
 import type { DailyNote } from "../domain/dailyNotes";
 import { db } from "../persistence/db";
-import { livedDayShiftWindow } from "../engine/scheduledContext";
+import { formatLocalDate, livedDayShiftWindow } from "../engine/scheduledContext";
 import { saveDailyNote } from "./dailyNoteCommands";
 import { getActiveDay, getSchedulePattern } from "./queries";
 import { getConfirmedKinds } from "./scheduleExceptions";
@@ -9,6 +9,10 @@ import { shiftRun } from "./shiftRun";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { getBodyweightHistory } from "./bodyTrendQueries";
 import { getLogNudge, usualTimesFor, type LogNudgeSettings } from "./logNudge";
+import type { Obligation } from "../domain/intent/types";
+import { INTENT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
+import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
+import { modifyObligation, satisfyObligation } from "./intentCommands";
 
 /**
  * GRAYSON C1.3 + C1.4 (Gavin, 2026-11-20): the close. It follows SHIFT DOWN, his getting-home ritual ("shifting down
@@ -140,5 +144,58 @@ export async function getCloseGaps(dayId: string, settings: CloseGapSettings, nu
   return deriveCloseGaps({
     settings, now, meals: read.meals, shift, lastWeighIn: latest,
     hasUsualTimes: read.kind !== null && usualTimesFor(read.kind, read.learned, nudge).length > 0,
+  });
+}
+
+/**
+ * GRAYSON-CARRY-001 (B6, Gavin 2026-11-24; brief merged): what he planned and didn't get to, named at the close. Nothing
+ * moves unless he taps: NEXT DAY plans it for the second date of the closing lived day, NO DAY clears the planned day
+ * (it moves to No date), DONE completes it. The due date and any repeat are never touched.
+ */
+export const CARRY_LOOKBACK_DAYS = 7;
+export interface UnfinishedPlan { task: Obligation; plannedLabel: string }
+export interface UnfinishedPlans { closingDate: string; nextDate: string; rows: UnfinishedPlan[] }
+const dateOf = (iso: string) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y!, m! - 1, d!, 12); };
+const addDays = (date: string, n: number) => { const d = dateOf(date); return formatLocalDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, 12)); };
+const shortDay = (date: string) => dateOf(date).toLocaleDateString("en-US", { weekday: "short" });
+
+/** Pure: open tasks planned on or before the closing lived day's first date, up to 7 days back, oldest planned first. */
+export function deriveUnfinishedPlans(tasks: readonly Obligation[], closingDate: string): UnfinishedPlans {
+  const earliest = addDays(closingDate, -CARRY_LOOKBACK_DAYS);
+  const rows = tasks
+    .filter((t) => t.status === "OPEN" && t.plannedAt !== undefined && t.plannedAt <= closingDate && t.plannedAt >= earliest)
+    .sort((a, b) => a.plannedAt!.localeCompare(b.plannedAt!) || a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+    .map((task) => ({ task, plannedLabel: shortDay(task.plannedAt!) }));
+  return { closingDate, nextDate: addDays(closingDate, 1), rows };
+}
+
+/** Read only. The closing lived day is the active day; its first date is the date its 16:30 start fell on. */
+export async function getUnfinishedPlans(): Promise<UnfinishedPlans | null> {
+  const day = await getActiveDay();
+  if (!day) return null;
+  const closingDate = formatLocalDate(mostRecentBoundaryAtOrBefore(new Date(day.startedAt)));
+  return deriveUnfinishedPlans(await getCurrentlyEligibleUnresolvedObligations(), closingDate);
+}
+
+export const CARRY_CHANGED = "This task changed. Open PLANS to see it.";
+/**
+ * Sets (or with null clears) one task's planned day, guarded like `moveWeekTask`: a task edited, closed or no longer
+ * eligible since the close read it is refused and nothing is written. NEXT DAY, NO DAY and both UNDOs use it.
+ */
+export async function setCarriedPlannedDay(id: string, plannedAt: string | null, expected: { updatedAt: string; plannedAt?: string | undefined }): Promise<Obligation> {
+  return writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const current = (await getCurrentlyEligibleUnresolvedObligations()).find((t) => t.id === id);
+    if (!current || current.updatedAt !== expected.updatedAt || current.plannedAt !== expected.plannedAt) throw new Error(CARRY_CHANGED);
+    if ((current.plannedAt ?? null) === plannedAt) return current;
+    return modifyObligation(id, { plannedAt });
+  });
+}
+
+/** DONE, guarded the same way. Completing can't be undone in BEYOND, so the close asks once first. */
+export async function completeCarriedTask(id: string, expected: { updatedAt: string; plannedAt?: string | undefined }): Promise<void> {
+  await writeAtomically(INTENT_WRITE_TABLES, async () => {
+    const current = (await getCurrentlyEligibleUnresolvedObligations()).find((t) => t.id === id);
+    if (!current || current.updatedAt !== expected.updatedAt || current.plannedAt !== expected.plannedAt) throw new Error(CARRY_CHANGED);
+    await satisfyObligation(id);
   });
 }

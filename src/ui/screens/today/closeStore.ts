@@ -36,6 +36,15 @@ export function markCatchUpDone(dayId: string): void {
   try { localStorage.setItem(CATCH_UP_DONE, dayId); } catch { /* not remembered; offered once more */ }
 }
 
+/** GRAYSON-CARRY-001: "Show 'Didn't get to' at the close", on by default. Travels with the backup ("Evening close carry"). */
+const CARRY = "beyond.close.carry.v1";
+export function readCloseCarryOn(): boolean {
+  try { return (JSON.parse(localStorage.getItem(CARRY) ?? "null") as { enabled?: unknown } | null)?.enabled !== false; } catch { return true; }
+}
+export function writeCloseCarryOn(enabled: boolean): void {
+  try { localStorage.setItem(CARRY, JSON.stringify({ enabled })); } catch { /* not remembered */ }
+}
+
 /** GRAYSON-CLOSE-GAPS-001: "Tell me what's missing" and the weigh-in gap. Travels with the backup ("Evening close gaps"). */
 const GAPS = "beyond.close.gaps.v1";
 export function readCloseGapSettings(): CloseGapSettings {

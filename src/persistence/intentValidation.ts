@@ -89,7 +89,8 @@ export const obligationModifyInputSchema = z
     description: obligationInputFields.description,
     missionId: obligationInputFields.missionId,
     dueAt: obligationInputFields.dueAt,
-    plannedAt: obligationInputFields.plannedAt,
+    /** GRAYSON-CARRY-001: null clears the planned day (the task moves to No date); its due date is untouched. */
+    plannedAt: obligationInputFields.plannedAt.or(z.null()).optional(),
     recurrence: obligationInputFields.recurrence,
     /** REMIND-AT-001: null removes the reminder time. */
     remindAt: obligationInputFields.remindAt.or(z.null()).optional(),

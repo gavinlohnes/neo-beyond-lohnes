@@ -41,6 +41,8 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.more.favorites.v1": "MORE favorites",
   "beyond.close.prompts.v1": "Evening close prompts",
   "beyond.close.gaps.v1": "Evening close gaps",
+  // GRAYSON-CARRY-001: whether the close shows "Didn't get to".
+  "beyond.close.carry.v1": "Evening close carry",
   "beyond.logNudge.v1": "Logging nudge",
   "beyond.todayQuiet.v1": "TODAY quiet lines",
   // GRAYSON-PLAN-FRESH-001: his two phone-alert switches. What was last sent to the phone (beyond.bridgePlan.sent.v1)

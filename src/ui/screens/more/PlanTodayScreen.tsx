@@ -127,7 +127,7 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
     {list !== "week" && <>
     <Section id="plan-commitments" eyebrow="YOUR COMMITMENTS" title={list === "today" ? "Today" : list === "next7" ? "Next 7" : "No date"}
       wayIn={{ label: "All missions", ariaLabel: "Open all missions and obligations", onClick: () => onOpen(null) }}>
-      <p className="more-section-purpose">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${plan ? planDate(plan.through) : "the next seven days"}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date."}</p>
+      <p className="more-section-purpose">{list === "today" ? "Planned today, or due today or earlier. Earlier due dates stay where you put them." : list === "next7" ? `Tomorrow through ${plan ? planDate(plan.through) : "the next seven days"}. Tasks already in Today stay there.` : "Tasks with neither a due date nor a planned date, and anything planned more than a week ago."}</p>
       {/* TIMEBOX-001: the sum of his own estimates for today, never free time or a full day. */}
       {list === "today" && plan && !readError && (() => { const line = estimateTotalLine(plan.today); return line && <p className="meta" data-estimate-total>{line}</p>; })()}
       {readError ? <div role="alert"><SectionUnavailable>{readError} Tasks are unavailable, not empty.</SectionUnavailable><button className="btn-secondary" onClick={() => void refresh()}>RETRY PLAN</button></div>
@@ -136,6 +136,12 @@ export function PlanTodayScreen({ active = true, onOpen, listRequest, onOpenCapt
           : list === "next7"
             ? { line: "The coming days are open.", detail: "No other tasks are dated in the next seven days." }
             : { line: "No undated tasks.", detail: "Every task has a planned or due date." })}
+      {/* GRAYSON-CARRY-001: nothing he planned can vanish. Display only; nothing is moved. */}
+      {list === "today" && plan && !readError && plan.plannedEarlier.length > 0 && <div className="plan-earlier" role="group" aria-labelledby="plan-earlier-head">
+        <h3 id="plan-earlier-head" className="tool-label">PLANNED EARLIER</h3>
+        <p className="meta">Planned for a day that's passed and still open. Open one to give it a day, or leave it.</p>
+        {rows(plan.plannedEarlier, { line: "", detail: "" })}
+      </div>}
     </Section>
     <form className="plan-composer" onSubmit={(event) => { event.preventDefault(); void addTask(); }}>
       <Section id="plan-add-task" eyebrow="YOUR PLAN" title="Add a task"

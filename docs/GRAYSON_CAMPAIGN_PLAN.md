@@ -56,7 +56,7 @@ status of its own.
 | C1.4 (Q4) | "Tomorrow differs" line | Done (#599) | Ships inside C1.3's close |
 | C1.5 | Re-entry thread | Partly built (the since-last-look line covers new advice, state, plan changes and Garmin sleep; not obligations or an active workout) |  |
 | C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
-| C1.7 | Carry or drop unfinished plans at the close (backlog B6, after Sunsama) | Briefed ([CARRY-001](agent/GRAYSON-CARRY-001.md)) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S |
+| C1.7 | Carry or drop unfinished plans at the close (backlog B6, after Sunsama) | In review ([CARRY-001](agent/GRAYSON-CARRY-001.md); Claude Code ccr-380c4225) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S |
 | **Campaign 2 — Shift Transitions** | | | |
 | C2.1 | Arrival in two taps | Done (#617) | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Briefed ([SHIFTDOWN-TAPS-001](agent/GRAYSON-SHIFTDOWN-TAPS-001.md)) | [brief](agent/GRAYSON-SHIFTDOWN-TAPS-001.md); Grok Bot |
