@@ -9,7 +9,7 @@
 - **Lane: PROTECTED** (data migration, Delta's context). One optional field added to the `MEMORY_RECORDED` payload; no
   new table, no Dexie version. Independent exact-head review, green CI; Gavin merges.
 - **Starting commit:** `origin/master` `2370d0f4` or later. Re-fetch before starting.
-- **Builder:** Claude Code. Branch `claude/grayson-one-memory-001`. **Reviewer:** Grok Bot.
+- **Builder:** Claude Code session `ccr-380c4225` (reassigned by Gavin's direct go, 2026-11-25: "Both are good to go", for C6.6 and C6.7), branch `ccr-380c4225-memory`. **Reviewer:** an independent Claude Code session (any qualified reviewer, DEV-FLOW-002).
 - **Order:** Claude Code **#6** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after
   YOUR-NUMBERS-001. No shared files with the TRAIN briefs.
 - **What plugs in later:** E8 ("That's not right" on every Why, kept as a correction) and E10 (corrections teach

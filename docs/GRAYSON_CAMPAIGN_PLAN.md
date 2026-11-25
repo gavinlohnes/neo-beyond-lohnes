@@ -124,8 +124,8 @@ status of its own.
 | C6.3 | What moves your numbers | Not started | [brief](agent/GRAYSON-WHAT-MOVES-001.md) (#649); Claude Code |
 | C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
 | C6.5 | Override as evidence | In review | [brief](agent/GRAYSON-C6.5-001.md); Claude Code |
-| C6.6 | Earned challenge ladder | Not started |  |
-| C6.7 | One memory store | Briefed ([ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md)) |  |
+| C6.6 | Earned challenge ladder | Approved, next after C6.7 | Gavin's go 2026-11-25; Claude Code (ccr-380c4225); design first |
+| C6.7 | One memory store | In progress | [ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md); Claude Code (ccr-380c4225), Gavin's go 2026-11-25 |
 | C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
 | C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M. [Brief](agent/GRAYSON-ASKS-COUNT-001.md); Claude Code |
 | C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
