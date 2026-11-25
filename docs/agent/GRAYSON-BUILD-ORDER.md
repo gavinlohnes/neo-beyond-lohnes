@@ -17,6 +17,8 @@ WORK-RECORD-001) are built and listed under Done. If the session is already part
 ladder), it finishes that first. Every row gets a fresh-context reviewer; a FEATURE row may self-merge with green CI
 and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR open at a time across both sessions.
 
+**FUEL first (Gavin, 2026-11-25: "the first 2 area we get to being above amazing is nutrition and Train"):** [GRAYSON-DAY-TARGETS-001](GRAYSON-DAY-TARGETS-001.md), a calorie target for each kind of day, goes next after WINDOW-REVIEW-001 and any row already open, ahead of the unstarted rows below. PROTECTED.
+
 | # | Brief | Row | Why here | Lane |
 |---|---|---|---|---|
 | 1 | [GRAYSON-CARRY-001](GRAYSON-CARRY-001.md) | B6 | Quick: plugs into the close that TODAY-CALM orders. Done (#720 + follow-up). | PROTECTED |
