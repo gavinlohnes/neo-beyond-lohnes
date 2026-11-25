@@ -96,6 +96,8 @@ export async function correctSet(performedSetId: string, input: SetFixInput): Pr
       ...(after.setKind ? { setKind: after.setKind } : {}),
       ...(after.repsInReserve !== undefined ? { repsInReserve: after.repsInReserve } : {}),
       ...(set.seq !== undefined ? { seq: set.seq } : {}),
+      // GRAYSON-TRAIN-LOCKSCREEN-001: a set from the lock screen keeps saying so after a fix.
+      ...(set.from ? { from: set.from } : {}),
       correctsSetId: set.id,
     };
     const commandId = newId();

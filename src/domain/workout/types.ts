@@ -215,6 +215,8 @@ export interface PerformedSet {
   seq?: number;
   /** GRAYSON-TRAIN-EDIT-001: on a corrected row, the row it replaces. */
   correctsSetId?: string;
+  /** GRAYSON-TRAIN-LOCKSCREEN-001: logged or skipped from the lock-screen notification; `recordedAt` is the tap. */
+  from?: "LOCK_SCREEN";
 }
 
 /** Shared statistics boundary; skipped sets and preparation are not working performance. */
