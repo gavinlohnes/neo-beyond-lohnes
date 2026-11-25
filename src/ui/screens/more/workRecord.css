@@ -1,0 +1,26 @@
+/* GRAYSON-WORK-RECORD-001: MORE · Work record, the Work schedule marker and TODAY's WORK_DUE line; tokens only. */
+.work-record { display: flex; flex-direction: column; gap: 12px; }
+.work-record .meta, .work-record p, .work-record label, .work-record input, .work-record select, .work-record li { font-size: 16px; }
+.work-record button { min-height: 44px; min-width: 44px; font-size: 16px; width: auto; flex: 0 0 auto; }
+.work-record input, .work-record select { min-height: 44px; max-width: 100%; box-sizing: border-box; }
+.work-record__section { margin: 0; }
+.work-record__list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.work-record__item { padding: 10px 12px; border: 1px solid var(--border-subtle); min-width: 0; }
+.work-record__item:focus { outline: none; }
+.work-record__item:focus-visible, .work-record__item[data-focused] { outline: 2px solid var(--text-1); outline-offset: 2px; }
+.work-record__title { margin: 0; color: var(--text-1); overflow-wrap: anywhere; }
+.work-record__detail { margin: 2px 0 0; color: var(--text-3-strong); overflow-wrap: anywhere; }
+.work-record__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.work-record__form { display: grid; gap: 10px; }
+.work-record__field { display: grid; gap: 4px; min-width: 0; }
+.work-record__inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.work-record__kinds { display: flex; flex-wrap: wrap; gap: 8px; }
+.work-record__error { margin: 0; color: var(--text-1); }
+.work-record__goal { margin: 0; color: var(--text-1); }
+/* Work schedule: work dates on their day. */
+.work-dates-on-schedule .work-record__item + .work-record__item { margin-top: 8px; }
+/* TODAY's quiet line. */
+.today-work-due { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: 16px; line-height: 1.35; color: var(--text-3-strong); }
+.today-work-due__open { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; font-size: 16px; color: var(--p-t1); text-decoration: underline; text-underline-offset: 3px; background: none; border: 0; text-align: left; overflow-wrap: anywhere; min-width: 0; max-width: 100%; }
+.today-work-due__open:focus-visible { outline: 2px solid var(--p-t1); outline-offset: 2px; }
+.work-record .work-record__days { width: 6em; }

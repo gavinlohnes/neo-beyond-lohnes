@@ -14,7 +14,7 @@ import { CommandBar } from "../../foundation/primitives";
  */
 export interface SystemsHomeArea { group: string; hint: string }
 
-export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onBackUp, onSearch, onArea, onGarmin, onSchedule, onDriveSettings }: {
+export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onBackUp, onSearch, onArea, onGarmin, onSchedule, onWorkRecord, onDriveSettings }: {
   active: boolean;
   refreshKey: number;
   areas: readonly SystemsHomeArea[];
@@ -25,6 +25,8 @@ export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onB
   onArea: (group: string) => void;
   onGarmin: () => void;
   onSchedule: () => void;
+  /** GRAYSON-WORK-RECORD-001: MORE · Work record, beside Work schedule. */
+  onWorkRecord?: () => void;
   /** Opens Backup & recovery's automatic backups, where Drive's RECONNECT lives. */
   onDriveSettings: () => void;
 }) {
@@ -72,6 +74,7 @@ export function SystemsHome({ active, refreshKey, areas, busy, backupStatus, onB
           <li><StatusCard icon={<HardDriveDownload size={22} />} name="Backup" line={describeBackup(overview)} {...(drivePaused ? { action: { label: "Reconnect Drive", onClick: onDriveSettings } } : {})} /></li>
           <li><StatusCard icon={<Watch size={22} />} name="Garmin" line={describeGarmin(overview, now)} action={{ label: "Sync or import", onClick: onGarmin }} /></li>
           <li><StatusCard icon={<CalendarDays size={22} />} name="Work schedule" line={describeSchedule(overview)} action={{ label: "Open schedule", onClick: onSchedule }} /></li>
+          {onWorkRecord && <li><StatusCard icon={<CalendarDays size={22} />} name="Work record" line="Training hours, certifications, court and training dates, and milestones." action={{ label: "Open work record", onClick: onWorkRecord }} /></li>}
           <li><StatusCard icon={<MessageCircle size={22} />} name="Alfred" line={hasAlfredKey ? "Your Claude key is on this phone." : "No Claude key on this phone. BEYOND works without it."} /></li>
           {facts?.calendar.connected && <li><StatusCard icon={<CalendarDays size={22} />} name="Google Calendar" line={facts.calendar.lastSyncAt ? `Connected · synced ${since(Date.parse(facts.calendar.lastSyncAt), now)}.` : "Connected · not synced yet."} /></li>}
         </ul>

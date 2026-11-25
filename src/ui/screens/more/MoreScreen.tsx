@@ -29,6 +29,7 @@ import type { UnderstandingSource } from "../review/PersonalUnderstanding";
 import { SearchScreen } from "../search/SearchScreen";
 import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
+import { WorkRecordScreen } from "./WorkRecordScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
 import { AutoBackupSettings } from "./AutoBackupSettings";
@@ -155,7 +156,7 @@ function resolveMoreLabels(labels: string[]): SystemCapability[] {
 const DATA_SCHEMA = db.verno;
 
 const REFLECT_BACK = { DAILY_NOTE: "BACK TO DAILY NOTE", WEEKLY: "BACK TO WEEKLY CHECK-IN", REVIEW: "BACK TO REVIEW" } as const;
-export type MoreView = "AUTOMATIONS" | "HIGHLIGHTS" | "COLLECTIONS" | "DAILY_NOTE" | "SNIPPETS" | "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE" | "SAVED";
+export type MoreView = "AUTOMATIONS" | "HIGHLIGHTS" | "COLLECTIONS" | "DAILY_NOTE" | "SNIPPETS" | "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "WORK_RECORD" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE" | "SAVED";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import type { WholePictureDestination } from "../review/WholePicture";
@@ -171,7 +172,7 @@ export function MoreScreen({
   active = true,
   navigationRequest = 0,
   coachDeltaRequest = 0,
-  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null,
+  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null, workRecordFocus = null,
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
@@ -210,6 +211,8 @@ export function MoreScreen({
   dailyNoteDayId?: string | null;
   /** PEOPLE-PAGE-001: the person a tapped [[name]] opened. */
   personFocus?: string | null;
+  /** GRAYSON-WORK-RECORD-001: the item TODAY's WORK_DUE line opened. */
+  workRecordFocus?: string | null;
   /** Existing subviews can be opened by SYSTEM; the top-bar icon still opens SEARCH. */
   initialView?: MoreView;
   /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
@@ -703,7 +706,8 @@ export function MoreScreen({
           <div hidden={view !== "COLLECTIONS"}>{visited.has("COLLECTIONS") && <><OperatorHeader destination="command">MORE // COLLECTIONS</OperatorHeader><CollectionsScreen active={active && view === "COLLECTIONS"} /></>}</div>
           <div hidden={view !== "HIGHLIGHTS"}>{visited.has("HIGHLIGHTS") && <><OperatorHeader destination="command">MORE // HIGHLIGHTS</OperatorHeader><HighlightsScreen active={active && view === "HIGHLIGHTS"} /></>}</div>
           <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><section className="memory-guided-entry" aria-labelledby="memory-guided-heading"><p className="section-label">NOT SURE WHAT TO ADD?</p><h2 id="memory-guided-heading">Let Delta ask one useful question.</h2><p className="meta">Answer one subject, review the exact understanding, then decide whether to save it.</p><button type="button" className="btn-secondary" onClick={() => { setView("MENU"); revealSection("GUIDE"); }}>TEACH DELTA A LITTLE</button></section><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /></>}</div>
-          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
+          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen onOpenWorkRecord={() => setView("WORK_RECORD")} /></>}
+          {view === "WORK_RECORD" && <><OperatorHeader destination="command">MORE // WORK RECORD</OperatorHeader><WorkRecordScreen active={active} focusId={workRecordFocus} onOpenSchedule={() => setView("WORK_SCHEDULE")} onOpenTrain={() => { onOpenDestination?.({ kind: "workspace", tab: "TRAIN" }); }} /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><Opening><ExerciseLibraryScreen /></Opening></>}
@@ -736,6 +740,7 @@ export function MoreScreen({
         onArea={openArea}
         onGarmin={() => setView("HEALTH_IMPORT")}
         onSchedule={() => setView("WORK_SCHEDULE")}
+        onWorkRecord={() => setView("WORK_RECORD")}
         onDriveSettings={() => { openArea("Backup & recovery"); const auto = menuRef.current?.querySelector<HTMLDetailsElement>('details[data-panel="automatic-backups"]'); if (auto) { auto.open = true; auto.scrollIntoView({ block: "start" }); } }}
       />
       <div className="command-search" role="search">
