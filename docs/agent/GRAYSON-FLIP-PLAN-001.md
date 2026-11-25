@@ -11,7 +11,7 @@
 - **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
   2026-11-25). Branch `ccr-380c4225-flip-plan`, or the branch name its session allows. **Reviewer:** a fresh-context
   reviewer.
-  **Active PR:** pending.
+  **Active PR:** branch `ccr-380c4225-flip-plan` (2026-11-25).
 - **Order and overlap:** Delta-track session **#3** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after SHIFTDOWN-TAPS-001. PLAN-FRESH-001 is
   built before this now; make sure the flip-day plan reaches the phone through its hand-off. Shares `TodayScreen.tsx` only through
   `LifeStateBand`'s props; touches `application/shiftSleepPlan.ts`, `application/sleepPlanSettings.ts` and
@@ -148,6 +148,24 @@ Each value says whether it's the default or his own, like the cut-off's "(your s
 - His records first: bedtime and "later than usual" come from his own Garmin days-off sleep, and the defaults are only
   used until there's enough of it.
 - Shown on TODAY as one line: the flip is the moment TODAY already names, so the plan goes with it.
+
+## Status (2026-11-25)
+Built on `ccr-380c4225-flip-plan`; screenshots in `docs/agent/screenshots/GRAYSON-FLIP-PLAN-001/`.
+- **Stop-and-ask checks:** his saved rotation gives exactly the breaks named here (Week A Wed–Thu 2, Week B Mon–Tue 2,
+  Week B Fri–Sun 3), and the moments fall on the days named (tested). The band takes one more line without moving the
+  next step (it sits under the moment in the existing band). **No existing card's output changes:**
+  `getShiftSleepPlan` is untouched; the flip plan is its own read (`application/flipPlan.ts` `getFlipPlan`), shown
+  beside the cards in ROUTE and merged into TODAY's bar by TODAY. That's a small change from Scope ("getShiftSleepPlan
+  adds the flip card"): the plan ends when the shift does, and the flip card has to outlive it, so keeping them apart
+  is what keeps the existing outputs identical.
+- **Phone hand-off:** PLAN-FRESH sends only the five existing moment kinds, and this brief excludes notifications, so
+  the flip plan adds no phone alert. Nothing about the hand-off changes.
+- **Settings:** `flip` beside `caffeineCutoff`, only his changed values stored; each part validated on its own, so a
+  bad flip value never drops the cut-off (and the reverse). The `writeSettings` fix is in, and a cut-off save keeps flip.
+- **Lived-day bar:** the short sleep is a SLEEP_PLAN mark labelled "(flip plan)"; daylight is a new DAYLIGHT_PLAN mark.
+- **Off:** with flip plans off, ROUTE keeps one "Flip plans are off." row with CHANGE, so it can be turned back on.
+- **Known limit:** a confirmed WORK change on a day the rotation has off has no shift times, so it doesn't start a
+  flip plan (the existing cards behave the same).
 
 ## Stop and ask Gavin if
 - His saved schedule doesn't produce the four breaks above (2, 2 and 3 days in the two weeks), or the life-state
