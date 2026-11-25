@@ -7,6 +7,7 @@ import { useSessionDraft } from "../sessionDrafts";
 import { describeError } from "../errorMessage";
 import { askAlfred } from "./AlfredSheet";
 import { ReminderAlertLine } from "./ReminderAlertLine";
+import { CommitmentQuickActions } from "../screens/today/CommitmentQuickActions";
 
 /**
  * HOME-001: the house, from records BEYOND already keeps: "Home: " repeating commitments and the
@@ -79,14 +80,21 @@ export function HomePanel({ active }: { active: boolean }) {
     {view && <>
       <h3 className="tool-label">COMING ROUND</h3>
       {view.due.length === 0 && <p className="meta">No repeating home jobs yet.</p>}
-      {view.due.slice(0, 12).map(({ reminder, daysAway }) => <div key={reminder.id} className="understanding-item">
+      {view.due.slice(0, 12).map(({ reminder, daysAway, lastDone, history, doneCount }) => <div key={reminder.id} className="understanding-item" data-home-job={reminder.title.slice(HOME_PREFIX.length)}>
         <p><strong>{reminder.title.slice(HOME_PREFIX.length)}</strong>{reminder.dueAt ? ` · ${shortDate(reminder.dueAt)}` : ""}{reminder.remindAt ? ` at ${reminder.remindAt}` : ""} · {when(daysAway)}</p>
         {reminder.description && <p className="understanding-words">{reminder.description}</p>}
+        {/* GRAYSON-HOME-LASTDONE-001: when it was last done, with his note, and the past dates one tap away. */}
+        <p className="meta" data-last-done>{lastDone ? <>Last done {shortDate(lastDone.on)}{lastDone.note ? ` · ${lastDone.note}` : ""}</> : "Not marked done in GRAYSON yet."}</p>
+        {doneCount > 0 && <details className="home-history"><summary>Done {doneCount} {doneCount === 1 ? "time" : "times"}</summary>
+          <ul>{history.map((d, i) => <li key={`${d.on}-${i}`} className="meta">{shortDate(d.on)}{d.note ? ` · ${d.note}` : ""}</li>)}</ul>
+          {doneCount > history.length && <p className="meta">The {history.length} most recent.</p>}
+        </details>}
+        <CommitmentQuickActions obligation={reminder} today={formatLocalDate(new Date())} withNote showRelease={false} label={reminder.title.slice(HOME_PREFIX.length)} onChanged={() => load()} />
       </div>)}
       <h3 className="tool-label">WHAT BEYOND KNOWS ABOUT THE HOUSE</h3>
       {view.facts.length === 0 && <p className="meta">Nothing about the house yet.</p>}
       <ul>{view.facts.map((f) => <li key={f.id} className="understanding-words">{f.text}</li>)}</ul>
-      <p className="meta">Change or forget these in MORE → MEMORY. Mark a job done in MISSIONS & OBLIGATIONS; the next one is created for you.</p>
+      <p className="meta">Change or forget these in MORE → MEMORY. Mark a job done here or in MISSIONS & OBLIGATIONS; the next one is created from its due date.</p>
       <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me with the house. Use what I've told you about it and what's coming round, and tell me what you don't know.")}>ASK ALFRED</button>
     </>}
     <h3 className="tool-label">ADD SOMETHING</h3>

@@ -42,3 +42,7 @@
 .bx-unlinked > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-2); }
 .home-presets > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 mark.search-mark { background: transparent; color: var(--text-1); font-weight: 700; text-decoration: underline; text-decoration-color: var(--text-1); text-underline-offset: 3px; }
+/* GRAYSON-HOME-LASTDONE-001: the dones of a home job, one tap away. */
+.home-history > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 16px; }
+.home-history ul { margin: 0 0 8px; padding-left: 18px; }
+.commitment-quick__note { display: grid; gap: 4px; margin: 6px 0; font-size: 16px; }
