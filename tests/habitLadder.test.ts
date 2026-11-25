@@ -65,8 +65,12 @@ describe("CHALLENGE only when the evidence earns it", () => {
 });
 
 describe("EXAMINE and quiet", () => {
-  it("six misses in 28 days examines the plan", () => {
-    const line = deriveHabitLadder(habit([20, 16, 12, 9, 5, 2]), [], TODAY)!;
+  it("the first line ever shown is a question, however many misses (Gavin, 2026-11-25)", () => {
+    expect(deriveHabitLadder(habit([20, 16, 12, 9, 5, 2]), [], TODAY)).toMatchObject({ stage: "ASK", missDate: date(2) });
+    expect(deriveHabitLadder(habit([20, 16, 12, 9, 8]), [], TODAY)).toBeNull(); // no recent miss to ask about: quiet
+  });
+  it("six misses in 28 days examines the plan, once Delta has asked", () => {
+    const line = deriveHabitLadder(habit([20, 16, 12, 9, 5, 2]), [ask(9, "LATER")], TODAY)!;
     expect(line.stage).toBe("EXAMINE");
     expect(line.text).toContain("Delta won't ask about it for two weeks either way.");
   });

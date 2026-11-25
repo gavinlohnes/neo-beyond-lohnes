@@ -19,8 +19,8 @@
   to nights) is still an unvalidated assumption. Partial adjustment, or anchoring to days off, would be a new
   owner-approved objective.
 - **Delta track:** C6.7 one memory store done (#704, #710). C6.6 earned challenge ladder done (#708): a TODAY quiet
-  line "Habit check-ins" (ask → name → challenge → examine), off per habit or for all. Open owner question: on ship
-  day a habit with 6+ misses in 4 weeks starts at EXAMINE (as briefed), not ASK. C2.2, C2.4 and C2.5 are Grok's; C6.3 is another Claude builder's (#693).
+  line "Habit check-ins" (ask → name → challenge → examine), off per habit or for all. Gavin, 2026-11-25: the first line
+  ever shown for a habit is always a question (ASK), however many misses. C2.2, C2.4 and C2.5 are Grok's; C6.3 is another Claude builder's (#693).
 - **Forward-compat note (#639 review):** LEARNING_RESPONDED's payload schema is strict, so a field added by a future
   build makes this build withhold Delta's knowledge (fail-safe). Add any new field as optional and ship the reader
   first.

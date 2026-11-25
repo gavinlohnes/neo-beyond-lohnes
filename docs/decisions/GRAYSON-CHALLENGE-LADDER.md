@@ -7,6 +7,8 @@ these.
   counts as a miss.
 - **On by default, easy to turn off:** there is one switch for all habits (TODAY's quiet line "Habit check-ins") and
   one per habit ("Stop asking about…", with UNDO). The per-habit switch travels with the backup.
+- **The first line ever shown for a habit is a question** (Gavin, 2026-11-25: "I'd rather the first line ever shown
+  always be a question."). Until Delta has asked once (any answer, NOT NOW included), only ASK can show.
 - **Four steps, each earned:**
   - ASK (2 misses in 14 days);
   - NAME (3 misses in 28 days and 2 answers);
