@@ -26,7 +26,7 @@ export const TRY_OUTCOMES = ["It helped", "No clear difference", "It didn't help
 
 /** Gaps smaller than these read as "about the same": a quarter hour of sleep, a third of an energy point. */
 const SAME_SLEEP_MINUTES = 15;
-const SAME_ENERGY = 0.3;
+export const SAME_ENERGY = 0.3;
 
 /** 95% two-sided Student-t critical values for df 1..30; beyond that, ease toward z. */
 const T975 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042] as const;

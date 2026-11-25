@@ -4,6 +4,7 @@ import {
   getEatingWindowSettings, presetLabel, saveEatingWindowSettings,
 } from "../../../application/eatingWindow";
 import type { EatingWindowDayKind, EatingWindowSettings } from "../../../domain/common/types";
+import { EatingWindowReview } from "./EatingWindowReview";
 import "./eatingWindow.css";
 
 const KINDS: readonly { kind: EatingWindowDayKind; label: string }[] = [
@@ -95,6 +96,10 @@ export function EatingWindowSetup({ active }: { active: boolean }) {
         </div>
       )}
       {message && <p className="meta" role="status">{message}</p>}
+      {/* GRAYSON-WINDOW-REVIEW-001 (C4.8c): what he actually does, how it's going, and why, once the window is on. */}
+      {saved?.enabled && <EatingWindowReview refreshKey={saved.setAt}
+        onSettings={(s) => { setSaved(s); setHours(s.eatingHours); setOpens({ ...s.opensAt }); }}
+        onAdjust={() => document.getElementById("eating-hours")?.focus()} />}
       </>}
     </details>
   );

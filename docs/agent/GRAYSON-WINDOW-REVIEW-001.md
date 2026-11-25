@@ -11,7 +11,7 @@
 - **Starting commit:** `origin/master` `fed6b84` (#662 merged). Re-fetch before starting.
 - **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
   2026-11-25). Branch `ccr-380c4225-window-review`, or the branch name its session allows. **Reviewer:** a fresh-context
-  reviewer. **Active PR:** pending.
+  reviewer. **Active PR:** see the tracker row (C4.8c).
 - **Order and overlap:** Delta-track session **#6** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after RUN-DEBRIEF-001. WINDOW-ALERT-001 (#672) is
   merged and also touches the eating window. This
   brief touches `application/eatingWindow.ts` (read helpers only), a new `application/eatingWindowReview.ts`,

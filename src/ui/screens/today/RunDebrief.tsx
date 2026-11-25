@@ -121,6 +121,8 @@ export function RunDebrief({ busy, readReport = getPostRunReport }: { busy: bool
           ))}
         </div>
         {nextField("One thing for next run (optional)")}
+        {/* #726 review: the journal can't clear a field, so say why SAVE LINE is off with the field emptied. */}
+        {line && !draft.trim() && <p className="meta" style={{ margin: "4px 0 0" }}>A saved line can be changed, not cleared.</p>}
         <div className="today-run-debrief__row">
           <button type="button" className="btn-secondary" disabled={off || !draft.trim() || draft.trim() === line}
             // A first line is a new log (quiet); changing an existing line is a fix (Undo).

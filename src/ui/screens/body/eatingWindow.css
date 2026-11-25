@@ -8,3 +8,20 @@
 .eating-setup__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 16px; }
 .eating-setup__row input { min-height: 40px; font: inherit; font-size: 16px; color: var(--p-t1, #f2f2f2); background: var(--p-s2, #0f0f0f); border: 1px solid var(--p-line-2, #3a3a3a); padding: 0 8px; }
 .eating-setup__question p { margin: 0 0 6px; font-size: 16px; }
+/* GRAYSON-WINDOW-REVIEW-001 (C4.8c): what you actually do, how it's going, and WHY A WINDOW. Plain text; no red, no score. */
+.window-review { display: grid; gap: 12px; margin-top: 14px; min-width: 0; }
+.window-review__block { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--p-line-2, #3a3a3a); min-width: 0; }
+.window-review__block > p, .window-review__kind > p { margin: 0; }
+.window-review__text { font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.window-review__kind { display: grid; gap: 2px; }
+.window-review__offer { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--p-line-2, #3a3a3a); }
+.window-review__offer > p { margin: 0; }
+.window-review__lines { display: grid; gap: 8px; margin: 0; }
+.window-review__lines dd { margin: 2px 0 0; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.window-review__guards { margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.45; color: var(--p-t1, #f2f2f2); }
+.window-review__field { display: grid; gap: 4px; }
+.window-review__field input { min-height: 44px; font-size: 16px; width: 100%; box-sizing: border-box; }
+.window-review .btn-secondary { min-height: 44px; }
+.window-review__hide, .window-review__show, .window-review > .btn-secondary { width: auto; justify-self: start; padding-inline: 16px; }
+.why-window__sources { display: grid; justify-items: start; }
+.why-window__source { display: flex; align-items: center; min-height: 44px; font-size: 16px; color: var(--p-t1, #f2f2f2); text-decoration: underline; overflow-wrap: anywhere; }

@@ -20,7 +20,7 @@
   owner-approved objective.
 - **Delta track:** C6.7 one memory store done (#704, #710). C6.6 earned challenge ladder done (#708): a TODAY quiet
   line "Habit check-ins" (ask → name → challenge → examine), off per habit or for all. Gavin, 2026-11-25: the first line
-  ever shown for a habit is always a question (ASK), however many misses. Grok Bot's queue moved to this session (Gavin, 2026-11-25): CARRY-001 (#720, #721), SHIFTDOWN-TAPS-001 (#722), C2.4 flip-day plan (#723; review follow-up #725 made it a FLIP_PLAN quiet line, Gavin's "Quiet line" call), C3.1 last done on Home (#724) are done; C2.5 run debrief in review (branch `ccr-380c4225-run-debrief`). Next in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md): row 6, WINDOW-REVIEW-001 (C4.8c, Protected). C6.3 is another Claude builder's (#693).
+  ever shown for a habit is always a question (ASK), however many misses. Grok Bot's queue moved to this session (Gavin, 2026-11-25): CARRY-001 (#720, #721), SHIFTDOWN-TAPS-001 (#722), C2.4 flip-day plan (#723; review follow-up #725 made it a FLIP_PLAN quiet line, Gavin's "Quiet line" call), C3.1 last done on Home (#724) and C2.5 run debrief (#726) are done; C4.8c eating window review in review (branch `ccr-380c4225-window-review`, Protected). Next in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md): row 7, BRISK-001 (Protected, Health Bridge). C6.3 is another Claude builder's (#693).
 - **Forward-compat note (#639 review):** LEARNING_RESPONDED's payload schema is strict, so a field added by a future
   build makes this build withhold Delta's knowledge (fail-safe). Add any new field as optional and ship the reader
   first.
