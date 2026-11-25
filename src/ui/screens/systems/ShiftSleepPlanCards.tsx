@@ -5,6 +5,7 @@ import { FlipSettings } from "./FlipSettings";
 import { takeFlipFocus } from "./flipFocus";
 import { getFlipPlan, type FlipPlan } from "../../../application/flipPlan";
 import { getFlipSettingsView } from "../../../application/sleepPlanSettings";
+import { readSkip, skipKey, writeSkip } from "./planSkips";
 
 /**
  * CIRCADIAN-SPIKE-001: the next shift transition's cards, in ROUTE. Shift-work guidance, not a decision. SAVE shows
@@ -12,7 +13,6 @@ import { getFlipSettingsView } from "../../../application/sleepPlanSettings";
  * device. Nothing else is written, and the Engine never sees the cards. C4.2a: the CAFFEINE card also shows where its
  * number comes from, lets him CHANGE it explicitly; a change redraws the cards.
  */
-import { readSkip, skipKey, writeSkip } from "./planSkips";
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const day = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
