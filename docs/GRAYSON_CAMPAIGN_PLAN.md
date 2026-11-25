@@ -71,7 +71,8 @@ status of its own.
 | C3.3 | Day-off shape | Briefed (GRAYSON-DAY-OFF-SHAPE-001, 2026-11-25) |  |
 | C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
 | C3.4a | Alert time on repeating Home jobs | Done (#594) | Added 2026-11-20 on Gavin's go; Home jobs alerted only at 16:00 |
-| C3.4b | Yearly repeats editable in Plans | In review (#606) | Added 2026-11-20 on Gavin's go; touches `engine/recurrence.ts`, so his merge |
+| C3.4b | Yearly repeats editable in Plans | Done (#606) | Added 2026-11-20 on Gavin's go; touches `engine/recurrence.ts`, so his merge. [Brief](agent/GRAYSON-C3.4b-001.md) |
+| C3.4c | Repeat edits keep their pattern and anchor | Done (#606) | Added 2026-11-21 on Gavin's go ("Fix those two next"), folded into #606 at his word; touches `engine/recurrence.ts`, so his merge. [Brief](agent/GRAYSON-C3.4c-001.md) |
 | C3.5 | Seasonal packs | Not started |  |
 | C3.6 | Home inventory light | Partly built (details sit on the Home item; not searchable yet) |  |
 | C3.7 | Group home jobs by room (backlog B12, after Sweepy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored field), S |
