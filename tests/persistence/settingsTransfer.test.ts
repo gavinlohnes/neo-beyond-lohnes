@@ -177,7 +177,7 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.more.recents.v1": "history", "beyond.catchup.done.v1": "done flag", "beyond.close.done.v1": "done flag",
       "beyond.coach.skips.v1": "dismissal", "beyond.eating.dismissed.v1": "dismissal", "beyond.logNudge.dismissed.v1": "dismissal", "beyond.workRunRedraft.dismissed.v1": "dismissal",
       "beyond.weeklyReviewLater": "snooze", "beyond.workoutCallLater.": "snooze", "beyond.shiftSleepPlan.skip.": "dismissal",
-      "beyond:sleepDraftDismissedDay": "dismissal", "beyond:outcomeDismissed:": "dismissal", "beyond:shiftHandoffSkipped:": "dismissal",
+      "beyond:sleepDraftDismissedDay": "dismissal", "beyond:outcomeDismissed:": "dismissal", "beyond:shiftHandoffSkipped:": "dismissal", "beyond:runDebriefSkipped:": "dismissal",
       "beyond:modePin:": "temporary pin", "beyond:autoBackupSnoozedUntil": "snooze", "beyond:lastBackupAt": "clock",
       "beyond:lastRestoreCheckAt": "clock", "beyond:checkInReminderLastSentDate": "clock", "beyond.garminSyncRequestedAt": "clock",
       "beyond.bridgePlan.sent.v1": "device state (what this phone handed Health Bridge)", "beyond.bridgePlan.lineDay.v1": "seen",

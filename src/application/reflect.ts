@@ -1,9 +1,12 @@
 import type { DecisionJournalEntry, MissedReason } from "../domain/journal/types";
 import type { Recommendation } from "../domain/common/types";
-import { createDecisionJournalEntry, reviewDecisionJournalEntry } from "./journalCommands";
+import { createDecisionJournalEntry, modifyDecisionJournalEntry, reviewDecisionJournalEntry } from "./journalCommands";
 import { getDecisionJournalEntries } from "./journalQueries";
 import { noteShiftHandoff } from "./commands";
 import { skipShiftHandoff } from "./shiftHandoffQueries";
+import { isRunDebriefSkipped, skipRunDebrief } from "../persistence/runDebriefSkips";
+
+export { isRunDebriefSkipped, skipRunDebrief };
 
 /**
  * LOOP step 2 — REFLECT (owner approval 2026-10-27, "go reflect"; brief docs/agent/LOOP.md).
@@ -113,4 +116,68 @@ export async function closeShift(dayId: string, input: { felt?: ShiftFelt | null
 /** "How did it go?" — the journal's own review, so the outcome and lesson live with the entry. */
 export async function answerFollowUp(id: string, outcome: string, lesson?: string): Promise<DecisionJournalEntry> {
   return reviewDecisionJournalEntry(id, { outcome, ...(lesson?.trim() ? { lesson: lesson.trim() } : {}) });
+}
+
+/**
+ * GRAYSON-RUN-DEBRIEF-001 (C2.5, Gavin 2026-11-24): on RUN OVER, "How did the run go?" One tap writes one journal
+ * entry; "One thing for next run" is its optional expectation. Not SHIFT_DEBRIEF_TITLE, so followUpsDue never asks
+ * "how did it go?" about it. The run is keyed by its last work day (PostRunReport.to), carried in the context line.
+ */
+export const RUN_DEBRIEF_TITLE = "Run debrief";
+export const RUN_NEXT_MAX = 200;
+const runShort = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+/** "Run Nov 18 to Nov 21, 4 shifts" (or "Run Nov 21, 1 shift"). The last date after "Run " / " to " is the key. */
+export function runDebriefContext(run: { from: string; to: string; shifts: number }): string {
+  const dates = run.from === run.to ? runShort(run.to) : `${runShort(run.from)} to ${runShort(run.to)}`;
+  return `Run ${dates}, ${run.shifts} ${run.shifts === 1 ? "shift" : "shifts"}`;
+}
+
+export function isRunDebrief(entry: DecisionJournalEntry): boolean {
+  return entry.title === RUN_DEBRIEF_TITLE;
+}
+
+/**
+ * Pure: this run's debrief. Same title, the context's last date is the run's last work day, and it was written in the
+ * 60 days after that day (so last year's Nov 21 isn't this year's).
+ */
+export function runDebriefFor(entries: readonly DecisionJournalEntry[], runEnd: string): DecisionJournalEntry | undefined {
+  const key = runShort(runEnd);
+  const end = new Date(`${runEnd}T00:00:00`).getTime();
+  return entries.find((e) => {
+    if (!isRunDebrief(e) || !e.context) return false;
+    const m = /^Run (?:.+ to )?([A-Z][a-z]{2} \d{1,2}),/.exec(e.context);
+    const at = Date.parse(e.createdAt);
+    return m?.[1] === key && at >= end && at < end + 60 * 86_400_000;
+  });
+}
+
+export async function getRunDebrief(runEnd: string): Promise<DecisionJournalEntry | undefined> {
+  return runDebriefFor(await getDecisionJournalEntries(), runEnd);
+}
+
+export const runFeltLine = (felt: ShiftFelt) => `Run felt ${felt.toLowerCase()}`;
+export const runNextLine = (next: string) => `Next run: ${next.trim()}`;
+
+/** Tap 1: how the run felt. A new log, so the caller stays quiet (no Undo). */
+export async function recordRunDebrief(input: { felt: ShiftFelt; run: { from: string; to: string; shifts: number } }): Promise<DecisionJournalEntry> {
+  return createDecisionJournalEntry({ title: RUN_DEBRIEF_TITLE, context: runDebriefContext(input.run), decision: runFeltLine(input.felt) });
+}
+
+/** Tap 2 (optional), or a fix: the one thing for next run, on the same entry. */
+export async function setRunDebriefNext(id: string, next: string): Promise<DecisionJournalEntry> {
+  const text = next.trim();
+  if (!text) throw new Error("EMPTY_RUN_NEXT: Write the one thing, or choose DONE.");
+  if (text.length > RUN_NEXT_MAX) throw new Error(`RUN_NEXT_TOO_LONG: Keep it to ${RUN_NEXT_MAX} characters.`);
+  return modifyDecisionJournalEntry(id, { expectation: runNextLine(text) });
+}
+
+/** A fix: re-pick the word on the same entry. */
+export async function changeRunDebriefFelt(id: string, felt: ShiftFelt): Promise<DecisionJournalEntry> {
+  return modifyDecisionJournalEntry(id, { decision: runFeltLine(felt) });
+}
+
+/** Undo of a fix: put the word and (if there was one) the line back as they were. */
+export async function restoreRunDebrief(id: string, before: { decision: string; expectation?: string }): Promise<DecisionJournalEntry> {
+  return modifyDecisionJournalEntry(id, { decision: before.decision, ...(before.expectation ? { expectation: before.expectation } : {}) });
 }
