@@ -102,6 +102,14 @@ this list; those stay where they are and are not memories of what he said. What 
 - `via` is recorded going forward only; no source is guessed for older facts.
 - The old table is kept, not dropped, so old backups and the evidence rule keep working.
 
+## Status (2026-11-25)
+Built on `ccr-380c4225-memory`. Decision: [GRAYSON-ONE-MEMORY](../decisions/GRAYSON-ONE-MEMORY.md). Screenshots:
+`docs/agent/screenshots/grayson-c6.7/`. Stop-and-ask checks: every existing event without `via` parses (test);
+`AlfredMemoryList`'s jobs (convert with review, guard on changed source, keep the draft, forget) all live in the review,
+with forget now restorable; his phone's count of old entries is unknown here, so the review pages 10 at a time.
+Two small calls inside scope: a kept old entry shows and sends the date he first said it (origin), so Delta's context
+is unchanged after a keep-all review; and the sheet's Memory link opens MORE · Memory instead of an in-sheet list.
+
 ## Stop and ask Gavin if
 - Any existing `MEMORY_RECORDED` event fails to parse with the new schema.
 - Removing `AlfredMemoryList` would take away something it does that the review doesn't.

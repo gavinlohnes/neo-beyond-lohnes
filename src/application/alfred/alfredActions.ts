@@ -88,7 +88,8 @@ export type SavedLog =
   | { kind: "water" | "sleep" | "weight" | "meal" | "protein"; dayId: string; eventId: string }
   | { kind: "habit"; dayId: string; habitId: string; prior: HabitAnswer }
   | { kind: "set"; dayId: string; sessionId: string; performedSetId: string };
-export interface ConfirmResult { open?: "TRAIN"; undo?: SavedLog }
+/** C6.7: memoryFactId lets the sheet say "Remembered" with OPEN to that fact. */
+export interface ConfirmResult { open?: "TRAIN"; undo?: SavedLog; memoryFactId?: string }
 export async function undoSavedLog(saved: SavedLog): Promise<boolean> {
   if (saved.kind === "habit") return undoHabitDone(saved.habitId, saved.dayId, saved.prior);
   if (saved.kind === "set") return undoLastSet(saved.dayId, saved.sessionId, saved.performedSetId);
