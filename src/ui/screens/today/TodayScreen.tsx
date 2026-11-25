@@ -16,6 +16,7 @@ import { Orientation } from "./Orientation";
 import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
 import { focusFlipCard } from "../systems/flipFocus";
+import { FlipPlanLine } from "./FlipPlanLine";
 import { readSkip, skipKey } from "../systems/planSkips";
 import { FirstAtHomeLine } from "./ShiftDownBridge";
 import { HOME_FIRST_EVENT, homeFirstFor } from "./shiftDownBridgeStore";
@@ -1112,6 +1113,10 @@ export function TodayScreen({
   const firstAtHomeDue = !!day && !!homeFirst && !!shiftDownCompletedAt && Date.parse(shiftDownCompletedAt) >= Date.parse(day.startedAt)
     && !(dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId);
   if (firstAtHomeDue) quietCandidates.push("FIRST_AT_HOME");
+  // GRAYSON-FLIP-PLAN-001 (Gavin, 2026-11-25: "Quiet line"): the flip plan's short line while it applies, unless skipped.
+  const flipPlan = recordedNow?.flipPlan ?? null;
+  const flipDue = !!day && !!flipPlan && Date.parse(flipPlan.showFrom) <= now.getTime() && now.getTime() < Date.parse(flipPlan.showUntil) && !readSkip(skipKey(flipPlan.date, flipPlan.kind));
+  if (flipDue) quietCandidates.push("FLIP_PLAN");
   if (logNudge) quietCandidates.push("LOG_NUDGE");
   // GRAYSON-PLAN-FRESH-001: the line decides for itself (Android, behind, outside a shift, once a lived day).
   if (quietPresence.PHONE_ALERTS_BEHIND) quietCandidates.push("PHONE_ALERTS_BEHIND");
@@ -1385,8 +1390,6 @@ export function TodayScreen({
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={bandHidden}>
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
-        flip={recordedNow?.flipPlan && Date.parse(recordedNow.flipPlan.showFrom) <= now.getTime() && now.getTime() < Date.parse(recordedNow.flipPlan.showUntil) && !readSkip(skipKey(recordedNow.flipPlan.date, recordedNow.flipPlan.kind))
-          ? { line: recordedNow.flipPlan.short, onOpen: onOpenCave ? () => { if (!busyRef.current) { focusFlipCard(); onOpenCave("route"); } } : undefined } : null}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* GRAYSON LOG-CATCHUP-001: after SHIFT DOWN on a shift day, what didn't get logged at work, before the close. */}
@@ -1431,8 +1434,9 @@ export function TodayScreen({
     {/* GRAYSON-TODAY-CALM-001 (C9.6): the quiet lines, together, right under the numbers, in his order. */}
     {dayRead && <TodayQuietLines tuckedCount={quietMoreOpen ? 0 : quiet.tucked.length}
       onMore={() => { markQuietMoreOpened(new Date()); setQuietMoreTick((n) => n + 1); }}
-      lines={quietSettings.order.filter((id): id is "FIRST_AT_HOME" | "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" | "WORK_DUE" | "HABIT_LADDER" => id === "FIRST_AT_HOME" || id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND" || id === "WORK_DUE" || id === "HABIT_LADDER").map((id) => ({ id, node:
-        id === "FIRST_AT_HOME" ? (firstAtHomeDue && quietVisible("FIRST_AT_HOME") && day && homeFirst ? <FirstAtHomeLine dayId={day.id} pick={homeFirst} /> : null)
+      lines={quietSettings.order.filter((id): id is "FIRST_AT_HOME" | "FLIP_PLAN" | "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" | "WORK_DUE" | "HABIT_LADDER" => id === "FIRST_AT_HOME" || id === "FLIP_PLAN" || id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND" || id === "WORK_DUE" || id === "HABIT_LADDER").map((id) => ({ id, node:
+        id === "FLIP_PLAN" ? (flipDue && quietVisible("FLIP_PLAN") && flipPlan ? <FlipPlanLine line={flipPlan.short} onOpen={onOpenCave ? () => { if (!busyRef.current) { focusFlipCard(); onOpenCave("route"); } } : undefined} /> : null)
+        : id === "FIRST_AT_HOME" ? (firstAtHomeDue && quietVisible("FIRST_AT_HOME") && day && homeFirst ? <FirstAtHomeLine dayId={day.id} pick={homeFirst} /> : null)
         : id === "LOG_NUDGE" ? (logNudge && quietVisible("LOG_NUDGE") ? <LogNudgeLine nudge={logNudge} busy={busy} /> : null)
         // GRAYSON-CHALLENGE-LADDER-001: mounted while tucked (it reports presence), not while his TODAY switch has it off.
         : id === "HABIT_LADDER" ? (day && !effectiveQuietOff(quietSettings).includes("HABIT_LADDER") ? <HabitLadderLine now={now} tucked={!quietVisible("HABIT_LADDER")} onPresence={reportQuiet("HABIT_LADDER")} onOpenHabits={onOpenHabits} /> : null)

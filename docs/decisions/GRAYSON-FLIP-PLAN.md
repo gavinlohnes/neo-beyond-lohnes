@@ -8,7 +8,7 @@ Gavin's merge of the [brief](../agent/GRAYSON-FLIP-PLAN-001.md)'s PR approves th
   the shift); after a stay-late break, just the nap line.
 - **When it shows:** from the last shift's start until the first normal night's bedtime (flip back) or the shift's end
   plus 12 h (stay late); from 16:30 on FLIP DAY until the first night starts.
-- **Where:** one muted line under TODAY's moment (tap → ROUTE at the card); a ROUTE card with basis, sources,
+- **Where:** one short TODAY quiet line, FLIP_PLAN (Gavin, 2026-11-25: "Quiet line"; tap → ROUTE at the card); a ROUTE card with basis, sources,
   SAVE/SKIP/CHANGE; the short sleep and daylight on the lived-day bar.
 - **His to change:** show on/off, get-up time, both plan choices, stay-late times, how much later before nights,
   daylight start and length. Stored beside the caffeine cut-off; each value says whether it's his or the default.

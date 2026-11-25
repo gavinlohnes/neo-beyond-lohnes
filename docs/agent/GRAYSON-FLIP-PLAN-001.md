@@ -175,10 +175,10 @@ Built on `ccr-380c4225-flip-plan`; screenshots in `docs/agent/screenshots/GRAYSO
 - UNDO of a cut-off save restores only the cut-off; a later flip save stays.
 - SKIP in ROUTE hides TODAY's line too (shared skip store, `ui/screens/systems/planSkips.ts`).
 - TODAY shows a short form ("Flip back: up by 13:00, daylight 14:00–16:00, bed 22:45."); ROUTE keeps the full line.
-- **Measured (stop-and-ask, open for Gavin):** at 360×800 on LAST SHIFT, the day's next action starts at 770 px
-  without the line and 826 px with the short line (it was 871 px with the long one). The next action's first line
-  already sits at the screen's edge without it. Placement is Gavin's call: keep it in the band, or make it a TODAY
-  quiet line (TODAY-CALM's rule for new notes), which doesn't move the next action.
+- **Placement (Gavin, 2026-11-25: "Quiet line"):** measured at 360×800 on LAST SHIFT, the band line moved the day's
+  next action from 770 px to 826 px (871 px with the long line). The TODAY line is now the `FLIP_PLAN` quiet line
+  (after FIRST_AT_HOME), with its own TODAY switch and the quiet-line budget; the band is as before #723, and the next
+  action doesn't move (tested). This replaces default 5's "one muted line in the operating-state band".
 
 ## Stop and ask Gavin if
 - His saved schedule doesn't produce the four breaks above (2, 2 and 3 days in the two weeks), or the life-state

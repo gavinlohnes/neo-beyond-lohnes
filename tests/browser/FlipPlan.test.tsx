@@ -23,16 +23,17 @@ beforeEach(async () => {
   await updateSchedulePattern(schedule);
 });
 afterEach(async () => { await cleanup(); vi.useRealTimers(); await page.viewport(1280, 800); });
-const flipLine = () => document.querySelector("[aria-label='Operating state'] [data-flip-line]");
+// Gavin, 2026-11-25 ("Quiet line"): the line is one of TODAY's quiet lines, not part of the operating-state band.
+const flipLine = () => document.querySelector("[aria-label='Quiet lines'] [data-flip-line]");
 const moment = () => document.querySelector("[aria-label='Operating state'] .today-life-state__moment")?.textContent ?? null;
 
-describe("TODAY: one muted line under the moment", () => {
+describe("TODAY: one muted quiet line on the flip days", () => {
   for (const [day, label, starts] of [
     [19, "LAST SHIFT", "Flip back: up by 13:00, daylight 14:00–16:00, bed at your usual time."],
     [20, "RUN OVER", "Flip back: up by 13:00, daylight 14:00–16:00, bed at your usual time."],
     [22, "FLIP DAY", "Tonight stay up a couple of hours later than usual; nap before your 18:00 shift."],
   ] as const) {
-    it(`Nov ${day} under ${label}`, async () => {
+    it(`Nov ${day} (${label})`, async () => {
       vi.setSystemTime(new Date(2026, 10, day, 18));
       await startDay();
       const open = vi.fn();
@@ -40,7 +41,7 @@ describe("TODAY: one muted line under the moment", () => {
       await expect.poll(moment).toMatch(new RegExp(`^${label} `));
       await expect.poll(() => flipLine()?.textContent ?? "").toMatch(new RegExp(`^${starts.replace(/[().]/g, "\\$&")}`));
       const line = flipLine()!;
-      expect(document.querySelector(".today-life-state__moment")!.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(document.querySelector("[aria-label='Operating state'] [data-flip-line]")).toBeNull();
       expect(getComputedStyle(line).fontSize).toBe("16px");
       expect(Math.round(line.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
       expect(getComputedStyle(line).color).not.toBe("rgb(208, 20, 27)");
@@ -49,26 +50,29 @@ describe("TODAY: one muted line under the moment", () => {
         expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
       }
       await page.viewport(360, 800);
-      expect((await axe.run(document.querySelector("[aria-label='Operating state']")!, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
-      if (SHOTS) await page.screenshot({ path: `${SHOTS}/today-${label.toLowerCase().replace(" ", "-")}-360.png`, element: document.querySelector("[aria-label='Operating state']") as HTMLElement });
+      expect((await axe.run(document.querySelector("[aria-label='Quiet lines']")!, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+      if (SHOTS) await page.screenshot({ path: `${SHOTS}/today-${label.toLowerCase().replace(" ", "-")}-360.png`, element: document.querySelector("[aria-label='Quiet lines']") as HTMLElement });
       (line as HTMLElement).click();
       expect(open).toHaveBeenCalledWith("route");
       expect(sessionStorage.getItem("beyond.flipPlan.focus.v1")).toBe("1");
     });
   }
-  it("#723 review: at 360 px the day's next action stays on the first screen under the long LAST SHIFT line", async () => {
+  it("Gavin's quiet-line call: the day's next action doesn't move at 360 px on LAST SHIFT", async () => {
     vi.setSystemTime(new Date(2026, 10, 19, 18));
     await startDay();
-    await render(<TodayScreen onOpenLife={() => {}} onOpenCave={() => {}} />);
-    await expect.poll(() => flipLine()?.textContent ?? "").toMatch(/^Flip back:/);
-    // Measure once the band and the week strip have settled, against the same screen with the line skipped.
-    await new Promise((r) => setTimeout(r, 1500));
-    window.scrollTo(0, 0);
-    const top = () => document.querySelector("[aria-label='Next action']")!.getBoundingClientRect().top;
-    const withLine = top(), height = flipLine()!.getBoundingClientRect().height;
-    expect(height).toBeLessThanOrEqual(2 * 16 * 1.4 + 10); // at most two lines at 360 px
-    expect(withLine).toBeGreaterThan(0);
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/today-last-shift-full-360.png` });
+    const topOfNext = async () => {
+      await render(<TodayScreen onOpenLife={() => {}} onOpenCave={() => {}} />);
+      await expect.poll(moment).toMatch(/^LAST SHIFT /);
+      await new Promise((r) => setTimeout(r, 1500));
+      window.scrollTo(0, 0);
+      const top = Math.round(document.querySelector("[aria-label='Next action']")!.getBoundingClientRect().top);
+      await cleanup();
+      return top;
+    };
+    const withLine = await topOfNext();
+    localStorage.setItem("beyond.shiftSleepPlan.skip.2026-11-19.FLIP_BACK", "1");
+    const without = await topOfNext();
+    expect(withLine).toBe(without);
   });
   it("#723 review: SKIP in ROUTE hides the TODAY line too", async () => {
     vi.setSystemTime(new Date(2026, 10, 20, 18));

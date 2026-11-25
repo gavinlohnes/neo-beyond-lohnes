@@ -14,6 +14,7 @@ import { quietLineOn, readTodayQuietSettings, setQuietLineOn, writeTodayQuietSet
 export const QUIET_LINE_LABELS: Record<QuietLineId, string> = {
   DRIVE_HOME: "Drive home · hands-free",
   FIRST_AT_HOME: "First at home",
+  FLIP_PLAN: "Flip plan (after a run, and before nights)",
   LOG_NUDGE: "Logging nudge (Tell Delta line)",
   PHONE_ALERTS_BEHIND: "Phone alerts out of date",
   ROUTINE: "Routine row",
