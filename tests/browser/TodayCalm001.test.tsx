@@ -172,7 +172,7 @@ describe("GRAYSON-TODAY-CALM-001 in MORE → Settings → TODAY", () => {
   it("changing the order in MORE changes TODAY", async () => {
     await page.viewport(360, 1600);
     const more = await render(<TodayQuietSettings />);
-    for (let i = 0; i < 4; i += 1) await more.getByRole("button", { name: "Move Routine row up" }).click();
+    for (let i = 0; i < 5; i += 1) await more.getByRole("button", { name: "Move Routine row up" }).click();
     expect(JSON.parse(localStorage.getItem("beyond.todayQuiet.v1")!).order.slice(0, 2)).toEqual(["ROUTINE", "DRIVE_HOME"]);
     fits(more.container, 360);
     await aa("MORE TODAY", more.container);
@@ -188,7 +188,7 @@ describe("GRAYSON-TODAY-CALM-001 in MORE → Settings → TODAY", () => {
     const more = await render(<TodayQuietSettings />);
     await more.getByRole("button", { name: "Move Routine row up" }).click();
     await more.getByRole("button", { name: "RESET ORDER" }).click();
-    expect(JSON.parse(localStorage.getItem("beyond.todayQuiet.v1")!).order).toEqual(["DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "HABIT_LADDER", "WORK_DUE"]);
+    expect(JSON.parse(localStorage.getItem("beyond.todayQuiet.v1")!).order).toEqual(["DRIVE_HOME", "FIRST_AT_HOME", "FLIP_PLAN", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "HABIT_LADDER", "WORK_DUE"]);
     await more.getByRole("button", { name: "Show Drive home · hands-free" }).click();
     await cleanup();
     await fixture();

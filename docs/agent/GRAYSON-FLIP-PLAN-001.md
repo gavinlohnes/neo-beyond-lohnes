@@ -167,6 +167,19 @@ Built on `ccr-380c4225-flip-plan`; screenshots in `docs/agent/screenshots/GRAYSO
 - **Known limit:** a confirmed WORK change on a day the rotation has off has no shift times, so it doesn't start a
   flip plan (the existing cards behave the same).
 
+## Post-merge review follow-up (#723 review, 2026-11-25)
+#723 merged before its review ran; the post-merge review (BLOCK) is fixed in the follow-up PR:
+- **Blocking:** on the shift day, once the late night is behind him (his "about" time passed, or after midnight without
+  a Garmin bedtime), BACK ON says only "Nap before your 18:00 shift." — never "tonight" for the first shift.
+- A day in the break he confirmed as WORK: no flip plan for that break (it would contradict him).
+- UNDO of a cut-off save restores only the cut-off; a later flip save stays.
+- SKIP in ROUTE hides TODAY's line too (shared skip store, `ui/screens/systems/planSkips.ts`).
+- TODAY shows a short form ("Flip back: up by 13:00, daylight 14:00–16:00, bed 22:45."); ROUTE keeps the full line.
+- **Placement (Gavin, 2026-11-25: "Quiet line"):** measured at 360×800 on LAST SHIFT, the band line moved the day's
+  next action from 770 px to 826 px (871 px with the long line). The TODAY line is now the `FLIP_PLAN` quiet line
+  (after FIRST_AT_HOME), with its own TODAY switch and the quiet-line budget; the band is as before #723, and the next
+  action doesn't move (tested). This replaces default 5's "one muted line in the operating-state band".
+
 ## Stop and ask Gavin if
 - His saved schedule doesn't produce the four breaks above (2, 2 and 3 days in the two weeks), or the life-state
   moments don't fall on the days named here.

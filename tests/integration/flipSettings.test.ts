@@ -28,6 +28,12 @@ describe("flip settings", () => {
     expect(await c.undo()).toBe(true);
     expect(await getSleepPlanSettings()).toEqual({ flip: { laterHours: 1, setAt: "2026-11-20T10:00:00.000Z" } });
   });
+  it("#723 review: UNDO of a cut-off save keeps a flip save made after it", async () => {
+    const c = await setCaffeineCutoffHours(8, new Date("2026-11-20T10:00:00Z"));
+    await saveFlipSettings({ getUpBy: 12 * 60 }, new Date("2026-11-20T11:00:00Z"));
+    expect(await c.undo()).toBe(true);
+    expect(await getSleepPlanSettings()).toEqual({ flip: { getUpBy: 720, setAt: "2026-11-20T11:00:00.000Z" } });
+  });
   it("a bad value is refused with nothing saved; a bad stored value falls back to its default, never the others", async () => {
     await expect(saveFlipSettings({ getUpBy: 10 * 60 })).rejects.toThrow("isn't allowed");
     await expect(saveFlipSettings({ getUpBy: 13 * 60 + 5 })).rejects.toThrow("isn't allowed");

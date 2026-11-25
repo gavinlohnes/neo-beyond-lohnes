@@ -202,6 +202,8 @@ export function isInAttention(plan: AttentionPlan, item: AttentionItem): boolean
 export type QuietLineId =
   | "DRIVE_HOME"
   | "FIRST_AT_HOME"
+  /** GRAYSON-FLIP-PLAN-001 (Gavin, 2026-11-25: "Quiet line"): the rotation flip's one line. After FIRST_AT_HOME. */
+  | "FLIP_PLAN"
   | "LOG_NUDGE"
   | "PHONE_ALERTS_BEHIND"
   | "ROUTINE"
@@ -212,7 +214,7 @@ export type QuietLineId =
   | "WORK_DUE";
 
 export const QUIET_LINE_DEFAULT_ORDER: readonly QuietLineId[] = [
-  "DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "HABIT_LADDER", "WORK_DUE",
+  "DRIVE_HOME", "FIRST_AT_HOME", "FLIP_PLAN", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "HABIT_LADDER", "WORK_DUE",
 ];
 
 export const QUIET_MAX = 2;

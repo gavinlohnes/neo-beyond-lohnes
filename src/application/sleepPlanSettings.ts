@@ -49,7 +49,9 @@ export async function setCaffeineCutoffHours(hours: number, now = new Date()): P
       undo: () => db.transaction("rw", db.schedulePatterns, async () => {
         const settings = await readSettings(), current = settings.caffeineCutoff;
         if (current?.setAt !== caffeineCutoff.setAt || current.hours !== caffeineCutoff.hours) return false;
-        await writeSettings(previous);
+        // #723 review: put back only the cut-off; a flip SAVE made since stays.
+        const { caffeineCutoff: _mine, ...rest } = settings;
+        await writeSettings(previous.caffeineCutoff ? { ...rest, caffeineCutoff: previous.caffeineCutoff } : rest);
         return true;
       }),
     };

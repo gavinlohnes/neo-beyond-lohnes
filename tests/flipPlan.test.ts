@@ -23,6 +23,7 @@ describe("after the last night of a run", () => {
     expect(p).toMatchObject({ kind: "FLIP_BACK", breakDays: 3, date: "2026-11-05" });
     expect(p.line).toBe("Sleep soon after this shift and get up by 13:00. Get outside in daylight this afternoon (14:00–16:00). Bed around 22:45, your usual on days off.");
     expect(p.card.title).toBe("Flip back");
+    expect(p.short).toBe("Flip back: up by 13:00, daylight 14:00–16:00, bed 22:45.");
     expect(p.card.source).toEqual(SOURCES.LIGHT_TIMING);
     expect(p.windows.map((w) => [w.kind, new Date(w.start).getHours(), new Date(w.end).getHours()])).toEqual([["SLEEP", 6, 13], ["DAYLIGHT", 14, 16]]);
     expect(plan(at(10, 6, 15))?.kind).toBe("FLIP_BACK");
@@ -54,9 +55,17 @@ describe("FLIP DAY, before the first night of a run", () => {
     const p = plan(at(10, 8, 20))!;
     expect(p).toMatchObject({ kind: "BACK_ON", date: "2026-11-08", breakDays: 3 });
     expect(p.line).toBe("Tonight, stay up later than usual (about 00:45) and sleep in. Nap before your 18:00 shift.");
+    expect(p.short).toBe("Tonight stay up until about 00:45; nap before your 18:00 shift.");
     expect(plan(at(10, 9, 17, 59))?.kind).toBe("BACK_ON");
     expect(plan(at(10, 9, 18, 1))).toBeNull();
     expect(plan(at(10, 8, 16, 29))?.kind).not.toBe("BACK_ON");
+  });
+  it("#723 review: once the late night is behind him, only the nap line (never 'tonight' on the shift day)", () => {
+    expect(plan(at(10, 9, 0, 30))!.line).toMatch(/^Tonight, stay up later/); // before about 00:45
+    expect(plan(at(10, 9, 13))!.line).toBe("Nap before your 18:00 shift.");
+    expect(plan(at(10, 9, 13))!.card.plan.title).toBe("Nap before the 18:00 shift");
+    expect(plan(at(10, 8, 23), { rhythm: null })!.line).toMatch(/^Tonight, stay up later/);
+    expect(plan(at(10, 9, 9), { rhythm: null })!.line).toBe("Nap before your 18:00 shift."); // after midnight, no Garmin bedtime
   });
   it("after a 2-day stay-late break: only the nap line", () => {
     expect(plan(at(9, 29, 20))!.line).toBe("Nap before your 18:00 shift.");
@@ -80,6 +89,10 @@ describe("his settings", () => {
   });
   it("no saved schedule: nothing", () => {
     expect(deriveFlipPlan({ now: at(10, 6, 7), pattern: DEFAULT_SCHEDULE_PATTERN, rhythm })).toBeNull();
+  });
+  it("#723 review: a day in the break he confirmed as WORK means no flip plan for that break", () => {
+    expect(plan(at(10, 6, 9), { confirmed: new Map([["2026-11-06", "WORK"]]) })).toBeNull();
+    expect(plan(at(10, 8, 20), { confirmed: new Map([["2026-11-07", "WORK"]]) })).toBeNull();
   });
   it("a confirmed schedule change wins: Thu Nov 5 confirmed off makes Wed the last night, with 4 days off", () => {
     const confirmed = new Map<string, "WORK" | "OFF">([["2026-11-05", "OFF"]]);
