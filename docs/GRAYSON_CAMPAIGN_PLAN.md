@@ -132,7 +132,7 @@ status of its own.
 | **Campaign 7 — Capture and Attention** | | | |
 | C7.1 | Voice into capture everywhere | Done (#699) | [brief](agent/GRAYSON-DICTATE-001.md); Grok Bot |
 | C7.2 | Plan stays fresh | Done (#698) | [brief](agent/GRAYSON-PLAN-FRESH-001.md); Grok Bot |
-| C7.3 | New moment kinds | Not started |  |
+| C7.3 | New moment kinds | Briefed (GRAYSON-ALERT-KINDS-001, 2026-11-25: coming up and caffeine cut-off; plan to confirm left out) |  |
 | C7.4 | Widget quick actions | Not started |  |
 | C7.5 | Lock-screen workout (HARVEST-003 later) | Done (#688) |  |
 | C7.6 | Search on MiniSearch | Done (SEARCH-002: MiniSearch index with tap to open, already on master) |  |
