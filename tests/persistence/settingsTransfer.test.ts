@@ -183,6 +183,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.bridgePlan.sent.v1": "device state (what this phone handed Health Bridge)", "beyond.bridgePlan.lineDay.v1": "seen",
       "beyond.bridgePlan.outdated": "this visit only (session)", "beyond.dictation.privacySeen.v1": "seen",
       "beyond.daily-note.draft.": "draft", "beyond:gym-draft:": "draft", "beyond:decrypt:": "animation state",
+      // GRAYSON-TRAIN-BODYMAP-001: the map's equipment chips, a view setting on this phone (the brief: doesn't travel).
+      "beyond.bodyMap.v1": "view setting",
     };
     const EVENTS = new Set(["beyond:ask-alfred", "beyond:do", "beyond:drive-home", "beyond:find-food", "beyond:hidden-features",
       "beyond:memory-changed", "beyond:open-record", "beyond:routines-changed", "beyond:snippets-changed", "beyond:weekly-review-saved"]);
