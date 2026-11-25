@@ -1,10 +1,15 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { ShiftClockPhase } from "../screens/today/shiftClock";
 import { WeeklyReviewReadyLine } from "./WeeklyReviewReadyLine";
+import { useReportPresence } from "./usePresence";
 
-/** Placement only. Children stay mounted; opening depth never generates another review. */
-export function TodayReviewSupport({ phase, now, active, review, onOpen }: {
-  phase: ShiftClockPhase | null; now: Date; active: boolean;
+/**
+ * Placement only. Children stay mounted; opening depth never generates another review.
+ * GRAYSON-TODAY-CALM-001: a quiet line (REVIEW). It tells TODAY when it is showing; while tucked it stays mounted but
+ * out of sight, unless he already has it open.
+ */
+export function TodayReviewSupport({ phase, now, active, review, onOpen, tucked = false, onPresence }: {
+  phase: ShiftClockPhase | null; now: Date; active: boolean; tucked?: boolean; onPresence?: ((shown: boolean) => void) | undefined;
   review?: ((onAvailable: (value: boolean) => void) => ReactNode) | undefined;
   onOpen?: (() => void) | undefined;
 }) {
@@ -14,7 +19,8 @@ export function TodayReviewSupport({ phase, now, active, review, onOpen }: {
   const summary = useRef<HTMLElement>(null);
   // An operator already reading keeps that deliberate depth across a phase change.
   const visible = open || phase === "OFF" && (alfredAvailable || structuredAvailable);
-  return <div hidden={!visible}>
+  useReportPresence(visible, onPresence);
+  return <div hidden={!visible || (tucked && !open)}>
     <details className="support-disclosure today-review-support" onToggle={(event) => {
       const nextOpen = event.currentTarget.open;
       setOpen(nextOpen);

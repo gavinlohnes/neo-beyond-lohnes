@@ -304,6 +304,11 @@ export type DomainEventType =
   | "RUNNING_PLAN_ADVANCED"
   | "RUNNING_PLAN_POSITION_SET"
   | "RUNNING_PLAN_EDITED"
+  // GRAYSON-TRAIN-STANDARDS-001 (Gavin, 2026-11-24): a sit-and-reach, one-minute sit-up or 1.5-mile run test result,
+  // day-scoped to the lived day it was recorded in. Removed through the shared void family (STANDARD_TEST_VOIDED,
+  // domain/logVoids.ts) and put back with LOG_VOID_UNDONE; a fix voids the old result and records a new one.
+  | "STANDARD_TEST_RECORDED"
+  | "STANDARD_TEST_VOIDED"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"
@@ -1303,4 +1308,19 @@ export interface RunningPlanEditedPayload {
   plan: RunningPlanVersion;
   reason: "EDIT_RUN" | "ADD_RUN" | "RESET_RUN" | "RESET_PLAN" | "WEEK_SETTINGS" | "UNDO";
   previousEventId?: string;
+}
+
+/** GRAYSON-TRAIN-STANDARDS-001: one result of one standards test. `at` is when he did it, inside `beyondDayId`. */
+export type StandardTestKind = "SIT_AND_REACH" | "SIT_UPS_1MIN" | "RUN_1_5_MILE";
+export type StandardTestUnit = "in" | "reps" | "seconds";
+export interface StandardTestRecordedPayload {
+  commandId: string;
+  test: StandardTestKind;
+  value: number;
+  unit: StandardTestUnit;
+  at: string;
+  beyondDayId: string;
+  note?: string;
+  /** Set when this result is a fix: the result it replaced (voided in the same write). */
+  correctsEventId?: string;
 }

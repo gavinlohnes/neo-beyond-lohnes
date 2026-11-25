@@ -45,7 +45,9 @@ for (const width of [320, 360, 412]) {
     const panel = screen.getByRole("region", { name: "Progress" });
     await expect.element(panel.getByRole("heading", { name: "WORKING", exact: true })).toBeVisible();
     await expect.element(panel.getByText(/doesn't prove muscle was gained/)).toBeVisible();
-    await expect.element(panel.getByText("BEYOND doesn't record this test yet.")).toBeVisible();
+    // GRAYSON-TRAIN-STANDARDS-001: the three tests can now be recorded; unrecorded ones say so.
+    await expect.element(panel.getByText("Not recorded yet.").first()).toBeVisible();
+    expect(panel.element().textContent).not.toMatch(/doesn't record/);
     await expect.element(panel.getByText(/7 finished sessions in the last 4 weeks \(FULL 7\)/)).toBeVisible();
     expect(panel.element().textContent).not.toMatch(/streak|missed|fail|behind|grew/i);
     expect([...panel.element().querySelectorAll("button")].some((b) => getComputedStyle(b).backgroundColor === "rgb(208, 20, 27)")).toBe(false);

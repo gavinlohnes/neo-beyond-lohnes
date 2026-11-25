@@ -33,12 +33,10 @@ export interface TodayNumbersProps {
   onOpenTile: (metric: "water" | "protein" | "weight" | "sleep") => void;
   onOpenMeasured: (metric: MeasuredMetric | null) => void;
   onOpenBody?: (() => void) | undefined;
-  /** GRAYSON-LOG-NUDGE-001: the quiet line under the tiles at a usual meal time, or null. */
-  logNudge?: { text: string; onTell: () => void; onNotNow: () => void } | null | undefined;
 }
 
 export function TodayNumbers({ measured, operationsOnly, minimumDayProteinG, proteinTargetG, minimumDayHydrateOz, waterTargetOz, waterLogCount, latestWeightLbs,
-  lastMainSleepMinutes, lastMainSleepFromGarmin, paceHistories, now, dayId, busy, fuelLine, recordsAvailable, onOpenTile, onOpenMeasured, onOpenBody, logNudge }: TodayNumbersProps) {
+  lastMainSleepMinutes, lastMainSleepFromGarmin, paceHistories, now, dayId, busy, fuelLine, recordsAvailable, onOpenTile, onOpenMeasured, onOpenBody }: TodayNumbersProps) {
   const day = dayId === undefined ? undefined : { id: dayId };
   const pct = proteinTargetG ? Math.min(100, Math.round((minimumDayProteinG / proteinTargetG) * 100)) : null;
   const sleep = lastMainSleepMinutes === null ? null : `${Math.floor(lastMainSleepMinutes / 60)}:${String(Math.round(lastMainSleepMinutes % 60)).padStart(2, "0")}`;
@@ -107,14 +105,7 @@ export function TodayNumbers({ measured, operationsOnly, minimumDayProteinG, pro
           </button>
         </>}
       </div>
-      {/* GRAYSON-LOG-NUDGE-001: one muted line, no red, no count; TELL DELTA opens Delta with "I ate " and sends nothing. */}
-      {logNudge && <div className="cc-log-nudge" role="group" aria-label="Logging nudge">
-        <p className="meta">{logNudge.text}</p>
-        <span className="cc-log-nudge-actions">
-          <button type="button" disabled={busy} onClick={logNudge.onTell}>TELL DELTA</button>
-          <button type="button" disabled={busy} onClick={logNudge.onNotNow}>NOT NOW</button>
-        </span>
-      </div>}
+      {/* GRAYSON-TODAY-CALM-001: the logging nudge is a quiet line now; TODAY renders it under the numbers (TodayQuietLines). */}
       {/* FIELD-AUTHORITY-001: TONIGHT-001's "a weigh-in sets the target" moves out of the tile. */}
       {pct === null && latestWeightLbs === undefined && <p className="meta cc-numbers-note">A weigh-in sets the protein target.</p>}
       {/* GARMIN-005: Garmin numbers only move when the helper sends; say so when they are old. */}

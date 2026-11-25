@@ -32,6 +32,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond:runningKeepAwake": "Running keeps the screen on",
   "beyond.runCues.v1": "Run cue words and voice",
   "beyond.exerciseNotes.v1": "Exercise notes",
+  "beyond.standardTargets.v1": "Standards targets",
   "beyond:weightTrendPreference": "Weight trend",
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",
@@ -39,6 +40,12 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.close.prompts.v1": "Evening close prompts",
   "beyond.close.gaps.v1": "Evening close gaps",
   "beyond.logNudge.v1": "Logging nudge",
+  "beyond.todayQuiet.v1": "TODAY quiet lines",
+  // GRAYSON-PLAN-FRESH-001: his two phone-alert switches. What was last sent to the phone (beyond.bridgePlan.sent.v1)
+  // is this phone's state and doesn't travel.
+  "beyond.bridgePlan.settings.v1": "Phone alert updates",
+  // GRAYSON-DICTATE-001: the TALK buttons and "sort what I say into logs".
+  "beyond.dictation.v1": "Voice (TALK buttons)",
 };
 
 const MAX_VALUE_LENGTH = 16_384;

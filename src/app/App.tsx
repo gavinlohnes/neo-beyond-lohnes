@@ -19,7 +19,8 @@ import { importBridgeFiles, type HealthSyncResult } from "../application/healthS
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
 import { GarminSyncLine } from "../ui/components/GarminSyncLine";
 import { markGarminSyncRequested, takeGarminSyncRequest } from "../ui/healthSyncRequest";
-import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid } from "../ui/screens/today/MeasuredSheet";
+import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid, recordSyncSent } from "../ui/screens/today/MeasuredSheet";
+import { markBridgeOutdated } from "../ui/bridgeHandoff";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
@@ -205,6 +206,17 @@ function AppWorkspaces() {
     window.addEventListener(ASK_ALFRED_EVENT, onAsk); window.addEventListener(DO_IN_BEYOND_EVENT, onDo);
     return () => { window.removeEventListener(ASK_ALFRED_EVENT, onAsk); window.removeEventListener(DO_IN_BEYOND_EVENT, onDo); };
   }, []);
+  // GRAYSON-PLAN-FRESH-001: a Health Bridge too old for the plan link sends Chrome back on ?bridge=update; open
+  // KEY MOMENT ALERTS (MORE → Work schedule), which says to update the Bridge.
+  const [bridgeUpdate] = useState(() => new URLSearchParams(window.location.search).get("bridge") === "update");
+  useEffect(() => {
+    if (!bridgeUpdate) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("bridge");
+    window.history.replaceState(null, "", url.toString());
+    markBridgeOutdated();
+    openMore("WORK_SCHEDULE");
+  }, [bridgeUpdate]);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
   const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
@@ -365,7 +377,7 @@ function AppWorkspaces() {
     if (!syncShortcut) return;
     markGarminSyncRequested();
     // Chrome may hold an app launch that no tap started; the line on TODAY offers the same link to tap.
-    void bridgeSyncUrl().then((url) => { try { window.location.assign(url); } catch { /* the line below stays */ } }, () => { try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ } });
+    void bridgeSyncUrl().then((url) => { try { recordSyncSent(url); window.location.assign(url); } catch { /* the line below stays */ } }, () => { try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ } });
   }, [syncShortcut]);
   useEffect(() => {
     if (!oneTapSync) return;

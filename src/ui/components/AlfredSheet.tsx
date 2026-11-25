@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useDictation } from "../speech/useDictation";
 import { operatorContextVersion } from "../../application/operatorContext";
 import { LogSheet } from "./LogSheet";
 import { buildPlanningContext, personalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
@@ -73,11 +74,6 @@ const STARTERS: { label: string; group: StarterGroup; ask?: string; fill?: strin
 const SPEAK = "beyond.alfredSpeak";
 const usd = (v: number) => (v > 0 && v < 0.01 ? v.toFixed(3) : v.toFixed(2));
 const plain = (text: string) => text.replace(/\*\*/g, "").replace(/^#+\s*/gm, "").replace(/^\s*[-*•]\s+/gm, "");
-type Recognition = { lang: string; interimResults: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
-function speechRecognition(): (new () => Recognition) | null {
-  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
 
 /** ALFRED-VOICE-001: the message box speaks like Alfred, not like a sample log. One line per lived day. */
 export const ALFRED_PROMPTS = [
@@ -108,7 +104,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   const [error, setError] = useState<string | null>(null);
   const [spent, setSpent] = useState(0);
   const [monthSpent, setMonthSpent] = useState(() => getMonthSpend());
-  const [listening, setListening] = useState(false);
+  const dictation = useDictation(); // GRAYSON-DICTATE-001: the shared Web Speech hook
+  const listening = dictation.listening;
   // ALFRED-004 talk mode: Alfred reads his answers aloud, and a spoken message sends itself.
   const [speak, setSpeak] = useState(() => { try { return localStorage.getItem(SPEAK) === "1"; } catch { return false; } });
   const [memories, setMemories] = useState<AlfredMemory[] | null>(null);
@@ -119,7 +116,6 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   const heard = useRef("");
   const prefix = useRef("");
   const session = useRef<AlfredSession | null>(null);
-  const recognition = useRef<Recognition | null>(null);
   const end = useRef<HTMLDivElement>(null);
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
@@ -336,21 +332,19 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   }
 
   function talk(lead = "") {
-    const Ctor = speechRecognition();
-    if (!Ctor) { setError("Voice isn't available in this browser. Type instead."); return; }
-    if (listening) { recognition.current?.stop(); return; }
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+    if (!dictation.supported) { setError("Voice isn't available in this browser. Type instead."); return; }
+    if (listening) { dictation.stop(); return; }
     prefix.current = lead; heard.current = "";
-    const r = new Ctor(); r.lang = "en-US"; r.interimResults = true;
-    r.onresult = (e) => { heard.current = Array.from(e.results).map((res) => res[0]!.transcript).join(" "); setText(lead + heard.current); };
-    // A shift debrief is a conversation, so it goes straight to Alfred; plain talk tries the free helper first.
-    r.onend = () => { setListening(false); if ((speak || lead) && heard.current.trim()) void (lead ? sendToAlfred(prefix.current + heard.current) : ask(heard.current)); };
-    r.onerror = () => setListening(false);
-    recognition.current = r; setListening(true); r.start();
+    dictation.start({
+      interim: true,
+      onWords: (words) => { heard.current = words; setText(lead + heard.current); },
+      // A shift debrief is a conversation, so it goes straight to Alfred; plain talk tries the free helper first.
+      onDone: () => { if ((speak || lead) && heard.current.trim()) void (lead ? sendToAlfred(prefix.current + heard.current) : ask(heard.current)); },
+    });
   }
 
   function chooseContext(value: boolean) {
-    recognition.current?.stop();
+    dictation.stop();
     setIncluded(value); session.current = null; lastContext.current = null;
     setTurns([]); setSnapshot(null); setSelectedSource(null);
     setContextNotice("Fresh conversation. Earlier requests sent to Claude cannot be recalled.");

@@ -1,6 +1,7 @@
 import { ExerciseHowToSheet } from "../../components/ExerciseHowToSheet";
 import { ExerciseNoteButton, ExerciseNoteLine, useExerciseNote } from "../../components/ExerciseNoteLine";
 import type React from "react";
+import { BodyMap } from "../../components/BodyMap";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
@@ -81,6 +82,7 @@ function LibraryRow({ lib, children }: { lib: LibraryExercise; children: React.R
 
 export function ExerciseLibraryScreen() {
   const [howTo, setHowTo] = useState<{ id: string; name: string } | null>(null);
+  const [byMuscle, setByMuscle] = useState(false);
   const [exercises, setExercises] = useState<CustomExercise[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -177,6 +179,11 @@ export function ExerciseLibraryScreen() {
           Your own exercises — pulled from a reference list or fully your own. Not yet used by TRAIN's workouts; this is where they live for now.
         </p>
       </header>
+
+      {/* GRAYSON-TRAIN-BODYMAP-001: BY MUSCLE opens the map above the list. */}
+      <button type="button" className="btn-secondary" style={{ width: "auto", minHeight: 44, fontSize: 16, marginBottom: 8 }} aria-expanded={byMuscle}
+        onClick={() => setByMuscle((v) => !v)}>BY MUSCLE</button>
+      {byMuscle && <BodyMap onHowTo={(entry) => setHowTo({ id: entry.howToId ?? entry.id, name: entry.name })} />}
 
       <section aria-labelledby="exercise-library-heading">
         <h2 id="exercise-library-heading" className="section-label">My exercises</h2>

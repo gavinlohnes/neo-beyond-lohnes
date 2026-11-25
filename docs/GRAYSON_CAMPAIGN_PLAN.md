@@ -130,8 +130,8 @@ status of its own.
 | C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M. [Brief](agent/GRAYSON-ASKS-COUNT-001.md); Claude Code |
 | C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
 | **Campaign 7 — Capture and Attention** | | | |
-| C7.1 | Voice into capture everywhere | Not started | [brief](agent/GRAYSON-DICTATE-001.md); Grok Bot |
-| C7.2 | Plan stays fresh | Not started | [brief](agent/GRAYSON-PLAN-FRESH-001.md); Grok Bot |
+| C7.1 | Voice into capture everywhere | Done (#699) | [brief](agent/GRAYSON-DICTATE-001.md); Grok Bot |
+| C7.2 | Plan stays fresh | Done (#698) | [brief](agent/GRAYSON-PLAN-FRESH-001.md); Grok Bot |
 | C7.3 | New moment kinds | Not started |  |
 | C7.4 | Widget quick actions | Not started |  |
 | C7.5 | Lock-screen workout (HARVEST-003 later) | Not started |  |
@@ -143,7 +143,7 @@ status of its own.
 | C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
 | C9.1 | TodayScreen split (TODAY-SPLIT-002 slice 2 shipped as #575; the rest is TODAY-SPLIT-003) | Not started | 2026-11-24, Gavin: hard pieces others plug into go first. [brief](agent/GRAYSON-TODAY-SPLIT-003.md); Grok Bot, first in its queue ([build order](agent/GRAYSON-BUILD-ORDER.md)). No visible change; Gavin merges each slice |
-| C9.6 | TODAY stays calm: at most two quiet lines at once in his order, one after-shift card at a time; every new TODAY note is a quiet-line candidate, never its own block | Not started | Added 2026-11-24 on Gavin's go ("Write a today clean up"). [brief](agent/GRAYSON-TODAY-CALM-001.md); Grok Bot. Lane, size: PROTECTED (TODAY composition), M |
+| C9.6 | TODAY stays calm: at most two quiet lines at once in his order, one after-shift card at a time; every new TODAY note is a quiet-line candidate, never its own block | Done (#697) | Added 2026-11-24 on Gavin's go ("Write a today clean up"). [brief](agent/GRAYSON-TODAY-CALM-001.md); Grok Bot. Lane, size: PROTECTED (TODAY composition), M |
 | C9.2 | Quiet Command finish | Done (TRAIN #628; DATA home #632) | [TRAIN brief](agent/GRAYSON-TRAIN-FINISH-3.md), [DATA brief](agent/GRAYSON-C9.2-DATA-001.md) |
 | C9.3 | Navigation study | Not started |  |
 | C9.4 | Accessibility and motion pass | Not started |  |
