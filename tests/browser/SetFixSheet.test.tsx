@@ -60,6 +60,9 @@ async function openRecord() {
   await screen.getByRole("button", { name: "HISTORY", exact: true }).click();
   await screen.getByRole("list").getByRole("button").first().click();
   await expect.poll(() => record()?.querySelector(".set-fix-row")).not.toBeNull();
+  // The record moves focus to its heading once it loads (an effect after paint). Wait for that, so a row the test
+  // focuses next keeps focus (#727 CI: Enter landed on the heading when the effect ran after the test's focus()).
+  await expect.poll(() => document.activeElement?.id).toBe("session-record-heading");
   return screen;
 }
 
