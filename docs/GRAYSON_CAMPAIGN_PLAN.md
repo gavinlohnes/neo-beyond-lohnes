@@ -54,7 +54,7 @@ status of its own.
 | C1.2 | Orientation slice 2: day-off, recovery and difficult-day grammar | Done (#598) | Approved 2026-11-20 (no invented day-off advice; mood trend as a fact); [brief](agent/GRAYSON-C1.2-001.md) |
 | C1.3 | Close ritual | Done (#599) | Approved 2026-11-20: follows SHIFT DOWN, not END DAY; [brief](agent/GRAYSON-C1.3-001.md) |
 | C1.4 (Q4) | "Tomorrow differs" line | Done (#599) | Ships inside C1.3's close |
-| C1.5 | Re-entry thread | Not started |  |
+| C1.5 | Re-entry thread | Partly built (the since-last-look line covers new advice, state, plan changes and Garmin sleep; not obligations or an active workout) |  |
 | C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
 | C1.7 | Carry or drop unfinished plans at the close (backlog B6, after Sunsama) | Briefed ([CARRY-001](agent/GRAYSON-CARRY-001.md)) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S |
 | **Campaign 2 — Shift Transitions** | | | |
@@ -125,7 +125,7 @@ status of its own.
 | C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
 | C6.5 | Override as evidence | Done (#701) | [brief](agent/GRAYSON-C6.5-001.md); Claude Code. "That's not right" on every other Why is [NOT-RIGHT-001](agent/GRAYSON-NOT-RIGHT-001.md) (backlog E8) |
 | C6.6 | Earned challenge ladder | Approved, next after C6.7 | Gavin's go 2026-11-25; Claude Code (ccr-380c4225); design first |
-| C6.7 | One memory store | In progress | [ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md); Claude Code (ccr-380c4225), Gavin's go 2026-11-25 |
+| C6.7 | One memory store | In review | [ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md); Claude Code (ccr-380c4225), Gavin's go 2026-11-25; Protected, Gavin merges |
 | C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
 | C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | In review (#694) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M. [Brief](agent/GRAYSON-ASKS-COUNT-001.md); Claude Code |
 | C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
@@ -138,15 +138,15 @@ status of its own.
 | C7.6 | Search on MiniSearch | Done (SEARCH-002: MiniSearch index with tap to open, already on master) |  |
 | **Campaign 8 — Data You Own** | | | |
 | C8.1 (Q6) | Settings travel with the backup | Done (#633) | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
-| C8.2 | Restore drill | Not started |  |
-| C8.3 | Export everything readable | Not started |  |
-| C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
+| C8.2 | Restore drill | Done (BACKUP-AUTO-001: the monthly restore check reads the backup through the real restore, offline and without writing, and compares per-table counts) |  |
+| C8.3 | Export everything readable | Partly built (CSV for weight, workouts, meals, days with sleep minutes, and measurements; not check-ins, journal, home or people) |  |
+| C8.4 | Second-device sync | Deferred (only if he gets a tablet or wants lists shared with Elle; Drive backup is built) | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
 | C9.1 | TodayScreen split (TODAY-SPLIT-002 slice 2 shipped as #575; the rest is TODAY-SPLIT-003) | Done (#685, #687, #690, #692, #695, #696; TODAY is 2,076 lines, down from 3,604) | 2026-11-24, Gavin: hard pieces others plug into go first. [brief](agent/GRAYSON-TODAY-SPLIT-003.md); Grok Bot, first in its queue ([build order](agent/GRAYSON-BUILD-ORDER.md)). No visible change; Gavin merges each slice |
 | C9.6 | TODAY stays calm: at most two quiet lines at once in his order, one after-shift card at a time; every new TODAY note is a quiet-line candidate, never its own block | Done (#697) | Added 2026-11-24 on Gavin's go ("Write a today clean up"). [brief](agent/GRAYSON-TODAY-CALM-001.md); Grok Bot. Lane, size: PROTECTED (TODAY composition), M |
 | C9.2 | Quiet Command finish | Done (TRAIN #628; DATA home #632) | [TRAIN brief](agent/GRAYSON-TRAIN-FINISH-3.md), [DATA brief](agent/GRAYSON-C9.2-DATA-001.md) |
 | C9.3 | Navigation study | Not started |  |
-| C9.4 | Accessibility and motion pass | Not started |  |
+| C9.4 | Accessibility and motion pass | Partly built (axe checks run on most screens in tests; no large-text or reduced-motion pass yet) |  |
 | C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
 | **Quick wins outside the campaigns** | | | |
 | Q3 | Finish workouts on the metric page | Done (#584) | Merged 2026-11-22 |

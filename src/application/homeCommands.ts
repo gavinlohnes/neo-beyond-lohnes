@@ -63,7 +63,7 @@ function validate(input: HomeItemInput) {
 export async function addHomeItem(input: HomeItemInput): Promise<{ memory: AlfredMemory | null; reminder: Obligation | null }> {
   const { item, details, repeat, remindAt } = validate(input);
   return writeAtomically(["alfredMemories", "beyondDays", ...INTENT_WRITE_TABLES], async () => {
-    const memory = details ? await rememberFact(`${item}: ${details}`, "HOME") : null;
+    const memory = details ? await rememberFact(`${item}: ${details}`, "HOME", "HOME") : null;
     const reminder = repeat ? await createObligation({
       title: `${HOME_PREFIX}${item}`,
       dueAt: repeat.firstDue,

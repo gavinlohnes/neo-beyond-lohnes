@@ -18,8 +18,8 @@
 - **Energy curve:** C4.1 (#636) locked the steady-night low in the waking night. The body-clock model (fully adjusted
   to nights) is still an unvalidated assumption. Partial adjustment, or anchoring to days off, would be a new
   owner-approved objective.
-- **Delta track:** C6.5 in review (Gavin's go 2026-11-25). Next candidates: C6.6 earned challenge ladder (Protected), or
-  C6.7 one memory store (briefed). C2.2, C2.4 and C2.5 are Grok's; C6.3 is another Claude builder's (#693).
+- **Delta track:** C6.7 one memory store in review (Protected; Gavin merges; Claude Code `ccr-380c4225-memory`). C6.6
+  earned challenge ladder approved next (Gavin's go 2026-11-25), design first. C2.2, C2.4 and C2.5 are Grok's; C6.3 is another Claude builder's (#693).
 - **Forward-compat note (#639 review):** LEARNING_RESPONDED's payload schema is strict, so a field added by a future
   build makes this build withhold Delta's knowledge (fail-safe). Add any new field as optional and ship the reader
   first.

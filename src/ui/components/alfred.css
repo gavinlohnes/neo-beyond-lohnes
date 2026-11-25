@@ -6,9 +6,6 @@
 .alfred-starter-grid .btn-secondary { margin: 0; min-height: 44px; padding: 6px 8px; font-size: 0.85em; text-transform: none; letter-spacing: 0; }
 
 /* Original evidence can contain long unbroken words. Keep deliberate inspection inside the phone. */
-.alfred-memory-page, .alfred-memory-page > *, .alfred-memory-page form { min-width: 0; overflow-wrap: anywhere; }
-.alfred-memory-page input, .alfred-memory-page textarea, .alfred-memory-page select { max-width: 100%; }
-.alfred-memory-page button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 /* ATTENTION-001: deliberate depth, in BEYOND's equipment grammar. */
 .support-disclosure { min-width: 0; margin-block: 12px; border: 1px solid var(--border-strong); border-inline-start: 2px solid var(--border-strong); background: var(--surface-1); overflow-wrap: anywhere; }
