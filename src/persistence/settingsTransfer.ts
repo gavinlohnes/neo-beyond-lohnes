@@ -36,6 +36,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.standardTargets.v1": "Standards targets",
   "beyond:weightTrendPreference": "Weight trend",
   "beyond:whatMovesPreference": "What moves your numbers",
+  "beyond.windowReview.v1": "Eating window review",
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",
   "beyond.more.favorites.v1": "MORE favorites",

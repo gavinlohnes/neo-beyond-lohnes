@@ -9,6 +9,7 @@ import { endDay, logSleep, startDay, updateSchedulePattern } from "../../src/app
 import { getDecisionJournalEntries } from "../../src/application/journalQueries";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { db } from "../../src/persistence/db";
+import { todaySettled } from "./helpers/todaySettled";
 
 /**
  * GRAYSON-RUN-DEBRIEF-001 (C2.5): on RUN OVER (Fri Nov 20 2026, after the Wed and Thu shifts) TODAY asks "How did the
@@ -116,6 +117,29 @@ describe("GRAYSON-RUN-DEBRIEF-001", () => {
     expect(all[0]!.decision).toBe("Run felt ok");
   });
 
+  it("#726 review: CHANGE edits an existing line with Undo; a cleared line says why it can't save; a failed fix changes nothing", async () => {
+    const screen = await runOver();
+    await screen.getByRole("button", { name: "OK", exact: true }).click();
+    await screen.getByLabelText("One thing for next run (optional)").fill("Nap first");
+    await screen.getByRole("button", { name: "SAVE" }).click();
+    await screen.getByRole("button", { name: "Change the run debrief" }).click();
+    const field = screen.getByLabelText("One thing for next run (optional)");
+    await expect.element(field).toHaveValue("Nap first");
+    await field.fill("");
+    await expect.element(screen.getByText("A saved line can be changed, not cleared.")).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "SAVE LINE" })).toBeDisabled();
+    await field.fill("Nap 90 min first");
+    await screen.getByRole("button", { name: "SAVE LINE" }).click();
+    await expect.element(screen.getByText("Changed.")).toBeVisible();
+    expect((await getDecisionJournalEntries())[0]!.expectation).toBe("Next run: Nap 90 min first");
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.poll(async () => (await getDecisionJournalEntries())[0]!.expectation).toBe("Next run: Nap first");
+    vi.spyOn(db.decisionJournalEntries, "put").mockRejectedValue(new Error("disk full"));
+    await screen.getByRole("button", { name: "Rough" }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("That didn't save. Nothing changed.");
+    expect((await getDecisionJournalEntries())[0]!.decision).toBe("Run felt ok");
+  });
+
   it("NOT NOW hides it for this run and writes nothing", async () => {
     const screen = await runOver();
     await screen.getByRole("button", { name: "NOT NOW" }).click();
@@ -130,8 +154,8 @@ describe("GRAYSON-RUN-DEBRIEF-001", () => {
   it("doesn't show outside RUN OVER, or with no post-run report", async () => {
     vi.setSystemTime(new Date(2026, 10, 19, 18)); // a work day, mid-run
     const screen = await render(<TodayScreen onOpenLife={() => {}} />);
-    await expect.element(screen.getByRole("heading").first()).toBeVisible();
-    await new Promise((r) => setTimeout(r, 300));
+    await todaySettled();
+    expect(screen.getByText("RUN OVER").elements()).toHaveLength(0);
     expect(card()).toBeNull();
     await cleanup();
     let read = false;

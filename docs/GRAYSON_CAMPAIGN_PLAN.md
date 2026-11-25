@@ -62,7 +62,7 @@ status of its own.
 | C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Done (#722, [SHIFTDOWN-TAPS-001](agent/GRAYSON-SHIFTDOWN-TAPS-001.md)) | [brief](agent/GRAYSON-SHIFTDOWN-TAPS-001.md); Claude Code (ccr-380c4225), queue moved from Grok Bot |
 | C2.3 | Home moment | Not started |  |
 | C2.4 | Flip-day plan | Done (#723, review follow-up #725, [FLIP-PLAN-001](agent/GRAYSON-FLIP-PLAN-001.md)) | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Claude Code (ccr-380c4225), queue moved from Grok Bot; Protected, Gavin merges |
-| C2.5 (Q8) | Two-tap run debrief | In review | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Claude Code (ccr-380c4225), queue moved from Grok Bot |
+| C2.5 (Q8) | Two-tap run debrief | Done (#726) | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Claude Code (ccr-380c4225), queue moved from Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
 | C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Done (#706) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
@@ -99,9 +99,10 @@ status of its own.
 | C4.5 | Mission review (monthly) | Briefed ([MISSION-REVIEW-001](agent/GRAYSON-MISSION-REVIEW-001.md)) |  |
 | C4.6 | Water target | Done (#629) | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
-| C4.8 | Optional fasting window | In progress (#619, #623, #672; [WINDOW-REVIEW-001](agent/GRAYSON-WINDOW-REVIEW-001.md) briefed) | Design in #601. Slices C4.8a and C4.8b are done; no further slice is authorized |
+| C4.8 | Optional fasting window | In progress (#619, #623, #672; [WINDOW-REVIEW-001](agent/GRAYSON-WINDOW-REVIEW-001.md) in review) | Design in #601. Slices C4.8a and C4.8b are done; C4.8c is approved by its brief (Gavin, 2026-11-24) |
 | C4.8a | Eating Window foundation | Done (#619) | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |
 | C4.8b | Eating Window meets the meal log | Done (#623) | Offers END FAST AT / FAST FROM a logged meal (never automatic); protein against the open window; [brief](agent/GRAYSON-C4.8B-001.md) |
+| C4.8c | Eating Window review | In review | What he actually does by kind of day (one MOVE offer, never narrower), a 14/28-day Try review (weight trend, protein, strength first; hours last), WHY A WINDOW; [brief](agent/GRAYSON-WINDOW-REVIEW-001.md); Claude Code (ccr-380c4225); Protected |
 | C4.9 | Running sessions: the 9-week run/walk plan in TRAIN (backlog B1, after Couch to 5K) | Done (#666) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new session kind, stored runs, events), L. [brief](agent/GRAYSON-TRAIN-RUN-001.md) (#640); Codex |
 | C4.10 | Buzz when rest ends, screen on (backlog B2, after Hevy) | Done (#668) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S. Reuses `src/ui/feel/feedback.ts`; [brief](agent/GRAYSON-TRAIN-REST-001.md) (#644); Codex |
 | C4.11 | Spoken run/walk cues and buzz with the phone locked, through Health Bridge (backlog B3) | Done (#683) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; Gavin's pick 1A. Lane, size: PROTECTED (Android permissions, background service), L. After C4.9; Codex |
