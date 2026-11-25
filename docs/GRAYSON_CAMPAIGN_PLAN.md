@@ -117,7 +117,7 @@ status of its own.
 | C5.2 | Help mode | Not started |  |
 | C5.3 | Shorter reality path | Not started |  |
 | C5.4 | Pattern review (monthly, private) | Not started |  |
-| C5.5 | Sensitive-data controls | Not started |  |
+| C5.5 | Sensitive-data controls | Briefed ([DELTA-READS-001](agent/GRAYSON-DELTA-READS-001.md)) |  |
 | **Campaign 6 — Delta** | | | |
 | C6.1 | Learning lifecycle | Done (#639) | [brief](agent/GRAYSON-C6.1-C6.2-001.md); answers are a new LEARNING_RESPONDED event |
 | C6.2 | "What I think I'm learning" weekly | Done (#639) | Ships with C6.1; [brief](agent/GRAYSON-C6.1-C6.2-001.md) |

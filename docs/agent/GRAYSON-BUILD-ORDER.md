@@ -40,6 +40,8 @@
 | 9 | [GRAYSON-WHAT-MOVES-001](GRAYSON-WHAT-MOVES-001.md) | C6.3 | DATA, read only. | FEATURE |
 | 10 | [GRAYSON-ASKS-COUNT-001](GRAYSON-ASKS-COUNT-001.md) | B15 | After WHAT-MOVES. | PROTECTED |
 | 11 | [GRAYSON-NOT-RIGHT-001](GRAYSON-NOT-RIGHT-001.md) | E8 | "That's not right" on every Why, saved into ONE-MEMORY's store. E10 reads these corrections. After ONE-MEMORY. | PROTECTED |
+| 12 | [GRAYSON-DELTA-READS-001](GRAYSON-DELTA-READS-001.md) | C5.5 | What Delta may read, per kind of record, with today's behaviour as the default; then which private kinds stay out of the Drive backup. Two slices. Doesn't need ONE-MEMORY, so build it first if NOT-RIGHT is still waiting. | PROTECTED |
+| 13 | [GRAYSON-TEACH-DEFAULTS-001](GRAYSON-TEACH-DEFAULTS-001.md) | E10 | After the same fix three times, Delta offers to change the number behind it, on his tap. Needs YOUR-NUMBERS and NOT-RIGHT. | PROTECTED |
 
 LOCKSCREEN-001 used to be last in Claude Code's TRAIN queue, after NOTES-001. It now comes before the quick content
 briefs. It still needs TRAIN-EDIT-001 first; it and NOTES-001 both touch `TrainScreen.tsx`, so whichever is second
@@ -48,9 +50,9 @@ rebases on whatever merged first.
 
 ## Next to brief
 
-Written: E9 (YOUR-NUMBERS-001), C6.7 (ONE-MEMORY-001), B16 (WORK-RECORD-001) on 2026-11-24; E8 (NOT-RIGHT-001)
-on 2026-11-25. Next hard pieces to weigh: E10 corrections that teach defaults (reads NOT-RIGHT, changes YOUR-NUMBERS),
-C5.5 what Delta may read.
+Written: E9 (YOUR-NUMBERS-001), C6.7 (ONE-MEMORY-001), B16 (WORK-RECORD-001) on 2026-11-24; E8 (NOT-RIGHT-001),
+C5.5 (DELTA-READS-001) and E10 (TEACH-DEFAULTS-001) on 2026-11-25. Next for Claude Code's own lane: C4.5 the monthly
+mission review and C8.3 the rest of the export.
 
 **Grok Bot's last 25% (2026-11-24 7:51 PM CT, his words: "Grock has 25% usage left"):** Grok builds
 WORK-RECORD-001, then FLIP-PLAN-001, then the rest of its queue in order, and does no more reviewing. Gavin chose to
@@ -61,4 +63,5 @@ keep its small briefs with it (2026-11-25). Claude Code's PRs get a fresh-contex
 Built and merged on 2026-11-24: TRAIN-RUN-001 (#666), TRAIN-REST-001 (#668), CLOSE-GAPS-001 (#667), LOG-NUDGE-001
 (#664), WINDOW-ALERT-001 (#672), CHECKIN-EDIT-001 (#651), FIX-UNDO-001 slice 1 (#653), WEIGHT-TREND-001 (#652), TRAIN-HOWTO-001 (#681), master fix for REST-001's select (#682), TRAIN-EDIT-001 (#675), TRAIN-RUN-CUES-001 (#683),
 TODAY-SPLIT-003 slices A to D3 (through #696), TRAIN-STANDARDS-001 (#686), TRAIN-BODYMAP-001 (#691),
-TODAY-CALM-001 (#697), PLAN-FRESH-001 (#698), DICTATE-001 (#699), C6.5 override as evidence (#701).
+TODAY-CALM-001 (#697), PLAN-FRESH-001 (#698), DICTATE-001 (#699), C6.5 override as evidence (#701),
+TRAIN-NOTES-001 (#689), WHAT-MOVES-001 (#693), TRAIN-LOCKSCREEN-001 (#688).
