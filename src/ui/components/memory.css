@@ -12,3 +12,15 @@
 .memory-editor textarea { min-height: 100px; }
 .memory-editor select, .memory-editor textarea { max-width: 100%; box-sizing: border-box; }
 .memory-history { border-top: 1px solid var(--border-subtle); padding-block: 8px; }
+/* GRAYSON-ONE-MEMORY-001: the old-entry review. 16 px, 44 px targets, tokens only. */
+.legacy-review { border-block: 1px solid var(--border-subtle); padding-block: 8px; margin-block: 8px; }
+.legacy-review__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.legacy-review__count { margin: 0; font-size: 16px; color: var(--text-1); }
+.legacy-review__list { list-style: none; margin: 0; padding: 0; }
+.legacy-review__entry { border-block-start: 1px solid var(--border-subtle); padding-block: 10px; }
+.memory-via { color: var(--text-2); }
+.legacy-review, .legacy-review form { min-width: 0; }
+.legacy-review__entry .memory-statement { overflow-wrap: anywhere; }
+.legacy-review textarea, .legacy-review select { max-width: 100%; }
+.legacy-review__list button { max-width: 100%; white-space: normal; overflow-wrap: normal; }
+.legacy-review .confirm-banner button { overflow-wrap: normal; white-space: nowrap; }

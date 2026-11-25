@@ -113,7 +113,7 @@ function GuidedTeaching({ active, onOpenMemory }: { active: boolean; onOpenMemor
     if (!subject || !proposal.trim() || busy) return;
     setBusy(true); setError("");
     try {
-      await recordMemory({ factId: crypto.randomUUID(), expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", topic: subject.topic, statement: proposal.trim() });
+      await recordMemory({ factId: crypto.randomUUID(), expectedPreviousId: null, action: "CREATED", kind: "PERSONAL_FACT", topic: subject.topic, statement: proposal.trim(), via: "GUIDED" });
       window.dispatchEvent(new Event("beyond:memory-changed"));
       await readFacts(); setStage("saved");
     } catch (cause) { setError(describeError(cause, "That understanding was not saved. Your words are still here.")); }

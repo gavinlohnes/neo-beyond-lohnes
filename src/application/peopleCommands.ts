@@ -69,7 +69,7 @@ export async function addPersonDate(input: PersonDateInput, now = new Date()): P
   const { person, occasion, note } = validate(input);
   const due = nextAnnualDate(input.month, input.day, formatLocalDate(now));
   return writeAtomically(["alfredMemories", "beyondDays", ...INTENT_WRITE_TABLES], async () => {
-    const memory = await rememberFact(`${person}: ${occasion.toLowerCase()} ${describeMonthDay(input.month, input.day)}${note ? `. ${note}` : ""}`, "PERSON");
+    const memory = await rememberFact(`${person}: ${occasion.toLowerCase()} ${describeMonthDay(input.month, input.day)}${note ? `. ${note}` : ""}`, "PERSON", "PEOPLE");
     const reminder = await createObligation({
       title: `${person}'s ${occasion.toLowerCase()}`,
       dueAt: due,
