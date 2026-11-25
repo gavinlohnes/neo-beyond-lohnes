@@ -57,7 +57,7 @@ import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
 import { RoutinesPanel } from "../../components/RoutinesPanel";
-import { LifeScreen } from "./LifeScreen";
+import { LifeScreen, type LifeTab } from "./LifeScreen";
 import { PeoplePanel } from "../../components/PeoplePanel";
 import { HomePanel } from "../../components/HomePanel";
 import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type ReflectFocus, type SystemCapability, type SystemDestination } from "../../systemCatalog";
@@ -172,6 +172,7 @@ export function MoreScreen({
   active = true,
   navigationRequest = 0,
   coachDeltaRequest = 0,
+  lifeTabRequest = null,
   recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null, workRecordFocus = null,
   initialView = "MENU",
   onOpenRecords,
@@ -205,6 +206,8 @@ export function MoreScreen({
   active?: boolean;
   navigationRequest?: number;
   coachDeltaRequest?: number;
+  /** GRAYSON-CHALLENGE-LADDER-001: open LIFE at one tab. */
+  lifeTabRequest?: { tab: LifeTab; key: number } | null;
   recordFocus?: IntentFocus | null;
   memoryFocusId?: string | null;
   /** CONNECT-002: the lived day a tapped [[link]] opened; null is the current day. */
@@ -693,7 +696,7 @@ export function MoreScreen({
           {view === "MIRROR" && <><OperatorHeader destination="command">MIRROR</OperatorHeader><MirrorView /></>}
           <div hidden={view !== "REVIEW"}>{visited.has("REVIEW") && <ReviewScreen active={active && view === "REVIEW"} onOpenDailyNote={reviewHandlers.openDailyNote} onOpenWeeklyInterview={reviewHandlers.openWeeklyInterview} understandingFocus={understandingFocus} destination={reviewDestination} {...(onReviewDestinationConsumed ? { onDestinationConsumed: reviewHandlers.destinationConsumed } : {})} onOpenUnderstandingSource={reviewHandlers.openSource} onOpenHistory={reviewHandlers.openHistory} />}</div>
           {view === "SEARCH" && <SearchScreen onSelectResult={handleSelectSearchResult} onRunCapability={runCapability} hiddenCapability={(entry) => "hiddenFeature" in entry && !hiddenFeatures[entry.hiddenFeature]} />}
-          <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} startAtOverview onTask={(id) => { setIntentFocus({ kind: "OBLIGATION", obligationId: id }); setView("INTENT"); }} onNavigate={(destination) => {
+          <div hidden={view !== "LIFE"}>{visited.has("LIFE") && <><OperatorHeader destination="command">MORE // LIFE</OperatorHeader><LifeScreen active={active && view === "LIFE"} startAtOverview tabRequest={lifeTabRequest} onTask={(id) => { setIntentFocus({ kind: "OBLIGATION", obligationId: id }); setView("INTENT"); }} onNavigate={(destination) => {
             if (destination.kind === "more") setView(destination.view);
             else if (destination.kind === "section") { setView("MENU"); revealSection(destination.section); }
             else onOpenDestination?.(destination);

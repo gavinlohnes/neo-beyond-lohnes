@@ -207,10 +207,12 @@ export type QuietLineId =
   | "ROUTINE"
   | "EXPERIMENT"
   | "REVIEW"
+  /** GRAYSON-CHALLENGE-LADDER-001 (C6.6): Delta asks when a habit keeps slipping. After REVIEW. */
+  | "HABIT_LADDER"
   | "WORK_DUE";
 
 export const QUIET_LINE_DEFAULT_ORDER: readonly QuietLineId[] = [
-  "DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "WORK_DUE",
+  "DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "HABIT_LADDER", "WORK_DUE",
 ];
 
 export const QUIET_MAX = 2;

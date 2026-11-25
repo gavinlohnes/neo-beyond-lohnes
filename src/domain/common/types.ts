@@ -274,6 +274,8 @@ export type DomainEventType =
   | "MEMORY_RECORDED"
   /** GRAYSON C6.1: his answer to one of Delta's learnings (Keep / Narrow / Not true / Drop / Undo). Global; payload in domain/learningLifecycle.ts. */
   | "LEARNING_RESPONDED"
+  /** GRAYSON-CHALLENGE-LADDER-001 (C6.6): his answer to a habit ladder line. Global; payload in application/habitLadder.ts. */
+  | "HABIT_LADDER_ANSWERED"
   // GRAYSON C4.8a (Gavin, 2026-11-20 design #601; build approved 2026-11-23): Eating Window boundaries he marks, a
   // one-day skip, and undo of either. Day-scoped to the active lived day when tapped. Payloads below.
   | "EATING_WINDOW_MARKED"

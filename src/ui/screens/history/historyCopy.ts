@@ -166,6 +166,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Memory · ${String(p?.action ?? "recorded").toLowerCase()} · ${String(p?.statement ?? "Unreadable statement")} · ${String(p?.status ?? "unknown status")} · ${event.source === "USER" ? "OPERATOR" : event.source}.`;
     case "LEARNING_RESPONDED":
       return `Delta's learning · ${({ KEEP: "kept", NARROW: "narrowed", NOT_TRUE: "marked not true", DROP: "dropped", UNDO: "answer undone" } as Record<string, string>)[String(p?.action)] ?? "answered"} · ${String(p?.statement ?? "Unreadable statement")}.`;
+    case "HABIT_LADDER_ANSWERED":
+      return `Habit check-in · ${String(p?.habitName ?? "a habit")} · ${({ ASK: "what got in the way", NAME: "the pattern", CHALLENGE: "the challenge", EXAMINE: "the plan" } as Record<string, string>)[String(p?.stage)] ?? "answered"}: ${({ SHIFT: "shift or work ran over", TIRED: "too tired or recovering", FORGOT: "forgot", DIDNT_FEEL: "didn't feel like it", PLAN: "the plan doesn't fit", OTHER: "something else", RIGHT: "that's right", NOT_RIGHT: "not right", CHANGE_PLAN: "change the plan", START_SMALLER: "start smaller", KEEP: "keep it as it is", LATER: "later" } as Record<string, string>)[String(p?.answer)] ?? "answered"}.`;
     case "WEEKLY_REVIEW_SAVED":
       return `Weekly review ${p?.supersedes ? "revised" : "saved"} for ${String(p?.weekStart ?? "unknown week")}. Note: ${String(p?.note || "None")}. Focus: ${String((p?.focus as { text?: unknown } | null)?.text ?? "None chosen")}.`;
     case "CLEAN_DAY_LOGGED":
