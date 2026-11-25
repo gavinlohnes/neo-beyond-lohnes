@@ -25,7 +25,7 @@ const payloadSchema = z.object({
   action: z.enum(LEARNING_ACTIONS),
   statement: z.string().trim().min(1).max(400),
   evidence: z.object({
-    kind: z.enum(["TAG", "SLEEP_WINDOW", "EXPERIMENT", "UNUSUAL"]), days: z.number().int().min(0),
+    kind: z.enum(["TAG", "SLEEP_WINDOW", "EXPERIMENT", "UNUSUAL", "OVERRIDE"]), days: z.number().int().min(0),
     measure: z.string().max(40).optional(), direction: z.enum(["MORE", "LESS", "SAME"]).optional(), midpoint: z.number().min(0).max(1440).optional(),
   }).strict(),
   context: z.object({ preset: z.enum(NARROW_PRESETS).optional(), words: z.string().trim().min(1).max(140).optional() }).strict().optional(),
@@ -76,6 +76,8 @@ export function evidenceOf(l: Learning): LearningEvidence {
     case "SLEEP_WINDOW": return { kind: "SLEEP_WINDOW", days: l.group.nights, midpoint: Math.round(l.group.midpoint) };
     case "EXPERIMENT": return { kind: "EXPERIMENT", days: l.days };
     case "UNUSUAL": return { kind: "UNUSUAL", days: l.reading.days.length };
+    // C6.5: how many times he gave this reason in the window.
+    case "OVERRIDE": return { kind: "OVERRIDE", days: l.count };
   }
 }
 /** Whether evidence now points the other way from what he kept. */
@@ -130,7 +132,7 @@ export function deriveLifecycle(input: { learnings: readonly Learning[]; respons
       else items.push({ ...base, state: verdict.action === "KEEP" ? "CONFIRMED" : "CONTEXT_SPECIFIC", by: "YOU" });
       continue;
     }
-    if (l.kind === "UNUSUAL") items.push({ ...base, state: "OBSERVED", by: "RECORDS" });
+    if (l.kind === "UNUSUAL" || l.kind === "OVERRIDE") items.push({ ...base, state: "OBSERVED", by: "RECORDS" });
     else if (l.kind === "EXPERIMENT") items.push({ ...base, state: "CONFIRMED", by: "YOU" }); // his own reviewed outcome
     else if (l.kind === "TAG" && input.runningTags.has(l.tag)) items.push({ ...base, state: "PROVISIONAL", by: "RECORDS" });
     else items.push({ ...base, state: "HYPOTHESIZED", by: "RECORDS" });
@@ -165,8 +167,9 @@ export function weeklyLearnings(items: readonly LifecycleItem[], now: Date): Lif
     .sort((a, b) => a.askedWeeklyAt!.localeCompare(b.askedWeeklyAt!) || a.learningId.localeCompare(b.learningId));
   const asked = askedAll.filter((i) => i.learning).slice(0, WEEKLY_MAX);
   const room = WEEKLY_MAX - Math.min(WEEKLY_MAX, askedAll.length);
-  const ask = items.filter((i) => !askedAll.includes(i) && i.learning && (i.learning.kind === "TAG" || i.learning.kind === "SLEEP_WINDOW")
-    && (i.state === "HYPOTHESIZED" || i.state === "PROVISIONAL" || (i.by === "EVIDENCE" && (i.state === "CONTESTED" || i.state === "OUTDATED"))));
+  // C6.5: what BEYOND keeps missing (OVERRIDE) is asked too, while unanswered (OBSERVED by records).
+  const ask = items.filter((i) => !askedAll.includes(i) && i.learning && (i.learning.kind === "TAG" || i.learning.kind === "SLEEP_WINDOW" || i.learning.kind === "OVERRIDE")
+    && (i.state === "HYPOTHESIZED" || i.state === "PROVISIONAL" || (i.learning.kind === "OVERRIDE" && i.state === "OBSERVED") || (i.by === "EVIDENCE" && (i.state === "CONTESTED" || i.state === "OUTDATED"))));
   const rank = (i: LifecycleItem) => (i.by === "EVIDENCE" ? 0 : 1);
   const fresh = [...ask].sort((a, b) => rank(a) - rank(b) || b.learning!.learnedOn.localeCompare(a.learning!.learnedOn) || a.learningId.localeCompare(b.learningId)).slice(0, Math.max(0, room));
   return [...asked, ...fresh];

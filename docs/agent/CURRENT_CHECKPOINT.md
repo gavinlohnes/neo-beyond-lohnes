@@ -11,15 +11,15 @@
 - **Builders:** several work in parallel: Grok (`grok/*`), other Claude Code sessions (`claude/*`) and this one
   (`ccr-380c4225-*`). The campaign plan names each item's builder.
 - **Open:** #686, #688, #689, #691 (TRAIN), #693 (C6.3 what moves your numbers), #694 (asks count, Protected) and #606
-  (C3.4b + C3.4c), plus this follow-up to #639's review nits (Routine).
+  (C3.4b + C3.4c), plus C6.5 override as evidence (Protected; Gavin merges; Claude Code).
 - **TRAIN:** planned work complete, except programme adaptation, which waits for 3–4 weeks of real use by design.
 - **C9.2:** done for TRAIN (#628) and DATA home (#632). Small follow-up noted in #632's review: "RECORDED THIS DAY"
   wraps to two lines inside the History frame at 320 px.
 - **Energy curve:** C4.1 (#636) locked the steady-night low in the waking night. The body-clock model (fully adjusted
   to nights) is still an unvalidated assumption. Partial adjustment, or anchoring to days off, would be a new
   owner-approved objective.
-- **Next (Delta track):** C6.5 override as evidence (Protected; needs Gavin's go). It builds on ReflectOnDecline,
-  which #694 also touches. C2.2, C2.4 and C2.5 are Grok's.
+- **Delta track:** C6.5 in review (Gavin's go 2026-11-25). Next candidates: C6.6 earned challenge ladder (Protected), or
+  C6.7 one memory store (briefed). C2.2, C2.4 and C2.5 are Grok's; C6.3 is another Claude builder's (#693).
 - **Forward-compat note (#639 review):** LEARNING_RESPONDED's payload schema is strict, so a field added by a future
   build makes this build withhold Delta's knowledge (fail-safe). Add any new field as optional and ship the reader
   first.
