@@ -1,0 +1,24 @@
+/* GRAYSON-SHIFTDOWN-TAPS-001: "Before you go". Quiet, 16 px, 44 px targets, tokens only, never red, no sound. */
+.shiftdown-bridge { display: grid; gap: 12px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle, #2a2a2a); min-width: 0; }
+.shiftdown-bridge__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.shiftdown-bridge__head p { margin: 0; }
+.shiftdown-bridge__link { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--text-2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 12px; letter-spacing: .12em; cursor: pointer; }
+.shiftdown-bridge__off { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.shiftdown-bridge__row { display: grid; gap: 8px; min-width: 0; font-size: 16px; }
+.shiftdown-bridge__row p, .shiftdown-bridge__row label { margin: 0; font-size: 16px; }
+.shiftdown-bridge__inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.shiftdown-bridge__inline .input { flex: 1 1 160px; min-width: 0; min-height: 44px; font-size: 16px; }
+.shiftdown-bridge__inline .btn-secondary, .shiftdown-bridge__breath .btn-secondary { width: auto; min-height: 44px; }
+.shiftdown-bridge__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.shiftdown-bridge__chips .chip { min-height: 44px; font-size: 16px; }
+.shiftdown-bridge__why summary { min-height: 44px; display: flex; align-items: center; font-size: 16px; cursor: pointer; }
+.shiftdown-bridge__why a { color: inherit; }
+.shiftdown-bridge__breath { justify-items: center; text-align: center; }
+.shiftdown-bridge__ring-wrap { width: 140px; height: 140px; display: grid; place-items: center; }
+.shiftdown-bridge__ring { width: 140px; height: 140px; border-radius: 50%; border: 3px solid var(--text-1, #f2f2f2); opacity: .85; transform: scale(.6); transition: transform 100ms linear; }
+.shiftdown-bridge__word { font-size: 20px; color: var(--text-1, #f2f2f2); }
+.shiftdown-bridge__settings { display: grid; gap: 8px; }
+.shiftdown-bridge__check { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 16px; }
+.shiftdown-bridge__settings textarea { width: 100%; font-size: 16px; }
+@media (prefers-reduced-motion: reduce) { .shiftdown-bridge__ring { transition: none; transform: none; } }
+.shiftdown-bridge__line p { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: 16px; }

@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import { Icon, ConfirmIcon, SignalIcon } from "../../icons/Icon";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
+import { ShiftDownBridge } from "./ShiftDownBridge";
 import {
   describeShiftDownInProgress,
   describeShiftDownResult,
@@ -36,6 +37,7 @@ export function ShiftDownCard({
   postShiftPlan,
   forceOpen = false,
   onMarkWorkEnded,
+  bridgeDay,
 }: {
   prominent: boolean;
   isDominant: boolean;
@@ -61,6 +63,8 @@ export function ShiftDownCard({
    * START SHIFT DOWN steps down to secondary until it's done.
    */
   onMarkWorkEnded?: (() => void) | undefined;
+  /** GRAYSON-SHIFTDOWN-TAPS-001: the lived day whose "Before you go" rows show while SHIFT DOWN runs. */
+  bridgeDay?: { id: string; startedAt: string } | undefined;
 }) {
   const active = activeShiftDownId !== null;
   const open = forceOpen || prominent || active || shiftDownOpen;
@@ -131,6 +135,8 @@ export function ShiftDownCard({
               </button>
             </div>
           )}
+          {/* GRAYSON-SHIFTDOWN-TAPS-001: below COMPLETE / CANCEL so they never move down the screen. */}
+          {bridgeDay && <ShiftDownBridge dayId={bridgeDay.id} dayStartedAt={bridgeDay.startedAt} />}
         </>
       ) : (
         <>

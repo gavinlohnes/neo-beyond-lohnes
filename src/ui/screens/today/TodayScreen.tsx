@@ -15,6 +15,8 @@ import { LifeStateBand } from "./LifeStateBand";
 import { Orientation } from "./Orientation";
 import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
+import { FirstAtHomeLine } from "./ShiftDownBridge";
+import { HOME_FIRST_EVENT, homeFirstFor } from "./shiftDownBridgeStore";
 import { ShiftCatchUpCard, type CatchUpPresence } from "./ShiftCatchUpCard";
 import { LogNudgeLine, TodayQuietLines } from "./TodayQuietLines";
 import { PhoneAlertsBehindLine } from "./PhoneAlertsBehindLine";
@@ -559,6 +561,9 @@ export function TodayScreen({
   const [orientationOpen, setOrientationOpen] = useState(false);
   const [orientationSeenTick, setOrientationSeenTick] = useState(0);
   const [closeSeenTick, setCloseSeenTick] = useState(0);
+  // GRAYSON-SHIFTDOWN-TAPS-001: tonight's "first at home" pick lives on this phone; re-read when it changes.
+  const [homeFirstTick, setHomeFirstTick] = useState(0);
+  useEffect(() => { const bump = () => setHomeFirstTick((n) => n + 1); window.addEventListener(HOME_FIRST_EVENT, bump); return () => window.removeEventListener(HOME_FIRST_EVENT, bump); }, []);
   // GRAYSON-TODAY-CALM-001: what the self-loading quiet lines and the shift catch-up say they have to show, and a
   // tick for "N MORE" (its opened state is kept for the lived day in todayQuietStore).
   const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean; PHONE_ALERTS_BEHIND: boolean; WORK_DUE: boolean; HABIT_LADDER: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false, PHONE_ALERTS_BEHIND: false, WORK_DUE: false, HABIT_LADDER: false });
@@ -1100,6 +1105,11 @@ export function TodayScreen({
   const logNudge = dayRead ? logNudgeLine() : null;
   const quietCandidates: QuietLineId[] = [];
   if (driveHomeDue) quietCandidates.push("DRIVE_HOME");
+  // GRAYSON-SHIFTDOWN-TAPS-001: after COMPLETE SHIFT DOWN this lived day, the pick he made, until the day ends at 16:30.
+  const homeFirst = day && homeFirstTick >= 0 ? homeFirstFor(day.id, day.startedAt, now) : null;
+  const firstAtHomeDue = !!day && !!homeFirst && !!shiftDownCompletedAt && Date.parse(shiftDownCompletedAt) >= Date.parse(day.startedAt)
+    && !(dominant === "OPERATION_CONFLICT" || !!activeWorkout || !!activeResetId || !!activeShiftDownId);
+  if (firstAtHomeDue) quietCandidates.push("FIRST_AT_HOME");
   if (logNudge) quietCandidates.push("LOG_NUDGE");
   // GRAYSON-PLAN-FRESH-001: the line decides for itself (Android, behind, outside a shift, once a lived day).
   if (quietPresence.PHONE_ALERTS_BEHIND) quietCandidates.push("PHONE_ALERTS_BEHIND");
@@ -1170,6 +1180,7 @@ export function TodayScreen({
       )}
       {day && dominant === "OPERATION_CONFLICT" && (
         <ShiftDownCard
+          bridgeDay={{ id: day.id, startedAt: day.startedAt }}
           prominent={false}
           isDominant={false}
           activeShiftDownId={activeShiftDownId}
@@ -1209,6 +1220,7 @@ export function TodayScreen({
 </>
           : activeShiftDownId ? <>      {day && (
         <ShiftDownCard
+          bridgeDay={{ id: day.id, startedAt: day.startedAt }}
           prominent={shiftDownIsPrimary}
           isDominant={false}
           activeShiftDownId={activeShiftDownId}
@@ -1414,8 +1426,9 @@ export function TodayScreen({
     {/* GRAYSON-TODAY-CALM-001 (C9.6): the quiet lines, together, right under the numbers, in his order. */}
     {dayRead && <TodayQuietLines tuckedCount={quietMoreOpen ? 0 : quiet.tucked.length}
       onMore={() => { markQuietMoreOpened(new Date()); setQuietMoreTick((n) => n + 1); }}
-      lines={quietSettings.order.filter((id): id is "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" | "WORK_DUE" | "HABIT_LADDER" => id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND" || id === "WORK_DUE" || id === "HABIT_LADDER").map((id) => ({ id, node:
-        id === "LOG_NUDGE" ? (logNudge && quietVisible("LOG_NUDGE") ? <LogNudgeLine nudge={logNudge} busy={busy} /> : null)
+      lines={quietSettings.order.filter((id): id is "FIRST_AT_HOME" | "LOG_NUDGE" | "EXPERIMENT" | "PHONE_ALERTS_BEHIND" | "WORK_DUE" | "HABIT_LADDER" => id === "FIRST_AT_HOME" || id === "LOG_NUDGE" || id === "EXPERIMENT" || id === "PHONE_ALERTS_BEHIND" || id === "WORK_DUE" || id === "HABIT_LADDER").map((id) => ({ id, node:
+        id === "FIRST_AT_HOME" ? (firstAtHomeDue && quietVisible("FIRST_AT_HOME") && day && homeFirst ? <FirstAtHomeLine dayId={day.id} pick={homeFirst} /> : null)
+        : id === "LOG_NUDGE" ? (logNudge && quietVisible("LOG_NUDGE") ? <LogNudgeLine nudge={logNudge} busy={busy} /> : null)
         // GRAYSON-CHALLENGE-LADDER-001: mounted while tucked (it reports presence), not while his TODAY switch has it off.
         : id === "HABIT_LADDER" ? (day && !effectiveQuietOff(quietSettings).includes("HABIT_LADDER") ? <HabitLadderLine now={now} tucked={!quietVisible("HABIT_LADDER")} onPresence={reportQuiet("HABIT_LADDER")} onOpenHabits={onOpenHabits} /> : null)
         : id === "PHONE_ALERTS_BEHIND" ? <PhoneAlertsBehindLine now={now} tucked={!quietVisible("PHONE_ALERTS_BEHIND")} onPresence={reportQuiet("PHONE_ALERTS_BEHIND")} />
@@ -1710,6 +1723,7 @@ export function TodayScreen({
       )}
       {day && dominant === "OPERATION_CONFLICT" && (
         <ShiftDownCard
+          bridgeDay={{ id: day.id, startedAt: day.startedAt }}
           prominent={false}
           isDominant={false}
           activeShiftDownId={activeShiftDownId}
@@ -1729,6 +1743,7 @@ export function TodayScreen({
       )}
       {day && dominant === "SHIFT_DOWN_ACTIVE" && (
         <ShiftDownCard
+          bridgeDay={{ id: day.id, startedAt: day.startedAt }}
           prominent={shiftDownIsPrimary}
           isDominant={false}
           activeShiftDownId={activeShiftDownId}

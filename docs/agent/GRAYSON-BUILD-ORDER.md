@@ -20,7 +20,7 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | # | Brief | Row | Why here | Lane |
 |---|---|---|---|---|
 | 1 | [GRAYSON-CARRY-001](GRAYSON-CARRY-001.md) | B6 | Quick: plugs into the close that TODAY-CALM orders. Done (#720 + follow-up). | PROTECTED |
-| 2 | [GRAYSON-SHIFTDOWN-TAPS-001](GRAYSON-SHIFTDOWN-TAPS-001.md) | C2.2 | Quick: "First at home" is a TODAY-CALM quiet line. | FEATURE |
+| 2 | [GRAYSON-SHIFTDOWN-TAPS-001](GRAYSON-SHIFTDOWN-TAPS-001.md) | C2.2 | Quick: "First at home" is a TODAY-CALM quiet line. In review (branch `ccr-380c4225-shiftdown-taps`). | FEATURE |
 | 3 | [GRAYSON-FLIP-PLAN-001](GRAYSON-FLIP-PLAN-001.md) | C2.4 | Sleep-plan cards; its flip days reach the phone through PLAN-FRESH's hand-off. | PROTECTED |
 | 4 | [GRAYSON-HOME-LASTDONE-001](GRAYSON-HOME-LASTDONE-001.md) | C3.1 | Quick: a read of records already kept. | FEATURE |
 | 5 | [GRAYSON-RUN-DEBRIEF-001](GRAYSON-RUN-DEBRIEF-001.md) | C2.5 | Quick: a journal entry through existing commands. | FEATURE |
