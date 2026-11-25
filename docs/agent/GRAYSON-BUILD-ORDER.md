@@ -21,8 +21,8 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 |---|---|---|---|---|
 | 1 | [GRAYSON-CARRY-001](GRAYSON-CARRY-001.md) | B6 | Quick: plugs into the close that TODAY-CALM orders. Done (#720 + follow-up). | PROTECTED |
 | 2 | [GRAYSON-SHIFTDOWN-TAPS-001](GRAYSON-SHIFTDOWN-TAPS-001.md) | C2.2 | Quick: "First at home" is a TODAY-CALM quiet line. Done (#722). | FEATURE |
-| 3 | [GRAYSON-FLIP-PLAN-001](GRAYSON-FLIP-PLAN-001.md) | C2.4 | Sleep-plan cards; its flip days reach the phone through PLAN-FRESH's hand-off. In review (branch `ccr-380c4225-flip-plan`). | PROTECTED |
-| 4 | [GRAYSON-HOME-LASTDONE-001](GRAYSON-HOME-LASTDONE-001.md) | C3.1 | Quick: a read of records already kept. | FEATURE |
+| 3 | [GRAYSON-FLIP-PLAN-001](GRAYSON-FLIP-PLAN-001.md) | C2.4 | Sleep-plan cards; its flip days reach the phone through PLAN-FRESH's hand-off. Done (#723). | PROTECTED |
+| 4 | [GRAYSON-HOME-LASTDONE-001](GRAYSON-HOME-LASTDONE-001.md) | C3.1 | Quick: a read of records already kept. In review (branch `ccr-380c4225-home-lastdone`). | FEATURE |
 | 5 | [GRAYSON-RUN-DEBRIEF-001](GRAYSON-RUN-DEBRIEF-001.md) | C2.5 | Quick: a journal entry through existing commands. | FEATURE |
 | 6 | [GRAYSON-WINDOW-REVIEW-001](GRAYSON-WINDOW-REVIEW-001.md) | C4.8c | The smart eating window. | PROTECTED |
 | 7 | [GRAYSON-BRISK-001](GRAYSON-BRISK-001.md) | NHS Active 10 | Brisk minutes from Garmin steps. The only open Health Bridge change; slice B after his phone check of slice A. WEEKLY-ACTION's brisk option plugs in. | PROTECTED |

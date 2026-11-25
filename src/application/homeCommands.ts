@@ -1,7 +1,7 @@
 import { RRule } from "rrule";
 import { INTENT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { createObligation } from "./intentCommands";
-import { getUnresolvedObligations } from "./intentQueries";
+import { getObligations } from "./intentQueries";
 import { isClockTime } from "./bridgePlan";
 import { getMemories, rememberFact } from "./alfred/alfredMemory";
 import { formatLocalDate } from "../engine/scheduledContext";
@@ -75,20 +75,43 @@ export async function addHomeItem(input: HomeItemInput): Promise<{ memory: Alfre
   });
 }
 
+/** GRAYSON-HOME-LASTDONE-001: one past done of a home job, on his local date, with the note he left. */
+export interface HomeDone { on: string; note?: string }
+export const HOME_HISTORY_MAX = 10;
+
+/**
+ * Pure. The dones of one home job: SATISFIED "Home: " obligations with exactly this title, newest first, at most 10.
+ * Occurrences carry no series id, so the exact title is the join (a renamed job starts a fresh history). RELEASED
+ * ("not a task") instances are not dones.
+ */
+export function homeHistory(all: readonly Obligation[], title: string): HomeDone[] {
+  return all
+    .filter((o) => o.status === "SATISFIED" && o.title === title && o.title.startsWith(HOME_PREFIX) && o.resolvedAt)
+    .sort((a, b) => b.resolvedAt!.localeCompare(a.resolvedAt!) || b.id.localeCompare(a.id))
+    .slice(0, HOME_HISTORY_MAX)
+    .map((o) => ({ on: formatLocalDate(new Date(o.resolvedAt!)), ...(o.resolutionNote?.trim() ? { note: o.resolutionNote.trim() } : {}) }));
+}
+
 export interface HomeView {
-  /** Open "Home: " commitments, soonest first, with whole days until each (negative: still open after its date). */
-  due: { reminder: Obligation; daysAway: number | null }[];
+  /**
+   * Open "Home: " commitments, soonest first, with whole days until each (negative: still open after its date).
+   * GRAYSON-HOME-LASTDONE-001: with its last done and its dones (newest first, up to 10).
+   */
+  due: { reminder: Obligation; daysAway: number | null; lastDone?: HomeDone; history: HomeDone[]; doneCount: number }[];
   /** What the operator asked Alfred to keep about the home, newest first. */
   facts: AlfredMemory[];
 }
 
 export async function getHomeView(now = new Date()): Promise<HomeView> {
   const today = formatLocalDate(now);
-  const [tasks, memories] = await Promise.all([getUnresolvedObligations(), getMemories()]);
+  // One obligations read for the whole view: the open jobs and their past dones both come from it.
+  const [all, memories] = await Promise.all([getObligations(), getMemories()]);
+  const tasks = all.filter((o) => o.status === "OPEN" || o.status === "WAITING");
   const days = (date: string) => Math.round((Date.parse(`${date}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000);
+  const doneCount = (title: string) => all.filter((o) => o.status === "SATISFIED" && o.title === title && o.resolvedAt).length;
   return {
     due: tasks.filter((t) => t.title.startsWith(HOME_PREFIX))
-      .map((t) => ({ reminder: t, daysAway: t.dueAt ? days(t.dueAt) : null }))
+      .map((t) => { const history = homeHistory(all, t.title); return { reminder: t, daysAway: t.dueAt ? days(t.dueAt) : null, ...(history[0] ? { lastDone: history[0] } : {}), history, doneCount: doneCount(t.title) }; })
       .sort((a, b) => (a.reminder.dueAt ?? "9999").localeCompare(b.reminder.dueAt ?? "9999")),
     facts: memories.filter((m) => m.topic === "HOME").reverse(),
   };
