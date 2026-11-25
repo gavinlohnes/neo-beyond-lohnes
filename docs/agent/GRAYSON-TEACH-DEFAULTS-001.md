@@ -12,7 +12,7 @@
 - **Starting commit:** `origin/master` after **YOUR-NUMBERS-001 (both slices) and NOT-RIGHT-001 have merged**. Re-fetch
   before starting.
 - **Builder:** Claude Code. Branch `claude/grayson-teach-defaults-001`. **Reviewer:** a fresh-context reviewer.
-- **Order:** Claude Code **#12** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after NOT-RIGHT-001.
+- **Order:** Claude Code **#13** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after NOT-RIGHT-001 and DELTA-READS-001.
 - **Next to it:** C6.5 (#701) already turns three declines with the same reason into a Delta learning that Delta asks
   him about. This brief leaves C6.5 as it is. It covers fixes that point at **one of his numbers**, and offers the
   number itself.
