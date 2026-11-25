@@ -68,7 +68,7 @@ status of its own.
 | **Campaign 3 — Home and Family** | | | |
 | C3.1 (Q7) | Last done and evidence | Not started | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Grok Bot |
 | C3.2 | Lead time and "coming up" | Briefed (GRAYSON-COMING-UP-001, 2026-11-25) |  |
-| C3.3 | Day-off shape | Not started |  |
+| C3.3 | Day-off shape | Briefed (GRAYSON-DAY-OFF-SHAPE-001, 2026-11-25) |  |
 | C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
 | C3.4a | Alert time on repeating Home jobs | Done (#594) | Added 2026-11-20 on Gavin's go; Home jobs alerted only at 16:00 |
 | C3.4b | Yearly repeats editable in Plans | In review (#606) | Added 2026-11-20 on Gavin's go; touches `engine/recurrence.ts`, so his merge |
@@ -113,8 +113,8 @@ status of its own.
 | C4.18 | Nutrition-label scan (backlog B13, after MacroFactor) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new OCR dependency), M |
 | C4.19 | Short sleep trims TRAIN to the SHORT or RECOVERY form; sleep and Garmin only ever lower it, and his check-in wins (backlog B14) | Done (SLEEP-ENGINE-001) | Added 2026-11-24 from the GRAYSON research backlog, then found already built: [SLEEP-ENGINE-001](agent/SLEEP-ENGINE-001.md) (2026-10-27) turns the standard session into the reduced one after two short nights, and his check-in still wins. Tuning is backlog E9, briefed as [YOUR-NUMBERS-001](agent/GRAYSON-YOUR-NUMBERS-001.md) |
 | **Campaign 5 — Inner Day** | | | |
-| C5.1 | Feeling word (optional) | Not started |  |
-| C5.2 | Help mode | Not started |  |
+| C5.1 | Feeling word (optional) | Briefed (GRAYSON-CHECKIN-WORDS-001 slice A, 2026-11-25) |  |
+| C5.2 | Help mode | Briefed (GRAYSON-CHECKIN-WORDS-001 slice B, 2026-11-25) |  |
 | C5.3 | Shorter reality path | Not started |  |
 | C5.4 | Pattern review (monthly, private) | Partly built; rest briefed ([MONTH-PATTERNS-001](agent/GRAYSON-MONTH-PATTERNS-001.md)) | Month recap and tag patterns exist |
 | C5.5 | Sensitive-data controls | Briefed ([DELTA-READS-001](agent/GRAYSON-DELTA-READS-001.md)) |  |

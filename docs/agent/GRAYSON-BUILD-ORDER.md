@@ -33,6 +33,7 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | 12 | [GRAYSON-COMING-UP-001](GRAYSON-COMING-UP-001.md) | C3.2 | A task, home job or date can show up days before it's due, by its own lead time; the Engine's arbitration is unchanged. C7.3's lead-time alert plugs in. A TODAY change. After HOME-PEOPLE-EDIT (same forms). | PROTECTED |
 | 13 | [GRAYSON-ALERT-KINDS-001](GRAYSON-ALERT-KINDS-001.md) | C7.3 | Two new phone alerts: something coming up (on by default) and the caffeine cut-off (off by default), inside the 3-a-day cap. No Health Bridge change. After COMING-UP (it reads the lead time). | PROTECTED |
 | 14 | [GRAYSON-ALERT-QUIET-001](GRAYSON-ALERT-QUIET-001.md) | E14 | Quiet hours that follow his sleep after shifts and on days off, and one buzz for alerts that land together. After ALERT-KINDS (same files). | PROTECTED |
+| 15 | [GRAYSON-DAY-OFF-SHAPE-001](GRAYSON-DAY-OFF-SHAPE-001.md) | C3.3 | One Shape today? card on a day off: recovery, one house thing, the next workout, an optional person, and the open time left. Nothing written until KEEP THIS. On RUN OVER it carries the recovery contract. A TODAY change. B17 plugs in. | PROTECTED |
 
 ## Claude Code (TRAIN, then DATA)
 
@@ -61,6 +62,7 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | 21 | [GRAYSON-CAFFEINE-LOG-001](GRAYSON-CAFFEINE-LOG-001.md) | C4.3 | One-tap caffeine log, log only (Gavin's "Yes", 2026-11-25). After HABIT-EDIT if open (both add a removal type). | PROTECTED |
 | 22 | [GRAYSON-TELL-DELTA-FIX-001](GRAYSON-TELL-DELTA-FIX-001.md) | E11 | Fix sleep, weight, check-ins and sets from the last 7 days by telling Delta, through the existing correction commands, each on a card he confirms. | PROTECTED |
 | 23 | [GRAYSON-RESTORE-DRILL-001](GRAYSON-RESTORE-DRILL-001.md) | C8.2 | A full trial restore into a scratch copy that's then deleted; his data is never written. Shares no files with the rows above. | PROTECTED |
+| 24 | [GRAYSON-CHECKIN-WORDS-001](GRAYSON-CHECKIN-WORDS-001.md) | C5.1, C5.2 | Optional feeling word and what's behind it, then how Delta should help today. Never read by capacity or the Engine. Two slices. After TELL-DELTA-FIX (both touch check-in corrections and Delta). | PROTECTED |
 
 LOCKSCREEN-001 used to be last in Claude Code's TRAIN queue, after NOTES-001. It now comes before the quick content
 briefs. It still needs TRAIN-EDIT-001 first; it and NOTES-001 both touch `TrainScreen.tsx`, so whichever is second
@@ -75,7 +77,8 @@ From Gavin's NHS apps go-ahead (2026-11-25): BRISK-001, WEEKLY-ACTION-001, START
 Then E5 (HABIT-EDIT-001), E6 (HOME-PEOPLE-EDIT-001) and C5.4 (MONTH-PATTERNS-001) on 2026-11-25, and E7
 (SLEEP-WRONG-001), E4 (EDITED-MARK-001), B9 (TRAIN-ORDER-001) and C4.3 (CAFFEINE-LOG-001, log only) the same night.
 Then C3.2 (COMING-UP-001), E11 (TELL-DELTA-FIX-001) and C8.2 (RESTORE-DRILL-001). Then C7.3 (ALERT-KINDS-001, without "plan to confirm", which has nothing to alert about yet) and E14
-(ALERT-QUIET-001). C7.2 was already built as PLAN-FRESH-001 (#698).
+(ALERT-QUIET-001). C7.2 was already built as PLAN-FRESH-001 (#698). Then C3.3 (DAY-OFF-SHAPE-001) and C5.1 with C5.2
+(CHECKIN-WORDS-001).
 
 **Reviewers (2026-11-25):** Grok Bot is out of usage and Codex is offline, so every PR from either Claude Code
 session gets a fresh-context reviewer, never the session that built it.
