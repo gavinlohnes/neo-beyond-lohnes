@@ -1064,6 +1064,8 @@ export interface SetLoggedPayload {
   weight: number;
   reps: number;
   substitutedName?: string;
+  /** GRAYSON-TRAIN-LOCKSCREEN-001: logged by DONE on the lock-screen notification (event occurredAt is the tap). */
+  from?: "LOCK_SCREEN";
 }
 
 export interface SetSkippedPayload {
@@ -1071,6 +1073,8 @@ export interface SetSkippedPayload {
   sessionId: string;
   exerciseId: string;
   setNumber: number;
+  /** GRAYSON-TRAIN-LOCKSCREEN-001: skipped by SKIP on the lock-screen notification. */
+  from?: "LOCK_SCREEN";
 }
 
 /**

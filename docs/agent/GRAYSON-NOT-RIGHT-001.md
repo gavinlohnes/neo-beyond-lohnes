@@ -9,7 +9,8 @@
 - **Lane: PROTECTED** (Delta behaviour; one new memory kind and one optional payload field). No Engine input, no
   recommendation change, no new table or Dexie version. Independent exact-head review, green CI; Gavin merges.
 - **Starting commit:** `origin/master` `4bc9a82b` or later, **after ONE-MEMORY-001 has merged** (it adds `via` and the
-  one memory list this saves into). Re-fetch before starting.
+  one memory list this saves into; the Delta-track session is building it, Gavin 2026-11-25). Re-fetch before
+  starting.
 - **Builder:** Claude Code. Branch `claude/grayson-not-right-001`. **Reviewer:** a fresh-context reviewer (Grok Bot is
   saving its usage for building).
 - **Order:** Claude Code **#11** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after ONE-MEMORY-001.

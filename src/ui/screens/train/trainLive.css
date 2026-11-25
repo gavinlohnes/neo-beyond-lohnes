@@ -83,3 +83,10 @@
 .train-rest-done { animation: train-rest-done 900ms ease-out 1; }
 @media (prefers-reduced-motion: reduce) { .train-rest-done { animation: none; } }
 .train-rest-buzz { width: 100%; min-height: 44px; margin-top: 8px; font-size: 16px; }
+
+/* GRAYSON-TRAIN-LOCKSCREEN-001: the LOCK SCREEN switch. 44 px rows, 16 px text, neutral ink. */
+.lockscreen-sets { margin: 0 0 12px; padding: 10px 0 0; border: 0; border-top: 1px solid var(--p-line, #2a2a2a); display: grid; gap: 2px; min-width: 0; }
+.lockscreen-sets > legend { padding: 0; }
+.lockscreen-sets__option { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; color: var(--text-1); }
+.lockscreen-sets__option input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--text-1); }
+.lockscreen-sets > .meta { margin: 0; font-size: 16px; }

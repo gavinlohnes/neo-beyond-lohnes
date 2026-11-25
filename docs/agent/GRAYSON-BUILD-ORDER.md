@@ -34,7 +34,7 @@
 | 3 | [GRAYSON-TRAIN-STANDARDS-001](GRAYSON-TRAIN-STANDARDS-001.md) | B4 | One new event for all three standards tests. | PROTECTED |
 | 4 | [GRAYSON-TRAIN-LOCKSCREEN-001](GRAYSON-TRAIN-LOCKSCREEN-001.md) | C7.5 | Two-way notification into a logged set; after TRAIN-EDIT so those sets can be fixed. | PROTECTED |
 | 5 | [GRAYSON-YOUR-NUMBERS-001](GRAYSON-YOUR-NUMBERS-001.md) | E9 | One page and one store for the numbers GRAYSON judges him by. E10 and every later rule read their numbers here. Two slices. | PROTECTED |
-| 6 | [GRAYSON-ONE-MEMORY-001](GRAYSON-ONE-MEMORY-001.md) | C6.7 | One memory store with where each memory came from. Corrections (E8, E10) and what Delta may read (C5.5) plug in. | PROTECTED |
+| 6 | [GRAYSON-ONE-MEMORY-001](GRAYSON-ONE-MEMORY-001.md) (**taken by the Delta-track session `ccr-380c4225`, Gavin 2026-11-25; skip it**) | C6.7 | One memory store with where each memory came from. Corrections (E8, E10) and what Delta may read (C5.5) plug in. | PROTECTED |
 | 7 | [GRAYSON-TRAIN-NOTES-001](GRAYSON-TRAIN-NOTES-001.md) | B10 | Quick: after HOWTO. | FEATURE |
 | 8 | [GRAYSON-TRAIN-BODYMAP-001](GRAYSON-TRAIN-BODYMAP-001.md) | B7 | Quick: after HOWTO. | FEATURE |
 | 9 | [GRAYSON-WHAT-MOVES-001](GRAYSON-WHAT-MOVES-001.md) | C6.3 | DATA, read only. | FEATURE |
