@@ -15,6 +15,7 @@ import { LifeStateBand } from "./LifeStateBand";
 import { Orientation } from "./Orientation";
 import { CloseCard } from "./CloseCard";
 import { closeDone, catchUpDone } from "./closeStore";
+import { focusFlipCard } from "../systems/flipFocus";
 import { ShiftCatchUpCard, type CatchUpPresence } from "./ShiftCatchUpCard";
 import { LogNudgeLine, TodayQuietLines } from "./TodayQuietLines";
 import { PhoneAlertsBehindLine } from "./PhoneAlertsBehindLine";
@@ -1303,7 +1304,7 @@ export function TodayScreen({
             run={bandCarriesRun ? null : todayRun}
             operation={bandHidden}
             // DAY-MAP-001: like the band, the map steps aside while an operation owns the screen, so RESUME stays above the fold.
-            marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks(recordedNow.sleepPlan?.windows ?? [], now)], livedDayStart).map((m) => (!m.planned && freshMarks.has(markKey(m)) ? { ...m, fresh: true as const } : m)) : undefined}
+            marks={recordedNow && !bandHidden ? placeMarks([...recordedNow.map, ...plannedMarks([...(recordedNow.sleepPlan?.windows ?? []), ...(recordedNow.flipPlan?.windows ?? [])], now)], livedDayStart).map((m) => (!m.planned && freshMarks.has(markKey(m)) ? { ...m, fresh: true as const } : m)) : undefined}
             onOpenSleepPlan={onOpenCave ? () => { if (!busyRef.current) onOpenCave("route"); } : undefined}
             onEditMark={(ref) => { if (!busyRef.current) setEditTarget(ref); }}
             onEditShift={(shift) => { if (!busyRef.current) setShiftTarget(shift); }}
@@ -1317,6 +1318,7 @@ export function TodayScreen({
               ...(onOpenCave ? {
                 SLEEP_PLAN: { label: "ROUTE", open: () => { if (!busyRef.current) onOpenCave("route"); } },
                 NAP_PLAN: { label: "ROUTE", open: () => { if (!busyRef.current) onOpenCave("route"); } },
+                DAYLIGHT_PLAN: { label: "ROUTE", open: () => { if (!busyRef.current) onOpenCave("route"); } },
               } : {}),
             }}
             now={now}
@@ -1370,6 +1372,8 @@ export function TodayScreen({
         aside while an operation or the late sleep prompt owns the card, so RESUME stays above the fold. */}
     {day && <div hidden={bandHidden}>
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
+        flip={recordedNow?.flipPlan && Date.parse(recordedNow.flipPlan.showFrom) <= now.getTime() && now.getTime() < Date.parse(recordedNow.flipPlan.showUntil)
+          ? { line: recordedNow.flipPlan.line, onOpen: onOpenCave ? () => { if (!busyRef.current) { focusFlipCard(); onOpenCave("route"); } } : undefined } : null}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
     {/* GRAYSON LOG-CATCHUP-001: after SHIFT DOWN on a shift day, what didn't get logged at work, before the close. */}

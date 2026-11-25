@@ -25,7 +25,8 @@ export interface PlanSource {
   /** How the quote was checked, when not read in full text here (Gavin chose "search-confirmed", 2026-11-11). */
   checked?: string;
 }
-export type PlanCardKind = "CAFFEINE" | "NAP" | "FIRST_SLEEP" | "LIGHT" | "TRAINING";
+/** GRAYSON-FLIP-PLAN-001 adds FLIP_BACK, STAY_LATE and BACK_ON (application/flipPlan.ts), shown beside these cards. */
+export type PlanCardKind = "CAFFEINE" | "NAP" | "FIRST_SLEEP" | "LIGHT" | "TRAINING" | "FLIP_BACK" | "STAY_LATE" | "BACK_ON";
 export interface PlanCard {
   kind: PlanCardKind;
   title: string;
@@ -100,6 +101,17 @@ export const SOURCES = {
     label: "Smith, Fogg & Eastman 2009, Practical interventions to promote circadian adaptation to permanent night shift work. SLEEP 32(11)",
     url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC2768954/",
     quote: "The primary purpose of the sunglasses was to attenuate phase-advancing outdoor light exposure during the travel home time after night shifts…",
+  },
+  // GRAYSON-FLIP-PLAN-001: the rotation flip.
+  NIOSH_FLIP: {
+    label: "NIOSH, Work schedules: shift work and long work hours. Training for nurses, Module 9 (Sleep)",
+    url: "https://www.cdc.gov/niosh/work-hour-training-for-nurses/longhours/mod9/06.html",
+    quote: "On days off, try to stay up until the middle of the night (3-4 a.m.), and sleep until noon or 1 p.m.",
+  },
+  LIGHT_TIMING: {
+    label: "Timeshifter, How to timeshift",
+    url: "https://timeshifter.com/the-shift-work-app/how-to-timeshift",
+    quote: "Light is the most important time cue for shifting your circadian clock, so try your best to follow the light exposure and light avoidance advice",
   },
 } as const satisfies Record<string, PlanSource>;
 

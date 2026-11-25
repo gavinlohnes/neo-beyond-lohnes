@@ -185,6 +185,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.daily-note.draft.": "draft", "beyond:gym-draft:": "draft", "beyond:decrypt:": "animation state",
       // GRAYSON-TRAIN-BODYMAP-001: the map's equipment chips, a view setting on this phone (the brief: doesn't travel).
       "beyond.bodyMap.v1": "view setting",
+      // GRAYSON-FLIP-PLAN-001: TODAY's flip line asks ROUTE to open at the card (this visit only).
+      "beyond.flipPlan.focus.v1": "this visit only (session)",
     };
     const EVENTS = new Set(["beyond:ask-alfred", "beyond:do", "beyond:drive-home", "beyond:find-food", "beyond:hidden-features",
       "beyond:memory-changed", "beyond:open-record", "beyond:routines-changed", "beyond:snippets-changed", "beyond:weekly-review-saved"]);

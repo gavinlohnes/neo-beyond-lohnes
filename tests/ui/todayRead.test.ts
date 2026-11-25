@@ -68,6 +68,7 @@ function fakeReaders(overrides: Record<string, unknown> = {}): { readers: TodayR
     getWeekAhead: null,
     getLivedDayMap: [],
     getShiftSleepPlan: null,
+    getFlipPlan: null,
     getSchedulePattern: null,
     ...overrides,
   };

@@ -17,12 +17,14 @@ import { WeekStrip } from "./WeekStrip";
  */
 const underNext = (line: string) => line.replace(/^Next (\w)/, (_, c: string) => c.toUpperCase());
 
-export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead, since = null, days, now }: {
+export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead, since = null, days, now, flip = null }: {
   /** WEEK-STRIP-001: the coming days, as tiles under NEXT; tapping one opens Week Ahead at that day. */
   days?: readonly WeekAheadDay[] | undefined; now?: Date | undefined;
   reading: LifeStateReading | null; moment?: LifeMomentReading | null; ahead?: AheadReading | null; weekAhead?: (() => ReactNode) | undefined;
   /** Slice 3: what changed since the last look on this device; shown only when something did. */
   since?: { label: string; items: string[] } | null;
+  /** GRAYSON-FLIP-PLAN-001: the rotation flip in one muted line under the moment; the tap opens ROUTE at its card. */
+  flip?: { line: string; onOpen?: (() => void) | undefined } | null;
 }) {
   const [open, setOpen] = useState(false);
   // WALKTHROUGH-002: on a work day the band sits at the bottom of the first screen, so the week opened below the fold;
@@ -59,6 +61,9 @@ export function LifeStateBand({ reading, moment = null, ahead = null, weekAhead,
     <section className="today-life-state" data-life-state={reading.state} data-life-moment={moment?.moment} aria-label="Operating state">
       {since && since.items.length > 0 && <p className="today-life-state__since" data-life-since><strong>{since.label}</strong> <span>{since.items.join(" · ")}</span></p>}
       {moment && <p className="today-life-state__moment"><strong>{moment.label}</strong> <span>{moment.line}</span></p>}
+      {flip && (flip.onOpen
+        ? <button type="button" className="today-life-state__flip" data-flip-line onClick={flip.onOpen} aria-label={`${flip.line} Open the flip plan in ROUTE`}>{flip.line}</button>
+        : <p className="today-life-state__flip" data-flip-line>{flip.line}</p>)}
       <p className="today-life-state__line"><strong>{reading.label}</strong> <span>{reading.line}</span></p>
       {/* TODAY-CLARITY-001: under the NEXT label the line drops its own leading "Next" ("NEXT Day off: Wed, …"). */}
       {ahead && <p className="today-life-state__next" data-life-next><strong>NEXT</strong> <span>{underNext(ahead.line)}</span></p>}
