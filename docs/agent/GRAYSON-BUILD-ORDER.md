@@ -31,6 +31,8 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | 10 | [GRAYSON-HOME-PEOPLE-EDIT-001](GRAYSON-HOME-PEOPLE-EDIT-001.md) | E6 | Edit or remove home jobs, people's dates and facts where he sees them, with undo. After HOME-LASTDONE (same panel). | PROTECTED |
 | 11 | [GRAYSON-SLEEP-WRONG-001](GRAYSON-SLEEP-WRONG-001.md) | E7 | Set aside a wrong Garmin night, or use his own times for it, everywhere that night is read. After FLIP-PLAN (both touch `shiftSleepPlan.ts`). | PROTECTED |
 | 12 | [GRAYSON-COMING-UP-001](GRAYSON-COMING-UP-001.md) | C3.2 | A task, home job or date can show up days before it's due, by its own lead time; the Engine's arbitration is unchanged. C7.3's lead-time alert plugs in. A TODAY change. After HOME-PEOPLE-EDIT (same forms). | PROTECTED |
+| 13 | [GRAYSON-ALERT-KINDS-001](GRAYSON-ALERT-KINDS-001.md) | C7.3 | Two new phone alerts: something coming up (on by default) and the caffeine cut-off (off by default), inside the 3-a-day cap. No Health Bridge change. After COMING-UP (it reads the lead time). | PROTECTED |
+| 14 | [GRAYSON-ALERT-QUIET-001](GRAYSON-ALERT-QUIET-001.md) | E14 | Quiet hours that follow his sleep after shifts and on days off, and one buzz for alerts that land together. After ALERT-KINDS (same files). | PROTECTED |
 
 ## Claude Code (TRAIN, then DATA)
 
@@ -72,7 +74,8 @@ C5.5 (DELTA-READS-001), E10 (TEACH-DEFAULTS-001), C4.5 (MISSION-REVIEW-001) and 
 From Gavin's NHS apps go-ahead (2026-11-25): BRISK-001, WEEKLY-ACTION-001, STARTER-HABITS-001 and QUIT-BREATHE-001.
 Then E5 (HABIT-EDIT-001), E6 (HOME-PEOPLE-EDIT-001) and C5.4 (MONTH-PATTERNS-001) on 2026-11-25, and E7
 (SLEEP-WRONG-001), E4 (EDITED-MARK-001), B9 (TRAIN-ORDER-001) and C4.3 (CAFFEINE-LOG-001, log only) the same night.
-Then C3.2 (COMING-UP-001), E11 (TELL-DELTA-FIX-001) and C8.2 (RESTORE-DRILL-001).
+Then C3.2 (COMING-UP-001), E11 (TELL-DELTA-FIX-001) and C8.2 (RESTORE-DRILL-001). Then C7.3 (ALERT-KINDS-001, without "plan to confirm", which has nothing to alert about yet) and E14
+(ALERT-QUIET-001). C7.2 was already built as PLAN-FRESH-001 (#698).
 
 **Reviewers (2026-11-25):** Grok Bot is out of usage and Codex is offline, so every PR from either Claude Code
 session gets a fresh-context reviewer, never the session that built it.
