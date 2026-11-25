@@ -43,6 +43,22 @@ describe("which tasks the close names", () => {
     expect(plans).toMatchObject({ closingDate: "2026-11-18", nextDate: "2026-11-19" });
     expect(plans.rows.map((r) => r.task.id)).toEqual([wed.id]);
   });
+  it("#720 review: a task planned a week ago says its date, never a second weekday like today's", async () => {
+    await startDay(at(16, 17).toISOString());
+    await createObligation({ title: "Week-old", plannedAt: "2026-11-09" });
+    await createObligation({ title: "Six days", plannedAt: "2026-11-10" });
+    vi.setSystemTime(at(17, 6, 10));
+    expect((await getUnfinishedPlans())!.rows.map((r) => r.plannedLabel)).toEqual(["Nov 9", "Tue"]);
+  });
+  it("#720 review: a close across the DST change (Nov 1, 2026) still gives the right dates", async () => {
+    vi.setSystemTime(new Date(2026, 9, 31, 17));
+    await startDay(new Date(2026, 9, 31, 17).toISOString());
+    await createObligation({ title: "Saturday plan", plannedAt: "2026-10-31" });
+    vi.setSystemTime(new Date(2026, 10, 1, 7));
+    const plans = (await getUnfinishedPlans())!;
+    expect(plans).toMatchObject({ closingDate: "2026-10-31", nextDate: "2026-11-01" });
+    expect(plans.rows).toHaveLength(1);
+  });
   it("a day started after midnight still closes the date its 16:30 start fell on", async () => {
     vi.setSystemTime(at(17, 1));
     await startDay(at(17, 1).toISOString());
