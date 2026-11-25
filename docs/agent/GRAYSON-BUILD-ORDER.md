@@ -27,6 +27,8 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | 6 | [GRAYSON-WINDOW-REVIEW-001](GRAYSON-WINDOW-REVIEW-001.md) | C4.8c | The smart eating window. | PROTECTED |
 | 7 | [GRAYSON-BRISK-001](GRAYSON-BRISK-001.md) | NHS Active 10 | Brisk minutes from Garmin steps. The only open Health Bridge change; slice B after his phone check of slice A. WEEKLY-ACTION's brisk option plugs in. | PROTECTED |
 | 8 | [GRAYSON-QUIT-BREATHE-001](GRAYSON-QUIT-BREATHE-001.md) | NHS Quit Smoking | Quick: a breathing guide inside the quit tracker. No shared files with BRISK, so build it while BRISK waits on the phone check. | PROTECTED |
+| 9 | [GRAYSON-HABIT-EDIT-001](GRAYSON-HABIT-EDIT-001.md) | E5 | Rename a habit, change its schedule without rewriting old days, bring one back, remove a wrong clean day. After STARTER-HABITS if that's open (same panel). | PROTECTED |
+| 10 | [GRAYSON-HOME-PEOPLE-EDIT-001](GRAYSON-HOME-PEOPLE-EDIT-001.md) | E6 | Edit or remove home jobs, people's dates and facts where he sees them, with undo. After HOME-LASTDONE (same panel). | PROTECTED |
 
 ## Claude Code (TRAIN, then DATA)
 
@@ -49,6 +51,7 @@ and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR o
 | 15 | [GRAYSON-EXPORT-ALL-001](GRAYSON-EXPORT-ALL-001.md) | C8.3 | Read-only CSV areas for sleep, check-ins, journal, notes, home, people and work record. Shares no files with the rows above, so build it whenever the next one waits on a merge. | FEATURE |
 | 16 | [GRAYSON-WEEKLY-ACTION-001](GRAYSON-WEEKLY-ACTION-001.md) | NHS Weight Loss Plan | One suggested weekly focus tied to his targets, in the Mission review's order. After MISSION-REVIEW-001; changes REVIEW-001's "no recommendation" rule for the focus only. | PROTECTED |
 | 17 | [GRAYSON-STARTER-HABITS-001](GRAYSON-STARTER-HABITS-001.md) | NHS Drink Free Days | Quick: one-tap starters in Add a habit, including drink-free days. Shares no files with the rows above. | FEATURE |
+| 18 | [GRAYSON-MONTH-PATTERNS-001](GRAYSON-MONTH-PATTERNS-001.md) | C5.4 | Energy, mood and stress by shift-week position, short sleep and training over 28 days; floors of 5 a side; Delta only with personal opt-in. After DELTA-READS. | PROTECTED |
 
 LOCKSCREEN-001 used to be last in Claude Code's TRAIN queue, after NOTES-001. It now comes before the quick content
 briefs. It still needs TRAIN-EDIT-001 first; it and NOTES-001 both touch `TrainScreen.tsx`, so whichever is second
@@ -60,7 +63,7 @@ rebases on whatever merged first.
 Written: E9 (YOUR-NUMBERS-001), C6.7 (ONE-MEMORY-001), B16 (WORK-RECORD-001) on 2026-11-24; E8 (NOT-RIGHT-001),
 C5.5 (DELTA-READS-001), E10 (TEACH-DEFAULTS-001), C4.5 (MISSION-REVIEW-001) and C8.3 (EXPORT-ALL-001) on 2026-11-25.
 From Gavin's NHS apps go-ahead (2026-11-25): BRISK-001, WEEKLY-ACTION-001, STARTER-HABITS-001 and QUIT-BREATHE-001.
-Next to weigh: C5.4 the monthly pattern review, E6 editing Home and People, E5 renaming habits.
+Then E5 (HABIT-EDIT-001), E6 (HOME-PEOPLE-EDIT-001) and C5.4 (MONTH-PATTERNS-001) on 2026-11-25.
 
 **Reviewers (2026-11-25):** Grok Bot is out of usage and Codex is offline, so every PR from either Claude Code
 session gets a fresh-context reviewer, never the session that built it.

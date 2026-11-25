@@ -116,7 +116,7 @@ status of its own.
 | C5.1 | Feeling word (optional) | Not started |  |
 | C5.2 | Help mode | Not started |  |
 | C5.3 | Shorter reality path | Not started |  |
-| C5.4 | Pattern review (monthly, private) | Not started |  |
+| C5.4 | Pattern review (monthly, private) | Partly built; rest briefed ([MONTH-PATTERNS-001](agent/GRAYSON-MONTH-PATTERNS-001.md)) | Month recap and tag patterns exist |
 | C5.5 | Sensitive-data controls | Briefed ([DELTA-READS-001](agent/GRAYSON-DELTA-READS-001.md)) |  |
 | **Campaign 6 — Delta** | | | |
 | C6.1 | Learning lifecycle | Done (#639) | [brief](agent/GRAYSON-C6.1-C6.2-001.md); answers are a new LEARNING_RESPONDED event |
