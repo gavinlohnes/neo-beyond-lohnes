@@ -10,7 +10,7 @@
 - **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
   2026-11-25). Branch `ccr-380c4225-carry`, or the branch name its session allows. **Reviewer:** a fresh-context
   reviewer.
-  **Active PR:** branch `ccr-380c4225-carry` (2026-11-25).
+  **Active PR:** #720 (merged 2026-11-25) + review follow-up.
 - **Order and overlap:** Delta-track session **#1** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after TODAY-SPLIT-003, TODAY-CALM-001,
   PLAN-FRESH-001, DICTATE-001 and WORK-RECORD-001. CLOSE-GAPS-001 (#667) is merged and adds a line at the top of `CloseCard`. This brief
   adds its block under that line. Shares `CloseCard.tsx` and `application/dayClose.ts`; rebase on whichever merges
