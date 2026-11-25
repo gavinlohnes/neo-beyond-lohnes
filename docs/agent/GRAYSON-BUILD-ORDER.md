@@ -34,11 +34,12 @@
 | 3 | [GRAYSON-TRAIN-STANDARDS-001](GRAYSON-TRAIN-STANDARDS-001.md) | B4 | One new event for all three standards tests. | PROTECTED |
 | 4 | [GRAYSON-TRAIN-LOCKSCREEN-001](GRAYSON-TRAIN-LOCKSCREEN-001.md) | C7.5 | Two-way notification into a logged set; after TRAIN-EDIT so those sets can be fixed. | PROTECTED |
 | 5 | [GRAYSON-YOUR-NUMBERS-001](GRAYSON-YOUR-NUMBERS-001.md) | E9 | One page and one store for the numbers GRAYSON judges him by. E10 and every later rule read their numbers here. Two slices. | PROTECTED |
-| 6 | [GRAYSON-ONE-MEMORY-001](GRAYSON-ONE-MEMORY-001.md) | C6.7 | One memory store with where each memory came from. Corrections (E8, E10) and what Delta may read (C5.5) plug in. | PROTECTED |
+| 6 | [GRAYSON-ONE-MEMORY-001](GRAYSON-ONE-MEMORY-001.md) (**taken by the Delta-track session `ccr-380c4225`, Gavin 2026-11-25; skip it**) | C6.7 | One memory store with where each memory came from. Corrections (E8, E10) and what Delta may read (C5.5) plug in. | PROTECTED |
 | 7 | [GRAYSON-TRAIN-NOTES-001](GRAYSON-TRAIN-NOTES-001.md) | B10 | Quick: after HOWTO. | FEATURE |
 | 8 | [GRAYSON-TRAIN-BODYMAP-001](GRAYSON-TRAIN-BODYMAP-001.md) | B7 | Quick: after HOWTO. | FEATURE |
 | 9 | [GRAYSON-WHAT-MOVES-001](GRAYSON-WHAT-MOVES-001.md) | C6.3 | DATA, read only. | FEATURE |
 | 10 | [GRAYSON-ASKS-COUNT-001](GRAYSON-ASKS-COUNT-001.md) | B15 | After WHAT-MOVES. | PROTECTED |
+| 11 | [GRAYSON-NOT-RIGHT-001](GRAYSON-NOT-RIGHT-001.md) | E8 | "That's not right" on every Why, saved into ONE-MEMORY's store. E10 reads these corrections. After ONE-MEMORY. | PROTECTED |
 
 LOCKSCREEN-001 used to be last in Claude Code's TRAIN queue, after NOTES-001. It now comes before the quick content
 briefs. It still needs TRAIN-EDIT-001 first; it and NOTES-001 both touch `TrainScreen.tsx`, so whichever is second
@@ -47,11 +48,17 @@ rebases on whatever merged first.
 
 ## Next to brief
 
-Written 2026-11-24: E9 (YOUR-NUMBERS-001), C6.7 (ONE-MEMORY-001), B16 (WORK-RECORD-001). Next hard pieces to
-weigh: E8 "That's not right" on every Why (into ONE-MEMORY's store), E10 corrections that teach defaults (into
-YOUR-NUMBERS), C5.5 what Delta may read.
+Written: E9 (YOUR-NUMBERS-001), C6.7 (ONE-MEMORY-001), B16 (WORK-RECORD-001) on 2026-11-24; E8 (NOT-RIGHT-001)
+on 2026-11-25. Next hard pieces to weigh: E10 corrections that teach defaults (reads NOT-RIGHT, changes YOUR-NUMBERS),
+C5.5 what Delta may read.
+
+**Grok Bot's last 25% (2026-11-24 7:51 PM CT, his words: "Grock has 25% usage left"):** Grok builds
+WORK-RECORD-001, then FLIP-PLAN-001, then the rest of its queue in order, and does no more reviewing. Gavin chose to
+keep its small briefs with it (2026-11-25). Claude Code's PRs get a fresh-context reviewer.
 
 ## Done
 
 Built and merged on 2026-11-24: TRAIN-RUN-001 (#666), TRAIN-REST-001 (#668), CLOSE-GAPS-001 (#667), LOG-NUDGE-001
-(#664), WINDOW-ALERT-001 (#672), CHECKIN-EDIT-001 (#651), FIX-UNDO-001 slice 1 (#653), WEIGHT-TREND-001 (#652), TRAIN-HOWTO-001 (#681), master fix for REST-001's select (#682).
+(#664), WINDOW-ALERT-001 (#672), CHECKIN-EDIT-001 (#651), FIX-UNDO-001 slice 1 (#653), WEIGHT-TREND-001 (#652), TRAIN-HOWTO-001 (#681), master fix for REST-001's select (#682), TRAIN-EDIT-001 (#675), TRAIN-RUN-CUES-001 (#683),
+TODAY-SPLIT-003 slices A to D3 (through #696), TRAIN-STANDARDS-001 (#686), TRAIN-BODYMAP-001 (#691),
+TODAY-CALM-001 (#697), PLAN-FRESH-001 (#698), DICTATE-001 (#699), C6.5 override as evidence (#701).

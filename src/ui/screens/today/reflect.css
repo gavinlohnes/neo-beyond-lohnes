@@ -7,3 +7,6 @@
 .reflect .input { width: 100%; min-width: 0; box-sizing: border-box; }
 .follow-ups { display: grid; gap: 12px; margin-bottom: 20px; }
 .follow-up { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--border-subtle); min-width: 0; overflow-wrap: anywhere; }
+/* GRAYSON C6.5: "What did I miss?" in two even columns, so the longer reasons read on one or two lines. */
+.reflect-chips--missed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reflect-chips--missed .chip { padding-inline: 10px; overflow-wrap: anywhere; }

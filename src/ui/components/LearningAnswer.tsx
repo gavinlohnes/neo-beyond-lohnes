@@ -49,14 +49,16 @@ export function LearningAnswer({ item, statement, onAnswered, via }: { item: Lif
     } catch (cause) { setError(describeError(cause, "That answer couldn't be saved. Nothing was changed.")); } finally { setBusy(false); }
   };
   const facts = [
-    { label: "Behind it", value: `${evidence.days} ${learning.kind === "SLEEP_WINDOW" ? "measured nights" : "tagged days"}` },
+    { label: "Behind it", value: `${evidence.days} ${learning.kind === "SLEEP_WINDOW" ? "measured nights" : learning.kind === "OVERRIDE" ? "times you said so in 30 days" : "tagged days"}` },
     ...(evidence.measure ? [{ label: "Compared", value: `${MEASURE[evidence.measure] ?? evidence.measure}: ${LEAN[evidence.direction ?? "SAME"]} on tagged days` }] : []),
     ...(item.verdict ? [{ label: "Your answer", value: `${new Date(item.verdict.recordedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${item.verdict.action === "NOT_TRUE" ? "not true" : item.verdict.action.toLowerCase()}` }] : []),
   ];
   return (
     <div className="learning-answer" data-learning-state={item.state}>
       <p className="learning-answer__state">{describeState(item)}</p>
-      <WhyTraceDisclosure why={{ rule: learning.kind === "TAG" ? "A #tag pattern: tagged days compared with other noted days. A pattern, not proof of a cause." : "Your usual sleep window from measured nights.", facts }} />
+      <WhyTraceDisclosure why={{ rule: learning.kind === "TAG" ? "A #tag pattern: tagged days compared with other noted days. A pattern, not proof of a cause."
+        : learning.kind === "OVERRIDE" ? "The same reason, 3 or more times in 30 days, when you declined this kind of advice. It never changes the advice."
+        : "Your usual sleep window from measured nights.", facts }} />
       {answerable && !narrowing && (
         <div className="learning-answer__actions" role="group" aria-label="Your answer">
           <button type="button" className="btn-secondary" disabled={busy} onClick={() => void send("KEEP")}>KEEP</button>

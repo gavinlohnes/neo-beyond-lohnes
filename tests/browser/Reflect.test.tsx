@@ -32,6 +32,33 @@ it("after declining, an optional reason is saved to the journal, linked to that 
   expect((await axe.run(document.querySelector("[data-reflect-saved]")!.parentElement!)).violations).toEqual([]);
 });
 
+// GRAYSON C6.5: "What did I miss?" is one more optional tap, saved with the decline; the advice is untouched.
+it("after the reason, an optional 'What did I miss?' tap is saved with the decline, readable at 320 px", async () => {
+  await page.viewport(320, 800);
+  const day = await startDay();
+  await submitCheckIn(day.id, { energy: 1, stress: 1, mood: 4, soreness: 0, alcoholUrge: 0 });
+  const screen = await render(<TodayScreen />);
+  await screen.getByRole("button", { name: "Not doing this" }).click();
+  await screen.getByRole("button", { name: "PROCEED ANYWAY" }).click();
+  expect(screen.getByRole("group", { name: /What did I miss\?/ }).elements()).toHaveLength(0); // only after a reason
+  await screen.getByRole("button", { name: "Not today", exact: true }).click();
+  const missed = screen.getByRole("group", { name: /What did I miss\?/ });
+  await expect.element(missed).toBeVisible();
+  for (const b of missed.element().querySelectorAll("button")) expect(b.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+  await missed.getByRole("button", { name: "Family or home" }).click();
+  await missed.getByRole("button", { name: "Family or home" }).click(); // tap again clears
+  await expect.element(missed.getByRole("button", { name: "Family or home" })).toHaveAttribute("aria-pressed", "false");
+  await missed.getByRole("button", { name: "Shift or work ran over" }).click();
+  noOverflow(320);
+  expect((await axe.run(document.querySelector("[data-reflect]")!)).violations).toEqual([]);
+  const before = await db.recommendations.toArray();
+  await screen.getByRole("button", { name: "SAVE TO JOURNAL" }).click();
+  await expect.element(screen.getByText(/^Saved to your journal: Not today\./)).toBeVisible();
+  const [entry] = await db.decisionJournalEntries.toArray();
+  expect(entry).toMatchObject({ decision: "Not today", missed: "Shift or work ran over" });
+  expect(await db.recommendations.toArray()).toEqual(before);
+});
+
 it("the journal asks how it went from the next lived day, and one tap reviews it", async () => {
   await page.viewport(390, 850);
   const entry = await reflectOnDecline({ id: "rec-1", title: "Recover", why: "Capacity is moderate." }, "Not today");

@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { getDecisionJournalEntries } from "./journalQueries";
 import { getEffectiveCheckIns } from "./queries";
 import { getImportedSleep } from "./externalSleepQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
@@ -7,7 +8,8 @@ import { deriveSleepRhythm, RHYTHM_MIN_NIGHTS, type RhythmGroup } from "../engin
 import { noteTags } from "./noteTags";
 import { compareTags, dayFacts, MIN_TAGGED_DAYS, type MeasureComparison } from "./tagPatterns";
 import type { DaySummary } from "../engine/dayLedger";
-import type { StateCheckIn } from "../domain/common/types";
+import type { RecommendationKind, StateCheckIn } from "../domain/common/types";
+import type { MissedReason } from "../domain/journal/types";
 import type { ExternalSleep } from "../domain/health/sleepImport";
 import { activeExperiments, getExperiments, type Experiment } from "./tryExperiment";
 import { getMeasuredSnapshot } from "./measuredQueries";
@@ -29,7 +31,9 @@ export type Learning = { evidence?: Evidence } & (
   | { id: string; kind: "TAG"; learnedOn: string; tag: string; taggedDays: number; comparison: MeasureComparison }
   | { id: string; kind: "EXPERIMENT"; learnedOn: string; what: string; days: number; outcome: string; lesson?: string }
   /** DELTA-NEXT 1: noticed, not learned — a run of days outside your own usual range, while it lasts. */
-  | { id: string; kind: "UNUSUAL"; learnedOn: string; metric: UnusualMetric; reading: UnusualReading });
+  | { id: string; kind: "UNUSUAL"; learnedOn: string; metric: UnusualMetric; reading: UnusualReading }
+  /** GRAYSON C6.5: the same thing BEYOND missed, OVERRIDE_MIN times in OVERRIDE_DAYS, when he declined one kind of advice. */
+  | { id: string; kind: "OVERRIDE"; learnedOn: string; recommendationKind: RecommendationKind; missed: MissedReason; count: number; since: string; journalIds: string[] });
 export type UnusualMetric = "resting" | "sleep" | "steps";
 /** DELTA's offer to test a tag that lines up with shorter sleep. Starting it is the existing experiment command, on a tap. */
 export interface ExperimentSuggestion { tag: string; what: string; days: number; minutesLess: number; taggedDays: number; withDays: number; withoutDays: number }
@@ -41,10 +45,45 @@ export const SUGGESTED_EXPERIMENT_DAYS = 14;
 export const CHECK_INS_NEEDED = 7;
 export const WORKOUTS_NEEDED = 3;
 
-interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySummary[]; notes: readonly { dayId: string; text: string }[]; checkIns: readonly StateCheckIn[]; experiments?: readonly Experiment[]; unusual?: Partial<Record<UnusualMetric, UnusualReading | null>>; now: Date }
+/** GRAYSON C6.5: a declined recommendation's "What did I miss?" tap, with the kind of advice it declined. */
+export interface MissedDecline { journalId: string; at: string; recommendationKind: RecommendationKind; missed: MissedReason }
+/** GRAYSON C6.5: this many of the same reason for the same kind of advice, within OVERRIDE_DAYS, is worth asking about. */
+export const OVERRIDE_MIN = 3;
+/** The kind of advice he declined, in plain words. */
+export const ADVICE_KIND_LABEL: Record<RecommendationKind, string> = {
+  STABILIZE: "steadying the basics", POST_SHIFT_TRANSITION: "the post-shift wind-down", RECOVER: "recovery",
+  EXECUTE_PLANNED_WORK: "the planned work", OBLIGATION_DUE: "a commitment that's due", NO_ACTION_REQUIRED: "nothing extra",
+};
+export const OVERRIDE_DAYS = 30;
+
+interface Inputs { sleeps: readonly ExternalSleep[]; summaries: readonly DaySummary[]; notes: readonly { dayId: string; text: string }[]; checkIns: readonly StateCheckIn[]; experiments?: readonly Experiment[]; unusual?: Partial<Record<UnusualMetric, UnusualReading | null>>; declines?: readonly MissedDecline[]; now: Date }
+
+/**
+ * GRAYSON C6.5 (Gavin, 2026-11-25): what BEYOND's data keeps missing when he declines. Pure. For each kind of advice
+ * and each reason, the taps within the last OVERRIDE_DAYS; OVERRIDE_MIN or more is a learning dated the day the
+ * OVERRIDE_MIN-th one landed. Never an Engine input: it only becomes something Delta asks him about.
+ */
+export function overrideLearnings(declines: readonly MissedDecline[], now: Date): Learning[] {
+  const from = now.getTime() - OVERRIDE_DAYS * 86_400_000;
+  const groups = new Map<string, MissedDecline[]>();
+  for (const d of declines) {
+    if (Date.parse(d.at) <= from || Date.parse(d.at) > now.getTime()) continue;
+    const key = `${d.recommendationKind}|${d.missed}`;
+    groups.set(key, [...(groups.get(key) ?? []), d]);
+  }
+  const out: Learning[] = [];
+  for (const list of groups.values()) {
+    if (list.length < OVERRIDE_MIN) continue;
+    const sorted = [...list].sort((a, b) => a.at.localeCompare(b.at) || a.journalId.localeCompare(b.journalId));
+    const { recommendationKind, missed } = sorted[0]!;
+    out.push({ id: `override-${recommendationKind}-${missed.toLowerCase().replace(/[^a-z]+/g, "-")}`, kind: "OVERRIDE", learnedOn: sorted[OVERRIDE_MIN - 1]!.at,
+      recommendationKind, missed, count: sorted.length, since: sorted[0]!.at, journalIds: sorted.map((d) => d.journalId) });
+  }
+  return out;
+}
 
 /** Pure. */
-export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = [], unusual = {}, now }: Inputs): DeltaKnowledge {
+export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = [], unusual = {}, declines = [], now }: Inputs): DeltaKnowledge {
   const all = deriveSleepRhythm(sleeps, summaries, now, 100_000);
   const idsFor = (starts: Set<string>) => summaries.filter((d) => starts.has(d.livedDayStart)).sort((a, b) => b.startedAt.localeCompare(a.startedAt)).map((d) => ({ id: d.beyondDayId, at: d.startedAt }));
   const recent = deriveSleepRhythm(sleeps, summaries, now);
@@ -105,6 +144,9 @@ export function deriveDelta({ sleeps, summaries, notes, checkIns, experiments = 
   const needle = whatMovesTheNeedle(summaries, checkIns, notes);
   topics.push({ id: "needle", label: "What lines up with your good weeks", state: needle.ready ? "KNOWN" : needle.judgedWeeks ? "LEARNING" : "NOT_STARTED", have: needle.judgedWeeks, need: needle.ready ? needle.judgedWeeks : needle.need, unit: "weeks with 3+ check-ins" });
 
+  // GRAYSON C6.5: what BEYOND's data keeps missing when he declines.
+  learnings.push(...overrideLearnings(declines, now));
+
   learnings.sort((a, b) => b.learnedOn.localeCompare(a.learnedOn));
   return { topics, learnings, suggestion, needle };
 }
@@ -134,8 +176,8 @@ function tagLearnedOn(notes: Inputs["notes"], summaries: readonly DaySummary[], 
 }
 
 export async function getDeltaKnowledge(now = new Date()): Promise<DeltaKnowledge> {
-  const [records, summaries, notes, checkIns, experiments, snapshot] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), getEffectiveCheckIns(), getExperiments(), getMeasuredSnapshot(now.getTime()).catch(() => null)]);
-  return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, experiments, unusual: snapshot?.unusual ?? {}, now });
+  const [records, summaries, notes, checkIns, experiments, snapshot, declines] = await Promise.all([getImportedSleep(), getDaySummaries(), db.dailyNotes.toArray(), getEffectiveCheckIns(), getExperiments(), getMeasuredSnapshot(now.getTime()).catch(() => null), getMissedDeclines()]);
+  return deriveDelta({ sleeps: records.map((r) => r.evidence), summaries, notes, checkIns, experiments, unusual: snapshot?.unusual ?? {}, declines, now });
 }
 
 /**
@@ -154,4 +196,12 @@ export function deltaQuestion(knowledge: DeltaKnowledge, workContext: string | u
 /** New learnings since `since` (ISO), newest first — for TODAY's one quiet line. */
 export function newLearnings(knowledge: DeltaKnowledge, since: string | null): Learning[] {
   return knowledge.learnings.filter((l) => !since || l.learnedOn > since);
+}
+
+/** GRAYSON C6.5: his "What did I miss?" taps, each with the kind of advice it declined (from the linked recommendation). */
+export async function getMissedDeclines(): Promise<MissedDecline[]> {
+  const entries = (await getDecisionJournalEntries()).filter((e) => e.missed && e.linkedRecommendationId);
+  if (!entries.length) return [];
+  const recs = await db.recommendations.bulkGet(entries.map((e) => e.linkedRecommendationId!));
+  return entries.flatMap((e, i) => { const r = recs[i]; return r ? [{ journalId: e.id, at: e.createdAt, recommendationKind: r.kind, missed: e.missed! }] : []; });
 }
