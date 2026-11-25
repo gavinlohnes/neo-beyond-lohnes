@@ -106,6 +106,14 @@ const dayName = (date: string) => { const [y, m, d] = date.split("-").map(Number
 function CarryBlock({ dayId, busy }: { dayId: string; busy: boolean }) {
   const [plans, setPlans] = useState<{ nextDate: string; rows: CarryRow[]; more: number } | null>(null);
   const [working, setWorking] = useState(false);
+  // #720 review: after a tap the pressed button goes away; focus stays in that row (its first button, or its line).
+  const [focusRow, setFocusRow] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusRow) return;
+    const row = document.querySelector<HTMLElement>(`[data-carry-row="${CSS.escape(focusRow)}"]`);
+    (row?.querySelector<HTMLElement>("button") ?? row?.querySelector<HTMLElement>("[data-carry-status]"))?.focus();
+    setFocusRow(null);
+  }, [focusRow, plans]);
   useEffect(() => {
     let cancelled = false;
     void getUnfinishedPlans().then((p: UnfinishedPlans | null) => {
@@ -121,7 +129,7 @@ function CarryBlock({ dayId, busy }: { dayId: string; busy: boolean }) {
     setWorking(true);
     try { update(row.task.id, { ...(await action()), error: undefined, confirming: false }); }
     catch (cause) { update(row.task.id, { error: cause instanceof Error && cause.message === CARRY_CHANGED ? CARRY_CHANGED : "That didn't save. Nothing changed.", confirming: false }); }
-    finally { setWorking(false); }
+    finally { setWorking(false); setFocusRow(row.task.id); }
   };
   const expected = (t: Obligation) => ({ updatedAt: t.updatedAt, plannedAt: t.plannedAt });
   const move = (row: CarryRow, to: string | null) => run(row, async () => {
@@ -137,19 +145,19 @@ function CarryBlock({ dayId, busy }: { dayId: string; busy: boolean }) {
   return <div className="today-close__carry" role="group" aria-label={heading}>
     <p className="today-close__carry-head">{heading}</p>
     <ul>
-      {plans.rows.map((row) => <li key={row.task.id} className="today-close__carry-row">
+      {plans.rows.map((row) => <li key={row.task.id} className="today-close__carry-row" data-carry-row={row.task.id}>
         <span className="today-close__carry-title">{row.task.title} <span className="today-close__carry-day">planned {row.plannedLabel}</span></span>
         {row.state ? <span className="today-close__carry-acts">
-          <span role="status">{row.state.kind === "NEXT" ? `Planned for ${dayName(plans.nextDate)}.` : row.state.kind === "NONE" ? "No day now. It's under No date in PLANS." : "Done."}</span>
+          <span role="status" tabIndex={-1} data-carry-status>{row.state.kind === "NEXT" ? `Planned for ${dayName(plans.nextDate)}.` : row.state.kind === "NONE" ? "No day now. It's under No date in PLANS." : "Done."}</span>
           {row.state.kind !== "DONE" && <button type="button" className="btn-secondary" disabled={off} aria-label={`Undo: ${row.task.title}`} onClick={() => undo(row)}>UNDO</button>}
         </span> : row.confirming ? <span className="today-close__carry-acts" role="group" aria-label={`Mark done: ${row.task.title}`}>
           <span>Mark it done? This can't be undone.</span>
           <button type="button" className="btn-secondary" disabled={off} onClick={() => void run(row, async () => { await completeCarriedTask(row.task.id, expected(row.task)); return { state: { kind: "DONE" } }; })}>YES, DONE</button>
-          <button type="button" className="btn-secondary" disabled={off} onClick={() => update(row.task.id, { confirming: false })}>NOT YET</button>
+          <button type="button" className="btn-secondary" disabled={off} onClick={() => { update(row.task.id, { confirming: false }); setFocusRow(row.task.id); }}>NOT YET</button>
         </span> : <span className="today-close__carry-acts" role="group" aria-label={`What to do with: ${row.task.title}`}>
           <button type="button" className="btn-secondary" disabled={off} onClick={() => void move(row, plans.nextDate)}>NEXT DAY</button>
           <button type="button" className="btn-secondary" disabled={off} onClick={() => void move(row, null)}>NO DAY</button>
-          <button type="button" className="btn-secondary" disabled={off} onClick={() => update(row.task.id, { confirming: true })}>DONE</button>
+          <button type="button" className="btn-secondary" disabled={off} onClick={() => { update(row.task.id, { confirming: true }); setFocusRow(row.task.id); }}>DONE</button>
         </span>}
         {row.error && <span role="alert" className="today-close__carry-day">{row.error}</span>}
       </li>)}

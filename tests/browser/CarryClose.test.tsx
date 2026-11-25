@@ -99,6 +99,21 @@ describe("GRAYSON-CARRY-001 the close", () => {
     expect((await db.obligations.get(vet))!.plannedAt).toBe("2026-11-14");
   });
 
+  it("#720 review: focus stays in the row after each tap (UNDO, then NEXT DAY again)", async () => {
+    await shiftDown();
+    const screen = await render(<TodayScreen onOpenLife={() => {}} />);
+    const oilRow = block(screen).getByRole("listitem").filter({ hasText: "oil change" });
+    await expect.element(oilRow.getByRole("button", { name: "NEXT DAY" })).toBeVisible();
+    (oilRow.getByRole("button", { name: "NEXT DAY" }).element() as HTMLElement).focus();
+    await userEvent.keyboard("{Enter}");
+    await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Undo: Book the oil change");
+    await userEvent.keyboard("{Enter}");
+    await expect.poll(() => document.activeElement?.textContent).toBe("NEXT DAY");
+    await userEvent.tab(); await userEvent.tab(); // NO DAY, then DONE
+    await userEvent.keyboard("{Enter}");
+    await expect.poll(() => document.activeElement?.textContent).toBe("YES, DONE");
+  });
+
   it("his switch hides the block; leaving the block alone changes nothing", async () => {
     await shiftDown();
     const screen = await render(<TodayScreen onOpenLife={() => {}} />);
