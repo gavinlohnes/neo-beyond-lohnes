@@ -9,8 +9,19 @@ type Pending = "DONE" | "RELEASE" | "DATE" | null;
  * way to close it lived in another panel. When a task is the answer, close it right on the card:
  * DONE, NOT A TASK (both one-way, so each asks once) or NEW DATE. Existing commands only.
  */
-export function CommitmentQuickActions({ obligation, today, onChanged }: { obligation: Obligation; today: string; onChanged: () => Promise<void> | void }) {
+export const DONE_NOTE_MAX = 200;
+export function CommitmentQuickActions({ obligation, today, onChanged, withNote = false, showRelease = true, label }: {
+  obligation: Obligation; today: string; onChanged: () => Promise<void> | void;
+  /** GRAYSON-HOME-LASTDONE-001: a Note in the DONE confirm, saved as its resolution note. */
+  withNote?: boolean;
+  /** GRAYSON-HOME-LASTDONE-001: Home leaves NOT A TASK off, because on a repeating job it ends the repeats. */
+  showRelease?: boolean;
+  /** How the confirm names it; the title by default. */
+  label?: string | undefined;
+}) {
   const [pending, setPending] = useState<Pending>(null);
+  const [note, setNote] = useState("");
+  const name = label ?? obligation.title;
   const [date, setDate] = useState(today);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +35,16 @@ export function CommitmentQuickActions({ obligation, today, onChanged }: { oblig
   return <div className="commitment-quick" role="group" aria-label={`Task: ${obligation.title}`}>
     {pending === null && <div className="commitment-quick__row">
       <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPending("DONE")}>DONE</button>
-      <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPending("RELEASE")}>NOT A TASK</button>
+      {showRelease && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPending("RELEASE")}>NOT A TASK</button>}
       <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPending("DATE")}>NEW DATE</button>
     </div>}
     {(pending === "DONE" || pending === "RELEASE") && <div className="commitment-quick__confirm">
-      <p className="meta">{pending === "DONE" ? `Mark "${obligation.title}" done?` : `Drop "${obligation.title}" as a task? The note stays in your history.`}</p>
+      <p className="meta">{pending === "DONE" ? `Mark "${name}" done?` : `Drop "${name}" as a task? The note stays in your history.`}</p>
+      {pending === "DONE" && withNote && <label className="meta commitment-quick__note">Note (optional): what you used or found
+        <input className="input" value={note} maxLength={DONE_NOTE_MAX} disabled={busy} onChange={(e) => setNote(e.target.value)} /></label>}
       <div className="commitment-quick__row">
         <button type="button" className="btn-secondary" disabled={busy}
-          onClick={() => void run(() => pending === "DONE" ? satisfyObligation(obligation.id) : releaseObligation(obligation.id))}>
+          onClick={() => void run(() => pending === "DONE" ? satisfyObligation(obligation.id, withNote && note.trim() ? note.trim() : undefined) : releaseObligation(obligation.id))}>
           {pending === "DONE" ? "YES, DONE" : "YES, DROP IT"}
         </button>
         <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPending(null)}>CANCEL</button>

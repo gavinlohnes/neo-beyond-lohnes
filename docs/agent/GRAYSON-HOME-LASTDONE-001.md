@@ -12,7 +12,7 @@
 - **Starting commit:** `origin/master` `1fd2c47`. Re-fetch before starting.
 - **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
   2026-11-25). Branch `ccr-380c4225-home-lastdone`, or the branch name its session allows. **Reviewer:** a fresh-context
-  reviewer. **Active PR:** pending.
+  reviewer. **Active PR:** branch `ccr-380c4225-home-lastdone` (2026-11-25).
 - **Order:** Delta-track session **#4** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after FLIP-PLAN-001. CHECKIN-EDIT-001 (#651) and
   FIX-UNDO-001 slice 1 (#653) are merged. Overlap check on
   `1fd2c47`: the only open PR is #641 (campaign plan text). CHECKIN-EDIT-001 touches `CheckInCard.tsx`, not
@@ -134,6 +134,14 @@ to TODAY's quick actions; any change to `intentCommands.ts`.
 
 The build PR records the approved defaults in `docs/decisions/GRAYSON-HOME-LASTDONE.md` (DEV-FLOW-002,
 2026-11-23 amendment).
+
+## Status (2026-11-25)
+Built on `ccr-380c4225-home-lastdone`; screenshots in `docs/agent/screenshots/GRAYSON-HOME-LASTDONE-001/`. Stop-and-ask
+checks: no new field, table, event or Dexie version, and no change to `intentCommands.ts`; one obligations read per
+view (the open jobs and their dones come from the same `getObligations()`); TODAY's quick actions are unchanged
+(tested); the next date is the existing `materializeNextOccurrence` one; no score, colour or alarm.
+**Seen while testing (not changed here):** a job due on the 30th that repeats every 3 months skips February (no
+Feb 30) and lands on May 30. That's the existing repeat rule; worth a look with E6 or the recurrence owner.
 
 ## Stop and ask Gavin if
 
