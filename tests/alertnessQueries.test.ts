@@ -36,3 +36,53 @@ describe("energy query clock progression", () => {
     expect(new Date(data.curve!.to).getMinutes()).toBe(30);
   });
 });
+
+/**
+ * GRAYSON C4.1 (Gavin, 2026-11-24: "Lock it in"): on a steady run of nights the curve's lowest waking stretch falls in
+ * the waking night, never inside the day sleep (#592 finding C1, withdrawn in the research audit once the production
+ * query's planned/usual sleep is supplied). Checked through this query, as TODAY reads it, for a grid of 3-night
+ * day-sleep patterns, with and without a shift plan. The body-clock assumption itself is unchanged and unvalidated.
+ */
+describe("C4.1 steady nights: the low sits in the waking night", () => {
+  const cases: [number, number][] = [];
+  for (const startHalfHours of [13, 14, 15, 16, 17, 18, 19, 20]) for (const lengthHalfHours of [11, 12, 13, 14, 15, 16]) cases.push([startHalfHours / 2, lengthHalfHours / 2]);
+  it.each(cases)("day sleep from %s:00 for %s h, 3 nights", async (startH, lengthH) => {
+    const span = (d: number) => { const s = new Date(2026, 10, d, 0).getTime() + startH * 3_600_000; return { s, e: s + lengthH * 3_600_000 }; };
+    mocks.sleep.mockResolvedValue([16, 17, 18].map((d) => { const { s, e } = span(d); return record(s, e); }));
+    const shift = { start: new Date(at(18, 18)).toISOString(), end: new Date(at(19, 6)).toISOString() };
+    const sleep = span(19);
+    for (const plan of [null, { shift, windows: [{ kind: "SLEEP", start: new Date(sleep.s).toISOString(), end: new Date(sleep.e).toISOString() }], caffeine: { hours: 6, setBy: "DEFAULT" } }]) {
+      mocks.plan.mockResolvedValue(plan);
+      const { curve } = await getEnergyToday(new Date(at(18, 20)));
+      const low = curve!.low!;
+      const label = `${startH}h for ${lengthH}h, plan ${plan ? "yes" : "no"}: low ${new Date(low.start).toTimeString().slice(0, 5)}–${new Date(low.end).toTimeString().slice(0, 5)}`;
+      expect(low.start, label).toBeGreaterThanOrEqual(at(19, 0)); // after midnight on the shift night
+      expect(low.end, label).toBeLessThanOrEqual(sleep.s); // over before the day sleep starts
+      expect(curve!.points.filter((p) => p.t >= low.start && p.t < low.end).every((p) => !p.asleep), label).toBe(true);
+    }
+  });
+});
+
+/** GRAYSON-C4.1-ENERGY-CURVE-001: the body clock reads 28 days of main sleeps; the "3 in the last week" gate doesn't change. */
+describe("C4.1 body-clock history", () => {
+  const now = new Date(2026, 10, 19, 20);
+  const nightSleep = (daysAgo: number) => record(new Date(2026, 10, 18 - daysAgo, 23).getTime(), new Date(2026, 10, 19 - daysAgo, 7).getTime()); // 23:00–07:00, local
+  const daySleeps = [2, 1, 0].map(d => record(at(19 - d, 7), at(19 - d, 14)));
+  it("places the low from night-time sleeps up to 28 days back, before this run's day sleeps", async () => {
+    mocks.sleep.mockResolvedValue([nightSleep(22), nightSleep(21), ...daySleeps]);
+    const data = await getEnergyToday(now);
+    expect(data.nights).toBe(3);
+    expect(data.curve!.basis.nights).toBe(3);
+    expect(data.curve!.basis.lowMinutes).toBe(7 * 60); // 05:30, then +30 min for each of three day sleeps
+  });
+  it("ignores sleep older than 28 days and naps", async () => {
+    mocks.sleep.mockResolvedValue([nightSleep(30), record(at(17, 22), at(17, 23)), ...daySleeps]);
+    expect((await getEnergyToday(now)).curve!.basis.lowMinutes).toBe(12 * 60 + 30);
+  });
+  it("still waits for 3 main sleeps in the last week, however much older history there is", async () => {
+    mocks.sleep.mockResolvedValue([nightSleep(20), nightSleep(15), nightSleep(10), ...daySleeps.slice(1)]);
+    const data = await getEnergyToday(now);
+    expect(data.nights).toBe(2);
+    expect(data.curve).toBeNull();
+  });
+});

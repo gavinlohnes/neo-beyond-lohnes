@@ -1,7 +1,17 @@
+import { LockScreenSwitch, useLockScreenSets } from "./LockScreenSets";
+import type { PlannedSet } from "../../../application/lockScreenSets";
+import { ExerciseNoteBlock } from "../../components/ExerciseNoteLine";
+import { BodyMap } from "../../components/BodyMap";
+import { groupForExercise } from "../../../application/exerciseByMuscle";
+import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { WorkoutRecap } from "./WorkoutRecap";
 import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
+import { TrainProgress } from "./TrainProgress";
+import { TrainWindowLine } from "./TrainWindowLine";
+import { DeltaPain, DeltaProposal } from "./DeltaPanels";
+import { deriveSetProposal, reviewLines, type GuidanceNote, type SetProposal } from "../../../application/trainGuidance";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useSessionDraft } from "../../sessionDrafts";
 import { MemoryPanel } from "../../components/MemoryPanel";
@@ -29,7 +39,15 @@ import { TrainingHistory } from "./TrainingHistory";
 import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
 import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
+import { SetFixSheet, useSetFixUndo } from "./SetFixSheet";
+import { restEndBuzz, shouldBuzzRestEnd } from "../../feel/restEndBuzz";
+import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
+import { RunningPanel } from "./RunningSession";
+import { ExerciseHowToSheet } from "../../components/ExerciseHowToSheet";
+import { howToFor } from "../../../domain/workout/exerciseHowTo";
 import { GymMode } from "./GymMode";
+import { CalibrationPreview } from "./CalibrationPreview";
+import { TrainPlanDraft } from "./TrainPlanDraft";
 import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
@@ -37,6 +55,7 @@ import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId
 import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import { getCustomTemplates } from "../../../application/customTemplateQueries";
+import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { deriveCapacity } from "../../../engine/capacity";
 import { suggestSessionVariant } from "../../../engine/trainSuggestion";
@@ -51,6 +70,7 @@ import { PlannedWorkCard } from "../today/PlannedWorkCard";
 import {
   getActiveWorkoutSession,
   getCurrentProgressionSuggestions,
+  getExerciseCues,
   getLastAdvancingTemplate,
   getLastPerformedSetForExercise,
   getLastStrengthSession,
@@ -164,7 +184,7 @@ interface CompletionSummary {
   setsLogged: number;
   setsSkipped: number;
   durationMinutes: number | null;
-  nextTemplate: WorkoutTemplateId;
+  nextLabel: string;
   advisoryChanges: { name: string; before: string; after: string }[];
   /** Drop 4: records set this session, in logged order, already worded for display. */
   records: string[];
@@ -197,6 +217,7 @@ export function TrainScreen({
   const [lastAdvancingTemplate, setLastAdvancingTemplate] = useState<WorkoutTemplateId | null>(null);
   const [chosenTemplate, setChosenTemplate] = useState<WorkoutTemplateId>("A");
   const [chosenVariant, setChosenVariant] = useState<SessionType>("STANDARD");
+  const [capacityForm, setCapacityForm] = useState<SessionType>("STANDARD");
   // DECLUTTER-001: the template/variant override chips sit behind one
   // CHANGE tap so START WORKOUT stays on the first screen. Opens itself for
   // the TODAY → RECOVERY handoff, whose focus target is the RECOVERY chip.
@@ -207,7 +228,15 @@ export function TrainScreen({
   // CLEANUP-003 (walk-through finding 10): no "Planning to train today?" once today's workout is done.
   const [workoutFinishedToday, setWorkoutFinishedToday] = useState(false);
   const [session, setSession] = useState<WorkoutSession | null>(null);
+  const [runningActive, setRunningActive] = useState(false);
   const [sets, setSets] = useState<PerformedSet[]>([]);
+  // GRAYSON-TRAIN-EDIT-001: the logged set whose fix sheet is open, and the 8 s Undo after a fix.
+  const [fixingSetId, setFixingSetId] = useState<string | null>(null);
+  const liveFixUndo = useSetFixUndo(async () => { await refresh(true); });
+  const [howToOpen, setHowToOpen] = useState<{ id: string; name: string } | null>(null);
+  // GRAYSON-TRAIN-BODYMAP-001: FIND BY MUSCLE in the swap, opened on the current exercise's group.
+  const [findByMuscle, setFindByMuscle] = useState(false);
+  const [customExercisesForMap, setCustomExercisesForMap] = useState<CustomExercise[]>([]);
   const setWriteRef = useRef(false);
   const draftSessionRef = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -236,12 +265,19 @@ export function TrainScreen({
   // when they aren't the prominent tool, so it structurally recedes
   // instead of consuming full footprint before any decision is made.
   const [performanceBriefOpen, setPerformanceBriefOpen] = useState(false);
-  const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS">(recordsFocus ? "RECORDS" : "WORKOUT");
+  const [calibrationPreview, setCalibrationPreview] = useState<{
+    exercise: ExercisePrescription;
+    lastSet?: LastSetInfo;
+    cue?: string;
+    readError?: string;
+  } | null>(null);
+  const [planDraftOpen, setPlanDraftOpen] = useState(false);
+  const [trainView, setTrainView] = useState<"WORKOUT" | "HISTORY" | "RECORDS" | "PROGRESS">(recordsFocus ? "RECORDS" : "WORKOUT");
   const [visitedRecords, setVisitedRecords] = useState(recordsFocus !== null);
   const [visitedHistory, setVisitedHistory] = useState(false);
   const [bestRecords, setBestRecords] = useState<Record<string, RecordCard>>({});
   const focusValues = useRef<Record<string, string>>({});
-  function openTrainView(view: "WORKOUT" | "HISTORY" | "RECORDS") {
+  function openTrainView(view: "WORKOUT" | "HISTORY" | "RECORDS" | "PROGRESS") {
     setTrainView(view);
     if (view === "RECORDS") setVisitedRecords(true);
     if (view === "HISTORY") setVisitedHistory(true);
@@ -265,6 +301,11 @@ export function TrainScreen({
   /** REST-MEMORY-001: which exercise the running rest follows, so ± taps teach that exercise. */
   const restExerciseRef = useRef<string | null>(null);
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
+  // GRAYSON-TRAIN-GUIDED-001: Delta's one proposal (if any), the pain stop, and what it noticed this workout (memory only).
+  const [proposal, setProposal] = useState<(SetProposal & { exerciseId: string; exerciseName: string }) | null>(null);
+  const [proposalWhy, setProposalWhy] = useState(false);
+  const [painFor, setPainFor] = useState<string | null>(null);
+  const [guidanceNotes, setGuidanceNotes] = useState<GuidanceNote[]>([]);
   // Drop 4 (live PR alerts): sets from every other session, loaded once per
   // active session. Records for this session's sets are derived from it and
   // the sets themselves, so an UNDO simply drops the record with its set.
@@ -298,6 +339,8 @@ export function TrainScreen({
   // exercisesFor/templateLabel take this as an explicit argument rather
   // than reading component state themselves, so they stay pure functions.
   const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
+  const [sequenceProgramme, setSequenceProgramme] = useState<SequenceProgrammeView | null>(null);
+  const [programmeRefreshKey, setProgrammeRefreshKey] = useState(0);
   // TRAIN-CREATE-003: names only, offered as substitution quick-picks
   // alongside recentSubstitutions — never a foreign-key reference, same
   // free-text substitutedName field as today.
@@ -314,6 +357,27 @@ export function TrainScreen({
     const interval = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [session?.activeRestEndsAt]);
+
+  // GRAYSON-TRAIN-REST-001 (Gavin, 2026-11-24): one buzz when rest reaches zero, read off the same 1 s tick. Once per
+  // `activeRestEndsAt` (the ref holds the last end buzzed), only seen live (TRAIN visible, within ~3 s of the end).
+  const [restBuzz, setRestBuzz] = useState<RestBuzzPreference>(getRestBuzzPreference);
+  const lastBuzzedRestEndRef = useRef<string | null>(null);
+  const [restDoneEnd, setRestDoneEnd] = useState<string | null>(null);
+  useEffect(() => {
+    const endsAt = session?.activeRestEndsAt ?? null;
+    if (!endsAt || endsAt === lastBuzzedRestEndRef.current || Date.parse(endsAt) > nowTick) return;
+    const buzz = shouldBuzzRestEnd({ endsAt, nowMs: nowTick, lastBuzzedEnd: lastBuzzedRestEndRef.current,
+      visible: typeof document === "undefined" || document.visibilityState === "visible", enabled: restBuzz.enabled });
+    // Seen once, buzzed or not: a late or silenced end never buzzes on a later tick.
+    lastBuzzedRestEndRef.current = endsAt;
+    if (Date.parse(endsAt) + 3000 >= nowTick) setRestDoneEnd(endsAt);
+    if (buzz) restEndBuzz(restBuzz.strength);
+  }, [nowTick, session?.activeRestEndsAt, restBuzz]);
+  const toggleRestBuzz = () => {
+    const next = { ...restBuzz, enabled: !restBuzz.enabled };
+    setRestBuzzPreference(next);
+    setRestBuzz(next);
+  };
 
   useEffect(() => {
     if (active) void refresh(hasReadRef.current);
@@ -401,12 +465,19 @@ export function TrainScreen({
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
-    setCustomExerciseNames((await getCustomExercises()).map((e) => e.name));
+    const customs = await getCustomExercises();
+    setCustomExerciseNames(customs.map((e) => e.name));
+    setCustomExercisesForMap(customs);
 
     const suggestion = suggestSessionVariant(cap, sleepShort);
     setNoCheckIn(suggestion.noCheckIn);
+    setCapacityForm(suggestion.variant === "RESET" ? "STANDARD" : suggestion.variant);
 
-    const nextTemplate = await suggestTemplateForNextWorkout();
+    const programmeView = await getProgrammeView();
+    setSequenceProgramme(programmeView.sequence);
+    const nextTemplate = programmeView.sequence?.status === "READY" && programmeView.sequence.nextMember
+      ? programmeView.sequence.nextMember.templateId
+      : await suggestTemplateForNextWorkout();
     setSuggestedTemplate(nextTemplate);
     if (!preserveChoice) templateChosenRef.current = false;
     if (!templateChosenRef.current) setChosenTemplate(nextTemplate);
@@ -506,7 +577,7 @@ export function TrainScreen({
     setRecentSubstitutions(Object.fromEntries(substitutionEntries));
   }
 
-  async function actuallyStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant) {
+  async function actuallyStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant, programmeContext?: WorkoutSession["programmeContext"]) {
     const acknowledge = captureCommitFeedback();
     if (busy) return;
     setBusy(true);
@@ -517,7 +588,7 @@ export function TrainScreen({
         activeDay.id,
         variant === "RECOVERY" ? null : template,
         variant,
-        { overrideConfirmed: true, receipt },
+        { overrideConfirmed: true, receipt, ...(programmeContext ? { programmeContext } : {}) },
       );
       if (receipt.changed) acknowledge("MEDIUM");
       setSession(started);
@@ -528,6 +599,7 @@ export function TrainScreen({
       setSets(await getPerformedSets(started.id));
       setFocusedExerciseId(null);
       setCompletionSummary(null);
+      setProposal(null); setPainFor(null); setGuidanceNotes([]);
       await loadExerciseAdvisory(started);
     } catch (error) {
       reportOperationFailure(error);
@@ -536,12 +608,12 @@ export function TrainScreen({
     }
   }
 
-  async function handleStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant) {
+  async function handleStart(template: WorkoutTemplateId = chosenTemplate, variant: SessionType = chosenVariant, programmeContext?: WorkoutSession["programmeContext"]) {
     if (busy) return;
     if (variant === "STANDARD") {
-      guard(capacity, () => actuallyStart(template, variant));
+      guard(capacity, () => actuallyStart(template, variant, programmeContext));
     } else {
-      await actuallyStart(template, variant);
+      await actuallyStart(template, variant, programmeContext);
     }
   }
 
@@ -683,8 +755,10 @@ export function TrainScreen({
       await logSet(session.beyondDayId, session.id, exerciseId, setNumber, weight, reps, subs[exerciseId] || undefined, { setKind: display.setKind ?? "WORKING", ...(display.setKind !== "WARMUP" && display.repsInReserve ? { repsInReserve: Number(display.repsInReserve) } : {}) });
       committed = true;
       haptic("SET_LOGGED");
-      setSets(await getPerformedSets(session.id));
+      const fresh = await getPerformedSets(session.id);
+      setSets(fresh);
       setJustLoggedKey(inputKey(exerciseId, setNumber));
+      offerProposal(exerciseId, weight, reps, display, fresh);
       if (display.setKind !== "WARMUP") await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
@@ -720,8 +794,10 @@ export function TrainScreen({
       );
       committed = true;
       haptic("SET_LOGGED");
-      setSets(await getPerformedSets(session.id));
+      const fresh = await getPerformedSets(session.id);
+      setSets(fresh);
       setJustLoggedKey(inputKey(exerciseId, setNumber));
+      offerProposal(exerciseId, suggestion.weight, suggestion.reps, { ...getInputDisplay(exerciseId, setNumber), setKind: "WORKING" }, fresh);
       await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
@@ -746,6 +822,8 @@ export function TrainScreen({
   async function handleUndoLastSet() {
     const acknowledge = captureCommitFeedback();
     if (busy || setWriteRef.current || !session) return;
+    // GRAYSON-TRAIN-GUIDED-001 (review on #627): a proposal never outlives the set it was based on.
+    setProposal(null);
     setWriteRef.current = true;
     setBusy(true);
     try {
@@ -788,15 +866,53 @@ export function TrainScreen({
     }
   }
 
-  async function handleSkipSet(exerciseId: string, setNumber: number) {
-    if (busy || setWriteRef.current || !session) return;
+  /** GRAYSON-TRAIN-GUIDED-001: after a set is recorded, one proposal only when the evidence is clear; else quiet. */
+  function offerProposal(exerciseId: string, weight: number, reps: number, display: SetInputState, recorded: readonly { exerciseId: string; setNumber: number; setKind?: string }[]) {
+    const exercise = activeExercises.find((ex) => ex.exerciseId === exerciseId);
+    if (!exercise) { setProposal(null); return; }
+    const done = new Set(recorded.filter((x) => x.exerciseId === exerciseId && x.setKind !== "WARMUP").map((x) => x.setNumber));
+    const next = Array.from({ length: exercise.sets }, (_, i) => i + 1).find((n) => !done.has(n)) ?? null;
+    const found = deriveSetProposal({
+      exerciseName: exercise.name, range: { low: exercise.repRangeLow, high: exercise.repRangeHigh }, incrementLbs: exercise.incrementLbs,
+      weight, reps, repsInReserve: display.repsInReserve ? Number(display.repsInReserve) : undefined, warmup: display.setKind === "WARMUP",
+      bodyweightForm: session?.programmeContext?.form === "HOME", nextSetNumber: next,
+    });
+    setProposalWhy(false);
+    setProposal(found ? { ...found, exerciseId, exerciseName: exercise.name } : null);
+  }
+  function answerProposal(use: boolean) {
+    if (!proposal) return;
+    if (use) patchInput(proposal.exerciseId, proposal.nextSetNumber, { weight: String(proposal.to) });
+    setGuidanceNotes((notes) => [...notes, { kind: "PROPOSAL", exerciseName: proposal.exerciseName, line: proposal.line, choice: use ? "USED" : "KEPT" }]);
+    setProposal(null);
+  }
+  /** Pain or a safety concern: stop this movement now; skipping its remaining sets is his choice. No diagnosis. */
+  async function stopForPain(exerciseId: string, skipRest: boolean) {
+    const exercise = activeExercises.find((ex) => ex.exerciseId === exerciseId);
+    if (!exercise || !session) { setPainFor(null); return; }
+    let skipped = 0;
+    if (skipRest) {
+      const done = new Set(sets.filter((x) => x.exerciseId === exerciseId && x.setKind !== "WARMUP").map((x) => x.setNumber));
+      for (let n = 1; n <= exercise.sets; n++) if (!done.has(n) && await handleSkipSet(exerciseId, n)) skipped += 1;
+    }
+    setGuidanceNotes((notes) => [...notes, skipRest ? { kind: "STOPPED", exerciseName: exercise.name, skipped } : { kind: "NOTED", exerciseName: exercise.name }]);
+    setProposal((p) => p?.exerciseId === exerciseId ? null : p);
+    setPainFor(null);
+  }
+
+  async function handleSkipSet(exerciseId: string, setNumber: number): Promise<boolean> {
+    if (busy || setWriteRef.current || !session) return false;
     setWriteRef.current = true;
     setBusy(true);
+    // A proposal for the set being skipped has nothing left to apply to.
+    setProposal((p) => p?.exerciseId === exerciseId && p.nextSetNumber === setNumber ? null : p);
     try {
       await skipSet(session.beyondDayId, session.id, exerciseId, setNumber);
       setSets(await getPerformedSets(session.id));
+      return true;
     } catch (error) {
       reportOperationFailure(error);
+      return false;
     } finally {
       setWriteRef.current = false;
       setBusy(false);
@@ -872,7 +988,12 @@ export function TrainScreen({
         setsLogged,
         setsSkipped,
         durationMinutes,
-        nextTemplate: await suggestTemplateForNextWorkout(),
+        nextLabel: await (async () => {
+          const programme = await getProgrammeView();
+          return programme.sequence?.status === "READY" && programme.sequence.nextMember
+            ? `${programme.sequence.nextMember.key} · ${programme.sequence.nextMember.name}`
+            : `Template ${await suggestTemplateForNextWorkout()}`;
+        })(),
         advisoryChanges,
         records,
         volumeLbs,
@@ -947,9 +1068,17 @@ export function TrainScreen({
   // (suggestedTemplate/describeTemplateSuggestion below still describe
   // only the locked A -> B -> C -> A suggestion, unchanged).
   const templateOptions: WorkoutTemplateId[] = [...WORKOUT_TEMPLATE_ORDER, ...customTemplates.map((t) => t.id)];
+  const sequenceNeedsReview = sequenceProgramme !== null && sequenceProgramme.status !== "READY" && !templateChosenRef.current;
   const activeExercises = session
     ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates)
     : [];
+  // GRAYSON-TRAIN-LOCKSCREEN-001: what the LOG button would save for each working set, for the lock screen.
+  const lockScreenPlanned: PlannedSet[] = activeExercises.flatMap((ex) => Array.from({ length: ex.sets }, (_, i) => {
+    const display = getInputDisplay(ex.exerciseId, i + 1);
+    return { exerciseId: ex.exerciseId, name: subs[ex.exerciseId] || ex.name, ...(subs[ex.exerciseId] ? { substitutedName: subs[ex.exerciseId] } : {}),
+      setNumber: i + 1, total: ex.sets, weight: Number(display.weight) || 0, reps: Number(display.reps) || 0, kind: display.setKind };
+  }).filter((p) => p.kind !== "WARMUP").map(({ kind: _kind, ...p }) => p));
+  const lockScreen = useLockScreenSets({ session, sets, planned: lockScreenPlanned, onApplied: async () => { await refresh(true); } });
   const variantSuggestion = suggestSessionVariant(capacity, shortSleep);
   const suggestedExercises = exercisesFor(
     chosenTemplate,
@@ -957,6 +1086,25 @@ export function TrainScreen({
     customTemplates,
   );
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
+
+  async function openCalibrationPreview() {
+    const exercise = suggestedExercises[0];
+    if (!exercise || chosenVariant === "RECOVERY") return;
+    setCalibrationPreview({ exercise });
+    try {
+      const [lastSet, cues] = await Promise.all([
+        getLastPerformedSetForExercise(chosenTemplate, chosenVariant, exercise.exerciseId),
+        getExerciseCues(),
+      ]);
+      setCalibrationPreview((current) => current?.exercise.exerciseId === exercise.exerciseId
+        ? { exercise, ...(lastSet ? { lastSet } : {}), ...(cues.get(exercise.exerciseId) ? { cue: cues.get(exercise.exerciseId)! } : {}) }
+        : current);
+    } catch (error) {
+      setCalibrationPreview((current) => current?.exercise.exerciseId === exercise.exerciseId
+        ? { exercise, readError: describeError(error, "Could not read prior performance.") }
+        : current);
+    }
+  }
   // TRAIN-003 (Performance Brief): pure aggregation of already-fetched
   // state, recomputed on every render — no separate query/state needed.
   const progressionCounts = summarizeProgressionSuggestions(currentProgressionSuggestions);
@@ -1049,9 +1197,29 @@ export function TrainScreen({
   const isResting = restRemainingMs !== null;
   const restComplete = isResting && restRemainingMs <= 0;
   const restCompressed = isResting && nowTick - restTouchedAt > REST_COMPRESS_AFTER_MS;
+  // GRAYSON-TRAIN-REST-001: the one-time highlight and announcement belong to the end he just reached.
+  const restJustDone = restComplete && restDoneEnd !== null && restDoneEnd === session?.activeRestEndsAt;
 
+  const programmePanel = (
+    <TrainingProgrammePanel active={active && trainView === "WORKOUT"} refreshKey={programmeRefreshKey} disabled={busy} startDisabled={!!session} capacityForm={capacityForm} selectedForm={chosenVariant} onProgrammeChanged={() => void refresh(true)} onStart={(templateId, requestedForm, programmeContext) => {
+        const requested = requestedForm ?? chosenVariant;
+        const variant = requestedForm ? requested : requested === "RECOVERY" ? "STANDARD" : requested;
+        templateChosenRef.current = true; variantChosenRef.current = true;
+        setChosenTemplate(templateId); setChosenVariant(variant);
+        void handleStart(templateId, variant, programmeContext);
+      }} />
+  );
   return (
     <div className="screen fade-in train-field train-operator bf" data-training-view={trainView} data-workout-active={Boolean(session)}>
+      {calibrationPreview && <CalibrationPreview
+        exercise={calibrationPreview.exercise}
+        templateLabel={templateLabel(chosenTemplate, customTemplates)}
+        {...(calibrationPreview.lastSet ? { lastSet: calibrationPreview.lastSet } : {})}
+        {...(calibrationPreview.cue ? { personalCue: calibrationPreview.cue } : {})}
+        {...(calibrationPreview.readError ? { readError: calibrationPreview.readError } : {})}
+        onClose={() => setCalibrationPreview(null)}
+      />}
+      {planDraftOpen && <TrainPlanDraft onClose={() => setPlanDraftOpen(false)} onSaved={() => { setProgrammeRefreshKey((value) => value + 1); void refresh(true); }} />}
       {/* FIELD ALPHA Phase 2: the identity zone is deliberately quiet, same
           principle TODAY applied (Suit Implementation 01B) for the same
           reason — freed territory belongs to whatever's actually being
@@ -1079,16 +1247,20 @@ export function TrainScreen({
               <p className="bf-bar__day" data-train-day><span className="bf-bar__date">{new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }).toUpperCase()}</span>
                 {trainHome && (() => { const c = describeDayContext(trainHome.day, trainHome.schedule); return <span className="bf-bar__ctx">{c.text}{c.basis === "schedule" ? <em> · schedule</em> : null}</span>; })()}</p>
               <p className="train-purpose">Prepare your workout. You choose the session.</p>
+              {/* C4.4: read only after TRAIN's own day read has succeeded, so it never competes with it. */}
+              {trainHome && <TrainWindowLine active={active} />}
             </>} />
           </section>)}
 
       <div className="train-switcher" role="group" aria-label="Training views">
-        {(["WORKOUT", "HISTORY", "RECORDS"] as const).map((view) => <button key={view} type="button"
+        {(["WORKOUT", "HISTORY", "RECORDS", "PROGRESS"] as const).map((view) => <button key={view} type="button"
           className="btn-secondary" aria-pressed={trainView === view} onClick={() => openTrainView(view)}>{view}</button>)}
       </div>
       {visitedHistory && <div hidden={trainView !== "HISTORY"}><TrainingHistory active={active && trainView === "HISTORY"} customTemplates={customTemplates} onClose={() => openTrainView("WORKOUT")} /></div>}
       {visitedRecords && <div hidden={trainView !== "RECORDS"}><RecordsList active={active && trainView === "RECORDS"} focusExerciseId={recordsFocus} onClose={() => openTrainView("WORKOUT")} /></div>}
-      <div hidden={trainView !== "WORKOUT"}>
+      {/* GRAYSON-TRAIN-PROGRESS-001: one tap from today's workout, read only. */}
+      {trainView === "PROGRESS" && <TrainProgress active={active} />}
+      <div hidden={trainView !== "WORKOUT" || runningActive}>
       <ConfirmPanel />
 
       {reading && <p role="status" className="meta">Reading your workout…</p>}
@@ -1153,7 +1325,13 @@ export function TrainScreen({
               ))}
             </div>
           )}
-          <p className="meta" style={{ marginBottom: 8 }}>Next up: Template {completionSummary.nextTemplate}.</p>
+          {/* GRAYSON-TRAIN-GUIDED-001: one consolidated review; nothing here was stored beyond your sets and skips. */}
+          {guidanceNotes.length > 0 && <div className="train-delta train-delta--review" role="group" aria-label="What Delta noticed">
+            <p className="train-delta__line"><span className="train-delta__who">WHAT DELTA NOTICED</span></p>
+            <ul className="train-delta__whylist">{reviewLines(guidanceNotes).map((line, i) => <li key={`${i}-${line}`} className="meta">{line}</li>)}</ul>
+            <p className="meta">Only your sets and skips were saved. Next time's suggestions come from those, as always.</p>
+          </div>}
+          <p className="meta" style={{ marginBottom: 8 }}>Next up: {completionSummary.nextLabel}.</p>
           {completionSummary.advisoryChanges.length > 0 && (
             <div style={{ marginTop: 8, marginBottom: 8 }}>
               <p className="meta" style={{ marginBottom: 4 }}>Next time:</p>
@@ -1206,7 +1384,7 @@ export function TrainScreen({
       {!session && !completionSummary && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
-            {noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
+            {sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
           <h2 className="command-title">
             {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
@@ -1276,24 +1454,37 @@ export function TrainScreen({
           <button
             className="btn-primary"
             style={{ fontSize: 18, padding: "18px var(--space-4)" }}
-            disabled={busy}
+            disabled={busy || sequenceNeedsReview}
             onClick={() => void handleStart()}
           >
-            START WORKOUT
+            {sequenceNeedsReview
+              ? "CHOOSE A WORKOUT"
+              : sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember && chosenTemplate === sequenceProgramme.nextMember.templateId
+                ? chosenVariant === "RECOVERY" ? "START RECOVERY" : `START NEXT · ${sequenceProgramme.nextMember.key}`
+                : "START WORKOUT"}
           </button>
+          {sequenceNeedsReview && <p className="meta">The active sequence cannot name a safe next member from current evidence. Review it below, or use CHANGE to make a direct choice.</p>}
 
           {/* REAL-DATA-001: see the workout before starting it. The owner's real backup had 10 of 12
               workouts abandoned within seconds; looking should never cost an abandoned session. */}
           {chosenVariant !== "RECOVERY" && (
-            <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
-              {suggestedExercises.map((exercise, index) => (
-                <li key={exercise.exerciseId}>
-                  <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                  <span>{exercise.name}</span>
-                  <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
-                </li>
-              ))}
-            </ol>
+            <>
+              <ol className="train-prescription train-prescription--preview" aria-label="Today's exercises">
+                {suggestedExercises.map((exercise, index) => (
+                  <li key={exercise.exerciseId}>
+                    <span className="train-prescription-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <span>{exercise.name}</span>
+                    <span className="meta">{exercise.sets} × {exercise.repRangeLow}–{exercise.repRangeHigh}</span>
+                  </li>
+                ))}
+              </ol>
+              <button type="button" className="btn-secondary" style={{ marginTop: 12 }} onClick={() => void openCalibrationPreview()}>
+                PREVIEW CALIBRATION
+              </button>
+              <button type="button" className="btn-secondary" style={{ marginTop: 8 }} onClick={() => setPlanDraftOpen(true)}>
+                DRAFT MY 3-DAY PLAN
+              </button>
+            </>
           )}
 
 
@@ -1302,7 +1493,13 @@ export function TrainScreen({
               <p className="card-body" style={{ marginBottom: 6 }}>{describeVariantSuggestion(variantSuggestion)}</p>
               {chosenVariant !== "RECOVERY" && (
                 <p className="card-body" style={{ marginBottom: 6 }}>
-                  {describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
+                  {sequenceProgramme?.status === "READY" && sequenceProgramme.nextMember
+                    ? chosenTemplate === sequenceProgramme.nextMember.templateId
+                      ? sequenceProgramme.why
+                      : sequenceProgramme.members.some((member) => member.templateId === chosenTemplate)
+                        ? `You chose sequence member ${sequenceProgramme.members.find((member) => member.templateId === chosenTemplate)!.key} · ${templateLabel(chosenTemplate, customTemplates)} out of order. The active sequence currently names ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} next. A qualifying completion advances from the member actually completed.`
+                        : `You chose ${templateLabel(chosenTemplate, customTemplates)} directly. It is not a member of the active A → B → C sequence, so completing it will not advance that sequence. ${sequenceProgramme.nextMember.key} · ${sequenceProgramme.nextMember.name} remains next.`
+                    : describeTemplateSuggestion(suggestedTemplate, lastAdvancingTemplate)}
                 </p>
               )}
               <p className="card-body">{VARIANT_MEANINGS}</p>
@@ -1350,12 +1547,8 @@ export function TrainScreen({
         );
       })()}
 
-      <TrainingProgrammePanel active={active && trainView === "WORKOUT"} disabled={busy} startDisabled={!!session} onStart={(templateId) => {
-        const variant = chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant;
-        templateChosenRef.current = true; variantChosenRef.current = true;
-        setChosenTemplate(templateId); setChosenVariant(variant);
-        void handleStart(templateId, variant);
-      }} />
+      {/* Gavin, 2026-11-23: "Move the Train my Program down." Before a workout it leads here; during one it sits below the live workout. */}
+      {!session && programmePanel}
 
 
       {/* TRAIN-003 (Performance Brief): read-only derived intelligence,
@@ -1486,7 +1679,7 @@ export function TrainScreen({
                 <div className="bf-bar train-session-tools">
                   <div className="bf-bar__id">
                     <p className="bf-bar__eyebrow" aria-hidden="true"><span className="bf-slashes">///</span> TRAIN // LIVE</p>
-                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
+                    <p className="meta-strong train-live-title">WORKOUT {templateLabel(session.templateId, customTemplates)}{session.programmeContext?.form ? (templateLabel(session.templateId, customTemplates).toUpperCase().includes(session.programmeContext.form) ? "" : ` · ${session.programmeContext.form}`) : session.sessionType === "STANDARD" ? "" : ` · ${session.sessionType}`} — in progress</p>
                   </div>
                   <button ref={gymModeButtonRef} type="button" className="bf-bar__log train-live-gym" onClick={() => setGymModeOpen(true)}>GYM MODE</button>
                 </div>
@@ -1512,6 +1705,7 @@ export function TrainScreen({
               ghost={lastPerformedSets[currentExercise.exerciseId]}
               exerciseUntouched={loggedSetNumbers(currentExercise.exerciseId).size === 0}
               sessionExerciseIds={activeExercises.map((ex) => ex.exerciseId)}
+              restDone={restJustDone}
               restLabel={
                 isResting && restRemainingMs !== null
                   ? restComplete
@@ -1535,6 +1729,11 @@ export function TrainScreen({
               onNextExercise={() => setFocusedExerciseId(null)}
               lastSet={describeGymLastSet()}
               onUndoLastSet={() => void handleUndoLastSet()}
+              delta={<>
+                {/* GRAYSON-TRAIN-FINISH-3: Delta in Gym mode, the same proposal and pain stop as the workout view. */}
+                <DeltaProposal proposal={proposal && proposal.exerciseId === currentExercise.exerciseId ? proposal : null} why={proposalWhy} busy={busy} onAnswer={answerProposal} onToggleWhy={() => setProposalWhy((v) => !v)} />
+                <DeltaPain exerciseName={currentExercise.name} open={painFor === currentExercise.exerciseId} busy={busy} onOpen={() => setPainFor(currentExercise.exerciseId)} onStop={(skip) => void stopForPain(currentExercise.exerciseId, skip)} onCancel={() => setPainFor(null)} />
+              </>}
               onSaveCue={async (exerciseId, cue) => {
     const acknowledge = captureCommitFeedback();
                 await setExerciseCue(session.beyondDayId, exerciseId, cue);
@@ -1557,6 +1756,12 @@ export function TrainScreen({
                 Exercise {currentExerciseIndex + 1} of {activeExercises.length}
               </p>
               <h2 ref={exerciseHeadingRef} tabIndex={-1} className="command-title" style={{ marginBottom: 4 }}>{currentExercise.name}</h2>
+              {/* GRAYSON-TRAIN-NOTES-001: his note under the name, NOTE beside HOW TO. GRAYSON-TRAIN-HOWTO-001: how to do it,
+                  over the workout; rest keeps counting behind the sheet. */}
+              <ExerciseNoteBlock exerciseId={currentExercise.exerciseId} name={currentExercise.name}
+                beside={howToFor(currentExercise.exerciseId) && <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${currentExercise.name}`}
+                  onClick={() => setHowToOpen({ id: currentExercise.exerciseId, name: currentExercise.name })}>HOW TO</button>} />
+              {howToOpen && <ExerciseHowToSheet exerciseId={howToOpen.id} name={howToOpen.name} onClose={() => setHowToOpen(null)} />}
               {/* SUPERSET-001: a plain cue; it changes no order, rest or logging. */}
               {(() => { const prev = activeExercises[currentExerciseIndex - 1]; const next = activeExercises[currentExerciseIndex + 1];
                 return currentExercise.supersetWithNext && next ? <p className="meta train-plates">Superset: then {next.name}, back to back</p>
@@ -1592,12 +1797,18 @@ export function TrainScreen({
                   in place — the set inputs and rest timer below stay as they are.
                   Inside the per-exercise surface, so it closes when the exercise changes. */}
               <LiftHistoryControl exerciseId={currentExercise.exerciseId} exerciseName={currentExercise.name} />
+              {/* GRAYSON-TRAIN-GUIDED-001: Delta speaks once, only on clear evidence; you decide. */}
+              <DeltaProposal proposal={proposal && proposal.exerciseId === currentExercise.exerciseId ? proposal : null} why={proposalWhy} busy={busy} onAnswer={answerProposal} onToggleWhy={() => setProposalWhy((v) => !v)} />
               {/* DECLUTTER-001 (Drop 1): only the current set — the first one
                   not yet logged or skipped — gets the full input row. Finished
                   sets stay as one-line summaries; later sets are counted in a
                   single "N more sets" line instead of each showing its own
                   steppers and LOG button. */}
-              {sets.filter((s) => s.exerciseId === currentExercise.exerciseId && s.setKind === "WARMUP").sort(compareSetOrder).map((s) => <p key={s.id} className="meta">Warm-up · {s.weight} lb × {s.reps}</p>)}
+              {sets.filter((s) => s.exerciseId === currentExercise.exerciseId && s.setKind === "WARMUP").sort(compareSetOrder).map((s) => fixingSetId === s.id
+                ? <SetFixSheet key={s.id} target={{ set: s }} exerciseName={currentExercise.name}
+                    onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />
+                : <p key={s.id} className="meta train-set-fix-line">Warm-up · {s.weight} lb × {s.reps}
+                    <button type="button" className="btn-secondary train-set-fix" aria-label={`Fix warm-up ${s.weight} lb × ${s.reps}`} disabled={busy} onClick={() => setFixingSetId(s.id)}>FIX</button></p>)}
               {[...sets].sort(compareSetOrder).at(-1)?.setKind === "WARMUP" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleUndoLastSet()}>UNDO WARM-UP</button>}
               {Array.from({ length: currentExercise.sets }, (_, i) => i + 1).map((setNumber) => {
                 const ex = currentExercise;
@@ -1633,6 +1844,7 @@ export function TrainScreen({
                           {!loggedSet.skipped && <ConfirmIcon size={20} />}
                           #{setNumber} — {loggedSet.skipped ? "SKIPPED" : `${loggedSet.weight} lb x ${loggedSet.reps}`}
                           {loggedSet.repsInReserve !== undefined && <span className="meta"> · {loggedSet.repsInReserve} reps left</span>}
+                          {loggedSet.from === "LOCK_SCREEN" && <span className="meta" data-from-lock-screen> · from lock screen</span>}
                         </p>
                         {/* TRAIN-WAVE-A (Set Commit Choreography): undo is only ever
                             offered for the exact set this session just committed —
@@ -1649,7 +1861,12 @@ export function TrainScreen({
                             UNDO
                           </button>
                         )}
+                        {/* GRAYSON-TRAIN-EDIT-001: any logged set, not only the last, opens the fix sheet. */}
+                        <button type="button" className="btn-secondary train-set-fix" aria-label={`Fix set ${setNumber}`} disabled={busy}
+                          onClick={() => setFixingSetId(loggedSet.id)}>FIX</button>
                       </div>
+                      {fixingSetId === loggedSet.id && <SetFixSheet target={{ set: loggedSet }} exerciseName={ex.name}
+                        onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />}
                       {sessionRecords.has(loggedSet.id) && (
                         // PR-CARDS-001: a quiet outlined PR tag; no sound, no vibration.
                         <p className="meta-strong fade-in pr-line">
@@ -1807,6 +2024,9 @@ export function TrainScreen({
                   CONTINUE — {firstIncompleteExercise.name}
                 </button>
               )}
+              {liveFixUndo.node}
+              {/* GRAYSON-TRAIN-GUIDED-001: below the set inputs, so LOG stays where the thumb expects it. */}
+              <DeltaPain exerciseName={currentExercise.name} open={painFor === currentExercise.exerciseId} busy={busy} onOpen={() => setPainFor(currentExercise.exerciseId)} onStop={(skip) => void stopForPain(currentExercise.exerciseId, skip)} onCancel={() => setPainFor(null)} />
               <details className="train-lift-inspect">
                 <summary className="disclosure-row">Progression and substitution</summary>
                 <p className="meta">Session: {describeTemplateSummary(activeExercises).bodyAreas}.</p>
@@ -1836,9 +2056,11 @@ export function TrainScreen({
                     // merged, deduplicated suggestion row.
                     const recent = recentSubstitutions[currentExercise.exerciseId] ?? [];
                     const suggestions = [...recent, ...customExerciseNames.filter((n) => !recent.includes(n))];
-                    if (suggestions.length === 0) return null;
                     return (
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                        {/* GRAYSON-TRAIN-BODYMAP-001: another exercise for the same muscle, filled in like a quick-pick. */}
+                        <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", fontSize: 16 }}
+                          aria-expanded={findByMuscle} onClick={() => setFindByMuscle((v) => !v)}>FIND BY MUSCLE</button>
                         {suggestions.map((name) => (
                           <button
                             key={name}
@@ -1853,6 +2075,9 @@ export function TrainScreen({
                       </div>
                     );
                   })()}
+                  {findByMuscle && <BodyMap initialGroup={groupForExercise(currentExercise.exerciseId, customExercisesForMap)}
+                    onPick={(name) => { setSubs((prev) => ({ ...prev, [currentExercise.exerciseId]: name })); setFindByMuscle(false); }}
+                    onHowTo={(entry) => setHowToOpen({ id: entry.howToId ?? entry.id, name: entry.name })} />}
                 </>
               )}
 
@@ -1879,6 +2104,7 @@ export function TrainScreen({
               expand/compress the widget drives itself. */}
           {isResting && restRemainingMs !== null && (
             <div className="equipment-row" style={{ marginBottom: 16 }}>
+              <p className="visually-hidden" role="status">{restJustDone ? "Rest complete." : ""}</p>
               {restCompressed ? (
                 <button
                   type="button"
@@ -1887,7 +2113,7 @@ export function TrainScreen({
                   aria-label="Expand rest timer controls"
                   onClick={handleTouchRest}
                 >
-                  <p className="meta" style={{ margin: 0 }}>
+                  <p className={`meta${restJustDone ? " train-rest-done" : ""}`} style={{ margin: 0 }}>
                     {restComplete ? "REST COMPLETE" : `RESTING · ${formatRestRemaining(restRemainingMs)}`}
                     {currentExercise && currentSetNumber !== null
                       ? ` — Next: ${currentExercise.name} Set ${currentSetNumber}`
@@ -1896,7 +2122,7 @@ export function TrainScreen({
                 </button>
               ) : (
                 <>
-                  <p className="tool-label" style={{ marginBottom: 4 }}>{restComplete ? "REST COMPLETE" : "RESTING"}</p>
+                  <p className={`tool-label${restJustDone ? " train-rest-done" : ""}`} style={{ marginBottom: 4 }}>{restComplete ? "REST COMPLETE" : "RESTING"}</p>
                   <p className="meta-strong train-live-rest" style={{ marginBottom: 8 }}>{formatRestRemaining(restRemainingMs)}</p>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
@@ -1921,6 +2147,10 @@ export function TrainScreen({
                       SKIP REST
                     </button>
                   </div>
+                  {/* GRAYSON-TRAIN-REST-001: one tap to silence (or bring back) the buzz mid-workout. */}
+                  <button type="button" className="btn-secondary train-rest-buzz" aria-pressed={restBuzz.enabled} onClick={toggleRestBuzz}>
+                    Buzz when rest ends: {restBuzz.enabled ? "On" : "Off"}
+                  </button>
                 </>
               )}
             </div>
@@ -1992,6 +2222,8 @@ export function TrainScreen({
                 lets a button's own text wrap onto a second line instead.
                 Pre-existing gap (no browser test previously verified
                 this), not a Phase 2 regression. */}
+            {/* GRAYSON-TRAIN-LOCKSCREEN-001: the current set on the lock screen, off until he turns it on. */}
+            <LockScreenSwitch state={lockScreen} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {/* Drop 4: finishing is a big moment, so COMPLETE and PARTIAL are
                   press-and-hold (ROADMAP 1.0 design rule). Logging a set stays one tap.
@@ -2040,6 +2272,14 @@ export function TrainScreen({
       )}
       </>}
       </div>
+      {/* GRAYSON-TRAIN-RUN-001: the running card, live run and plan. While a run is live (or its finish sheet is open)
+          the lift content steps aside, so a lift can't start mid-run; the running command refuses mid-lift.
+          It sits after the lift content (one mount point, so a live run keeps its state): TRAIN-HOME keeps START
+          WORKOUT on the first screen at 360 px and TRAIN opening at the top; a live run still leads, as the lift
+          content above it is hidden then. */}
+      {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
+      {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
+      {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>
   );
 }

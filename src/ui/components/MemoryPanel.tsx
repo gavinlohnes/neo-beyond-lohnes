@@ -1,7 +1,8 @@
 import { captureCommitFeedback } from "../feel/feedback";
 import { useEffect, useId, useRef, useState } from "react";
 import { getMemoryWorkspace, recordMemory } from "../../application/memory";
-import { MEMORY_KINDS, MEMORY_LABELS, type MemoryFact, type MemoryKind, type MemoryAction } from "../../domain/memory";
+import { MEMORY_KINDS, MEMORY_LABELS, MEMORY_VIA_LABELS, type MemoryFact, type MemoryKind, type MemoryAction } from "../../domain/memory";
+import { LegacyMemoryReview } from "./LegacyMemoryReview";
 import { MEMORY_TOPICS, type MemoryTopic } from "../../domain/alfred/types";
 import { useSessionDraft } from "../sessionDrafts";
 import { useUndoWindow } from "../hooks/useUndoWindow";
@@ -17,6 +18,8 @@ const starters: Record<MemoryKind, string> = {
   DIRECTION: "I want more energy for life outside work.", CONSTRAINT: "Keep my first morning after nights quiet.",
 };
 const date = (value: string) => new Date(value).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+/** C6.7: where a memory came from, with its date; never a guessed source for facts saved before ONE-MEMORY-001. */
+const source = (f: MemoryFact) => `${f.history[0]?.via ? MEMORY_VIA_LABELS[f.history[0].via] : "Saved in BEYOND"}, ${new Date(f.origin?.savedAt ?? f.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 const includes = (scope: Scope, kind: MemoryKind) => scope === "ALL" || (scope === "RECOVERY" ? kind === "RECOVERY" : scope === "PERSONAL" ? kind === "DIRECTION" || kind === "CONSTRAINT" : kind.startsWith("PREP_"));
 
 /** Shared operator editor and contextual hints. Opening a view never records a fact. */
@@ -79,7 +82,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
     try {
       const saved = await recordMemory({ action, dayId, factId: subject.factId,
         expectedPreviousId: fact?.id ?? draft!.previous,
-        ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement, ...(draft!.kind === "PERSONAL_FACT" ? { topic: draft!.topic } : {}) }) }, receipt);
+        ...(fact ? {} : { kind: draft!.kind, statement: draft!.statement, ...(draft!.kind === "PERSONAL_FACT" ? { topic: draft!.topic } : {}), ...(draft!.previous === null ? { via: "MEMORY" as const } : {}) }) }, receipt);
       if (receipt.changed) acknowledge(action === "IRRELEVANT" ? "HEAVY" : "LIGHT");
       if (lifecycle.current !== request) return;
       if (!fact) { setDraft(null); focused.current = null; setSavedFocus({ factId: saved.factId, revision: saved.id }); }
@@ -97,6 +100,8 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
     {error && <div><p role="alert">{error} Unreadable memory is not empty memory.</p><button type="button" className="btn-secondary" disabled={busy} onClick={() => setRefresh((n) => n + 1)}>RELOAD MEMORY LIST</button></div>}
     {notice && !undo && <p role="status" className="meta confirm-banner">{notice}</p>}
     {undo && <ConfirmBanner message="Marked no longer relevant." actionLabel="RESTORE & CONFIRM" disabled={disabled} onAction={() => void write("RESTORED", undo)} />}
+    {/* C6.7: the old Delta entries to review, on the full list only. */}
+    {!contextual && scope === "ALL" && <LegacyMemoryReview active={active} />}
     {data && !loading && <>
       {!contextual && <details className="memory-management"><summary>MANAGE MEMORY</summary><div className="memory-actions" role="group" aria-label="Memory status">
         {(["ACTIVE", "IRRELEVANT"] as const).map((value) => <button type="button" className="btn-secondary" key={value} aria-pressed={status === value} onClick={() => { setStatus(value); setLimit(5); }}>{value === "ACTIVE" ? "ACTIVE" : "NO LONGER RELEVANT"}</button>)}
@@ -105,7 +110,7 @@ export function MemoryPanel({ active = true, scope = "ALL", contextual = false, 
       {!facts.length && !contextual && <p className="meta">{status === "ACTIVE" ? "No active memories yet. Add only what you want BEYOND to remember." : "No memories marked irrelevant."}</p>}
       {facts.slice(0, limit).map((fact) => <article className="memory-fact" key={fact.factId} tabIndex={-1} data-memory-id={fact.factId}>
         <p className="memory-statement">{fact.statement}</p>
-        <p className="meta">{MEMORY_LABELS[fact.kind]} · OPERATOR · confirmed {date(fact.lastConfirmedAt)}</p>
+        <p className="meta"><span className="memory-via" data-memory-via>{source(fact)}</span> · {MEMORY_LABELS[fact.kind]} · confirmed {date(fact.lastConfirmedAt)}</p>
         <details open={fact.factId === focusFactId || undefined}><summary>Inspect or fix this memory</summary>
           <p className="meta">Source: OPERATOR · created {date(fact.createdAt)} · {fact.status === "ACTIVE" ? "Active" : "No longer relevant"}</p>
           <div className="memory-actions">

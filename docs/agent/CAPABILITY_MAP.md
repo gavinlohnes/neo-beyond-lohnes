@@ -118,6 +118,58 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 
 - **Week planning (WEEK-PLANNER-002, owner selected):** `application/weekPlannerQueries.ts` composes existing Week Ahead work provenance, training-programme assignments or labelled existing workout suggestions, canonical eligible tasks and local cached calendar events. `ui/screens/more/WeekPlanner.tsx` lives inside Plan Today with a Week Ahead link. `moveWeekTask` wraps existing `modifyObligation` atomically with stale-plan and current-date guards; only planned attention moves, never deadlines/recurrence/status. No parallel plan store, auto allocation or invented free-time score. Native controls support touch/keyboard; draft intended dates survive midnight and open-sheet retry retains its choice. [Brief](WEEK-PLANNER-002.md). Reuse this rather than building a second week calendar.
 
+- **Training intelligence design (not implemented):** BEYOND already owns exercise references and
+  custom exercises/templates, A/B/C and assigned programmes, live STANDARD/REDUCED/RECOVERY set
+  recording, effort/warm-up/substitution, advisory progression/re-entry/deload, history, records and
+  metric views. [`GRAYSON_TRAIN_INTELLIGENCE.md`](../GRAYSON_TRAIN_INTELLIGENCE.md) connects these
+  into a proposed guided calibration, curated exercise understanding, four-to-six-week emphasis
+  blocks and evidence-bounded Progress/Direction surface. Preserve current Engine/programme
+  authority: the Mission A/B/C, short/minimum/home variants and programme-level adaptation are
+  designs only. Muscle coverage is a proxy, never proof of growth; estimated strength is not an
+  observed test. Prior free-exercise-db research remains a field-shape donor, not a bulk-import or
+  content license. The read-only calibration preview (#608), ephemeral A/B/C draft (#609) and atomic
+  owner-confirmed three-template save (#610) and explicit ordered sequence activation (#612) are
+  now built; linked short/home variants and programme-level adaptation remain
+  unimplemented.
+
+- **Sequence activation design (design only, 2026-11-21):**
+  [`GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md`](../GRAYSON_TRAIN_SEQUENCE_ACTIVATION.md) reconciles the
+  merged guided draft/template-save work with current custom templates, `TRAIN_PROGRAM_SET`, workout
+  outcomes, capacity/recovery and planning. Current weekday/WORK-OFF assignments and the built-in
+  Engine A/B/C selector are different systems; neither represents Gavin's approved date-independent
+  custom-template sequence. `GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001` (#612) deepens the existing
+  causal programme revision with an explicit SEQUENCE mode and derives next-member state from qualifying outcomes,
+  rather than add a mutable cursor/table or infer by names/dates. Existing capacity/recovery,
+  working-set, RED-override and progression semantics are unchanged;
+  linked short/home variants and planning connection remain separately Protected.
+
+- **Finished-workout metric candidate (PR #584):** reuses the shared metric page and existing
+  completed-or-partial “finished workout” definition to show lived-day counts, weekly totals,
+  work/day-off coverage and today's recorded session labels. This is descriptive DATA evidence only:
+  it is not sequence advancement, adherence, TRAIN Progress and Direction, a goal or advice. The
+  stricter qualifying-outcome rule remains owned by the active programme projection.
+
+- **Sequence planning connection (C4.4t candidate):** Week Planner and Week Ahead reuse the active
+  sequence projection to label their existing eligible training opportunities with the same current
+  next member and evidence. Dates remain presentation only: they never assign, advance, defer or
+  create debt. The underlying PlannerDay/work-run suggestion projection is preserved, so this is a
+  bounded overlay in the two approved planning views rather than new scheduling authority.
+
+- **Training reality-form design (C4.4v, design only):**
+  [`GRAYSON_TRAIN_REALITY_FORMS.md`](../GRAYSON_TRAIN_REALITY_FORMS.md) preserves FULL as the base
+  template, reframes existing REDUCED as MINIMUM and preserves RECOVERY, while requiring separate
+  owner-confirmed SHORT/HOME template links and form-at-start provenance. Names, shared exercises and
+  muscle similarity are never programme identity. Current re-entry/deload spans templates by exercise
+  ID, so the recommended first later slice couples linked HOME forms with bodyweight-specific IDs and
+  suppression of inapplicable loaded progression; no form link, progression change,
+  event/command/backup change or implementation is authorized by the design.
+
+- **Linked HOME forms (C4.4w candidate):** extends each existing sequence member with an optional
+  exact owner-confirmed bodyweight template rather than creating another programme. Starts and
+  outcomes retain programme revision, parent member and HOME provenance; only completed linked work
+  with a working set advances. Changed/unavailable links cannot start, FULL remains available, HOME
+  is named in active/history views and loaded progression/re-entry/deload output is suppressed.
+
 - **Task date views (SMART-LISTS-001 / A7a):** `application/planTodayQueries.ts` exposes
   `getTaskSmartLists` over canonical current-obligation eligibility; PlanTodayScreen owns Today /
   Next 7 / No date. These are calendar-date filters, preserving the existing Plan Today convention,

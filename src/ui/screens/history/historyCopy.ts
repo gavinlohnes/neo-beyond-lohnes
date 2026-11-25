@@ -1,5 +1,6 @@
 import { PREPARATION_LABELS, type PreparationValue } from "../../../domain/preparation";
-import type { DomainEvent, UrgeTrigger } from "../../../domain/common/types";
+import { formatStandardValue, isStandardTestKind, STANDARD_TEST } from "../../../domain/workout/standardTests";
+import type { CheckInCorrectedPayload, DomainEvent, StateCheckIn, UrgeTrigger } from "../../../domain/common/types";
 import { URGE_TRIGGER_LABELS } from "../body/quitCopy";
 import { formatDuration } from "../body/bodyScreenCopy";
 
@@ -23,6 +24,13 @@ export function describeHistoryDayMeta(status: string, workContext: string, even
   const work = workContext === "WORK" ? "work day" : workContext === "OFF" ? "day off" : "work not set";
   return `${state} · ${work} · ${eventCount} ${eventCount === 1 ? "event" : "events"}`;
 }
+
+/** GRAYSON-FIX-UNDO-001: the log a put-back names, by the removal it takes back. */
+const PUT_BACK_NAMES: Record<string, string> = {
+  MEAL_LOG_VOIDED: "Meal", PROTEIN_LOG_VOIDED: "Protein", WATER_LOG_VOIDED: "Water",
+  SLEEP_LOG_VOIDED: "Sleep", BODYWEIGHT_LOG_VOIDED: "Bodyweight", MEASUREMENT_LOG_VOIDED: "Measurement",
+  STANDARD_TEST_VOIDED: "Standards test",
+};
 
 /**
  * Priority 1 (HISTORY screen): one-line, human-readable summary per
@@ -76,6 +84,16 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return "Sleep log undone.";
     case "BODYWEIGHT_LOG_VOIDED":
       return "Bodyweight log undone.";
+    // GRAYSON-TRAIN-STANDARDS-001: a standards test result, and its removal (a fix is a removal plus a new result).
+    case "STANDARD_TEST_RECORDED":
+      return isStandardTestKind(p.test)
+        ? `${STANDARD_TEST[p.test].name} ${p.correctsEventId ? "fixed to" : "test:"} ${formatStandardValue(p.test, Number(p.value))}.`
+        : "Standards test recorded.";
+    case "STANDARD_TEST_VOIDED":
+      return "Standards test result removed.";
+    // GRAYSON-FIX-UNDO-001: a removal taken back; the removal stays above it.
+    case "LOG_VOID_UNDONE":
+      return `${PUT_BACK_NAMES[String(p.voidedType)] ?? "Log"} log put back.`;
     case "OUTCOME_RATED":
       return `Outcome rated: ${p.rating}.`;
     case "WORK_PERIOD_ENDED":
@@ -107,6 +125,11 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Check-in: energy ${p.energy}, stress ${p.stress}, mood ${p.mood}, soreness ${p.soreness}, urge ${p.alcoholUrge}${
         p.draft === "CONFIRMED" ? " (BEYOND's draft, as proposed)" : p.draft === "ADJUSTED" ? " (BEYOND's draft, adjusted)" : ""
       }.`;
+    // GRAYSON-CHECKIN-EDIT-001: HistoryScreen adds the before and after from the day's events (describeCheckInFix).
+    case "CHECK_IN_CORRECTED":
+      return "Check-in fixed.";
+    case "CHECK_IN_CORRECTION_UNDONE":
+      return "Check-in fix undone: the answers before it count again.";
     case "RECOMMENDATION_ISSUED":
       return `Recommendation: ${kindLabel(p.kind)}.`;
     case "RECOMMENDATION_ACCEPTED":
@@ -141,6 +164,8 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       return `Preparation · ${p.item === "FOOD" ? "Food and snacks" : "Bottle"}: ${PREPARATION_LABELS[p.value as PreparationValue] ?? "Unknown"}.`;
     case "MEMORY_RECORDED":
       return `Memory · ${String(p?.action ?? "recorded").toLowerCase()} · ${String(p?.statement ?? "Unreadable statement")} · ${String(p?.status ?? "unknown status")} · ${event.source === "USER" ? "OPERATOR" : event.source}.`;
+    case "LEARNING_RESPONDED":
+      return `Delta's learning · ${({ KEEP: "kept", NARROW: "narrowed", NOT_TRUE: "marked not true", DROP: "dropped", UNDO: "answer undone" } as Record<string, string>)[String(p?.action)] ?? "answered"} · ${String(p?.statement ?? "Unreadable statement")}.`;
     case "WEEKLY_REVIEW_SAVED":
       return `Weekly review ${p?.supersedes ? "revised" : "saved"} for ${String(p?.weekStart ?? "unknown week")}. Note: ${String(p?.note || "None")}. Focus: ${String((p?.focus as { text?: unknown } | null)?.text ?? "None chosen")}.`;
     case "CLEAN_DAY_LOGGED":
@@ -169,4 +194,22 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
     default:
       return event.type;
   }
+}
+
+const CHECK_IN_LABELS = [["energy", "energy"], ["stress", "stress"], ["mood", "mood"], ["soreness", "soreness"], ["alcoholUrge", "urge"]] as const;
+
+/**
+ * GRAYSON-CHECKIN-EDIT-001: "Check-in fixed: energy 2 → 4." The before comes from the row the fix superseded, found in
+ * the same day's events; falls back to the fixed answers alone if that row isn't there.
+ */
+export function describeCheckInFix(event: DomainEvent, dayEvents: readonly DomainEvent[]): string {
+  const { supersedesCheckInId, checkIn: after } = event.payload as CheckInCorrectedPayload;
+  let before: StateCheckIn | undefined;
+  for (const e of dayEvents) {
+    if (e.type === "STATE_CHECKED_IN" && (e.payload as StateCheckIn).id === supersedesCheckInId) before = e.payload as StateCheckIn;
+    if (e.type === "CHECK_IN_CORRECTED" && (e.payload as CheckInCorrectedPayload).checkIn.id === supersedesCheckInId) before = (e.payload as CheckInCorrectedPayload).checkIn;
+  }
+  if (!before) return `Check-in fixed: ${CHECK_IN_LABELS.map(([key, label]) => `${label} ${after[key]}`).join(", ")}.`;
+  const changed = CHECK_IN_LABELS.filter(([key]) => before[key] !== after[key]).map(([key, label]) => `${label} ${before[key]} → ${after[key]}`);
+  return changed.length ? `Check-in fixed: ${changed.join(", ")}.` : "Check-in fixed.";
 }

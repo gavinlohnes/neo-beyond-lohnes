@@ -2,6 +2,9 @@ import { getSchedulePattern } from "./queries";
 import { getUnresolvedObligations } from "./intentQueries";
 import { getKeyMomentAlerts } from "./keyMomentAlerts";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
+import { dayKindFor, getEatingWindowSettings, plannedOpening } from "./eatingWindow";
+import { deriveLifeState, lifeStateInput } from "./lifeState";
+import { getConfirmedKinds } from "./scheduleExceptions";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import type { KeyMomentAlertSettings, KeyMomentKind } from "../domain/common/types";
 
@@ -27,8 +30,10 @@ export const HORIZON_DAYS = 28;
  * Which kinds win when a lived day has more than three: highest first, then the earlier moment.
  * Before the shift is the one that must not be missed; the end of the shift opens Alfred's debrief and the days-off
  * handover; a task due is a real commitment but also sits on TODAY; the wake prompt only asks for a sleep log.
+ * GRAYSON-WINDOW-ALERT-001: the eating window opening comes last, so it never pushes out an alert he already gets;
+ * on a day with three others it waits (TODAY's Eating Window card and the logging nudge still cover it).
  */
-export const KIND_PRIORITY: readonly KeyMomentKind[] = ["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE"];
+export const KIND_PRIORITY: readonly KeyMomentKind[] = ["BEFORE_SHIFT", "SHIFT_DONE", "TASK_DUE", "WAKE", "WINDOW_OPEN"];
 
 function minutesOf(clock: string): number {
   const [h, m] = clock.split(":").map(Number) as [number, number];
@@ -112,7 +117,33 @@ async function planCandidates(now: Date, tasks: PlanTask[]) {
     const text = titles.length === 1 ? titles[0]!.slice(0, 120) : `${titles[0]!.slice(0, 100)} + ${titles.length - 1} more`;
     moments.push({ at, kind: "TASK_DUE", title: timed ? "Reminder" : "Due today", text, go: "" });
   }
+  moments.push(...await windowMoments(now, pattern));
   return { settings, shifts: [...shifts.values()], moments: moments.filter((m) => m.at > now.getTime()) };
+}
+
+const clock12 = (d: Date) => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+/**
+ * GRAYSON-WINDOW-ALERT-001 (Gavin, 2026-11-24: "I don't want it to be annoying and pester me"): with the Eating Window
+ * on, one moment per lived day in the horizon at that day kind's opening, the kind named from the saved rotation and
+ * his confirmed schedule changes the way TODAY names it (WORK_RUN → WORK, RECOVERY, FREE or FLIP → OFF). A day whose
+ * kind can't be named gets none. The tap opens Delta ready for the first meal. Planned ahead: a SKIP TODAY or an early
+ * OPENED mark reaches the phone only at the next SYNC GARMIN, when the plan is rebuilt.
+ */
+async function windowMoments(now: Date, pattern: Awaited<ReturnType<typeof getSchedulePattern>>): Promise<BridgeMoment[]> {
+  const settings = await getEatingWindowSettings().catch(() => null);
+  if (!settings?.enabled) return [];
+  const confirmed = await getConfirmedKinds().catch(() => new Map<string, "WORK" | "OFF">());
+  const out: BridgeMoment[] = [];
+  for (let d = 0; d <= HORIZON_DAYS; d++) {
+    const livedStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d - 1, 16, 30);
+    const kind = dayKindFor(deriveLifeState(lifeStateInput(livedStart, pattern, null, null, undefined, confirmed))?.state);
+    if (!kind) continue;
+    const opens = plannedOpening(livedStart, settings.opensAt[kind]);
+    const closes = new Date(opens.getTime() + settings.eatingHours * 3_600_000);
+    out.push({ at: opens.getTime(), kind: "WINDOW_OPEN", title: "Eating window open", text: `Your window is open until ${clock12(closes)}. Tap to tell Delta your first meal.`, go: "?alfred=meal" });
+  }
+  return out;
 }
 
 export async function buildBridgePlan(home: string, brief: string, now = new Date()): Promise<BridgePlan> {
@@ -184,4 +215,124 @@ export async function reminderAlertLine(input: { dueAt: string; remindAt: string
 /** The SYNC GARMIN link, carrying the plan to the Bridge. */
 export function helperSyncUrl(plan?: BridgePlan): string {
   return `intent://sync${plan ? `?plan=${encodeURIComponent(JSON.stringify(plan))}` : ""}#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;end`;
+}
+
+/**
+ * GRAYSON-PLAN-FRESH-001 (C7.2, Gavin 2026-11-24): phone alerts that stay current without a SYNC GARMIN. BEYOND
+ * remembers what it last handed the Bridge, so it can tell when the plan on the phone is behind what's saved, and hand
+ * the new one over on a tap he's already making (Chrome opens an app only from a tap).
+ */
+export const PLAN_SENT_KEY = "beyond.bridgePlan.sent.v1";
+export const PLAN_SETTINGS_KEY = "beyond.bridgePlan.settings.v1";
+/** The lived day the TODAY line was last tapped, so it shows at most once a lived day. Device state. */
+export const PLAN_LINE_DAY_KEY = "beyond.bridgePlan.lineDay.v1";
+
+/** FNV-1a, 32 bits, as hex: a fingerprint, not a secret. */
+function fnv(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+
+/** One moment's key: its time, then a fingerprint of its kind, title and text. */
+export function planMomentKey(m: Pick<BridgeMoment, "at" | "kind" | "title" | "text">): string {
+  return `${m.at}|${fnv(`${m.kind}\u0000${m.title}\u0000${m.text}`)}`;
+}
+
+/** The plan's fingerprint: its moments (time, kind, title, text) and the brief. The order of the moments doesn't count. */
+export function planFingerprint(plan: Pick<BridgePlan, "brief" | "moments">): string {
+  return fnv(`${plan.moments.map(planMomentKey).sort().join("\n")}\u0001${plan.brief}`);
+}
+
+/**
+ * What BEYOND last handed the Bridge: the fingerprint and when (`{ hash, at }`), plus each moment's key and the brief's
+ * fingerprint, so a moment that has since passed, or a new day coming into the four-week reach, isn't a change.
+ */
+export interface BridgePlanSent { hash: string; at: number; moments: string[]; brief: string }
+
+export function sentStateOf(plan: BridgePlan, at: number): BridgePlanSent {
+  return { hash: planFingerprint(plan), at, moments: plan.moments.map(planMomentKey).sort(), brief: fnv(plan.brief) };
+}
+
+export function readPlanSent(): BridgePlanSent | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(PLAN_SENT_KEY) ?? "null") as Partial<BridgePlanSent> | null;
+    if (!v || typeof v.hash !== "string" || typeof v.at !== "number" || !Number.isFinite(v.at)) return null;
+    return { hash: v.hash, at: v.at, moments: Array.isArray(v.moments) ? v.moments.filter((k): k is string => typeof k === "string") : [], brief: typeof v.brief === "string" ? v.brief : "" };
+  } catch { return null; }
+}
+
+export function writePlanSent(plan: BridgePlan, at = Date.now()): void {
+  try { localStorage.setItem(PLAN_SENT_KEY, JSON.stringify(sentStateOf(plan, at))); } catch { /* not remembered; the line may show again */ }
+}
+
+/**
+ * Whether the phone's plan is behind this one. Only what both cover counts: moments after `now` and within the four
+ * weeks the sent plan reached. With nothing sent yet the phone is behind.
+ */
+export function planBehind(plan: BridgePlan, sent: BridgePlanSent | null, now = Date.now()): boolean {
+  if (!sent) return true;
+  if (sent.hash === planFingerprint(plan)) return false;
+  if (sent.brief !== fnv(plan.brief)) return true;
+  const reach = sent.at + HORIZON_DAYS * 24 * 60 * MIN;
+  const inBoth = (at: number) => at > now && at <= reach;
+  const current = plan.moments.filter((m) => inBoth(m.at)).map(planMomentKey).sort();
+  const before = sent.moments.filter((k) => inBoth(Number(k.slice(0, k.indexOf("|"))))).sort();
+  return current.length !== before.length || current.some((k, i) => k !== before[i]);
+}
+
+/** His two switches (KEY MOMENT ALERTS). Both default on. Carried by the backup. */
+export interface BridgePlanSettings { updateOnSave: boolean; showBehind: boolean }
+export const DEFAULT_BRIDGE_PLAN_SETTINGS: BridgePlanSettings = { updateOnSave: true, showBehind: true };
+
+export function readBridgePlanSettings(): BridgePlanSettings {
+  try {
+    const v = JSON.parse(localStorage.getItem(PLAN_SETTINGS_KEY) ?? "null") as Partial<BridgePlanSettings> | null;
+    if (!v || typeof v !== "object") return { ...DEFAULT_BRIDGE_PLAN_SETTINGS };
+    return { updateOnSave: v.updateOnSave !== false, showBehind: v.showBehind !== false };
+  } catch { return { ...DEFAULT_BRIDGE_PLAN_SETTINGS }; }
+}
+
+export function writeBridgePlanSettings(next: BridgePlanSettings): void {
+  try { localStorage.setItem(PLAN_SETTINGS_KEY, JSON.stringify({ updateOnSave: next.updateOnSave, showBehind: next.showBehind })); } catch { /* not remembered */ }
+}
+
+/** The lived day (16:30 to 16:30) `at` belongs to, as YYYY-MM-DD of its start: 06:10 belongs to the night before. */
+export function planLivedDay(at: Date): string {
+  const s = mostRecentBoundaryAtOrBefore(at);
+  return `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, "0")}-${String(s.getDate()).padStart(2, "0")}`;
+}
+
+export function markPlanLineTapped(now = new Date()): void {
+  try { localStorage.setItem(PLAN_LINE_DAY_KEY, planLivedDay(now)); } catch { /* not remembered */ }
+}
+export function readPlanLineDay(): string | null {
+  try { return localStorage.getItem(PLAN_LINE_DAY_KEY); } catch { return null; }
+}
+
+/**
+ * The "Phone alerts are behind your plan" line on TODAY is due: Android only, when he hasn't turned it off, the plan
+ * changed since the last hand-off, he isn't inside a shift, and he hasn't already used it this lived day. Pure.
+ */
+export function phoneAlertsBehindDue(input: {
+  android: boolean; on: boolean; behind: boolean; onShift: boolean; lineDay: string | null; now: Date;
+}): boolean {
+  return input.android && input.on && input.behind && !input.onShift && input.lineDay !== planLivedDay(input.now);
+}
+
+/** Whether `now` falls inside a shift of the saved rotation (the same "quiet on the clock" the alerts use). */
+export async function onShiftNow(now = new Date()): Promise<boolean> {
+  const pattern = await getSchedulePattern();
+  const start = mostRecentBoundaryAtOrBefore(now);
+  const prior = new Date(start.getFullYear(), start.getMonth(), start.getDate() - 1, start.getHours(), start.getMinutes());
+  return [start, prior].some((d) => { const s = livedDayShiftWindow(d, pattern); return !!s && now.getTime() > s.start.getTime() && now.getTime() < s.end.getTime(); });
+}
+
+/**
+ * The update link: the plan host on the Bridge's scheme. A Bridge too old to have the plan screen won't resolve it, so
+ * Chrome goes to `fallback` instead (BEYOND's KEY MOMENT ALERTS, saying to update the Bridge).
+ */
+export function helperPlanUrl(plan: BridgePlan, fallback?: string): string {
+  const back = fallback ? `S.browser_fallback_url=${encodeURIComponent(fallback)};` : "";
+  return `intent://plan?plan=${encodeURIComponent(JSON.stringify(plan))}#Intent;scheme=beyond-bridge;package=app.beyond.healthbridge;${back}end`;
 }

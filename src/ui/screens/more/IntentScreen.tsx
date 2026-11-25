@@ -25,6 +25,8 @@ import {
 } from "../../../application/intentCommands";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { ReminderAlertLine } from "../../components/ReminderAlertLine";
+import { EstimateFields } from "../../components/EstimateFields";
+import { EMPTY_ESTIMATE, estimateFormFor, formatEstimate, readEstimateForm, type EstimateForm } from "../../../domain/intent/estimate";
 import { ProjectsSection } from "./ProjectsSection";
 import { saveObligationEdits } from "../../../application/projectCommands";
 import { getProjects } from "../../../application/projectQueries";
@@ -275,9 +277,10 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
   const [newObligationPlannedAt, setNewObligationPlannedAt] = useState("");
   const [newObligationRemindAt, setNewObligationRemindAt] = useState("");
   const [newObligationRecurrence, setNewObligationRecurrence] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
+  const [newObligationEstimate, setNewObligationEstimate] = useState<EstimateForm>(EMPTY_ESTIMATE);
 
   const missionCreateDirty = newMissionTitle.length > 0;
-  const obligationCreateDirty = [newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRemindAt].some((value) => value.length > 0)
+  const obligationCreateDirty = [newObligationTitle, newObligationMissionId, newObligationDueAt, newObligationPlannedAt, newObligationRemindAt, newObligationEstimate.hours, newObligationEstimate.minutes].some((value) => value.length > 0)
     || !sameRecurrence(newObligationRecurrence, EMPTY_RECURRENCE);
   // DAILY-EXPERIENCE-001 review blocker 2: reload/update warnings cover these drafts too.
   useSessionDraft("intent-create-mission", missionCreateDirty);
@@ -369,6 +372,8 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
 
   async function handleCreateObligation() {
     if (!newObligationTitle.trim()) return;
+    const estimate = readEstimateForm(newObligationEstimate);
+    if (!estimate.ok) return;
     await withBusy(async () => {
     const acknowledge = captureCommitFeedback();
       const anchor = newObligationDueAt || formatLocalDate(new Date());
@@ -379,6 +384,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         ...(newObligationDueAt ? { dueAt: newObligationDueAt } : {}),
         ...(newObligationPlannedAt ? { plannedAt: newObligationPlannedAt } : {}),
         ...(newObligationDueAt && newObligationRemindAt ? { remindAt: newObligationRemindAt } : {}),
+        ...(estimate.minutes !== null ? { estimateMinutes: estimate.minutes } : {}),
         ...(recurrence ? { recurrence } : {}),
       });
       acknowledge("LIGHT");
@@ -388,6 +394,7 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
       setNewObligationPlannedAt("");
       setNewObligationRemindAt("");
       setNewObligationRecurrence(EMPTY_RECURRENCE);
+      setNewObligationEstimate(EMPTY_ESTIMATE);
       setObligationCreateOpen(false);
       await refreshList();
     });
@@ -546,8 +553,9 @@ export function IntentScreen({ initialFocus, navigationFocus, active = true, onD
         </div>
         {!newObligationDueAt && newObligationRemindAt && <p className="meta">A reminder time needs a due date.</p>}
         <ReminderAlertLine dueAt={newObligationDueAt} remindAt={newObligationRemindAt} title={newObligationTitle.trim()} />
+        <EstimateFields idPrefix={`${uid}-new`} form={newObligationEstimate} onChange={setNewObligationEstimate} disabled={busy} />
         <RecurrencePicker form={newObligationRecurrence} onChange={setNewObligationRecurrence} idPrefix={`${uid}-recurrence`} disabled={busy} />
-        <button className="btn-primary" disabled={busy || !newObligationTitle.trim()} onClick={() => void handleCreateObligation()}>
+        <button className="btn-primary" disabled={busy || !newObligationTitle.trim() || !readEstimateForm(newObligationEstimate).ok} onClick={() => void handleCreateObligation()}>
           CREATE OBLIGATION
         </button>
       </FieldDisclosure>
@@ -571,6 +579,7 @@ function describeObligationSummary(o: Obligation, missions: Mission[], projects:
   }
   if (o.dueAt) parts.push(`due ${o.dueAt}`);
   if (o.plannedAt) parts.push(`planned ${o.plannedAt}`);
+  if (o.estimateMinutes !== undefined) parts.push(`est. ${formatEstimate(o.estimateMinutes)}`);
   return parts.join(" · ");
 }
 
@@ -735,6 +744,7 @@ function ObligationDetail({
   const [dueAt, setDueAt] = useState("");
   const [plannedAt, setPlannedAt] = useState("");
   const [remindAt, setRemindAt] = useState("");
+  const [estimateForm, setEstimateForm] = useState<EstimateForm>(EMPTY_ESTIMATE);
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceFormState>(EMPTY_RECURRENCE);
   const [projectId, setProjectId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -743,7 +753,8 @@ function ObligationDetail({
   const [historyOpen, setHistoryOpen] = useState(false);
   useSessionDraft(`intent-obligation-edit-${obligationId}`, editing && obligation !== null
     && (title !== obligation.title || description !== (obligation.description ?? "") || dueAt !== (obligation.dueAt ?? "")
-      || plannedAt !== (obligation.plannedAt ?? "") || remindAt !== (obligation.remindAt ?? "") || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))
+      || plannedAt !== (obligation.plannedAt ?? "") || remindAt !== (obligation.remindAt ?? "")
+      || JSON.stringify(estimateForm) !== JSON.stringify(estimateFormFor(obligation.estimateMinutes)) || !sameRecurrence(recurrenceForm, recurrenceFormFor(obligation.recurrence))
       || projectId !== (obligation.projectId ?? "")));
 
   const loadSequence = useRef(0);
@@ -760,7 +771,7 @@ function ObligationDetail({
     setObligation(found);
     if (found && !keepInput) {
       setTitle(found.title); setDescription(found.description ?? ""); setDueAt(found.dueAt ?? "");
-      setPlannedAt(found.plannedAt ?? ""); setRemindAt(found.remindAt ?? ""); setRecurrenceForm(recurrenceFormFor(found.recurrence)); setProjectId(found.projectId ?? "");
+      setPlannedAt(found.plannedAt ?? ""); setRemindAt(found.remindAt ?? ""); setEstimateForm(estimateFormFor(found.estimateMinutes)); setRecurrenceForm(recurrenceFormFor(found.recurrence)); setProjectId(found.projectId ?? "");
     }
     setHistory(trail);
   }
@@ -768,6 +779,8 @@ function ObligationDetail({
   async function handleSave() {
     const acknowledge = captureCommitFeedback();
     if (busy) return;
+    const estimate = readEstimateForm(estimateForm);
+    if (!estimate.ok) { setError(estimate.message); return; }
     setBusy(true);
     setError(null);
     try {
@@ -789,6 +802,8 @@ function ObligationDetail({
         plannedAt: plannedAt || undefined,
         // REMIND-AT-001: clearing the time removes it; a time without a due date is refused by the command.
         ...(remindAt ? (remindAt !== obligation?.remindAt ? { remindAt } : {}) : obligation?.remindAt ? { remindAt: null } : {}),
+        // TIMEBOX-001: clearing both boxes removes the estimate; an unchanged one is not rewritten.
+        ...(estimate.minutes !== (obligation?.estimateMinutes ?? null) ? { estimateMinutes: estimate.minutes } : {}),
         ...(recurrence ? { recurrence } : {}),
       }, projectId || null);
       acknowledge("LIGHT");
@@ -842,6 +857,7 @@ function ObligationDetail({
                 {obligation.dueAt && obligation.remindAt && obligation.status !== "SATISFIED" && obligation.status !== "RELEASED"
                   && <ReminderAlertLine dueAt={obligation.dueAt} remindAt={obligation.remindAt} title={obligation.title} obligationId={obligation.id} />}
                 {obligation.plannedAt && <p className="meta">Planned: {obligation.plannedAt}</p>}
+                {obligation.estimateMinutes !== undefined && <p className="meta">Your estimate: {formatEstimate(obligation.estimateMinutes)}</p>}
                 {obligation.recurrence && <p className="meta">Repeats: {describeRecurrence(obligation.recurrence.rrule)}</p>}
                 {obligation.resolvedAt && (
                   <p className="meta">
@@ -908,6 +924,7 @@ function ObligationDetail({
                 </div>
                 {!dueAt && remindAt && <p className="meta">A reminder time needs a due date.</p>}
                 <ReminderAlertLine dueAt={dueAt} remindAt={remindAt} title={title.trim()} obligationId={obligationId} />
+                <EstimateFields idPrefix={`obligation-${obligationId}`} form={estimateForm} onChange={setEstimateForm} disabled={busy} />
                 <RecurrencePicker form={recurrenceForm} onChange={setRecurrenceForm} idPrefix={`obligation-recurrence-${obligationId}`} disabled={busy} />
                 {obligation.recurrence && !recurrenceForm.freq && (
                   <p className="meta">Keeps its repeat: {describeRecurrence(obligation.recurrence.rrule)}. Pick a new repeat to replace it.</p>

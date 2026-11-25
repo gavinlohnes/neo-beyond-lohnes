@@ -11,6 +11,7 @@ import { logSleep, startDay } from "../../src/application/commands";
 import { db } from "../../src/persistence/db";
 import { syntheticGarminMonth } from "../helpers/syntheticGarminMonth";
 import { openReadings } from "./helpers/dataReadings";
+import { todaySettled } from "./helpers/todaySettled";
 
 const now = new Date(2026, 9, 21, 22, 10).getTime();
 async function seed() {
@@ -24,6 +25,8 @@ const sheetOf = (screen: Awaited<ReturnType<typeof render>>) => screen.getByRole
 describe("NAV-001 sleep metric", () => {
   it("uses the same week-first sheet from TODAY and DATA, restores focus, and never writes", async () => {
     await seed(); const screen = await render(<App />); const before = await db.events.toArray();
+    // #635 CI flake: tapping before TODAY settled could leave focus elsewhere when the sheet closed (#624 rule).
+    await todaySettled();
     const tile = screen.getByRole("button", { name: /open sleep$/ }); await tile.click();
     let sheet = sheetOf(screen);
     await expect.element(sheet.getByRole("button", { name: "Week", exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -86,6 +89,7 @@ describe("NAV-001 sleep metric", () => {
   it("does not turn logged main sleep into Garmin evidence and keeps the records route", async () => {
     const day = await startDay(); await logSleep(day.id, 420, "PRIMARY");
     const screen = await render(<App />); const before = await db.events.toArray();
+    await todaySettled();
     await screen.getByRole("button", { name: "Main sleep 7:00, explore records", exact: true }).click();
     const sheet = sheetOf(screen);
     // AUDIT: a night Garmin missed shows the logged main sleep, named as logged, never as measured.

@@ -5,6 +5,12 @@ Status: **OWNER-AUTHORIZED DESIGN CANDIDATE, NOT IMPLEMENTATION** - objective
 mission from current BEYOND truth. It authorizes no product code, navigation, Engine, command/event,
 schema, provider, dependency, medical treatment, Google Drive change or implementation.
 
+**Canonical refinement:** the later owner-authorized
+[Training Intelligence design](GRAYSON_TRAIN_INTELLIGENCE.md) preserves this Mission and settles the
+exercise-card, calibration, intervention, adaptation, emphasis-block and TRAIN Progress experience.
+Where its more specific training design differs, it governs future training proposals; neither
+document authorizes implementation.
+
 ## 1. Product judgment
 
 Gavin does not need another fitness dashboard or a catalogue of exercises. He needs an informed plan
@@ -595,7 +601,7 @@ Every implementation requires separate approval.
 8. **Personal learning - Protected, L.** Only after real use generates corrections and outcomes;
    inspectable, provenance-retaining and never a hidden recommendation model.
 
-### Recommended first implementation objective
+### Original recommended first implementation objective
 
 `GRAYSON-TRAIN-PLAN-DRAFT-001`: one phone-first, read-mostly guided plan builder inside TRAIN. It
 produces a three-session Planet Fitness draft plus home/minimum previews using existing exercises,
@@ -605,8 +611,11 @@ changes no programme, alters no Engine rule and adds no schema/provider/dependen
 hardest product question - whether the generated plan is understandable, balanced and useful - before
 authorizing writes or Mission semantics.
 
-This is the health Mission’s recommended first slice. It does not silently displace the merged Guided
-Operating Loop’s broader Guided Start priority; Gavin decides their order.
+This was the health Mission's original recommended first slice. The later
+[Training Intelligence design](GRAYSON_TRAIN_INTELLIGENCE.md) preserves it as ranked step 2 and
+recommends the narrower read-only `GRAYSON-TRAIN-CALIBRATION-PREVIEW-001` first, so teaching and
+evidence language can be field-tested before a whole-plan preview. Neither slice is authorized by
+either design document.
 
 ## 14. Acceptance scenarios for later implementation
 

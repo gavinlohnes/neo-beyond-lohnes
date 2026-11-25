@@ -24,6 +24,8 @@ export interface GymModeProps {
   /** The session's exercise ids in order (the warm-up ramp goes on the first barbell one). */
   sessionExerciseIds: readonly string[];
   restLabel: string | null;
+  /** GRAYSON-TRAIN-REST-001: the rest he just finished, for the one-time REST COMPLETE highlight (TRAIN detects it). */
+  restDone?: boolean;
   notice: string | null;
   busy: boolean;
   onAdjustWeight: (deltaLbs: number) => void;
@@ -41,6 +43,8 @@ export interface GymModeProps {
   lastSet: { label: string; record?: string } | undefined;
   /** CLEANUP-002: undoes that set (TRAIN's own handleUndoLastSet). */
   onUndoLastSet: () => void;
+  /** GRAYSON-TRAIN-FINISH-3: Delta's proposal and pain stop, rendered by TRAIN (same panels as the workout view). */
+  delta?: React.ReactNode;
 }
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
@@ -156,9 +160,13 @@ export function GymMode(props: GymModeProps) {
           <button type="button" className="btn-secondary gym-mode__skip" hidden={props.setDetails?.setKind === "WARMUP"} disabled={props.busy} onClick={props.onSkip}>
             SKIP
           </button>
+          {/* GRAYSON C4.6 batch (#628 review note): Delta right after LOG / SKIP, visible at 320 px without scrolling. */}
+          {props.delta && <div className="gym-mode__delta">{props.delta}</div>}
           {props.onSetDetails && <SetDetails value={props.setDetails ?? {}} disabled={props.busy} onChange={props.onSetDetails} />}
         </>
       )}
+      {/* #630 review: once the exercise or the workout is logged, Delta (the pain stop included) still shows here. */}
+      {props.delta && (props.allComplete || setNumber === null) && <div className="gym-mode__delta">{props.delta}</div>}
 
       {props.lastSet && (
         <div className="gym-mode__last">
@@ -180,7 +188,7 @@ export function GymMode(props: GymModeProps) {
       )}
 
       {props.restLabel && (
-        <p className="gym-mode__rest" role="status">
+        <p className={`gym-mode__rest${props.restDone ? " train-rest-done" : ""}`} role="status">
           {props.restLabel}
         </p>
       )}

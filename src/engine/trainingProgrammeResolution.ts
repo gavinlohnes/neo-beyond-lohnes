@@ -3,6 +3,7 @@ import type { TrainingProgramme } from "../domain/workout/trainingProgramme";
 /** Pure selection of an operator assignment, not a recommendation or progression rule. */
 export function resolveProgrammeSlot(programme: TrainingProgramme | null, date: Date, contextForDate: (date: Date) => "WORK" | "OFF") {
   if (!programme) return { key: null, templateId: null };
+  if (programme.mode === "SEQUENCE") return { key: null, templateId: null };
   let key: string;
   if (programme.mode === "WEEKDAYS") key = String(date.getDay());
   else {

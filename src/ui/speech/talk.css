@@ -1,0 +1,14 @@
+/* GRAYSON-DICTATE-001: TALK and the "I heard" preview; tokens only. */
+.talk { display: grid; gap: 4px; min-width: 0; }
+.talk__button { min-height: 44px; min-width: 44px; font-size: 16px; letter-spacing: .08em; }
+.talk__line { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+.heard { display: grid; gap: 8px; min-width: 0; border-top: 1px solid var(--border-subtle); padding-top: 12px; }
+.heard__title { margin: 0; }
+.heard__rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.heard__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 16px; min-width: 0; }
+.heard__row > span { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.heard__row button, .heard__buttons button { min-height: 44px; min-width: 44px; font-size: 16px; width: auto; }
+.heard__buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.heard__line { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+.check-in-talk { display: grid; gap: 4px; margin-bottom: 12px; }
+.check-in-talk .talk { justify-self: start; }

@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds } from "../domain/logVoids";
 import { effectiveLogTimes } from "./logTimes";
 import { parseSavedMeal } from "../persistence/nutritionValidation";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
@@ -52,11 +53,9 @@ export async function getRecentSavedMeals(limit = Number.POSITIVE_INFINITY, now?
   const [meals, logged, voids] = await Promise.all([
     getSavedMeals(),
     db.events.where("type").equals("MEAL_LOGGED").toArray(),
-    db.events.where("type").equals("MEAL_LOG_VOIDED").toArray(),
+    db.events.where("type").anyOf(["MEAL_LOG_VOIDED", "LOG_VOID_UNDONE"]).toArray(),
   ]);
-  const voidedIds = new Set(
-    voids.map((event) => (event.payload as MealLogVoidedPayload).mealEventId),
-  );
+  const voidedIds = activeVoidedIds(voids, "MEAL_LOG_VOIDED");
   const latestUseByMealId = new Map<string, DomainEvent<MealLoggedPayload>>();
 
   const survivingLogs = logged
@@ -140,9 +139,7 @@ export interface NutritionEntry {
 
 export async function getMealEntries(beyondDayId: string): Promise<NutritionEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const voided = new Set(
-    events.filter((e) => e.type === "MEAL_LOG_VOIDED").map((e) => (e.payload as MealLogVoidedPayload).mealEventId),
-  );
+  const voided = activeVoidedIds(events, "MEAL_LOG_VOIDED");
   const logged = events.filter(
     (e): e is DomainEvent<MealLoggedPayload> => e.type === "MEAL_LOGGED" && !voided.has(e.id),
   );

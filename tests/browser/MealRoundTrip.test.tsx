@@ -236,6 +236,25 @@ describe("TODAY meal round trip", () => {
     expect((await getHistoryDays()).flatMap((day) => day.events).filter((event) => event.type === "MEAL_LOGGED")).toHaveLength(1);
   });
 
+  // Flake root cause (MealRoundTrip, ~2 in 5 CI runs): opening LOG after a failed meal read must not wake the hidden
+  // meal tools. One stale render counted them visible, their recovery read set "meal in flight", and App then
+  // ignored the MEAL tap until it finished. Held deterministically here: the recovery read never settles.
+  it("after a failed meal read, LOG's MEAL opens even while a slow read is still pending", async () => {
+    await seedMeal();
+    const screen = await render(<App />);
+    await openMeal(screen);
+    await fillMeal(screen, "Unfinished dinner");
+    const read = vi.spyOn(db.savedMeals, "toArray").mockRejectedValue(new Error("Read failed"));
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.element(screen.getByRole("alert")).toHaveTextContent("Meal logged.");
+    await screen.getByRole("button", { name: "CLOSE" }).click();
+    await expect.poll(() => document.querySelector("dialog[open]")).toBeNull();
+    read.mockImplementation(() => Dexie.Promise.resolve(new Promise<never>(() => {})));
+    await screen.getByRole("navigation", { name: "Primary", exact: true }).getByRole("button", { name: "Open LOG", exact: true }).click();
+    await screen.getByRole("dialog", { name: "LOG", exact: true }).getByRole("button", { name: "MEAL", exact: true }).click();
+    await expect.element(screen.getByRole("dialog", { name: "MEAL", exact: true })).toBeInTheDocument();
+  });
+
   it("recovers a committed preset on reopen without creating or logging it again", async () => {
     const screen = await render(<App />);
     await openMeal(screen);

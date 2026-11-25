@@ -1,6 +1,12 @@
 import { db } from "./db";
 // Side-effect import: extends Dexie/Dexie.prototype with export()/import().
 import { importInto } from "dexie-export-import";
+import { applySettingsBlock, parseSettingsBlock, withSettingsBlock } from "./settingsTransfer";
+
+/** GRAYSON C8.1: every native backup = the unchanged dexie export plus this phone's travelling preferences. */
+export async function exportNativeBackup(prettyJson: boolean): Promise<Blob> {
+  return withSettingsBlock(await db.export({ prettyJson }));
+}
 
 /**
  * Backup reminder (BODY & Backup Decisions, 2026-08-19, locked): a weekly
@@ -51,7 +57,7 @@ function backupFilename(): string {
  * hardening, which is a separate, complementary fix).
  */
 export async function exportBackup(): Promise<void> {
-  const blob = await db.export({ prettyJson: true });
+  const blob = await exportNativeBackup(true);
   const file = new File([blob], backupFilename(), { type: "application/json" });
   const url = URL.createObjectURL(file);
   const a = document.createElement("a");
@@ -75,7 +81,7 @@ export async function exportBackup(): Promise<void> {
  * isn't available — most desktop browsers.
  */
 export async function shareBackup(): Promise<{ shared: boolean }> {
-  const blob = await db.export({ prettyJson: true });
+  const blob = await exportNativeBackup(true);
   const file = new File([blob], backupFilename(), { type: "application/json" });
 
   const nav = navigator as Navigator & {
@@ -97,6 +103,8 @@ export interface RestorePreview {
   databaseName: string;
   databaseVersion: number;
   tables: { name: string; rowCount: number }[];
+  /** GRAYSON C8.1: how many preferences the backup carries; null for a backup made before C8.1 (none). */
+  settingsCount: number | null;
 }
 
 /**
@@ -113,6 +121,7 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
     throw new Error("INVALID_BACKUP_FILE: not valid JSON.");
   }
   const data = parsed as {
+    beyondSettings?: unknown;
     formatName?: string;
     data?: { databaseName: string; databaseVersion: number; tables: { name: string; rowCount: number }[] };
   };
@@ -131,6 +140,7 @@ export async function previewRestore(file: File): Promise<RestorePreview> {
     databaseName: data.data.databaseName,
     databaseVersion: data.data.databaseVersion,
     tables: data.data.tables.map((t) => ({ name: t.name, rowCount: t.rowCount })),
+    settingsCount: (() => { const block = parseSettingsBlock(data.beyondSettings); return block ? Object.keys(block.values).length : null; })(),
   };
 }
 
@@ -162,5 +172,7 @@ export async function applyRestore(file: File): Promise<void> {
   await db.transaction("rw", db.tables, () => importInto(db, stream, {
     clearTablesBeforeImport: true, acceptVersionDiff: databaseVersion < db.verno, noTransaction: true,
   }));
+  // GRAYSON C8.1: preferences only after the data is safely in; a backup from before C8.1 leaves them as they are.
+  applySettingsBlock(parseSettingsBlock((result as { beyondSettings?: unknown }).beyondSettings));
 }
 

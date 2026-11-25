@@ -59,8 +59,7 @@ describe("TIMELINE-EDIT-001", () => {
     for (const el of box.querySelectorAll<HTMLElement>("p, button, label")) expect(parseFloat(getComputedStyle(el).fontSize), el.textContent!).toBeGreaterThanOrEqual(16);
     expect((await axe.run(sheet().element(), { runOnly: ["wcag2a", "wcag2aa"] })).violations.map((v) => v.id)).toEqual([]);
 
-    await sheet().getByRole("button", { name: "REMOVE", exact: true }).click();
-    await expect.element(sheet().getByText(/^Remove Butter Chicken and Rice \(600 kcal/)).toBeVisible();
+    // GRAYSON-FIX-UNDO-001 (Gavin, 2026-11-24 02:02 CT): REMOVE acts on one tap; there is no "Remove …?" step.
     await sheet().getByRole("button", { name: "REMOVE", exact: true }).click();
     await expect.element(page.getByText("Removed. It stays in HISTORY as removed.", { exact: true })).toBeVisible();
     expect((await getDayLogEntries(day.id)).map((e) => e.kind)).toEqual(["WATER"]);
@@ -71,7 +70,8 @@ describe("TIMELINE-EDIT-001", () => {
     await expect.poll(() => document.querySelector("[data-day-map-summary]")?.textContent ?? "").not.toContain("Butter Chicken");
   });
 
-  it("from the food diary: a row opens the same fixes; KEEP IT removes nothing", async () => {
+  // GRAYSON-FIX-UNDO-001: KEEP IT is gone with the confirm step; UNDO takes a removal back instead.
+  it("from the food diary: a row opens the same fixes; UNDO puts a removal back", async () => {
     const day = await seed();
     await page.viewport(412, 900);
     const screen = await render(<App />);
@@ -80,7 +80,8 @@ describe("TIMELINE-EDIT-001", () => {
     await screen.getByRole("button", { name: "Edit Butter Chicken and Rice at 19:15", exact: true }).click();
     await expect.element(sheet()).toBeVisible();
     await sheet().getByRole("button", { name: "REMOVE", exact: true }).click();
-    await sheet().getByRole("button", { name: "KEEP IT", exact: true }).click();
+    await sheet().getByRole("button", { name: "Undo the removal", exact: true }).click();
+    await expect.element(sheet().getByText("Put back. HISTORY shows the removal and the put-back.", { exact: true })).toBeVisible();
     expect((await getDayLogEntries(day.id)).map((e) => e.kind)).toEqual(["MEAL", "WATER"]);
     await sheet().getByRole("button", { name: "EDIT AMOUNT", exact: true }).click();
     await sheet().getByRole("spinbutton", { name: "Protein (g)", exact: true }).fill("-3");

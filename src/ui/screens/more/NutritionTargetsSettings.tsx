@@ -38,6 +38,7 @@ function formInputs(targets: NutritionTargets | null) {
     muscleSets: targets?.muscleSetsTargetPerWeek?.toString() ?? "",
     sessions: targets?.strengthSessionsTargetPerWeek?.toString() ?? "",
     floor: targets?.calorieFloorKcal?.toString() ?? "",
+    water: targets?.waterTargetOz?.toString() ?? "",
   };
 }
 
@@ -45,8 +46,9 @@ function describeTargets(targets: NutritionTargets | null): string {
   const calorieSummary = targets?.calorieTargetKcal !== undefined ? `${targets.calorieTargetKcal} kcal` : "No calorie target";
   const proteinSummary = `${targets?.proteinMultiplierGPerLb ?? 1.0} g/lb protein`;
   const goalSummary = targets?.goalWeightLbs !== undefined ? ` · goal ${targets.goalWeightLbs} lb` : "";
+  const waterSummary = targets?.waterTargetOz !== undefined ? ` · water ${targets.waterTargetOz} oz` : "";
   const reviewCount = [targets?.weightChangeTargetPercentPerWeek, targets?.muscleSetsTargetPerWeek, targets?.strengthSessionsTargetPerWeek].filter((value) => value !== undefined).length;
-  return `${calorieSummary} · ${proteinSummary}${goalSummary}${reviewCount ? ` · ${reviewCount} review ${reviewCount === 1 ? "target" : "targets"}` : ""}`;
+  return `${calorieSummary} · ${proteinSummary}${goalSummary}${waterSummary}${reviewCount ? ` · ${reviewCount} review ${reviewCount === 1 ? "target" : "targets"}` : ""}`;
 }
 export function NutritionTargetsSettings() {
   const [targets, setTargets] = useState<NutritionTargets | null>(null);
@@ -58,6 +60,7 @@ export function NutritionTargetsSettings() {
   const [muscleSetsInput, setMuscleSetsInput] = useState("");
   const [sessionsInput, setSessionsInput] = useState("");
   const [floorInput, setFloorInput] = useState("");
+  const [waterInput, setWaterInput] = useState("");
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +93,7 @@ export function NutritionTargetsSettings() {
     setMuscleSetsInput(filled.muscleSets);
     setSessionsInput(filled.sessions);
     setFloorInput(filled.floor);
+    setWaterInput(filled.water);
     setError(null);
     setOpen(true);
   }
@@ -105,6 +109,7 @@ export function NutritionTargetsSettings() {
     const muscleSetsValue = muscleSetsInput.trim() ? Number(muscleSetsInput) : undefined;
     const sessionsValue = sessionsInput.trim() ? Number(sessionsInput) : undefined;
     const floorValue = floorInput.trim() ? Number(floorInput) : undefined;
+    const waterValue = waterInput.trim() ? Number(waterInput) : undefined;
     // Existing nutrition fields retain their historical "blank means unchanged"
     // behavior. The additive Review targets are optional, so blank clears them.
     const changes = {
@@ -118,6 +123,8 @@ export function NutritionTargetsSettings() {
       ...(sessionsValue !== targets?.strengthSessionsTargetPerWeek ? { strengthSessionsTargetPerWeek: sessionsValue ?? null } : {}),
       // TARGET-PROPOSAL-002: optional; blank goes back to the 1,500 default.
       ...(floorValue !== targets?.calorieFloorKcal ? { calorieFloorKcal: floorValue ?? null } : {}),
+      // GRAYSON C4.6: optional; blank clears it (no target, nothing shown).
+      ...(waterValue !== targets?.waterTargetOz ? { waterTargetOz: waterValue ?? null } : {}),
     };
     if (Object.keys(changes).length === 0) {
       setError(NO_CHANGES_MESSAGE);
@@ -202,6 +209,16 @@ export function NutritionTargetsSettings() {
             placeholder="1500" value={floorInput} onChange={(e) => setFloorInput(e.target.value)} className="input" />
           <p className="meta" style={{ marginTop: 4 }}>
             Weekly's calorie proposal never goes below this. Blank uses 1,500. You can still type any target yourself.
+          </p>
+        </div>
+        <div>
+          <label className="meta" htmlFor="water-target-input" style={{ display: "block", marginBottom: 4 }}>
+            Daily water target (oz)
+          </label>
+          <input id="water-target-input" type="number" min="16" max="300" step="1" aria-label="Daily water target (oz)"
+            placeholder="No target" value={waterInput} onChange={(e) => setWaterInput(e.target.value)} className="input" />
+          <p className="meta" style={{ marginTop: 4 }}>
+            Your own number. TODAY and the water sheet show it beside what you've logged. Blank means no target.
           </p>
         </div>
         <div>

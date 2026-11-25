@@ -6,6 +6,7 @@ import type {
   NutritionTargets,
   QuitHabit,
   Outcome,
+  RunningSession,
   PerformedSetRaw,
   Recommendation,
   SavedMeal,
@@ -32,6 +33,7 @@ import type { DailyNote } from "../domain/dailyNotes";
 import type { Collection, CollectionItem } from "../domain/collections";
 import type { Highlight } from "../domain/highlights";
 import type { ScheduleException } from "../domain/scheduleExceptions";
+import type { WorkRecord } from "../domain/workRecords";
 
 export class BeyondDB extends Dexie {
   externalSleepRecords!: Table<ExternalSleepRecord, string>;
@@ -70,6 +72,8 @@ export class BeyondDB extends Dexie {
   collectionItems!: Table<CollectionItem, string>;
   highlights!: Table<Highlight, string>;
   scheduleExceptions!: Table<ScheduleException, string>;
+  runningSessions!: Table<RunningSession, string>;
+  workRecords!: Table<WorkRecord, string>;
 
   constructor() {
     super("beyond");
@@ -411,6 +415,14 @@ export class BeyondDB extends Dexie {
     // standing rotation. Additive only; nothing prior to migrate. Native Dexie backups include it; older backups
     // simply restore with none.
     this.version(26).stores({ scheduleExceptions: "id, date, status, swapId, createdAt" });
+    // GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24, Protected persistence): running sessions. Additive only; nothing prior
+    // to migrate. Native Dexie backups include it; older backups simply restore with no running history.
+    this.version(27).stores({ runningSessions: "id, beyondDayId, status, startedAt" });
+    // GRAYSON-WORK-RECORD-001 (Gavin, 2026-11-24, Protected persistence): his work record (training hours,
+    // certifications, work dates, milestones). Additive only; nothing prior to migrate. Native Dexie backups include
+    // it; older backups simply restore with an empty work record. Version race with ASKS-COUNT-001 (#694): whichever
+    // merges second takes the next number.
+    this.version(28).stores({ workRecords: "id, kind, date, status, updatedAt" });
   }
 }
 

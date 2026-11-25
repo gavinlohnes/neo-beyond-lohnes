@@ -252,6 +252,17 @@ charter. Until he revokes it, the Builder of record for a PR may merge that PR w
 The merge uses `expectedHeadSha` (no force, no admin bypass), and the checkpoint records each merge. Everything else
 above still applies, and Gavin can revoke this delegation at any time by saying so.
 
+**Red master: whoever broke it fixes it (amendment, Gavin, 2026-11-24).** After #666 turned master's CI red, two
+builders opened the same fix within two minutes (#676 and #677; Gavin merged #677). Gavin: "Add the rule and fix
+whatever is best." So:
+1. When required CI goes red on master, the Builder of record of the PR whose merge first turned it red owns the fix.
+2. Every other Builder leaves it alone: no second fix PR. Before opening any fix PR, check open PRs for one that
+   already fixes master; if one exists, review it instead.
+3. If the owning Builder is offline or says it can't fix it, Gavin names who does. The research and planning lead
+   may point out the red master and who owns it, but never writes the fix.
+4. A fix that stays inside the breaking PR's approved objective is ROUTINE; it still needs green CI and merges under
+   the rules above. A fix that changes what the original PR was approved to do is not a fix: stop and ask Gavin.
+
 ## Product identity and engineering safeguards
 
 Preserve the Operator Interface Doctrine, UX Decision Register, engineering contract, path rules,
@@ -274,6 +285,25 @@ and architecture checks. In particular:
 The charter neither changes product functionality nor approves future provider/backend, schema,
 Engine, primary-navigation, or AI-autonomy work. Google Drive is a planning archive, not a
 competing implementation authority. Resolve genuine product-authority conflicts with the owner.
+
+**Batches, conflict-free records, settled tests and quieter runs (amendment, Gavin, 2026-11-23).** After a day of
+three parallel logger PRs, each with its own review, CI, fix and re-review cycle, doc conflicts and a wait on each
+merge, Gavin asked for "a better way to run this process ... while keeping usage to a minimum" and approved:
+
+1. **One PR per approved batch.** Approved items that belong together ship as one PR: one brief section per item, one
+   independent exact-head review, one CI run, one merge. Split an item out only when it is blocked or its risk would
+   hold up the rest. One batch PR is open at a time unless Gavin asks for more. Approval and merge rules are unchanged.
+2. **Conflict-free records.** The Decision Register is `docs/UX_DECISIONS.md` plus `docs/decisions/`, with equal
+   authority. Decision entries recorded after this amendment merges (#624) go one file each in
+   `docs/decisions/<ID>.md`; every earlier entry, including those dated 2026-11-23, stays in `docs/UX_DECISIONS.md`.
+   Briefs stay one file each. A PR updates its item's tracker row and the checkpoint as before, but when several PRs
+   are open at once, only one of them (the batch PR, or the oldest) edits those shared files; the others record their
+   status in their PR description, and it is carried into the files by the next PR.
+3. **Tests settle before they act.** Browser tests that tap or measure TODAY wait for its async sections with the
+   shared `tests/browser/helpers/todaySettled.ts` instead of racing them.
+4. **Quieter runs.** The Builder messages Gavin only at decision points: approval needed, ready to merge (or merged),
+   blocked, or a finding that changes scope. Progress lives in the PR and the checkpoint. The Builder does not re-run a
+   full local browser suite on a head CI is already verifying.
 
 ## Cost, continuity, and historical evidence
 

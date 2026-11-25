@@ -39,3 +39,20 @@
 .suit-data-readout strong { color: var(--text-1); font-size: 15px; font-variant-numeric: tabular-nums; }
 @media (max-width: 360px) { .suit-data-frame { padding-inline: 9px; } }
 @media (prefers-reduced-motion: reduce) { .suit-data-frame *, .suit-data-frame *::before, .suit-data-frame *::after { animation: none !important; transition: none !important; } }
+/* GRAYSON-WEIGHT-TREND-001: the smoothed trend reads apart from the scale line without colour: lighter ink, wider,
+   with a long dash unlike the goal line's short one. */
+.suit-data-line--trend { stroke: var(--text-2); stroke-width: 3; stroke-dasharray: 10 4; opacity: 0.75; }
+.weight-trend__readout { margin: 0 0 6px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.weight-trend__readout strong { color: var(--text-1); }
+.weight-trend__waiting { margin: 0 0 6px; }
+.weight-trend__legend { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; }
+.weight-trend__key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--text-1); }
+.weight-trend__key--trend { margin-left: 8px; border-top: 3px dashed var(--text-2); opacity: 0.75; }
+.weight-trend__settings { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; }
+.weight-trend__toggle { width: auto; min-height: 44px; padding: 8px 14px; }
+.weight-trend__smoothing { display: flex; align-items: center; gap: 4px 12px; margin: 0; padding: 0; border: 0; }
+.weight-trend__smoothing legend { float: left; margin-right: 8px; padding: 0; }
+.weight-trend__option { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 16px; }
+.weight-trend__option input { width: 20px; height: 20px; margin: 0; accent-color: var(--text-1); }
+.weight-trend__why { flex-basis: 100%; }
+.weight-trend__why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }

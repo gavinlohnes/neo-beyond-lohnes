@@ -18,6 +18,7 @@ import type {
   WorkoutTemplateId,
 } from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
+import { assertLinkedFormStart } from "./trainingProgramme";
 
 function newId(): string {
   return crypto.randomUUID();
@@ -78,7 +79,7 @@ export async function startWorkout(
   beyondDayId: string,
   templateId: WorkoutTemplateId | null,
   sessionType: SessionType,
-  options: { overrideConfirmed?: boolean; receipt?: WriteReceipt } = {},
+  options: { overrideConfirmed?: boolean; receipt?: WriteReceipt; programmeContext?: WorkoutSession["programmeContext"] } = {},
 ): Promise<WorkoutSession> {
   if (startWorkoutInFlight) return startWorkoutInFlight;
 
@@ -92,6 +93,10 @@ export async function startWorkout(
       const capacity = await currentCapacity(beyondDayId);
       assertRedOverrideConfirmed(capacity, options.overrideConfirmed ?? false);
     }
+    if (options.programmeContext) {
+      if (sessionType !== "STANDARD") throw new Error(`${options.programmeContext.form}_FORM_INVALID: linked ${options.programmeContext.form} workouts use STANDARD execution with ${options.programmeContext.form} provenance.`);
+      await assertLinkedFormStart(templateId ?? "", options.programmeContext);
+    }
 
     const id = newId();
     const session: WorkoutSession = {
@@ -102,6 +107,7 @@ export async function startWorkout(
       sessionType,
       status: "ACTIVE",
       startedAt: new Date().toISOString(),
+      ...(options.programmeContext ? { programmeContext: structuredClone(options.programmeContext) } : {}),
     };
     await writeWorkoutAtomically(async () => {
       await db.workoutSessions.add(session);
@@ -110,7 +116,7 @@ export async function startWorkout(
       await logEvent(
         beyondDayId,
         "WORKOUT_STARTED",
-        { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType },
+        { commandId: correlationId, sessionId: id, templateId: session.templateId, sessionType, ...(session.programmeContext ? { programmeContext: session.programmeContext } : {}) },
         "USER",
         correlationId,
       );
@@ -128,6 +134,21 @@ export async function startWorkout(
 }
 
 /**
+ * GRAYSON-TRAIN-LOCKSCREEN-001 (Gavin, 2026-11-24: "Extend options"): a set or skip from the lock-screen notification
+ * is written later, when BEYOND next runs, through these same commands. `at` is when he tapped, and `from` marks it so
+ * he can tell. Every other caller passes neither and nothing changes for them.
+ */
+export interface SetSourceOptions { at?: string; from?: "LOCK_SCREEN" }
+
+/** A tap time must be real, inside the workout (not before it started), and not in the future. */
+function checkSetTime(at: string, sessionStartedAt: string): string {
+  const t = Date.parse(at);
+  if (!Number.isFinite(t)) throw new Error("SET_TIME_INVALID: that set has no real time.");
+  if (t < Date.parse(sessionStartedAt) || t > Date.now() + 60_000) throw new Error("SET_TIME_OUTSIDE_WORKOUT: that set's time isn't inside this workout.");
+  return new Date(t).toISOString();
+}
+
+/**
  * Records a logged set as history (skipped:false). setNumber is 1-indexed
  * within the exercise. substitutedName is free-text exercise substitution
  * ("if a machine's unavailable") — exerciseId still identifies the
@@ -141,8 +162,9 @@ export async function logSet(
   weight: number,
   reps: number,
   substitutedName?: string,
-  metadata: { setKind?: "WORKING" | "WARMUP"; repsInReserve?: number } = {},
+  options: { setKind?: "WORKING" | "WARMUP"; repsInReserve?: number } & SetSourceOptions = {},
 ): Promise<void> {
+  const { at, from, ...metadata } = options;
   // Drop 1.6a (field soak): an empty LOG tap used to save "0 lb x 0". A logged set has at least one rep
   // (a set not done is SKIP); weight may be 0 for bodyweight work.
   if (!Number.isInteger(reps) || reps < 1) throw new Error("SET_REPS_REQUIRED: enter at least 1 rep, or SKIP the set.");
@@ -162,10 +184,12 @@ export async function logSet(
     recordedAt: new Date().toISOString(),
     ...(substitutedName ? { substitutedName } : {}),
     ...metadata,
+    ...(from ? { from } : {}),
   };
   await writeWorkoutAtomically(async () => {
     const session = await db.workoutSessions.get(sessionId);
     if (!session || session.status !== "ACTIVE" || session.beyondDayId !== beyondDayId) throw new Error("WORKOUT_NOT_ACTIVE");
+    if (at !== undefined) set.recordedAt = checkSetTime(at, session.startedAt);
     if (metadata.setKind !== "WARMUP") {
       const live = await getPerformedSets(sessionId);
       if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) throw new Error("SET_ALREADY_RECORDED");
@@ -173,8 +197,8 @@ export async function logSet(
     const correlationId = newId();
     const eventId = await logEvent(beyondDayId, "SET_LOGGED", {
       commandId: correlationId, performedSetId: set.id, sessionId, exerciseId, setNumber, weight, reps,
-      ...(substitutedName ? { substitutedName } : {}), ...metadata,
-    }, "USER", correlationId);
+      ...(substitutedName ? { substitutedName } : {}), ...metadata, ...(from ? { from } : {}),
+    }, "USER", correlationId, undefined, at !== undefined ? set.recordedAt : undefined);
     const event = await db.events.get(eventId);
     await db.performedSets.add({ ...set, seq: event!.seq } as unknown as PerformedSetRaw);
   });
@@ -190,7 +214,9 @@ export async function skipSet(
   sessionId: string,
   exerciseId: string,
   setNumber: number,
+  options: SetSourceOptions = {},
 ): Promise<void> {
+  const { at, from } = options;
   const set: PerformedSet = {
     id: newId(),
     beyondDayId,
@@ -201,14 +227,17 @@ export async function skipSet(
     reps: 0,
     skipped: true,
     recordedAt: new Date().toISOString(),
+    ...(from ? { from } : {}),
   };
   await writeWorkoutAtomically(async () => {
     const session = await db.workoutSessions.get(sessionId);
     if (!session || session.status !== "ACTIVE" || session.beyondDayId !== beyondDayId) throw new Error("WORKOUT_NOT_ACTIVE");
+    if (at !== undefined) set.recordedAt = checkSetTime(at, session.startedAt);
     const live = await getPerformedSets(sessionId);
     if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) throw new Error("SET_ALREADY_RECORDED");
     const correlationId = newId();
-    const eventId = await logEvent(beyondDayId, "SET_SKIPPED", { commandId: correlationId, performedSetId: set.id, sessionId, exerciseId, setNumber }, "USER", correlationId);
+    const eventId = await logEvent(beyondDayId, "SET_SKIPPED", { commandId: correlationId, performedSetId: set.id, sessionId, exerciseId, setNumber, ...(from ? { from } : {}) },
+      "USER", correlationId, undefined, at !== undefined ? set.recordedAt : undefined);
     const event = await db.events.get(eventId);
     await db.performedSets.add({ ...set, seq: event!.seq } as unknown as PerformedSetRaw);
   });
@@ -253,8 +282,9 @@ export async function undoLastSet(beyondDayId: string, sessionId: string, /** AL
  * rejects "timer clutter" as its own capability, not the underlying
  * timing itself becoming history).
  */
-export async function startRest(sessionId: string, durationSeconds: number): Promise<void> {
-  const activeRestEndsAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
+export async function startRest(sessionId: string, durationSeconds: number, /** LOCKSCREEN-001: rest from a lock-screen tap. */ from?: string): Promise<void> {
+  const start = from !== undefined && Number.isFinite(Date.parse(from)) ? Date.parse(from) : Date.now();
+  const activeRestEndsAt = new Date(start + durationSeconds * 1000).toISOString();
   await db.workoutSessions.update(sessionId, { activeRestEndsAt });
 }
 
@@ -298,6 +328,7 @@ export async function completeWorkout(
   durationMinutes?: number,
 ): Promise<void> {
   await writeWorkoutAtomically(async () => {
+    const existing = await db.workoutSessions.get(sessionId);
     await db.workoutSessions
       .where(":id")
       .equals(sessionId)
@@ -315,6 +346,7 @@ export async function completeWorkout(
         sessionId,
         status,
         sessionType,
+        ...(existing?.programmeContext ? { programmeContext: existing.programmeContext } : {}),
         ...(durationMinutes !== undefined ? { durationMinutes } : {}),
       },
       "USER",

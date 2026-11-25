@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getShiftChange, getWorkStart, type ShiftChange, type WorkStart } from "../../../application/shiftChange";
-import { markWorkStarted } from "../../../application/commands";
+import { markShiftHandoffRead, markWorkStarted } from "../../../application/commands";
+import { getArrival, type Arrival } from "../../../application/arrival";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { describeError } from "../../errorMessage";
 import { Emblem } from "../../components/Emblem";
@@ -19,11 +20,16 @@ function remember(key: string) { try { localStorage.setItem(STORE, key); } catch
 export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWork }: { refreshKey: string; now: Date; onOpen: () => void; onStarted?: () => void; onEndWork?: () => void }) {
   const [moment, setMoment] = useState<ShiftChange | null>(null);
   const [closed, setClosed] = useState<string | null>(null);
+  // GRAYSON C2.1: last shift's note and the one easy-to-forget BEFORE SHIFT step, shown in PREFLIGHT only.
+  const [arrival, setArrival] = useState<Arrival | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const sequence = useRef(0);
   useEffect(() => {
     const request = ++sequence.current;
-    getShiftChange(now).then((m) => { if (request === sequence.current) setMoment(m); }).catch(() => { if (request === sequence.current) setMoment(null); });
+    getShiftChange(now).then(async (m) => {
+      const extra = m?.phase === "PREFLIGHT" ? await getArrival(m.dayId, now).catch(() => null) : null;
+      if (request === sequence.current) { setMoment(m); setArrival(extra); }
+    }).catch(() => { if (request === sequence.current) setMoment(null); });
   }, [refreshKey]);
   const show = moment && closed !== moment.key && !seen(moment.key) ? moment : null;
   useEffect(() => { if (show) heading.current?.focus({ preventScroll: true }); }, [show?.key]);
@@ -33,7 +39,13 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWor
   const landing = show.phase === "LANDING", preflight = show.phase === "PREFLIGHT";
   const startWork = async () => {
     const acknowledge = captureCommitFeedback();
-    try { if (await markWorkStarted(show.dayId)) acknowledge("MEDIUM"); dismiss(); onStarted?.(); }
+    // GRAYSON C2.1: one tap marks work started and, since it was on screen, last shift's note read.
+    try {
+      const started = await markWorkStarted(show.dayId);
+      if (arrival?.handoff) await markShiftHandoffRead(show.dayId, arrival.handoff.eventId).catch(() => undefined);
+      if (started) acknowledge("MEDIUM");
+      dismiss(); onStarted?.();
+    }
     catch { dismiss(); }
   };
   const kicker = preflight ? `PREFLIGHT · SHIFT ${hhmm(show.end)}` : landing ? `LANDING · SHIFT ENDS ${hhmm(show.end)}` : `SHIFT SECURED · ${hhmm(show.end)}`;
@@ -61,6 +73,8 @@ export function ShiftChangeMoment({ refreshKey, now, onOpen, onStarted, onEndWor
         </ol>}
         {landing && show.rows.length === 0 && <p className="shift-change__clear">Everything's closed out. Bring it home.</p>}
         <p className="shift-change__plan"><span>{preflight ? "BEFORE YOU GO" : "LANDING PLAN"}</span>{show.plan}</p>
+        {preflight && arrival?.handoff && <p className="shift-change__plan shift-change__arrival"><span>FROM LAST SHIFT</span>{arrival.handoff.note}</p>}
+        {preflight && arrival?.forget && <p className="shift-change__plan shift-change__arrival"><span>DON'T FORGET</span>{arrival.forget.text}</p>}
         {preflight && <button type="button" className="btn-secondary shift-change__start" onClick={() => void startWork()}>STARTED WORK</button>}
         {landing && onEndWork && <button type="button" className="btn-secondary shift-change__start" onClick={() => { dismiss(); onEndWork(); }}>WORK ENDED</button>}
         <div className="shift-change__actions">

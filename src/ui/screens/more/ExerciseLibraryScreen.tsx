@@ -1,3 +1,7 @@
+import { ExerciseHowToSheet } from "../../components/ExerciseHowToSheet";
+import { ExerciseNoteButton, ExerciseNoteLine, useExerciseNote } from "../../components/ExerciseNoteLine";
+import type React from "react";
+import { BodyMap } from "../../components/BodyMap";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
@@ -25,7 +29,8 @@ import { describeError } from "../../errorMessage";
 
 const MUSCLE_GROUPS: MuscleGroup[] = ["Chest", "Back", "Shoulders", "Legs", "Glutes", "Arms", "Core", "Full Body"];
 
-function ExerciseRow({ exercise, onArchive }: { exercise: CustomExercise; onArchive: () => void }) {
+function ExerciseRow({ exercise, onArchive, customs }: { exercise: CustomExercise; onArchive: () => void; customs: readonly CustomExercise[] }) {
+  const note = useExerciseNote(exercise.id, customs);
   return (
     <div className="equipment-row" style={{ marginBottom: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
@@ -34,8 +39,11 @@ function ExerciseRow({ exercise, onArchive }: { exercise: CustomExercise; onArch
           <p className="meta" style={{ margin: 0 }}>
             {exercise.muscleGroup} · {exercise.equipment} · {exercise.repRangeLow}-{exercise.repRangeHigh} reps
           </p>
-          {exercise.notes && <p className="meta" style={{ margin: 0 }}>{exercise.notes}</p>}
+          {/* GRAYSON-TRAIN-NOTES-001: his note, shown and edited the same way as on library rows. */}
+          <ExerciseNoteLine name={exercise.name} state={note} returnFocusTo={`note-${exercise.id}`} />
         </div>
+        <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <ExerciseNoteButton id={`note-${exercise.id}`} name={exercise.name} state={note} />
         <button
           type="button"
           className="btn-secondary"
@@ -44,12 +52,37 @@ function ExerciseRow({ exercise, onArchive }: { exercise: CustomExercise; onArch
         >
           ARCHIVE
         </button>
+        </div>
       </div>
     </div>
   );
 }
 
+/** A library row: name and details, his note (GRAYSON-TRAIN-NOTES-001), and HOW TO, NOTE and ADD. */
+function LibraryRow({ lib, children }: { lib: LibraryExercise; children: React.ReactNode }) {
+  const note = useExerciseNote(lib.id);
+  return (
+    <div className="equipment-row" style={{ marginBottom: 4 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <p className="card-body" style={{ margin: 0 }}>{lib.name}</p>
+          <p className="meta" style={{ margin: 0 }}>
+            {lib.muscleGroup} · {lib.equipment} · {lib.repRangeLow}-{lib.repRangeHigh} reps
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <ExerciseNoteButton id={`note-${lib.id}`} name={lib.name} state={note} />
+          {children}
+        </div>
+      </div>
+      <ExerciseNoteLine name={lib.name} state={note} returnFocusTo={`note-${lib.id}`} />
+    </div>
+  );
+}
+
 export function ExerciseLibraryScreen() {
+  const [howTo, setHowTo] = useState<{ id: string; name: string } | null>(null);
+  const [byMuscle, setByMuscle] = useState(false);
   const [exercises, setExercises] = useState<CustomExercise[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -139,12 +172,18 @@ export function ExerciseLibraryScreen() {
 
   return (
     <div className="intent-field">
+      {howTo && <ExerciseHowToSheet exerciseId={howTo.id} name={howTo.name} onClose={() => setHowTo(null)} />}
       <header className="intent-field__intro">
         <p className="tool-label">EXERCISE LIBRARY</p>
         <p className="card-body">
           Your own exercises — pulled from a reference list or fully your own. Not yet used by TRAIN's workouts; this is where they live for now.
         </p>
       </header>
+
+      {/* GRAYSON-TRAIN-BODYMAP-001: BY MUSCLE opens the map above the list. */}
+      <button type="button" className="btn-secondary" style={{ width: "auto", minHeight: 44, fontSize: 16, marginBottom: 8 }} aria-expanded={byMuscle}
+        onClick={() => setByMuscle((v) => !v)}>BY MUSCLE</button>
+      {byMuscle && <BodyMap onHowTo={(entry) => setHowTo({ id: entry.howToId ?? entry.id, name: entry.name })} />}
 
       <section aria-labelledby="exercise-library-heading">
         <h2 id="exercise-library-heading" className="section-label">My exercises</h2>
@@ -161,7 +200,7 @@ export function ExerciseLibraryScreen() {
         <div role="group" aria-label="My exercises">
           {exercises.length === 0 && <p className="empty-state">No exercises saved yet.</p>}
           {exercises.map((ex) => (
-            <ExerciseRow key={ex.id} exercise={ex} onArchive={() => void handleArchive(ex.id)} />
+            <ExerciseRow key={ex.id} exercise={ex} customs={exercises} onArchive={() => void handleArchive(ex.id)} />
           ))}
         </div>
 
@@ -181,14 +220,9 @@ export function ExerciseLibraryScreen() {
             <div style={{ maxHeight: 220, overflowY: "auto", marginBottom: 16 }}>
               {libraryResults.length === 0 && <p className="meta">No matches.</p>}
               {libraryResults.map((lib) => (
-                <div key={lib.id} className="equipment-row" style={{ marginBottom: 4 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <div>
-                      <p className="card-body" style={{ margin: 0 }}>{lib.name}</p>
-                      <p className="meta" style={{ margin: 0 }}>
-                        {lib.muscleGroup} · {lib.equipment} · {lib.repRangeLow}-{lib.repRangeHigh} reps
-                      </p>
-                    </div>
+                <LibraryRow key={lib.id} lib={lib}>
+                    {/* GRAYSON-TRAIN-HOWTO-001: how to do it, beside ADD. */}
+                    <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${lib.name}`} onClick={() => setHowTo(lib)}>HOW TO</button>
                     <button
                       type="button"
                       className="btn-secondary"
@@ -198,8 +232,7 @@ export function ExerciseLibraryScreen() {
                     >
                       ADD
                     </button>
-                  </div>
-                </div>
+                </LibraryRow>
               ))}
             </div>
 

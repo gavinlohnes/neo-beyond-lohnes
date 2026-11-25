@@ -24,7 +24,8 @@ import type { DetailMetric } from "../../../application/metricDetail";
  * watch measurements wear Garmin blue and say how fresh they are; your own logs are white. Nothing is invented: a
  * missing reading says so, and no goal appears that you didn't set. The cave and every shortcut stay below.
  */
-export type DashMetric = "water" | "sleep" | "weight" | "nutrition";
+/** GRAYSON-Q5-PROTEIN-TAP-001: "protein" is the NUTRITION card's Protein meter, opening the protein page. */
+export type DashMetric = "water" | "sleep" | "weight" | "nutrition" | "protein";
 export type DashLog = "log" | "meal" | "weight" | "sleep" | "urge" | "water";
 
 export interface BodyDashboardProps {
@@ -180,7 +181,7 @@ export function BodyDashboard(p: BodyDashboardProps) {
           {/* Review of #512: no bare zero (DENSITY-001). Calories need a logged meal; protein needs a protein record. */}
           {p.nutrition.mealsLogged > 0 || p.nutrition.proteinG > 0 ? <>
             {p.nutrition.mealsLogged > 0 ? <Meter label="Eaten" value={p.nutrition.calories} of={p.nutrition.calorieTargetKcal} unit="kcal" /> : <p className="bf-meta">No meals logged</p>}
-            {p.nutrition.proteinG > 0 && <Meter label="Protein" value={p.nutrition.proteinG} of={p.nutrition.proteinTargetG} unit="g" />}
+            {p.nutrition.proteinG > 0 && <Meter label="Protein" value={p.nutrition.proteinG} of={p.nutrition.proteinTargetG} unit="g" onOpen={() => p.onOpen("protein")} openLabel="open protein page" />}
           </> : <p className="bf-value"><span className="bf-none">No food logged</span></p>}
           {burned !== null && <p className="bf-meta bf-meta--garmin" data-dash-burned>Burned (Garmin estimate) {fmt(burned)} kcal</p>}
         </Card>

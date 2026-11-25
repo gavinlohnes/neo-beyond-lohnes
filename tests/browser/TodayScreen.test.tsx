@@ -119,6 +119,23 @@ beforeEach(() => {
   getAdvisoryNotesMock.mockImplementation((now) => realGetAdvisoryNotes(now));
 });
 
+/**
+ * The async-ownership tests script what TodayScreen's own refresh() reads, in order. Other modules import the same
+ * mocked getActiveDay (and a previous test's leftover work can reach it), so a plain mockImplementationOnce could be
+ * taken by the wrong caller and the test would pass without exercising TodayScreen. This hands each queued read only
+ * to a call made from TodayScreen.tsx and counts those calls; every other caller gets the real read.
+ */
+function scriptTodayScreenReads() {
+  const queue: (() => Promise<BeyondDay | undefined>)[] = [];
+  const script = { count: 0, next(read: () => Promise<BeyondDay | undefined>) { queue.push(read); } };
+  getActiveDayMock.mockImplementation(() => {
+    if (!/at refresh \(.*TodayScreen\.tsx/.test(new Error().stack ?? "")) return realGetActiveDay();
+    script.count += 1;
+    return (queue.shift() ?? realGetActiveDay)();
+  });
+  return script;
+}
+
 /** A promise whose settlement a test controls, standing in for real Dexie retrieval timing. */
 function createDeferred<T>() {
   let resolve!: (value: T) => void;
@@ -702,10 +719,11 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     // Mount refresh (A) begins first — hold its getActiveDay() pending so
     // it settles LAST, after the second refresh's own getActiveDay().
     const dayADeferred = createDeferred<BeyondDay | undefined>();
-    getActiveDayMock.mockImplementationOnce(() => dayADeferred.promise);
+    const today = scriptTodayScreenReads();
+    today.next(() => dayADeferred.promise);
 
     const screen = await render(<TodayScreen />);
-    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(today.count).toBe(1));
 
     // Day transitions entirely outside the still-pending mount refresh.
     await endDay(dayA.id, "EXPLICIT_END_DAY");
@@ -718,7 +736,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
 
     // Capture refresh (B) begins second but its getActiveDay() resolves
     // FIRST — the exact out-of-order shape the root defect mishandled.
-    getActiveDayMock.mockImplementationOnce(async () => dayB);
+    today.next(async () => dayB);
     // workContext: null makes the status strip fall back to reading
     // `day.workContext` directly (see TodayScreen.tsx's status-strip
     // render), isolating the `day` state assertion below from
@@ -744,6 +762,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     // on B — A's context composition must never even have started.
     expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
     expect(currentContextMock).toHaveBeenCalledTimes(1);
+    expect(today.count).toBe(2); // the mount refresh and the capture refresh, nothing else
   });
 
   it("keeps the newer day/context installed and produces no unhandled rejection when an older, superseded refresh's getActiveDay() rejects after a newer refresh already succeeded", async () => {
@@ -751,14 +770,15 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
     const tracker = trackUnhandledRejections();
 
     const dayADeferred = createDeferred<BeyondDay | undefined>();
-    getActiveDayMock.mockImplementationOnce(() => dayADeferred.promise); // mount refresh (A) — pending
+    const today = scriptTodayScreenReads();
+    today.next(() => dayADeferred.promise); // mount refresh (A) — pending
 
     const screen = await render(<TodayScreen />);
-    await vi.waitFor(() => expect(getActiveDayMock).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(today.count).toBe(1));
 
     await endDay(dayA.id, "EXPLICIT_END_DAY");
     const dayB = await startDay();
-    getActiveDayMock.mockImplementationOnce(async () => dayB); // capture refresh (B) — succeeds first
+    today.next(async () => dayB); // capture refresh (B) — succeeds first
     currentContextMock.mockImplementationOnce(() =>
       Promise.resolve({ workContext: "OFF", hasUnresolvedPostShift: false, schedulePrediction: FIXED_PREDICTION }),
     );
@@ -775,6 +795,7 @@ describe("TodayScreen // Current Operational Context V1 — async request owners
 
     expect(tracker.reasons).toEqual([]);
     expect(document.querySelector(".status-strip")?.textContent).toContain("Off today");
+    expect(today.count).toBe(2); // the mount refresh and the capture refresh, nothing else
     tracker.stop();
   });
 

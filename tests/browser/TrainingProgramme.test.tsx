@@ -7,6 +7,8 @@ import axe from "axe-core";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { getTrainingProgramme } from "../../src/application/trainingProgramme";
 import { db } from "../../src/persistence/db";
+import { createCustomTemplateSet } from "../../src/application/customTemplateCommands";
+import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 it("sets a programme, starts its template through TRAIN, and clears it at 360px without changing the workout", async () => {
   vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 2, 17));
@@ -47,4 +49,108 @@ it("a planned STANDARD session still requires the existing RED override confirma
   await screen.getByRole("button", { name: "PROCEED ANYWAY", exact: true }).click();
   await expect.poll(() => db.workoutSessions.count()).toBe(1);
   expect((await db.workoutSessions.toArray())[0]!.templateId).toBe("A");
+});
+
+it("reviews and activates three saved workouts, shows evidence, and starts the next member at 360px", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 2, 17));
+  await page.viewport(360, 900);
+  const templates = await createCustomTemplateSet((["Grayson A", "Grayson B", "Grayson C"] as const).map((name, index) => ({
+    name,
+    exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+  const priorProgramme = { mode: "WEEKDAYS" as const, slots: { "1": "A" } };
+  await saveTrainingProgramme(priorProgramme, null);
+  const screen = await render(<TrainScreen />);
+  await screen.getByRole("button", { name: "ACTIVATE A → B → C", exact: true }).click();
+  await expect.element(screen.getByRole("group", { name: "Review A → B → C activation" })).toBeVisible();
+  await screen.getByRole("combobox", { name: "Sequence A", exact: true }).selectOptions(templates[0]!.id);
+  await screen.getByRole("combobox", { name: "Sequence B", exact: true }).selectOptions(templates[1]!.id);
+  await screen.getByRole("combobox", { name: "Sequence C", exact: true }).selectOptions(templates[2]!.id);
+  await expect.element(screen.getByText("A · Grayson A", { exact: true })).toBeVisible();
+  expect((await getTrainingProgramme()).programme).toEqual(priorProgramme);
+  await screen.getByRole("button", { name: "CONFIRM ACTIVATION", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "Next: A · Grayson A", exact: true })).toBeVisible();
+  await expect.element(screen.getByText("WHY: Sequence activated with A selected first.", { exact: true })).toBeVisible();
+  const saved = (await getTrainingProgramme()).programme;
+  expect(saved?.mode).toBe("SEQUENCE");
+  expect(saved?.mode === "SEQUENCE" ? saved.members.map((member) => member.templateId) : []).toEqual(templates.map((template) => template.id));
+  const panel = screen.getByRole("region", { name: "My programme", exact: true });
+  expect((await axe.run(panel.element())).violations).toEqual([]);
+  await screen.getByRole("button", { name: "CHANGE", exact: true }).click();
+  await screen.getByRole("button", { name: "Grayson B", exact: true }).click();
+  await screen.getByText("Why this suggestion", { exact: true }).click();
+  await expect.element(screen.getByText(/You chose sequence member B · Grayson B out of order/)).toBeVisible();
+  await screen.getByRole("button", { name: "A", exact: true }).click();
+  await expect.element(screen.getByText(/It is not a member of the active A → B → C sequence, so completing it will not advance that sequence/)).toBeVisible();
+  await screen.getByRole("button", { name: "REDUCED", exact: true }).click();
+  await expect.element(screen.getByText(/Capacity guidance:\s*STANDARD\.\s*Selected start form:\s*REDUCED/)).toBeVisible();
+  await screen.getByRole("button", { name: "Grayson A", exact: true }).click();
+  await screen.getByRole("button", { name: "STANDARD", exact: true }).click();
+  await screen.getByRole("button", { name: "START NEXT · A", exact: true }).click();
+  await expect.poll(() => db.workoutSessions.count()).toBe(1);
+  expect((await db.workoutSessions.toArray())[0]!.templateId).toBe(templates[0]!.id);
+  await screen.getByRole("button", { name: "UNDO ACTIVATION", exact: true }).click();
+  await expect.element(screen.getByRole("group", { name: "Confirm activation undo", exact: true })).toBeVisible();
+  await expect.element(screen.getByText(/Monday.*Workout A/)).toBeVisible();
+  expect((await getTrainingProgramme()).programme?.mode).toBe("SEQUENCE");
+  await screen.getByRole("button", { name: "CONFIRM RESTORE", exact: true }).click();
+  await expect.poll(async () => (await getTrainingProgramme()).programme).toEqual(priorProgramme);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+});
+
+it("creates, reviews, links and starts the next exact HOME form at 360px", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 2, 17));
+  await page.viewport(360, 900);
+  const templates = await createCustomTemplateSet((["Home Test A", "Home Test B", "Home Test C"] as const).map((name, index) => ({
+    name, exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+  const screen = await render(<TrainScreen />);
+  await screen.getByRole("button", { name: "ACTIVATE A → B → C", exact: true }).click();
+  for (const [index, key] of (["A", "B", "C"] as const).entries()) await screen.getByRole("combobox", { name: `Sequence ${key}` }).selectOptions(templates[index]!.id);
+  await screen.getByRole("button", { name: "CONFIRM ACTIVATION", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "Next: A · Home Test A", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "SET UP HOME FORMS", exact: true }).click();
+  await screen.getByRole("button", { name: "CREATE BODYWEIGHT HOME OPTIONS", exact: true }).click();
+  await expect.element(screen.getByText("A · Grayson HOME A", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("Incline Push-Up · 3 × 6–15", { exact: true })).toBeVisible();
+  expect((await axe.run(screen.getByRole("region", { name: "My programme", exact: true }).element())).violations).toEqual([]);
+  await screen.getByRole("button", { name: "CONFIRM HOME LINKS", exact: true }).click();
+  await expect.element(screen.getByRole("button", { name: "START HOME · A", exact: true })).toBeVisible();
+  await screen.getByRole("button", { name: "START HOME · A", exact: true }).click();
+  await expect.poll(() => db.workoutSessions.count()).toBe(1);
+  await expect.element(screen.getByText(/WORKOUT Grayson HOME A — in progress/)).toBeVisible();
+  const started = (await db.workoutSessions.toArray())[0]!;
+  expect(started.templateId).not.toBe(templates[0]!.id);
+  expect(started.programmeContext).toMatchObject({ memberKey: "A", parentTemplateId: templates[0]!.id, form: "HOME" });
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
+});
+
+for (const width of [320, 360, 412]) it(`GRAYSON SHORT: drafts, reviews what's left out, links and starts SHORT · A at ${width}px`, async () => {
+  vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(2026, 10, 2, 17));
+  await page.viewport(width, 900);
+  const templates = await createCustomTemplateSet((["Short Test A", "Short Test B", "Short Test C"] as const).map((name, index) => ({
+    name, exercises: WORKOUT_TEMPLATES[["A", "B", "C"][index] as "A" | "B" | "C"]!.exercises,
+  })));
+  const screen = await render(<TrainScreen />);
+  await screen.getByRole("button", { name: "ACTIVATE A → B → C", exact: true }).click();
+  for (const [index, key] of (["A", "B", "C"] as const).entries()) await screen.getByRole("combobox", { name: `Sequence ${key}` }).selectOptions(templates[index]!.id);
+  await screen.getByRole("button", { name: "CONFIRM ACTIVATION", exact: true }).click();
+  await expect.element(screen.getByRole("heading", { name: "Next: A · Short Test A", exact: true })).toBeVisible();
+  // Each member shows its five forms; SHORT and HOME aren't set yet.
+  await expect.element(screen.getByText("FULL · SHORT not set · MINIMUM · HOME not set · RECOVERY").first()).toBeVisible();
+  await screen.getByRole("button", { name: "SET UP SHORT FORMS", exact: true }).click();
+  await screen.getByRole("button", { name: "CREATE SHORT DRAFTS", exact: true }).click();
+  await expect.element(screen.getByText("A · Short Test A · SHORT", { exact: true })).toBeVisible();
+  const fullA = templates[0]!.exercises;
+  if (fullA.length > 3) await expect.element(screen.getByText(`Left out from FULL: ${fullA.slice(3).map((e) => e.name).join(", ")}.`).first()).toBeVisible();
+  expect((await axe.run(screen.getByRole("region", { name: "My programme", exact: true }).element())).violations).toEqual([]);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+  await screen.getByRole("button", { name: "CONFIRM SHORT LINKS", exact: true }).click();
+  await expect.element(screen.getByText("FULL · SHORT · MINIMUM · HOME not set · RECOVERY").first()).toBeVisible();
+  await screen.getByRole("button", { name: "START SHORT · A", exact: true }).click();
+  await expect.poll(() => db.workoutSessions.count()).toBe(1);
+  await expect.element(screen.getByText(/WORKOUT Short Test A · SHORT — in progress/)).toBeVisible();
+  const started = (await db.workoutSessions.toArray())[0]!;
+  expect(started.programmeContext).toMatchObject({ memberKey: "A", parentTemplateId: templates[0]!.id, form: "SHORT" });
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
 });

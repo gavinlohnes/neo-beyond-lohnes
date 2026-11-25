@@ -61,6 +61,22 @@ const MOMENTS = {
 } as const;
 
 const overflow = () => document.documentElement.scrollWidth > window.innerWidth;
+/**
+ * Waits for a screen to finish arriving: nothing still loading (aria-busy) and no animation running, checked again
+ * after each round, since content that finishes loading starts new fade-ins (the TRAIN contrast flake: axe ran while
+ * TRAIN's START panel was still fading in).
+ */
+let settleCalls = 0;
+async function settle() {
+  settleCalls += 1;
+  await expect.poll(() => document.querySelector('[aria-busy="true"]'), { timeout: 5000 }).toBeNull();
+  for (let round = 0; round < 20; round++) {
+    const running = document.getAnimations().filter((a) => a.playState === "running");
+    if (running.length === 0) break;
+    await Promise.all(running.map((a) => a.finished.catch(() => undefined)));
+  }
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+}
 async function axeClean() {
   const result = await axe.run(document.body, { runOnly: ["wcag2a", "wcag2aa"] });
   return result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
@@ -121,10 +137,10 @@ it.each([
   expect(shiftButton).toBe(moment === "landing" ? "WORK ENDED" : null);
   if (moment === "secured") expect([...document.querySelectorAll("button")].filter((b) => /WORK ENDED$/.test(b.textContent?.trim() ?? "") && b.getClientRects().length).length).toBeLessThanOrEqual(1);
   // OWNER-GO-001: LOG is the middle of the bottom bar on every screen; nothing floats over TODAY.
-  const settle = async () => { await new Promise((done) => setTimeout(done, 80)); await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))); };
+  const settleToday = async () => { await new Promise((done) => setTimeout(done, 80)); await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))); };
   expect(document.querySelector(".cc-fab"), "no floating LOG").toBeNull();
   expect(document.querySelector(".shell-nav")!.contains(screen.getByRole("button", { name: "Open LOG" }).element())).toBe(true);
-  window.scrollTo(0, 0); await settle();
+  window.scrollTo(0, 0); await settleToday();
   await screen.getByRole("button", { name: "DATA", exact: true }).click();
   for (const tab of ["lead", "tonight", "route", "brief", "vitals", "file", "log"]) {
     const button = document.querySelector<HTMLButtonElement>(`[data-cave-tab="${tab}"]`);
@@ -140,15 +156,17 @@ it.each([
     // A day is only ever painted off-normal against the band of its own kind.
     if (tab === "vitals") expect(document.querySelectorAll(`.cave__bar--off:not([data-kind="${moment === "dayOff" ? "OFF" : "WORK"}"])`)).toHaveLength(0);
   }
-  // TRAIN (the room that may be loudest) and MORE settle too.
+  // TRAIN (the room that may be loudest) and MORE settle too (the module-level settle(); #631 review: guarded below).
+  const settledBefore = settleCalls;
   for (const tab of ["TRAIN", "MORE"]) {
     await screen.getByRole("button", { name: tab, exact: true }).click();
     await new Promise((done) => setTimeout(done, 300));
-    await Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined)));
+    await settle();
     expect(overflow(), `${tab} overflows`).toBe(false);
     expect(await axeClean(), tab).toEqual([]);
     await shot(`${moment}-${tab.toLowerCase()}-${width}`);
   }
+  expect(settleCalls - settledBefore, "TRAIN and MORE waited on the full settle()").toBe(2);
   window.removeEventListener("error", onError);
   expect(errors).toEqual([]);
 }, 60_000);

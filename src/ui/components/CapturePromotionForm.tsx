@@ -1,5 +1,7 @@
-import type { ReactNode, Ref } from "react";
+import { useId, type ReactNode, type Ref } from "react";
 import { describeError } from "../errorMessage";
+import { EMPTY_ESTIMATE, readEstimateForm, type EstimateForm } from "../../domain/intent/estimate";
+import { EstimateFields } from "./EstimateFields";
 import "./capturePromotion.css";
 
 /**
@@ -9,11 +11,14 @@ import "./capturePromotion.css";
  * the same optional title, planned day and due date as a thought promoted
  * the moment it was saved. Only the primary button writes, through the
  * existing atomic `convertCaptureToObligation`; nothing here infers a date.
+ * TIMEBOX-001: an optional time estimate he types; nothing here guesses one.
  */
 export interface CapturePromotionDraft {
   title: string;
   plannedAt: string;
   dueAt: string;
+  /** TIMEBOX-001: hours + minutes he typed; missing or blank = no estimate. */
+  estimate?: EstimateForm;
 }
 
 export function emptyCapturePromotionDraft(title = ""): CapturePromotionDraft {
@@ -21,14 +26,18 @@ export function emptyCapturePromotionDraft(title = ""): CapturePromotionDraft {
 }
 
 /** The exact input quick capture sends: a trimmed title and only the dates the operator chose. */
-export function capturePromotionInput(draft: CapturePromotionDraft): { title: string; plannedAt?: string; dueAt?: string } {
+export function capturePromotionInput(draft: CapturePromotionDraft): { title: string; plannedAt?: string; dueAt?: string; estimateMinutes?: number } {
   const plannedAt = draft.plannedAt.trim();
   const dueAt = draft.dueAt.trim();
-  return { title: draft.title.trim(), ...(plannedAt ? { plannedAt } : {}), ...(dueAt ? { dueAt } : {}) };
+  const estimate = readEstimateForm(draft.estimate ?? EMPTY_ESTIMATE);
+  return {
+    title: draft.title.trim(), ...(plannedAt ? { plannedAt } : {}), ...(dueAt ? { dueAt } : {}),
+    ...(estimate.ok && estimate.minutes !== null ? { estimateMinutes: estimate.minutes } : {}),
+  };
 }
 
 export function canConfirmCapturePromotion(draft: CapturePromotionDraft): boolean {
-  return draft.title.trim().length > 0;
+  return draft.title.trim().length > 0 && readEstimateForm(draft.estimate ?? EMPTY_ESTIMATE).ok;
 }
 
 export function capturePromotionConfirmLabel(draft: CapturePromotionDraft): "CREATE PLAN ITEM" | "CREATE TASK" {
@@ -73,6 +82,7 @@ export function CapturePromotionForm({
   dueHint?: ReactNode;
   className?: string;
 }) {
+  const idPrefix = useId().replace(/:/g, "");
   return (
     <fieldset className={["capture-promotion", className].filter(Boolean).join(" ")} disabled={busy}>
       <legend className="tool-label">OPTIONAL · CREATE A TASK OR PLAN ITEM</legend>
@@ -90,6 +100,7 @@ export function CapturePromotionForm({
         <input className="input" type="date" aria-label="Due date (optional)" value={draft.dueAt} onChange={(e) => onChange({ ...draft, dueAt: e.target.value })} />
       </label>
       {dueHint}
+      <EstimateFields idPrefix={`capture-promotion-${idPrefix}`} form={draft.estimate ?? EMPTY_ESTIMATE} onChange={(estimate) => onChange({ ...draft, estimate })} />
       <button type="button" className="btn-primary" disabled={busy || !canConfirmCapturePromotion(draft)} onClick={onConfirm}>
         {capturePromotionConfirmLabel(draft)}
       </button>

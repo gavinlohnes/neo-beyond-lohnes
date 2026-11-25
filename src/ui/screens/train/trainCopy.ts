@@ -340,8 +340,10 @@ export function templateLabel(templateId: WorkoutTemplateId, customTemplates: re
 }
 
 /** ULTIMATE-FOUNDATION-002: "Template A · REDUCED" — the variant only when REDUCED, as RECENT words it. */
-export function describeHistoryTitle(entry: Pick<TrainingHistoryEntry, "templateId" | "sessionType">, customTemplates: readonly CustomWorkoutTemplate[]): string {
-  return `WORKOUT ${templateLabel(entry.templateId, customTemplates)}${entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
+export function describeHistoryTitle(entry: Pick<TrainingHistoryEntry, "templateId" | "sessionType" | "programmeForm">, customTemplates: readonly CustomWorkoutTemplate[]): string {
+  const label = templateLabel(entry.templateId, customTemplates);
+  // A linked form is named once: "Bench A · SHORT", never "Bench A · SHORT · SHORT".
+  return `WORKOUT ${label}${entry.programmeForm ? (label.toUpperCase().includes(entry.programmeForm) ? "" : ` · ${entry.programmeForm}`) : entry.sessionType === "REDUCED" ? " · REDUCED" : ""}`;
 }
 
 /** ULTIMATE-FOUNDATION-002: one history row's facts — real status, then only what was recorded. */
@@ -362,3 +364,70 @@ export function describeRecordedSet(set: SessionRecordSet): string {
 }
 
 export const TRAINING_HISTORY_EMPTY = "Finished and stopped strength sessions will appear here.";
+
+// GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): set fix copy.
+/** "145 lb × 12", "warm-up 95 lb × 10", "skipped", plus reps left when recorded. */
+export function describeSetValues(v: { weight: number; reps: number; skipped: boolean; setKind?: string | undefined; repsInReserve?: number | undefined }): string {
+  if (v.skipped) return "skipped";
+  const base = `${v.setKind === "WARMUP" ? "warm-up " : ""}${v.weight} lb × ${v.reps}`;
+  return v.repsInReserve !== undefined ? `${base}, ${v.repsInReserve} reps left` : base;
+}
+
+/** One line of a set's "edited" detail: what it was and what it became. */
+export function describeSetFix(f: { kind: "CORRECTED" | "REMOVED" | "ADDED"; before?: Parameters<typeof describeSetValues>[0]; after?: Parameters<typeof describeSetValues>[0] }): string {
+  if (f.kind === "ADDED") return "Added after the workout";
+  if (f.kind === "REMOVED") return "Removed";
+  return f.before && f.after ? `Was ${describeSetValues(f.before)}, now ${describeSetValues(f.after)}` : "Corrected";
+}
+// ---------------------------------------------------------------------------------------------------------------
+// GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running copy. "run" only in words he reads; identifiers say "running".
+
+/** "28 min 30 s", "25 min", "45 s". */
+export function describeRunningLength(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const min = Math.floor(s / 60);
+  const sec = s % 60;
+  if (min === 0) return `${sec} s`;
+  return sec === 0 ? `${min} min` : `${min} min ${sec} s`;
+}
+
+/** A countdown: "4:05", "0:09", "1:02:00". */
+export function formatRunningClock(totalSeconds: number): string {
+  const s = Math.max(0, Math.ceil(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+}
+
+export const describeRunningPosition = (p: { week: number; run: number }) => `Week ${p.week}, run ${p.run}`;
+
+export const RUNNING_SEGMENT_LABEL = { WARMUP: "WARM-UP WALK", RUN: "RUN", WALK: "WALK", COOLDOWN: "COOL-DOWN WALK" } as const;
+export const RUNNING_KIND_NAME = { WARMUP: "Warm-up walk", RUN: "Run", WALK: "Walk", COOLDOWN: "Cool-down walk" } as const;
+
+const ORDINAL = ["", "a first", "a second", "a third", "a fourth", "a fifth"];
+/** "2 of 2 done · a third is optional". Information only: never "missed" or behind. */
+export function describeRunningWeek(week: { done: number; expected: number; showOptional: boolean }): string {
+  const base = `${week.done} of ${week.expected} done this week`;
+  return week.showOptional ? `${base} · ${ORDINAL[week.expected + 1] ?? "one more"} is optional` : base;
+}
+
+export const RUNNING_SCREEN_ON = "Keep the screen on, or turn on VOICE CUES to hear them with the phone locked.";
+
+// GRAYSON-TRAIN-RUN-CUES-001: VOICE CUES and CUE WORDS.
+export const RUN_CUE_LOCKED = "You can lock the phone: Health Bridge speaks and buzzes the cues.";
+export const RUN_CUE_SWITCH = "Voice and buzz with the phone locked (Health Bridge)";
+export const RUN_CUE_INSTALL = "Install Health Bridge 0.12 to hear cues with the phone locked.";
+export const RUN_CUE_BRIDGE_MISSING = "Health Bridge didn't answer, so cues stay on this screen. Install Health Bridge 0.12 to hear them with the phone locked.";
+export const RUN_CUE_NOT_ANDROID = "Health Bridge runs on Android phones, so cues stay on this screen.";
+export const RUN_CUE_TOO_LARGE = "This run has too many cues to hand to Health Bridge, so cues stay on this screen.";
+export const RUN_CUE_PLACEHOLDERS = "Write each cue your way. {minutes} and {seconds} stand for its length: 1 and 30 for a 90-second walk. A blank line uses the default.";
+export const RUN_CUE_VOICE_SETTINGS = "Voice and speed follow your phone's text-to-speech settings.";
+export const RUN_CUE_NAME = { WARMUP: "Warm-up walk", RUN: "Run", WALK: "Walk", HALFWAY: "Halfway", COOLDOWN: "Cool-down walk", FINISH: "Finish" } as const;
+export const RUNNING_FIRST_TIME = "Every run starts and ends with a 5-minute walk. Repeat any run or week whenever you like, and aim for a rest day between runs.";
+export const RUNNING_FOUNDATION_DONE = "Foundation done: 30 minutes running. The 1.5-mile phase comes next.";
+export const RUNNING_PAIN_LINE = "The run is stopped. No diagnosis here: if pain is sharp, or doesn't ease with rest, get it checked before running again.";
+export const RUNNING_LIFT_ACTIVE = "Finish or stop your workout before starting a run.";
+export const RUNNING_HISTORY_EMPTY = "Runs you start will appear here.";
+
+export const RUNNING_STATUS_LABEL = { ACTIVE: "In progress", COMPLETED: "Completed", PARTIAL: "Partial", ABANDONED: "Stopped" } as const;

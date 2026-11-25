@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { WhyTraceDisclosure } from "../../components/WhyTrace";
 import { getCoachCards, readCoachSkips, skipCoachCard, type CoachCard as Card, type CoachDestination } from "../../../application/coachCards";
 
 /** One optional suggestion below Engine guidance; accepting opens the existing confirmation flow. */
@@ -21,6 +22,8 @@ export function CoachCard({ active, refreshKey, variant = "STANDARD", onOpen }: 
   if (!card) return null;
   return <section className="cc-panel" aria-label="One coach suggestion">
     <p className="tool-label">OPTIONAL COACH SUGGESTION</p><h3>{card.title}</h3><p>{card.evidence}</p>
+    {/* GRAYSON C6.4: the rule and the dated facts; REVIEW SUGGESTION below is the way to the records. */}
+    <WhyTraceDisclosure why={card.why} />
     {skipError && <p role="alert">Could not keep this skip on this phone. Try again.</p>}
     <p className="meta">Review first. Nothing is changed here.</p>
     <button type="button" className="btn-secondary" onClick={() => onOpen(card.destination)}>REVIEW SUGGESTION</button>{" "}

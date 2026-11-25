@@ -1,0 +1,27 @@
+/* GRAYSON-TRAIN-STANDARDS-001: RECORD, RECORDS and TARGET on TRAIN → PROGRESS → STANDARDS. TRAIN's look: neutral
+   ink, 1 px lines, square corners, 44 px controls, 16 px text. Nothing red, no pass or fail. */
+.standard-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.standard-acts > button { width: auto; flex: 1 1 96px; min-height: 44px; padding: 8px 12px; font-size: 16px; }
+.standard-undo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.standard-undo > button { width: auto; min-height: 44px; padding: 8px 14px; font-size: 16px; }
+.standard-sheet { margin-top: 10px; padding: 10px 0 0; border-top: 1px solid var(--bf-line, var(--p-line, #2a2a2a)); display: grid; gap: 8px; min-width: 0; }
+.standard-sheet__title { margin: 0; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.standard-sheet__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--bf-quiet, var(--p-t2, #a8a8a8)); overflow-wrap: anywhere; }
+.standard-sheet__line strong { color: var(--p-t1, #f2f2f2); font-weight: 600; }
+.standard-sheet__time { display: flex; flex-wrap: wrap; gap: 8px; }
+.standard-sheet__time > .standard-sheet__field { flex: 1 1 120px; }
+.standard-sheet__field { display: grid; gap: 4px; font-size: 16px; color: var(--bf-quiet, var(--p-t2, #a8a8a8)); min-width: 0; }
+.standard-sheet__field input {
+  min-height: 44px; font: inherit; font-size: 16px; padding: 8px 10px; min-width: 0; border: 1px solid var(--p-line-2, #3a3a3a);
+  border-radius: 0; background: var(--p-bg, #000); color: var(--p-t1, #f2f2f2); color-scheme: dark;
+}
+.standard-sheet__field input:focus-visible { outline: 2px solid var(--focus, var(--p-t1, #f2f2f2)); outline-offset: 2px; }
+.standard-sheet__timer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.standard-sheet__timer > button { width: auto; min-height: 44px; padding: 8px 14px; font-size: 16px; }
+.standard-sheet__timer > .standard-sheet__line { flex-basis: 100%; }
+.standard-sheet__clock { margin: 0; font-family: var(--font-mono, monospace); font-size: 28px; font-variant-numeric: tabular-nums; color: var(--p-t1, #f2f2f2); }
+.standard-sheet__acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.standard-sheet__acts > button { width: auto; flex: 1 1 110px; min-height: 44px; padding: 8px 12px; font-size: 16px; }
+.standard-sheet__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.standard-sheet__result { display: grid; gap: 6px; padding-top: 8px; border-top: 1px solid var(--bf-line, var(--p-line, #2a2a2a)); }
+.standard-sheet__save { border-color: var(--p-t1, #f2f2f2); color: var(--p-t1, #f2f2f2); }

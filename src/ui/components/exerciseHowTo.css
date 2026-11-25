@@ -1,0 +1,17 @@
+/* GRAYSON-TRAIN-HOWTO-001: the HOW TO sheet, full screen over the library or the live workout (the calibration
+   preview's overlay pattern). 16 px text, 44 px controls. */
+.howto-sheet { position: fixed; inset: 0; z-index: 85; overflow-y: auto; background: var(--color-bg, #050505); color: var(--color-text, #f4f4f4);
+  padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom)); }
+.howto-sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; max-width: 680px; margin: 0 auto 14px; }
+.howto-sheet__head h2 { margin: 4px 0 0; overflow-wrap: anywhere; }
+.howto-sheet__close { width: auto; min-height: 44px; padding: 8px 14px; flex: none; }
+.howto-sheet__body { max-width: 680px; margin: 0 auto; }
+.howto-sheet__body p, .howto-sheet__body li { font-size: 16px; line-height: 1.5; }
+.howto-sheet__body h3 { margin: 18px 0 6px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+.howto-sheet__list { margin: 0; padding-left: 22px; }
+.howto-sheet__acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.howto-sheet__acts > * { flex: 1 1 140px; min-height: 44px; }
+.howto-sheet__watch { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.howto-edit__field { display: grid; gap: 4px; margin-top: 10px; font-size: 16px; color: var(--text-2); }
+.howto-edit__field :is(input, textarea) { min-height: 44px; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--p-line-2, #3a3a3a); border-radius: 0; background: var(--p-bg, #000); color: var(--text-1); min-width: 0; }
+.howto-open { width: auto; min-height: 44px; padding: 4px 10px; font-size: 16px; flex-shrink: 0; }

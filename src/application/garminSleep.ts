@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoids } from "../domain/logVoids";
 import { logEvent, newId } from "./commands";
 import { assignGarminSleep, type GarminSleepSource, type ShiftWindow } from "../domain/health/sleepImport";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
@@ -58,8 +59,9 @@ export async function applyGarminSleep(): Promise<{ logged: number; corrected: n
   const assignments = assignGarminSleep(days, records, await getWorkedShiftWindows(days));
   const assignedDay = new Map(assignments.map((a) => [a.recordKey, a.dayId]));
   // Every sleep log, correction and void, across days: a Garmin sleep can move between days.
-  const events = await db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED"]).toArray();
-  const voids = events.filter((e) => e.type === "SLEEP_LOG_VOIDED");
+  const events = await db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED", "LOG_VOID_UNDONE"]).toArray();
+  // GRAYSON-FIX-UNDO-001: a removal that was put back no longer counts, so a put-back entry reads as never removed.
+  const voids = activeVoids(events).filter((e) => e.type === "SLEEP_LOG_VOIDED");
   const voided = new Set(voids.map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
   const garminLogs = events.filter((e) => e.type === "SLEEP_LOGGED" && garminSource(e));
   const keyOf = (e: DomainEvent) => garminSource(e)!.recordKey;

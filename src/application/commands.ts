@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds, isLogVoidType } from "../domain/logVoids";
 import { DAY_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { deriveShortSleepStreak } from "../engine/sleepStreak";
 import { getDaySummaries } from "./dayLedgerQueries";
@@ -459,7 +460,7 @@ export async function logSleep(
 
 export async function submitCheckIn(
   beyondDayId: string,
-  values: Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt" | "seq" | "draft">,
+  values: Omit<StateCheckIn, "id" | "beyondDayId" | "recordedAt" | "seq" | "draft" | "correctsCheckInId">,
   // Check-in draft (Drop 5): how a drafted check-in was decided, when the form opened with one.
   draft?: DraftDecision,
 ): Promise<{ checkIn: StateCheckIn; recommendation: Recommendation }> {
@@ -483,48 +484,63 @@ export async function submitCheckIn(
     await db.checkIns.add(checkIn);
     await logEvent(beyondDayId, "STATE_CHECKED_IN", checkIn, "USER", correlationId);
 
-    // Engine reassesses immediately after new evidence. Issuing a
-    // recommendation is automatic; RECORDING it (accept / no-action) is a
-    // separate, explicit user step — see recordRecommendation below.
-    // evaluate() stays pure (no I/O, no seq assignment) — seq is stamped
-    // here, at the one place its result is actually persisted.
-    // INTENT-ARBITRATION-001: same pattern as hasUnresolvedPostShift above —
-    // the application layer decides current eligibility (today's date, which
-    // obligations are unresolved) and passes the Engine only the one derived
-    // boolean it needs to arbitrate with.
-    const eligibleObligations = await getCurrentlyEligibleUnresolvedObligations();
-    const recommendation: Recommendation = {
-      ...evaluate({
-        beyondDayId,
-        checkIn,
-        // PLANNED-WORK-001: derived from an explicit PLANNED_WORK_SET
-        // declaration (setPlannedWork), never inferred from capacity,
-        // schedule, or TRAIN's rotation state — see hasActivePlannedWork's
-        // own doc comment.
-        hasPlannedWork: await hasActivePlannedWork(beyondDayId),
-        // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
-        // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
-        // Engine only ever sees what queries.ts already determined is true.
-        hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
-        hasEligibleObligationDueOrOverdue: hasObligationRequiringArbitration(
-          eligibleObligations,
-          formatLocalDate(new Date()),
-        ),
-        shortSleep: { streak: sleep.streak, evidence: sleep.nights.length ? JSON.stringify(sleep.nights) : "" },
-      }),
-      seq: await nextSeq(),
-    };
-    await db.recommendations.add(recommendation);
-    await logEvent(
-      beyondDayId,
-      "RECOMMENDATION_ISSUED",
-      { recommendationId: recommendation.id, kind: recommendation.kind },
-      "ENGINE",
-      correlationId,
-    );
-
+    const recommendation = await issueRecommendationForCheckIn(beyondDayId, checkIn, sleep, correlationId);
     return { checkIn, recommendation };
   });
+}
+
+/**
+ * GRAYSON-CHECKIN-EDIT-001: the evaluate-and-issue step submitCheckIn has always run, pulled out unchanged so a fix of
+ * today's latest check-in re-works the advice through the same code. Call inside a DAY_WRITE_TABLES transaction, with
+ * the short-sleep reading taken before it (see submitCheckIn).
+ */
+export async function issueRecommendationForCheckIn(
+  beyondDayId: string,
+  checkIn: StateCheckIn,
+  sleep: ReturnType<typeof deriveShortSleepStreak>,
+  correlationId: string,
+): Promise<Recommendation> {
+  // Engine reassesses immediately after new evidence. Issuing a
+  // recommendation is automatic; RECORDING it (accept / no-action) is a
+  // separate, explicit user step — see recordRecommendation below.
+  // evaluate() stays pure (no I/O, no seq assignment) — seq is stamped
+  // here, at the one place its result is actually persisted.
+  // INTENT-ARBITRATION-001: same pattern as hasUnresolvedPostShift above —
+  // the application layer decides current eligibility (today's date, which
+  // obligations are unresolved) and passes the Engine only the one derived
+  // boolean it needs to arbitrate with.
+  const eligibleObligations = await getCurrentlyEligibleUnresolvedObligations();
+  const recommendation: Recommendation = {
+    ...evaluate({
+      beyondDayId,
+      checkIn,
+      // PLANNED-WORK-001: derived from an explicit PLANNED_WORK_SET
+      // declaration (setPlannedWork), never inferred from capacity,
+      // schedule, or TRAIN's rotation state — see hasActivePlannedWork's
+      // own doc comment.
+      hasPlannedWork: await hasActivePlannedWork(beyondDayId),
+      // Drop 02b: derived from event history (WORK_PERIOD_ENDED, cleared by
+      // a later SHIFT_DOWN_COMPLETED), never from clock/schedule — the
+      // Engine only ever sees what queries.ts already determined is true.
+      hasUnresolvedPostShift: await hasUnresolvedPostShift(beyondDayId),
+      hasEligibleObligationDueOrOverdue: hasObligationRequiringArbitration(
+        eligibleObligations,
+        formatLocalDate(new Date()),
+      ),
+      shortSleep: { streak: sleep.streak, evidence: sleep.nights.length ? JSON.stringify(sleep.nights) : "" },
+    }),
+    seq: await nextSeq(),
+  };
+  await db.recommendations.add(recommendation);
+  await logEvent(
+    beyondDayId,
+    "RECOMMENDATION_ISSUED",
+    { recommendationId: recommendation.id, kind: recommendation.kind },
+    "ENGINE",
+    correlationId,
+  );
+
+  return recommendation;
 }
 
 /**
@@ -980,6 +996,8 @@ export async function updateSchedulePattern(input: SchedulePatternInput): Promis
     ...(existing?.keyMomentAlerts ? { keyMomentAlerts: existing.keyMomentAlerts } : {}),
     // C4.2a: so do the sleep plan's settings (the caffeine cut-off).
     ...(existing?.sleepPlanSettings ? { sleepPlanSettings: existing.sleepPlanSettings } : {}),
+    // GRAYSON C4.8a: and the Eating Window's.
+    ...(existing?.eatingWindowSettings ? { eatingWindowSettings: existing.eatingWindowSettings } : {}),
   };
   await db.schedulePatterns.put(record);
   return record;
@@ -1157,7 +1175,7 @@ export async function retimeLog(beyondDayId: string, rootEventId: string, at: st
     const voided =
       (root.type === "WATER_LOGGED" && isBodyLogVoided(events, "WATER_LOG_VOIDED", root.id)) ||
       (root.type === "PROTEIN_LOGGED" && isProteinLogVoided(events, root.id)) ||
-      (root.type === "MEAL_LOGGED" && events.some((e) => e.type === "MEAL_LOG_VOIDED" && (e.payload as { mealEventId: string }).mealEventId === root.id));
+      (root.type === "MEAL_LOGGED" && activeVoidedIds(events, "MEAL_LOG_VOIDED").has(root.id));
     if (voided) throw new Error("LOG_VOIDED: this entry was undone and can no longer move.");
     const current = effectiveLogTimes(events).get(root.id) ?? root.occurredAt;
     if (Date.parse(current) === Date.parse(occurredAt)) return false;
@@ -1329,9 +1347,7 @@ export async function correctProtein(
 }
 
 function isProteinLogVoided(dayEvents: readonly DomainEvent[], proteinEventId: string): boolean {
-  return dayEvents.some(
-    (e) => e.type === "PROTEIN_LOG_VOIDED" && (e.payload as ProteinLogVoidedPayload).proteinEventId === proteinEventId,
-  );
+  return activeVoidedIds(dayEvents, "PROTEIN_LOG_VOIDED").has(proteinEventId);
 }
 
 /**
@@ -1372,7 +1388,8 @@ export async function correctBodyweight(
 }
 
 function isBodyLogVoided(dayEvents: readonly DomainEvent[], voidedType: DomainEvent["type"], loggedEventId: string): boolean {
-  return dayEvents.some((e) => e.type === voidedType && (e.payload as BodyLogVoidedPayload).loggedEventId === loggedEventId);
+  // GRAYSON-FIX-UNDO-001: only a standing removal counts; a put-back entry can be corrected and removed again.
+  return isLogVoidType(voidedType) && activeVoidedIds(dayEvents, voidedType).has(loggedEventId);
 }
 
 /**
@@ -1485,9 +1502,9 @@ export async function markShiftHandoffRead(beyondDayId: string, handoffEventId: 
  * the same kind on that day. Lives here, not in garminSleep.ts, so the import graph stays one-way
  * (garminSleep → commands); a cycle hung Vitest's browser module loader.
  */
-async function replaceGarminSleep(dayId: string, kind: SleepLoggedPayload["kind"], ownerEventId: string): Promise<void> {
+export async function replaceGarminSleep(dayId: string, kind: SleepLoggedPayload["kind"], ownerEventId: string): Promise<void> {
   const events = await db.events.where("beyondDayId").equals(dayId).toArray();
-  const voided = new Set(events.filter((e) => e.type === "SLEEP_LOG_VOIDED").map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId));
+  const voided = activeVoidedIds(events, "SLEEP_LOG_VOIDED");
   for (const e of events) {
     const payload = e.payload as SleepLoggedPayload;
     if (e.type !== "SLEEP_LOGGED" || voided.has(e.id) || payload.source?.kind !== "GARMIN" || (payload.kind ?? "PRIMARY") !== kind) continue;

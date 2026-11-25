@@ -67,6 +67,7 @@ export async function createDecisionJournalEntry(input: DecisionJournalEntryInpu
       ...(parsed.reasoning ? { reasoning: parsed.reasoning } : {}),
       ...(parsed.expectation ? { expectation: parsed.expectation } : {}),
       ...(parsed.linkedRecommendationId ? { linkedRecommendationId: parsed.linkedRecommendationId } : {}),
+      ...(parsed.missed ? { missed: parsed.missed } : {}),
       status: "OPEN",
       source: "USER",
       seq: await nextSeq(),

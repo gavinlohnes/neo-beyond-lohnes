@@ -2,7 +2,6 @@ import type { CaveVitalId } from "../../../application/caveVitals";
 import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
 import { MemoryPanel } from "../../components/MemoryPanel";
 import { OperatorContextPanel } from "../../components/OperatorContextPanel";
-import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { getExerciseNames } from "../../../application/exerciseLibraryQueries";
 import { getSavedMeals } from "../../../application/nutritionQueries";
 import type { SavedMeal } from "../../../domain/common/types";
@@ -30,10 +29,13 @@ import type { UnderstandingSource } from "../review/PersonalUnderstanding";
 import { SearchScreen } from "../search/SearchScreen";
 import type { SearchResult } from "../../../application/searchQueries";
 import { WorkScheduleScreen } from "./WorkScheduleScreen";
+import { WorkRecordScreen } from "./WorkRecordScreen";
 import { IntentScreen, type IntentFocus } from "./IntentScreen";
 import { NutritionTargetsSettings } from "./NutritionTargetsSettings";
 import { AutoBackupSettings } from "./AutoBackupSettings";
 import { DriveRestorePicker } from "./DriveRestorePicker";
+import { VoiceSettings } from "./VoiceSettings";
+import { TodayQuietSettings } from "./TodayQuietSettings";
 import { TimeCapsuleSettings } from "./TimeCapsuleSettings";
 import { WeeklyCheckInScreen } from "../weekly/WeeklyCheckInScreen";
 import { LineIcon } from "../../icons/LineIcon";
@@ -50,6 +52,7 @@ import {
   setCheckInReminderPreference,
   type CheckInReminderPreference,
 } from "../../../application/checkInReminderQueries";
+import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
 import { formatReminderHour } from "./moreCopy";
 import { describeError } from "../../errorMessage";
 import { GuidedOverview } from "./GuidedOverview";
@@ -153,7 +156,7 @@ function resolveMoreLabels(labels: string[]): SystemCapability[] {
 const DATA_SCHEMA = db.verno;
 
 const REFLECT_BACK = { DAILY_NOTE: "BACK TO DAILY NOTE", WEEKLY: "BACK TO WEEKLY CHECK-IN", REVIEW: "BACK TO REVIEW" } as const;
-export type MoreView = "AUTOMATIONS" | "HIGHLIGHTS" | "COLLECTIONS" | "DAILY_NOTE" | "SNIPPETS" | "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE" | "SAVED";
+export type MoreView = "AUTOMATIONS" | "HIGHLIGHTS" | "COLLECTIONS" | "DAILY_NOTE" | "SNIPPETS" | "BATCOMPUTER" | "REPORT" | "MIRROR" | "DAILY_CONTROLS" | "MENU" | "SYSTEMS" | "PLAN" | "HISTORY" | "REVIEW" | "WEEKLY" | "SEARCH" | "WORK_SCHEDULE" | "WORK_RECORD" | "INTENT" | "JOURNAL" | "EXERCISE_LIBRARY" | "CUSTOM_TEMPLATES" | "HEALTH_IMPORT" | "MEMORY" | "ROUTINES" | "PEOPLE" | "HOME" | "LIFE" | "SAVED";
 
 import type { HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import type { WholePictureDestination } from "../review/WholePicture";
@@ -169,7 +172,7 @@ export function MoreScreen({
   active = true,
   navigationRequest = 0,
   coachDeltaRequest = 0,
-  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null,
+  recordFocus = null, memoryFocusId = null, dailyNoteDayId = null, personFocus = null, workRecordFocus = null,
   initialView = "MENU",
   onOpenRecords,
   onOpenMeal,
@@ -208,6 +211,8 @@ export function MoreScreen({
   dailyNoteDayId?: string | null;
   /** PEOPLE-PAGE-001: the person a tapped [[name]] opened. */
   personFocus?: string | null;
+  /** GRAYSON-WORK-RECORD-001: the item TODAY's WORK_DUE line opened. */
+  workRecordFocus?: string | null;
   /** Existing subviews can be opened by SYSTEM; the top-bar icon still opens SEARCH. */
   initialView?: MoreView;
   /** FIND-001: a LIFT or PR result opens TRAIN → RECORDS at that lift's curve. */
@@ -386,6 +391,9 @@ export function MoreScreen({
   // never throws, so no loading state is needed) — every change writes through
   // setCheckInReminderPreference immediately, matching this screen's other
   // immediate-action controls rather than a separate SAVE step.
+  // GRAYSON-TRAIN-REST-001: the rest-end buzz, beside the check-in reminder.
+  const [restBuzz, setRestBuzzState] = useState<RestBuzzPreference>(getRestBuzzPreference);
+  const updateRestBuzz = (next: RestBuzzPreference) => { setRestBuzzPreference(next); setRestBuzzState(next); };
   const [reminderPreference, setReminderPreference] = useState<CheckInReminderPreference>(() =>
     getCheckInReminderPreference(),
   );
@@ -697,8 +705,9 @@ export function MoreScreen({
           <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} dayId={dailyNoteDayId} onOpenWeeklyInterview={() => openReflect("INTERVIEW")} onOpenPatterns={() => openReflect("PATTERNS")} onOpenDelta={() => openReflect("DELTA")} /></>}</div>
           <div hidden={view !== "COLLECTIONS"}>{visited.has("COLLECTIONS") && <><OperatorHeader destination="command">MORE // COLLECTIONS</OperatorHeader><CollectionsScreen active={active && view === "COLLECTIONS"} /></>}</div>
           <div hidden={view !== "HIGHLIGHTS"}>{visited.has("HIGHLIGHTS") && <><OperatorHeader destination="command">MORE // HIGHLIGHTS</OperatorHeader><HighlightsScreen active={active && view === "HIGHLIGHTS"} /></>}</div>
-          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><section className="memory-guided-entry" aria-labelledby="memory-guided-heading"><p className="section-label">NOT SURE WHAT TO ADD?</p><h2 id="memory-guided-heading">Let Delta ask one useful question.</h2><p className="meta">Answer one subject, review the exact understanding, then decide whether to save it.</p><button type="button" className="btn-secondary" onClick={() => { setView("MENU"); revealSection("GUIDE"); }}>TEACH DELTA A LITTLE</button></section><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /><AlfredMemoryList active={active && view === "MEMORY"} /></>}</div>
-          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen /></>}
+          <div hidden={view !== "MEMORY"}>{visited.has("MEMORY") && <><OperatorHeader destination="command">MORE // MEMORY</OperatorHeader><section className="memory-guided-entry" aria-labelledby="memory-guided-heading"><p className="section-label">NOT SURE WHAT TO ADD?</p><h2 id="memory-guided-heading">Let Delta ask one useful question.</h2><p className="meta">Answer one subject, review the exact understanding, then decide whether to save it.</p><button type="button" className="btn-secondary" onClick={() => { setView("MENU"); revealSection("GUIDE"); }}>TEACH DELTA A LITTLE</button></section><OperatorContextPanel active={active && view === "MEMORY"} /><MemoryPanel active={active && view === "MEMORY"} focusFactId={memoryFocusId} /></>}</div>
+          {view === "WORK_SCHEDULE" && <><OperatorHeader destination="command">MORE // WORK SCHEDULE</OperatorHeader><WorkScheduleScreen onOpenWorkRecord={() => setView("WORK_RECORD")} /></>}
+          {view === "WORK_RECORD" && <><OperatorHeader destination="command">MORE // WORK RECORD</OperatorHeader><WorkRecordScreen active={active} focusId={workRecordFocus} onOpenSchedule={() => setView("WORK_SCHEDULE")} onOpenTrain={() => { onOpenDestination?.({ kind: "workspace", tab: "TRAIN" }); }} /></>}
           <div hidden={view !== "INTENT"}>{visited.has("INTENT") && <><OperatorHeader destination="command">MORE // MISSIONS & OBLIGATIONS</OperatorHeader><IntentScreen active={active && view === "INTENT"} navigationFocus={intentFocus} {...(intentFocus ? { initialFocus: intentFocus } : {})} /></>}</div>
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><Opening><ExerciseLibraryScreen /></Opening></>}
@@ -731,6 +740,7 @@ export function MoreScreen({
         onArea={openArea}
         onGarmin={() => setView("HEALTH_IMPORT")}
         onSchedule={() => setView("WORK_SCHEDULE")}
+        onWorkRecord={() => setView("WORK_RECORD")}
         onDriveSettings={() => { openArea("Backup & recovery"); const auto = menuRef.current?.querySelector<HTMLDetailsElement>('details[data-panel="automatic-backups"]'); if (auto) { auto.open = true; auto.scrollIntoView({ block: "start" }); } }}
       />
       <div className="command-search" role="search">
@@ -883,6 +893,12 @@ export function MoreScreen({
             {preview.tables.map((t) => (
               <p key={t.name} className="meta" style={{ paddingLeft: 8 }}>{t.name}: {t.rowCount} rows</p>
             ))}
+            {/* GRAYSON C8.1: say what happens to this phone's preferences; keys and sign-ins never travel. */}
+            <p className="meta" style={{ marginTop: 8 }} data-restore-settings>
+              {preview.format === "NATIVE" && preview.settingsCount !== null
+                ? `Settings: ${preview.settingsCount} ${preview.settingsCount === 1 ? "preference" : "preferences"} replace this phone's. Keys and sign-ins stay as they are.`
+                : "Settings: this backup has none, so this phone keeps its own."}
+            </p>
             <p className="meta" style={{ marginTop: 8, marginBottom: 8 }}>
               A backup of what's currently here will be downloaded automatically before this replaces it.
             </p>
@@ -970,6 +986,9 @@ export function MoreScreen({
           else { if (destination === "INTENT") setIntentFocus(null); setView(destination); }
         }} />
       </details>
+      {/* GRAYSON-TODAY-CALM-001: TODAY's quiet lines (how many, order, which) and the after-shift rule. */}
+      <details id="command-today-lines" className="more-inspection"><summary>TODAY</summary><TodayQuietSettings /></details>
+      <details id="command-voice" className="more-inspection"><summary>Voice</summary><VoiceSettings /></details>
       <details id="command-hidden-features" className="more-inspection"><summary>Hidden features</summary>
         <p className="meta">These optional tools start hidden. Showing or hiding them never changes records or Engine guidance. This preference stays on this browser.</p>
         {([ ["minimumDay", "Minimum Day"], ["smallSteps", "Small Steps"], ["foodLookup", "Online food lookup"] ] as [HiddenFeature, string][]).map(([feature, label]) => <label key={feature} className="hidden-feature-choice">
@@ -1023,6 +1042,27 @@ export function MoreScreen({
               use this.
             </p>
           )}
+        </div>
+        <div className="equipment-row" data-rest-buzz-setting>
+          <p className="tool-label" style={{ marginBottom: 4 }}>BUZZ WHEN REST ENDS</p>
+          <p className="card-body" style={{ marginBottom: 8 }}>
+            {restBuzz.enabled ? `On, ${restBuzz.strength === "LONG" ? "long" : "short"} buzz.` : "Off."}
+          </p>
+          <p className="meta" style={{ marginBottom: 8 }}>While TRAIN is open with the screen on.</p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button className="btn-secondary" aria-pressed={restBuzz.enabled} aria-label={`Buzz when rest ends: ${restBuzz.enabled ? "turn off" : "turn on"}`}
+              onClick={() => updateRestBuzz({ ...restBuzz, enabled: !restBuzz.enabled })}>
+              {restBuzz.enabled ? "TURN OFF" : "TURN ON"}
+            </button>
+            {restBuzz.enabled && (
+              // 16 px text and a 44 px target, like every MORE control (MORE-OPERATOR-001's readable-text check).
+              <select aria-label="Buzz strength" value={restBuzz.strength} style={{ fontSize: 16, minHeight: 44 }}
+                onChange={(e) => updateRestBuzz({ ...restBuzz, strength: e.target.value === "LONG" ? "LONG" : "SHORT" })}>
+                <option value="SHORT">Short</option>
+                <option value="LONG">Long</option>
+              </select>
+            )}
+          </div>
         </div>
       </section>
 

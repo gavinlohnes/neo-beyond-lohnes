@@ -12,6 +12,34 @@ as an authority conflict to adjudicate; do not silently assume either
 that implementation overrides a locked decision or that stale prose
 accurately describes current behavior.
 
+> **Decision entries recorded after #624 merges live one file each in [`decisions/`](decisions/README.md)**, so
+> parallel work never conflicts here. This file and that folder together are the Decision Register; every entry below
+> stays canonical.
+
+## GRAYSON-C4.8b — the Eating Window meets the meal log (owner go 2026-11-23)
+
+"7 + 8 as C4.8b." [Brief](agent/GRAYSON-C4.8B-001.md). Amends C4.8a's "nothing is inferred from meals" to: a logged
+meal may *offer* a boundary, never set one. During a fast, a meal logged after it began offers END FAST AT its time;
+near or past the window's end (60 min), or after the planned window with no marks, the last meal offers FAST FROM its
+time. NOT NOW dismisses that offer. While the window is open, TODAY's card and the meal sheet state protein against
+it ("Protein 76 / 170 g · 94 g left with 2:10 of window."); while fasting, the meal sheet says logging food doesn't end
+the fast. Plain facts only: no failure or level words, no red, no target, advice or Engine change.
+
+## GRAYSON-C4.8a — Eating Window foundation (owner go 2026-11-23)
+
+"Approve C4.8a". [Brief](agent/GRAYSON-C4.8A-001.md); design GRAYSON-BEHAVIOR-FASTING-DESIGN-001. Off until he
+turns it on behind a private safety check (only completion is stored). Neutral programme: window length is a
+setting, never a level; completing a fast is not success; END FAST and SKIP TODAY need no reason; every mark has
+UNDO. Context is labelled "Typical, not measured in you." Nothing is inferred from meals and no target, advice or
+Engine input changes. New events: EATING_WINDOW_MARKED, EATING_WINDOW_DAY_SKIPPED, EATING_WINDOW_MARK_VOIDED.
+
+## GRAYSON-C2.1 — arrival in two taps (owner go 2026-11-23)
+
+Gavin: "1, yes 2 yes". [Brief](agent/GRAYSON-C2.1-001.md). PREFLIGHT shows last shift's unread handoff note and the
+one BEFORE SHIFT step he's passed over most lately (on days he did that routine; at least twice), by its words only.
+**ROUTINES-001 reading:** skips may be read to choose that one step; no count, "missed" or streak is ever shown.
+STARTED WORK marks work started and the note on screen read in one tap.
+
 ## GRAYSON-C1.6 — Delta's voice: Mentor by default, Delta and Droid switchable (owner go 2026-11-20)
 
 "Bruce → Terry by default, with Delta and Droid as switchable voices." [Brief](agent/GRAYSON-C1.6-001.md). One copy
@@ -1177,6 +1205,12 @@ below, this entry wins; the older entry is kept for history.
   and protein target's latest weight, and the end-the-day suggestion after main sleep — and can't
   be corrected afterwards. Undoing twice is a no-op. No schema change; backups carry the new events
   like any other.
+  **Amended (GRAYSON-FIX-UNDO-001, Gavin 2026-11-24 02:02 CT, option 1: undo shows only after a fix
+  or a removal):** "can't be corrected afterwards" holds only while the void stands. A removal can be
+  put back (`LOG_VOID_UNDONE`, one tap on UNDO for 8 s, or PUT IT BACK in History later); every
+  reader goes through `domain/logVoids.activeVoids`, so a put-back entry is back everywhere and can be
+  corrected and removed again. TODAY's log sheet removes on one tap with no "Remove …?" step. See
+  `docs/decisions/GRAYSON-FIX-UNDO-001.md`.
 
 - **As built: duplicate-meal prompt (DUP-MEAL-001, owner brief 2026-10-04, PR #155).** Field case:
   dinner logged twice doubled the day's protein and kcal. Right after a meal is logged on BODY, an
@@ -2671,6 +2705,33 @@ prelog stuff too." On the rules he said "your call".
 - **When it was entered is kept as it always was.** History lists a move as "Water log moved to 01:30."
   Old backups are unchanged, and the new fact is restored like any other event.
 
+## LOG-WHEN-001 — WHEN gets a day and the shift (owner go, 2026-11-23)
+
+Gavin: "I can select time but not a day." Then: "1 + 2 together, as one 'When' upgrade. Day picker plus
+shift-shaped times." This amends LOG-TIME-001 in one place: a new log may be placed on an earlier lived day.
+
+- **DAY on the water and meal sheets:** TODAY (the default, every time the sheet opens), YESTERDAY and EARLIER…
+  for the lived days on record from the last 7. An earlier day has no NOW or AGO; it asks for a time or a shift
+  point first.
+- **SHIFT:** START, MID, END and AFTER (end + 1 hour) from the chosen day's own scheduled shift, each showing its
+  clock time. Not shown on a day without a shift. Shift times come from the schedule as saved now, so changing the
+  schedule changes the SHIFT times shown for earlier days.
+- **Today is never "yesterday":** an ended day in the current lived day (after END DAY, before a new day opens) is
+  not offered as an earlier day; TODAY covers it.
+- **Unchanged from LOG-TIME-001:** the log lives inside its own day's 16:30 to 16:30, entered-at is kept, totals
+  count it as always, and a later move stays within its day. The receipt names the day ("…recorded yesterday at
+  06:00."). That day's Engine advice is not re-run.
+## LOG-CATCHUP-001 — post-shift catch-up (owner go, 2026-11-23)
+
+Gavin: "Then: 3, the post-shift catch-up. It's the biggest time saver for how your nights actually go."
+
+- **Where:** TODAY, after SHIFT DOWN on a shift day, above CLOSE THE DAY, once per day. No red.
+- **What:** "ON SHIFT, DID YOU HAVE:" with his usual shift items not yet logged tonight. A saved meal counts as usual
+  when it was logged inside the shift on 2+ shift days in the last 28; water likewise, offered as his usual count
+  minus tonight's.
+- **When it lands:** each meal at its median point into the shift, water spread evenly across it, never outside the
+  shift or after now. Nothing is pre-ticked; NOTHING ELSE writes nothing. Writes are ordinary meal and water logs.
+
 ## BRAND-MARK-003 — Brand Drop v2: the emblem and the palette (owner decision, 2026-10-28)
 
 Gavin's Brand Drop v2 supersedes the split-bat Drop (BRAND-MARK-002), and every split-bat and older
@@ -3664,3 +3725,56 @@ history and existing sharing boundaries; they do not automatically alter Engine 
 recommendation semantics or Mission authority. This slice adds no provider, autonomous inference,
 hidden profile, schema or primary-navigation change. Mounted-session resumption does not establish a
 new persisted guided-session contract.
+
+## 2026-11-20 — GRAYSON-TRAIN-INTELLIGENCE-001: guided training with restrained adaptation
+
+**Protected documentation/design-only owner authorization.** The canonical design is
+[`GRAYSON_TRAIN_INTELLIGENCE.md`](GRAYSON_TRAIN_INTELLIGENCE.md). It refines, rather than replaces,
+the merged Integrated Health Mission and current TRAIN implementation.
+
+- **Programme identity:** a sequenced three-day full-body A/B/C Mission, not fixed weekdays. A
+  permanent balanced foundation remains beneath zero-to-three owner-selected emphasis areas.
+- **Training Emphasis Rule:** focus runs in four-to-six-week blocks. Weekly flexibility may move,
+  reduce or temporarily substitute work; it changes dosage, not programme identity. Gavin chooses a
+  new emphasis.
+- **Calibration:** the first exposures learn conservative working loads through preparation sets and
+  explicit feedback, not guessed loads or a forced maximum test. Proposed understandings remain
+  inspectable and owner-controlled.
+- **Delta Training Intervention Rule:** Delta stays quiet after normal sets; speaks briefly when
+  recorded evidence justifies an adjustment; responds immediately to reported pain or safety; gives
+  detail on request; and consolidates proposed learnings after the workout. It never claims to have
+  observed technique without an authorized observation source and never diagnoses pain.
+- **Adaptation:** change the smallest supported variable. One poor session ordinarily holds. Stalls
+  require multiple comparable exposures and context; associations do not become causes. Current
+  Engine progression, REDUCED/RECOVERY and programme-selection semantics remain authoritative until
+  separately amended.
+- **Progress:** TRAIN Progress and Direction composes the Mission, current emphasis, four performance
+  tracks, strength/coverage, consistency/recovery and one inspectable Delta assessment. A muscle map
+  navigates anatomy and planned/completed coverage; it does not claim hypertrophy. Estimated 1RM is
+  never presented as an observed test.
+- **Scope boundary:** exercise demonstrations are deferred. This ruling authorizes no code,
+  navigation, schema, provider, dependency, programme activation or recommendation change.
+
+## 2026-11-22 — GRAYSON-TRAIN-SEQUENCE-ACTIVATE-001: owner-confirmed sequence, derived position
+
+**Protected owner authorization.** Gavin may activate exactly three existing active custom workout
+templates as one explicitly reviewed A → B → C sequence. The programme stores the confirmed member
+identity and exact reviewed content in the existing `TRAIN_PROGRAM_SET` revision chain; it does not
+add a table or mutable position cursor. The next member is derived from the activation revision and
+causally ordered recorded workout outcomes.
+
+- STANDARD completed with at least one working set advances; STANDARD partial holds.
+- REDUCED completed or partial with at least one working set advances.
+- RECOVERY, abandoned, zero-working-set and non-member sessions hold. An explicitly completed
+  out-of-order member advances from that member.
+- Dates never advance the sequence and missed time creates no catch-up debt. Sequence selects the
+  workout identity; existing capacity and RED override authority still select or guard its form.
+- Changed, archived, missing or causally incomplete member evidence pauses guided START NEXT and
+  explains why. Direct owner workout choice remains available.
+- Activation, replacement, undo/prior restoration and deactivation are explicit stale-write-guarded
+  owner actions. Existing weekday and WORK/OFF modes, history, progression and backup compatibility
+  remain supported.
+
+This ruling does not authorize linked short/home variants, programme adaptation, Week Planner/Week
+Ahead changes, exercise-content changes, schemas, dependencies, providers or primary-navigation
+changes.

@@ -1,4 +1,5 @@
 import type { DraftDecision } from "../intelligence/types";
+import type { RunningPhase, RunningPlanVersion, RunningPosition, RunningSegment } from "../workout/runningPlan";
 // Domain layer must not import React, Dexie, or UI code.
 
 export type Capacity = "GREEN" | "YELLOW" | "RED";
@@ -48,6 +49,11 @@ export interface StateCheckIn {
    * are always the operator's own, submitted by them.
    */
   draft?: DraftDecision;
+  /**
+   * GRAYSON-CHECKIN-EDIT-001: set only on a corrected row, naming the check-in row it supersedes. The corrected row
+   * keeps the original's `recordedAt` and carries no `draft` (that describes how the original was submitted).
+   */
+  correctsCheckInId?: string;
   /**
    * Deterministic same-instant tie-break (event-ordering redesign,
    * following Drop 02b): recordedAt stays the real, unmodified moment this
@@ -137,6 +143,8 @@ export interface WorkoutSession {
   status: string;
   startedAt: string;
   endedAt?: string;
+  /** GRAYSON-TRAIN-HOME-LINK-001: exact owner-confirmed programme/form context; absent for every legacy and ordinary workout. */
+  programmeContext?: { programmeRevisionId: string; memberKey: "A" | "B" | "C"; parentTemplateId: string; form: "HOME" | "SHORT" };
   /**
    * TRAIN-WAVE-A (Persistent Rest, 2026-09-02): absolute end time of the
    * current rest period, or absent when not resting. Absolute rather than
@@ -264,6 +272,43 @@ export type DomainEventType =
   | "WEEKLY_REVIEW_SAVED"
   | "PREPARATION_RECORDED"
   | "MEMORY_RECORDED"
+  /** GRAYSON C6.1: his answer to one of Delta's learnings (Keep / Narrow / Not true / Drop / Undo). Global; payload in domain/learningLifecycle.ts. */
+  | "LEARNING_RESPONDED"
+  // GRAYSON C4.8a (Gavin, 2026-11-20 design #601; build approved 2026-11-23): Eating Window boundaries he marks, a
+  // one-day skip, and undo of either. Day-scoped to the active lived day when tapped. Payloads below.
+  | "EATING_WINDOW_MARKED"
+  | "EATING_WINDOW_DAY_SKIPPED"
+  | "EATING_WINDOW_MARK_VOIDED"
+  // GRAYSON-CHECKIN-EDIT-001 (Gavin, 2026-11-24): a sent check-in corrected, and that fix undone. USER-sourced, under the
+  // check-in's own beyondDayId. Append-only: no check-in row is edited or deleted. Payloads below.
+  | "CHECK_IN_CORRECTED"
+  | "CHECK_IN_CORRECTION_UNDONE"
+  // GRAYSON-FIX-UNDO-001 (Gavin, 2026-11-24): a removal of a meal, protein, water, sleep, bodyweight or measurement log
+  // put back. USER-sourced, under the entry's own beyondDayId (measurements: unscoped). Payload in domain/logVoids.ts.
+  | "LOG_VOID_UNDONE"
+  // GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): fix any logged set, live or past. USER-sourced, under the set's own
+  // session's beyondDayId. Append-only: the replaced row stays, retracted. Payloads in the block at the end.
+  | "SET_CORRECTED"
+  | "SET_REMOVED"
+  | "SET_ADDED"
+  | "SET_FIX_UNDONE"
+  // GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running sessions and his editable run/walk plan. "RUNNING", never
+  // "RUN": a run is a work run in this codebase. Session events are day-scoped to the session's lived day; plan
+  // edits and position jumps are global configuration (like TRAIN_PROGRAM_SET). Payloads in the block at the end.
+  | "RUNNING_SESSION_STARTED"
+  | "RUNNING_SESSION_PAUSED"
+  | "RUNNING_SESSION_RESUMED"
+  | "RUNNING_SESSION_ENDED"
+  | "RUNNING_SESSION_CORRECTED"
+  | "RUNNING_SESSION_VOIDED"
+  | "RUNNING_PLAN_ADVANCED"
+  | "RUNNING_PLAN_POSITION_SET"
+  | "RUNNING_PLAN_EDITED"
+  // GRAYSON-TRAIN-STANDARDS-001 (Gavin, 2026-11-24): a sit-and-reach, one-minute sit-up or 1.5-mile run test result,
+  // day-scoped to the lived day it was recorded in. Removed through the shared void family (STANDARD_TEST_VOIDED,
+  // domain/logVoids.ts) and put back with LOG_VOID_UNDONE; a fix voids the old result and records a new one.
+  | "STANDARD_TEST_RECORDED"
+  | "STANDARD_TEST_VOIDED"
 
   // REVIEW-001 Phase 1a — not day-scoped; payloads in domain/body/types.ts.
   | "MEASUREMENT_LOGGED"
@@ -554,6 +599,8 @@ export interface NutritionTargets {
   strengthSessionsTargetPerWeek?: number;
   /** TARGET-PROPOSAL-002 (Gavin, 2026-11-15): the lowest calorie target Weekly may propose; unset means 1,500. */
   calorieFloorKcal?: number;
+  /** GRAYSON C4.6 (Gavin, 2026-11-23): his own daily water target in oz; unset means no target and no nag. */
+  waterTargetOz?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -836,6 +883,8 @@ export interface ObligationModifiedPayload {
     recurrence?: { freq: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number };
     /** REMIND-AT-001: HH:MM on the due date; null removed it. */
     remindAt?: string | null;
+    /** TIMEBOX-001: his estimate in whole minutes; null removed it. */
+    estimateMinutes?: number | null;
   };
 }
 
@@ -921,7 +970,28 @@ export interface SchedulePattern {
    * (application/sleepPlanSettings.ts), never by the schedule's own parser. Absent means the cited defaults.
    */
   sleepPlanSettings?: SleepPlanSettings;
+  /** GRAYSON C4.8a: the Eating Window programme's settings; configuration, not history (like the caffeine cut-off). */
+  eatingWindowSettings?: EatingWindowSettings;
 }
+
+/** GRAYSON C4.8a: the day kinds a planned eating window is set for. */
+export type EatingWindowDayKind = "WORK" | "RECOVERY" | "OFF";
+export interface EatingWindowSettings {
+  /** Off until he turns it on. */
+  enabled: boolean;
+  /** Hours the window is open (6–16). 12, 10, 8 and 6 are the presets 12:12, 14:10, 16:8 and 18:6. */
+  eatingHours: number;
+  /** When eating opens on each kind of lived day, "HH:MM" local. Times before 16:30 fall on the lived day's second date. */
+  opensAt: Record<EatingWindowDayKind, string>;
+  /** When he completed the safety check (answers are never stored). */
+  safetyCheckedAt: string;
+  setAt: string;
+}
+/** EATING_WINDOW_MARKED: CLOSED = he stopped eating (a fast starts); OPENED = he started eating (the fast ends). */
+export interface EatingWindowMarkedPayload { commandId: string; boundary: "CLOSED" | "OPENED" }
+export interface EatingWindowDaySkippedPayload { commandId: string }
+/** Undo of a mark or a skip, naming the event it voids. The voided event is never deleted. */
+export interface EatingWindowMarkVoidedPayload { commandId: string; voidsEventId: string }
 
 /** C4.2a: owner-set caffeine cutoff configuration and its timestamp. No automated proposal or experiment. */
 export interface SleepPlanSettings {
@@ -929,7 +999,7 @@ export interface SleepPlanSettings {
 }
 
 /** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */
-export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE";
+export type KeyMomentKind = "BEFORE_SHIFT" | "SHIFT_DONE" | "TASK_DUE" | "WAKE" | "WINDOW_OPEN";
 
 /** BRIDGE-NOTIFY-001: which kinds are off, and the owner's quiet hours ("HH:MM" local, may cross midnight). */
 export interface KeyMomentAlertSettings {
@@ -994,6 +1064,8 @@ export interface SetLoggedPayload {
   weight: number;
   reps: number;
   substitutedName?: string;
+  /** GRAYSON-TRAIN-LOCKSCREEN-001: logged by DONE on the lock-screen notification (event occurredAt is the tap). */
+  from?: "LOCK_SCREEN";
 }
 
 export interface SetSkippedPayload {
@@ -1001,6 +1073,8 @@ export interface SetSkippedPayload {
   sessionId: string;
   exerciseId: string;
   setNumber: number;
+  /** GRAYSON-TRAIN-LOCKSCREEN-001: skipped by SKIP on the lock-screen notification. */
+  from?: "LOCK_SCREEN";
 }
 
 /**
@@ -1019,6 +1093,20 @@ export interface SetUndonePayload {
   exerciseId: string;
   setNumber: number;
   performedSetId: string;
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: `checkIn` is the corrected row, also stored in `checkIns`. */
+export interface CheckInCorrectedPayload {
+  commandId: string;
+  supersedesCheckInId: string;
+  originalCheckInId: string;
+  checkIn: StateCheckIn;
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: only the newest standing fix of a check-in can be undone. */
+export interface CheckInCorrectionUndonePayload {
+  commandId: string;
+  correctionEventId: string;
 }
 
 /** SHIFT DOWN mirrors RESET's shape: duration input, then a two-step START/COMPLETE flow. */
@@ -1096,4 +1184,147 @@ export interface CaptureItem {
   resolvedAt?: string;
   /** See StateCheckIn.seq's doc comment — same deterministic tie-break, same shared counter. */
   seq?: number;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): set fixes. Projected by domain/workout/setFixes.ts into the one
+// retracted-set filter every set reader already uses (getUndoneSetIds).
+
+/** The values a fix can change on a set. */
+export interface SetFixValues {
+  weight: number;
+  reps: number;
+  skipped: boolean;
+  setKind?: "WORKING" | "WARMUP";
+  repsInReserve?: number;
+}
+
+/**
+ * A set corrected: `newPerformedSetId` is a new performedSets row with the `after` values and the replaced row's
+ * sessionId, exerciseId, setNumber, recordedAt and seq. `replacesSetId` is retracted while this fix stands.
+ */
+export interface SetCorrectedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  replacesSetId: string;
+  newPerformedSetId: string;
+  before: SetFixValues;
+  after: SetFixValues;
+}
+
+/** A set removed: `performedSetId` is retracted while this fix stands. */
+export interface SetRemovedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  performedSetId: string;
+}
+
+/** A forgotten set added to a finished session, as a new performedSets row inside the session's window. */
+export interface SetAddedPayload {
+  commandId: string;
+  sessionId: string;
+  exerciseId: string;
+  setNumber: number;
+  performedSetId: string;
+  weight: number;
+  reps: number;
+  setKind?: "WORKING" | "WARMUP";
+  repsInReserve?: number;
+}
+
+/** Cancels one fix (the newest on its set): its retraction is lifted, and a row it created is retracted. */
+export interface SetFixUndonePayload { commandId: string; fixEventId: string }
+// GRAYSON-TRAIN-RUN-001 (Gavin, 2026-11-24): running sessions. One additive table (db.ts v27); every change is an
+// append-only event, so history stays honest and backups carry it.
+
+export type RunningSessionStatus = "ACTIVE" | "COMPLETED" | "PARTIAL" | "ABANDONED";
+export type RunningEndReason = "FINISHED" | "STOPPED" | "PAIN";
+
+/**
+ * One running session. `segments` is a snapshot of what he ran, so a later plan edit never rewrites history.
+ * Timing is absolute (`startedAt` + `pausedMs`, like WorkoutSession.activeRestEndsAt): a reload or backgrounding
+ * recovers the right interval from Date.now(). (B4 standards tests are a separate event, per GRAYSON-TRAIN-STANDARDS-001.)
+ * Status and minutes as recorded; corrections are RUNNING_SESSION_CORRECTED / _VOIDED events, never row edits.
+ */
+export interface RunningSession {
+  id: string;
+  beyondDayId: string;
+  schemaVersion: 1;
+  kind: "PLAN_RUN";
+  planId: string;
+  phase: RunningPhase;
+  week: number;
+  run: number;
+  segments: RunningSegment[];
+  status: RunningSessionStatus;
+  startedAt: string;
+  endedAt?: string;
+  /** Set while paused; cleared on resume. */
+  pausedAt?: string;
+  /** Total time spent paused before the current pause. */
+  pausedMs: number;
+  /** Seconds of the plan he completed (warm-up and cool-down included). */
+  completedSeconds: number;
+  endReason?: RunningEndReason;
+}
+
+export interface RunningSessionStartedPayload {
+  commandId: string;
+  runningSessionId: string;
+  planId: string;
+  phase: RunningPhase;
+  week: number;
+  run: number;
+  segments: RunningSegment[];
+}
+export interface RunningSessionPausedPayload { commandId: string; runningSessionId: string }
+export interface RunningSessionResumedPayload { commandId: string; runningSessionId: string; pausedMs: number }
+export interface RunningSessionEndedPayload {
+  commandId: string;
+  runningSessionId: string;
+  status: Exclude<RunningSessionStatus, "ACTIVE">;
+  completedSeconds: number;
+  endReason: RunningEndReason;
+}
+/**
+ * His correction of a finished run: any of status, minutes or the day it belongs to (a local YYYY-MM-DD date).
+ * The latest correction of each field wins; `supersedesEventId` is the correction it replaces, if any.
+ */
+export interface RunningSessionCorrectedPayload {
+  commandId: string;
+  runningSessionId: string;
+  supersedesEventId?: string;
+  status?: "COMPLETED" | "PARTIAL";
+  completedSeconds?: number;
+  dayDate?: string;
+}
+export interface RunningSessionVoidedPayload { commandId: string; runningSessionId: string }
+/** Only from his tap on Move on, after a COMPLETED run. */
+export interface RunningPlanAdvancedPayload { commandId: string; runningSessionId: string; from: RunningPosition; to: RunningPosition }
+export interface RunningPlanPositionSetPayload { commandId: string; to: RunningPosition; reason: "JUMP" | "UNDO_MOVE_ON" }
+/** The full plan snapshot after an edit, a reset, a weekly-count change or an undo of one of those. */
+export interface RunningPlanEditedPayload {
+  commandId: string;
+  plan: RunningPlanVersion;
+  reason: "EDIT_RUN" | "ADD_RUN" | "RESET_RUN" | "RESET_PLAN" | "WEEK_SETTINGS" | "UNDO";
+  previousEventId?: string;
+}
+
+/** GRAYSON-TRAIN-STANDARDS-001: one result of one standards test. `at` is when he did it, inside `beyondDayId`. */
+export type StandardTestKind = "SIT_AND_REACH" | "SIT_UPS_1MIN" | "RUN_1_5_MILE";
+export type StandardTestUnit = "in" | "reps" | "seconds";
+export interface StandardTestRecordedPayload {
+  commandId: string;
+  test: StandardTestKind;
+  value: number;
+  unit: StandardTestUnit;
+  at: string;
+  beyondDayId: string;
+  note?: string;
+  /** Set when this result is a fix: the result it replaced (voided in the same write). */
+  correctsEventId?: string;
 }

@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds } from "../domain/logVoids";
 import { newId } from "./commands";
 import { writeAtomically } from "./atomicWrite";
 import { logUnscopedEvent } from "./unscopedEvents";
@@ -38,7 +39,7 @@ export async function logMeasurement(input: MeasurementInput, now: Date = new Da
 }
 
 async function measurementEvents(): Promise<DomainEvent[]> {
-  return db.events.where("type").anyOf("MEASUREMENT_LOGGED", "MEASUREMENT_LOG_CORRECTED", "MEASUREMENT_LOG_VOIDED").toArray();
+  return db.events.where("type").anyOf("MEASUREMENT_LOGGED", "MEASUREMENT_LOG_CORRECTED", "MEASUREMENT_LOG_VOIDED", "LOG_VOID_UNDONE").toArray();
 }
 
 function rootIdOf(event: DomainEvent): string {
@@ -46,7 +47,7 @@ function rootIdOf(event: DomainEvent): string {
 }
 
 function isVoided(events: readonly DomainEvent[], rootId: string): boolean {
-  return events.some((e) => e.type === "MEASUREMENT_LOG_VOIDED" && (e.payload as MeasurementLogVoidedPayload).loggedEventId === rootId);
+  return activeVoidedIds(events, "MEASUREMENT_LOG_VOIDED").has(rootId);
 }
 
 function findEntryEvent(events: readonly DomainEvent[], eventId: string): DomainEvent {

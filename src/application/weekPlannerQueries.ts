@@ -3,7 +3,6 @@ import { resolveProgrammeSlot } from "../engine/trainingProgrammeResolution";
 import { formatLocalDate, isOperatorSavedSchedule } from "../engine/scheduledContext";
 import { getWeekAhead, type WeekAheadDay } from "./weekAheadQueries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
-import { getTrainingProgramme } from "./trainingProgramme";
 import { getCustomTemplates } from "./customTemplateQueries";
 import { getSchedulePattern } from "./queries";
 import { getRecordedContexts, livedDayOn, resolveWorkContext } from "./workContextResolution";
@@ -11,6 +10,8 @@ import { getConfirmedExceptions } from "./scheduleExceptions";
 import { readCalendarWithDay } from "./calendarWithDay";
 import type { GoogleCalendarEvent } from "./googleCalendar";
 import { WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { getTrainingProgramme } from "./trainingProgramme";
+import { getPlanningTrainingConnection, type PlanningTrainingConnection } from "./planningTrainingConnection";
 
 export function plannerDates(now = new Date()): string[] {
   return Array.from({ length: 7 }, (_, n) => formatLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n, 12)));
@@ -33,14 +34,15 @@ export interface PlannerDay extends WeekAheadDay {
 export interface WeekPlanner {
   date: string; days: PlannerDay[]; overdue: Obligation[]; unplanned: Obligation[];
   calendar: { connected: boolean; lastSyncAt: string | null };
+  trainingConnection: PlanningTrainingConnection | null;
 }
 
 /** Existing facts composed for explicit planning, never an Engine input or a new plan store. */
 export async function getWeekPlanner(now = new Date()): Promise<WeekPlanner> {
   const dates = plannerDates(now);
   const contextDates = Array.from({ length: 10 }, (_, i) => formatLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i - 3, 12)));
-  const [week, tasks, revision, custom, schedule, recorded, exceptions] = await Promise.all([
-    getWeekAhead(now), getCurrentlyEligibleUnresolvedObligations(), getTrainingProgramme(), getCustomTemplates(),
+  const [week, tasks, revision, trainingConnection, custom, schedule, recorded, exceptions] = await Promise.all([
+    getWeekAhead(now), getCurrentlyEligibleUnresolvedObligations(), getTrainingProgramme(), getPlanningTrainingConnection(now), getCustomTemplates(),
     getSchedulePattern(), getRecordedContexts(contextDates), getConfirmedExceptions(contextDates),
   ]);
   const calendar = readCalendarWithDay();
@@ -48,7 +50,13 @@ export async function getWeekPlanner(now = new Date()): Promise<WeekPlanner> {
   const names = new Map([...Object.values(WORKOUT_TEMPLATES).map((t) => [t.id as string, `Workout ${t.id}`] as const), ...custom.map((t) => [t.id, t.name] as const)]);
   const days = week.days.map((day): PlannerDay => {
     let workout: PlannerDay["workout"];
-    if (revision.programme) {
+    if (revision.programme?.mode === "SEQUENCE") {
+      // Preserve the existing PlannerDay/work-run projection. The owner-confirmed sequence is a
+      // separate read-only overlay consumed only by Week Planner; it does not become an assignment.
+      workout = day.suggestedTemplate
+        ? { label: `Workout ${day.suggestedTemplate}${day.afterShift ? " after shift" : ""}`, basis: "SUGGESTED" }
+        : { label: day.basis === "UNKNOWN" ? "No workout forecast without work context" : "No workout suggested", basis: "UNASSIGNED" };
+    } else if (revision.programme) {
       const date = livedDayOn(day.date);
       const rotationKnown = revision.programme.mode !== "ROTATION" || (isOperatorSavedSchedule(schedule) && [0, 1, 2, 3].every((n) => context(new Date(date.getFullYear(), date.getMonth(), date.getDate() - n, 16, 30)) !== null));
       const slot = rotationKnown ? resolveProgrammeSlot(revision.programme, date, (d) => context(d)!) : null;
@@ -63,5 +71,5 @@ export async function getWeekPlanner(now = new Date()): Promise<WeekPlanner> {
   const overdueIds = new Set(overdue.map((t) => t.id));
   return { date: dates[0]!, days, overdue,
     unplanned: tasks.filter((t) => (!t.plannedAt || t.plannedAt < dates[0]!) && !overdueIds.has(t.id)),
-    calendar: { connected: calendar.connected, lastSyncAt: calendar.lastSyncAt } };
+    calendar: { connected: calendar.connected, lastSyncAt: calendar.lastSyncAt }, trainingConnection };
 }

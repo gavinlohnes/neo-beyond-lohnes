@@ -28,7 +28,7 @@ const input = (over: Partial<OrientationInput> = {}): OrientationInput => ({
   picture: { now: { state: "WORK_RUN", label: "WORK RUN", line: "Shift 2 of 3. Fuel, water and sleep between shifts carry the run.", why: [] }, next: null },
   shift: { start: at(14, 18), end: at(15, 6) }, run: { position: 2, length: 3 },
   plan: { shift: { date: "2026-11-14", start: at(14, 18).toISOString(), end: at(15, 6).toISOString(), overnight: true, firstOfRun: false, lastOfRun: false },
-    cards: [], windows: [{ kind: "NAP", start: at(14, 15).toISOString(), end: at(14, 17).toISOString(), basis: "RHYTHM" }], caffeine: { hours: 6, setBy: "DEFAULT" }, caffeineAt: at(15, 1, 30).toISOString() },
+    cards: [], windows: [{ kind: "NAP", start: at(14, 15).toISOString(), end: at(14, 17).toISOString(), basis: "RHYTHM" }], caffeine: { hours: 6, setBy: "DEFAULT" }, caffeineAt: at(15, 1, 30).toISOString(), trainWindow: null },
   sleep: { minutes: 400, fromGarmin: true, band: { low: 415, high: 470, kind: "WORK" } }, checkIn: null, recommendation: null,
   draft: { kind: "RECOVER", title: "Protect recovery", reason: "Your last two main sleeps were below your usual range for those kinds of day.", nights: [{ livedDayStart: "", minutes: 400, kind: "WORK", low: 415, high: 470 }, { livedDayStart: "", minutes: 395, kind: "WORK", low: 415, high: 470 }] },
   prep: OPEN_PREP, obligations: [{ id: "vet", title: "Call the vet", dueAt: "2026-11-14", remindAt: "16:00", status: "OPEN" }], ...over,
@@ -80,6 +80,25 @@ describe("Orientation states", () => {
       });
     }
   }
+
+  // GRAYSON C6.4: Delta's line says why, one tap down: the rule and the facts it read. Closed until asked.
+  it("Delta's WHY THIS? opens to the rule and the facts, readable at 320 px", async () => {
+    await page.viewport(320, 900);
+    vi.mocked(getOrientation).mockResolvedValue(deriveOrientation(STATES["work-draft"]!));
+    const screen = await render(<Orientation active busy={false} refreshKey={0} routes={routes()} />);
+    const delta = screen.getByRole("article", { name: "DELTA" });
+    const why = delta.getByText("WHY THIS?", { exact: true });
+    await expect.element(why).toBeVisible();
+    expect(delta.element().querySelector("details > summary")!.getBoundingClientRect().height).toBeGreaterThanOrEqual(44); // #638 review
+    expect(delta.element().querySelector("details")!.open).toBe(false);
+    await why.click();
+    await expect.element(delta.getByText("A recover draft from your recent nights, before your check-in; the Engine decides after it.")).toBeVisible();
+    await expect.element(delta.getByText("Draft before check-in: Protect recovery")).toBeVisible();
+    await expect.element(delta.getByText("night 2 of 3")).toBeVisible();
+    for (const el of delta.element().querySelectorAll<HTMLElement>("[data-why-trace] dt, [data-why-trace] dd, .why-trace__rule")) expect(parseFloat(getComputedStyle(el).fontSize), el.textContent!).toBeGreaterThanOrEqual(16);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(320);
+    expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+  });
 
   it("work day before check-in: tonight, your range, Delta, the draft, the runway and the actions route to existing surfaces", async () => {
     await page.viewport(360, 900);

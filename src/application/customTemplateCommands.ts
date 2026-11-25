@@ -7,6 +7,7 @@ import {
   type CustomWorkoutTemplateInput,
   type CustomWorkoutTemplateModifyInput,
 } from "../persistence/workoutTemplateValidation";
+import { writeAtomically } from "./atomicWrite";
 
 /**
  * TRAIN-CREATE-002 (Custom Workout Templates, High-Risk Drop). A
@@ -33,6 +34,63 @@ export async function createCustomTemplate(input: CustomWorkoutTemplateInput): P
   };
   await db.customWorkoutTemplates.add(template);
   return template;
+}
+
+/**
+ * GRAYSON-TRAIN-PLAN-SAVE-001: one explicit confirmation creates the
+ * reviewed A/B/C set as one transaction. Validation and duplicate-name
+ * guards run before any row is added, so interruption or a stale retry
+ * cannot leave a partial plan behind. The records retain the existing
+ * directly-mutable template provenance (owner action + createdAt); no
+ * programme event, recommendation or second storage contract is added.
+ */
+export async function createCustomTemplateSet(inputs: readonly CustomWorkoutTemplateInput[]): Promise<CustomWorkoutTemplate[]> {
+  if (inputs.length !== 3) throw new Error("TRAIN_PLAN_SET_INVALID: exactly three templates are required.");
+  const parsed = inputs.map((input) => customWorkoutTemplateInputSchema.parse(input));
+  const normalizedNames = parsed.map((input) => input.name.trim().toLowerCase());
+  if (new Set(normalizedNames).size !== normalizedNames.length) {
+    throw new Error("TRAIN_PLAN_SET_DUPLICATE: every template needs a distinct name.");
+  }
+
+  return writeAtomically(["customWorkoutTemplates"], async () => {
+    const existing = await db.customWorkoutTemplates.toArray();
+    const activeNames = new Set(existing.filter((template) => !template.archivedAt).map((template) => template.name.trim().toLowerCase()));
+    if (normalizedNames.some((name) => activeNames.has(name))) {
+      throw new Error("TRAIN_PLAN_SET_EXISTS: one or more Grayson plan templates already exist. Review My Templates before saving again.");
+    }
+
+    const createdAt = new Date().toISOString();
+    const templates: CustomWorkoutTemplate[] = parsed.map((input) => ({
+      id: newId(),
+      name: input.name,
+      exercises: input.exercises,
+      createdAt,
+    }));
+    await db.customWorkoutTemplates.bulkAdd(templates);
+    return templates;
+  });
+}
+
+/** HOME-LINK-001: atomically reuse exact defaults and create only missing members. */
+export async function ensureExactCustomTemplateSet(inputs: readonly CustomWorkoutTemplateInput[]): Promise<CustomWorkoutTemplate[]> {
+  if (inputs.length !== 3) throw new Error("TRAIN_PLAN_SET_INVALID: exactly three templates are required.");
+  const parsed = inputs.map((input) => customWorkoutTemplateInputSchema.parse(input));
+  return writeAtomically(["customWorkoutTemplates"], async () => {
+    const existing = (await db.customWorkoutTemplates.toArray()).filter((template) => !template.archivedAt);
+    const createdAt = new Date().toISOString();
+    const created: CustomWorkoutTemplate[] = [];
+    const result = parsed.map((input) => {
+      const match = existing.find((template) => template.name.trim().toLowerCase() === input.name.trim().toLowerCase());
+      if (match) {
+        if (JSON.stringify(match.exercises) !== JSON.stringify(input.exercises)) throw new Error(`HOME_TEMPLATE_CHANGED: ${input.name} already exists with different exercises. Review My Templates.`);
+        return match;
+      }
+      const template = { id: newId(), name: input.name, exercises: input.exercises, createdAt };
+      created.push(template); return template;
+    });
+    if (created.length) await db.customWorkoutTemplates.bulkAdd(created);
+    return result;
+  });
 }
 
 export async function updateCustomTemplate(

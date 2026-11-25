@@ -19,7 +19,8 @@ import { importBridgeFiles, type HealthSyncResult } from "../application/healthS
 import { takeSharedHealthFiles } from "../ui/screens/health/sharedHealthFiles";
 import { GarminSyncLine } from "../ui/components/GarminSyncLine";
 import { markGarminSyncRequested, takeGarminSyncRequest } from "../ui/healthSyncRequest";
-import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid } from "../ui/screens/today/MeasuredSheet";
+import { HELPER_SYNC_URL, SyncGarminLink, bridgeSyncUrl, isAndroid, recordSyncSent } from "../ui/screens/today/MeasuredSheet";
+import { markBridgeOutdated } from "../ui/bridgeHandoff";
 import type { HealthEvidenceRequest, HealthHistoryDestination } from "../application/healthRecordQueries";
 import type { InsightMetric } from "../application/bodyInsightsQueries";
 import { readBootPhase } from "../ui/screens/today/bootMode";
@@ -175,12 +176,14 @@ function AppWorkspaces() {
   // ALFRED-001: the man in the chair, from the header or LOG.
   // BRIDGE-MOMENTS-001: the Bridge's "Shift's done" notification opens BEYOND on ?alfred=debrief.
   const [alfredLaunch] = useState(() => new URLSearchParams(window.location.search).get("alfred"));
-  const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief");
+  // GRAYSON-WINDOW-ALERT-001: the "Eating window open" notification opens BEYOND on ?alfred=meal, Delta ready for the meal.
+  const [alfredOpen, setAlfredOpen] = useState(alfredLaunch === "debrief" || alfredLaunch === "meal");
   const [driveOpen, setDriveOpen] = useState(false);
   useEffect(() => { const open = () => setDriveOpen(true); window.addEventListener(DRIVE_HOME_EVENT, open); return () => window.removeEventListener(DRIVE_HOME_EVENT, open); }, []);
   // CONNECT-002: a tapped link opens where its record lives.
   const [dailyNoteDayId, setDailyNoteDayId] = useState<string | null>(null);
   const [personFocus, setPersonFocus] = useState<string | null>(null);
+  const [workRecordFocus, setWorkRecordFocus] = useState<string | null>(null);
   const openRecordRef = useRef<(target: OpenRecordTarget) => void>(() => {});
   openRecordRef.current = (target) => {
     if (target.kind === "TASK") openMore("INTENT", { kind: "OBLIGATION", obligationId: target.id });
@@ -188,10 +191,11 @@ function AppWorkspaces() {
     else if (target.kind === "DAY") { if (openMore("DAILY_NOTE")) setDailyNoteDayId(target.id); }
     else if (target.kind === "PERSON") { if (openMore("PEOPLE")) setPersonFocus(target.id); }
     else if (target.kind === "JOURNAL") openMore("JOURNAL");
+    else if (target.kind === "WORK_RECORD") { if (openMore("WORK_RECORD")) setWorkRecordFocus(target.id); }
     else openMore("HIGHLIGHTS");
   };
   useEffect(() => { const open = (e: Event) => openRecordRef.current((e as CustomEvent<OpenRecordTarget>).detail); window.addEventListener(OPEN_RECORD_EVENT, open); return () => window.removeEventListener(OPEN_RECORD_EVENT, open); }, []);
-  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : undefined);
+  const [alfredDraft, setAlfredDraft] = useState<{ key: number; text: string; send?: boolean } | undefined>(alfredLaunch === "debrief" ? { key: 1, text: "Shift debrief: " } : alfredLaunch === "meal" ? { key: 1, text: "I ate " } : undefined);
   useEffect(() => {
     if (!alfredLaunch) return;
     const url = new URL(window.location.href);
@@ -204,6 +208,17 @@ function AppWorkspaces() {
     window.addEventListener(ASK_ALFRED_EVENT, onAsk); window.addEventListener(DO_IN_BEYOND_EVENT, onDo);
     return () => { window.removeEventListener(ASK_ALFRED_EVENT, onAsk); window.removeEventListener(DO_IN_BEYOND_EVENT, onDo); };
   }, []);
+  // GRAYSON-PLAN-FRESH-001: a Health Bridge too old for the plan link sends Chrome back on ?bridge=update; open
+  // KEY MOMENT ALERTS (MORE → Work schedule), which says to update the Bridge.
+  const [bridgeUpdate] = useState(() => new URLSearchParams(window.location.search).get("bridge") === "update");
+  useEffect(() => {
+    if (!bridgeUpdate) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("bridge");
+    window.history.replaceState(null, "", url.toString());
+    markBridgeOutdated();
+    openMore("WORK_SCHEDULE");
+  }, [bridgeUpdate]);
   const [oneTapSync] = useState(() => sharedHealth && takeGarminSyncRequest());
   // SYNC-002: the SYNC GARMIN home-screen shortcut (?go=sync) remembers the request and opens the Bridge.
   const [syncShortcut] = useState(() => new URLSearchParams(window.location.search).get("go") === "sync" && isAndroid());
@@ -364,7 +379,7 @@ function AppWorkspaces() {
     if (!syncShortcut) return;
     markGarminSyncRequested();
     // Chrome may hold an app launch that no tap started; the line on TODAY offers the same link to tap.
-    void bridgeSyncUrl().then((url) => { try { window.location.assign(url); } catch { /* the line below stays */ } }, () => { try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ } });
+    void bridgeSyncUrl().then((url) => { try { recordSyncSent(url); window.location.assign(url); } catch { /* the line below stays */ } }, () => { try { window.location.assign(HELPER_SYNC_URL); } catch { /* the line below stays */ } });
   }, [syncShortcut]);
   useEffect(() => {
     if (!oneTapSync) return;
@@ -591,7 +606,7 @@ function AppWorkspaces() {
     if (!canNavigate()) return false;
     setCommandTodayOrigin(tab === "TODAY" && view !== "MENU");
     setHealthHistoryOrigin(false); setHealthHistory(null);
-    setIntentFocus(focus); setMemoryFocusId(null); setDailyNoteDayId(null); setPersonFocus(null);
+    setIntentFocus(focus); setMemoryFocusId(null); setDailyNoteDayId(null); setPersonFocus(null); setWorkRecordFocus(null);
     setMoreView(view);
     setMoreRequest((key) => key + 1);
     showTab("COMMAND", false);
@@ -812,7 +827,7 @@ function AppWorkspaces() {
             onMealJourneyInFlightChange={updateMealInFlight} /></RootErrorBoundary>
         </div>}
         {visited.has("COMMAND") && <div id="workspace-COMMAND" className={tab === "COMMAND" ? "tab-enter" : undefined} hidden={tab !== "COMMAND"}>
-          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} reviewDestination={reviewDestination}
+          <RootErrorBoundary active={tab === "COMMAND"}><Suspense fallback={<TabLoading />}><MoreScreen coachDeltaRequest={coachDeltaRequest} onViewChange={setMoreView} active={tab === "COMMAND"} initialView={moreView} navigationRequest={moreRequest} recordFocus={intentFocus} memoryFocusId={memoryFocusId} dailyNoteDayId={dailyNoteDayId} personFocus={personFocus} workRecordFocus={workRecordFocus} reviewDestination={reviewDestination}
             onReviewDestinationConsumed={(key) => setReviewDestination((current) => current?.key === key ? null : current)}
             historyDestination={healthHistory} onHistoryExit={() => setHealthHistoryOrigin(false)}
             onReturnToHealth={healthHistoryOrigin ? () => { setHealthHistoryOrigin(false); showTab("BODY"); } : undefined}

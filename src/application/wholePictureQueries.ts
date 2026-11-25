@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds } from "../domain/logVoids";
 import { effectiveLogTimes } from "./logTimes";
 import type { StateCheckIn } from "../domain/common/types";
 import type { DecisionJournalEntry } from "../domain/journal/types";
@@ -10,7 +11,7 @@ import { getUndoneSetIds } from "./trainQueries";
 import { getExerciseNames } from "./exerciseLibraryQueries";
 import { getWeekAhead } from "./weekAheadQueries";
 import { getWeeklyReviewRecords, findWeekReview } from "./weeklyReviewQueries";
-import { getActiveDay, getSchedulePattern } from "./queries";
+import { getActiveDay, getSchedulePattern, getEffectiveCheckIns } from "./queries";
 import { livedDayShiftWindow } from "../engine/scheduledContext";
 import type { DomainEvent, SleepLoggedPayload } from "../domain/common/types";
 import type { ExternalSleepRevision } from "../domain/health/sleepImport";
@@ -35,14 +36,14 @@ export interface PictureLift {
 export async function getWholePicture(now = new Date()) {
   return db.transaction("r", db.tables, async () => {
     const [summaries, weights, checkIns, hours, resting, missions, obligations, journal, sets, undone, names, weekAhead, reviews, activeDay, eligible] = await Promise.all([
-      getDaySummaries(), getBodyweightHistoryWithSources(), db.checkIns.toArray(),
+      getDaySummaries(), getBodyweightHistoryWithSources(), getEffectiveCheckIns(),
       db.externalActivityHours.toArray(), db.externalRestingHeartRates.toArray(),
       getMissions(), getObligations(), getReviewedDecisionJournalEntries(),
       db.performedSets.toArray(), getUndoneSetIds(), getExerciseNames(),
       getWeekAhead(now), getWeeklyReviewRecords(), getActiveDay(), getCurrentlyEligibleUnresolvedObligations(),
     ]);
     const [sleepEvents, revisions, pattern] = await Promise.all([
-      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED", "MEAL_LOGGED", "MEAL_LOG_VOIDED", "WATER_LOGGED", "WATER_LOG_VOIDED", "LOG_RETIMED"]).toArray(),
+      db.events.where("type").anyOf(["SLEEP_LOGGED", "SLEEP_LOG_CORRECTED", "SLEEP_LOG_VOIDED", "MEAL_LOGGED", "MEAL_LOG_VOIDED", "WATER_LOGGED", "WATER_LOG_VOIDED", "LOG_RETIMED", "LOG_VOID_UNDONE"]).toArray(),
       db.externalSleepRevisions.toArray(), getSchedulePattern(),
     ]);
     const window = finishedLivedDays(now, 0, 56);
@@ -124,8 +125,8 @@ function byPeriod<T>(periods: readonly Period[], items: readonly T[], at: (item:
 }
 /** ROTATION-004: per BEYOND day, when each live (not voided or undone) meal and water log happened. */
 function dayMarks(events: readonly DomainEvent[]): Map<string, { meals: number[]; water: number[] }> {
-  const voidedMeals = new Set(events.filter((e) => e.type === "MEAL_LOG_VOIDED").map((e) => (e.payload as { mealEventId: string }).mealEventId));
-  const voidedWater = new Set(events.filter((e) => e.type === "WATER_LOG_VOIDED").map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
+  const voidedMeals = activeVoidedIds(events, "MEAL_LOG_VOIDED");
+  const voidedWater = activeVoidedIds(events, "WATER_LOG_VOIDED");
   const result = new Map<string, { meals: number[]; water: number[] }>();
   // LOG-TIME-001: a log sits where it actually happened.
   const times = effectiveLogTimes(events);
@@ -141,7 +142,7 @@ function dayMarks(events: readonly DomainEvent[]): Map<string, { meals: number[]
 }
 /** Per BEYOND day: the Garmin start/end behind its single live main-sleep log, when the owner has not corrected it. */
 function sleepTiming(events: readonly DomainEvent[], revisions: readonly ExternalSleepRevision[]): Map<string, { start: number; end: number }> {
-  const voided = new Set(events.filter((e) => e.type === "SLEEP_LOG_VOIDED").map((e) => (e.payload as { loggedEventId: string }).loggedEventId));
+  const voided = activeVoidedIds(events, "SLEEP_LOG_VOIDED");
   // Garmin's own corrections carry the newer version's source; any owner correction makes the times unknown.
   const corrections = events.filter((e) => e.type === "SLEEP_LOG_CORRECTED").sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
   const ownerCorrected = new Set(corrections.filter((e) => e.source === "USER").map((e) => (e.payload as { originalEventId: string }).originalEventId));

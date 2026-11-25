@@ -11,6 +11,9 @@ import { describeSchedulePreview } from "../today/workContextCopy";
 import type { SchedulePattern } from "../../../domain/common/types";
 import { describeError } from "../../errorMessage";
 import { KeyMomentAlerts } from "./KeyMomentAlerts";
+import { handPlanToPhone } from "../../bridgeHandoff";
+import { LogNudgeSettings } from "./LogNudgeSettings";
+import { WorkDatesOnSchedule } from "./WorkDatesOnSchedule";
 
 /**
  * Drop 02a (Daily Intelligence / Context, first slice). MORE -> Work
@@ -43,7 +46,7 @@ function toggled(set: number[], value: number): number[] {
   return set.includes(value) ? set.filter((v) => v !== value) : [...set, value].sort((a, b) => a - b);
 }
 
-export function WorkScheduleScreen() {
+export function WorkScheduleScreen({ onOpenWorkRecord }: { onOpenWorkRecord?: () => void } = {}) {
   const [loaded, setLoaded] = useState(false);
   const [weekAWorkdays, setWeekAWorkdays] = useState<number[]>([]);
   const [weekBWorkdays, setWeekBWorkdays] = useState<number[]>([]);
@@ -100,7 +103,8 @@ export function WorkScheduleScreen() {
         postWorkTailHours: draft.postWorkTailHours,
       });
       acknowledge("LIGHT");
-      setStatus("Saved.");
+      // GRAYSON-PLAN-FRESH-001: on Android, the same tap hands the new plan to the phone when it changed.
+      setStatus((await handPlanToPhone()) ? "Saved. Sent to your phone." : "Saved.");
     } catch (e) {
       setStatus(describeError(e, "Could not save."));
     } finally {
@@ -227,7 +231,10 @@ export function WorkScheduleScreen() {
         {saving ? "SAVING..." : "SAVE SCHEDULE"}
       </button>
       {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
+      {/* GRAYSON-WORK-RECORD-001: court and training dates on their day, with MARK AS WORK on a day off. */}
+      <WorkDatesOnSchedule {...(onOpenWorkRecord ? { onOpenWorkRecord } : {})} />
       <KeyMomentAlerts />
+      <LogNudgeSettings />
     </div>
   );
 }

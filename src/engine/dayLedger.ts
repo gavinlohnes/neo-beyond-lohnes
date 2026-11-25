@@ -1,3 +1,5 @@
+import { projectSetFixes } from "../domain/workout/setFixes";
+import { activeVoidedIds } from "../domain/logVoids";
 import type {
   BeyondDay,
   Capacity,
@@ -8,7 +10,6 @@ import type {
   BodyLogVoidedPayload,
   RecommendationKind,
   SchedulePattern,
-  StateCheckIn,
   UrgeTrigger,
   WorkContextSetPayload,
   WorkContextSource,
@@ -16,6 +17,7 @@ import type {
 } from "../domain/common/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { deriveCapacity } from "./capacity";
+import { checkInChains } from "../domain/checkInCorrections";
 import { effectiveWorkMarks } from "./workMarks";
 import { mostRecentBoundaryAtOrBefore } from "./dayRollover";
 import { findSessionRecords } from "./personalRecords";
@@ -195,6 +197,16 @@ const CORRECTION_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(
   // SHIFT-CORRECT-001: an explicit correction of a work mark.
   "WORK_PERIOD_RETIMED",
   "WORK_PERIOD_VOIDED",
+  // GRAYSON-CHECKIN-EDIT-001: a check-in fix is one correction; undoing it is another.
+  "CHECK_IN_CORRECTED",
+  "CHECK_IN_CORRECTION_UNDONE",
+  // GRAYSON-FIX-UNDO-001: putting a removed log back is a correction, like the removal before it.
+  "LOG_VOID_UNDONE",
+  // GRAYSON-TRAIN-EDIT-001: each set fix, and undoing one, is a correction.
+  "SET_CORRECTED",
+  "SET_REMOVED",
+  "SET_ADDED",
+  "SET_FIX_UNDONE",
 ]);
 
 const TRAINING_SET_TYPES: ReadonlySet<DomainEventType> = new Set<DomainEventType>(["SET_LOGGED", "SET_SKIPPED"]);
@@ -226,6 +238,14 @@ function deriveBurden(dayEvents: readonly DomainEvent[]): LedgerBurden {
     } else if (CORRECTION_TYPES.has(e.type)) corrections += 1;
     else if (TRAINING_SET_TYPES.has(e.type)) trainingSets += 1;
     else if (e.type === "SET_UNDONE") trainingSets -= 1;
+    // GRAYSON-TRAIN-EDIT-001: an added set is one more training set, a removed one one fewer; undoing either reverses it.
+    if (e.type === "SET_ADDED") trainingSets += 1;
+    else if (e.type === "SET_REMOVED") trainingSets -= 1;
+    else if (e.type === "SET_FIX_UNDONE") {
+      const cancelled = dayEvents.find((d) => d.id === (e.payload as { fixEventId?: string })?.fixEventId);
+      if (cancelled?.type === "SET_ADDED") trainingSets -= 1;
+      else if (cancelled?.type === "SET_REMOVED") trainingSets += 1;
+    }
   }
   return { manualEntries, corrections, trainingSets: Math.max(0, trainingSets), ...(firstEntryAt ? { firstEntryAt } : {}) };
 }
@@ -281,12 +301,8 @@ export function projectDaySummaries(input: DayLedgerInput): DaySummary[] {
   }
   for (const list of eventsByDay.values()) list.sort(byOccurrence);
 
-  const undoneSetIds = new Set(
-    input.events
-      .filter((e) => e.type === "SET_UNDONE")
-      .map((e) => (e.payload as { performedSetId?: string }).performedSetId)
-      .filter((id): id is string => id !== undefined),
-  );
+  // GRAYSON-TRAIN-EDIT-001: the same retraction every set reader uses (undone, replaced or removed sets).
+  const undoneSetIds = projectSetFixes(input.events).retractedSetIds;
   const setsBySession = new Map<string, PerformedSet[]>();
   for (const set of input.performedSets) {
     if (undoneSetIds.has(set.id) || set.setKind === "WARMUP") continue;
@@ -342,7 +358,8 @@ function summarizeDay(
   const naps: number[] = [];
   // UNDO-001: undone logs leave every total, the same as a deleted protein log.
   const undoneLogs = new Set(
-    [...ofType(events, "SLEEP_LOG_VOIDED"), ...ofType(events, "WATER_LOG_VOIDED")].map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId),
+    // GRAYSON-FIX-UNDO-001: a removal that was put back no longer counts.
+    [...activeVoidedIds(events, "SLEEP_LOG_VOIDED"), ...activeVoidedIds(events, "WATER_LOG_VOIDED")],
   );
   for (const root of ofType(events, "SLEEP_LOGGED").filter((e) => !undoneLogs.has(e.id))) {
     const minutes = effectiveValue(root, sleepCorrections, (p) => (p as { durationMinutes: number }).durationMinutes);
@@ -361,11 +378,11 @@ function summarizeDay(
 
   // Protein + meals (voided meals leave every total, same as getMealEntries)
   const proteinCorrections = correctionsOf(events, "PROTEIN_LOG_CORRECTED");
-  const voidedProtein = new Set(ofType(events, "PROTEIN_LOG_VOIDED").map((e) => (e.payload as ProteinLogVoidedPayload).proteinEventId));
+  const voidedProtein = activeVoidedIds(events, "PROTEIN_LOG_VOIDED");
   const proteinLogs = ofType(events, "PROTEIN_LOGGED").filter((e) => !voidedProtein.has(e.id)).map((root) =>
     effectiveValue(root, proteinCorrections, (p) => (p as { grams: number }).grams),
   );
-  const voided = new Set(ofType(events, "MEAL_LOG_VOIDED").map((e) => (e.payload as MealLogVoidedPayload).mealEventId));
+  const voided = activeVoidedIds(events, "MEAL_LOG_VOIDED");
   const mealCorrections = correctionsOf(events, "MEAL_LOG_CORRECTED");
   const meals = ofType(events, "MEAL_LOGGED")
     .filter((e) => !voided.has(e.id))
@@ -403,9 +420,10 @@ function summarizeDay(
     );
 
   // Check-in → the locked capacity rule
-  const checkIns = ofType(events, "STATE_CHECKED_IN");
+  // GRAYSON-CHECKIN-EDIT-001: a fixed check-in counts with its fixed answers; a fix is not a second check-in.
+  const checkIns = checkInChains(events);
   const latestCheckIn = checkIns[checkIns.length - 1];
-  const capacity = latestCheckIn ? deriveCapacity(latestCheckIn.payload as StateCheckIn) : undefined;
+  const capacity = latestCheckIn ? deriveCapacity(latestCheckIn.current) : undefined;
 
   // Latest recommendation and the operator's decision on it
   const issued = ofType(events, "RECOMMENDATION_ISSUED");
@@ -464,7 +482,7 @@ function summarizeDay(
             capacity: capacity.capacity,
             reasonCodes: capacity.reasonCodes,
             count: checkIns.length,
-            at: latestCheckIn.occurredAt,
+            at: latestCheckIn.at,
           },
         }
       : {}),

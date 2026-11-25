@@ -1,4 +1,4 @@
-import type { DecisionJournalEntry } from "../domain/journal/types";
+import type { DecisionJournalEntry, MissedReason } from "../domain/journal/types";
 import type { Recommendation } from "../domain/common/types";
 import { createDecisionJournalEntry, reviewDecisionJournalEntry } from "./journalCommands";
 import { getDecisionJournalEntries } from "./journalQueries";
@@ -72,6 +72,8 @@ export async function reflectOnDecline(
   recommendation: { id: Recommendation["id"]; title: string; why: string },
   reason: DeclineReason,
   note?: string,
+  /** GRAYSON C6.5: what BEYOND's data missed, optional. */
+  missed?: MissedReason | null,
 ): Promise<DecisionJournalEntry> {
   return createDecisionJournalEntry({
     title: `Not doing: ${recommendation.title}`,
@@ -79,6 +81,7 @@ export async function reflectOnDecline(
     decision: reason,
     ...(note?.trim() ? { reasoning: note.trim() } : {}),
     linkedRecommendationId: recommendation.id,
+    ...(missed ? { missed } : {}),
   });
 }
 

@@ -2,6 +2,7 @@ import { getImportedSleep } from "./externalSleepQueries";
 import { getShiftSleepPlan } from "./shiftSleepPlan";
 import { energyCurve, nextUsualSleep, usualSleep, type EnergyCurve, type SleepSpan } from "./alertness";
 import { mostRecentBoundaryAtOrBefore, nextRolloverBoundaryAfter } from "../engine/dayRollover";
+import { RHYTHM_WINDOW_DAYS } from "../engine/sleepRhythm";
 
 /**
  * ENERGY-CURVE-001: the lived day's energy estimate from your own Garmin sleep (main sleeps for the habitual wake
@@ -23,7 +24,11 @@ export async function getEnergyToday(now = new Date()): Promise<EnergyToday> {
   const t = now.getTime();
   const spans: SleepSpan[] = revisions.map((r) => ({ start: Date.parse(r.evidence.startTime), end: Date.parse(r.evidence.endTime) }))
     .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start && s.start <= t);
-  const nights = spans.filter((s) => s.start >= t - 7 * DAY && (s.end - s.start) / 60_000 >= MAIN_SLEEP_MINUTES);
+  const main = spans.filter((s) => (s.end - s.start) / 60_000 >= MAIN_SLEEP_MINUTES);
+  const nights = main.filter((s) => s.start >= t - 7 * DAY);
+  // C4.1: the body clock is placed from the last 28 days of main sleeps (SLEEP-RHYTHM-001's window), so a night run
+  // can be seen against the night-time sleeps before it.
+  const history = main.filter((s) => s.start >= t - RHYTHM_WINDOW_DAYS * DAY);
   const from = mostRecentBoundaryAtOrBefore(now).getTime(), to = nextRolloverBoundaryAfter(now).getTime();
   const sleeps = spans.filter((s) => s.end >= from - 3 * DAY).map((s) => ({ start: s.start, end: Math.min(s.end, t) }));
   const shift = plan ? { start: Date.parse(plan.shift.start), end: Date.parse(plan.shift.end) } : null;
@@ -42,7 +47,7 @@ export async function getEnergyToday(now = new Date()): Promise<EnergyToday> {
   const shiftEnd = shift && shift.end > from && shift.end <= to ? shift.end : null;
   const cutoffBase = sleepWindow ? Date.parse(sleepWindow.start) : shift?.end ?? null;
   return {
-    curve: energyCurve({ from, to, sleeps, planned, nights, shiftEnd }),
+    curve: energyCurve({ from, to, sleeps, planned, nights, shiftEnd, history }),
     shift: shift && shift.end > from && shift.start < to ? shift : null,
     // C4.2a: the plan's own cut-off (his setting when he set one), so TODAY and ROUTE never disagree.
     caffeineCutoff: cutoffBase === null || !plan ? null : cutoffBase - plan.caffeine.hours * 3_600_000,

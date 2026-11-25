@@ -1,7 +1,6 @@
 import { useId, useState, type KeyboardEvent } from "react";
 import { OperatorContextPanel } from "../../components/OperatorContextPanel";
 import { MemoryPanel } from "../../components/MemoryPanel";
-import { AlfredMemoryList } from "../../components/AlfredMemoryList";
 import { RoutinesPanel } from "../../components/RoutinesPanel";
 import { PeoplePanel } from "../../components/PeoplePanel";
 import { HomePanel } from "../../components/HomePanel";
@@ -69,7 +68,7 @@ export function LifeScreen({ active, initialTab = "Direction", startAtOverview =
         {t === "Habits" && <HabitsPanel active={on(t)} />}
         {t === "People" && <PeoplePanel active={on(t)} />}
         {t === "Home" && <HomePanel active={on(t)} />}
-        {t === "Memory" && <><OperatorContextPanel active={on(t)} onMemory={setMemoryFocus} /><MemoryPanel active={on(t)} focusFactId={memoryFocus} /><AlfredMemoryList active={on(t)} /></>}
+        {t === "Memory" && <><OperatorContextPanel active={on(t)} onMemory={setMemoryFocus} /><MemoryPanel active={on(t)} focusFactId={memoryFocus} /></>}
       </>}
     </div>)}
     </div>

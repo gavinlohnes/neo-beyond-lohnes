@@ -26,9 +26,17 @@ it("DRIVE-BACKUP-001: keeps a non-extractable key on the phone, outside the back
   expect(exported).not.toContain("beyond-drive-key");
   expect(exported).not.toContain(stored!.wraps.passphrase.key);
 
+  localStorage.setItem("beyond.vision", "NIGHT"); localStorage.setItem("beyond.alfredKey", "sk-secret");
   const encrypted = await encryptCurrentBackup();
   const file = await unlockBackup(encrypted, recoveryCode, "recovery");
-  expect((await previewAnyRestore(file)).format).toBe("NATIVE");
+  const preview = await previewAnyRestore(file);
+  expect(preview.format).toBe("NATIVE");
+  // GRAYSON C8.1: the encrypted Drive backup carries the travelling preferences too, never the Alfred key.
+  expect(preview.format === "NATIVE" && preview.settingsCount).toBeGreaterThanOrEqual(1);
+  const text = await file.text();
+  expect(text).toContain('"beyond.vision":"NIGHT"');
+  expect(text).not.toContain("sk-secret");
+  localStorage.removeItem("beyond.vision"); localStorage.removeItem("beyond.alfredKey");
 
   await forgetBackupKey();
   expect(await hasBackupKey()).toBe(false);

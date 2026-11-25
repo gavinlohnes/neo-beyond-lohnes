@@ -2811,8 +2811,20 @@ html { overflow-anchor: none; }
 /* OWNER-GO-001: SAME AS LAST leads the check-in sheet; the outcome line sits under NEXT. */
 .check-in-same { display: grid; gap: 4px; margin-bottom: 12px; }
 .check-in-outcome { margin: 0 0 8px; }
+/* GRAYSON-CHECKIN-EDIT-001: the "Checked in" line carries FIX beside it; wraps at narrow widths. */
+.check-in-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.check-in-line .meta { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.check-in-line .check-in-fix { width: auto; padding: var(--space-2) var(--space-4); }
+/* 16 px text on FIX even inside TODAY's field styling, which sets its secondary buttons to 13 px. */
+.today-field .check-in-line .check-in-fix, .check-in-line .check-in-fix { font-size: 16px; }
+.check-in-edited { margin: var(--space-3) 0; }
+.history-event-end { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
+.history-event-end .history-fix { width: auto; padding: var(--space-2) var(--space-3); }
 
 /* Optional workout recording follows the existing control palette. */
 .train-set-details { border: 1px solid var(--border-subtle); border-radius: var(--radius-md, 8px); padding: 12px; margin: 12px 0; min-width: 0; display: grid; gap: 10px; }
 .train-set-details label { display: grid; gap: 6px; min-width: 0; }
 .train-set-details select { width: 100%; min-height: 44px; font-size: 16px; }
+
+/* GRAYSON-FIX-UNDO-001: History's PUT IT BACK sits where a check-in row's FIX does (.history-fix). 16px text. */
+.history-event-end .history-put-back { font-size: 16px; white-space: nowrap; }

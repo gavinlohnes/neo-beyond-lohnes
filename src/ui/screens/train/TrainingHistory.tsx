@@ -1,4 +1,7 @@
 import { WorkoutRecap } from "./WorkoutRecap";
+import { SetFixHistory, SetFixSheet, useSetFixUndo } from "./SetFixSheet";
+import { undoSetFix } from "../../../application/trainFixCommands";
+import { RunningHistory } from "./RunningSession";
 import { useEffect, useRef, useState } from "react";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import {
@@ -103,6 +106,8 @@ export function TrainingHistory({
       {entries && !readError && entries.length > limit && (
         <button type="button" className="btn-secondary" onClick={() => setLimit((n) => n + 10)}>SHOW MORE SESSIONS</button>
       )}
+      {/* GRAYSON-TRAIN-RUN-001: running sessions, read-only, each correctable. */}
+      <RunningHistory active={active} />
       <button className="btn-secondary" style={{ width: "auto", padding: "8px 14px" }} onClick={onClose}>
         BACK TO WORKOUT
       </button>
@@ -127,6 +132,17 @@ function SessionRecordView({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const focusedRef = useRef(false);
 
+  // GRAYSON-TRAIN-EDIT-001: `reload` re-reads after a fix; the fix sheet and its Undo live here.
+  const [reload, setReload] = useState(0);
+  const [fixing, setFixing] = useState<{ setId: string } | { addTo: string } | null>(null);
+  const [fixError, setFixError] = useState<string | null>(null);
+  const refreshRecord = () => setReload((n) => n + 1);
+  const undo = useSetFixUndo(refreshRecord);
+  const putBack = async (fixEventId: string) => {
+    try { await undoSetFix(fixEventId); setFixError(null); refreshRecord(); }
+    catch (e) { setFixError(describeError(e, "That couldn't be put back. Nothing changed.")); }
+  };
+
   useEffect(() => {
     if (!active) return;
     let current = true;
@@ -138,7 +154,7 @@ function SessionRecordView({
     return () => {
       current = false;
     };
-  }, [sessionId, active]);
+  }, [sessionId, active, reload]);
 
   useEffect(() => {
     if (record === undefined || focusedRef.current) return;
@@ -159,7 +175,9 @@ function SessionRecordView({
       ) : (
         <>
           <p className="card-body" style={{ marginBottom: 12 }}>{describeHistoryFacts(record.entry)}</p>
-          <WorkoutRecap sessionId={sessionId} />
+          <WorkoutRecap key={reload} sessionId={sessionId} />
+          {undo.node}
+          {fixError && <p className="meta" role="alert">{fixError}</p>}
           {record.exercises.length === 0 ? (
             <p className="empty-state">No sets were recorded in this session.</p>
           ) : (
@@ -169,7 +187,16 @@ function SessionRecordView({
                 <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
                   {exercise.sets.map((set) => (
                     <li key={set.id} className={set.skipped ? "meta" : "card-body"} style={{ marginBottom: 2 }}>
-                      <span>{set.setKind === "WARMUP" ? "Warm-up · " : ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}</span>
+                      {/* GRAYSON-TRAIN-EDIT-001: tap any set to fix it (or fill in a skipped one). */}
+                      {fixing && "setId" in fixing && fixing.setId === set.id
+                        ? <SetFixSheet target={{ set }} exerciseName={exercise.name}
+                            onDone={(done) => { setFixing(null); undo.show(done); refreshRecord(); }} onCancel={() => setFixing(null)} />
+                        : <button type="button" className="set-fix-row" id={`set-row-${set.id}`}
+                            aria-label={`${set.setKind === "WARMUP" ? "Warm-up · " : ""}${describeRecordedSet(set)}${set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}. Fix this set`}
+                            onClick={() => setFixing({ setId: set.id })}>
+                            {set.setKind === "WARMUP" ? "Warm-up · " : ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}
+                          </button>}
+                      {set.fixes && <SetFixHistory fixes={set.fixes} newestFixEventId={set.newestFixEventId} onPutBack={(id) => void putBack(id)} />}
                       {set.record && (
                         <span className="pr-line">
                           <span className="pr-tag">PR</span>
@@ -178,7 +205,18 @@ function SessionRecordView({
                       )}
                     </li>
                   ))}
+                  {exercise.removed?.map((gone) => (
+                    <li key={gone.id} className="meta set-fix-removed">
+                      <span>Set {gone.setNumber} · removed</span>
+                      <button type="button" className="btn-secondary set-fix-history__back" aria-label={`Put set ${gone.setNumber} of ${exercise.name} back`}
+                        onClick={() => void putBack(gone.removalEventId)}>PUT IT BACK</button>
+                    </li>
+                  ))}
                 </ul>
+                {fixing && "addTo" in fixing && fixing.addTo === exercise.exerciseId
+                  ? <SetFixSheet target={{ add: { sessionId, exerciseId: exercise.exerciseId, weight: exercise.sets.at(-1)?.weight ?? 0, reps: exercise.sets.at(-1)?.reps ?? 0 } }}
+                      exerciseName={exercise.name} onDone={(done) => { setFixing(null); undo.show(done); refreshRecord(); }} onCancel={() => setFixing(null)} />
+                  : (record.entry.status === "COMPLETED" || record.entry.status === "PARTIAL") && <button type="button" className="set-fix-add" onClick={() => setFixing({ addTo: exercise.exerciseId })}>Add a set</button>}
               </div>
             ))
           )}

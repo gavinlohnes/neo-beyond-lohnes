@@ -1,4 +1,5 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds } from "../domain/logVoids";
 import { byTimeThenSeq } from "./queries";
 import type { DomainEvent } from "../domain/common/types";
 import type {
@@ -28,10 +29,8 @@ export interface MeasurementEntry {
 
 /** Every measurement (or one site's), oldest measurement date first; same-date entries in the order they were logged. */
 export async function getMeasurements(site?: MeasurementSite): Promise<MeasurementEntry[]> {
-  const events = await db.events.where("type").anyOf("MEASUREMENT_LOGGED", "MEASUREMENT_LOG_CORRECTED", "MEASUREMENT_LOG_VOIDED").toArray();
-  const voided = new Set(
-    events.filter((e) => e.type === "MEASUREMENT_LOG_VOIDED").map((e) => (e.payload as MeasurementLogVoidedPayload).loggedEventId),
-  );
+  const events = await db.events.where("type").anyOf("MEASUREMENT_LOGGED", "MEASUREMENT_LOG_CORRECTED", "MEASUREMENT_LOG_VOIDED", "LOG_VOID_UNDONE").toArray();
+  const voided = activeVoidedIds(events, "MEASUREMENT_LOG_VOIDED");
   const nextBySupersedes = new Map<string, DomainEvent>();
   for (const e of events) {
     if (e.type === "MEASUREMENT_LOG_CORRECTED") nextBySupersedes.set((e.payload as MeasurementLogCorrectedPayload).supersedesEventId, e);

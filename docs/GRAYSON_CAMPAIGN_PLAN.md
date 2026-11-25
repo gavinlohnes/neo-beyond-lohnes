@@ -54,73 +54,106 @@ status of its own.
 | C1.2 | Orientation slice 2: day-off, recovery and difficult-day grammar | Done (#598) | Approved 2026-11-20 (no invented day-off advice; mood trend as a fact); [brief](agent/GRAYSON-C1.2-001.md) |
 | C1.3 | Close ritual | Done (#599) | Approved 2026-11-20: follows SHIFT DOWN, not END DAY; [brief](agent/GRAYSON-C1.3-001.md) |
 | C1.4 (Q4) | "Tomorrow differs" line | Done (#599) | Ships inside C1.3's close |
-| C1.5 | Re-entry thread | Not started |  |
+| C1.5 | Re-entry thread | Partly built (the since-last-look line covers new advice, state, plan changes and Garmin sleep; not obligations or an active workout) |  |
 | C1.6 | Delta voice pass on the loop | Done (#600) | Approved 2026-11-20: Mentor (Bruce → Terry) default, Delta and Droid switchable; [brief](agent/GRAYSON-C1.6-001.md) |
+| C1.7 | Carry or drop unfinished plans at the close (backlog B6, after Sunsama) | Briefed ([CARRY-001](agent/GRAYSON-CARRY-001.md)) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S |
 | **Campaign 2 — Shift Transitions** | | | |
-| C2.1 | Arrival in two taps | Not started |  |
-| C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Not started |  |
+| C2.1 | Arrival in two taps | Done (#617) | Approved 2026-11-23 (skips read only to pick one step; one tap marks the note read); [brief](agent/GRAYSON-C2.1-001.md) |
+| C2.2 | Shift-down bridge (from #592's SHIFT-DOWN-BRIDGE-001) | Briefed ([SHIFTDOWN-TAPS-001](agent/GRAYSON-SHIFTDOWN-TAPS-001.md)) | [brief](agent/GRAYSON-SHIFTDOWN-TAPS-001.md); Grok Bot |
 | C2.3 | Home moment | Not started |  |
-| C2.4 | Flip-day plan | Not started |  |
-| C2.5 (Q8) | Two-tap run debrief | Not started |  |
+| C2.4 | Flip-day plan | Briefed ([FLIP-PLAN-001](agent/GRAYSON-FLIP-PLAN-001.md)) | [brief](agent/GRAYSON-FLIP-PLAN-001.md); Grok Bot |
+| C2.5 (Q8) | Two-tap run debrief | Not started | [brief](agent/GRAYSON-RUN-DEBRIEF-001.md) (#647); Grok Bot |
 | C2.6 | Work boundary guard | Not started |  |
+| C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Done (#706) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
-| C3.1 (Q7) | Last done and evidence | Not started |  |
-| C3.2 | Lead time and "coming up" | Not started |  |
-| C3.3 | Day-off shape | Not started |  |
+| C3.1 (Q7) | Last done and evidence | Not started | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Grok Bot |
+| C3.2 | Lead time and "coming up" | Briefed (GRAYSON-COMING-UP-001, 2026-11-25) |  |
+| C3.3 | Day-off shape | Briefed (GRAYSON-DAY-OFF-SHAPE-001, 2026-11-25) |  |
 | C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
 | C3.4a | Alert time on repeating Home jobs | Done (#594) | Added 2026-11-20 on Gavin's go; Home jobs alerted only at 16:00 |
 | C3.4b | Yearly repeats editable in Plans | Done (#606) | Added 2026-11-20 on Gavin's go; touches `engine/recurrence.ts`, so his merge. [Brief](agent/GRAYSON-C3.4b-001.md) |
 | C3.4c | Repeat edits keep their pattern and anchor | Done (#606) | Added 2026-11-21 on Gavin's go ("Fix those two next"), folded into #606 at his word; touches `engine/recurrence.ts`, so his merge. [Brief](agent/GRAYSON-C3.4c-001.md) |
 | C3.5 | Seasonal packs | Not started |  |
-| C3.6 | Home inventory light | Not started |  |
+| C3.6 | Home inventory light | Partly built (details sit on the Home item; not searchable yet) |  |
+| C3.7 | Group home jobs by room (backlog B12, after Sweepy) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored field), S |
+| C3.8 | Days off with Elle: where their schedules overlap, from a calendar she shares (backlog B17) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new provider and another person's data; needs Elle's OK too), L |
 | **Campaign 4 — Body Engine** | | | |
-| C4.1 | Energy curve body-clock fix | Not started |  |
+| C4.1 | Energy curve body-clock fix | Done (verified and locked; no runtime change) | [brief](agent/GRAYSON-C4.1-001.md); the body-clock model itself stays unvalidated |
 | C4.2 (Q2) | Caffeine cut-off by what he drinks (Quick win Q2) | Not started |  |
 | C4.2a | Owner-editable caffeine cut-off, source, SAVE / UNDO | Done (#595) | Narrowed by Gavin 2026-11-20: no automated suggestion, confidence or suppression. Explicit experiment deferred to separate authorization |
-| C4.3 | Optional one-tap caffeine log | Not started |  |
-| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Not started |  |
-| C4.5 | Mission review (monthly) | Not started |  |
-| C4.6 | Water target | Not started |  |
+| C4.3 | Optional one-tap caffeine log | Briefed | Log only, Gavin 2026-11-25: no "still in your system" estimate and no monthly sleep comparison. [Brief](agent/GRAYSON-CAFFEINE-LOG-001.md) |
+| C4.4 | Training feeds the night (HARVEST-003 W2) and a train window | Done (#627) | Hard/late session adds "Protect sleep tonight"; train window from usual wake to 2 h before the shift; [brief](agent/GRAYSON-TRAIN-FINISH-2.md) |
+| C4.4p | Guided exercise/calibration preview | Done (#608) | Read-only first Training Intelligence slice; no programme, Engine or C4.4 training-to-sleep/window behavior |
+| C4.4d | Guided three-session plan draft | Done (#609) | Ephemeral A/B/C and reality-form preview; no save/activation and does not start C4.4 |
+| C4.4s | Owner-confirmed A/B/C template save | Done (#610) | Exact review plus atomic custom-template creation; no programme activation, assignment or C4.4 behavior |
+| C4.4q | Ordered sequence activation design | Done (#611) | Protected design only: date-independent next-member, recovery and failure semantics; no runtime change or C4.4 behavior |
+| C4.4r | Owner-confirmed A/B/C sequence activation | Done (#612) | Existing programme history plus qualifying workout outcomes; preserves capacity/recovery authority and does not start C4.4 training-to-night behavior |
+| C4.4t | Connect next sequence member to week opportunities | Done (#613) | Read-only Week Planner/Week Ahead composition; no fixed dates, time advancement, catch-up debt or new planning semantics |
+| C4.4v | FULL/SHORT/MINIMUM/HOME/RECOVERY form design | Done (#614) | Protected design only: explicit parent identity, advancement, history and repair; no runtime change |
+| C4.4w | Exact bodyweight HOME links | Done (#616) | Protected candidate: owner-confirmed links, exact provenance/advancement, history truth and loaded-progression suppression; no SHORT/adaptation |
+| C4.4x | Linked SHORT forms | Done (#625, fix #626) | Exact loaded SHORT per member, mirrors HOME; completed advances, partial holds; [brief](agent/GRAYSON-TRAIN-FINISH-1.md) |
+| C4.4y | TRAIN Progress & Direction (read only) | Done (#625, fix #626) | WORKING / UNCERTAIN / NEEDS ATTENTION with evidence floors and WHY; no adaptation |
+| C4.4z | Delta during training (guided execution) | Done (#627; Gym mode #628) | Quiet on normal sets; one owner-decided load proposal on clear evidence; pain stop without diagnosis; one end review |
+| LOG-WHEN-001 | Logger: DAY and SHIFT on WHEN | Done (#621) | Protected (amends LOG-TIME-001); water and meal sheets; brief `docs/agent/GRAYSON-LOG-WHEN-001.md` |
+| LOG-CATCHUP-001 | Post-shift catch-up | Done (#622) | Protected (TODAY after SHIFT DOWN); brief `docs/agent/GRAYSON-LOG-CATCHUP-001.md` |
+| C4.5 | Mission review (monthly) | Briefed ([MISSION-REVIEW-001](agent/GRAYSON-MISSION-REVIEW-001.md)) |  |
+| C4.6 | Water target | Done (#629) | Own optional target beside the total on TODAY and the water sheet; [brief](agent/GRAYSON-C4.6-001.md) |
 | C4.7 | Watch workouts and weight from Health Connect | Not started |  |
-| C4.8 | Optional fasting window | Not started | Design in #601; no implementation authorized |
+| C4.8 | Optional fasting window | In progress (#619, #623, #672; [WINDOW-REVIEW-001](agent/GRAYSON-WINDOW-REVIEW-001.md) briefed) | Design in #601. Slices C4.8a and C4.8b are done; no further slice is authorized |
+| C4.8a | Eating Window foundation | Done (#619) | Approved 2026-11-23 (settings on the schedule row, safety check stores completion only, three day kinds); [brief](agent/GRAYSON-C4.8A-001.md) |
+| C4.8b | Eating Window meets the meal log | Done (#623) | Offers END FAST AT / FAST FROM a logged meal (never automatic); protein against the open window; [brief](agent/GRAYSON-C4.8B-001.md) |
+| C4.9 | Running sessions: the 9-week run/walk plan in TRAIN (backlog B1, after Couch to 5K) | Done (#666) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new session kind, stored runs, events), L. [brief](agent/GRAYSON-TRAIN-RUN-001.md) (#640); Codex |
+| C4.10 | Buzz when rest ends, screen on (backlog B2, after Hevy) | Done (#668) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S. Reuses `src/ui/feel/feedback.ts`; [brief](agent/GRAYSON-TRAIN-REST-001.md) (#644); Codex |
+| C4.11 | Spoken run/walk cues and buzz with the phone locked, through Health Bridge (backlog B3) | Done (#683) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; Gavin's pick 1A. Lane, size: PROTECTED (Android permissions, background service), L. After C4.9; Codex |
+| C4.12 | Record the standards tests: timed 1.5-mile run, sit-and-reach, one-minute sit-ups (backlog B4) | Done (#686) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; benchmarks per Gavin's pick 4A. Lane, size: PROTECTED (new stored records), M. After C4.9; Codex |
+| C4.13 | Written setup, cues and mistakes for every library exercise, plus a link to a free official video (backlog B5, after MuscleWiki) | Done (#681) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog; Gavin's pick 2B. Lane, size: FEATURE, M; Codex |
+| C4.14 | Body map: tap a muscle to see its exercises, coverage only (backlog B7, after MuscleWiki) | Done (#691) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, M; Codex |
+| C4.15 | Smoothed trend weight beside the 60-day line (backlog B8, after MacroFactor) | Done (#652) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S. [brief](agent/GRAYSON-WEIGHT-TREND-001.md) (#648); Claude Code |
+| C4.16 | Reorder exercises mid-workout (backlog B9, after Hevy) | Partly built (jump to any exercise mid-workout; the new order is not saved) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: FEATURE, S; Codex |
+| C4.17 | Pinned note per exercise (backlog B10, after Hevy) | Done (#689) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored field), S; Codex |
+| C4.18 | Nutrition-label scan (backlog B13, after MacroFactor) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new OCR dependency), M |
+| C4.19 | Short sleep trims TRAIN to the SHORT or RECOVERY form; sleep and Garmin only ever lower it, and his check-in wins (backlog B14) | Done (SLEEP-ENGINE-001) | Added 2026-11-24 from the GRAYSON research backlog, then found already built: [SLEEP-ENGINE-001](agent/SLEEP-ENGINE-001.md) (2026-10-27) turns the standard session into the reduced one after two short nights, and his check-in still wins. Tuning is backlog E9, briefed as [YOUR-NUMBERS-001](agent/GRAYSON-YOUR-NUMBERS-001.md) |
 | **Campaign 5 — Inner Day** | | | |
-| C5.1 | Feeling word (optional) | Not started |  |
-| C5.2 | Help mode | Not started |  |
+| C5.1 | Feeling word (optional) | Briefed (GRAYSON-CHECKIN-WORDS-001 slice A, 2026-11-25) |  |
+| C5.2 | Help mode | Briefed (GRAYSON-CHECKIN-WORDS-001 slice B, 2026-11-25) |  |
 | C5.3 | Shorter reality path | Not started |  |
-| C5.4 | Pattern review (monthly, private) | Not started |  |
-| C5.5 | Sensitive-data controls | Not started |  |
+| C5.4 | Pattern review (monthly, private) | Partly built; rest briefed ([MONTH-PATTERNS-001](agent/GRAYSON-MONTH-PATTERNS-001.md)) | Month recap and tag patterns exist |
+| C5.5 | Sensitive-data controls | Briefed ([DELTA-READS-001](agent/GRAYSON-DELTA-READS-001.md)) |  |
 | **Campaign 6 — Delta** | | | |
-| C6.1 | Learning lifecycle | Not started |  |
-| C6.2 | "What I think I'm learning" weekly | Not started |  |
-| C6.3 | What moves your numbers | Not started |  |
-| C6.4 | "Why am I seeing this?" everywhere | Not started |  |
-| C6.5 | Override as evidence | Not started |  |
-| C6.6 | Earned challenge ladder | Not started |  |
-| C6.7 | One memory store | Not started |  |
-| C6.8 | Guided Start + Teach Delta, slice 1 | In PR #605 | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
+| C6.1 | Learning lifecycle | Done (#639) | [brief](agent/GRAYSON-C6.1-C6.2-001.md); answers are a new LEARNING_RESPONDED event |
+| C6.2 | "What I think I'm learning" weekly | Done (#639) | Ships with C6.1; [brief](agent/GRAYSON-C6.1-C6.2-001.md) |
+| C6.3 | What moves your numbers | Done (#693) | [brief](agent/GRAYSON-WHAT-MOVES-001.md) (#649); Claude Code |
+| C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
+| C6.5 | Override as evidence | Done (#701) | [brief](agent/GRAYSON-C6.5-001.md); Claude Code. "That's not right" on every other Why is [NOT-RIGHT-001](agent/GRAYSON-NOT-RIGHT-001.md) (backlog E8) |
+| C6.6 | Earned challenge ladder | Approved, next after C6.7 | Gavin's go 2026-11-25; Claude Code (ccr-380c4225); design first |
+| C6.7 | One memory store | Done (#704) | [ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md); Claude Code (ccr-380c4225) |
+| C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
+| C6.9 | Count the questions GRAYSON asks each day by area, shown only on Delta's monthly page and never as a score of him (backlog B15) | In review (#694) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records, Delta behaviour), M. [Brief](agent/GRAYSON-ASKS-COUNT-001.md); Claude Code |
+| C6.10 | His own cross-area rules, with Delta proposing edits he confirms (backlog B18) | Not started | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (Engine authority, AI autonomy), L |
 | **Campaign 7 — Capture and Attention** | | | |
-| C7.1 | Voice into capture everywhere | Not started |  |
-| C7.2 | Plan stays fresh | Not started |  |
-| C7.3 | New moment kinds | Not started |  |
+| C7.1 | Voice into capture everywhere | Done (#699) | [brief](agent/GRAYSON-DICTATE-001.md); Grok Bot |
+| C7.2 | Plan stays fresh | Done (#698) | [brief](agent/GRAYSON-PLAN-FRESH-001.md); Grok Bot |
+| C7.3 | New moment kinds | Briefed (GRAYSON-ALERT-KINDS-001, 2026-11-25: coming up and caffeine cut-off; plan to confirm left out) |  |
 | C7.4 | Widget quick actions | Not started |  |
-| C7.5 | Lock-screen workout (HARVEST-003 later) | Not started |  |
-| C7.6 | Search on MiniSearch | Not started |  |
+| C7.5 | Lock-screen workout (HARVEST-003 later) | Done (#688) |  |
+| C7.6 | Search on MiniSearch | Done (SEARCH-002: MiniSearch index with tap to open, already on master) |  |
 | **Campaign 8 — Data You Own** | | | |
-| C8.1 (Q6) | Settings travel with the backup | Not started |  |
-| C8.2 | Restore drill | Not started |  |
-| C8.3 | Export everything readable | Not started |  |
-| C8.4 | Second-device sync | Not started | Deferred until a second device is wanted |
+| C8.1 (Q6) | Settings travel with the backup | Done (#633) | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
+| C8.2 | Restore drill | Done (BACKUP-AUTO-001: the monthly restore check reads the backup through the real restore, offline and without writing, and compares per-table counts). Full trial restore into a scratch copy briefed as GRAYSON-RESTORE-DRILL-001, 2026-11-25 |  |
+| C8.3 | Export everything readable | Partly built; rest briefed ([EXPORT-ALL-001](agent/GRAYSON-EXPORT-ALL-001.md)) | CSV today for weight, workouts, meals, days with sleep minutes, and measurements |
+| C8.4 | Second-device sync | Deferred (only if he gets a tablet or wants lists shared with Elle; Drive backup is built) | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
-| C9.1 | TodayScreen split (TODAY-SPLIT-002) | Not started |  |
-| C9.2 | Quiet Command finish | Not started |  |
+| C9.1 | TodayScreen split (TODAY-SPLIT-002 slice 2 shipped as #575; the rest is TODAY-SPLIT-003) | Done (#685, #687, #690, #692, #695, #696; TODAY is 2,076 lines, down from 3,604) | 2026-11-24, Gavin: hard pieces others plug into go first. [brief](agent/GRAYSON-TODAY-SPLIT-003.md); Grok Bot, first in its queue ([build order](agent/GRAYSON-BUILD-ORDER.md)). No visible change; Gavin merges each slice |
+| C9.6 | TODAY stays calm: at most two quiet lines at once in his order, one after-shift card at a time; every new TODAY note is a quiet-line candidate, never its own block | Done (#697) | Added 2026-11-24 on Gavin's go ("Write a today clean up"). [brief](agent/GRAYSON-TODAY-CALM-001.md); Grok Bot. Lane, size: PROTECTED (TODAY composition), M |
+| C9.2 | Quiet Command finish | Done (TRAIN #628; DATA home #632) | [TRAIN brief](agent/GRAYSON-TRAIN-FINISH-3.md), [DATA brief](agent/GRAYSON-C9.2-DATA-001.md) |
 | C9.3 | Navigation study | Not started |  |
-| C9.4 | Accessibility and motion pass | Not started |  |
+| C9.4 | Accessibility and motion pass | Partly built (axe checks run on most screens in tests; no large-text or reduced-motion pass yet) |  |
 | C9.5 | BEYOND → GRAYSON, Alfred → Delta | Not started |  |
 | **Quick wins outside the campaigns** | | | |
-| Q3 | Finish workouts on the metric page | In progress (#584) | Conflicts with master on the checkpoint file; no review yet |
-| Q5 | BODY protein tap (roadmap Next #2) | Not started | |
+| Q3 | Finish workouts on the metric page | Done (#584) | Merged 2026-11-22 |
+| Q5 | BODY protein tap (roadmap Next #2) | Done (#634, Codex) | |
 
-Last status update: 2026-11-20.
+Last status update: 2026-11-24.
 
 ### Guided Operating Loop overlay
 
@@ -242,7 +275,7 @@ partial, **M** missing. Paths are under `src/` unless shown. Campaign column say
 | Watch-recorded workouts, weight, body fat | **M** | Not in Bridge permissions (AndroidManifest) | V | C4.7 (Protected) |
 | Personal baselines and "unusual for you" | **B** | `engine/personalBaselines.ts`, `domain/health/unusual.ts` | V | — |
 | Sleep owed vs his own usual | **B** | `application/sleepDebt.ts` | V | — |
-| Night energy curve | **P** | `application/alertness.ts`; #592 reports the circadian low lands too early on steady nights | V / A | C4.1 |
+| Night energy curve | **P** | `application/alertness.ts`; #592's early-low claim withdrawn (research audit); shown low locked in the waking night by C4.1 (#636); body-clock anchor unvalidated | V / A | C4.1 |
 | Caffeine timing | **P** | Owner-editable cutoff, default 6 h (`application/sleepPlanSettings.ts`, C4.2a); no automated proposal or exposure/adherence measurement | V | C4.2–C4.3 |
 | Light timing | **P** | LIGHT card on night shifts only (`shiftSleepPlan.ts`) | V | C2.4 |
 | Meals, protein, water, barcode, USDA | **B** | `nutritionCommands.ts`, `foodLookupQueries.ts`, `barcodeLookup.ts`, `ui/components/BarcodeScanner.tsx` | V | — |
@@ -537,6 +570,12 @@ Health Bridge.
 
 - **C4.1 DEEPEN · Energy curve body-clock fix.** Place the circadian low from his actual sleep
   pattern on steady night runs (#592 finding C1; its simulation put the low at 12:30, inside day sleep).
+  - **Correction (Gavin, 2026-11-24: "Lock it in"):** the research audit withdrew #592's finding. Its simulation
+    left out the planned/usual sleep the production query supplies. With it, the shown low on steady nights is in
+    the waking night (for example 04:30–07:30 for a 07:30–14:00 day sleep). C4.1 therefore locked that behaviour
+    with a property test and changed no runtime code. The circadian anchor (1.5 h before habitual wake, which
+    assumes a body clock fully adjusted to nights) stays an unvalidated assumption. Changing it (partial
+    adjustment, or an off-day anchor) is a separate, owner-approved objective.
   - Done when: a property test with a 3-night synthetic run puts the low inside the waking night
     window; existing curve tests pass; copy unchanged.
   - Builds on: `application/alertness.ts` (circadian low 1.5 h before habitual wake).
@@ -567,6 +606,8 @@ Health Bridge.
   - Builds on: water log pattern (`commands.ts`), `tagPatterns.ts`/`tryExperiment.ts` for the comparison.
   - Lane, size: **Protected** (new event + backup; amends the locked "caffeine never recorded") · **M**.
   - Borrow: same half-life code as C4.2. **Needs Gavin's answer (Q2 in section 7).**
+  - **Narrowed by Gavin, 2026-11-25 ("Yes" to log only):** the log only. No "still in his system" estimate and no
+    monthly sleep comparison, per his Nov 20 C4.2a ruling. [Brief](agent/GRAYSON-CAFFEINE-LOG-001.md).
 - **C4.4 EXPAND · Training feeds the night (HARVEST-003 W2) and a train window.** A hard or late
   session adds "protect sleep tonight" to the plan; TRAIN shows when to train today from shift and
   sleep windows (#592's TRAIN-WINDOW-001).
@@ -574,6 +615,11 @@ Health Bridge.
     abstains without a schedule; Engine variant choice unchanged (tests).
   - Builds on: `trainHome.ts`, `shiftSleepPlan.ts`, `alertness.ts`, `performedSets`.
   - Lane, size: **Protected** (sleep-plan guidance) · **M**.
+  - **Training-intelligence boundary (design only, 2026-11-20):**
+    [`GRAYSON_TRAIN_INTELLIGENCE.md`](GRAYSON_TRAIN_INTELLIGENCE.md) defines the sequenced A/B/C
+    Mission, calibration, exercise understanding, emphasis blocks and Progress/Direction. C4.4
+    remains only the separately authorized training-to-sleep/window connection. Neither design
+    silently changes Engine variant selection, programme activation or recommendation priority.
 - **C4.5 ADD · Mission review (monthly).** One page: goal, what he did (training sessions, protein
   days, sleep), what moved (weight trend, strength, resting HR), how sure, and at most one change he can
   accept or skip. Excludes partly logged days from burn (#592's HONEST-BURN-001).
@@ -848,8 +894,9 @@ vision modes (`ui/vision/`), Emblem, TODAY-SPLIT-002 brief.
 
 - **C9.1 DEEPEN · TodayScreen split (TODAY-SPLIT-002).** Finish the smaller first slice (toasts),
   then the rest, so Orientation and close can grow safely.
-  - Done when: per the existing brief; no behaviour change.
-  - Lane, size: **Feature** · **M**.
+  - Done when: per [GRAYSON-TODAY-SPLIT-003](agent/GRAYSON-TODAY-SPLIT-003.md) (one read, one set of actions,
+    then sections); no behaviour change.
+  - Lane, size: **Feature** (no visible change; Gavin merges) · **L**.
 - **C9.2 DEEPEN · Quiet Command finish.** Apply the Orientation visual grammar to TRAIN home and
   DATA home.
   - Done when: per-screen visual review at 360 px; tokens only.

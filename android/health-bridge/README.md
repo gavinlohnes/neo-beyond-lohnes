@@ -52,9 +52,38 @@ moment of the stored plan that came due within the last 2 hours counts as shown 
 window), so nothing 0.11.0 showed appears a second time (the one-off cost: an alarm Android was still holding at that
 instant is not shown).
 
+0.12.0 (GRAYSON-TRAIN-RUN-CUES-001, Gavin 2026-11-24): spoken run and walk cues, and a buzz, with the phone
+locked. When he starts, pauses, resumes or ends a run in BEYOND with **VOICE CUES** on, BEYOND opens
+`beyond-bridge://run` carrying the whole run: each cue's time, its words (his own, from CUE WORDS) and whether to
+speak or buzz it. A no-screen activity hands that to a foreground service and closes, so he lands straight back in
+BEYOND. The service speaks each cue with the phone's own text-to-speech voice (music ducks, then comes back) and,
+only while the screen is off or locked, buzzes: a long double buzz before a run, one short buzz before a walk. An
+ongoing notification shows "Running · Week 1, run 1" and the interval with a countdown to the next change, with
+**MUTE** (silences this run) and **END CUES** (stops the Bridge). It works the time out from the same timestamps
+BEYOND uses, so a pause in BEYOND moves every later cue, and a cue it can't say on time is said late only while its
+interval is still running, never out of order. It stops itself 10 seconds after the finish, when BEYOND ends the run,
+on END CUES, or 4 hours after the start, and never restarts after a reboot. BEYOND keeps the only record of the run;
+nothing is written to the phone.
+
+New permissions, and why: `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_HEALTH` (install-time) for the service, which
+Android describes as being for exercise trackers; `ACTIVITY_RECOGNITION` (asked once, the first time cues start, on
+Android 14 and later), because Android requires one of the health type's runtime permissions to start it; `VIBRATE`
+for the buzz; and a query for the phone's text-to-speech engine. **It reads nothing new:** no activity, sensor,
+location or health data is read with these permissions, no health permission changes, and there is still no Internet
+permission. If he denies the physical activity permission, the Bridge doesn't start, a notification says "Voice cues
+need the physical activity permission. Allow it in Health Bridge's settings.", and the run carries on in BEYOND with
+its on-screen cues. CI allows exactly one new service, `RunCueService`.
+
 The packaged manifest allows the official Health Connect SDK's bound
 `HealthDataSdkService`, used for platform/client IPC. It is not a scheduled sync
 worker. CI rejects other services, other health permissions and Internet access.
+
+0.13.0 (GRAYSON-PLAN-FRESH-001, Gavin 2026-11-24): BEYOND can hand the alert plan over without a SYNC GARMIN. Its
+update link (`beyond-bridge://plan?plan=…`), opened when he saves alert settings, his schedule or a confirmed schedule
+change, or taps UPDATE ALERTS, lands on `PlanActivity`: it saves the plan with the same `MomentAlerts.save`, re-arms
+the moments and finishes at once with no screen. It reads nothing, sends nothing and asks for no permission; no new
+service. A Bridge older than 0.13.0 doesn't know the link, and Chrome goes back to BEYOND's KEY MOMENT ALERTS, which
+says to update the Bridge.
 
 ## Build and provenance
 

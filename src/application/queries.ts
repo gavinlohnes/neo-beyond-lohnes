@@ -1,6 +1,8 @@
 import { db } from "../persistence/db";
+import { activeVoidedIds, type LogVoidType } from "../domain/logVoids";
 import { effectiveWorkMarks, type EffectiveWorkMark } from "../engine/workMarks";
 import { effectiveLogTimes } from "./logTimes";
+import { checkInChains, chainForCheckIn, hiddenCheckInIds, type CheckInChain } from "../domain/checkInCorrections";
 import type {
   BeyondDay,
   CaptureItem,
@@ -83,8 +85,43 @@ export async function getActiveDay(): Promise<BeyondDay | undefined> {
 export async function getLatestCheckIn(
   beyondDayId: string,
 ): Promise<StateCheckIn | undefined> {
-  const all = await db.checkIns.where("beyondDayId").equals(beyondDayId).toArray();
-  return all.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq)).at(-1);
+  const [all, hidden] = await Promise.all([
+    db.checkIns.where("beyondDayId").equals(beyondDayId).toArray(),
+    hiddenCheckInRows(),
+  ]);
+  return all
+    .filter((c) => !hidden.has(c.id))
+    .sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq))
+    .at(-1);
+}
+
+const CHECK_IN_CHAIN_TYPES = ["STATE_CHECKED_IN", "CHECK_IN_CORRECTED", "CHECK_IN_CORRECTION_UNDONE"] as const;
+
+/** GRAYSON-CHECKIN-EDIT-001: check-in rows a fix superseded, or fixes that were undone. Empty when nothing was fixed. */
+async function hiddenCheckInRows(): Promise<Set<string>> {
+  const corrections = await db.events.where("type").anyOf(["CHECK_IN_CORRECTED", "CHECK_IN_CORRECTION_UNDONE"]).toArray();
+  if (corrections.length === 0) return new Set();
+  return hiddenCheckInIds(await db.events.where("type").anyOf([...CHECK_IN_CHAIN_TYPES]).toArray());
+}
+
+/**
+ * GRAYSON-CHECKIN-EDIT-001: every check-in that counts, with fixed answers in place of the ones they replaced. The one
+ * reader for anything that summarises check-ins; only `currentMaxSeq` and record integrity read raw rows.
+ */
+export async function getEffectiveCheckIns(beyondDayIds?: readonly string[]): Promise<StateCheckIn[]> {
+  const [rows, hidden] = await Promise.all([
+    beyondDayIds ? db.checkIns.where("beyondDayId").anyOf([...beyondDayIds]).toArray() : db.checkIns.toArray(),
+    hiddenCheckInRows(),
+  ]);
+  return rows.filter((c) => !hidden.has(c.id));
+}
+
+/** GRAYSON-CHECKIN-EDIT-001: the chain any check-in row belongs to, so the original row opens the current version. */
+export async function getCheckInChain(checkInId: string): Promise<CheckInChain | undefined> {
+  const row = await db.checkIns.get(checkInId);
+  if (!row) return undefined;
+  const events = await db.events.where("beyondDayId").equals(row.beyondDayId).toArray();
+  return chainForCheckIn(checkInChains(events), checkInId);
 }
 
 /** See getLatestCheckIn's note — same fix, sorted by issuedAt. */
@@ -269,8 +306,9 @@ export async function getPriorOutcomeMemory(
  * event. An undone entry leaves every list and total, the same way
  * getProteinEntries drops a deleted protein log.
  */
-export function voidedLogIds(events: readonly DomainEvent[], voidedType: DomainEvent["type"]): Set<string> {
-  return new Set(events.filter((e) => e.type === voidedType).map((e) => (e.payload as BodyLogVoidedPayload).loggedEventId));
+export function voidedLogIds(events: readonly DomainEvent[], voidedType: LogVoidType): Set<string> {
+  // GRAYSON-FIX-UNDO-001: a removal that was put back (LOG_VOID_UNDONE in `events`) no longer counts.
+  return activeVoidedIds(events, voidedType);
 }
 
 /**
@@ -528,7 +566,7 @@ export async function getLatestBodyweight(beyondDayId: string): Promise<number |
  * corrections list is exactly as correct as the day-scoped version).
  */
 export async function getMostRecentBodyweight(): Promise<number | undefined> {
-  const undone = voidedLogIds(await db.events.where("type").equals("BODYWEIGHT_LOG_VOIDED").toArray(), "BODYWEIGHT_LOG_VOIDED");
+  const undone = voidedLogIds(await db.events.where("type").anyOf(["BODYWEIGHT_LOG_VOIDED", "LOG_VOID_UNDONE"]).toArray(), "BODYWEIGHT_LOG_VOIDED");
   const logged = (await db.events.where("type").equals("BODYWEIGHT_LOGGED").toArray()).filter((e) => !undone.has(e.id));
   if (logged.length === 0) return undefined;
   const mostRecentRoot = logged.sort((a, b) => byTimeThenSeq(a.recordedAt, a.seq, b.recordedAt, b.seq)).at(-1)!;
@@ -556,9 +594,7 @@ export interface ProteinEntry {
  */
 export async function getProteinEntries(beyondDayId: string): Promise<ProteinEntry[]> {
   const events = await db.events.where("beyondDayId").equals(beyondDayId).toArray();
-  const voided = new Set(
-    events.filter((e) => e.type === "PROTEIN_LOG_VOIDED").map((e) => (e.payload as ProteinLogVoidedPayload).proteinEventId),
-  );
+  const voided = activeVoidedIds(events, "PROTEIN_LOG_VOIDED");
   const logged = events.filter((e) => e.type === "PROTEIN_LOGGED" && !voided.has(e.id));
   const corrections = events.filter((e) => e.type === "PROTEIN_LOG_CORRECTED");
   const times = effectiveLogTimes(events);

@@ -11,7 +11,6 @@ import { recordMemory } from "../../src/application/memory";
 import { buildAlfredContext } from "../../src/application/alfred/alfredContext";
 import { MemoryPanel } from "../../src/ui/components/MemoryPanel";
 import { getMemoryFacts } from "../../src/application/memory";
-import { AlfredMemoryList } from "../../src/ui/components/AlfredMemoryList";
 
 /** ALFRED-006: Alfred writes the week's review once, TODAY shows it until GOT IT, MONTH keeps them all. */
 let asks: string[] = [];
@@ -76,7 +75,7 @@ describe("ALFRED-006 memory in MORE", () => {
   it("adds, groups and forgets facts in MORE → MEMORY; Alfred also reads MEMORY-001's own notes", async () => {
     const day = await startDay();
     await recordMemory({ dayId: day.id, factId: "f1", expectedPreviousId: null, action: "CREATED", kind: "PREP_FOOD", statement: "Frozen meals are my backup." });
-    const screen = await render(<><MemoryPanel /><AlfredMemoryList active /></>);
+    const screen = await render(<MemoryPanel />);
     await screen.getByRole("button", { name: "ADD MEMORY", exact: true }).click();
     const topic = screen.getByRole("combobox", { name: "About", exact: true });
     await expect.element(topic).toBeVisible();

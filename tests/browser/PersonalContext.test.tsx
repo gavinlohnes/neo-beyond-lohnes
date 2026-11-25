@@ -194,7 +194,7 @@ it("a saved remember card keeps sibling cards and the conversation going", async
   await expect.element(screen.getByRole("group", { name: "Log 12 oz water" }).getByText("Logged.")).toBeVisible();
   await expect.poll(() => db.events.where("type").equals("WATER_LOGGED").count()).toBe(1);
   await screen.getByRole("group", { name: "Remember (other): Invented gift idea" }).getByRole("button", { name: "SAVE", exact: true }).click();
-  await expect.element(screen.getByText("Saved.", { exact: true })).toBeVisible();
+  await expect.element(screen.getByText("Remembered.", { exact: true })).toBeVisible();
   expect(screen.container.querySelector("[role=alert]")).toBeNull();
   await send(screen, "Thanks");
   expect(screen.container.textContent).not.toContain("Personal context changed");

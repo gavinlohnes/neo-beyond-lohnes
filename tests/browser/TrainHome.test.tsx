@@ -5,6 +5,7 @@ import { page } from "vitest/browser";
 import "../../src/ui/styles/fonts";
 import { App } from "../../src/app/App";
 import { startDay } from "../../src/application/commands";
+import { db } from "../../src/persistence/db";
 
 /**
  * TRAIN-HOME-001: TRAIN opens like the other screens, compactly: START WORKOUT stays on the first phone screen.
@@ -41,5 +42,56 @@ describe("TRAIN-HOME-001", () => {
     }
     expect(small).toEqual([]);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(w);
+  });
+
+  it("opens and closes the calibration preview without starting or writing a workout", async () => {
+    await page.viewport(360, 780);
+    await startDay();
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+    const beforeEvents = await db.events.count();
+    const beforeSessions = await db.workoutSessions.count();
+    const trigger = screen.getByRole("button", { name: "PREVIEW CALIBRATION" });
+    await trigger.click();
+    await expect.element(screen.getByRole("dialog", { name: "Machine Chest Press" })).toBeVisible();
+    expect([...document.querySelector(".calibration-preview")!.parentElement!.children]
+      .filter((element) => !element.classList.contains("calibration-preview"))
+      .every((element) => (element as HTMLElement).inert)).toBe(true);
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+    await expect.element(screen.getByRole("button", { name: "CLOSE" })).toHaveFocus();
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }));
+    await expect.element(screen.getByRole("button", { name: "CONTINUE" })).toHaveFocus();
+    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await expect.element(trigger).toHaveFocus();
+    await trigger.click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await expect.element(screen.getByText(/No comparable performance found/)).toBeVisible();
+    await screen.getByRole("button", { name: "CLOSE" }).click();
+    await expect.element(trigger).toHaveFocus();
+    await expect.element(screen.getByRole("button", { name: /^START WORKOUT/ }).first()).toBeVisible();
+    expect(await db.events.count()).toBe(beforeEvents);
+    expect(await db.workoutSessions.count()).toBe(beforeSessions);
+  });
+
+  it("builds and discards a three-day plan draft without canonical writes", async () => {
+    await page.viewport(360, 780);
+    await startDay();
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+    const beforeEvents = await db.events.count(), beforeSessions = await db.workoutSessions.count();
+    const trigger = screen.getByRole("button", { name: "DRAFT MY 3-DAY PLAN" });
+    await trigger.click();
+    const dialog = screen.getByRole("dialog", { name: "Your three-day plan" });
+    await expect.element(dialog).toBeVisible();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await screen.getByRole("button", { name: "MINIMUM" }).click();
+    await screen.getByRole("button", { name: "CONTINUE" }).click();
+    await expect.element(screen.getByText(/Nothing has been activated/i)).toBeVisible();
+    await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
+    await expect.element(trigger).toHaveFocus();
+    expect(await db.events.count()).toBe(beforeEvents);
+    expect(await db.workoutSessions.count()).toBe(beforeSessions);
   });
 });

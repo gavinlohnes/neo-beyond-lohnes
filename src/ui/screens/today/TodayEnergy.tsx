@@ -61,7 +61,7 @@ export function TodayEnergy({ now, active = true, refreshKey = 0 }: { now: numbe
         ].filter(Boolean).join(" · ")}.</p>}
         <details className="today-energy__how">
           <summary>How this is worked out</summary>
-          <p className="bf-meta">An estimate from your last {curve.basis.nights} main sleeps (Garmin, usual wake {String(Math.floor(curve.basis.wakeMinutes / 60)).padStart(2, "0")}:{String(curve.basis.wakeMinutes % 60).padStart(2, "0")}) and the two-process sleep model: sleep pressure builds while you're awake and clears while you sleep, against a 24-hour rhythm whose low sits about 1.5 hours before your usual wake. Not a measurement or a score. Unrecorded sleep follows the planned or usual sleep window as an assumption, not a confirmed sleep record.</p>
+          <p className="bf-meta">An estimate from your last {curve.basis.nights} main sleeps (Garmin, usual wake {String(Math.floor(curve.basis.wakeMinutes / 60)).padStart(2, "0")}:{String(curve.basis.wakeMinutes % 60).padStart(2, "0")}) and the two-process sleep model: sleep pressure builds while you're awake and clears while you sleep, against a 24-hour rhythm whose low sits about 1.5 hours before you wake from a night-time sleep and, on a run of day sleeps, moves later by at most half an hour a day, because most night workers' body clocks lag. Not a measurement or a score. Unrecorded sleep follows the planned or usual sleep window as an assumption, not a confirmed sleep record.</p>
           <ul className="today-energy__sources">{Object.values(SOURCES).map((s) => <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></li>)}</ul>
         </details>
       </>}

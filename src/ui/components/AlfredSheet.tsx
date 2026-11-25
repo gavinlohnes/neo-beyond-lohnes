@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
+import { useDictation } from "../speech/useDictation";
 import { operatorContextVersion } from "../../application/operatorContext";
 import { LogSheet } from "./LogSheet";
 import { buildPlanningContext, personalContextVersion, type PlanningContext, type ContextSource } from "../../application/alfred/personalContext";
@@ -9,13 +10,11 @@ import type { AlfredDepth, AlfredSession, AlfredTurn } from "../../application/a
 const loadClient = () => import("../../application/alfred/alfredClient");
 import { ReminderAlertLine } from "./ReminderAlertLine";
 import { confirmLabel, describeConfirmError, describeProposal, describeProposalNote, undoSavedLog } from "../../application/alfred/alfredActions";
-import { stopUsingMemory, getMemories } from "../../application/alfred/alfredMemory";
 import { foodQuery, interpret, isQuestion } from "../../application/helper/freeHelper";
 import { readHelperContext } from "../../application/helper/helperContext";
 import { answerQuestion } from "../../application/helper/freeAnswers";
 import { deltaAnswer } from "./DeltaViews";
 import { addSpend, automaticAlfredOn, capReached, getMonthlyCap, getMonthSpend, setAutomaticAlfred, setMonthlyCap } from "../../application/alfred/alfredSpend";
-import type { AlfredMemory } from "../../domain/alfred/types";
 import { captureCommitFeedback } from "../feel/feedback";
 import { heldNotes, helperSummary, planAct, pauseWindow, resumeWindow, runImmediate, undoAct, undoOpen, ACT_UNDO_MS, OVER_CAP_NOTE, type UndoWindow } from "../../application/alfred/alfredAct";
 import type { ProposalSource } from "../../application/alfred/alfredTools";
@@ -73,11 +72,6 @@ const STARTERS: { label: string; group: StarterGroup; ask?: string; fill?: strin
 const SPEAK = "beyond.alfredSpeak";
 const usd = (v: number) => (v > 0 && v < 0.01 ? v.toFixed(3) : v.toFixed(2));
 const plain = (text: string) => text.replace(/\*\*/g, "").replace(/^#+\s*/gm, "").replace(/^\s*[-*•]\s+/gm, "");
-type Recognition = { lang: string; interimResults: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
-function speechRecognition(): (new () => Recognition) | null {
-  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
 
 /** ALFRED-VOICE-001: the message box speaks like Alfred, not like a sample log. One line per lived day. */
 export const ALFRED_PROMPTS = [
@@ -94,6 +88,10 @@ export function placeholderFor(now: Date): string {
   return ALFRED_PROMPTS[((n % ALFRED_PROMPTS.length) + ALFRED_PROMPTS.length) % ALFRED_PROMPTS.length]!;
 }
 
+/** GRAYSON-ONE-MEMORY-001: MORE · Memory is the one memory list; the sheet opens it (at one fact when it has one). */
+const memorySource = (id?: string): ContextSource => id
+  ? { key: `PERSONAL_FACT:${id}`, kind: "PERSONAL_FACT", id, revision: "", title: "Memory", text: "", classification: "Operator statement", lifecycle: "ACTIVE", freshness: "" }
+  : { key: "ALFRED_MEMORY:all", kind: "ALFRED_MEMORY", id: "", revision: "", title: "Memory", text: "", classification: "Operator statement", lifecycle: "ACTIVE", freshness: "" };
 export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord, draft }: { open: boolean; onClose: () => void; onSaved: () => void; onOpenTrain?: () => void; onOpenRecord?: ((source: ContextSource) => void) | undefined; draft?: { key: number; text: string; send?: boolean } | undefined }) {
   const [key, setKey] = useState<string | null>(() => readAlfredKey());
   const [draftKey, setDraftKey] = useState("");
@@ -108,10 +106,10 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   const [error, setError] = useState<string | null>(null);
   const [spent, setSpent] = useState(0);
   const [monthSpent, setMonthSpent] = useState(() => getMonthSpend());
-  const [listening, setListening] = useState(false);
+  const dictation = useDictation(); // GRAYSON-DICTATE-001: the shared Web Speech hook
+  const listening = dictation.listening;
   // ALFRED-004 talk mode: Alfred reads his answers aloud, and a spoken message sends itself.
   const [speak, setSpeak] = useState(() => { try { return localStorage.getItem(SPEAK) === "1"; } catch { return false; } });
-  const [memories, setMemories] = useState<AlfredMemory[] | null>(null);
   const [limitsOpen, setLimitsOpen] = useState(false);
   const [cap, setCap] = useState<number | null>(() => getMonthlyCap());
   const [capDraft, setCapDraft] = useState("");
@@ -119,7 +117,6 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   const heard = useRef("");
   const prefix = useRef("");
   const session = useRef<AlfredSession | null>(null);
-  const recognition = useRef<Recognition | null>(null);
   const end = useRef<HTMLDivElement>(null);
 
   // A fresh conversation (and a fresh read of the records) each time the sheet opens.
@@ -294,7 +291,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       const proposal = remember && card.proposal.kind === "log_meal" ? { ...card.proposal, remember: true } : card.proposal;
       const confirmed = save ? await confirmContextProposal(proposal, turn.context!, included) : null;
       const result = confirmed?.result ?? {};
-      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); if (card.proposal.kind === "routine_tick" || card.proposal.kind === "routine_edit") window.dispatchEvent(new Event("beyond:routines-changed")); onSaved(); if (memories) setMemories(await getMemories()); }
+      if (save) { acknowledge("LIGHT"); if (["remember", "forget", "memory_retire", "memory_restore", "person_date", "home_item"].includes(card.proposal.kind)) window.dispatchEvent(new Event("beyond:memory-changed")); if (card.proposal.kind === "routine_tick" || card.proposal.kind === "routine_edit") window.dispatchEvent(new Event("beyond:routines-changed")); onSaved(); }
       // The operator's own save (a "remember" card) is not an outside change: carry the new version
       // forward for this conversation's other cards and its next question, nothing else.
       const before = turn.context!.personalVersion, after = confirmed?.personalVersion;
@@ -303,7 +300,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
       setTurns((all) => all.map((t, i) => {
         const context = advance(t.context);
         const next = context === t.context ? t : { ...t, ...(context ? { context } : {}) };
-        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, ...(save ? { proposal } : {}), state: save ? "saved" : "skipped", ...(result.undo ? { undo: result.undo } : {}) } : p) };
+        return i !== turnIndex ? next : { ...next, proposals: next.proposals!.map((p) => p.id === id ? { ...p, ...(save ? { proposal } : {}), state: save ? "saved" : "skipped", ...(result.undo ? { undo: result.undo } : {}), ...(result.memoryFactId ? { memoryFactId: result.memoryFactId } : {}) } : p) };
       }));
       if (result.open === "TRAIN" && onOpenTrain) { onClose(); onOpenTrain(); }
     } catch (e) {
@@ -336,37 +333,23 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   }
 
   function talk(lead = "") {
-    const Ctor = speechRecognition();
-    if (!Ctor) { setError("Voice isn't available in this browser. Type instead."); return; }
-    if (listening) { recognition.current?.stop(); return; }
-    if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+    if (!dictation.supported) { setError("Voice isn't available in this browser. Type instead."); return; }
+    if (listening) { dictation.stop(); return; }
     prefix.current = lead; heard.current = "";
-    const r = new Ctor(); r.lang = "en-US"; r.interimResults = true;
-    r.onresult = (e) => { heard.current = Array.from(e.results).map((res) => res[0]!.transcript).join(" "); setText(lead + heard.current); };
-    // A shift debrief is a conversation, so it goes straight to Alfred; plain talk tries the free helper first.
-    r.onend = () => { setListening(false); if ((speak || lead) && heard.current.trim()) void (lead ? sendToAlfred(prefix.current + heard.current) : ask(heard.current)); };
-    r.onerror = () => setListening(false);
-    recognition.current = r; setListening(true); r.start();
+    dictation.start({
+      interim: true,
+      onWords: (words) => { heard.current = words; setText(lead + heard.current); },
+      // A shift debrief is a conversation, so it goes straight to Alfred; plain talk tries the free helper first.
+      onDone: () => { if ((speak || lead) && heard.current.trim()) void (lead ? sendToAlfred(prefix.current + heard.current) : ask(heard.current)); },
+    });
   }
 
   function chooseContext(value: boolean) {
-    recognition.current?.stop();
+    dictation.stop();
     setIncluded(value); session.current = null; lastContext.current = null;
     setTurns([]); setSnapshot(null); setSelectedSource(null);
     setContextNotice("Fresh conversation. Earlier requests sent to Claude cannot be recalled.");
   }
-  async function forget(memory: AlfredMemory) {
-    if (working.current) return;
-    working.current = true; setBusy(true); setError(null);
-    try {
-      if (!memory.reference) throw new Error("Memory source unavailable");
-      await stopUsingMemory(memory.reference, memory.text); window.dispatchEvent(new Event("beyond:memory-changed")); setMemories(await getMemories());
-      session.current = null; lastContext.current = null; setTurns([]); setSnapshot(null); setSelectedSource(null);
-      setContextNotice(memory.reference.source === "PERSONAL_FACT" ? "Stopped using. Correction history retained. Fresh conversation; earlier requests cannot be recalled." : "Forgotten on this phone. Fresh conversation; earlier Claude requests and older backups cannot be recalled.");
-    } catch { setError("That memory could not be forgotten. Try again."); }
-    finally { working.current = false; setBusy(false); }
-  }
-
   function toggleSpeak() {
     const next = !speak; setSpeak(next);
     try { localStorage.setItem(SPEAK, next ? "1" : "0"); } catch { /* not kept */ }
@@ -374,10 +357,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
   }
 
   return <LogSheet open={open} title="ALFRED" onClose={onClose} canClose={() => !busy}>
-    <AlfredContextPanel included={included} onIncluded={chooseContext} busy={busy} snapshot={snapshot} selected={selectedSource} onSelected={setSelectedSource} onOpenRecord={(s) => {
-      if (s.kind === "ALFRED_MEMORY") void getMemories().then(setMemories).catch(() => setError("Alfred memory is unavailable."));
-      else onOpenRecord?.(s);
-    }} />
+    <AlfredContextPanel included={included} onIncluded={chooseContext} busy={busy} snapshot={snapshot} selected={selectedSource} onSelected={setSelectedSource} onOpenRecord={onOpenRecord} />
     {contextNotice && <p role="status" className="meta">{contextNotice}</p>}
     {!key && <details className="alfred-setup">
       <summary className="disclosure-row">Connect Alfred (optional)</summary>
@@ -435,7 +415,8 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
               <button type="button" className="btn-secondary" disabled={busy} onClick={() => void decide(i, p.id, false)}>SKIP</button>
             </div> : p.state === "saved" && p.auto && p.undo ? <ActUndo window={p.auto} label={describeProposal(p.proposal)} busy={busy}
                 onUndo={() => void undoCard(i, p.id)} onPause={() => setWindow(i, p.id, (w) => pauseWindow(w))} onResume={() => setWindow(i, p.id, (w) => resumeWindow(w))} onExpire={() => setWindow(i, p.id, () => undefined)} />
-            : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : p.immediate ? "Logged. To change it, use LOG or HISTORY." : "Saved.") : p.state === "undone" ? (p.proposal.kind === "log_meal" && p.proposal.remember ? "Undone. The saved meal stays in MY MEALS." : "Undone. Nothing of it is counted.") : "Skipped."}</p>
+            : <div className="alfred-card__row"><p className="meta">{p.state === "saved" ? (p.proposal.kind === "open_training" ? "Opened." : p.immediate ? "Logged. To change it, use LOG or HISTORY." : p.memoryFactId ? "Remembered." : "Saved.") : p.state === "undone" ? (p.proposal.kind === "log_meal" && p.proposal.remember ? "Undone. The saved meal stays in MY MEALS." : "Undone. Nothing of it is counted.") : "Skipped."}</p>
+              {p.state === "saved" && p.memoryFactId && onOpenRecord && <button type="button" className="btn-secondary" disabled={busy} aria-label={`Open in Memory: ${describeProposal(p.proposal)}`} onClick={() => onOpenRecord(memorySource(p.memoryFactId))}>OPEN</button>}
               {p.state === "saved" && p.undo && !p.immediate && <button type="button" className="btn-secondary" disabled={busy} onClick={() => void undoCard(i, p.id)} aria-label={`Undo: ${describeProposal(p.proposal)}`}>UNDO</button>}</div>}
           </div>)}
         </div>)}
@@ -452,11 +433,7 @@ export function AlfredSheet({ open, onClose, onSaved, onOpenTrain, onOpenRecord,
           <button type="submit" className="btn-primary" disabled={busy || !text.trim()}>SEND</button>
         </div>
       </form>
-      {memories && <div className="alfred-memory" role="group" aria-label="What Alfred remembers">
-        {memories.length === 0 ? <p className="meta">Nothing yet. Say "remember…" and confirm the card.</p>
-          : <ul>{memories.map((m) => <li key={m.id}><span>{m.text}</span><button type="button" className="alfred-link" aria-label={`${m.reference?.source === "PERSONAL_FACT" ? "Stop using" : "Forget"}: ${m.text}`} disabled={busy} onClick={() => void forget(m)}>{m.reference?.source === "PERSONAL_FACT" ? "Stop using" : "Forget"}</button></li>)}</ul>}
-      </div>}
-      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{" · "}<button type="button" className="alfred-link" aria-expanded={!!memories} onClick={() => void (memories ? Promise.resolve(setMemories(null)) : getMemories().then(setMemories))}>Memory</button>{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{key && <>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></>}</p>
+      <p className="meta alfred-foot"><button type="button" className="alfred-link" aria-pressed={speak} onClick={toggleSpeak}>{speak ? "Speaking answers" : "Speak answers"}</button>{onOpenRecord && <>{" · "}<button type="button" className="alfred-link" onClick={() => onOpenRecord(memorySource())}>Memory</button></>}{" · "}<button type="button" className="alfred-link" aria-expanded={limitsOpen} onClick={() => { setLimitsOpen(!limitsOpen); setCapDraft(cap ? cap.toFixed(2) : ""); }}>Limits</button>{key && <>{" · "}<button type="button" className="alfred-link" onClick={() => { writeAlfredKey(null); setKey(null); }}>Remove key</button></>}</p>
       {limitsOpen && <div className="alfred-limits" role="group" aria-label="Alfred limits">
         <p className="meta">BEYOND's estimate of this month: ${usd(monthSpent)}{cap ? ` of your $${cap.toFixed(2)} limit` : ", no limit set"}. At the limit Alfred stops until next month; everything else keeps working. For a hard ceiling, also set a spend limit in the Anthropic console.</p>
         <form className="alfred-limits__row" onSubmit={(e) => { e.preventDefault(); const v = Number(capDraft); if (Number.isFinite(v) && v > 0) { setMonthlyCap(v); setCap(getMonthlyCap()); } }}>

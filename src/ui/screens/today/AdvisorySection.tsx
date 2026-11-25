@@ -3,7 +3,8 @@ import type { AdvisoryNote } from "../../../domain/intelligence/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { CollapsibleRow } from "../../components/CollapsibleRow";
 import { WATER_QUICK_ADD_OZ } from "../body/bodyScreenCopy";
-import { describeAdvisorySummary, groupAdvisoryNotes, type AdvisoryRow as AdvisoryRowModel } from "./advisoryCopy";
+import { ADVISORY_RULE, describeAdvisorySummary, groupAdvisoryNotes, type AdvisoryRow as AdvisoryRowModel } from "./advisoryCopy";
+import { WhyTraceBody } from "../../components/WhyTrace";
 
 /**
  * Intelligence Spine (I1/I2/I3, approved 2026-08-22/23) had a real,
@@ -129,6 +130,8 @@ function AdvisoryRowView({
             {!row.lead && <p className="card-body" style={{ margin: 0 }}>{item.name}</p>}
             {row.lead && <p className="meta">{item.note.message}</p>}
             {item.why && <p className="meta" style={{ margin: 0 }}>{item.why}</p>}
+            {/* GRAYSON C6.4: the same rule line every Delta surface shows. */}
+            <WhyTraceBody why={{ rule: ADVISORY_RULE[item.note.sourceModule], facts: [] }} />
           </div>
         ))}
         <p className="meta">Your call.</p>

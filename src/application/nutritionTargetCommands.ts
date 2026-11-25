@@ -23,12 +23,13 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   const now = new Date().toISOString();
   const effectiveCalorieTarget = parsed.calorieTargetKcal ?? existing?.calorieTargetKcal;
   const effectiveGoalWeight = parsed.goalWeightLbs ?? existing?.goalWeightLbs;
-  const reviewTarget = <K extends "weightChangeTargetPercentPerWeek" | "muscleSetsTargetPerWeek" | "strengthSessionsTargetPerWeek" | "calorieFloorKcal">(key: K) =>
+  const reviewTarget = <K extends "weightChangeTargetPercentPerWeek" | "muscleSetsTargetPerWeek" | "strengthSessionsTargetPerWeek" | "calorieFloorKcal" | "waterTargetOz">(key: K) =>
     parsed[key] === null ? undefined : parsed[key] ?? existing?.[key];
   const weightChangeTargetPercentPerWeek = reviewTarget("weightChangeTargetPercentPerWeek");
   const muscleSetsTargetPerWeek = reviewTarget("muscleSetsTargetPerWeek");
   const strengthSessionsTargetPerWeek = reviewTarget("strengthSessionsTargetPerWeek");
   const calorieFloorKcal = reviewTarget("calorieFloorKcal");
+  const waterTargetOz = reviewTarget("waterTargetOz");
   const record: NutritionTargets = {
     id: "current",
     ...(effectiveCalorieTarget !== undefined ? { calorieTargetKcal: effectiveCalorieTarget } : {}),
@@ -38,6 +39,7 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
     ...(muscleSetsTargetPerWeek !== undefined ? { muscleSetsTargetPerWeek } : {}),
     ...(strengthSessionsTargetPerWeek !== undefined ? { strengthSessionsTargetPerWeek } : {}),
     ...(calorieFloorKcal !== undefined ? { calorieFloorKcal } : {}),
+    ...(waterTargetOz !== undefined ? { waterTargetOz } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

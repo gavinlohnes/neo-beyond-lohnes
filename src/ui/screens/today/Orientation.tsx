@@ -7,6 +7,7 @@ import "../../foundation/foundation.css";
 import "./orientation.css";
 import { VOICES, type DeltaVoice } from "../../../application/deltaVoice";
 import { readVoice, writeVoice } from "./voiceStore";
+import { WhyTraceDisclosure } from "../../components/WhyTrace";
 
 export interface OrientationRoutes {
   onEnter: () => void;
@@ -123,6 +124,7 @@ export function Orientation({ active, busy, refreshKey, routes }: { active: bool
         {o.delta && (
           <Panel headingLevel={2} headingId="orient-delta" icon={<MessageSquareText size={18} />} label="DELTA" wide source={<SourceTag>FROM YOUR RECORDS</SourceTag>}>
             <p className="orientation__delta">{o.delta}</p>
+            {o.deltaWhy && <WhyTraceDisclosure why={o.deltaWhy} />}
             <div className="orientation__voices" role="group" aria-label="Delta's voice">
               {VOICES.map((x) => (
                 <button key={x.id} type="button" className="orientation__voice" aria-pressed={voice === x.id} title={x.hint} onClick={() => pickVoice(x.id)}>{x.label}</button>

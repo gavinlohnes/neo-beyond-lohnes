@@ -47,7 +47,10 @@ jobs:
                      'androidx.work.impl.background.systemalarm.SystemAlarmService',
                      'androidx.work.impl.background.systemjob.SystemJobService',
                      'androidx.work.impl.foreground.SystemForegroundService',
-                     'androidx.room.MultiInstanceInvalidationService'}
+                     'androidx.room.MultiInstanceInvalidationService',
+                     # GRAYSON-TRAIN-RUN-CUES-001 (Gavin's merge of the brief): the run-cue foreground service.
+                     # Speaks and buzzes what BEYOND sends; reads nothing, writes nothing.
+                     'app.beyond.healthbridge.RunCueService'}
           assert services <= allowed, services
           print('Packaged manifest: sleep, steps, heart rate and calories read only (background check allowed); no Internet; SDK IPC and WorkManager services only')
           PY

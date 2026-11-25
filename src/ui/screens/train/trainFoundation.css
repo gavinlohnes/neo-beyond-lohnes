@@ -18,3 +18,80 @@
 /* WORKOUT / HISTORY / RECORDS in the foundation's mono capitals; the chosen view carries the red. */
 .train-operator .train-switcher .btn-secondary { font-family: var(--font-mono, monospace); letter-spacing: .14em; }
 .train-operator .train-switcher .btn-secondary[aria-pressed="true"] { border-bottom-color: var(--p-red, #D0141B); }
+.calibration-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow-y: auto;
+  background: var(--color-bg, #050505);
+  color: var(--color-text, #f4f4f4);
+  padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+}
+
+.calibration-preview__head,
+.calibration-preview__actions,
+.calibration-preview__choices {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calibration-preview__head { justify-content: space-between; margin-bottom: 18px; }
+.calibration-preview__head h2 { margin: 4px 0 0; }
+.calibration-preview .suit-panel { max-width: 680px; margin: 0 auto; padding: 18px; }
+.calibration-preview .suit-panel p,
+.calibration-preview .suit-panel li { font-size: 16px; line-height: 1.5; }
+.calibration-preview .suit-panel h3 { margin: 18px 0 6px; }
+.calibration-preview__own { border-left: 3px solid var(--color-accent, #e32636); padding-left: 12px; }
+.calibration-preview__choices { flex-wrap: wrap; margin: 14px 0; }
+.calibration-preview__actions { justify-content: flex-end; max-width: 680px; margin: 18px auto 0; }
+
+.train-plan-draft {
+  width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0;
+  background: var(--color-bg, #050505); color: var(--color-text, #f4f4f4);
+  padding: max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom)); overflow-y: auto;
+}
+.train-plan-draft::backdrop { background: #050505; }
+.train-plan-draft__head, .train-plan-draft__actions, .train-plan-draft__choices { display: flex; align-items: center; gap: 10px; }
+.train-plan-draft__head { justify-content: space-between; margin-bottom: 18px; }
+.train-plan-draft__head h2 { margin: 4px 0 0; }
+.train-plan-draft > section, .train-plan-draft__actions { max-width: 720px; margin-left: auto; margin-right: auto; }
+.train-plan-draft fieldset { border: 1px solid var(--color-line, #555); padding: 14px; margin: 18px 0; }
+.train-plan-draft legend, .train-plan-draft p, .train-plan-draft li { font-size: 16px; line-height: 1.45; }
+.train-plan-draft__choices { flex-wrap: wrap; margin: 10px 0; }
+.train-plan-draft article { margin: 14px 0; padding: 16px; }
+.train-plan-draft article h3 { margin: 4px 0; }
+.train-plan-draft__exercises { list-style: none; padding: 0; margin: 12px 0 0; }
+.train-plan-draft__exercises li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--color-line, #333); }
+.train-plan-draft__exercises li p { margin: 2px 0 0; color: var(--color-muted, #aaa); }
+.train-plan-draft__exercises li > span { white-space: nowrap; }
+.train-plan-draft__actions { justify-content: flex-end; margin-top: 18px; }
+/* GRAYSON-TRAIN-PROGRESS-001 + C9.2: Progress & Direction in the Orientation grammar: framed panels, mono keys, one
+   rule between rows, tokens only, no red. Text stays at 16 px or more (TRAIN-OPERATOR-001). */
+.train-progress { display: grid; gap: 10px; }
+.train-progress__state { margin: 0; font-family: var(--font-display, sans-serif); font-weight: 600; font-size: 22px; line-height: 1.2; color: var(--p-t1, #f2f2f2); }
+.train-progress__verdict { margin: 4px 0 0; font-size: 17px; line-height: 1.45; color: var(--p-t1, #f2f2f2); }
+.train-progress__note { margin: 6px 0 0; font-size: 16px; line-height: 1.4; color: var(--bf-quiet, var(--p-t2, #a8a8a8)); }
+.train-progress__rows { display: grid; }
+.train-progress__row { margin: 0; padding: 8px 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, #f2f2f2); min-width: 0; }
+.train-progress__row + .train-progress__row { border-top: 1px solid var(--bf-line, var(--p-line, #2a2a2a)); }
+.train-progress__name { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-weight: 600; font-size: 16px; color: var(--p-t1, #f2f2f2); }
+.train-progress__text { margin: 2px 0 0; font-size: 16px; line-height: 1.4; color: var(--bf-quiet, var(--p-t2, #a8a8a8)); }
+.train-progress__key { margin-right: 6px; font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .08em; color: var(--p-t2, #a8a8a8); }
+.train-progress__tag { font-family: var(--font-mono, monospace); font-weight: 400; font-size: 13px; letter-spacing: .1em; padding: 1px 6px; border: 1px solid var(--p-t2, #a8a8a8); color: var(--p-t1, #f2f2f2); white-space: nowrap; }
+.train-progress__tag--quiet { border-color: var(--bf-line, var(--p-line, #2a2a2a)); color: var(--p-t2, #a8a8a8); }
+.train-progress__tag--look { border-color: var(--p-amber, #c8901e); color: var(--p-amber, #c8901e); }
+.train-progress__why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .12em; color: var(--p-t2, #a8a8a8); }
+/* C9.2: four TRAIN views never break a word: two by two on a phone, one row when there's room (text stays 16 px). */
+.train-operator .train-switcher .btn-secondary { padding-inline: 4px; min-width: 0; white-space: nowrap; letter-spacing: .08em; }
+@media (max-width: 459px) { .train-operator .train-switcher { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* GRAYSON-TRAIN-GUIDED-001: Delta during training: one quiet panel, no red, 44 px targets. */
+.train-delta { display: grid; gap: 8px; margin: 8px 0 12px; padding: 10px 12px; border: 1px solid var(--p-line, #2a2a2a); border-left: 3px solid var(--p-t1, #f2f2f2); background: var(--p-s1, #0b0b0b); }
+.train-delta__line { margin: 0; font-size: 16px; line-height: 1.4; color: var(--p-t1, #f2f2f2); }
+.train-delta__who { margin-right: 6px; font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .14em; color: var(--p-t2, #a8a8a8); }
+.train-delta__acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.train-delta__acts .btn-secondary { width: auto; min-height: 44px; }
+/* Live-workout controls stay at least 16 px (TRAIN-OPERATOR-001). */
+.train-delta__why, .train-delta__pain { min-height: 44px; padding: 0 8px; background: transparent; border: 0; color: var(--p-t2, #a8a8a8); font-family: var(--font-mono, monospace); font-size: 16px; letter-spacing: .08em; cursor: pointer; }
+.train-delta__pain { display: block; margin: 0 0 8px auto; }
+.train-delta__whylist { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
