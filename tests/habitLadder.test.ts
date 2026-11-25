@@ -68,17 +68,25 @@ describe("EXAMINE and quiet", () => {
   it("six misses in 28 days examines the plan", () => {
     const line = deriveHabitLadder(habit([20, 16, 12, 9, 5, 2]), [], TODAY)!;
     expect(line.stage).toBe("EXAMINE");
-    expect(line.text).toContain("Delta will stop asking about it either way.");
+    expect(line.text).toContain("Delta won't ask about it for two weeks either way.");
   });
-  it("a challenge answered twice examines the plan", () => {
-    const answers = [ask(9, "FORGOT"), ask(7, "DIDNT_FEEL"), ask(5, "FORGOT"), reply("NAME", "RIGHT", 5), reply("CHALLENGE", "START_SMALLER", 4), reply("CHALLENGE", "START_SMALLER", 3)];
-    expect(deriveHabitLadder(habit([9, 7, 5]), answers, TODAY)!.stage).toBe("EXAMINE");
+  it("a challenge answered twice, with a new miss in between, examines the plan", () => {
+    const answers = [ask(9, "FORGOT"), ask(7, "DIDNT_FEEL"), ask(5, "FORGOT"), reply("NAME", "RIGHT", 5), reply("CHALLENGE", "START_SMALLER", 4), ask(3, "FORGOT"), reply("CHALLENGE", "START_SMALLER", 2)];
+    expect(deriveHabitLadder(habit([9, 7, 5, 3]), answers, TODAY)!.stage).toBe("EXAMINE");
+  });
+  it("#708 review: after START SMALLER the challenge waits for a new forgot / didn't-feel miss, and never escalates on the same evidence", () => {
+    const base = [ask(9, "FORGOT"), ask(7, "DIDNT_FEEL"), ask(5, "FORGOT"), reply("NAME", "RIGHT", 5), reply("CHALLENGE", "START_SMALLER", 4)];
+    expect(deriveHabitLadder(habit([9, 7, 5]), base, TODAY)).toBeNull();
+    expect(deriveHabitLadder(habit([9, 7, 5, 2]), [...base, ask(2, "SHIFT")], TODAY)).toBeNull(); // a shift miss isn't one
+    expect(deriveHabitLadder(habit([9, 7, 5, 2]), [...base, ask(2, "FORGOT")], TODAY)!.stage).toBe("CHALLENGE");
   });
   it("after EXAMINE, NOT RIGHT or CHANGE THE PLAN: quiet 14 days, then counting starts fresh", () => {
     const many = habit([20, 18, 16, 15, 13, 2]);
     expect(deriveHabitLadder(many, [reply("EXAMINE", "KEEP", 10)], TODAY)).toBeNull();
     expect(deriveHabitLadder(habit([5, 2]), [reply("NAME", "NOT_RIGHT", 3)], TODAY)).toBeNull();
     expect(deriveHabitLadder(habit([5, 2]), [reply("NAME", "CHANGE_PLAN", 3)], TODAY)).toBeNull();
+    // #708 review: CHANGE THE PLAN restarts the counting too, so old-plan misses never carry over into EXAMINE.
+    expect(deriveHabitLadder(habit([25, 23, 21, 19, 17, 5, 2]), [reply("NAME", "CHANGE_PLAN", 16)], TODAY)!.stage).toBe("ASK");
     // 15 days after EXAMINE, only misses since then count: two recent misses means ASK, not EXAMINE again.
     expect(deriveHabitLadder(habit([25, 23, 21, 19, 17, 5, 2]), [reply("EXAMINE", "KEEP", 16)], TODAY)!.stage).toBe("ASK");
   });
@@ -95,5 +103,21 @@ describe("one line a day", () => {
   it("is deterministic", () => {
     const input = { habits: two, answers: [], today: TODAY, todayLowCapacity: false, off: new Set<string>() };
     expect(deriveLadderLine(input)).toEqual(deriveLadderLine(input));
+  });
+});
+
+describe("#708 review: lines never say more than the evidence", () => {
+  it("NAME counts only the days he answered, and says so", () => {
+    const unanswered = Array.from({ length: 28 }, (_, i) => i).filter((b) => ![9, 7, 5, 3].includes(b));
+    const line = deriveHabitLadder(habit([9, 7, 5], { unanswered }), [ask(9, "PLAN"), ask(7, "PLAN")], TODAY)!;
+    expect(line.stage).toBe("NAME");
+    expect(line.text).toContain("didn't happen 3 of the 4 days you answered it.");
+  });
+  it("CHALLENGE never calls them 'the last' misses when another miss sits between", () => {
+    const answers = [ask(10, "FORGOT"), ask(8, "FORGOT"), ask(6, "SHIFT"), ask(4, "FORGOT"), reply("NAME", "RIGHT", 4)];
+    const line = deriveHabitLadder(habit([10, 8, 6, 4]), answers, TODAY)!;
+    expect(line.stage).toBe("CHALLENGE");
+    expect(line.text).toContain("3 of the misses (");
+    expect(line.text).not.toMatch(/the last \d+ misses/);
   });
 });

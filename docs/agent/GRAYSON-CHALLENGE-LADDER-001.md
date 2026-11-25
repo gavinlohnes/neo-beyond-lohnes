@@ -26,20 +26,22 @@ These live in one place, `LADDER` in `src/domain/habitLadder.ts`.
   Shift or work ran over · Too tired or recovering · Forgot · Didn't feel like it · The plan doesn't fit ·
   Something else · NOT NOW.
 - **NAME:** 3 misses in 28 days and at least 2 answers. It names the most common answer as a problem with the plan or
-  the moment, never with him, and adds how many misses were work days. It is asked once. The replies are:
+  the moment, never with him, and adds how many misses were work days. It counts only days he answered ("3 of the 4 days you answered it"). It is asked once. The replies are:
   - THAT'S RIGHT;
   - NOT RIGHT (quiet for 14 days, and counting restarts);
-  - CHANGE THE PLAN (opens LIFE · Habits; quiet for 14 days).
+  - CHANGE THE PLAN (opens LIFE · Habits; quiet for 14 days, and counting restarts).
 - **CHALLENGE:** only after THAT'S RIGHT, and only when 3 or more misses were "Forgot" / "Didn't feel like it" on days
   that weren't low-energy, and those outnumber the other answers. It ends "Two minutes counts. Start smaller today?"
   The replies are START SMALLER, NOT RIGHT and NOT NOW. It never appears for shift, tiredness or plan answers.
-- **EXAMINE:** 6 misses in 28 days, or a challenge answered twice. It says the plan isn't working as set, and that
-  Delta will stop asking either way. The replies are CHANGE THE PLAN and KEEP IT AS IT IS. Either one is quiet for
+  After he answers it, it waits for a new "Forgot" / "Didn't feel like it" miss before it can show again. It says
+  "3 of the misses", never "the last 3", because other misses may sit between them.
+- **EXAMINE:** 6 misses in 28 days, or a challenge answered twice with a new miss in between. It says the plan isn't
+  working as set, and that Delta won't ask about it for two weeks either way. The replies are CHANGE THE PLAN and KEEP IT AS IT IS. Either one is quiet for
   14 days, and counting restarts afterwards.
 - **What a low-energy day is:** his last check-in that lived day had energy 2 or less, or the day's guidance was
   RECOVER or STABILIZE.
-- **Limits across all habits:** at most one ladder line a day; none once he has answered one today; none on a
-  low-energy day. When several habits qualify, the one with the most misses shows.
+- **Limits across all habits:** at most one ladder line a day; none once he has answered one or said "Stop asking"
+  today; none on a low-energy day. The note after an answer clears after 8 seconds. When several habits qualify, the one with the most misses shows.
 
 ## Off switches
 - **For all habits:** TODAY's quiet-line switch "Habit check-ins". The line is `HABIT_LADDER`, placed after REVIEW in

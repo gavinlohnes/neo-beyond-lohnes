@@ -33,16 +33,36 @@ export async function getLadderAnswers(): Promise<LadderAnswer[]> {
 
 /** "Stop asking about this habit": per habit, on this phone, travels with the backup. Turning the line off for all is TODAY's quiet-line switch. */
 export const HABIT_LADDER_KEY = "beyond.habitLadder.v1";
-export function readLadderOff(): Set<string> {
+interface LadderStore { off: Set<string>; quietDate: string | null }
+function readStore(): LadderStore {
   try {
-    const raw = JSON.parse(localStorage.getItem(HABIT_LADDER_KEY) ?? "null") as { off?: unknown } | null;
-    return new Set(Array.isArray(raw?.off) ? raw.off.filter((id): id is string => typeof id === "string") : []);
-  } catch { return new Set(); }
+    const raw = JSON.parse(localStorage.getItem(HABIT_LADDER_KEY) ?? "null") as { off?: unknown; quietDate?: unknown } | null;
+    return {
+      off: new Set(Array.isArray(raw?.off) ? raw.off.filter((id): id is string => typeof id === "string") : []),
+      quietDate: typeof raw?.quietDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.quietDate) ? raw.quietDate : null,
+    };
+  } catch { return { off: new Set(), quietDate: null }; }
 }
+function writeStore(store: LadderStore): void {
+  localStorage.setItem(HABIT_LADDER_KEY, JSON.stringify({ off: [...store.off].sort(), ...(store.quietDate ? { quietDate: store.quietDate } : {}) }));
+}
+export function readLadderOff(): Set<string> { return readStore().off; }
+/** Settings' ASK AGAIN (and tests): turns one habit back on. */
 export function setLadderHabitOff(habitId: string, off: boolean): void {
-  const next = readLadderOff();
-  if (off) next.add(habitId); else next.delete(habitId);
-  localStorage.setItem(HABIT_LADDER_KEY, JSON.stringify({ off: [...next].sort() }));
+  const store = readStore();
+  if (off) store.off.add(habitId); else store.off.delete(habitId);
+  writeStore(store);
+}
+/**
+ * "Stop asking about <habit>" on TODAY: that habit is off, and (#708 review) no other habit's line shows for the rest
+ * of this lived day, because he has just said stop. UNDO (`askAgainAbout`) turns both back.
+ */
+export async function stopAskingAbout(habitId: string, now = new Date()): Promise<void> {
+  const date = (await getHabitWorkspace(now)).date;
+  const store = readStore(); store.off.add(habitId); store.quietDate = date; writeStore(store);
+}
+export function askAgainAbout(habitId: string): void {
+  const store = readStore(); store.off.delete(habitId); store.quietDate = null; writeStore(store);
 }
 
 /** Low capacity for a lived day: his last check-in that day put energy at 2 or below, or the day's guidance was to recover. */
@@ -50,7 +70,7 @@ const LOW_KINDS = new Set(["RECOVER", "STABILIZE"]);
 
 export async function getHabitLadderLine(now = new Date()): Promise<LadderLine | null> {
   const workspace = await getHabitWorkspace(now);
-  if (!workspace.habits.length) return null;
+  if (!workspace.habits.length || readStore().quietDate === workspace.date) return null;
   const dayIds = [...new Set(workspace.habits.flatMap((h) => h.history.flatMap((d) => d.dayId ? [d.dayId] : [])))];
   const [checkIns, recommendations, answers] = await Promise.all([
     getEffectiveCheckIns(dayIds), db.recommendations.where("beyondDayId").anyOf(dayIds).toArray(), getLadderAnswers(),

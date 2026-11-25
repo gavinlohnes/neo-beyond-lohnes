@@ -11,10 +11,11 @@ these.
   - ASK (2 misses in 14 days);
   - NAME (3 misses in 28 days and 2 answers);
   - CHALLENGE (only after he agrees, and only for "forgot" / "didn't feel like it" on days that weren't low-energy);
-  - EXAMINE (6 misses, or a challenge answered twice), after which Delta stops asking.
+  - EXAMINE (6 misses, or a challenge answered twice with a new miss in between), then two quiet weeks.
+  - A challenge he has answered waits for a new forgot / didn't-feel miss before it can show again.
   - NOT RIGHT, CHANGE THE PLAN and EXAMINE's replies give 14 quiet days, and counting restarts.
 - **Calm:**
-  - one line a day at most;
+  - one line a day at most, and none for the rest of the day once he says "Stop asking";
   - none on a low-energy day;
   - it sits in the quiet-line budget;
   - never red and no streaks;

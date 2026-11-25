@@ -5,7 +5,7 @@ import axe from "axe-core";
 import { HabitLadderLine } from "../../src/ui/screens/today/HabitLadderLine";
 import { TodayQuietSettings } from "../../src/ui/screens/more/TodayQuietSettings";
 import { createHabit, setHabitAnswer } from "../../src/application/habitCommands";
-import { getLadderAnswers, readLadderOff } from "../../src/application/habitLadder";
+import { getLadderAnswers, getHabitLadderLine, readLadderOff } from "../../src/application/habitLadder";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { mostRecentBoundaryAtOrBefore } from "../../src/engine/dayRollover";
 import { formatLocalDate } from "../../src/engine/scheduledContext";
@@ -39,8 +39,11 @@ it("ASK after two misses: one tap saves what got in the way, then the line is do
   const screen = await render(<HabitLadderLine now={new Date()} />);
   const line = screen.getByRole("region", { name: "Habit check-in" });
   await expect.element(line.getByText(/^Stretch didn't happen .+\. What got in the way\?$/)).toBeVisible();
-  fits(line.element());
-  expect((await axe.run(line.element())).violations).toEqual([]);
+  for (const width of [320, 360, 412]) {
+    await page.viewport(width, 800);
+    fits(line.element());
+    expect((await axe.run(line.element())).violations).toEqual([]);
+  }
   await line.getByRole("button", { name: "Forgot", exact: true }).click();
   await expect.element(screen.getByText("Saved. Delta won't ask again today.")).toBeVisible();
   expect(await getLadderAnswers()).toMatchObject([{ habitId: habit.id, stage: "ASK", answer: "FORGOT", missDate: formatLocalDate(dayBack(2)) }]);
@@ -93,4 +96,23 @@ it("on TODAY it is one of the quiet lines, and his TODAY switch turns it off for
   await new Promise((r) => setTimeout(r, 750)); // the line loads on its own; give it time to (not) appear
   expect(screen.getByRole("region", { name: "Habit check-in" }).elements()).toHaveLength(0);
   await expect.element(screen.getByRole("group", { name: "Quiet lines" })).toBeInTheDocument();
+});
+
+it("#708 review: after 'Stop asking' no other habit's line shows that day; UNDO brings the ladder back", async () => {
+  const a = await createHabit({ name: "Read", kind: "ANY_DAY" });
+  const b = await createHabit({ name: "Stretch", kind: "ANY_DAY" });
+  for (const k of [5, 4, 2]) {
+    const d = await startDay(dayBack(k).toISOString());
+    await setHabitAnswer(a.id, "NOT_DONE", d.id);
+    if (k !== 5) await setHabitAnswer(b.id, "NOT_DONE", d.id);
+  }
+  const today = await startDay(dayBack(0).toISOString());
+  await submitCheckIn(today.id, { energy: 4, stress: 2, mood: 3, soreness: 1, alcoholUrge: 0 });
+  const screen = await render(<HabitLadderLine now={new Date()} />);
+  await screen.getByRole("button", { name: "Stop asking about Read" }).click();
+  await expect.element(screen.getByText(/^Delta won't ask about Read\./)).toBeVisible();
+  expect(await getHabitLadderLine()).toBeNull(); // Stretch qualifies too, but not today
+  expect(screen.getByRole("button", { name: "Stop asking about Stretch" }).elements()).toHaveLength(0);
+  await screen.getByRole("button", { name: "UNDO" }).click();
+  await expect.poll(async () => (await getHabitLadderLine())?.habitId).toBe(a.id);
 });

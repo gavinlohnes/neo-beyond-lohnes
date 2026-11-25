@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useReportPresence } from "../../components/usePresence";
 import { WhyTraceDisclosure } from "../../components/WhyTrace";
 import { describeError } from "../../errorMessage";
-import { answerLadder, getHabitLadderLine, setLadderHabitOff } from "../../../application/habitLadder";
+import { answerLadder, askAgainAbout, getHabitLadderLine, stopAskingAbout } from "../../../application/habitLadder";
 import { LADDER_REASONS, LADDER_REASON_LABEL, type LadderAnswerValue, type LadderLine } from "../../../domain/habitLadder";
 import "./habitLadder.css";
 
@@ -25,6 +25,9 @@ export function HabitLadderLine({ now, tucked = false, onPresence, onOpenHabits 
   const minute = Math.floor(now.getTime() / 600_000);
   const load = () => getHabitLadderLine().then(setLine, () => setLine(null));
   useEffect(() => { void load(); }, [minute]);
+  // #708 review: the "what he answered" note gives its quiet-line slot back after a few seconds (UNDO for a stopped
+  // habit stays in MORE · Settings · TODAY after that).
+  useEffect(() => { if (!notice) return; const t = window.setTimeout(() => setNotice(null), 8_000); return () => window.clearTimeout(t); }, [notice]);
   useReportPresence(line !== null || notice !== null, onPresence);
   async function run(action: () => Promise<unknown>, after: string, undoOff?: string) {
     if (working.current) return;
@@ -39,7 +42,7 @@ export function HabitLadderLine({ now, tucked = false, onPresence, onOpenHabits 
   return <section className="habit-ladder" aria-label="Habit check-in" data-habit-ladder={line?.stage ?? "DONE"}>
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status" className="habit-ladder__notice">{notice.text}
-      {notice.undoOff && <> <button type="button" className="btn-secondary" disabled={busy} onClick={() => void run(async () => { setLadderHabitOff(notice.undoOff!, false); }, "Delta will ask about it again.")}>UNDO</button></>}</p>}
+      {notice.undoOff && <> <button type="button" className="btn-secondary" disabled={busy} onClick={() => void run(async () => { askAgainAbout(notice.undoOff!); }, "Delta will ask about it again.")}>UNDO</button></>}</p>}
     {line && <>
       <p className="habit-ladder__text">{line.text}</p>
       {line.stage === "ASK" && <div className="habit-ladder__chips" role="group" aria-label="What got in the way?">
@@ -53,7 +56,7 @@ export function HabitLadderLine({ now, tucked = false, onPresence, onOpenHabits 
       </div>
       <WhyTraceDisclosure why={line.why} />
       <button type="button" className="btn-secondary habit-ladder__off" disabled={busy}
-        onClick={() => void run(async () => { setLadderHabitOff(line.habitId, true); }, `Delta won't ask about ${line.habitName}. Turn it back on in MORE · Settings · TODAY.`, line.habitId)}>
+        onClick={() => void run(() => stopAskingAbout(line.habitId), `Delta won't ask about ${line.habitName}. Turn it back on in MORE · Settings · TODAY.`, line.habitId)}>
         Stop asking about {line.habitName}
       </button>
     </>}

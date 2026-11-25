@@ -66,9 +66,10 @@ const isReason = (a: LadderAnswerValue): a is LadderReason => (LADDER_REASONS as
 export function deriveHabitLadder(habit: LadderHabit, answers: readonly LadderAnswer[], today: string): LadderLine | null {
   const mine = answers.filter((a) => a.habitId === habit.id);
   const recent = (days: number) => mine.filter((a) => within(a.date, today, days));
-  // NOT RIGHT goes back to the first step and is quiet for 14 days. So is a finished EXAMINE, and CHANGE THE PLAN.
+  // NOT RIGHT goes back to the first step and is quiet for 14 days. So is a finished EXAMINE, and CHANGE THE PLAN; all
+  // three restart the counting, so misses under the old plan never carry over.
   if (recent(LADDER.QUIET_DAYS).some((a) => a.answer === "NOT_RIGHT" || a.stage === "EXAMINE" || a.answer === "CHANGE_PLAN")) return null;
-  const since = [...mine].filter((a) => a.answer === "NOT_RIGHT" || a.stage === "EXAMINE").map((a) => a.date).sort().at(-1);
+  const since = [...mine].filter((a) => a.answer === "NOT_RIGHT" || a.answer === "CHANGE_PLAN" || a.stage === "EXAMINE").map((a) => a.date).sort().at(-1);
   const counted = (d: LadderDay) => within(d.date, today, LADDER.WINDOW_DAYS) && (!since || d.date > since);
   const misses = habit.history.filter((d) => d.applies && d.answer === "NOT_DONE" && counted(d)).map((d) => d.date).sort();
   if (!misses.length) return null;
@@ -78,17 +79,20 @@ export function deriveHabitLadder(habit: LadderHabit, answers: readonly LadderAn
   const explained = misses.filter((m) => reasonOf.has(m));
   const answeredSince = (stage: LadderStage) => mine.filter((a) => a.stage === stage && (!since || a.date > since) && within(a.date, today, LADDER.WINDOW_DAYS));
   const named = answeredSince("NAME").filter((a) => a.answer === "RIGHT");
-  const challenges = answeredSince("CHALLENGE").filter((a) => a.answer !== "LATER");
+  const challenges = answeredSince("CHALLENGE").filter((a) => a.answer !== "LATER").map((a) => a.date).sort();
   const name = habit.name;
   const evidence = { label: "Misses", value: misses.map(weekday).join(" · ") };
   const why = (rule: string, extra: { label: string; value: string }[] = []): WhyTrace => ({ rule, facts: [{ label: "Habit", value: name }, evidence, ...extra] });
   const base = { habitId: habit.id, habitName: name, misses };
 
-  // 4. EXAMINE: enough misses, or a challenge twice without change. Delta stops asking.
-  if (misses.length >= LADDER.EXAMINE_MISSES || challenges.length >= LADDER.EXAMINE_AFTER_CHALLENGES) {
+  // #708 review: a challenge answer counts toward EXAMINE only when a new miss came after the one before it, so
+  // agreeing twice to the same evidence never escalates.
+  const challengesWithNewMisses = challenges.filter((c, i) => i === 0 || misses.some((m) => m > challenges[i - 1]! && m <= c)).length;
+  // 4. EXAMINE: enough misses, or a challenge answered twice with new misses in between.
+  if (misses.length >= LADDER.EXAMINE_MISSES || challengesWithNewMisses >= LADDER.EXAMINE_AFTER_CHALLENGES) {
     return { ...base, stage: "EXAMINE",
-      text: `${name} didn't happen ${misses.length} times in 4 weeks. That points to the plan. Change the days, make it smaller, pause it, or keep it as it is. Delta will stop asking about it either way.`,
-      why: why(`${LADDER.EXAMINE_MISSES} or more misses in ${LADDER.WINDOW_DAYS} days, or a challenge answered twice: examine the plan, then stop asking.`) };
+      text: `${name} didn't happen ${misses.length} times in 4 weeks. That points to the plan. Change the days, make it smaller, pause it, or keep it as it is. Delta won't ask about it for two weeks either way.`,
+      why: why(`${LADDER.EXAMINE_MISSES} or more misses in ${LADDER.WINDOW_DAYS} days, or a challenge answered twice: examine the plan, then two quiet weeks.`) };
   }
   const due = habit.history.filter((d) => d.applies && d.answer !== "UNRECORDED" && counted(d)).length;
   const counts = new Map<LadderReason, number>();
@@ -100,11 +104,14 @@ export function deriveHabitLadder(habit: LadderHabit, answers: readonly LadderAn
   // feeling like it on days that weren't low-capacity. Never for shift, tiredness or the plan.
   const avoided = explained.filter((m) => AVOIDANCE.has(reasonOf.get(m)!) && !missDay.get(m)?.lowCapacity);
   const constrained = explained.length - avoided.length;
-  if (named.length && avoided.length >= LADDER.CHALLENGE_AVOIDANCE && avoided.length > constrained) {
+  // #708 review: after he answers a challenge, it waits for a new forgot / didn't-feel miss before it can show again.
+  const lastChallenge = challenges.at(-1);
+  const fresh = !lastChallenge || avoided.some((m) => m > lastChallenge);
+  if (named.length && fresh && avoided.length >= LADDER.CHALLENGE_AVOIDANCE && avoided.length > constrained) {
     const last = avoided.slice(-3);
     const said = [...new Set(last.map((m) => `"${LADDER_REASON_LABEL[reasonOf.get(m)!]}"`))].join(" and ");
     return { ...base, stage: "CHALLENGE",
-      text: `${name}: the last ${last.length} misses (${last.map(weekday).join(" · ")}) weren't low-energy days, and you said ${said}. Two minutes counts. Start smaller today?`,
+      text: `${name}: ${last.length} of the misses (${last.map(weekday).join(" · ")}) weren't on low-energy days, and you said ${said}. Two minutes counts. Start smaller today?`,
       why: why(`You agreed with the pattern, and ${LADDER.CHALLENGE_AVOIDANCE} or more misses were "forgot" or "didn't feel like it" on days that weren't low-energy. Never used for shift, tiredness or the plan.`, reasonFacts) };
   }
   // 2. NAME: three misses and two answers. Asked once; RIGHT keeps it, CHANGE THE PLAN and NOT RIGHT quiet it.
@@ -112,7 +119,7 @@ export function deriveHabitLadder(habit: LadderHabit, answers: readonly LadderAn
     const work = misses.filter((m) => missDay.get(m)?.work === "WORK").length;
     const where = work >= 2 && work === misses.length ? ` All ${work} were work days.` : work >= 2 ? ` ${work} were work days.` : "";
     return { ...base, stage: "NAME",
-      text: `${name} didn't happen ${misses.length} of the last ${due} days it was due.${where} Your answers point to: ${LADDER_PATTERN[top[0]]}.`,
+      text: `${name} didn't happen ${misses.length} of the ${due} days you answered it.${where} Your answers point to: ${LADDER_PATTERN[top[0]]}.`,
       why: why(`${LADDER.NAME_MISSES} or more misses in ${LADDER.WINDOW_DAYS} days, with ${LADDER.NAME_ANSWERS} or more of your answers. Named from what you said.`, reasonFacts) };
   }
   // 1. ASK: two misses in 14 days; asks about the latest one he hasn't explained, only if it's recent.
