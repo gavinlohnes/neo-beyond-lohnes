@@ -7,6 +7,7 @@ import { describePosition, positionName } from "./rotationCopy";
 import { describeError } from "../../errorMessage";
 import "./personalUnderstanding.css";
 import { TagPatternsSection } from "../more/TagPatternsSection";
+import { WhatMovesSection } from "./WhatMovesSection";
 import { SleepRhythmLines } from "./SleepRhythmLines";
 import { DeltaPanel } from "../../components/DeltaViews";
 
@@ -125,6 +126,9 @@ export function PersonalUnderstanding({ active, onOpenHistory, onOpenSource, foc
           {/* JOURNAL-LEARN-001 (part 3): the rest of what BEYOND has learned, in the same place. */}
           <h2 className="tool-label">WHEN YOU SLEEP</h2>
           <SleepRhythmLines active={active && open && view === "Patterns"} />
+          {/* GRAYSON-WHAT-MOVES-001: habits, training and work days against next-day sleep, energy and resting heart rate. */}
+          <h2 className="tool-label">WHAT MOVES YOUR NUMBERS</h2>
+          <WhatMovesSection active={active && open && view === "Patterns"} />
           <h2 className="tool-label">WHAT YOUR TAGS LINE UP WITH</h2>
           <TagPatternsSection active={active && open && view === "Patterns"} />
         </section>}
