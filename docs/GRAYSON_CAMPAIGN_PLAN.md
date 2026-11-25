@@ -123,7 +123,7 @@ status of its own.
 | C6.2 | "What I think I'm learning" weekly | Done (#639) | Ships with C6.1; [brief](agent/GRAYSON-C6.1-C6.2-001.md) |
 | C6.3 | What moves your numbers | Not started | [brief](agent/GRAYSON-WHAT-MOVES-001.md) (#649); Claude Code |
 | C6.4 | "Why am I seeing this?" everywhere | Done (#638) | [brief](agent/GRAYSON-C6.4-001.md) |
-| C6.5 | Override as evidence | In review | [brief](agent/GRAYSON-C6.5-001.md); Claude Code |
+| C6.5 | Override as evidence | Done (#701) | [brief](agent/GRAYSON-C6.5-001.md); Claude Code. "That's not right" on every other Why is [NOT-RIGHT-001](agent/GRAYSON-NOT-RIGHT-001.md) (backlog E8) |
 | C6.6 | Earned challenge ladder | Not started |  |
 | C6.7 | One memory store | Briefed ([ONE-MEMORY-001](agent/GRAYSON-ONE-MEMORY-001.md)) |  |
 | C6.8 | Guided Start + Teach Delta, slice 1 | Done (#605) | `GRAYSON-GUIDED-START-001`; optional one-question teaching, exact confirmation and canonical memory reuse |
