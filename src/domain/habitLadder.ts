@@ -88,8 +88,11 @@ export function deriveHabitLadder(habit: LadderHabit, answers: readonly LadderAn
   // #708 review: a challenge answer counts toward EXAMINE only when a new miss came after the one before it, so
   // agreeing twice to the same evidence never escalates.
   const challengesWithNewMisses = challenges.filter((c, i) => i === 0 || misses.some((m) => m > challenges[i - 1]! && m <= c)).length;
+  // Gavin, 2026-11-25: "I'd rather the first line ever shown always be a question." Until Delta has asked about this
+  // habit once (any ASK answer, NOT NOW included), nothing but ASK can show, however many misses there are.
+  const askedBefore = mine.some((a) => a.stage === "ASK");
   // 4. EXAMINE: enough misses, or a challenge answered twice with new misses in between.
-  if (misses.length >= LADDER.EXAMINE_MISSES || challengesWithNewMisses >= LADDER.EXAMINE_AFTER_CHALLENGES) {
+  if (askedBefore && (misses.length >= LADDER.EXAMINE_MISSES || challengesWithNewMisses >= LADDER.EXAMINE_AFTER_CHALLENGES)) {
     return { ...base, stage: "EXAMINE",
       text: `${name} didn't happen ${misses.length} times in 4 weeks. That points to the plan. Change the days, make it smaller, pause it, or keep it as it is. Delta won't ask about it for two weeks either way.`,
       why: why(`${LADDER.EXAMINE_MISSES} or more misses in ${LADDER.WINDOW_DAYS} days, or a challenge answered twice: examine the plan, then two quiet weeks.`) };

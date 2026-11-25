@@ -43,6 +43,11 @@ These live in one place, `LADDER` in `src/domain/habitLadder.ts`.
 - **Limits across all habits:** at most one ladder line a day; none once he has answered one or said "Stop asking"
   today; none on a low-energy day. The note after an answer clears after 8 seconds. When several habits qualify, the one with the most misses shows.
 
+## Amendment (Gavin, 2026-11-25)
+"I'd rather the first line ever shown always be a question." Until Delta has asked about a habit once (any ASK answer,
+NOT NOW included), only ASK can show. A habit with 6 or more misses on ship day therefore starts with a question, and
+stays quiet if none of its misses is from the last 7 days.
+
 ## Off switches
 - **For all habits:** TODAY's quiet-line switch "Habit check-ins". The line is `HABIT_LADDER`, placed after REVIEW in
   the default order and counted in the quiet-line budget.
