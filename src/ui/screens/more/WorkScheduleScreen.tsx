@@ -13,6 +13,7 @@ import { describeError } from "../../errorMessage";
 import { KeyMomentAlerts } from "./KeyMomentAlerts";
 import { handPlanToPhone } from "../../bridgeHandoff";
 import { LogNudgeSettings } from "./LogNudgeSettings";
+import { WorkDatesOnSchedule } from "./WorkDatesOnSchedule";
 
 /**
  * Drop 02a (Daily Intelligence / Context, first slice). MORE -> Work
@@ -45,7 +46,7 @@ function toggled(set: number[], value: number): number[] {
   return set.includes(value) ? set.filter((v) => v !== value) : [...set, value].sort((a, b) => a - b);
 }
 
-export function WorkScheduleScreen() {
+export function WorkScheduleScreen({ onOpenWorkRecord }: { onOpenWorkRecord?: () => void } = {}) {
   const [loaded, setLoaded] = useState(false);
   const [weekAWorkdays, setWeekAWorkdays] = useState<number[]>([]);
   const [weekBWorkdays, setWeekBWorkdays] = useState<number[]>([]);
@@ -230,6 +231,8 @@ export function WorkScheduleScreen() {
         {saving ? "SAVING..." : "SAVE SCHEDULE"}
       </button>
       {status && <p className="meta" style={{ marginTop: 8 }}>{status}</p>}
+      {/* GRAYSON-WORK-RECORD-001: court and training dates on their day, with MARK AS WORK on a day off. */}
+      <WorkDatesOnSchedule {...(onOpenWorkRecord ? { onOpenWorkRecord } : {})} />
       <KeyMomentAlerts />
       <LogNudgeSettings />
     </div>

@@ -74,6 +74,8 @@ export const SYSTEM_CAPABILITIES = [
   { label: "PEOPLE", description: "Birthdays, dates and what to remember about people", aliases: ["people", "birthday", "anniversary", "family", "friend", "gift"], group: "Plan", destination: { kind: "more", view: "PEOPLE" }, browse: false },
   { label: "HOME", description: "House facts and jobs that come round", aliases: ["home", "house", "filter", "maintenance", "chore"], group: "Plan", destination: { kind: "more", view: "HOME" }, browse: false },
   { label: "WORK SCHEDULE", description: "Your standing schedule", aliases: ["shift", "schedule", "rotation"], group: "Plan", destination: { kind: "more", view: "WORK_SCHEDULE" } },
+  // GRAYSON-WORK-RECORD-001: found by name in search; browsed from its row beside Work schedule (MORE-TRIM-001's cap).
+  { label: "WORK RECORD", description: "Training hours, certifications, court and training dates", aliases: ["training hours", "certification", "court", "two-year mark", "work record"], group: "Plan", destination: { kind: "more", view: "WORK_RECORD" }, browse: false },
   { label: "WHAT BEYOND SHOULD REMEMBER", description: "Your prep and recovery preferences", aliases: ["memory", "preferences", "remember", "constraint"], group: "Settings", destination: { kind: "more", view: "MEMORY" } },
   { label: "IMPORT HEALTH DATA", description: "Preview Garmin data from the helper before saving", aliases: ["import", "health connect", "garmin"], group: "Review", destination: { kind: "more", view: "HEALTH_IMPORT" } },
   { label: "DATA", description: "Nutrition, water, sleep and bodyweight", aliases: ["body", "daily record", "health"], group: "Review", destination: { kind: "workspace", tab: "BODY" }, browse: false },
