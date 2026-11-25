@@ -1,4 +1,4 @@
-import type { DeltaKnowledge, Learning } from "./delta";
+import { ADVICE_KIND_LABEL, type DeltaKnowledge, type Learning } from "./delta";
 import type { LifecycleItem } from "./learningLifecycle";
 import { NARROW_LABELS } from "../domain/learningLifecycle";
 
@@ -30,6 +30,9 @@ export function deltaFact(l: Learning): { text: string; personal: boolean } {
       const latest = l.reading.days.at(-1)!;
       return { personal: false, text: `DELTA NOTICED: ${l.metric === "resting" ? "resting heart rate" : l.metric === "sleep" ? "Garmin main sleep" : "steps"} ${l.reading.direction === "ABOVE" ? "above" : "below"} his usual range for ${l.reading.days.length} days running (latest ${l.metric === "sleep" ? hm(latest.value) : Math.round(latest.value)}, usual ${l.metric === "sleep" ? `${hm(latest.low)}–${hm(latest.high)}` : `${latest.low}–${latest.high}`}). A reading, not a diagnosis.` };
     }
+    // GRAYSON C6.5: from his own decline reasons (journal), so it follows the personal opt-in.
+    case "OVERRIDE":
+      return { personal: true, text: `DELTA NOTICED (his own decline reasons, ${l.count} in the last 30 days): when BEYOND suggested ${ADVICE_KIND_LABEL[l.recommendationKind]}, he declined saying "${l.missed}". Context BEYOND's data missed, not a rule.` };
     case "EXPERIMENT":
       return { personal: true, text: `DELTA LEARNED (finished experiment "${l.what}", ${l.days} days): his own outcome "${l.outcome}"${l.lesson ? `; his lesson: "${l.lesson}"` : ""}.` };
   }

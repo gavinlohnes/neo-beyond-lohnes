@@ -1,0 +1,14 @@
+/* GRAYSON-TRAIN-NOTES-001: his note on an exercise. One muted line; an inline editor. 16 px text, 44 px controls. */
+.exercise-note { margin: 2px 0 8px; font-size: 16px; line-height: 1.35; color: var(--text-2); overflow-wrap: anywhere; }
+.exercise-note-open { width: auto; min-height: 44px; padding: 4px 10px; font-size: 16px; flex-shrink: 0; }
+.exercise-note-edit { display: grid; gap: 6px; margin: 4px 0 10px; min-width: 0; }
+.exercise-note-edit__label { font-size: 16px; color: var(--text-2); }
+.exercise-note-edit input {
+  min-height: 44px; font: inherit; font-size: 16px; padding: 8px 10px; min-width: 0; border: 1px solid var(--p-line-2, #3a3a3a);
+  border-radius: 0; background: var(--p-bg, #000); color: var(--text-1);
+}
+.exercise-note-edit input:focus-visible { outline: 2px solid var(--focus, var(--text-1)); outline-offset: 2px; }
+.exercise-note-edit__count { margin: 0; font-size: 16px; color: var(--text-2); }
+.exercise-note-edit__acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.exercise-note-edit__acts > button { width: auto; flex: 1 1 90px; min-height: 44px; padding: 6px 12px; font-size: 16px; }
+.exercise-note-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

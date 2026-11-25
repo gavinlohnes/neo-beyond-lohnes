@@ -187,3 +187,65 @@ export function deriveAttentionPlan(input: AttentionInput): AttentionPlan {
 export function isInAttention(plan: AttentionPlan, item: AttentionItem): boolean {
   return plan.attention.includes(item);
 }
+
+/**
+ * GRAYSON-TODAY-CALM-001 (C9.6, Gavin 2026-11-24): TODAY's quiet lines get the same kind of budget its cards have.
+ * A quiet line is a one-line note or one-button row that is not the hero, the next-action card, an operation, the
+ * numbers or an error. At most `max` show at once (default QUIET_MAX), in his order; the rest wait behind one
+ * "N MORE" tap. Errors and his own just-made actions (the signal line, the SYNC GARMIN result) are never quiet lines.
+ *
+ * Future rule: a new TODAY note is a new `QuietLineId` with a default place in QUIET_LINE_DEFAULT_ORDER, never a new
+ * block in TodayScreen.tsx. Each brief says which place it takes.
+ *
+ * Pure: no I/O. Each line's own existing condition decides whether it is a candidate; this only budgets and orders.
+ */
+export type QuietLineId =
+  | "DRIVE_HOME"
+  | "FIRST_AT_HOME"
+  | "LOG_NUDGE"
+  | "PHONE_ALERTS_BEHIND"
+  | "ROUTINE"
+  | "EXPERIMENT"
+  | "REVIEW"
+  | "WORK_DUE";
+
+export const QUIET_LINE_DEFAULT_ORDER: readonly QuietLineId[] = [
+  "DRIVE_HOME", "FIRST_AT_HOME", "LOG_NUDGE", "PHONE_ALERTS_BEHIND", "ROUTINE", "EXPERIMENT", "REVIEW", "WORK_DUE",
+];
+
+export const QUIET_MAX = 2;
+export const QUIET_MAX_CHOICES = [1, 2, 3] as const;
+export type QuietMax = (typeof QUIET_MAX_CHOICES)[number];
+
+export interface QuietLineSettings {
+  /** How many quiet lines show at once: 1, 2 or 3. */
+  max: QuietMax;
+  /** His order; every known id exactly once. */
+  order: readonly QuietLineId[];
+  /** Lines he turned off. */
+  off: readonly QuietLineId[];
+  /** After SHIFT DOWN, the catch-up and the close show one at a time (catch-up first). */
+  oneAfterShift: boolean;
+}
+
+export const DEFAULT_QUIET_SETTINGS: QuietLineSettings = { max: QUIET_MAX, order: QUIET_LINE_DEFAULT_ORDER, off: [], oneAfterShift: true };
+
+/**
+ * The candidates true right now, budgeted: the first `max` by his order are shown, the rest are tucked behind
+ * "N MORE". Lines he turned off never show. While an operation or the late sleep prompt owns the screen
+ * (`operationActive`), no quiet line shows except DRIVE_HOME, which keeps its own existing rule.
+ */
+export function deriveQuietLines(
+  candidates: Iterable<QuietLineId>,
+  settings: Pick<QuietLineSettings, "max" | "order" | "off">,
+  operationActive = false,
+): { shown: QuietLineId[]; tucked: QuietLineId[] } {
+  const live = new Set(candidates);
+  const off = new Set(settings.off);
+  const rank = (id: QuietLineId) => { const i = settings.order.indexOf(id); return i < 0 ? QUIET_LINE_DEFAULT_ORDER.indexOf(id) + settings.order.length : i; };
+  const ordered = [...live]
+    .filter((id) => !off.has(id) && (!operationActive || id === "DRIVE_HOME"))
+    .sort((a, b) => rank(a) - rank(b));
+  const max = Math.max(0, Math.floor(settings.max));
+  return { shown: ordered.slice(0, max), tucked: ordered.slice(max) };
+}

@@ -42,6 +42,11 @@
         <activity android:name=".RunCueActivity" android:exported="true" android:excludeFromRecents="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="beyond-bridge" android:host="run" /></intent-filter>
         </activity>
+        <!-- GRAYSON-PLAN-FRESH-001: BEYOND's update link (beyond-bridge://plan) lands here, saves the alert plan and
+             finishes at once with no screen, so he goes straight back to BEYOND. No permission, no service. -->
+        <activity android:name=".PlanActivity" android:exported="true" android:excludeFromRecents="true" android:noHistory="true" android:taskAffinity="" android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="beyond-bridge" android:host="plan" /></intent-filter>
+        </activity>
         <service android:name=".RunCueService" android:exported="false" android:foregroundServiceType="health" />
         <receiver android:name=".MomentReceiver" android:exported="false">
             <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>

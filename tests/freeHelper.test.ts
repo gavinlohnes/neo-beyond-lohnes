@@ -136,3 +136,22 @@ describe("FREE-HELPER-002", () => {
     expect(foodQuery("ate it")).toBeNull();
   });
 });
+
+describe("GRAYSON-DICTATE-001: readCheckInWords", () => {
+  it("fills only the fields said; craving means urge and sore means soreness", async () => {
+    const { readCheckInWords } = await import("../src/application/helper/freeHelper");
+    expect(readCheckInWords("Energy 3, stress 2, mood 4, sore 1, urge 0")).toEqual({ energy: 3, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 });
+    expect(readCheckInWords("energy is 2 and craving 4")).toEqual({ energy: 2, alcoholUrge: 4 });
+    expect(readCheckInWords("soreness 5")).toEqual({ soreness: 5 });
+    expect(readCheckInWords("I feel fine")).toEqual({});
+  });
+  it("numbers as words count; out-of-range numbers are ignored", async () => {
+    const { readCheckInWords } = await import("../src/application/helper/freeHelper");
+    expect(readCheckInWords("energy three, mood five, urge zero")).toEqual({ energy: 3, mood: 5, alcoholUrge: 0 });
+    expect(readCheckInWords("energy 0, stress 7, sore 6, mood 9")).toEqual({});
+  });
+  it("interpret is unchanged: a full check-in is still one card, digits only", () => {
+    const result = interpret("energy 3 stress 2 mood 4 sore 1 urge 0", ctx);
+    expect(result.cards).toEqual([{ kind: "check_in", energy: 3, stress: 2, mood: 4, soreness: 1, alcohol_urge: 0 }]);
+  });
+});

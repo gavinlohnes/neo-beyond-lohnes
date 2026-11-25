@@ -91,6 +91,8 @@ describe("C6.2 the weekly pick", () => {
     expect(again.map((i) => [i.learningId, i.state])).toEqual([["tag-a", "CONFIRMED"], ["tag-b", "RETIRED"], ["tag-c", "CONTESTED"]]); // no new ones
     const later = weeklyLearnings(life(ls, answered), new Date(NOW.getTime() + 7 * 86_400_000));
     expect(later.map((i) => i.learningId)).toEqual(["tag-d", "tag-e"]);
+    // A weekly ask whose learning can no longer be derived still holds its slot (#639 review nit).
+    expect(weeklyLearnings(life(ls.slice(1), answered), NOW).map((i) => i.learningId)).toEqual(["tag-b", "tag-c"]);
     // An answer given in the notebook isn't one of the week's asks.
     expect(weeklyLearnings(life(ls, [answer(ls[0]!, "KEEP", null)]), NOW).map((i) => i.learningId)).toEqual(["tag-b", "tag-c", "tag-d"]);
   });

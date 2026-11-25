@@ -1,6 +1,6 @@
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useId, useState } from "react";
-import type { DecisionJournalEntry } from "../../../domain/journal/types";
+import { MISSED_REASONS, type DecisionJournalEntry, type MissedReason } from "../../../domain/journal/types";
 import { DECLINE_REASONS, getReflectionFor, reflectOnDecline, type DeclineReason } from "../../../application/reflect";
 import { describeError } from "../../errorMessage";
 import "./reflect.css";
@@ -15,6 +15,8 @@ export function ReflectOnDecline({ recommendationId, title, why }: { recommendat
   const [saved, setSaved] = useState<DecisionJournalEntry | null | undefined>(undefined);
   const [reason, setReason] = useState<DeclineReason | null>(null);
   const [note, setNote] = useState("");
+  // GRAYSON C6.5: what BEYOND's data missed. Optional; tap again to clear.
+  const [missed, setMissed] = useState<MissedReason | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,7 +33,7 @@ export function ReflectOnDecline({ recommendationId, title, why }: { recommendat
     const acknowledge = captureCommitFeedback();
     if (!reason || busy) return;
     setBusy(true); setError("");
-    try { setSaved(await reflectOnDecline({ id: recommendationId, title, why }, reason, note)); acknowledge("LIGHT"); }
+    try { setSaved(await reflectOnDecline({ id: recommendationId, title, why }, reason, note, missed)); acknowledge("LIGHT"); }
     catch (cause) { setError(describeError(cause, "Could not save to the journal.")); }
     finally { setBusy(false); }
   }
@@ -42,6 +44,11 @@ export function ReflectOnDecline({ recommendationId, title, why }: { recommendat
       {DECLINE_REASONS.map((r) => <button key={r} type="button" className={`chip ${reason === r ? "chip--selected" : ""}`} aria-pressed={reason === r} disabled={busy} onClick={() => setReason(r)}>{r}</button>)}
     </div>
     {reason && <>
+      {/* GRAYSON C6.5: one optional tap. Repeats become something Delta asks you about; never the advice itself. */}
+      <p className="meta" id={`${uid}-missed`}>What did I miss? Optional. If it keeps coming up, Delta will ask you about it.</p>
+      <div className="reflect-chips reflect-chips--missed" role="group" aria-labelledby={`${uid}-missed`} data-reflect-missed>
+        {MISSED_REASONS.map((m) => <button key={m} type="button" className={`chip ${missed === m ? "chip--selected" : ""}`} aria-pressed={missed === m} disabled={busy} onClick={() => setMissed(missed === m ? null : m)}>{m}</button>)}
+      </div>
       <label className="meta" htmlFor={`${uid}-note`}>Anything to add? Optional.</label>
       <input id={`${uid}-note`} className="input" value={note} maxLength={280} onChange={(e) => setNote(e.target.value)} />
       <button type="button" className="btn-secondary" disabled={busy} onClick={() => void save()}>SAVE TO JOURNAL</button>

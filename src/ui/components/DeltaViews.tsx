@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { newLearnings, type DeltaKnowledge, type ExperimentSuggestion, type Learning, type Topic } from "../../application/delta";
+import { ADVICE_KIND_LABEL, newLearnings, type DeltaKnowledge, type ExperimentSuggestion, type Learning, type Topic } from "../../application/delta";
 import { disputedByHim, getReasoningKnowledge, type ReasoningKnowledge } from "../../application/learningQueries";
 import { LearningAnswer } from "./LearningAnswer";
 import { startExperiment } from "../../application/tryExperiment";
@@ -20,6 +20,8 @@ const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month
 export function describeLearning(l: Learning): string {
   if (l.kind === "SLEEP_WINDOW") return `Learned when you sleep. ${describeGroup(l.group)}`;
   if (l.kind === "UNUSUAL") { const c = describeUnusual(l.metric, l.reading); return `Noticed: ${c.headline} ${c.basis}`; }
+  // GRAYSON C6.5: what BEYOND's data keeps missing when he declines.
+  if (l.kind === "OVERRIDE") return `Noticed: when BEYOND suggested ${ADVICE_KIND_LABEL[l.recommendationKind]}, you said "${l.missed}" ${l.count} times since ${day(l.since)}.`;
   if (l.kind === "EXPERIMENT") return `Learned from your experiment "${l.what}" (${l.days} days): ${l.outcome}.${l.lesson ? ` Your lesson: ${l.lesson}` : ""}`;
   return `Learned what #${l.tag} lines up with, over ${l.taggedDays} tagged days. ${describeComparison(l.comparison)}`;
 }
@@ -47,7 +49,8 @@ export function DeltaPanel({ active }: { active: boolean }) {
   const knowledge = useDeltaKnowledge(active, refresh);
   if (knowledge === "ERROR") return <p className="meta">DELTA couldn't read your records. Nothing was changed.</p>;
   if (!knowledge) return <p className="meta" role="status">DELTA is reading…</p>;
-  const known = knowledge.topics.filter((t) => t.state === "KNOWN").length;
+  // #639 review nit: a topic he dropped isn't one Delta "knows".
+  const known = knowledge.topics.filter((t) => t.state === "KNOWN" && knowledge.states.get(t.id)?.state !== "RETIRED").length;
   return <section className="delta-panel" aria-label="DELTA">
     <h2 className="tool-label">DELTA · WHAT I KNOW ABOUT YOU</h2>
     <p className="card-body">I know {known} of {knowledge.topics.length} things so far. I learn from what you log; I never guess.</p>

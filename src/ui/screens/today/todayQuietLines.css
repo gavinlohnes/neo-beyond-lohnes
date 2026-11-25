@@ -1,0 +1,17 @@
+/* GRAYSON-TODAY-CALM-001: the quiet lines sit together under the numbers; tokens only. */
+.today-quiet-lines { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 0; }
+.today-quiet-lines:focus { outline: none; }
+.today-quiet-lines:focus-visible { outline: 2px solid var(--p-t1); outline-offset: 2px; }
+.today-quiet-line:empty, .today-quiet-line:not(:has(> :not([hidden]))) { display: none; }
+.today-quiet-line > [data-try-active] { margin: 0; font-size: 16px; line-height: 1.35; color: var(--text-3-strong); }
+.today-quiet-line .cc-log-nudge { margin: 0; }
+.today-field .today-quiet-lines .today-quiet-more, .today-quiet-lines .today-quiet-more { align-self: flex-start; width: auto; min-height: 44px; margin: 0; font-size: 16px; letter-spacing: .08em; }
+/* MORE → Settings → TODAY */
+.today-quiet-settings__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0; }
+.today-quiet-settings__chips { display: flex; gap: 8px; }
+.today-quiet-settings__order { list-style: none; padding: 0; margin: 0 0 12px; }
+.today-quiet-settings__line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; font-size: 16px; }
+.today-quiet-settings__name { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.today-quiet-settings__controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.today-quiet-settings button { min-height: 44px; min-width: 44px; font-size: 16px; width: auto; }
+.today-quiet-settings__row > button, .today-quiet-settings__chips > button, .today-quiet-settings__controls > button { flex: 0 0 auto; }

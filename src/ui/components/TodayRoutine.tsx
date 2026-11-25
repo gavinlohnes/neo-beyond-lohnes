@@ -5,13 +5,18 @@ import { captureCommitFeedback } from "../feel/feedback";
 import { describeError } from "../errorMessage";
 import "./alfred.css";
 import { RoutinePlayer } from "./RoutinePlayer";
+import { useReportPresence } from "./usePresence";
 
 /**
  * ROUTINES-001 (owner ruling: "One quiet row on TODAY"). Only the routines for the current moment,
  * collapsed. Ticks are today's only; there's no count of past days, no streak and nothing marked
  * missed. With no routine for this moment the row isn't shown at all.
+ * GRAYSON-TODAY-CALM-001: a quiet line (ROUTINE). It tells TODAY when it has a row, and stays out of sight while tucked;
+ * a read error always shows.
  */
-export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: string | null; moment: RoutineMoment | null; active: boolean; busy?: boolean }) {
+export function TodayRoutine({ dayId, moment, active, busy = false, tucked = false, onPresence }: {
+  dayId: string | null; moment: RoutineMoment | null; active: boolean; busy?: boolean; tucked?: boolean; onPresence?: (shown: boolean) => void;
+}) {
   const [routines, setRoutines] = useState<Routine[] | null>(null);
   const [ticks, setTicks] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +42,11 @@ export function TodayRoutine({ dayId, moment, active, busy = false }: { dayId: s
     return () => window.removeEventListener("beyond:routines-changed", reload);
   }, [dayId, moment, active]);
 
+  useReportPresence(!!dayId && !!moment && !error && (routines ?? []).some((r) => r.moment === moment), onPresence);
   if (!dayId || !moment) return null;
   if (error) return <div><p role="alert" className="meta">{error}</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY ROUTINES</button></div>;
   const here = (routines ?? []).filter((r) => r.moment === moment);
-  if (here.length === 0) return null;
+  if (here.length === 0 || tucked) return null;
 
   async function toggle(routine: Routine, stepId: string, done: boolean) {
     if (saving || busy || !dayId) return;

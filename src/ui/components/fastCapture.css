@@ -6,3 +6,7 @@
 .fast-capture__message { margin: 0; }
 .fast-capture__saved { border-top: 1px solid var(--border-subtle); padding-top: 12px; min-width: 0; }
 .fast-capture__open { min-height: 44px; justify-self: start; font-size: 16px; }
+/* GRAYSON-DICTATE-001: CAPTURE and TALK side by side, wrapping on narrow screens. */
+.fast-capture__actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.fast-capture__actions > .btn-primary { flex: 1 1 160px; }
+.fast-capture__actions > .talk { flex: 0 1 auto; }

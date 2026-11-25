@@ -14,7 +14,7 @@ export const NARROW_LABELS: Record<NarrowPreset, string> = { WORK_DAYS: "Work da
 
 /** What the learning rested on when he answered, so a later flip can be seen. */
 export interface LearningEvidence {
-  kind: "TAG" | "SLEEP_WINDOW" | "EXPERIMENT" | "UNUSUAL";
+  kind: "TAG" | "SLEEP_WINDOW" | "EXPERIMENT" | "UNUSUAL" | "OVERRIDE";
   /** Days (or nights) behind it. */
   days: number;
   /** TAG: which measure and which way it leaned. */

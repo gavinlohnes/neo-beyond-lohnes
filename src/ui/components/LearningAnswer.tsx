@@ -12,7 +12,12 @@ const LEAN: Record<string, string> = { MORE: "more", LESS: "less", SAME: "about 
 /** What his answer says now, in his terms. */
 export function describeState(item: LifecycleItem): string {
   const label = LEARNING_STATE_LABELS[item.state];
-  if (item.by === "EVIDENCE" && item.state === "CONTESTED") return `${label}: you kept this, but newer records point the other way.`;
+  if (item.by === "EVIDENCE" && item.state === "CONTESTED") {
+    // #639 review nit: a TAG pattern that now compares a different measure changed, it didn't reverse.
+    const now = item.learning ? evidenceOf(item.learning) : null;
+    if (now?.kind === "TAG" && item.verdict?.evidence.measure && now.measure !== item.verdict.evidence.measure) return `${label}: you kept this, but Delta now compares something different.`;
+    return `${label}: you kept this, but newer records point the other way.`;
+  }
   if (item.by === "EVIDENCE" && item.state === "OUTDATED") return `${label}: you kept this, but there's been no fresh evidence for 8 weeks.`;
   if (item.state === "CONTEXT_SPECIFIC" && item.verdict?.context) {
     const c = item.verdict.context;
@@ -44,14 +49,16 @@ export function LearningAnswer({ item, statement, onAnswered, via }: { item: Lif
     } catch (cause) { setError(describeError(cause, "That answer couldn't be saved. Nothing was changed.")); } finally { setBusy(false); }
   };
   const facts = [
-    { label: "Behind it", value: `${evidence.days} ${learning.kind === "SLEEP_WINDOW" ? "measured nights" : "tagged days"}` },
+    { label: "Behind it", value: `${evidence.days} ${learning.kind === "SLEEP_WINDOW" ? "measured nights" : learning.kind === "OVERRIDE" ? "times you said so in 30 days" : "tagged days"}` },
     ...(evidence.measure ? [{ label: "Compared", value: `${MEASURE[evidence.measure] ?? evidence.measure}: ${LEAN[evidence.direction ?? "SAME"]} on tagged days` }] : []),
     ...(item.verdict ? [{ label: "Your answer", value: `${new Date(item.verdict.recordedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${item.verdict.action === "NOT_TRUE" ? "not true" : item.verdict.action.toLowerCase()}` }] : []),
   ];
   return (
     <div className="learning-answer" data-learning-state={item.state}>
       <p className="learning-answer__state">{describeState(item)}</p>
-      <WhyTraceDisclosure why={{ rule: learning.kind === "TAG" ? "A #tag pattern: tagged days compared with other noted days. A pattern, not proof of a cause." : "Your usual sleep window from measured nights.", facts }} />
+      <WhyTraceDisclosure why={{ rule: learning.kind === "TAG" ? "A #tag pattern: tagged days compared with other noted days. A pattern, not proof of a cause."
+        : learning.kind === "OVERRIDE" ? "The same reason, 3 or more times in 30 days, when you declined this kind of advice. It never changes the advice."
+        : "Your usual sleep window from measured nights.", facts }} />
       {answerable && !narrowing && (
         <div className="learning-answer__actions" role="group" aria-label="Your answer">
           <button type="button" className="btn-secondary" disabled={busy} onClick={() => void send("KEEP")}>KEEP</button>
