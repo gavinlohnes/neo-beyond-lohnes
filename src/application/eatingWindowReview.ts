@@ -84,7 +84,8 @@ export interface ActualDay {
 
 /**
  * Pure. His actual window on each lived day of a known kind. A day's search span is the 24 hours centred on its planned
- * opening, so a window that opens after midnight on a work night still belongs to that night. Opening: his first
+ * opening (cut at the halfway point to a neighbour's), so a window that opens after midnight on a work night still
+ * belongs to that night. Opening: his first
  * OPENED mark in the span, else the first logged meal. Closing: his first CLOSED mark in the 24 hours after opening,
  * else the last logged meal in the span. Rows are consecutive lived days, oldest first.
  */
@@ -93,11 +94,16 @@ export function actualWindows(rows: readonly PictureRow[], marks: readonly Eatin
   const sorted = [...marks].sort((a, b) => a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0));
   const meals = rows.flatMap((row) => (row.marks?.meals ?? []).map((m) => Date.parse(row.start) + m * MIN)).sort((a, b) => a - b);
   const out: ActualDay[] = [];
+  const plans = rows.map((row, i) => { const kind = kinds[i]; return kind ? plannedOpening(new Date(row.start), settings.opensAt[kind]).getTime() : undefined; });
   rows.forEach((row, i) => {
     const kind = kinds[i];
-    if (!kind) return;
-    const planned = plannedOpening(new Date(row.start), settings.opensAt[kind]).getTime();
-    const lo = planned - 12 * HOUR, hi = planned + 12 * HOUR;
+    const planned = plans[i];
+    if (!kind || planned === undefined) return;
+    // #727 review: neighbours with different openings (Recovery 14:00, then Off 10:00) would overlap, so each span
+    // stops halfway to the next day's planned opening, and starts halfway from the day before's.
+    const prev = plans[i - 1], next = plans[i + 1];
+    const lo = Math.max(planned - 12 * HOUR, prev !== undefined ? (prev + planned) / 2 : -Infinity);
+    const hi = Math.min(planned + 12 * HOUR, next !== undefined ? (planned + next) / 2 : Infinity);
     const inSpan = (t: number) => t >= lo && t < hi;
     const openMark = sorted.find((m) => m.boundary === "OPENED" && inSpan(Date.parse(m.at)));
     const spanMeals = meals.filter(inSpan);
@@ -270,7 +276,8 @@ export function windowReview(e: Experiment, inputs: ReviewInputs): WindowReview 
   const kept = inputs.actual.filter((d) => inRange(d.start, from, to));
   const keptKnown = kept.filter((d) => d.opened !== undefined);
   const within = keptKnown.filter((d) => Math.abs(d.opened! - d.planned) <= WINDOW_REVIEW.KEPT_WITHIN_MINUTES * MIN).length;
-  lines.push({ label: "Window kept", text: `Opened within ${WINDOW_REVIEW.KEPT_WITHIN_MINUTES} minutes of the plan on ${within} of ${keptKnown.length} known days${kept.length > keptKnown.length ? `; ${kept.length - keptKnown.length} days unknown` : ""}.` });
+  const unknown = kept.length - keptKnown.length;
+  lines.push({ label: "Window kept", text: `Opened within ${WINDOW_REVIEW.KEPT_WITHIN_MINUTES} minutes of your plan as it is now on ${within} of ${keptKnown.length} known ${keptKnown.length === 1 ? "day" : "days"}${unknown ? `; ${unknown} ${unknown === 1 ? "day" : "days"} unknown` : ""}.` });
 
   const guards: string[] = [];
   if (proteinGuard) guards.push(proteinGuard);
@@ -319,7 +326,9 @@ export async function getWindowReviewView(now: Date = new Date()): Promise<Windo
   if (tryE && now < tryE.to) review = { kind: "RUNNING", id: tryE.entry.id, day: Math.max(1, experimentDay(tryE, now)), of: tryE.days };
   else if (tryE) {
     const [weighIns, targets, proteinTargetG, train] = await Promise.all([
-      getBodyweightHistory(), getNutritionTargets(), getEffectiveProteinTargetG(), getTrainProgress(now).catch(() => null),
+      getBodyweightHistory(), getNutritionTargets(), getEffectiveProteinTargetG(),
+      // #727 review: strength as of the Try's end, so a late look doesn't slide its 4-week window past the Try.
+      getTrainProgress(new Date(Math.min(now.getTime(), tryE.to.getTime()))).catch(() => null),
     ]);
     review = { kind: "DUE", id: tryE.entry.id, days: tryE.days, review: windowReview(tryE, {
       rows, actual: allDays, weighIns, alpha: TREND_ALPHA[readWeightTrendPreference().smoothing], goalWeightLbs: targets.goalWeightLbs,

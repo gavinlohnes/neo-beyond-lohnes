@@ -65,6 +65,15 @@ describe("what you actually do", () => {
     expect(days.every((d) => d.opened !== undefined && d.opened - d.planned === 20 * 60_000)).toBe(true);
     expect(summarizeActual(days, night).find((s) => s.kind === "WORK")!.opensAt).toBe("01:20");
   });
+
+  it("#727 review: a Recovery day then a day off don't share a meal; spans stop halfway to the next plan", () => {
+    // Nov 10 work, Nov 11 recovery (opens Nov 12 14:00), Nov 12 off (opens Nov 13 10:00). A 23:30 meal on Nov 12 sits
+    // inside both 12-hour spans; it belongs to the recovery day (before the halfway point, Nov 13 00:00).
+    const rows = [row(10), row(11, { context: "OFF", meals: [minutesAfterStart(11, 12, 15), minutesAfterStart(11, 12, 23, 30)] }), row(12, { context: "OFF", meals: [minutesAfterStart(12, 13, 10)] })];
+    const [, recovery, off] = actualWindows(rows, [], settings);
+    expect(recovery).toMatchObject({ kind: "RECOVERY", opened: new Date(2026, 10, 12, 15).getTime(), closed: new Date(2026, 10, 12, 23, 30).getTime() });
+    expect(off).toMatchObject({ kind: "OFF", opened: new Date(2026, 10, 13, 10).getTime() });
+  });
 });
 
 describe("one offer to move the plan", () => {
@@ -150,6 +159,16 @@ describe("the review", () => {
     expect(all.guardrails[1]).toBe("Strength is lower than 4 weeks ago while your weight is dropping. Worth more protein or a wider window before anything else.");
     const noProtein = windowReview(e, base(energyRows.map((r) => ({ ...r, protein: 200 })), { weighIns, strength: { state: "NEEDS ATTENTION", missing: [] } }));
     expect(noProtein.guardrails[1]).toBe("Energy has been lower while you've been on the window. A wider window or more food on work nights may help.");
+  });
+
+  it("#727 review: an unknown day isn't counted as kept, and counts read in the singular", () => {
+    const planned = (d: number) => new Date(2026, 9, d + 1, 14).getTime();
+    const actual: ActualDay[] = [
+      { start: new Date(2026, 9, 20, 16, 30).toISOString(), kind: "WORK", planned: planned(20), opened: planned(20) + 10 * 60_000, source: "MARKED" },
+      { start: new Date(2026, 9, 21, 16, 30).toISOString(), kind: "WORK", planned: planned(21), source: "UNKNOWN" },
+    ];
+    expect(windowReview(e, base([], { actual })).lines.at(-1)).toEqual({ label: "Window kept",
+      text: "Opened within 30 minutes of your plan as it is now on 1 of 1 known day; 1 day unknown." });
   });
 
   it("strength says when there aren't enough comparable lifts", () => {
