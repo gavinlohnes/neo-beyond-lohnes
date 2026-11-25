@@ -8,9 +8,11 @@
   TODAY's operating-state band, and two settings on the `schedulePatterns` "current" row next to the caffeine cut-off.
   No new table, event, Dexie version, Engine input, recommendation change or notification.
 - **Starting commit:** `origin/master` `92f46cf3` (#667). Re-fetch before starting.
-- **Builder:** Grok Bot. Branch `grok/grayson-flip-plan-001`. **Reviewer:** Claude Code (Codex is offline).
+- **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
+  2026-11-25). Branch `ccr-380c4225-flip-plan`, or the branch name its session allows. **Reviewer:** a fresh-context
+  reviewer.
   **Active PR:** pending.
-- **Order and overlap:** Grok Bot **#8** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-24), after SHIFTDOWN-TAPS-001. PLAN-FRESH-001 is
+- **Order and overlap:** Delta-track session **#3** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after SHIFTDOWN-TAPS-001. PLAN-FRESH-001 is
   built before this now; make sure the flip-day plan reaches the phone through its hand-off. Shares `TodayScreen.tsx` only through
   `LifeStateBand`'s props; touches `application/shiftSleepPlan.ts`, `application/sleepPlanSettings.ts` and
   `persistence/sleepPlanSettingsValidation.ts`, which no queued brief changes. Rebase on whichever merges first.

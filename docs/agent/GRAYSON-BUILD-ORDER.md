@@ -9,21 +9,24 @@
   changes the order whenever he likes.
 - Master at the time of writing: `2d575d0b`. Codex is offline; its TRAIN rows are with Claude Code.
 
-## Grok Bot (TODAY, alerts, voice, home)
+## Delta-track Claude Code session `ccr-380c4225` (TODAY, sleep, home; Grok Bot's queue)
+
+Grok Bot ran out of usage on 2026-11-24 at about 8:35 PM CT. Gavin gave its unstarted briefs to the Delta-track session
+(2026-11-25, his pick "1"). Its rows 1 to 5 (TODAY-SPLIT-003, TODAY-CALM-001, PLAN-FRESH-001, DICTATE-001,
+WORK-RECORD-001) are built and listed under Done. If the session is already partway into C6.6 (the earned challenge
+ladder), it finishes that first. Every row gets a fresh-context reviewer; a FEATURE row may self-merge with green CI
+and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR open at a time across both sessions.
 
 | # | Brief | Row | Why here | Lane |
 |---|---|---|---|---|
-| 1 | [GRAYSON-TODAY-SPLIT-003](GRAYSON-TODAY-SPLIT-003.md) | C9.1 | Every TODAY feature below edits `TodayScreen.tsx` (3,604 lines). After this they edit a section instead and stop colliding. | No visible change; Gavin merges |
-| 2 | [GRAYSON-TODAY-CALM-001](GRAYSON-TODAY-CALM-001.md) | C9.6 | The quiet-line budget and one after-shift card at a time. Every new TODAY line plugs in here instead of adding a block. | PROTECTED |
-| 3 | [GRAYSON-PLAN-FRESH-001](GRAYSON-PLAN-FRESH-001.md) | C7.2 | Phone alerts that stay current without a Garmin sync. New alert kinds (C7.3) and quiet times (E14) build on its plan hand-off. Health Bridge change: rebase on RUN-CUES-001 if that merges first. | PROTECTED |
-| 4 | [GRAYSON-DICTATE-001](GRAYSON-DICTATE-001.md) | C7.1 | One shared voice hook and one confirm path. "Fix anything by talking" (E11) reuses both. | FEATURE |
-| 5 | [GRAYSON-WORK-RECORD-001](GRAYSON-WORK-RECORD-001.md) | B16 | New stored records (training hours, certifications, work dates, the two-year mark). Its TODAY line is a TODAY-CALM quiet line; work dates on days off become OT through the existing confirmation. | PROTECTED |
-| 6 | [GRAYSON-CARRY-001](GRAYSON-CARRY-001.md) | B6 | Quick: plugs into the close that TODAY-CALM orders. | PROTECTED |
-| 7 | [GRAYSON-SHIFTDOWN-TAPS-001](GRAYSON-SHIFTDOWN-TAPS-001.md) | C2.2 | Quick: "First at home" is a TODAY-CALM quiet line. | FEATURE |
-| 8 | [GRAYSON-FLIP-PLAN-001](GRAYSON-FLIP-PLAN-001.md) | C2.4 | Sleep-plan cards; its flip days reach the phone through PLAN-FRESH's hand-off. | PROTECTED |
-| 9 | [GRAYSON-HOME-LASTDONE-001](GRAYSON-HOME-LASTDONE-001.md) | C3.1 | Quick: a read of records already kept. | FEATURE |
-| 10 | [GRAYSON-RUN-DEBRIEF-001](GRAYSON-RUN-DEBRIEF-001.md) | C2.5 | Quick: a journal entry through existing commands. | FEATURE |
-| 11 | [GRAYSON-WINDOW-REVIEW-001](GRAYSON-WINDOW-REVIEW-001.md) | C4.8c | The smart eating window. | PROTECTED |
+| 1 | [GRAYSON-CARRY-001](GRAYSON-CARRY-001.md) | B6 | Quick: plugs into the close that TODAY-CALM orders. | PROTECTED |
+| 2 | [GRAYSON-SHIFTDOWN-TAPS-001](GRAYSON-SHIFTDOWN-TAPS-001.md) | C2.2 | Quick: "First at home" is a TODAY-CALM quiet line. | FEATURE |
+| 3 | [GRAYSON-FLIP-PLAN-001](GRAYSON-FLIP-PLAN-001.md) | C2.4 | Sleep-plan cards; its flip days reach the phone through PLAN-FRESH's hand-off. | PROTECTED |
+| 4 | [GRAYSON-HOME-LASTDONE-001](GRAYSON-HOME-LASTDONE-001.md) | C3.1 | Quick: a read of records already kept. | FEATURE |
+| 5 | [GRAYSON-RUN-DEBRIEF-001](GRAYSON-RUN-DEBRIEF-001.md) | C2.5 | Quick: a journal entry through existing commands. | FEATURE |
+| 6 | [GRAYSON-WINDOW-REVIEW-001](GRAYSON-WINDOW-REVIEW-001.md) | C4.8c | The smart eating window. | PROTECTED |
+| 7 | [GRAYSON-BRISK-001](GRAYSON-BRISK-001.md) | NHS Active 10 | Brisk minutes from Garmin steps. The only open Health Bridge change; slice B after his phone check of slice A. WEEKLY-ACTION's brisk option plugs in. | PROTECTED |
+| 8 | [GRAYSON-QUIT-BREATHE-001](GRAYSON-QUIT-BREATHE-001.md) | NHS Quit Smoking | Quick: a breathing guide inside the quit tracker. No shared files with BRISK, so build it while BRISK waits on the phone check. | PROTECTED |
 
 ## Claude Code (TRAIN, then DATA)
 
@@ -34,16 +37,18 @@
 | 3 | [GRAYSON-TRAIN-STANDARDS-001](GRAYSON-TRAIN-STANDARDS-001.md) | B4 | One new event for all three standards tests. | PROTECTED |
 | 4 | [GRAYSON-TRAIN-LOCKSCREEN-001](GRAYSON-TRAIN-LOCKSCREEN-001.md) | C7.5 | Two-way notification into a logged set; after TRAIN-EDIT so those sets can be fixed. | PROTECTED |
 | 5 | [GRAYSON-YOUR-NUMBERS-001](GRAYSON-YOUR-NUMBERS-001.md) | E9 | One page and one store for the numbers GRAYSON judges him by. E10 and every later rule read their numbers here. Two slices. | PROTECTED |
-| 6 | [GRAYSON-ONE-MEMORY-001](GRAYSON-ONE-MEMORY-001.md) (**taken by the Delta-track session `ccr-380c4225`, Gavin 2026-11-25; skip it**) | C6.7 | One memory store with where each memory came from. Corrections (E8, E10) and what Delta may read (C5.5) plug in. | PROTECTED |
+| 6 | [GRAYSON-ONE-MEMORY-001](GRAYSON-ONE-MEMORY-001.md) (**built by the Delta-track session as #704; skip it**) | C6.7 | One memory store with where each memory came from. Corrections (E8, E10) and what Delta may read (C5.5) plug in. | PROTECTED |
 | 7 | [GRAYSON-TRAIN-NOTES-001](GRAYSON-TRAIN-NOTES-001.md) | B10 | Quick: after HOWTO. | FEATURE |
 | 8 | [GRAYSON-TRAIN-BODYMAP-001](GRAYSON-TRAIN-BODYMAP-001.md) | B7 | Quick: after HOWTO. | FEATURE |
 | 9 | [GRAYSON-WHAT-MOVES-001](GRAYSON-WHAT-MOVES-001.md) | C6.3 | DATA, read only. | FEATURE |
-| 10 | [GRAYSON-ASKS-COUNT-001](GRAYSON-ASKS-COUNT-001.md) | B15 | After WHAT-MOVES. | PROTECTED |
-| 11 | [GRAYSON-NOT-RIGHT-001](GRAYSON-NOT-RIGHT-001.md) | E8 | "That's not right" on every Why, saved into ONE-MEMORY's store. E10 reads these corrections. After ONE-MEMORY. | PROTECTED |
+| 10 | [GRAYSON-ASKS-COUNT-001](GRAYSON-ASKS-COUNT-001.md) | B15 | Open as #694. WORK-RECORD-001 (#706) merged first with Dexie v28, so #694 moves to v29 (and `CURRENT_SCHEMA_VERSION` in its migration test) and gets a fresh-context review. | PROTECTED |
+| 11 | [GRAYSON-NOT-RIGHT-001](GRAYSON-NOT-RIGHT-001.md) | E8 | "That's not right" on every Why, saved into ONE-MEMORY's store. E10 reads these corrections. ONE-MEMORY merged (#704), so it can start. | PROTECTED |
 | 12 | [GRAYSON-DELTA-READS-001](GRAYSON-DELTA-READS-001.md) | C5.5 | What Delta may read, per kind of record, with today's behaviour as the default; then which private kinds stay out of the Drive backup. Two slices. Doesn't need ONE-MEMORY, so build it first if NOT-RIGHT is still waiting. | PROTECTED |
 | 13 | [GRAYSON-TEACH-DEFAULTS-001](GRAYSON-TEACH-DEFAULTS-001.md) | E10 | After the same fix three times, Delta offers to change the number behind it, on his tap. Needs YOUR-NUMBERS and NOT-RIGHT. | PROTECTED |
 | 14 | [GRAYSON-MISSION-REVIEW-001](GRAYSON-MISSION-REVIEW-001.md) | C4.5 | Two slices: "Not fully logged" days leave the burn estimate, then one monthly Mission panel with at most one change. Slice B after ASKS-COUNT (#694). | PROTECTED |
 | 15 | [GRAYSON-EXPORT-ALL-001](GRAYSON-EXPORT-ALL-001.md) | C8.3 | Read-only CSV areas for sleep, check-ins, journal, notes, home, people and work record. Shares no files with the rows above, so build it whenever the next one waits on a merge. | FEATURE |
+| 16 | [GRAYSON-WEEKLY-ACTION-001](GRAYSON-WEEKLY-ACTION-001.md) | NHS Weight Loss Plan | One suggested weekly focus tied to his targets, in the Mission review's order. After MISSION-REVIEW-001; changes REVIEW-001's "no recommendation" rule for the focus only. | PROTECTED |
+| 17 | [GRAYSON-STARTER-HABITS-001](GRAYSON-STARTER-HABITS-001.md) | NHS Drink Free Days | Quick: one-tap starters in Add a habit, including drink-free days. Shares no files with the rows above. | FEATURE |
 
 LOCKSCREEN-001 used to be last in Claude Code's TRAIN queue, after NOTES-001. It now comes before the quick content
 briefs. It still needs TRAIN-EDIT-001 first; it and NOTES-001 both touch `TrainScreen.tsx`, so whichever is second
@@ -54,11 +59,11 @@ rebases on whatever merged first.
 
 Written: E9 (YOUR-NUMBERS-001), C6.7 (ONE-MEMORY-001), B16 (WORK-RECORD-001) on 2026-11-24; E8 (NOT-RIGHT-001),
 C5.5 (DELTA-READS-001), E10 (TEACH-DEFAULTS-001), C4.5 (MISSION-REVIEW-001) and C8.3 (EXPORT-ALL-001) on 2026-11-25.
+From Gavin's NHS apps go-ahead (2026-11-25): BRISK-001, WEEKLY-ACTION-001, STARTER-HABITS-001 and QUIT-BREATHE-001.
 Next to weigh: C5.4 the monthly pattern review, E6 editing Home and People, E5 renaming habits.
 
-**Grok Bot's last 25% (2026-11-24 7:51 PM CT, his words: "Grock has 25% usage left"):** Grok builds
-WORK-RECORD-001, then FLIP-PLAN-001, then the rest of its queue in order, and does no more reviewing. Gavin chose to
-keep its small briefs with it (2026-11-25). Claude Code's PRs get a fresh-context reviewer.
+**Reviewers (2026-11-25):** Grok Bot is out of usage and Codex is offline, so every PR from either Claude Code
+session gets a fresh-context reviewer, never the session that built it.
 
 ## Done
 
@@ -66,4 +71,4 @@ Built and merged on 2026-11-24: TRAIN-RUN-001 (#666), TRAIN-REST-001 (#668), CLO
 (#664), WINDOW-ALERT-001 (#672), CHECKIN-EDIT-001 (#651), FIX-UNDO-001 slice 1 (#653), WEIGHT-TREND-001 (#652), TRAIN-HOWTO-001 (#681), master fix for REST-001's select (#682), TRAIN-EDIT-001 (#675), TRAIN-RUN-CUES-001 (#683),
 TODAY-SPLIT-003 slices A to D3 (through #696), TRAIN-STANDARDS-001 (#686), TRAIN-BODYMAP-001 (#691),
 TODAY-CALM-001 (#697), PLAN-FRESH-001 (#698), DICTATE-001 (#699), C6.5 override as evidence (#701),
-TRAIN-NOTES-001 (#689), WHAT-MOVES-001 (#693), TRAIN-LOCKSCREEN-001 (#688), WORK-RECORD-001 (#706).
+TRAIN-NOTES-001 (#689), WHAT-MOVES-001 (#693), TRAIN-LOCKSCREEN-001 (#688), WORK-RECORD-001 (#706), ONE-MEMORY-001 (#704).
