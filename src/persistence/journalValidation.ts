@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { DecisionJournalEntry } from "../domain/journal/types";
+import { MISSED_REASONS, type DecisionJournalEntry } from "../domain/journal/types";
 
 /**
  * Decision Journal. Same shared-schema pattern as intentValidation.ts: an
@@ -26,7 +26,9 @@ const entryInputFields = {
  * LOOP step 2 (REFLECT): linkedRecommendationId may be set at creation only — the reason given for a declined
  * recommendation — and is never changed afterwards (not in the modify schema).
  */
-export const decisionJournalEntryInputSchema = z.object({ ...entryInputFields, linkedRecommendationId: z.string().min(1).optional() });
+export const decisionJournalEntryInputSchema = z.object({ ...entryInputFields, linkedRecommendationId: z.string().min(1).optional(),
+  // GRAYSON C6.5: what BEYOND's data missed, only on a declined recommendation; set at creation only.
+  missed: z.enum(MISSED_REASONS).optional() }).refine((v) => !v.missed || Boolean(v.linkedRecommendationId), "What BEYOND missed goes with a declined recommendation");
 export type DecisionJournalEntryInput = z.infer<typeof decisionJournalEntryInputSchema>;
 
 /** Input to modifyDecisionJournalEntry — same fields, all optional, at least one required. */
@@ -61,6 +63,7 @@ export const decisionJournalEntrySchema = z.object({
   lesson: z.string().optional(),
   status: statusSchema,
   linkedRecommendationId: z.string().min(1).optional(),
+  missed: z.enum(MISSED_REASONS).optional(),
   source: sourceSchema,
   seq: z.number().optional(),
   createdAt: z.string(),

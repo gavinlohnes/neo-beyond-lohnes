@@ -21,6 +21,10 @@
 
 export type DecisionJournalStatus = "OPEN" | "REVIEWED";
 
+/** GRAYSON C6.5: "What did I miss?" when he declines a recommendation. */
+export const MISSED_REASONS = ["Already did it", "Sore or hurting", "Shift or work ran over", "Family or home", "Felt better than it looked"] as const;
+export type MissedReason = (typeof MISSED_REASONS)[number];
+
 export interface DecisionJournalEntry {
   id: string;
   title: string;
@@ -42,6 +46,11 @@ export interface DecisionJournalEntry {
    * dormant `recurrence` field) — nothing in this Drop's UI sets it yet.
    */
   linkedRecommendationId?: string;
+  /**
+   * GRAYSON C6.5 (Gavin, 2026-11-25: "1." — all five): on a declined recommendation, what BEYOND's data missed, one
+   * optional tap. Set at creation only. Older builds ignore it.
+   */
+  missed?: MissedReason;
   /** See Mission.source's doc comment — same vocabulary, same reservation for a future BEYOND-proposed flow. Always "USER" today. */
   source: "USER" | "ENGINE" | "SYSTEM";
   /** See StateCheckIn.seq's doc comment in ../common/types.ts — same deterministic tie-break, same shared counter. */

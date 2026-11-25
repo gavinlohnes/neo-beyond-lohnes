@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { newLearnings, type DeltaKnowledge, type ExperimentSuggestion, type Learning, type Topic } from "../../application/delta";
+import { ADVICE_KIND_LABEL, newLearnings, type DeltaKnowledge, type ExperimentSuggestion, type Learning, type Topic } from "../../application/delta";
 import { disputedByHim, getReasoningKnowledge, type ReasoningKnowledge } from "../../application/learningQueries";
 import { LearningAnswer } from "./LearningAnswer";
 import { startExperiment } from "../../application/tryExperiment";
@@ -20,6 +20,8 @@ const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month
 export function describeLearning(l: Learning): string {
   if (l.kind === "SLEEP_WINDOW") return `Learned when you sleep. ${describeGroup(l.group)}`;
   if (l.kind === "UNUSUAL") { const c = describeUnusual(l.metric, l.reading); return `Noticed: ${c.headline} ${c.basis}`; }
+  // GRAYSON C6.5: what BEYOND's data keeps missing when he declines.
+  if (l.kind === "OVERRIDE") return `Noticed: when BEYOND suggested ${ADVICE_KIND_LABEL[l.recommendationKind]}, you said "${l.missed}" ${l.count} times since ${day(l.since)}.`;
   if (l.kind === "EXPERIMENT") return `Learned from your experiment "${l.what}" (${l.days} days): ${l.outcome}.${l.lesson ? ` Your lesson: ${l.lesson}` : ""}`;
   return `Learned what #${l.tag} lines up with, over ${l.taggedDays} tagged days. ${describeComparison(l.comparison)}`;
 }
