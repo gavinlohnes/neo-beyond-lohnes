@@ -8,6 +8,7 @@
 import { getWeekAhead, type WeekAhead } from "../../../application/weekAheadQueries";
 import { getLivedDayMap, type MapMark } from "../../../application/livedDayMap";
 import { getShiftSleepPlan, type ShiftSleepPlan } from "../../../application/shiftSleepPlan";
+import { getFlipPlan, type FlipPlan } from "../../../application/flipPlan";
 import { getRecordedDayBefore, getRecordedYesterday } from "../../../application/lifeState";
 import { getConfirmedExceptions } from "../../../application/scheduleExceptions";
 import { hasRecoveryContract } from "../../../application/recoveryContract";
@@ -80,6 +81,8 @@ export type TodayYesterday = {
   week: WeekAhead | null;
   map: MapMark[];
   sleepPlan: ShiftSleepPlan | null;
+  /** GRAYSON-FLIP-PLAN-001: the rotation flip's line and windows, while it applies. */
+  flipPlan: FlipPlan | null;
 };
 
 /**
@@ -132,6 +135,7 @@ export function todayReaders() {
     getWeekAhead,
     getLivedDayMap,
     getShiftSleepPlan,
+    getFlipPlan,
     getSchedulePattern,
     getBackupPrompt,
   };
@@ -368,8 +372,8 @@ export async function readTodaySnapshot(now: () => Date = () => new Date(), opti
   // LIFE-STATE-002: the day before yesterday too (for yesterday's own state, so a transition can be named), and
   // whether the run-over follow-up is already planned, so it isn't offered twice.
   const [nextYesterday, nextSchedule] = activeDay ? await Promise.all([
-    Promise.all([r.getRecordedYesterday(readAt), r.getRecordedDayBefore(readAt, 2), r.hasRecoveryContract(readAt), r.getConfirmedExceptions(), r.getWeekAhead(readAt).catch(() => null), r.getLivedDayMap(activeDay, readAt).catch(() => [] as MapMark[]), r.getShiftSleepPlan(readAt).catch(() => null)])
-      .then(([kind, dayBefore, contractPlanned, exceptions, week, map, sleepPlan]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned, week, map, sleepPlan,
+    Promise.all([r.getRecordedYesterday(readAt), r.getRecordedDayBefore(readAt, 2), r.hasRecoveryContract(readAt), r.getConfirmedExceptions(), r.getWeekAhead(readAt).catch(() => null), r.getLivedDayMap(activeDay, readAt).catch(() => [] as MapMark[]), r.getShiftSleepPlan(readAt).catch(() => null), r.getFlipPlan(readAt).catch(() => null)])
+      .then(([kind, dayBefore, contractPlanned, exceptions, week, map, sleepPlan, flipPlan]) => ({ livedDay: livedDayStartOf(readAt).getTime(), kind, dayBefore, contractPlanned, week, map, sleepPlan, flipPlan,
         // SCHEDULE-EXCEPTIONS-001: confirmed changes, for the state, its moments and the shift run (FIELD-READINESS-001).
         confirmed: new Map([...exceptions].map(([date, e]) => [date, e.kind] as const)) }), () => null),
     r.getSchedulePattern().catch(() => null),

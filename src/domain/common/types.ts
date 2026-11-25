@@ -998,6 +998,15 @@ export interface EatingWindowMarkVoidedPayload { commandId: string; voidsEventId
 /** C4.2a: owner-set caffeine cutoff configuration and its timestamp. No automated proposal or experiment. */
 export interface SleepPlanSettings {
   caffeineCutoff?: { hours: number; setAt: string; setBy: "OWNER" };
+  /**
+   * GRAYSON-FLIP-PLAN-001: his own flip-plan values. Only the ones he changed are stored (the rest are the defaults in
+   * application/flipPlan.ts); `setAt` is the last SAVE, for UNDO.
+   */
+  flip?: {
+    show?: boolean; getUpBy?: number; shortBreak?: "FLIP_BACK" | "STAY_LATE"; longBreak?: "FLIP_BACK" | "STAY_LATE";
+    stayLateBed?: number; stayLateWake?: number; laterHours?: number; daylightStart?: number; daylightMinutes?: number;
+    setAt: string;
+  };
 }
 
 /** BRIDGE-NOTIFY-001: the four existing Health Bridge moment kinds (BRIDGE-MOMENTS-001/002). No others. */

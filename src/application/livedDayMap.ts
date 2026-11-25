@@ -10,7 +10,7 @@ import { getHydrationEntries, getLatestCheckIn, getWorkPeriodEnded, getWorkPerio
  * schedule's phases already are, so the night reads as one picture. Recorded only: Garmin's main sleep, meals, water,
  * the check-in, the work marks and workouts. Read only, never an Engine input, no advice and nothing inferred.
  */
-export type MapMarkKind = "SLEEP" | "WORK" | "WORKOUT" | "MEAL" | "WATER" | "CHECK_IN" | "NAP_PLAN" | "SLEEP_PLAN";
+export type MapMarkKind = "SLEEP" | "WORK" | "WORKOUT" | "MEAL" | "WATER" | "CHECK_IN" | "NAP_PLAN" | "SLEEP_PLAN" | "DAYLIGHT_PLAN";
 /** `planned`: slice 2's outlined blocks ahead of NOW, from ROUTE's shift sleep plan; never a record. */
 /** `ref` (TIMELINE-EDIT-001): the log a meal or water mark came from, so it can open its edit sheet. */
 /** `shift` (SHIFT-CORRECT-001): a work mark, so its EDIT opens the shift sheet (change a time, reopen). */
@@ -52,10 +52,13 @@ export function deriveMapMarks(input: MapInput, now: Date): MapMark[] {
  * shift sleep plan's nap and sleep windows, as outlined blocks, while they are still ahead (end after now). No advice
  * text: the cards, their sources and SAVE/SKIP stay in ROUTE, one tap away.
  */
-export function plannedMarks(windows: readonly { kind: "NAP" | "SLEEP"; start: string; end: string; basis?: "RHYTHM" | "PAST_RUNS" }[], now: Date): MapMark[] {
+export function plannedMarks(windows: readonly { kind: "NAP" | "SLEEP" | "DAYLIGHT"; start: string; end: string; basis?: "RHYTHM" | "PAST_RUNS" | "FLIP" }[], now: Date): MapMark[] {
   return windows.filter((w) => Date.parse(w.end) > now.getTime()).map((w) => ({
-    kind: w.kind === "NAP" ? "NAP_PLAN" : "SLEEP_PLAN", at: w.start, until: w.end, planned: true,
-    label: w.kind === "NAP" ? `Nap window ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan)`
+    kind: w.kind === "NAP" ? "NAP_PLAN" : w.kind === "DAYLIGHT" ? "DAYLIGHT_PLAN" : "SLEEP_PLAN", at: w.start, until: w.end, planned: true,
+    // GRAYSON-FLIP-PLAN-001: the flip plan's short sleep and afternoon daylight.
+    label: w.kind === "DAYLIGHT" ? `Daylight ${hhmm(w.start)}–${hhmm(w.end)} (flip plan)`
+      : w.basis === "FLIP" ? `Short sleep ${hhmm(w.start)}–${hhmm(w.end)}, then up (flip plan)`
+      : w.kind === "NAP" ? `Nap window ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan)`
       : w.basis === "PAST_RUNS" ? `First sleep after the run, usually ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan, your past runs)`
       : `Usual sleep ${hhmm(w.start)}–${hhmm(w.end)} (sleep plan, your Garmin rhythm)`,
   }));

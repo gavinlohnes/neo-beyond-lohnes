@@ -185,6 +185,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.daily-note.draft.": "draft", "beyond:gym-draft:": "draft", "beyond:decrypt:": "animation state",
       // GRAYSON-TRAIN-BODYMAP-001: the map's equipment chips, a view setting on this phone (the brief: doesn't travel).
       "beyond.bodyMap.v1": "view setting",
+      // GRAYSON-FLIP-PLAN-001: TODAY's flip line asks ROUTE to open at the card (this visit only).
+      "beyond.flipPlan.focus.v1": "this visit only (session)",
       // GRAYSON-SHIFTDOWN-TAPS-001: tonight's "first at home" pick, one lived day's state (the brief: doesn't travel).
       "beyond.shiftDownHomeFirst.v1": "one lived day's state",
     };

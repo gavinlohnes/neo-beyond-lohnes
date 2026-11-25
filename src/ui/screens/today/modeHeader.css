@@ -138,6 +138,9 @@
 .cc-mode .cc-tl-span--nap_plan { border-style: dotted; }
 .cc-mode .cc-tl-key__swatch--nap_plan, .cc-mode .cc-tl-key__swatch--sleep_plan { width: 10px; height: 6px; border: 1px dashed var(--p-t2); }
 .cc-mode .cc-tl-key__swatch--nap_plan { border-style: dotted; }
+/* GRAYSON-FLIP-PLAN-001: planned daylight, a light outline in the existing palette. */
+.cc-mode .cc-tl-span--daylight_plan { height: 8px; top: 1px; background: transparent; border: 1px solid var(--p-t2); }
+.cc-mode .cc-tl-key__swatch--daylight_plan { width: 10px; height: 6px; border: 1px solid var(--p-t2); }
 .cc-mode .cc-tl-plan-link { display: inline-flex; align-items: center; min-height: 32px; margin-top: 2px; padding: 0; background: none; border: 0; color: var(--p-t1); font-size: 11px; letter-spacing: .08em; cursor: pointer; }
 /* DAY-MAP-001 slice 3: the night as a list, one quiet row per mark, its screen one tap away. */
 .cc-mode .cc-tl-links { display: flex; flex-wrap: wrap; gap: 0 16px; }
