@@ -67,7 +67,7 @@ status of its own.
 | C2.7 | Work record: training hours, certifications, fitness standards, court and training dates, the two-year mark (Jan 9, 2027), beside swaps and OT (backlog B16) | Done (#706) | Added 2026-11-24 on Gavin's go ("yes to PR"), from the GRAYSON research backlog. Lane, size: PROTECTED (new stored records), M |
 | **Campaign 3 — Home and Family** | | | |
 | C3.1 (Q7) | Last done and evidence | Not started | [brief](agent/GRAYSON-HOME-LASTDONE-001.md) (#646); Grok Bot |
-| C3.2 | Lead time and "coming up" | Not started |  |
+| C3.2 | Lead time and "coming up" | Briefed (GRAYSON-COMING-UP-001, 2026-11-25) |  |
 | C3.3 | Day-off shape | Not started |  |
 | C3.4 (Q1) | Dog care and CO presets (Quick win Q1) | Done (#594) |  |
 | C3.4a | Alert time on repeating Home jobs | Done (#594) | Added 2026-11-20 on Gavin's go; Home jobs alerted only at 16:00 |
@@ -138,7 +138,7 @@ status of its own.
 | C7.6 | Search on MiniSearch | Done (SEARCH-002: MiniSearch index with tap to open, already on master) |  |
 | **Campaign 8 — Data You Own** | | | |
 | C8.1 (Q6) | Settings travel with the backup | Done (#633) | [brief](agent/GRAYSON-C8.1-SETTINGS-001.md) |
-| C8.2 | Restore drill | Done (BACKUP-AUTO-001: the monthly restore check reads the backup through the real restore, offline and without writing, and compares per-table counts) |  |
+| C8.2 | Restore drill | Done (BACKUP-AUTO-001: the monthly restore check reads the backup through the real restore, offline and without writing, and compares per-table counts). Full trial restore into a scratch copy briefed as GRAYSON-RESTORE-DRILL-001, 2026-11-25 |  |
 | C8.3 | Export everything readable | Partly built; rest briefed ([EXPORT-ALL-001](agent/GRAYSON-EXPORT-ALL-001.md)) | CSV today for weight, workouts, meals, days with sleep minutes, and measurements |
 | C8.4 | Second-device sync | Deferred (only if he gets a tablet or wants lists shared with Elle; Drive backup is built) | Deferred until a second device is wanted |
 | **Campaign 9 — Craft and Identity** | | | |
