@@ -10,7 +10,7 @@
 - **Builder:** Claude Code, the Delta-track session `ccr-380c4225` (Grok Bot ran out of usage; Gavin moved its queue,
   2026-11-25). Branch `ccr-380c4225-carry`, or the branch name its session allows. **Reviewer:** a fresh-context
   reviewer.
-  **Active PR:** pending.
+  **Active PR:** branch `ccr-380c4225-carry` (2026-11-25).
 - **Order and overlap:** Delta-track session **#1** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after TODAY-SPLIT-003, TODAY-CALM-001,
   PLAN-FRESH-001, DICTATE-001 and WORK-RECORD-001. CLOSE-GAPS-001 (#667) is merged and adds a line at the top of `CloseCard`. This brief
   adds its block under that line. Shares `CloseCard.tsx` and `application/dayClose.ts`; rebase on whichever merges
@@ -98,6 +98,17 @@ itself: the vision's "Yours to change" and the anti-goal of an autonomous manage
 - Show, don't move: nothing rolls over by itself, but nothing can disappear either.
 - "Next day" follows his lived day, because a 06:00 close belongs to the night before.
 - Clearing a planned day reuses the "null removes" pattern already in the schema.
+
+## Status and one deviation (2026-11-25)
+Built on `ccr-380c4225-carry`; screenshots in `docs/agent/screenshots/GRAYSON-CARRY-001/`. Stop-and-ask checks:
+CLOSE-GAPS-001 is merged and its line doesn't fill the close at 320 px; `satisfyObligation` on a repeating task completes
+this occurrence and creates the next (unchanged behaviour); clearing `plannedAt` needed only the "null removes" pattern.
+**Deviation:** default 3 puts UNDO on every row, but completing a task can't be undone anywhere in BEYOND (the
+commitments card says so) and an un-complete event is excluded here. So **DONE asks once** ("Mark it done? This can't be
+undone." YES, DONE / NOT YET), and NEXT DAY and NO DAY keep UNDO. Flagged for Gavin in the PR.
+"Show 'Didn't get to'" is its own key, `beyond.close.carry.v1` (travels with the backup), rather than a change to the
+close prompts' stored shape. PLANS precedence is Today > Next 7 > Planned earlier > No date, so a past-planned task with
+a due date in the next week stays in Next 7.
 
 ## Stop and ask Gavin if
 - CLOSE-GAPS-001 isn't merged, or its line already fills the close at 320 px.

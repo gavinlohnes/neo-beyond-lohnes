@@ -14,6 +14,9 @@ export interface TaskSmartLists {
   through: string;
   today: Obligation[];
   next7: Obligation[];
+  /** GRAYSON-CARRY-001: open tasks whose planned day has passed (up to 7 days back) and that no list above shows. */
+  plannedEarlier: Obligation[];
+  /** No planned day and no due date; plus (CARRY-001) tasks planned more than 7 days ago that no other list shows. */
   noDate: Obligation[];
   /** WAITING-FOR-001 (APPS-PICKS-003 pick 7, after GTD): open tasks you marked Waiting on someone else. */
   waiting: Obligation[];
@@ -32,11 +35,17 @@ export async function getTaskSmartLists(now = new Date()): Promise<TaskSmartList
   const through = taskListDate(end);
   const [obligations, missions] = await Promise.all([getCurrentlyEligibleUnresolvedObligations(), getMissions()]);
   const inToday = (item: Obligation) => item.plannedAt === date || (item.dueAt !== undefined && item.dueAt <= date);
+  const inNext7 = (item: Obligation) => !inToday(item) && [item.plannedAt, item.dueAt].some((at) => at !== undefined && at > date && at <= through);
+  // GRAYSON-CARRY-001: nothing he planned can vanish. A passed planned day shows in "Planned earlier" for 7 days, then
+  // under No date (the screen shows its day). Precedence Today > Next 7 > Planned earlier > No date: nothing twice.
+  const weekBack = taskListDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 12));
+  const pastPlanned = (item: Obligation) => item.plannedAt !== undefined && item.plannedAt < date && !inToday(item) && !inNext7(item);
   return {
     date, through, missions,
     today: obligations.filter(inToday),
-    next7: obligations.filter((item) => !inToday(item) && [item.plannedAt, item.dueAt].some((at) => at !== undefined && at > date && at <= through)),
-    noDate: obligations.filter((item) => item.plannedAt === undefined && item.dueAt === undefined),
+    next7: obligations.filter(inNext7),
+    plannedEarlier: obligations.filter((item) => pastPlanned(item) && item.plannedAt! >= weekBack),
+    noDate: obligations.filter((item) => (item.plannedAt === undefined && item.dueAt === undefined) || (pastPlanned(item) && item.plannedAt! < weekBack)),
     waiting: obligations.filter((item) => item.status === "WAITING"),
   };
 }
