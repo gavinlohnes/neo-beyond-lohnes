@@ -37,6 +37,8 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond:weightTrendPreference": "Weight trend",
   "beyond:whatMovesPreference": "What moves your numbers",
   "beyond.fitsNow.v1": "Fits now",
+  // GRAYSON-LIGHTER-NIGHT-001: the lighter-last-night card and its three parts (each night's choices stay on the phone).
+  "beyond.lighterNight.v1": "Lighter last night",
   "beyond.windowReview.v1": "Eating window review",
   "beyond.hiddenFeatures": "Hidden features",
   "beyond.vision": "Vision mode",

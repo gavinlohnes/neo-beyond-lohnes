@@ -3,6 +3,7 @@ import { getActiveHabits } from "../../../application/habitQueries";
 import { readLadderOff, setLadderHabitOff } from "../../../application/habitLadder";
 import "../today/todayQuietLines.css";
 import { QUIET_LINE_DEFAULT_ORDER, QUIET_MAX_CHOICES, type QuietLineId, type QuietLineSettings } from "../today/attentionPolicy";
+import { readLighterNightSettings, writeLighterNightSettings, type LighterNightSettings } from "../../../application/lighterNightQueries";
 import { quietLineOn, readTodayQuietSettings, setQuietLineOn, writeTodayQuietSettings } from "../today/todayQuietStore";
 
 /**
@@ -70,7 +71,27 @@ export function TodayQuietSettings() {
         onClick={() => save({ ...settings, oneAfterShift: !settings.oneAfterShift })}>{settings.oneAfterShift ? "ON" : "OFF"}</button>
     </div>
     <p className="meta">On: after SHIFT DOWN, the catch-up comes first and the close after it. Off: both show together.</p>
+    <LighterNightSwitches />
     <LadderPausedHabits />
+  </div>;
+}
+
+const LIGHTER_PARTS = [["on", "Lighter last night card"], ["lift", "Lift part (SHORT form)"], ["food", "Food part (usuals first)"], ["home", "Home part (to first day off)"]] as const;
+
+/** GRAYSON-LIGHTER-NIGHT-001: the card on or off, and each of its three parts. Nothing changes until he taps TAKE IT. */
+function LighterNightSwitches() {
+  const [settings, setSettings] = useState<LighterNightSettings>(() => readLighterNightSettings());
+  return <div role="group" aria-label="Lighter last night">
+    <p className="tool-label">Lighter last night</p>
+    <p className="meta">On the last night of a run, before the shift: one card to take the SHORT lift, your usuals and move tonight's home jobs. It changes nothing until you tap TAKE IT.</p>
+    {LIGHTER_PARTS.filter(([key]) => key === "on" || settings.on).map(([key, label]) => {
+      const on = settings[key];
+      return <div key={key} className="today-quiet-settings__row">
+        <span>{label}</span>
+        <button type="button" className={`chip${on ? " chip--selected" : ""}`} aria-pressed={on} aria-label={label}
+          onClick={() => { const next = { ...settings, [key]: !on }; writeLighterNightSettings(next); setSettings(next); }}>{on ? "ON" : "OFF"}</button>
+      </div>;
+    })}
   </div>;
 }
 

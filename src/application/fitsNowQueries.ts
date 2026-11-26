@@ -12,6 +12,7 @@ import { dayKindFor, getEatingWindowView, plannedOpening } from "./eatingWindow"
 import { getTodayPicture } from "./todayPicture";
 import { deriveLifeState, lifeStateInput } from "./lifeState";
 import { getConfirmedKinds } from "./scheduleExceptions";
+import { lighterFoodFor } from "../persistence/lighterNightPreference";
 
 export { readFitsNowOn, writeFitsNowOn };
 
@@ -24,7 +25,7 @@ const LOOKBACK_DAYS = 28;
 const DAY = 86_400_000;
 
 /** How often each saved meal was logged on lived days of this kind over the last 28 days (voided logs left out). */
-async function usesOnKind(kind: EatingWindowDayKind | null, now: Date): Promise<Map<string, number>> {
+export async function usesOnKind(kind: EatingWindowDayKind | null, now: Date): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (!kind) return counts;
   const today = mostRecentBoundaryAtOrBefore(now);
@@ -81,5 +82,7 @@ export async function getFitsNow(now: Date = new Date()): Promise<FitsNow | null
     targetKcal: target.kcal, eatenKcal: eaten, proteinTargetG: proteinTarget, proteinG: protein,
     meals: meals.map((m) => ({ id: m.id, name: m.name, calories: m.calories, proteinG: m.proteinG })),
     usesOnThisKind: await usesOnKind(kind, now), window,
+    // GRAYSON-LIGHTER-NIGHT-001: his work-night usuals first, tonight only, when he took the lighter night's food part.
+    ...(lighterFoodFor(day.id) ? { usualsFirst: await usesOnKind("WORK", now) } : {}),
   });
 }

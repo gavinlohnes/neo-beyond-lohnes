@@ -54,6 +54,8 @@ export type AttentionItem =
   | "RECOMMENDATION_UNRESOLVED"
   | "END_DAY_SUGGESTED"
   | "WORK_END_AVAILABLE"
+  /** GRAYSON-LIGHTER-NIGHT-001: the lighter-last-night card, before the last shift of a run (or folded, once taken). */
+  | "LIGHTER_NIGHT"
   | "COMMITMENT_DUE"
   | "CHECK_IN_MISSING"
   | "MINIMUM_DAY_PROMINENT"
@@ -84,6 +86,11 @@ export interface AttentionInput {
   hasCommitmentDue: boolean;
   /** WORK is confirmed and the operator has not yet marked the period ended. */
   hasWorkEndAvailable: boolean;
+  /**
+   * GRAYSON-LIGHTER-NIGHT-001: the lighter-last-night card has something to show (its own query decides: the last
+   * night of a run, before the shift, or what he took tonight with its UNDO).
+   */
+  hasLighterNight?: boolean;
   /** No State Check-In has been recorded for the active BeyondDay. */
   isCheckInMissing: boolean;
   /** Existing Minimum Day copy policy says the constrained offer should be prominent. */
@@ -145,8 +152,9 @@ function activeOperationFulfillsRecommendation(input: AttentionInput): boolean {
  *      operation retains the field.
  *   2. END_DAY_SUGGESTED — a real, time-sensitive domain signal (primary
  *      sleep already logged); the day is objectively likely over.
- *   3. Work-end availability, then COMMITMENT_DUE — explicit current or
- *      due state that the operator may otherwise miss.
+ *   3. Work-end availability, then the lighter-last-night card (a window of a
+ *      few hours, once a run; GRAYSON-LIGHTER-NIGHT-001), then COMMITMENT_DUE —
+ *      explicit current or due state that the operator may otherwise miss.
  *   4. Missing check-in / prominent Minimum Day — state support backed by
  *      current day/capacity truth, never manufactured urgency.
  *   5. PENDING_OUTCOME — explicit, lightweight, backward-looking feedback;
@@ -175,6 +183,7 @@ export function deriveAttentionPlan(input: AttentionInput): AttentionPlan {
   if (recommendationPlacement === "ATTENTION") candidates.push("RECOMMENDATION_UNRESOLVED");
   if (input.suggestEndDay) candidates.push("END_DAY_SUGGESTED");
   if (input.hasWorkEndAvailable) candidates.push("WORK_END_AVAILABLE");
+  if (input.hasLighterNight) candidates.push("LIGHTER_NIGHT");
   if (input.hasCommitmentDue) candidates.push("COMMITMENT_DUE");
   if (input.isCheckInMissing) candidates.push("CHECK_IN_MISSING");
   if (input.isMinimumDayProminent) candidates.push("MINIMUM_DAY_PROMINENT");
