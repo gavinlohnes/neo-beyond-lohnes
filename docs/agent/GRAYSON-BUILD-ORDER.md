@@ -17,7 +17,7 @@ WORK-RECORD-001) are built and listed under Done. If the session is already part
 ladder), it finishes that first. Every row gets a fresh-context reviewer; a FEATURE row may self-merge with green CI
 and that reviewer's PASS; Gavin merges every PROTECTED row. Still one TODAY PR open at a time across both sessions.
 
-**FUEL first (Gavin, 2026-11-25: "the first 2 area we get to being above amazing is nutrition and Train"):** [GRAYSON-DAY-TARGETS-001](GRAYSON-DAY-TARGETS-001.md), a calorie target for each kind of day, goes next after WINDOW-REVIEW-001 and any row already open, ahead of the unstarted rows below. PROTECTED.
+**FUEL first (Gavin, 2026-11-25: "the first 2 area we get to being above amazing is nutrition and Train"):** [GRAYSON-DAY-TARGETS-001](GRAYSON-DAY-TARGETS-001.md), a calorie target for each kind of day, goes next after WINDOW-REVIEW-001 and any row already open, ahead of the unstarted rows below. PROTECTED. Then, from Gavin's "Brief all four" (2026-11-26): [GRAYSON-FITS-NOW-001](GRAYSON-FITS-NOW-001.md), his own saved meals that fit what's left of today (FEATURE), then [GRAYSON-PROTEIN-HEADSUP-001](GRAYSON-PROTEIN-HEADSUP-001.md), one calm line when protein runs well under target on several logged days (PROTECTED).
 
 | # | Brief | Row | Why here | Lane |
 |---|---|---|---|---|
@@ -50,6 +50,15 @@ These five go ahead of every unstarted row below, in this order. Each builds on 
 | B3 | [GRAYSON-ONE-OFF-001](GRAYSON-ONE-OFF-001.md) | Empty workout, SAVE AS ROUTINE, and START on TODAY. A TODAY change: one TODAY PR open at a time across both sessions. | PROTECTED |
 | B4 | [GRAYSON-WEEK-PLAN-001](GRAYSON-WEEK-PLAN-001.md) | The week laid on his Week A and Week B, one day or every week. | PROTECTED |
 | B5 | [GRAYSON-BLOCK-CYCLE-001](GRAYSON-BLOCK-CYCLE-001.md) | 4 to 6 week blocks, a lighter last week, and the block review he decides by tap. Amends TRAIN Intelligence §7. | PROTECTED |
+
+### Next: FUEL and TRAIN pass (Gavin, 2026-11-26: "Brief all four")
+
+After B1 to B5, ahead of the queue below. They share the set logging screen, so build them in this order.
+
+| # | Brief | Why here | Lane |
+|---|---|---|---|
+| P1 | [GRAYSON-SET-TYPES-001](GRAYSON-SET-TYPES-001.md) | Drop, failure and timed sets on the existing set event (optional fields only); drop sets stay out of bests and progression. After B2 (same logging screen). | PROTECTED |
+| P2 | [GRAYSON-OPEN-LIBRARY-001](GRAYSON-OPEN-LIBRARY-001.md) | About 800 exercises from free-exercise-db (Unlicense), lazy-loaded, his 55 first. **Merging the brief amends the no-bulk-import line** in CAPABILITY_MAP, UX_DECISIONS and the Integrated Health Mission, for this dataset only. After P1 (it reads `measure`). | PROTECTED |
 
 ### Then the queue below
 
@@ -94,7 +103,8 @@ Then E5 (HABIT-EDIT-001), E6 (HOME-PEOPLE-EDIT-001) and C5.4 (MONTH-PATTERNS-001
 (SLEEP-WRONG-001), E4 (EDITED-MARK-001), B9 (TRAIN-ORDER-001) and C4.3 (CAFFEINE-LOG-001, log only) the same night.
 Then C3.2 (COMING-UP-001), E11 (TELL-DELTA-FIX-001) and C8.2 (RESTORE-DRILL-001). Then C7.3 (ALERT-KINDS-001, without "plan to confirm", which has nothing to alert about yet) and E14
 (ALERT-QUIET-001). C7.2 was already built as PLAN-FRESH-001 (#698). Then C3.3 (DAY-OFF-SHAPE-001) and C5.1 with C5.2
-(CHECKIN-WORDS-001).
+(CHECKIN-WORDS-001). Then DAY-TARGETS-001 (2026-11-25), and FITS-NOW-001, PROTEIN-HEADSUP-001, SET-TYPES-001 and
+OPEN-LIBRARY-001 (2026-11-26).
 
 **Reviewers (2026-11-25):** Grok Bot is out of usage and Codex is offline, so every PR from either Claude Code
 session gets a fresh-context reviewer, never the session that built it.
