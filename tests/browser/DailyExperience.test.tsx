@@ -176,7 +176,7 @@ it.each([320, 360, 412])("keeps focused Capture input clear of navigation when u
     return rect.top >= 12 && rect.bottom <= nav.top;
   }).toBe(true);
   await expect.element(input).toHaveValue("Keep writing through keyboard changes");
-  expect(document.activeElement).toBe(input.element());
+  await expect.poll(() => document.activeElement).toBe(input.element());
   expect(await db.captureItems.count()).toBe(0);
 });
 

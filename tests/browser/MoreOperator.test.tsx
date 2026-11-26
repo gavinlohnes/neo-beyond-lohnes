@@ -159,11 +159,11 @@ describe("MORE-OPERATOR-001", () => {
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     const back = screen.getByRole("button", { name: "BACK TO MORE" });
-    expect(document.activeElement).toBe(back.element());
+    await expect.poll(() => document.activeElement).toBe(back.element());
     expect(screen.getByRole("searchbox", { name: "Find a screen or action" }).elements()).toHaveLength(0);
     await userEvent.keyboard("{Enter}");
     await expect.element(trigger).toBeVisible();
-    expect(document.activeElement).toBe(trigger.element());
+    await expect.poll(() => document.activeElement).toBe(trigger.element());
     expect(await db.events.toArray()).toEqual(before);
     expect((await db.workoutSessions.get(session.id))?.status).toBe("ACTIVE");
     expect(await db.performedSets.where("sessionId").equals(session.id).count()).toBe(1);
@@ -186,7 +186,7 @@ describe("MORE-OPERATOR-001", () => {
     expect(window.scrollY).toBe(0);
     await screen.getByRole("button", { name: "BACK TO MORE" }).click();
     expect(window.scrollY).toBe(origin);
-    expect(document.activeElement).toBe(trigger.element());
+    await expect.poll(() => document.activeElement).toBe(trigger.element());
     await expect.element(screen.getByRole("textbox", { name: "Note to future you" })).toHaveValue("Unsaved private draft");
     await expect.element(screen.getByRole("spinbutton", { name: "Calorie target (kcal/day)" })).toHaveValue(2345);
     expect(await db.events.where("type").equals("TIME_CAPSULE_SEALED").count()).toBe(0);

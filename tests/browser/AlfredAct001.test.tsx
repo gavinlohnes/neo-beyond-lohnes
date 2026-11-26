@@ -62,7 +62,7 @@ describe("ALFRED-ACT-001", () => {
     await expect.poll(() => water(day.id)).toBe(20);
     const undo = card.getByRole("button", { name: "Undo: Log 20 oz water" });
     await expect.element(undo).toBeVisible();
-    expect(document.activeElement).not.toBe(undo.element());
+    await expect.poll(() => document.activeElement).not.toBe(undo.element());
     expect(card.getByRole("button", { name: "SAVE" }).elements()).toHaveLength(0);
     expect((await axe.run(sheet.element(), { runOnly: ["wcag2a", "wcag2aa"] })).violations.map((v) => v.id)).toEqual([]);
     await undo.click();

@@ -86,7 +86,7 @@ describe("GRAYSON-TRAIN-EDIT-001 fix any logged set", () => {
     (row.element() as HTMLElement).focus();
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: "Fix Machine Chest Press, set 1" })).toBeVisible();
-    expect((document.activeElement as HTMLElement).textContent).toBe("Fix Machine Chest Press, set 1");
+    await expect.poll(() => (document.activeElement as HTMLElement).textContent).toBe("Fix Machine Chest Press, set 1");
     await axeClean("fix sheet", sheet());
     await shot("360-fix-sheet", sheet());
     await noOverflow("fix sheet", sheet, "fix-sheet");

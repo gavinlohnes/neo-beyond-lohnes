@@ -26,7 +26,7 @@ it("inspects both local memory contracts offline without a key or writes, with a
   await screen.getByRole("button", { name: "INSPECT Keep the morning quiet", exact: true }).click();
   const detail = screen.getByRole("region", { name: "Local source record" });
   await expect.element(detail).toHaveTextContent("BEYOND memory — revision history available");
-  expect(document.activeElement).toBe(detail.element());
+  await expect.poll(() => document.activeElement).toBe(detail.element());
   await screen.getByRole("button", { name: "CLOSE SOURCE", exact: true }).click();
   await expect.poll(() => document.activeElement?.textContent).toBe("INSPECT Keep the morning quiet");
   await screen.getByRole("button", { name: "INSPECT An old Alfred fact", exact: true }).click();

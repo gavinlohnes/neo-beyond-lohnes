@@ -59,7 +59,7 @@ describe("GRAYSON-TRAIN-HOWTO-001 HOW TO", () => {
     (open.element() as HTMLElement).focus();
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("dialog", { name: "Seated Cable Row" })).toBeVisible();
-    expect(document.activeElement).toBe(sheet());
+    await expect.poll(() => document.activeElement).toBe(sheet());
     await expect.element(screen.getByText("Horizontal pull · back and arms")).toBeVisible();
     const watch = screen.getByRole("link", { name: /WATCH ON ACE/ });
     expect(watch.element().getAttribute("href")).toBe("https://www.acefitness.org/resources/everyone/exercise-library/48/seated-row/");
@@ -93,7 +93,7 @@ describe("GRAYSON-TRAIN-HOWTO-001 HOW TO", () => {
     // Escape closes and returns focus to HOW TO.
     await userEvent.keyboard("{Escape}");
     await expect.poll(() => sheet()).toBeNull();
-    expect((document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("How to do Seated Cable Row");
+    await expect.poll(() => (document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("How to do Seated Cable Row");
   });
 
   it("shows no link where none is set", async () => {
@@ -122,7 +122,7 @@ describe("GRAYSON-TRAIN-HOWTO-001 HOW TO", () => {
     clock += 5000; vi.setSystemTime(clock);
     await expect.poll(() => document.querySelector(".train-live-rest")?.textContent, { timeout: 3000 }).not.toBe(before);
     // TRAIN re-rendering every second never pulls focus out of the open sheet.
-    expect(sheet()!.contains(document.activeElement)).toBe(true);
+    await expect.poll(() => sheet()!.contains(document.activeElement)).toBe(true);
     await axeClean("live sheet");
     await shot("360-sheet-over-live-workout-in-rest");
     await noOverflow("live sheet", "sheet-over-live-workout-in-rest");

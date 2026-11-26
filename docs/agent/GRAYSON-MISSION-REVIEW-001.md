@@ -15,6 +15,8 @@
 - **Builder:** Claude Code. Branches `claude/grayson-mission-review-001-a` and `-b`. **Reviewer:** a fresh-context
   reviewer.
 - **Order:** Claude Code **#14** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25).
+- **Launch 1.0 (2026-11-26):** slice A is Launch 1.0 piece F4 and moves to the Delta-track session `ccr-380c4225`,
+  branch `ccr-380c4225-mission-review-a`, after DAY-TARGETS-001. Slice B stays with Claude Code, after 1.0.
 - **Reconciles with:** the Integrated Health Mission design (`docs/GRAYSON_INTEGRATED_HEALTH_MISSION.md`), which names
   C4.5 the one cross-domain review ("rather than introducing a second review system") and sets its evidence floors
   ("A missing meal log is not a calorie deficit"). This brief builds that review; it adds no second one.

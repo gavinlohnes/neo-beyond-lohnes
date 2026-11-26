@@ -330,7 +330,7 @@ describe("TodayScreen (real browser) — accepted recommendation handoff", () =>
 
     await screen.getByText("GO TO SHIFT DOWN", { exact: true }).click();
     const start = screen.getByRole("button", { name: "START SHIFT DOWN" }).element();
-    expect(document.activeElement).toBe(start);
+    await expect.poll(() => document.activeElement).toBe(start);
     expect((await db.events.where("beyondDayId").equals(day.id).toArray()).some((event) => event.type === "SHIFT_DOWN_STARTED")).toBe(false);
   });
 

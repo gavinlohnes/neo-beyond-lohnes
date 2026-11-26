@@ -229,7 +229,7 @@ describe("COMMAND catalog", () => {
       (searchbox(screen).element() as HTMLInputElement).focus();
       await userEvent.tab();
       await userEvent.tab();
-      expect(document.activeElement?.textContent).toContain("HISTORY");
+      await expect.poll(() => document.activeElement?.textContent).toContain("HISTORY");
       (searchbox(screen).element() as HTMLInputElement).focus();
       await page.viewport(width, 420); // constrained visual space with phone keyboard
       expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
