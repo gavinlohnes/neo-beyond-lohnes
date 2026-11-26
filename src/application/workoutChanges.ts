@@ -11,6 +11,8 @@ import { TEMPLATE_TO_LIBRARY_ID } from "../domain/workout/exerciseHowTo";
 import { isWorkingSet, type ExercisePrescription, type PerformedSet, type WorkoutTemplateId } from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
 import { saveRoutineEdit, type RoutineEditResult } from "./routineEditCommands";
+import { createCustomTemplate } from "./customTemplateCommands";
+import { hasRememberedRest, restSecondsFor } from "./restMemory";
 import {
   projectWorkoutPlan,
   routineToKeep,
@@ -37,7 +39,9 @@ async function planEvents() {
 
 /** Today's plan for a strength workout, and the routine KEEP would save. RECOVERY has none. */
 export async function getWorkoutPlan(session: Pick<WorkoutSession, "id" | "startedAt" | "templateId" | "sessionType">): Promise<WorkoutPlanState & { routineBase: ExercisePrescription[] }> {
-  if (session.sessionType === "RECOVERY" || !session.templateId) return { today: [], routine: [], changes: 0, routineBase: [] };
+  if (session.sessionType === "RECOVERY") return { today: [], routine: [], changes: 0, routineBase: [] };
+  // GRAYSON-ONE-OFF-001: an empty workout has no routine; today's plan is what he added.
+  if (!session.templateId) return { ...projectWorkoutPlan([], [], sessionPlanChanges(await planEvents(), session.id, parseWorkoutPlanChangedPayload)), routineBase: [] };
   const point = await getSessionRoutinePoint(session);
   const templateId = session.templateId as WorkoutTemplateId;
   const [routineBase, todayBase, events] = await Promise.all([
@@ -171,6 +175,7 @@ export async function getLastNumbers(): Promise<Map<string, { weight: number; re
  */
 export async function getChangesToKeep(sessionId: string): Promise<ExercisePrescription[] | null> {
   const session = await db.workoutSessions.get(sessionId);
+  // A one-off has no routine to keep changes in; it offers SAVE AS ROUTINE instead.
   if (!session || session.sessionType === "RECOVERY" || !session.templateId) return null;
   const plan = await getWorkoutPlan(session);
   return routineToKeep(plan.routineBase, plan, await liveSets(sessionId));
@@ -183,4 +188,55 @@ export async function keepWorkoutChanges(sessionId: string): Promise<RoutineEdit
   const exercises = await getChangesToKeep(sessionId);
   if (!exercises) throw fail("ROUTINE_NO_CHANGE", "Nothing changed.");
   return saveRoutineEdit(session.templateId!, { exercises });
+}
+
+// ---- GRAYSON-ONE-OFF-001: an empty workout saved as a routine -------------------------------------------------------
+
+/** "Arms · Nov 25": the main muscle groups (by sets done, at most two), then the day it was done. */
+export function oneOffRoutineName(groups: readonly string[], startedAt: string): string {
+  const date = new Date(startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return groups.length ? `${groups.slice(0, 2).join(" & ")} · ${date}` : `Workout · ${date}`;
+}
+
+export interface OneOffRoutineDraft { name: string; exercises: ExercisePrescription[] }
+
+/**
+ * What SAVE AS ROUTINE would save for a finished one-off: each exercise he did, in the order done, with the working
+ * sets he did, its rep range, and his remembered rest. Null when nothing was logged.
+ */
+export async function getOneOffRoutineDraft(sessionId: string): Promise<OneOffRoutineDraft | null> {
+  const session = await db.workoutSessions.get(sessionId);
+  if (!session || session.templateId || session.sessionType === "RECOVERY") return null;
+  const [plan, sets, candidates] = await Promise.all([getWorkoutPlan(session), liveSets(sessionId), swapCandidates()]);
+  const working = sets.filter((s) => isWorkingSet(s) && !s.substitutedName)
+    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt) || (a.seq ?? 0) - (b.seq ?? 0));
+  const order: string[] = [];
+  const count = new Map<string, number>();
+  for (const s of working) { if (!count.has(s.exerciseId)) order.push(s.exerciseId); count.set(s.exerciseId, (count.get(s.exerciseId) ?? 0) + 1); }
+  const exercises = order.flatMap((id) => {
+    const ex = plan.today.find((e) => e.exerciseId === id);
+    if (!ex) return [];
+    const rest = hasRememberedRest(id) ? restSecondsFor(id) : undefined;
+    const { supersetWithNext: _s, restSeconds: _r, ...rest_ } = ex;
+    return [{ ...rest_, sets: Math.min(10, count.get(id)!), ...(rest !== undefined ? { restSeconds: rest } : {}) }];
+  });
+  if (!exercises.length) return null;
+  const groupSets = new Map<string, number>();
+  for (const ex of exercises) {
+    const group = candidates.find((c) => c.exerciseId === ex.exerciseId)?.muscleGroup;
+    if (group) groupSets.set(group, (groupSets.get(group) ?? 0) + ex.sets);
+  }
+  const groups = [...groupSets].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([g]) => g);
+  return { name: oneOffRoutineName(groups, session.startedAt), exercises };
+}
+
+/** SAVE AS ROUTINE: a new routine of his own (not added to his programme). UNDO archives it. */
+export async function saveSessionAsRoutine(sessionId: string, name: string): Promise<{ templateId: string }> {
+  const session = await db.workoutSessions.get(sessionId);
+  if (!session || session.status === "ACTIVE") throw fail("WORKOUT_NOT_FINISHED", "Finish the workout first.");
+  if (session.templateId) throw fail("ONE_OFF_HAS_ROUTINE", "This workout already has a routine. Change it with EDIT instead.");
+  const draft = await getOneOffRoutineDraft(sessionId);
+  if (!draft) throw fail("ONE_OFF_EMPTY", "Nothing was logged, so there's nothing to save.");
+  const template = await createCustomTemplate({ name: name.trim() || draft.name, exercises: draft.exercises });
+  return { templateId: template.id };
 }

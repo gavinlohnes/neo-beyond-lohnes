@@ -66,6 +66,8 @@ async function advancingSessions(): Promise<WorkoutSession[]> {
   const working = new Map<string, number>();
   for (const set of sets as unknown as PerformedSet[]) if (isWorkingSet(set) && !undone.has(set.id)) working.set(set.sessionId, (working.get(set.sessionId) ?? 0) + 1);
   return (sessions as WorkoutSession[])
+    // GRAYSON-ONE-OFF-001: an empty one-off workout (no routine) never moves the A, B, C turn.
+    .filter((s) => !(s.sessionType !== "RECOVERY" && !s.templateId))
     .filter((s) => doesSessionAdvanceRotation(s.sessionType as SessionType, s.status as WorkoutSessionStatus, working.get(s.id) ?? 0))
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
 }
