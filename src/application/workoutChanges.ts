@@ -234,6 +234,7 @@ export async function getOneOffRoutineDraft(sessionId: string): Promise<OneOffRo
 export async function saveSessionAsRoutine(sessionId: string, name: string): Promise<{ templateId: string }> {
   const session = await db.workoutSessions.get(sessionId);
   if (!session || session.status === "ACTIVE") throw fail("WORKOUT_NOT_FINISHED", "Finish the workout first.");
+  if (session.templateId) throw fail("ONE_OFF_HAS_ROUTINE", "This workout already has a routine. Change it with EDIT instead.");
   const draft = await getOneOffRoutineDraft(sessionId);
   if (!draft) throw fail("ONE_OFF_EMPTY", "Nothing was logged, so there's nothing to save.");
   const template = await createCustomTemplate({ name: name.trim() || draft.name, exercises: draft.exercises });

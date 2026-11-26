@@ -446,14 +446,8 @@ export function TrainScreen({
       variantChosenRef.current = true;
       setChosenVariant(destination === "WORKOUT_STANDARD" ? "STANDARD" : "REDUCED");
     }
-    // GRAYSON-ONE-OFF-001: START from TODAY. An open workout is resumed, never doubled; a sequence that needs review
-    // isn't started (TRAIN shows why, as on its own START).
-    if (!session && (destination === "START_PLANNED" || destination === "START_PLANNED_REDUCED") && !sequenceNeedsReview) {
-      const variant = destination === "START_PLANNED" ? "STANDARD" : "REDUCED";
-      variantChosenRef.current = true; setChosenVariant(variant);
-      void handleStart(chosenTemplate, variant);
-    }
-    if (!session && destination === "START_EMPTY") void handleStart("", "STANDARD");
+    // GRAYSON-ONE-OFF-001: START from TODAY, from a fresh read (review of #734).
+    if (destination === "START_PLANNED" || destination === "START_PLANNED_REDUCED" || destination === "START_EMPTY") void startFromToday(destination);
     requestAnimationFrame(() => {
       if (session && session.sessionType !== "RECOVERY" && destination === "WORKOUT" && exerciseHeadingRef.current) {
         exerciseHeadingRef.current.focus({ preventScroll: true });
@@ -673,6 +667,28 @@ export function TrainScreen({
     } else {
       await actuallyStart(template, variant, programmeContext);
     }
+  }
+
+  /**
+   * GRAYSON-ONE-OFF-001 (review of #734): TODAY's START. TRAIN may still hold an earlier read (it stays mounted), so
+   * this reads capacity, any open workout and the plan afresh, then starts through the same RED gate as TRAIN's own
+   * START. An open workout is resumed, never doubled; a sequence that needs review isn't started (TRAIN shows why).
+   */
+  async function startFromToday(kind: "START_PLANNED" | "START_PLANNED_REDUCED" | "START_EMPTY") {
+    if (!(await refresh(false))) return;
+    if (await getActiveWorkoutSession()) return;
+    const day = await getActiveDay();
+    const checkIn = day ? await getLatestCheckIn(day.id) : undefined;
+    const fresh = checkIn ? deriveCapacity(checkIn).capacity : null;
+    if (kind === "START_EMPTY") { guard(fresh, () => actuallyStart("", "STANDARD")); return; }
+    const view = await getProgrammeView();
+    if (view.sequence && view.sequence.status !== "READY") return;
+    const template = view.sequence?.nextMember ? view.sequence.nextMember.templateId : await suggestTemplateForNextWorkout();
+    const variant = kind === "START_PLANNED" ? "STANDARD" : "REDUCED";
+    templateChosenRef.current = true; variantChosenRef.current = true;
+    setChosenTemplate(template); setChosenVariant(variant);
+    if (variant === "STANDARD") guard(fresh, () => actuallyStart(template, variant));
+    else await actuallyStart(template, variant);
   }
 
   async function handleQuickCheckIn() {

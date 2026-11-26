@@ -147,7 +147,8 @@ export function WorkoutCall({
         {/* GRAYSON-ONE-OFF-001: START begins the planned workout and shows it live (TRAIN still asks the RED override);
             START EMPTY is the quieter second choice. */}
         {onOpenTrain && <div className="workout-call__starts">
-          <button type="button" className="btn-primary" disabled={busy} onClick={() => onOpenTrain(variant === "REDUCED" ? "START_PLANNED_REDUCED" : "START_PLANNED")}>
+          {/* Neutral, not red: a calm row on TODAY has no filled red action (FIELD-AUTHORITY-001; review of #734). */}
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenTrain(variant === "REDUCED" ? "START_PLANNED_REDUCED" : "START_PLANNED")}>
             START · {label}{variant === "REDUCED" ? " REDUCED" : ""}</button>
           <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenTrain("START_EMPTY")}>START EMPTY</button>
         </div>}
