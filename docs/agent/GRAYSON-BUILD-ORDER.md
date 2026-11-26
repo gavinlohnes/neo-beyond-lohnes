@@ -29,7 +29,8 @@ PR open at a time across both sessions, a fresh-context reviewer on every PR, Ga
 | F3 | Protein heads-up | [GRAYSON-PROTEIN-HEADSUP-001](GRAYSON-PROTEIN-HEADSUP-001.md) | Delta-track | F1 | PROTECTED |
 | F4 | Honest burn estimate | [GRAYSON-MISSION-REVIEW-001](GRAYSON-MISSION-REVIEW-001.md), **slice A only** | Delta-track (moved from Claude Code row 14, so Claude Code stays on TRAIN) | F1 | PROTECTED |
 | X2 | Lighter last night, in one tap | [GRAYSON-LIGHTER-NIGHT-001](GRAYSON-LIGHTER-NIGHT-001.md) | Delta-track | F2; a TODAY change | PROTECTED |
-| T1 | One routine editor | [GRAYSON-ROUTINE-EDIT-001](GRAYSON-ROUTINE-EDIT-001.md) | Claude Code | open as #730 | PROTECTED |
+| X4 | Home workouts in one tap, a home twin, stretch routines that fit the hour | [GRAYSON-HOME-STRETCH-001](GRAYSON-HOME-STRETCH-001.md), three PRs A, B, C | Delta-track | X2; slice C also waits on T1 and T2 (merged) | PROTECTED |
+| T1 | One routine editor | [GRAYSON-ROUTINE-EDIT-001](GRAYSON-ROUTINE-EDIT-001.md) | Claude Code | nothing: first | PROTECTED |
 | T2 | Add and swap mid-workout | [GRAYSON-WORKOUT-CHANGES-001](GRAYSON-WORKOUT-CHANGES-001.md) | Claude Code | T1 | PROTECTED |
 | T3 | Empty workout, START on TODAY | [GRAYSON-ONE-OFF-001](GRAYSON-ONE-OFF-001.md) | Claude Code | T2; a TODAY change | PROTECTED |
 | T4 | The week on Week A and Week B | [GRAYSON-WEEK-PLAN-001](GRAYSON-WEEK-PLAN-001.md) | Claude Code | T3 | PROTECTED |
@@ -37,6 +38,12 @@ PR open at a time across both sessions, a fresh-context reviewer on every PR, Ga
 | T6 | Drop, failure and timed sets | [GRAYSON-SET-TYPES-001](GRAYSON-SET-TYPES-001.md) | Claude Code | T5 | PROTECTED |
 | T7 | The open exercise library | [GRAYSON-OPEN-LIBRARY-001](GRAYSON-OPEN-LIBRARY-001.md) | Claude Code | T6 | PROTECTED |
 | X3 | TRAIN home check | no brief: Gavin's phone check of TRAIN's home screen once T5 merges | Gavin | T5 | — |
+
+**Merged so far (2026-11-26):** X1 #733, F1 #736, F2 #737 and #739, F3 #740, F4 #738, T1 #730, T2 #735. T3 is open as #734.
+
+**Checkpoint:** 1.0 merged and phone-checked by Fri Dec 4, so the first 4-week block on GRAYSON alone (no Hevy, MuscleWiki or Couch to 5K) starts Mon Dec 7. X4 joined 1.0 on Gavin's **"Yes"**, 14:48 CT.
+
+X4 and the TRAIN builder's T3 to T7 both touch TRAIN screens: X4 keeps its UI in new files and rebases before each PR opens.
 
 F3 and F4 don't share files with F2, so either may go while F2 waits on review. MISSION-REVIEW-001 slice B stays with
 Claude Code after 1.0. PR #694 (ASKS-COUNT) stays out of 1.0.
