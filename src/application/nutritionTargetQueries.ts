@@ -41,7 +41,8 @@ export async function getEffectiveProteinTargetG(): Promise<number | undefined> 
 }
 
 /** The canonical calorie target reader for a lived day. Unknown placement safely returns the plain target. */
-export async function getDayCalorieTarget(beyondDayId: string): Promise<DayCalorieTarget> {
+export async function getDayCalorieTarget(beyondDayId: string | null): Promise<DayCalorieTarget> {
+  if (!beyondDayId) return deriveDayCalorieTarget(await getNutritionTargets(), null, false);
   const day = await db.beyondDays.get(beyondDayId);
   if (!day) return deriveDayCalorieTarget(await getNutritionTargets(), null, false);
   return getCalorieTargetForDate(new Date(day.startedAt), day);

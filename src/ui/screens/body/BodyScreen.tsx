@@ -753,7 +753,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       // (the owner saw TODAY 7:15 Garmin beside DATA "Not logged" for the same night).
       activeDay && !correctionRequest ? getLastMainSleep(activeDay.id).catch(() => null).then(async (logged) => logged
         ?? await getMeasuredSnapshot().then((m) => m.lastNight ? { minutes: measuredSleepMinutes(m.lastNight), fromGarmin: true } : null, () => null)) : Promise.resolve(null),
-      activeDay ? getDayCalorieTarget(activeDay.id) : Promise.resolve(null),
+      getDayCalorieTarget(activeDay?.id ?? null),
     ]);
     // Publish one consistent reading; a delayed older read cannot replace a newer result.
     if (revision !== readRevision.current) return;

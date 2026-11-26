@@ -44,6 +44,8 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await screen.getByRole("button", { name: "Increase Work night by 50 kcal" }).click();
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
     await expect.poll(async () => (await db.nutritionTargets.get("current"))?.dayTargets?.adjustKcal.WORK).toBe(100);
+    await screen.getByRole("button", { name: "Open TARGETS", exact: true }).click();
+    await expect.element(screen.getByText("Work night +100", { exact: true })).toBeVisible();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/day-targets-320.png`, element: screen.container });
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
