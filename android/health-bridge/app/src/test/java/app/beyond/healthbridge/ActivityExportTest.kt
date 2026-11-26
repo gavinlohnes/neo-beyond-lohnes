@@ -16,7 +16,7 @@ class ActivityExportTest {
     @Test fun writesHourlyMeasurementsAndRestingHeartRateWithProvenance() {
         val json = export()
         assertEquals("BEYOND_HEALTH_CONNECT_ACTIVITY", json.getString("format"))
-        assertEquals(2, json.getInt("schemaVersion"))
+        assertEquals(3, json.getInt("schemaVersion"))
         assertEquals(GARMIN_PACKAGE, json.getString("source"))
         val h = json.getJSONArray("hours").getJSONObject(0)
         assertEquals("2026-10-12T00:00:00Z", h.getString("startTime"))
@@ -49,6 +49,18 @@ class ActivityExportTest {
         assertTrue(h.isNull("steps"))
     }
     @Test(expected = IllegalArgumentException::class) fun refusesImplausibleCalories() { export(listOf(hour().copy(totalCalories = 9000))) }
+    @Test fun writesBriskMinutesAndKeepsMissingOnesNull() {
+        val h = export(listOf(hour().copy(briskMinutesAt = listOf(14, 12, 6, 0, 0), stepsTooCoarse = 40))).getJSONArray("hours").getJSONObject(0)
+        assertEquals(12, h.getJSONArray("briskMinutesAt").getInt(1))
+        assertEquals(5, h.getJSONArray("briskMinutesAt").length())
+        assertEquals(40, h.getInt("stepsTooCoarse"))
+        val none = export().getJSONArray("hours").getJSONObject(0)
+        assertTrue(none.isNull("briskMinutesAt"))
+        assertTrue(none.isNull("stepsTooCoarse"))
+    }
+    @Test(expected = IllegalArgumentException::class) fun refusesBriskMinutesThatRiseWithCadence() { export(listOf(hour().copy(briskMinutesAt = listOf(1, 2, 0, 0, 0)))) }
+    @Test(expected = IllegalArgumentException::class) fun refusesBriskMinutesOverAnHour() { export(listOf(hour().copy(briskMinutesAt = listOf(61, 0, 0, 0, 0)))) }
+    @Test(expected = IllegalArgumentException::class) fun refusesTheWrongNumberOfThresholds() { export(listOf(hour().copy(briskMinutesAt = listOf(1, 0)))) }
     @Test fun allowsEmptyExports() { assertEquals(0, export(emptyList(), emptyList()).getJSONArray("hours").length()) }
     @Test fun sortsHours() {
         val hours = export(listOf(hour(5), hour(2))).getJSONArray("hours")

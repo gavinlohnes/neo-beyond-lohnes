@@ -12,17 +12,23 @@ import java.time.Instant
 data class ExportHour(val start: Instant, val zoneOffset: Int?, val steps: Long?, val heartRateMin: Long?,
     val heartRateAvg: Long?, val heartRateMax: Long?,
     /** GARMIN-005: Garmin's total (resting + active) and active energy for the hour, whole kilocalories. */
-    val totalCalories: Long? = null, val activeCalories: Long? = null)
+    val totalCalories: Long? = null, val activeCalories: Long? = null,
+    /**
+     * GRAYSON-BRISK-001: minutes at 90, 100, 110, 120 and 130 steps a minute or faster (Brisk.kt), or null when no step
+     * record that hour was short enough to judge; and the steps in records too long to judge.
+     */
+    val briskMinutesAt: List<Int>? = null, val stepsTooCoarse: Long? = null)
 data class ExportRestingHeartRate(val id: String, val origin: String, val modified: Instant, val time: Instant,
     val zoneOffset: Int?, val bpm: Long)
 
 private fun nullable(value: Any?): Any = value ?: JSONObject.NULL
 
 /**
- * Versioned interchange for steps, heart rate and (schema 2, GARMIN-005) calories burned. Separate from
- * the sleep file, whose format is unchanged. BEYOND still accepts schema 1 files from older helpers.
+ * Versioned interchange for steps, heart rate, (schema 2, GARMIN-005) calories burned and (schema 3,
+ * GRAYSON-BRISK-001) brisk minutes. Separate from the sleep file, whose format is unchanged. BEYOND still accepts
+ * schema 1 and 2 files from older helpers.
  */
-const val ACTIVITY_SCHEMA_VERSION = 2
+const val ACTIVITY_SCHEMA_VERSION = 3
 const val MAX_HOUR_KCAL = 5000L
 fun activityExport(hours: List<ExportHour>, resting: List<ExportRestingHeartRate>, start: Instant, end: Instant,
     exported: Instant, version: String): String {
@@ -35,12 +41,16 @@ fun activityExport(hours: List<ExportHour>, resting: List<ExportRestingHeartRate
         require(h.steps != null || h.heartRateAvg != null || h.totalCalories != null || h.activeCalories != null)
         listOf(h.totalCalories, h.activeCalories).forEach { require(it == null || it in 0..MAX_HOUR_KCAL) }
         require(h.steps == null || h.steps in 0..100_000)
+        h.briskMinutesAt?.let { b -> require(b.size == BRISK_CADENCES.size && b.all { it in 0..60 } && b.zipWithNext().all { (a, c) -> c <= a }) }
+        require(h.stepsTooCoarse == null || h.stepsTooCoarse in 0..100_000)
         listOf(h.heartRateMin, h.heartRateAvg, h.heartRateMax).forEach { require(it == null || it in 20..300) }
         rows.put(JSONObject().put("startTime", h.start.toString()).put("endTime", h.start.plus(Duration.ofHours(1)).toString())
             .put("zoneOffsetSeconds", nullable(h.zoneOffset)).put("steps", nullable(h.steps))
             .put("heartRateMinBpm", nullable(h.heartRateMin)).put("heartRateAvgBpm", nullable(h.heartRateAvg))
             .put("heartRateMaxBpm", nullable(h.heartRateMax))
-            .put("totalCaloriesKcal", nullable(h.totalCalories)).put("activeCaloriesKcal", nullable(h.activeCalories)))
+            .put("totalCaloriesKcal", nullable(h.totalCalories)).put("activeCaloriesKcal", nullable(h.activeCalories))
+            .put("briskMinutesAt", h.briskMinutesAt?.let { JSONArray(it) } ?: JSONObject.NULL)
+            .put("stepsTooCoarse", nullable(h.stepsTooCoarse)))
     }
     val restingRows = JSONArray()
     resting.sortedBy { it.time }.forEach { r ->

@@ -390,6 +390,35 @@ class MainActivity : ComponentActivity() {
             }
             sliceStart = sliceEnd
         }
+        // GRAYSON-BRISK-001: Garmin's raw step records, in the same 30-day slices, give each hour its brisk minutes
+        // (Brisk.kt). A slice keeps the records that start inside it, so each is read once.
+        var stepDetail = ""
+        if (stepsPermission in granted) {
+            val brisk = mutableMapOf<Instant, HourBrisk>()
+            val lastWeek = mutableListOf<StepSample>()
+            val weekStart = end.minus(7, ChronoUnit.DAYS)
+            var from = start
+            while (from < end) {
+                val to = minOf(from.plus(30, ChronoUnit.DAYS), end)
+                val samples = mutableListOf<StepSample>()
+                var token: String? = null
+                val seenTokens = mutableSetOf<String>()
+                do {
+                    val response = client.readRecords(ReadRecordsRequest(StepsRecord::class,
+                        timeRangeFilter = TimeRangeFilter.between(from, to), dataOriginFilter = garmin, pageSize = 1000, pageToken = token))
+                    response.records.filter { it.startTime >= from && it.startTime < to && it.count in 0..100_000 }.forEach { r ->
+                        samples.add(StepSample(r.startTime, r.endTime, r.count, r.metadata.lastModifiedTime))
+                    }
+                    token = response.pageToken
+                    if (token != null) require(seenTokens.add(token))
+                } while (token != null)
+                briskByHour(samples).forEach { (hour, b) -> brisk.merge(hour, b, ::mergeBrisk) }
+                lastWeek.addAll(samples.filter { it.start >= weekStart })
+                from = to
+            }
+            for (i in hours.indices) brisk[hours[i].start]?.let { b -> hours[i] = hours[i].copy(briskMinutesAt = b.minutesAt, stepsTooCoarse = b.stepsTooCoarse) }
+            stepDetail = " ${stepDetailLine(lastWeek, end)}"
+        }
         val resting = mutableListOf<ExportRestingHeartRate>()
         if (restingPermission in granted) {
             var token: String? = null
@@ -411,6 +440,6 @@ class MainActivity : ComponentActivity() {
         preparedActivity = activityExport(hours, resting, start, end, Instant.now(), BuildConfig.VERSION_NAME)
         activityGranted = granted.intersect(activityPermissions)
         val calorieHours = hours.count { it.totalCalories != null || it.activeCalories != null }
-        return "${hours.size} hours of steps/heart rate, $calorieHours with calories, and ${resting.size} resting heart rate readings ready."
+        return "${hours.size} hours of steps/heart rate, $calorieHours with calories, and ${resting.size} resting heart rate readings ready.$stepDetail"
     }
 }
