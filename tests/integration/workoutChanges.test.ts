@@ -88,6 +88,18 @@ describe("changes in the live workout", () => {
   });
 });
 
+describe("review of #732", () => {
+  it("a second swap of an exercise already swapped after a logged set still reaches the routine KEEP saves", async () => {
+    const { day, session } = await liveA();
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 10);
+    await swapExerciseInSession(session.id, "machine-chest-press", await choice("lib-barbell-bench-press"));
+    await swapExerciseInSession(session.id, "machine-chest-press", await choice("lib-dumbbell-bench-press"));
+    const plan = await getWorkoutPlan(session);
+    expect(ids(plan.routine)).toContain("lib-dumbbell-bench-press");
+    expect(ids(plan.routine)).not.toContain("machine-chest-press");
+  });
+});
+
 describe("swap suggestions", () => {
   it("are the same muscle, ranked by equipment used in the last 60 days, each with his last numbers", async () => {
     const now = new Date();

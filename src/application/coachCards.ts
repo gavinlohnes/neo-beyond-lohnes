@@ -1,7 +1,8 @@
 import { getActiveDay, hasActivePlannedWork } from "./queries";
 import { getActiveWorkoutSession, getLastAdvancingTemplate, getProgressionSuggestion, getUndoneSetIds } from "./trainQueries";
 import { getProgrammeView } from "./trainingProgrammeQueries";
-import { getSessionRoutinePoint, resolveTemplateExercises } from "./customTemplateQueries";
+import { resolveTemplateExercises } from "./customTemplateQueries";
+import { getWorkoutPlan } from "./workoutChanges";
 import { suggestNextTemplate } from "../engine/trainSuggestion";
 import { getExperiments } from "./tryExperiment";
 import { getWeeklySummary } from "./weeklyQueries";
@@ -33,7 +34,7 @@ export async function getCoachCards(now = new Date(), suggestedVariant: "STANDAR
   const template = active?.templateId ?? programme.planned.templateId ?? (declared ? suggestNextTemplate(await getLastAdvancingTemplate()) : null);
   if (template && active?.sessionType !== "RECOVERY" && (active || suggestedVariant !== "RESET")) {
     const variant = active ? (active.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD";
-    const [exercises, undone, sessions] = await Promise.all([resolveTemplateExercises(template, variant, active ? await getSessionRoutinePoint(active) : undefined), getUndoneSetIds(), db.workoutSessions.toArray()]);
+    const [exercises, undone, sessions] = await Promise.all([active ? getWorkoutPlan(active).then((plan) => plan.today) : resolveTemplateExercises(template, variant), getUndoneSetIds(), db.workoutSessions.toArray()]);
     const finished = new Set(sessions.filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL").map((s) => s.id));
     for (const ex of exercises) {
       const advice = await getProgressionSuggestion(template, variant, ex.exerciseId, now);

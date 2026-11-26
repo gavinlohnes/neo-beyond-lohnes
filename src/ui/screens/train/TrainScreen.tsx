@@ -759,7 +759,8 @@ export function TrainScreen({
     setSets(await getPerformedSets(current.id));
     await loadExerciseAdvisory(current);
     setFocusedExerciseId(focusExerciseId);
-    if (focusExerciseId) requestAnimationFrame(() => exerciseHeadingRef.current?.focus({ preventScroll: true }));
+    // Focus goes to the exercise now on screen, after a removal too (review of #732).
+    requestAnimationFrame(() => exerciseHeadingRef.current?.focus({ preventScroll: true }));
   }
 
   async function refreshSession() {

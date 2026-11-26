@@ -56,7 +56,11 @@ export function projectWorkoutPlan(todayBase: readonly ExercisePrescription[], r
       if (!routine.some((ex) => ex.exerciseId === change.exercise.exerciseId)) routine.push({ ...change.exercise });
     } else if (change.kind === "SWAP") {
       today = swapIn(today, change.fromExerciseId, change.exercise, change.keptSets);
-      routine = swapIn(routine, change.fromExerciseId, change.exercise, 0, true);
+      // The old exercise may already have left the routine (swapped once after a logged set, then again): the new one
+      // still joins it (review of #732).
+      routine = routine.some((ex) => ex.exerciseId === change.fromExerciseId)
+        ? swapIn(routine, change.fromExerciseId, change.exercise, 0, true)
+        : routine.some((ex) => ex.exerciseId === change.exercise.exerciseId) ? routine : [...routine, { ...change.exercise }];
     } else {
       today = today.flatMap((ex) => (ex.exerciseId !== change.exerciseId ? [ex] : change.keptSets > 0 ? [{ ...ex, sets: change.keptSets, supersetWithNext: undefined }] : []));
       routine = routine.filter((ex) => ex.exerciseId !== change.exerciseId);
