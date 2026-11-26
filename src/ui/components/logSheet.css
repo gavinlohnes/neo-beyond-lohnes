@@ -76,3 +76,8 @@
 /* GRAYSON-DICTATE-001: TALK sits under the meal search; the search row is unchanged where TALK doesn't show. */
 .record-meal-search { display: grid; gap: 8px; min-width: 0; }
 .record-meal-search .talk { justify-self: start; }
+/* GRAYSON-FITS-NOW-001: Fits now, above LIKELY NOW. Plain rows; no colour. */
+.fits-now { margin-bottom: 12px; }
+.fits-now h3 { margin-top: 0; }
+.fits-now__text { min-width: 0; }
+.fits-now__row button { min-height: 44px; }

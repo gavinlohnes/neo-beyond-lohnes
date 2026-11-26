@@ -72,6 +72,7 @@ import {
 import { searchFoods, type FoodSearchResult } from "../../../application/foodLookupQueries";
 import { getBatchDuplicateMealCheck, getDuplicateMealCheck, getSameFoodCheck } from "../../../application/sameFoodQueries";
 import type { DuplicateMealPair, SameFoodPair } from "../../../engine/sameFood";
+import { FitsNowBlock } from "../../components/FitsNowBlock";
 import { getDayCalorieTarget, getEffectiveProteinTargetG, getNutritionTargets } from "../../../application/nutritionTargetQueries";
 import type { DayCalorieTarget } from "../../../engine/dayTarget";
 import {
@@ -2273,6 +2274,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           <p className="meta">{effectiveProteinTargetG !== undefined
             ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
             : dayProteinG === 0 ? "No protein logged yet" : `${dayProteinG} g protein today (meals + protein logs)`}</p>
+          {/* GRAYSON-FITS-NOW-001: one line, the best of his own meals that fit what's left today. */}
+          <FitsNowBlock compact busy={busy} refreshKey={dataRevision} />
         </div>}
         {onReturnToToday && mealDirty && <p className="meta" style={{ marginBottom: 12 }}>
           Unsaved details stay here while you return to TODAY.
