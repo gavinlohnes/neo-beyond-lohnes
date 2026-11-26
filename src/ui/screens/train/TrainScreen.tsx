@@ -54,9 +54,11 @@ import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
 import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
-import { getCustomTemplates, getSessionRoutinePoint, reducedExercises, resolveTemplateExercises } from "../../../application/customTemplateQueries";
+import { getCustomTemplates, reducedExercises } from "../../../application/customTemplateQueries";
 import { getRoutineViews } from "../../../application/routineEditQueries";
 import { RoutinesPanel } from "./RoutineEditor";
+import { AddExerciseSheet, KeepChangesLine, SwapSheet } from "./WorkoutChanges";
+import { getLastNumbers, getWorkoutPlan } from "../../../application/workoutChanges";
 import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { deriveCapacity } from "../../../engine/capacity";
@@ -193,6 +195,8 @@ interface CompletionSummary {
   records: string[];
   /** Drop 4: total weight × reps across logged (non-skipped) sets — workoutVolumeLbs, the one volume rule. */
   volumeLbs: number;
+  /** GRAYSON-WORKOUT-CHANGES-001: the routine's label for the end-of-workout question (strength workouts only). */
+  routineLabel?: string;
 }
 
 /**
@@ -307,7 +311,13 @@ export function TrainScreen({
   const restStartRef = useRef<number | null>(null);
   const restAdjustedRef = useRef<Set<string>>(new Set());
   const restAdjustedSessionRef = useRef<string | null>(null);
-  if (restAdjustedSessionRef.current !== (session?.id ?? null)) { restAdjustedSessionRef.current = session?.id ?? null; restAdjustedRef.current = new Set(); }
+  if (restAdjustedSessionRef.current !== (session?.id ?? null)) {
+    restAdjustedSessionRef.current = session?.id ?? null;
+    // GRAYSON-WORKOUT-CHANGES-001 (review of #730): kept per workout, so a reload doesn't forget a ± he made.
+    let saved: unknown = [];
+    try { saved = session ? JSON.parse(localStorage.getItem(`beyond:rest-adjusted:${session.id}`) ?? "[]") : []; } catch { /* Storage may be unavailable. */ }
+    restAdjustedRef.current = new Set(Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string") : []);
+  }
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
   // GRAYSON-TRAIN-GUIDED-001: Delta's one proposal (if any), the pain stop, and what it noticed this workout (memory only).
   const [proposal, setProposal] = useState<(SetProposal & { exerciseId: string; exerciseName: string }) | null>(null);
@@ -352,6 +362,8 @@ export function TrainScreen({
   const [builtInRoutines, setBuiltInRoutines] = useState<Record<string, ExercisePrescription[]>>({});
   const [sessionExercises, setSessionExercises] = useState<ExercisePrescription[] | null>(null);
   const [routinesOpen, setRoutinesOpen] = useState<{ templateId: string | null } | null>(null);
+  // GRAYSON-WORKOUT-CHANGES-001: SWAP (on the current exercise) or ADD EXERCISE, open on the live workout.
+  const [changeSheet, setChangeSheet] = useState<{ kind: "SWAP"; exerciseId: string } | { kind: "ADD" } | null>(null);
   const [sequenceProgramme, setSequenceProgramme] = useState<SequenceProgrammeView | null>(null);
   const [programmeRefreshKey, setProgrammeRefreshKey] = useState(0);
   // TRAIN-CREATE-003: names only, offered as substitution quick-picks
@@ -541,7 +553,10 @@ export function TrainScreen({
       setLastPerformedSets({});
       setRecentSubstitutions({});
       if (draftSessionRef.current) {
-        try { localStorage.removeItem(`beyond:gym-draft:${draftSessionRef.current}`); } catch { /* Storage may be unavailable. */ }
+        try {
+          localStorage.removeItem(`beyond:gym-draft:${draftSessionRef.current}`);
+          localStorage.removeItem(`beyond:rest-adjusted:${draftSessionRef.current}`);
+        } catch { /* Storage may be unavailable. */ }
         draftSessionRef.current = null;
       }
       setInputs({});
@@ -575,15 +590,25 @@ export function TrainScreen({
     const templateId = activeSession.templateId as WorkoutTemplateId;
     const sessionType = activeSession.sessionType as "STANDARD" | "REDUCED";
     // GRAYSON-ROUTINE-EDIT-001: the routine as it was when this workout started; an edit saved since applies next time.
-    const exercises = await resolveTemplateExercises(templateId, sessionType, await getSessionRoutinePoint(activeSession));
+    // GRAYSON-WORKOUT-CHANGES-001: with today's adds, swaps and removals.
+    const exercises = (await getWorkoutPlan(activeSession)).today;
     setSessionExercises(exercises);
     const progressionEntries = await Promise.all(
-      exercises.map(async (ex) => [ex.exerciseId, await getProgressionSuggestion(templateId, sessionType, ex.exerciseId)] as const),
+      exercises.map(async (ex) => [ex.exerciseId, await getProgressionSuggestion(templateId, sessionType, ex.exerciseId, new Date(), ex)] as const),
     );
     setProgressionSuggestions(Object.fromEntries(progressionEntries));
     const lastSetEntries = await Promise.all(
       exercises.map(async (ex) => [ex.exerciseId, await getLastPerformedSetForExercise(templateId, sessionType, ex.exerciseId)] as const),
     );
+    // GRAYSON-WORKOUT-CHANGES-001: an added or swapped-in exercise with no history in this routine starts from its last
+    // numbers anywhere (an editable display default, as before).
+    if (lastSetEntries.some(([, last]) => last === undefined)) {
+      const anywhere = await getLastNumbers();
+      for (const entry of lastSetEntries) {
+        const last = entry[1] === undefined ? anywhere.get(entry[0]) : undefined;
+        if (last) (entry as [string, LastSetInfo | undefined])[1] = { weight: last.weight, reps: last.reps, recordedAt: last.at };
+      }
+    }
     setLastPerformedSets(
       Object.fromEntries(lastSetEntries.filter((entry): entry is [string, LastSetInfo] => entry[1] !== undefined)),
     );
@@ -724,6 +749,17 @@ export function TrainScreen({
     const current = getInputDisplay(exerciseId, setNumber);
     const next = Math.max(0, (Number(current.reps) || 0) + delta);
     patchInput(exerciseId, setNumber, { reps: String(next) });
+  }
+
+  /** GRAYSON-WORKOUT-CHANGES-001: after an add, swap or removal, re-read today's plan and go to the exercise placed. */
+  async function afterWorkoutChange(focusExerciseId: string | null) {
+    const current = (await getActiveWorkoutSession()) ?? null;
+    setSession(current);
+    if (!current) return;
+    setSets(await getPerformedSets(current.id));
+    await loadExerciseAdvisory(current);
+    setFocusedExerciseId(focusExerciseId);
+    if (focusExerciseId) requestAnimationFrame(() => exerciseHeadingRef.current?.focus({ preventScroll: true }));
   }
 
   async function refreshSession() {
@@ -873,7 +909,10 @@ export function TrainScreen({
       rememberRestAdjustment(restExerciseRef.current, deltaSeconds, restStartRef.current ?? undefined);
       // The next ± builds on this one; later sets of this exercise start from the remembered length.
       if (restStartRef.current !== null) restStartRef.current += deltaSeconds;
-      if (restExerciseRef.current) restAdjustedRef.current.add(restExerciseRef.current);
+      if (restExerciseRef.current) {
+        restAdjustedRef.current.add(restExerciseRef.current);
+        try { localStorage.setItem(`beyond:rest-adjusted:${session.id}`, JSON.stringify([...restAdjustedRef.current])); } catch { /* Storage may be unavailable. */ }
+      }
       await refreshSession();
     } catch (error) {
       reportOperationFailure(error);
@@ -991,7 +1030,7 @@ export function TrainScreen({
         for (const ex of activeExercises) {
           const before = beforeSuggestions[ex.exerciseId];
           if (!before) continue;
-          const after = await getProgressionSuggestion(templateId, sessionType, ex.exerciseId);
+          const after = await getProgressionSuggestion(templateId, sessionType, ex.exerciseId, new Date(), ex);
           if (before.recommendation !== after.recommendation) {
             advisoryChanges.push({
               name: ex.name,
@@ -1021,6 +1060,7 @@ export function TrainScreen({
         advisoryChanges,
         records,
         volumeLbs,
+        ...(sessionType === "STANDARD" || sessionType === "REDUCED" ? { routineLabel: templateLabel(templateId, customTemplates) } : {}),
       });
 
       // DAY-ROLLOVER-001: "don't interrupt an in-progress workout, roll
@@ -1369,6 +1409,8 @@ export function TrainScreen({
               ))}
             </div>
           )}
+          {/* GRAYSON-WORKOUT-CHANGES-001: one question, only when something changed. */}
+          {completionSummary.routineLabel && <KeepChangesLine sessionId={completionSummary.sessionId} routineLabel={completionSummary.routineLabel} />}
           {/* DELTA-NEXT 4: how the workout felt, as a tag on today's note. */}
           <QuickTags label="How did it feel" tags={["felt-strong", "felt-flat", "short-on-time", "sore"]} />
           {/* ALFRED-007: ask Alfred about the workout just finished. */}
@@ -2064,6 +2106,13 @@ export function TrainScreen({
               {liveFixUndo.node}
               {/* GRAYSON-TRAIN-GUIDED-001: below the set inputs, so LOG stays where the thumb expects it. */}
               <DeltaPain exerciseName={currentExercise.name} open={painFor === currentExercise.exerciseId} busy={busy} onOpen={() => setPainFor(currentExercise.exerciseId)} onStop={(skip) => void stopForPain(currentExercise.exerciseId, skip)} onCancel={() => setPainFor(null)} />
+              {/* GRAYSON-WORKOUT-CHANGES-001: SWAP out of the fold; the free-text substitute stays inside it. */}
+              {changeSheet?.kind === "SWAP" && changeSheet.exerciseId === currentExercise.exerciseId
+                ? <SwapSheet sessionId={session.id} exercise={currentExercise} today={activeExercises} onChanged={afterWorkoutChange} onClose={() => setChangeSheet(null)} />
+                : <div className="train-change-acts">
+                    <button type="button" className="btn-secondary" disabled={busy} aria-label={`Swap ${currentExercise.name}`}
+                      onClick={() => setChangeSheet({ kind: "SWAP", exerciseId: currentExercise.exerciseId })}>SWAP</button>
+                  </div>}
               <details className="train-lift-inspect">
                 <summary className="disclosure-row">Progression and substitution</summary>
                 <p className="meta">Session: {describeTemplateSummary(activeExercises).bodyAreas}.</p>
@@ -2241,6 +2290,13 @@ export function TrainScreen({
               </div>
             </div>
           )}
+
+          {/* GRAYSON-WORKOUT-CHANGES-001: ADD EXERCISE below the exercise list; today only until KEEP at the end. */}
+          {changeSheet?.kind === "ADD"
+            ? <AddExerciseSheet sessionId={session.id} today={activeExercises} onChanged={afterWorkoutChange} onClose={() => setChangeSheet(null)} />
+            : <div className="train-change-acts">
+                <button type="button" className="btn-secondary" disabled={busy} onClick={() => setChangeSheet({ kind: "ADD" })}>ADD EXERCISE</button>
+              </div>}
 
           <p className="section-label">Finish</p>
 

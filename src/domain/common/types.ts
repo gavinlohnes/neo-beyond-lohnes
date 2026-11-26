@@ -310,6 +310,10 @@ export type DomainEventType =
   // Global (no beyondDayId), USER. For A, B and C the latest wins over the code's version; for his own routines it
   // keeps the version it replaced. Payload in domain/workout/routineEdit.ts.
   | "ROUTINE_EDITED"
+  // GRAYSON-WORKOUT-CHANGES-001 (Gavin, 2026-11-25): an exercise added, swapped or removed in a live workout. USER,
+  // under the session's own beyondDayId. Today only; the routine changes only on KEEP FOR NEXT TIME (ROUTINE_EDITED).
+  // Payload in domain/workout/workoutChanges.ts.
+  | "WORKOUT_PLAN_CHANGED"
   // GRAYSON-TRAIN-STANDARDS-001 (Gavin, 2026-11-24): a sit-and-reach, one-minute sit-up or 1.5-mile run test result,
   // day-scoped to the lived day it was recorded in. Removed through the shared void family (STANDARD_TEST_VOIDED,
   // domain/logVoids.ts) and put back with LOG_VOID_UNDONE; a fix voids the old result and records a new one.
