@@ -19,7 +19,21 @@ export interface SequenceTrainingProgramme {
   startTemplateId: string;
 }
 
-export type TrainingProgramme = AssignedTrainingProgramme | SequenceTrainingProgramme;
+/**
+ * GRAYSON-WEEK-PLAN-001 (Gavin, 2026-11-25): his training week laid on his saved Week A and Week B. `weeks` has one
+ * entry per week of his schedule (index 0 is Week A), keyed by weekday "0" (Sunday) to "6". A value is a routine id,
+ * WEEK_PLAN_REST or WEEK_PLAN_EMPTY. `overrides` holds one-day changes by local date (YYYY-MM-DD); an override wins on
+ * its own day only. A missed day stays missed: nothing shifts.
+ */
+export interface WeekPlanTrainingProgramme {
+  mode: "WEEK_PLAN";
+  weeks: Record<string, string>[];
+  overrides?: Record<string, string>;
+}
+export const WEEK_PLAN_REST = "REST";
+export const WEEK_PLAN_EMPTY = "EMPTY";
+
+export type TrainingProgramme = AssignedTrainingProgramme | SequenceTrainingProgramme | WeekPlanTrainingProgramme;
 export interface ProgrammeRevision {
   id: string | null;
   programme: TrainingProgramme | null;

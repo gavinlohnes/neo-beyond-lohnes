@@ -18,6 +18,8 @@ function RestorationDetail({ programme, templates }: { programme: TrainingProgra
     <p>Restore this exact sequence. Its preserved next member is {programme.members.find((member) => member.templateId === programme.startTemplateId)?.key ?? "unknown"}. Current sequence history remains recorded.</p>
     <ol>{programme.members.map((member) => <li key={member.key}><b>{member.key}</b> · {member.snapshot.name}{member.templateId === programme.startTemplateId ? " · NEXT" : ""}</li>)}</ol>
   </>;
+  // GRAYSON-WEEK-PLAN-001: a prior week plan is restored as it was (its days are shown in TRAIN · This week).
+  if (programme.mode === "WEEK_PLAN") return <p>Restore your earlier week plan ({programme.weeks.length} {programme.weeks.length === 1 ? "week" : "weeks"}). Current history remains recorded.</p>;
   return <>
     <p>Restore these prior {programme.mode === "WEEKDAYS" ? "weekday" : "work/day-off"} assignments. Current sequence history remains recorded.</p>
     <ul>{Object.entries(programme.slots).map(([slot, templateId]) => <li key={slot}><b>{slotLabel(slot)}</b> · {templates.find((template) => template.id === templateId)?.name ?? `Unavailable template (${templateId})`}</li>)}</ul>
@@ -121,7 +123,7 @@ export function TrainingProgrammePanel({ onStart, onProgrammeChanged, capacityFo
     if (!data) return;
     editingVersion.current = data.revision.id;
     const current = data.revision.programme;
-    setDraft(current && current.mode !== "SEQUENCE" ? { ...current, slots: { ...current.slots } } : emptyAssigned());
+    setDraft(current && (current.mode === "WEEKDAYS" || current.mode === "ROTATION") ? { ...current, slots: { ...current.slots } } : emptyAssigned());
     setEditing(true);
     setActivating(false);
     setReceipt(null);

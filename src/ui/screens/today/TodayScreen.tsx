@@ -1,3 +1,4 @@
+import { getTodayPlannedTemplate } from "../../../application/weekPlan";
 import { CoachCard } from "./CoachCard";
 import { HabitLadderLine } from "./HabitLadderLine";
 import type { CoachDestination } from "../../../application/coachCards";
@@ -619,7 +620,8 @@ export function TodayScreen({
     try {
       const schedulePattern = await getSchedulePattern();
       patchSnapshot({ schedulePattern });
-      const [templateId, customTemplates] = await Promise.all([suggestTemplateForNextWorkout(), getCustomTemplates()]);
+      // GRAYSON-WEEK-PLAN-001: his week plan's routine for today when he has one; otherwise unchanged.
+      const [templateId, customTemplates] = await Promise.all([getTodayPlannedTemplate().then((p) => (p.fromWeekPlan ? p.templateId : suggestTemplateForNextWorkout())), getCustomTemplates()]);
       setCustomTemplateList(customTemplates);
       const [standard, reduced] = await Promise.all([
         getSessionMinutesEstimate(templateId, "STANDARD"),

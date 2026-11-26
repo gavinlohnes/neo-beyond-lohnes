@@ -57,6 +57,7 @@ import type { CustomWorkoutTemplate } from "../../../domain/workout/customTempla
 import { getCustomTemplates, reducedExercises } from "../../../application/customTemplateQueries";
 import { getRoutineViews } from "../../../application/routineEditQueries";
 import { RoutinesPanel } from "./RoutineEditor";
+import { WeekPlan } from "./WeekPlan";
 import { AddExerciseSheet, KeepChangesLine, SaveAsRoutineLine, SwapSheet } from "./WorkoutChanges";
 import { getLastNumbers, getWorkoutPlan } from "../../../application/workoutChanges";
 import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
@@ -370,6 +371,9 @@ export function TrainScreen({
   const [sessionExercises, setSessionExercises] = useState<ExercisePrescription[] | null>(null);
   const [routinesOpen, setRoutinesOpen] = useState<{ templateId: string | null } | null>(null);
   // GRAYSON-WORKOUT-CHANGES-001: SWAP (on the current exercise) or ADD EXERCISE, open on the live workout.
+  // GRAYSON-WEEK-PLAN-001: null without a week plan; else whether today is planned or Rest. And the week view.
+  const [weekPlanToday, setWeekPlanToday] = useState<"PLANNED" | "REST" | null>(null);
+  const [weekOpen, setWeekOpen] = useState(false);
   const [changeSheet, setChangeSheet] = useState<{ kind: "SWAP"; exerciseId: string } | { kind: "ADD" } | null>(null);
   const [sequenceProgramme, setSequenceProgramme] = useState<SequenceProgrammeView | null>(null);
   const [programmeRefreshKey, setProgrammeRefreshKey] = useState(0);
@@ -510,9 +514,14 @@ export function TrainScreen({
 
     const programmeView = await getProgrammeView();
     setSequenceProgramme(programmeView.sequence);
-    const nextTemplate = programmeView.sequence?.status === "READY" && programmeView.sequence.nextMember
-      ? programmeView.sequence.nextMember.templateId
-      : await suggestTemplateForNextWorkout();
+    // GRAYSON-WEEK-PLAN-001: his week plan's routine for today first, when he has one.
+    const weekPlanned = programmeView.revision.programme?.mode === "WEEK_PLAN" ? programmeView.planned.templateId : null;
+    setWeekPlanToday(programmeView.revision.programme?.mode === "WEEK_PLAN" ? (weekPlanned === null ? "REST" : "PLANNED") : null);
+    const nextTemplate = weekPlanned !== null
+      ? weekPlanned
+      : programmeView.sequence?.status === "READY" && programmeView.sequence.nextMember
+        ? programmeView.sequence.nextMember.templateId
+        : await suggestTemplateForNextWorkout();
     setSuggestedTemplate(nextTemplate);
     if (!preserveChoice) templateChosenRef.current = false;
     if (!templateChosenRef.current) setChosenTemplate(nextTemplate);
@@ -683,7 +692,9 @@ export function TrainScreen({
     if (kind === "START_EMPTY") { guard(fresh, () => actuallyStart("", "STANDARD")); return; }
     const view = await getProgrammeView();
     if (view.sequence && view.sequence.status !== "READY") return;
-    const template = view.sequence?.nextMember ? view.sequence.nextMember.templateId : await suggestTemplateForNextWorkout();
+    // GRAYSON-WEEK-PLAN-001: the week plan's routine for today first (an empty workout is "").
+    const weekPlanned = view.revision.programme?.mode === "WEEK_PLAN" ? view.planned.templateId : null;
+    const template = weekPlanned ?? (view.sequence?.nextMember ? view.sequence.nextMember.templateId : await suggestTemplateForNextWorkout());
     const variant = kind === "START_PLANNED" ? "STANDARD" : "REDUCED";
     templateChosenRef.current = true; variantChosenRef.current = true;
     setChosenTemplate(template); setChosenVariant(variant);
@@ -1490,11 +1501,16 @@ export function TrainScreen({
           onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(true); }}
           onClose={() => setRoutinesOpen(null)} />
       )}
-      {!session && !completionSummary && !routinesOpen && (
+      {/* GRAYSON-WEEK-PLAN-001: the week opens in the workout card's place. */}
+      {!session && !completionSummary && !routinesOpen && weekOpen && (
+        <WeekPlan onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(false); }} onClose={() => setWeekOpen(false)} />
+      )}
+      {!session && !completionSummary && !routinesOpen && !weekOpen && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
-            {sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
+            {weekPlanToday ? "YOUR WEEK" : sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
+          {weekPlanToday === "REST" && <p className="meta" style={{ marginBottom: 8 }}>Your week says Rest today. START still works if you want to train.</p>}
           <h2 className="command-title">
             {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
           </h2>
@@ -1591,6 +1607,7 @@ export function TrainScreen({
                 <button type="button" className="btn-secondary" disabled={busy} aria-label={`Edit workout ${templateLabel(chosenTemplate, customTemplates)}`}
                   onClick={() => setRoutinesOpen({ templateId: chosenTemplate })}>EDIT</button>
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => setRoutinesOpen({ templateId: null })}>ROUTINES</button>
+                <button type="button" className="btn-secondary" disabled={busy} onClick={() => setWeekOpen(true)}>THIS WEEK</button>
                 {/* GRAYSON-ONE-OFF-001: a blank workout; never moves the A, B, C turn. */}
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleStart("", "STANDARD")}>EMPTY WORKOUT</button>
               </div>

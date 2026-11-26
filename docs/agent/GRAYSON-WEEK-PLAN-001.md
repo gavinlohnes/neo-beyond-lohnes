@@ -80,6 +80,8 @@ its own plan).
 
 ## Stop and ask Gavin if
 - Converting his current setup would change what TRAIN plans for today.
+  **Asked and answered (Gavin, 2026-11-26): "Keep today as now."** USE THIS WEEK saves a one-day override for today
+  with what TRAIN plans right now; the week takes over from tomorrow.
 
 ## Risks
 - **A wrong week:** the week index comes from the same anchor the schedule already uses, with tests across a rota

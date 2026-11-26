@@ -1,0 +1,20 @@
+/* GRAYSON-WEEK-PLAN-001: the week on Week A and Week B. TRAIN's look: neutral ink, 1px lines, square corners, 44 px
+   rows, 16 px text; today marked by weight and a word, never colour alone. Reduced motion: nothing animates. */
+.week-plan { margin: 12px 0; }
+.week-plan__draft { margin: 8px 0 12px; padding: 8px 0; border-top: 1px solid var(--p-line, #2a2a2a); border-bottom: 1px solid var(--p-line, #2a2a2a); }
+.week-plan__week { margin-top: 12px; }
+.week-plan__days { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 4px; }
+.week-plan__day {
+  width: 100%; min-height: 44px; display: grid; grid-template-columns: minmax(84px, auto) 44px minmax(0, 1fr); align-items: center; gap: 8px;
+  padding: 6px 10px; font: inherit; font-size: 16px; text-align: left; color: var(--text-1); background: transparent;
+  border: 1px solid var(--p-line-2, #3a3a3a); border-radius: 0; cursor: pointer;
+}
+.week-plan__day:disabled { cursor: default; color: var(--text-2); }
+.week-plan__day[data-today] { border-color: var(--text-1); font-weight: 600; }
+.week-plan__day[data-rest] .week-plan__what { color: var(--text-2); }
+.week-plan__day:focus-visible { outline: 2px solid var(--focus, var(--text-1)); outline-offset: 2px; }
+.week-plan__when { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.week-plan__when b { display: block; font-size: 12px; letter-spacing: .06em; }
+.week-plan__work { font-size: 12px; letter-spacing: .06em; color: var(--text-2); }
+.week-plan__what { overflow-wrap: break-word; min-width: 0; }
+.week-plan__choices { border: 0; margin: 8px 0; padding: 0; display: grid; gap: 2px; }
