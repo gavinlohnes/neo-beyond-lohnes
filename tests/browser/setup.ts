@@ -17,6 +17,9 @@ import "../../src/ui/cc/suitPolish.css";
 import "../../src/ui/styles/fonts.ts";
 
 import Dexie from "dexie";
+// GRAYSON-FLAKES-003: focus moves in effects and on the next frame: wait for it, never read it straight after an action.
+// Read focus with `await expect.poll(() => document.activeElement…)` or `expect.element(x).toHaveFocus()`; focus a
+// control yourself with `focusAfterSettle` (helpers/focus.ts) on a screen that moves focus when it opens.
 import { afterEach, beforeEach, expect, vi } from "vitest";
 import { cleanup } from "vitest-browser-react";
 

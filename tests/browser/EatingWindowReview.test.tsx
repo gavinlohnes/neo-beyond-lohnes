@@ -150,7 +150,7 @@ describe("GRAYSON-WINDOW-REVIEW-001", () => {
     await shot("why-sheet", document.querySelector("[data-why-window]") as HTMLElement, [320, 360, 412]);
     await userEvent.keyboard("{Escape}");
     await expect.poll(() => document.querySelector("[data-why-window]")).toBeNull();
-    expect(document.activeElement).toBe(why.element());
+    await expect.poll(() => document.activeElement).toBe(why.element());
   });
 
   it("CHECK HOW IT'S GOING runs a Try; at the end the review shows its lines, a guardrail, and END turns the window off", async () => {

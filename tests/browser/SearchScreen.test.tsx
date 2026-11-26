@@ -191,7 +191,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     await input.fill("deck");
     await expect.element(screen.getByRole("status")).toHaveTextContent("Searching…");
     await expect.element(screen.getByRole("alert")).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(input.element());
+    await expect.poll(() => document.activeElement).toBe(input.element());
     results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 
@@ -199,7 +199,7 @@ describe("SearchScreen (real browser) — accessibility", () => {
     deferred.reject(new Error("boom"));
     await expect.element(screen.getByRole("status")).toHaveTextContent("Search failed. Try again.");
     await expect.element(screen.getByRole("alert")).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(input.element());
+    await expect.poll(() => document.activeElement).toBe(input.element());
     results = await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } });
     expect(results.violations).toEqual([]);
 
@@ -207,14 +207,14 @@ describe("SearchScreen (real browser) — accessibility", () => {
     spy.mockResolvedValueOnce([]);
     await input.fill("nothing-matches-this");
     await expect.element(screen.getByRole("status")).toHaveTextContent('No matches for "nothing-matches-this".');
-    expect(document.activeElement).toBe(input.element());
+    await expect.poll(() => document.activeElement).toBe(input.element());
 
     // Cleared — back to the initial polite status.
     await input.fill("");
     await expect
       .element(screen.getByRole("status"))
       .toHaveTextContent('Try "16 oz water", "protein left?", "week ahead" or "bench".');
-    expect(document.activeElement).toBe(input.element());
+    await expect.poll(() => document.activeElement).toBe(input.element());
   });
 });
 
