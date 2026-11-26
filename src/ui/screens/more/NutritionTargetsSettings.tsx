@@ -8,6 +8,7 @@ import { LineIcon } from "../../icons/LineIcon";
 import type { NutritionTargets } from "../../../domain/common/types";
 import { getNutritionTargets, getTwoWeekDayTargetProjection } from "../../../application/nutritionTargetQueries";
 import { saveNutritionTargets } from "../../../application/nutritionTargetCommands";
+import { readFitsNowOn, writeFitsNowOn } from "../../../application/fitsNowQueries";
 import { averageDayTargets, balancedOffAdjustment } from "../../../engine/dayTarget";
 import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
@@ -65,6 +66,7 @@ export function NutritionTargetsSettings() {
   const [waterInput, setWaterInput] = useState("");
   const [dayTargets, setDayTargets] = useState<NutritionTargets["dayTargets"]>({ ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
   // The two weeks' kinds and lifts; the line and BALANCE read the steppers' current values against them (#736 review B1).
+  const [fitsNowOn, setFitsNowOn] = useState(readFitsNowOn);
   const [projection, setProjection] = useState<Awaited<ReturnType<typeof getTwoWeekDayTargetProjection>> | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
@@ -232,6 +234,11 @@ export function NutritionTargetsSettings() {
             className="input"
           />
         </div>
+        {/* GRAYSON-FITS-NOW-001: on by default; this phone's choice, saved as soon as it's ticked (travels with backups). */}
+        <label className="meta" style={{ display: "flex", gap: 10, alignItems: "center", minHeight: 44 }}>
+          <input type="checkbox" checked={fitsNowOn} onChange={(e) => { writeFitsNowOn(e.target.checked); setFitsNowOn(e.target.checked); }} />
+          Show Fits now: your saved meals that fit what's left of today
+        </label>
         <fieldset style={{ border: "1px solid var(--border-subtle)", padding: 12 }}>
           <legend className="tool-label">TARGETS BY KIND OF DAY</legend>
           <label className="meta" style={{ display: "flex", gap: 10, alignItems: "center" }}>

@@ -22,6 +22,7 @@ import { buildPlanningContext } from "../../application/alfred/personalContext";
 import { describeProposal, type AlfredProposal } from "../../application/alfred/alfredActions";
 import type { ProposalContext } from "../../application/alfred/contextActions";
 import { getActiveDay, getHydrationEntries } from "../../application/queries";
+import { FitsNowBlock } from "./FitsNowBlock";
 import { getSavedMeals, getLikelySavedMeals } from "../../application/nutritionQueries";
 import { logMeal, logManualMeal, updateSavedMeal, archiveSavedMeal, voidMealLog, createSavedMeal, MAX_SERVINGS } from "../../application/nutritionCommands";
 import { getFoodDiary, type FoodDiary } from "../../application/foodDiaryQueries";
@@ -311,6 +312,13 @@ export function RecordSheets({ mealRequest, correctionRequest, target, open, clo
           {target === "meal" && mealTalkSaved && <p role="status" className="meta">{mealTalkSaved}</p>}
           {target === "meal" && mealMissed.length > 0 && <p className="meta" data-didnt-catch>Didn't catch: {mealMissed.join("; ")}</p>}
           {readState === "loading" ? <p role="status">Reading meals…</p> : readState === "error" ? <p role="alert">Could not read your meals.<button type="button" className="btn-secondary" onClick={() => setRetry((key) => key + 1)}>RETRY MEALS</button></p> : <>
+            {/* GRAYSON-FITS-NOW-001: his own meals that fit what's left of today, above LIKELY NOW; LOG logs one serving now. */}
+            {target === "meal" && !query.trim() && !chosenDay && <FitsNowBlock busy={busy} refreshKey={retry} onLog={(mealId) => void commit(async () => {
+              const day = await getActiveDay();
+              if (!day) throw new Error("Start your day first.");
+              const result = await logMeal(day.id, mealId, 1); resetWhen();
+              return mealReceipt(day.id, result.eventId, result.name);
+            })} />}
             <h3>{target === "myMeals" ? "MY MEALS" : query.trim() ? "MATCHES" : "LIKELY NOW"}</h3>
             {(target === "myMeals" && !query.trim() ? meals : displayed).map((meal) => <div className="record-meal-row" key={meal.id}>
               <button type="button" className="btn-secondary" disabled={busy} aria-label={`Servings for ${meal.name}`} onClick={() => chooseMeal(meal)}><strong>{meal.name}</strong><span className="meta">{meal.calories} kcal · {meal.proteinG} g protein · 1 serving</span></button>
