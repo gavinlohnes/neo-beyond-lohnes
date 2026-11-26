@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { latestReviewWeek } from "../../src/engine/weeklyReview";
-import { isMonthlyReviewWeek, measurementChanges, monthlyWindow, photoComparisons, weeksBetween, weeksUntilMonthly, windowWeightChange } from "../../src/engine/monthlyReview";
+import { isMonthlyReviewWeek, measurementChanges, monthlyWindow, photoComparisons, shortFoodDays, weeksBetween, weeksUntilMonthly, windowWeightChange } from "../../src/engine/monthlyReview";
 import type { ReviewRow } from "../../src/engine/reviewOverview";
 
 const weekAt = (date: Date) => latestReviewWeek(date);
@@ -65,5 +65,17 @@ describe("monthly body composition", () => {
     ];
     const pairs = photoComparisons(photos, "2026-10-12", "2026-11-08", ["FRONT", "SIDE", "BACK"]);
     expect(pairs.map((pair) => [pair.pose, pair.earlier.id, pair.later.id])).toEqual([["FRONT", "f0", "f1"], ["SIDE", "s1", "s2"]]);
+  });
+});
+
+describe("GRAYSON-MISSION-REVIEW-001 slice A: days that look short", () => {
+  const d = (id: string, kcal: number, day: number) => ({ beyondDayId: id, livedDayStart: new Date(2026, 10, day, 16, 30).toISOString(), kcal });
+  it("suggests days under half the median logged day, oldest first, and skips days he has answered", () => {
+    const days = [d("a", 2000, 1), d("b", 2100, 2), d("c", 900, 3), d("d", 1999, 4), d("e", 1100, 5), d("f", 400, 6)];
+    // Median of 400, 900, 1100, 1999, 2000, 2100 is 1549.5, half 774.75; adding 500 makes it 1100, half 550.
+    expect(shortFoodDays(days, new Set()).map((x) => x.beyondDayId)).toEqual(["f"]);
+    expect(shortFoodDays([...days, d("g", 500, 7)], new Set()).map((x) => x.beyondDayId)).toEqual(["f", "g"]);
+    expect(shortFoodDays([...days, d("g", 500, 7)], new Set(["f"])).map((x) => x.beyondDayId)).toEqual(["g"]);
+    expect(shortFoodDays([], new Set())).toEqual([]);
   });
 });

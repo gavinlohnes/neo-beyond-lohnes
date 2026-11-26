@@ -21,6 +21,11 @@ import type { DaySummary } from "./dayLedger";
  * Only finished BeyondDays with at least one meal logged count as intake:
  * today is still being eaten, and a day with no meals logged is missing,
  * never zero. It assumes the logged days' meals were all logged, and says so.
+ *
+ * GRAYSON-MISSION-REVIEW-001 slice A (HONEST-BURN, Gavin 2026-11-24): a day he
+ * marked "Not fully logged" leaves intake too (its weigh-ins still count), and
+ * the readout says how many were left out. With no marks the readout is exactly
+ * what it was.
  */
 export const EXPENDITURE_WINDOW_DAYS = 28;
 export const MIN_INTAKE_DAYS = 14;
@@ -49,6 +54,8 @@ export type ExpenditureReadout =
       /** Fitted weight change per week, lb (negative = losing). */
       weeklyChangeLbs: number;
       weighIns: number;
+      /** Days he marked not fully logged that would otherwise have counted; absent when none. */
+      leftOut?: number;
     }
   | {
       kind: "WAITING";
@@ -59,12 +66,15 @@ export type ExpenditureReadout =
       spanOk: boolean;
       /** Enough data, but the weight moves around too much for a useful range. */
       tooNoisy: boolean;
+      leftOut?: number;
     };
 
 export function projectExpenditure(
   summaries: readonly DaySummary[],
   weighIns: readonly ExpenditureWeighIn[],
   now: Date,
+  /** beyondDayIds he marked not fully logged. */
+  partialDayIds: ReadonlySet<string> = new Set(),
 ): ExpenditureReadout {
   const end = now.getTime();
   const start = end - EXPENDITURE_WINDOW_DAYS * DAY_MS;
@@ -73,7 +83,10 @@ export function projectExpenditure(
     return t > start && t <= end;
   };
 
-  const intake = summaries.filter((d) => d.endedAt !== undefined && d.kcal !== undefined && inWindow(d.startedAt)).map((d) => d.kcal!);
+  const counted = summaries.filter((d) => d.endedAt !== undefined && d.kcal !== undefined && inWindow(d.startedAt));
+  const intake = counted.filter((d) => !partialDayIds.has(d.beyondDayId)).map((d) => d.kcal!);
+  const leftOut = counted.length - intake.length;
+  const left = leftOut ? { leftOut } : {};
   const weights = weighIns.filter((w) => inWindow(w.recordedAt));
   const times = weights.map((w) => new Date(w.recordedAt).getTime());
   const spanOk = weights.length > 0 && (Math.max(...times) - Math.min(...times)) / DAY_MS >= MIN_WEIGH_IN_SPAN_DAYS;
@@ -85,6 +98,7 @@ export function projectExpenditure(
     weighIns: { have: weights.length, need: MIN_WEIGH_INS },
     spanOk,
     tooNoisy,
+    ...left,
   });
   if (intake.length < MIN_INTAKE_DAYS || weights.length < MIN_WEIGH_INS || !spanOk) return waiting(false);
 
@@ -124,5 +138,6 @@ export function projectExpenditure(
     avgIntakeKcal: Math.round(avgIntake),
     weeklyChangeLbs: Math.round(slope * 7 * 10) / 10,
     weighIns: weights.length,
+    ...left,
   };
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getHealthDay, healthDayStart, offsetHealthDay, type HealthDay, type HealthHistoryDestination } from "../../../application/healthRecordQueries";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
 import { HealthMeasure, describeRecord } from "./DailyHealthRecord";
+import { NotFullyLoggedRow } from "./NotFullyLoggedRow";
 import type { SourceSelection } from "./HealthSources";
 import { formatDuration } from "./bodyScreenCopy";
 import "./connectedHealth.css";
@@ -70,6 +71,11 @@ export function HealthDayBrowser({ selected, onSelect, onExplore, refreshKey, vi
           <HealthMeasure label="CALORIES" value={sum("MEAL", "calories")} metric="calories" onExplore={(metric) => onExplore(metric, record?.days.at(-1)?.id)} />
           <HealthMeasure label="PROTEIN" value={sum("PROTEIN", "protein")} metric="protein" onExplore={(metric) => onExplore(metric, record?.days.at(-1)?.id)} />
         </div>
+        {/* GRAYSON-MISSION-REVIEW-001 slice A: under the day's food, "Not fully logged" (one per recorded day segment). */}
+        {record.days.map((day, index) => <div key={day.id}>
+          {record.days.length > 1 && <p className="meta">Segment {index + 1}</p>}
+          <NotFullyLoggedRow dayId={day.id} disabled={disabled} />
+        </div>)}
         <div className="readout-grid health-readings">
           <HealthMeasure label="WATER" value={sum("WATER", "water")} metric="water" onExplore={(metric) => onExplore(metric, record?.days.at(-1)?.id)} />
           <HealthMeasure label="RECORDED WEIGHT" value={weights.length ? `${weights.at(-1)!.effectiveWeightLbs} lbs` : "Not recorded"} metric="weight" onExplore={(metric) => onExplore(metric, record?.days.at(-1)?.id)} detail={weights.length > 1 ? `Latest of ${weights.length} weigh-ins` : undefined} />

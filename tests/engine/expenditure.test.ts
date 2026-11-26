@@ -80,3 +80,28 @@ describe("projectExpenditure", () => {
     expect(projectExpenditure(old, weighIns(0.5), NOW)).toMatchObject({ kind: "WAITING", intakeDays: { have: 0 } });
   });
 });
+
+describe("GRAYSON-MISSION-REVIEW-001 slice A: Not fully logged", () => {
+  it("with no marks, the readout is exactly today's (no new field)", () => {
+    const before = projectExpenditure(twentyDays, weighIns(0.5), NOW);
+    expect(projectExpenditure(twentyDays, weighIns(0.5), NOW, new Set())).toStrictEqual(before);
+    expect("leftOut" in before).toBe(false);
+  });
+
+  it("a marked day leaves intake and the day count, and the readout says so", () => {
+    // Two short days pull the average down; marked, they leave it.
+    const days = [...twentyDays.slice(0, 18), day(19, 600), day(20, 500)];
+    const all = projectExpenditure(days, weighIns(0.5), NOW);
+    const marked = projectExpenditure(days, weighIns(0.5), NOW, new Set(["d19", "d20"]));
+    expect(all).toMatchObject({ kind: "ESTIMATE", intakeDays: 20 });
+    expect(marked).toMatchObject({ kind: "ESTIMATE", intakeDays: 18, leftOut: 2, avgIntakeKcal: 2000 });
+    if (all.kind === "ESTIMATE" && marked.kind === "ESTIMATE") expect(marked.lowKcal).toBeGreaterThan(all.lowKcal);
+  });
+
+  it("marks can send it back to WAITING, and a mark on a day that didn't count changes nothing", () => {
+    const fourteen = twentyDays.slice(0, MIN_INTAKE_DAYS);
+    expect(projectExpenditure(fourteen, weighIns(0.5), NOW, new Set(["d1"]))).toMatchObject({ kind: "WAITING", intakeDays: { have: MIN_INTAKE_DAYS - 1 }, leftOut: 1 });
+    expect(projectExpenditure(twentyDays, weighIns(0.5), NOW, new Set(["not-a-day"]))).toStrictEqual(projectExpenditure(twentyDays, weighIns(0.5), NOW));
+  });
+});
+

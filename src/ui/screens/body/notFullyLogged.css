@@ -1,0 +1,7 @@
+/* GRAYSON-MISSION-REVIEW-001 slice A: "Not fully logged" under a day's food. */
+.health-partial { margin: 8px 0 12px; }
+.health-partial__switch { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
+.health-partial__switch input { width: 24px; height: 24px; }
+.health-partial > p { margin: 2px 0 0; }
+.health-partial__undo { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.health-partial__undo button { width: auto; min-height: 44px; padding-inline: 16px; }
