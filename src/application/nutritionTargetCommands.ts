@@ -33,6 +33,8 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   const calorieFloorKcal = reviewTarget("calorieFloorKcal");
   const waterTargetOz = reviewTarget("waterTargetOz");
   const dayTargets = parsed.dayTargets ?? existing?.dayTargets;
+  // GRAYSON-PROTEIN-HEADSUP-001: carried through every other save, like dayTargets.
+  const proteinHeadsUp = parsed.proteinHeadsUp ?? existing?.proteinHeadsUp;
   const record: NutritionTargets = {
     id: "current",
     ...(effectiveCalorieTarget !== undefined ? { calorieTargetKcal: effectiveCalorieTarget } : {}),
@@ -44,6 +46,7 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
     ...(calorieFloorKcal !== undefined ? { calorieFloorKcal } : {}),
     ...(waterTargetOz !== undefined ? { waterTargetOz } : {}),
     ...(dayTargets !== undefined ? { dayTargets } : {}),
+    ...(proteinHeadsUp !== undefined ? { proteinHeadsUp } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

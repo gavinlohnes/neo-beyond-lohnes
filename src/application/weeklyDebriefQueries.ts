@@ -6,6 +6,7 @@ import { db } from "../persistence/db";
 import { getWeeklyDashboard, type WeeklyDashboard } from "./weeklyDashboardQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
+import { getProteinHeadsUp } from "./proteinPatternQueries";
 import { getDayCalorieTarget, getNutritionTargets, getEffectiveProteinTargetG } from "./nutritionTargetQueries";
 import { getUndoneSetIds } from "./trainQueries";
 import { getSchedulePattern } from "./queries";
@@ -47,7 +48,9 @@ export async function getWeekInNumbers(current: WeeklyDashboard) {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   // WEEK-COMPARE-001: the week before, from the read above, for a side-by-side line. Null when it has no records.
   const before = previous.headline.recordedDays > 0 ? { start: previous.week.start, sessions: previous.headline.sessions, ...deriveWeekInNumbers(previous.rows, []) } : null;
-  return { ...deriveWeekInNumbers(current.rows, previous.rows), week: current.week, before, muscles,
+  // GRAYSON-PROTEIN-HEADSUP-001: one sentence when the pattern stood at the week's end (facts only).
+  const proteinHeadsUp = (await getProteinHeadsUp(new Date(current.week.end), new Set(), { ignoreQuiet: true }).catch(() => null))?.line ?? null;
+  return { ...deriveWeekInNumbers(current.rows, previous.rows), week: current.week, before, muscles, proteinHeadsUp,
     // Off, the plain target as before; on, the average of this week's own day targets.
     targets: { calories: targets.dayTargets?.on ? weekTargetAverage : targets.calorieTargetKcal, proteinG, byDay: !!targets.dayTargets?.on },
     training: { sessions: sessionIds.size, sets: sets.length, volume: workoutVolumeLbs(sets), records: current.records.length, days: new Set(days.filter((d) => d.workouts.some((s) => sessionIds.has(s.sessionId))).map((d) => d.livedDayStart)).size },
