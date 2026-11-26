@@ -20,7 +20,7 @@ import {
   type RoutineEditOp,
 } from "../../../domain/workout/routineEdit";
 import type { ExercisePrescription } from "../../../domain/workout/types";
-import { DEFAULT_REST_SECONDS } from "../../../application/restMemory";
+import { restSecondsFor } from "../../../application/restMemory";
 import { feedback } from "../../feel/feedback";
 import { describeError } from "../../errorMessage";
 import "./routineEditor.css";
@@ -158,12 +158,14 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
   if (picker) {
     const swapping = picker.swapIndex !== null ? exercises[picker.swapIndex] : undefined;
     return <ExercisePicker title={swapping ? `Swap ${swapping.name} for…` : "Add an exercise"} taken={new Set(exercises.flatMap((ex) => [ex.exerciseId, `name:${ex.name.trim().toLowerCase()}`]))}
-      onCancel={() => setPicker(null)}
+      onCancel={() => { pendingFocus.current = picker.swapIndex !== null ? `${rowKey(exercises[picker.swapIndex]!)}-menu` : `${id}-add`; setPicker(null); }}
       onPick={(choice) => {
         const pick = { exerciseId: choice.exerciseId, name: choice.name, repRangeLow: choice.repRangeLow, repRangeHigh: choice.repRangeHigh, incrementLbs: choice.incrementLbs };
         setPicker(null);
-        if (picker.swapIndex !== null) apply({ kind: "SWAP", index: picker.swapIndex, with: pick });
-        else apply({ kind: "ADD", exercise: pick });
+        // Focus returns to the exercise just placed (review of #730), not the page.
+        const placed = `${rowKey({ ...pick, sets: 0 })}-menu`;
+        if (picker.swapIndex !== null) apply({ kind: "SWAP", index: picker.swapIndex, with: pick }, placed);
+        else apply({ kind: "ADD", exercise: pick }, placed);
       }} />;
   }
 
@@ -179,6 +181,8 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
       {exercises.map((ex, i) => {
         const key = rowKey(ex);
         const rest = ex.restSeconds;
+        // "Usual" steps from his remembered rest for this exercise (review of #730), not a fixed default.
+        const base = rest ?? restSecondsFor(ex.exerciseId);
         const step = (change: FieldChange) => apply({ kind: "SET", index: i, change });
         return <li key={ex.exerciseId} className="routine-row" data-routine-row={ex.exerciseId}>
           <div className="routine-row__head">
@@ -210,8 +214,8 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
               onLess={ex.repRangeHigh > ex.repRangeLow ? () => step({ repRangeHigh: ex.repRangeHigh - 1 }) : undefined}
               onMore={ex.repRangeHigh < ROUTINE_REPS_MAX ? () => step({ repRangeHigh: ex.repRangeHigh + 1 }) : undefined} />
             <Stepper label="Rest" value={rest === undefined ? "Usual" : formatRest(rest)} name={ex.name} disabled={busy} unit="15 seconds"
-              onLess={(rest ?? DEFAULT_REST_SECONDS) > ROUTINE_REST_MIN_SECONDS ? () => step({ restSeconds: clamp((rest ?? DEFAULT_REST_SECONDS) - REST_STEP, ROUTINE_REST_MIN_SECONDS, ROUTINE_REST_MAX_SECONDS) }) : undefined}
-              onMore={(rest ?? DEFAULT_REST_SECONDS) < ROUTINE_REST_MAX_SECONDS ? () => step({ restSeconds: clamp((rest ?? DEFAULT_REST_SECONDS) + REST_STEP, ROUTINE_REST_MIN_SECONDS, ROUTINE_REST_MAX_SECONDS) }) : undefined} />
+              onLess={base > ROUTINE_REST_MIN_SECONDS ? () => step({ restSeconds: clamp(base - REST_STEP, ROUTINE_REST_MIN_SECONDS, ROUTINE_REST_MAX_SECONDS) }) : undefined}
+              onMore={base < ROUTINE_REST_MAX_SECONDS ? () => step({ restSeconds: clamp(base + REST_STEP, ROUTINE_REST_MIN_SECONDS, ROUTINE_REST_MAX_SECONDS) }) : undefined} />
           </div>
           <div className="routine-row__extras">
             {rest !== undefined && <button type="button" className="btn-secondary routine-inline" disabled={busy} onClick={() => step({ restSeconds: undefined })}
@@ -222,7 +226,7 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
         </li>;
       })}
     </ol>
-    <button type="button" className="btn-secondary" disabled={busy} onClick={() => setPicker({ swapIndex: null })}>ADD EXERCISE</button>
+    <button type="button" id={`${id}-add`} className="btn-secondary" disabled={busy} onClick={() => setPicker({ swapIndex: null })}>ADD EXERCISE</button>
     {problem && <p className="meta meta--error" role="alert">{problem}</p>}
     <div className="routine-editor__acts">
       <button type="button" className="btn-primary" disabled={busy} onClick={save}>SAVE</button>

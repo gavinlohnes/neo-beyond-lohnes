@@ -49,7 +49,8 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await submitCheckIn(day.id, GREEN);
     const screen = await render(<TrainScreen />);
     await expect.element(screen.getByRole("button", { name: "Edit workout A" })).toBeVisible();
-    await axeClean("workout card", document.querySelector(".command-surface")!);
+    // The pair this change adds (the card's own START is covered by TRAIN's tests; it fades in).
+    await axeClean("EDIT and ROUTINES", document.querySelector(".train-routine-acts")!);
     await shot("360-card", document.querySelector(".command-surface"));
     await screen.getByRole("button", { name: "Edit workout A" }).click();
     await expect.element(screen.getByRole("heading", { name: "Edit Workout A" })).toHaveFocus();
@@ -121,7 +122,8 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await axeClean("picker", picker);
     await noOverflow("picker", picker, "picker");
     await screen.getByRole("button", { name: /^Cable Fly/ }).click();
-    expect(rows().at(-1)).toMatch(/.+/);
+    // Focus returns to the exercise just added, not the page.
+    await expect.element(screen.getByRole("button", { name: "More for Cable Fly" })).toHaveFocus();
     await screen.getByRole("button", { name: "More for Leg Press" }).click();
     await screen.getByRole("button", { name: "SWAP" }).click();
     await screen.getByRole("searchbox", { name: "Search" }).fill("hack");

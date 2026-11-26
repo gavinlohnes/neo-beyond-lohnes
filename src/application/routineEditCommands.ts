@@ -75,6 +75,10 @@ async function commit(templateId: string, next: RoutineVersion, reason: RoutineE
         || (m.home?.templateId === templateId && sameSnapshot(before, m.home.snapshot))
         || (m.short?.templateId === templateId && sameSnapshot(before, m.short.snapshot)));
       if (linked) {
+        // A HOME or SHORT workout in progress names the revision it started under; a new one would make it read as
+        // conflicting evidence when it ends. Nothing is written until it's finished (review of #730).
+        const live = (await db.workoutSessions.where("status").equals("ACTIVE").toArray()).find((s) => s.programmeContext?.programmeRevisionId === revision.id);
+        if (live) throw fail("ROUTINE_WORKOUT_IN_PROGRESS", `Finish your ${live.programmeContext!.form} workout first; this routine is in your programme. Nothing changed.`);
         if (programme.members.some((m) => m.home?.templateId === templateId) && !after.exercises.every((ex) => ex.exerciseId.startsWith("home-"))) {
           throw fail("ROUTINE_HOME_ONLY", "This is a HOME routine in your programme, so it keeps to its bodyweight exercises. Nothing changed.");
         }
@@ -135,9 +139,11 @@ export function undoRoutineEdit(eventId: string): Promise<RoutineEditResult> {
     const entries = await getRoutineEditEntries();
     const entry = entries.find((e) => e.eventId === eventId);
     if (!entry) throw fail("ROUTINE_UNDO_STALE", "That change can't be found. Nothing changed.");
-    if (routineEditState(entry.payload.templateId, entries).latest?.eventId !== eventId) {
-      throw fail("ROUTINE_UNDO_STALE", "The routine has changed since. Edit it directly instead.");
-    }
+    const stale = () => fail("ROUTINE_UNDO_STALE", "The routine has changed since. Edit it directly instead.");
+    if (routineEditState(entry.payload.templateId, entries).latest?.eventId !== eventId) throw stale();
+    // Changed outside the editor since (review of #730): UNDO would overwrite that change, so it's refused.
+    const { version } = await currentVersion(entry.payload.templateId);
+    if (!sameRoutine(version, { exercises: entry.payload.exercises, ...(entry.payload.name ? { name: entry.payload.name } : {}) })) throw stale();
     return commit(entry.payload.templateId, entry.payload.previous, "UNDO", eventId);
   });
 }

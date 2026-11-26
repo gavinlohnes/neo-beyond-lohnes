@@ -9,7 +9,9 @@ import { getCustomTemplates, getSessionRoutinePoint, resolveTemplateExercises } 
 import { resetRoutine, saveRoutineEdit, undoRoutineEdit } from "../../src/application/routineEditCommands";
 import { getRoutineExerciseChoices, getRoutineViews } from "../../src/application/routineEditQueries";
 import { getTrainingProgramme, saveTrainingProgramme } from "../../src/application/trainingProgramme";
-import { buildSequenceProgramme, getProgrammeView } from "../../src/application/trainingProgrammeQueries";
+import { buildSequenceProgramme, getProgrammeView, linkSequenceHomeForms } from "../../src/application/trainingProgrammeQueries";
+import { GRAYSON_HOME_TEMPLATE_INPUTS } from "../../src/domain/workout/homeTemplates";
+import type { SequenceTrainingProgramme } from "../../src/domain/workout/trainingProgramme";
 import { restStartSeconds, rememberRestAdjustment, restSecondsFor } from "../../src/application/restMemory";
 import { getExerciseNames } from "../../src/application/exerciseLibraryQueries";
 import { applyAnyRestore, previewAnyRestore } from "../../src/persistence/restore";
@@ -84,8 +86,11 @@ describe("A, B and C through an override", () => {
     // Adding the chest press back offers A's own movement (its id and history), not the library's twin.
     const back = (await getRoutineExerciseChoices()).filter((c) => c.name === "Machine Chest Press");
     expect(back.map((c) => c.exerciseId)).toEqual(["machine-chest-press"]);
-    // History still names it, and the new exercise has its library name.
-    expect((await getExerciseNames())["lib-barbell-bench-press"]).toBe("Barbell Bench Press");
+    // History names the library exercise once a routine holds it; unused library twins stay out of search.
+    const names = await getExerciseNames();
+    expect(names["lib-barbell-bench-press"]).toBe("Barbell Bench Press");
+    expect(names["lib-machine-chest-press"]).toBeUndefined();
+    expect(Object.values(names).filter((n) => n === "Machine Chest Press")).toHaveLength(1);
   });
 });
 
@@ -185,6 +190,38 @@ describe("the programme stays in step", () => {
     const result = await saveRoutineEdit(templates[1]!.id, { exercises: applyRoutineEdit(templates[1]!.exercises, { kind: "REMOVE", index: 0 }) });
     expect(result.programmeUpdated).toBe(false);
     expect((await getProgrammeView()).sequence?.members[1]?.issue).toBe("CHANGED");
+  });
+});
+
+describe("review of #730", () => {
+  it("a programme routine can't be saved while a linked HOME workout is in progress; after it ends, it saves in step", async () => {
+    const templates = await createCustomTemplateSet(["A", "B", "C"].map((key) => ({ name: `Synthetic ${key}`, exercises: WORKOUT_TEMPLATES[key]!.exercises })));
+    const activation = await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+    const homes = await createCustomTemplateSet(GRAYSON_HOME_TEMPLATE_INPUTS);
+    const linked = await saveTrainingProgramme(linkSequenceHomeForms(activation.programme as SequenceTrainingProgramme, homes.map((h) => h.id) as [string, string, string], homes), activation.id);
+    const day = await startDay();
+    const context = { programmeRevisionId: linked.id!, memberKey: "A" as const, parentTemplateId: templates[0]!.id, form: "HOME" as const };
+    const home = await startWorkout(day.id, homes[0]!.id, "STANDARD", { overrideConfirmed: true, programmeContext: context });
+    const events = await db.events.count();
+    await expect(saveRoutineEdit(templates[1]!.id, { exercises: applyRoutineEdit(templates[1]!.exercises, { kind: "REMOVE", index: 0 }) })).rejects.toThrow("Finish your HOME workout first");
+    expect(await db.events.count()).toBe(events);
+    // A routine outside the programme still saves.
+    await saveRoutineEdit("C", { exercises: applyRoutineEdit(structuredClone(WORKOUT_TEMPLATES.C!.exercises), { kind: "REMOVE", index: 0 }) });
+
+    await logSet(day.id, home.id, homes[0]!.exercises[0]!.exerciseId, 1, 0, 20);
+    await completeWorkout(day.id, home.id, "STANDARD", "COMPLETED");
+    expect((await getProgrammeView()).sequence).toMatchObject({ status: "READY", nextMember: { key: "B" } });
+    const saved = await saveRoutineEdit(templates[1]!.id, { exercises: applyRoutineEdit(templates[1]!.exercises, { kind: "REMOVE", index: 0 }) });
+    expect(saved.programmeUpdated).toBe(true);
+    expect((await getProgrammeView()).sequence).toMatchObject({ status: "READY", nextMember: { key: "B" } });
+  });
+
+  it("UNDO is refused when the routine was changed outside the editor since", async () => {
+    const mine = await createCustomTemplate({ name: "Pull", exercises: WORKOUT_TEMPLATES.B!.exercises });
+    const edit = await saveRoutineEdit(mine.id, { exercises: applyRoutineEdit(mine.exercises, { kind: "REMOVE", index: 0 }) });
+    await updateCustomTemplate(mine.id, { name: "Renamed elsewhere" });
+    await expect(undoRoutineEdit(edit.eventId)).rejects.toThrow("ROUTINE_UNDO_STALE");
+    expect((await getCustomTemplates())[0]!.name).toBe("Renamed elsewhere");
   });
 });
 
