@@ -3,13 +3,16 @@ import {
   addExerciseToSession,
   getAddChoices,
   getChangesToKeep,
+  getOneOffRoutineDraft,
   getSwapSuggestions,
+  saveSessionAsRoutine,
   keepWorkoutChanges,
   removeExerciseFromSession,
   swapExerciseInSession,
   type SwapOptions,
 } from "../../../application/workoutChanges";
 import { undoRoutineEdit } from "../../../application/routineEditCommands";
+import { archiveCustomTemplate } from "../../../application/customTemplateCommands";
 import type { RoutineExerciseChoice } from "../../../application/routineEditQueries";
 import type { ExercisePrescription } from "../../../domain/workout/types";
 import { feedback } from "../../feel/feedback";
@@ -130,6 +133,44 @@ export function KeepChangesLine({ sessionId, routineLabel }: { sessionId: string
       {kept && <button type="button" className="btn-secondary routine-inline" disabled={busy}
         onClick={() => void run(async () => { await undoRoutineEdit(kept); setKept(null); setState("ASK"); })}>UNDO</button>}</p>}
     {state === "TODAY" && <p className="meta" role="status">Just today. {routineLabel} stays as it was.</p>}
+    {error && <p className="meta meta--error" role="alert">{error}</p>}
+  </div>;
+}
+
+/**
+ * GRAYSON-ONE-OFF-001: SAVE AS ROUTINE on a one-off's finish summary. Two taps (SAVE AS ROUTINE, SAVE) with the default
+ * name; UNDO archives the new routine. It isn't added to his programme.
+ */
+export function SaveAsRoutineLine({ sessionId }: { sessionId: string }) {
+  const [draftName, setDraftName] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [state, setState] = useState<"IDLE" | "NAMING" | "SAVED">("IDLE");
+  const [saved, setSaved] = useState<{ templateId: string; name: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const id = useId();
+  useEffect(() => { void getOneOffRoutineDraft(sessionId).then((d) => { setDraftName(d?.name ?? null); setName(d?.name ?? ""); }).catch(() => setDraftName(null)); }, [sessionId]);
+  useEffect(() => { if (state === "NAMING") nameRef.current?.focus(); }, [state]);
+  if (!draftName) return null;
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true); setError(null);
+    try { await fn(); } catch (e) { setError(describeError(e, "That didn't save. Nothing changed.")); } finally { setBusy(false); }
+  };
+  return <div className="train-keep-changes" role="group" aria-label="Save this workout as a routine" data-save-routine>
+    {state === "IDLE" && <button type="button" className="btn-secondary" disabled={busy} onClick={() => setState("NAMING")}>SAVE AS ROUTINE</button>}
+    {state === "NAMING" && <>
+      <label className="routine-field" htmlFor={`${id}-name`}>Routine name</label>
+      <input id={`${id}-name`} ref={nameRef} type="text" className="input" value={name} disabled={busy} onChange={(e) => setName(e.target.value)} />
+      <div className="routine-list__acts">
+        <button type="button" className="btn-secondary" disabled={busy}
+          onClick={() => void run(async () => { const result = await saveSessionAsRoutine(sessionId, name); feedback("MEDIUM"); setSaved({ templateId: result.templateId, name: name.trim() || draftName }); setState("SAVED"); })}>SAVE</button>
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => setState("IDLE")}>CANCEL</button>
+      </div>
+    </>}
+    {state === "SAVED" && saved && <p className="routine-saved" role="status">{saved.name} is in your routines.{" "}
+      <button type="button" className="btn-secondary routine-inline" disabled={busy}
+        onClick={() => void run(async () => { await archiveCustomTemplate(saved.templateId); setSaved(null); setState("IDLE"); })}>UNDO</button></p>}
     {error && <p className="meta meta--error" role="alert">{error}</p>}
   </div>;
 }

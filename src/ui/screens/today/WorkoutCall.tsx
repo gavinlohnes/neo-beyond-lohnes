@@ -127,7 +127,11 @@ export function WorkoutCall({
       <div className="equipment-row workout-call workout-call--quiet">
         <p className="tool-label" style={{ marginBottom: 4 }}>WORKOUT</p>
         <p className="card-title" style={{ margin: 0 }}>Not today. {label} stays next.</p>
-        <button type="button" className="btn-secondary" disabled={busy} onClick={question.change}>CHANGE</button>
+        <div className="workout-call__starts">
+          <button type="button" className="btn-secondary" disabled={busy} onClick={question.change}>CHANGE</button>
+          {/* GRAYSON-ONE-OFF-001: a rest day still has an empty workout one tap away; it never moves the turn. */}
+          {onOpenTrain && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenTrain("START_EMPTY")}>START EMPTY</button>}
+        </div>
       </div>
     );
   }
@@ -140,7 +144,13 @@ export function WorkoutCall({
         <p className="card-title" style={{ margin: 0 }}>
           {tonight.planned === true ? "Planned" : "Later"} · {label}{time ? ` · ${time}` : ""}
         </p>
-        {onOpenTrain && <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenTrain("WORKOUT")}>OPEN TRAIN</button>}
+        {/* GRAYSON-ONE-OFF-001: START begins the planned workout and shows it live (TRAIN still asks the RED override);
+            START EMPTY is the quieter second choice. */}
+        {onOpenTrain && <div className="workout-call__starts">
+          <button type="button" className="btn-primary" disabled={busy} onClick={() => onOpenTrain(variant === "REDUCED" ? "START_PLANNED_REDUCED" : "START_PLANNED")}>
+            START · {label}{variant === "REDUCED" ? " REDUCED" : ""}</button>
+          <button type="button" className="btn-secondary" disabled={busy} onClick={() => onOpenTrain("START_EMPTY")}>START EMPTY</button>
+        </div>}
       </div>
     );
   }
@@ -177,8 +187,11 @@ export function WorkoutCall({
           </>
         ) : (
           <>
-            <button type="button" className="today-sheet__option" disabled={busy} onClick={() => void answer(true, suggestedVariant === "REDUCED" ? "WORKOUT_REDUCED" : "WORKOUT")}>
-              <span><strong>START · {label}{suggestedVariant === "REDUCED" ? " REDUCED" : ""}</strong><span>Opens TRAIN{minutesText(suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD") ? ` · ${minutesText(suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD")}` : ""}</span></span>
+            <button type="button" className="today-sheet__option" disabled={busy} onClick={() => void answer(true, suggestedVariant === "REDUCED" ? "START_PLANNED_REDUCED" : "START_PLANNED")}>
+              <span><strong>START · {label}{suggestedVariant === "REDUCED" ? " REDUCED" : ""}</strong><span>Starts it now{minutesText(suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD") ? ` · ${minutesText(suggestedVariant === "REDUCED" ? "REDUCED" : "STANDARD")}` : ""}</span></span>
+            </button>
+            <button type="button" className="today-sheet__option" disabled={busy} onClick={() => void answer(true, "START_EMPTY")}>
+              <span><strong>START EMPTY</strong><span>A blank workout; {label} stays next.</span></span>
             </button>
             <button type="button" className="today-sheet__option" disabled={busy} onClick={question.defer}>
               <span><strong>LATER</strong><span>Keeps a quiet row here.</span></span>
