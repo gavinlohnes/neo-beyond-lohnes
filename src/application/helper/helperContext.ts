@@ -3,7 +3,7 @@ import { getUnresolvedObligations } from "../intentQueries";
 import { getProjects } from "../projectQueries";
 import { getRoutines } from "../routineCommands";
 import { getActiveWorkoutSession } from "../trainQueries";
-import { resolveTemplateExercises } from "../customTemplateQueries";
+import { getSessionRoutinePoint, resolveTemplateExercises } from "../customTemplateQueries";
 import { getActiveDay, getBodyweightEntries, getHydrationEntries, getSleepEntries, getWorkMarks } from "../queries";
 import type { HelperContext } from "./freeHelper";
 import type { WorkoutTemplateId } from "../../domain/workout/types";
@@ -25,7 +25,7 @@ export async function readHelperContext(now = new Date()): Promise<HelperContext
   const marks = day ? await getWorkMarks(day.id) : {};
   // ALFRED-FIX-001: the entries a plain "move / remove / was N kcal" can fix, newest last.
   const entries = await recentEntries().catch(() => []);
-  const exercises = session ? await resolveTemplateExercises(session.templateId as WorkoutTemplateId, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD") : [];
+  const exercises = session ? await resolveTemplateExercises(session.templateId as WorkoutTemplateId, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD", await getSessionRoutinePoint(session)) : [];
   return {
     now, savedMeals: meals, openTasks: tasks,
     openProjects: projects.filter((p) => p.status === "ACTIVE" || p.status === "PAUSED"),

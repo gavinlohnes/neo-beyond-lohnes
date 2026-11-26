@@ -556,7 +556,7 @@ change it.
 
 | Current BEYOND capability | Preserve | Evolve toward | Disposition |
 | --- | --- | --- | --- |
-| Fixed A/B/C templates | Locked content and history continuity | Remain available; Mission uses owner-approved custom templates rather than rewriting them | Preserve + route around carefully |
+| Fixed A/B/C templates | History continuity; content his to edit with a reset (GRAYSON-ROUTINE-EDIT-001, 2026-11-25) | Remain available; the code's originals never change and RESET TO ORIGINAL brings them back; Mission uses owner-approved custom templates | Preserve + route around carefully |
 | Custom exercises/templates | Local records, edit/archive and TRAIN execution | Guided three-session draft and explicit creation | Connect + deepen |
 | Training programme | Weekday/rotation assignment; information only | Mission-aware proposal with schedule preview; does not change current suggestion | Connect |
 | Progression/re-entry/deload | Existing deterministic advisory rules | Explain within the Mission; no hidden application | Preserve |

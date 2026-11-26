@@ -306,6 +306,10 @@ export type DomainEventType =
   | "RUNNING_PLAN_ADVANCED"
   | "RUNNING_PLAN_POSITION_SET"
   | "RUNNING_PLAN_EDITED"
+  // GRAYSON-ROUTINE-EDIT-001 (Gavin, 2026-11-25): a routine edited, reset or an edit undone in TRAIN's routine editor.
+  // Global (no beyondDayId), USER. For A, B and C the latest wins over the code's version; for his own routines it
+  // keeps the version it replaced. Payload in domain/workout/routineEdit.ts.
+  | "ROUTINE_EDITED"
   // GRAYSON-TRAIN-STANDARDS-001 (Gavin, 2026-11-24): a sit-and-reach, one-minute sit-up or 1.5-mile run test result,
   // day-scoped to the lived day it was recorded in. Removed through the shared void family (STANDARD_TEST_VOIDED,
   // domain/logVoids.ts) and put back with LOG_VOID_UNDONE; a fix voids the old result and records a new one.

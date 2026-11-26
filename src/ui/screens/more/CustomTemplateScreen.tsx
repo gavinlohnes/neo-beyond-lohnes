@@ -1,55 +1,32 @@
 import { captureCommitFeedback } from "../../feel/feedback";
 import { useEffect, useState } from "react";
-import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
-import type { CustomExercise } from "../../../domain/workout/customExercise";
-import { deriveIncrementLbs, type ExercisePrescription } from "../../../domain/workout/types";
-import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
-import { getCustomTemplates } from "../../../application/customTemplateQueries";
-import { archiveCustomTemplate, createCustomTemplate, updateCustomTemplate } from "../../../application/customTemplateCommands";
-import { FieldDisclosure } from "../../components/FieldDisclosure";
+import { archiveCustomTemplate } from "../../../application/customTemplateCommands";
+import { getRoutineViews, type RoutineView } from "../../../application/routineEditQueries";
+import { undoRoutineEdit } from "../../../application/routineEditCommands";
+import { getActiveWorkoutSession } from "../../../application/trainQueries";
+import { RoutineEditor, type RoutineSaved } from "../train/RoutineEditor";
 import { describeError } from "../../errorMessage";
 
 /**
- * TRAIN-CREATE-002 (Custom Workout Templates). The one dedicated
- * management surface, reachable from MORE (same placement pattern as
- * Exercise Library/Decision Journal), not a new primary bottom-nav
- * destination. Every mutation goes through
- * application/customTemplateCommands.ts. Assembles a template from the
- * operator's own saved CustomExercise library (TRAIN-CREATE-001) — this
- * screen does not create or edit exercise facts (name/muscle group/
- * equipment/rep range) itself, only which exercises belong to a template
- * and how many sets each gets here.
- *
- * DEFAULT_SETS below has no real per-exercise signal to derive from (how
- * many sets someone wants is a personal choice, not an equipment fact),
- * so it stays an explicit placeholder. incrementLbs (TRAIN-PROGRESSION-001,
- * 2026-09-15) no longer does — it's derived from each CustomExercise's own
- * `equipment`/`muscleGroup` fields via `deriveIncrementLbs`, the same
- * convention now used for the built-in A/B/C templates.
+ * TRAIN-CREATE-002 (Custom Workout Templates): the management surface in MORE. GRAYSON-ROUTINE-EDIT-001: creating and
+ * editing open TRAIN's one routine editor (sets, rep range, rest, order, swap, add from his exercises or the bundled
+ * library), with UNDO after every save. ARCHIVE stays here.
  */
-const DEFAULT_SETS = 3;
 
-function TemplateRow({ template, onArchive, onEdit }: { template: CustomWorkoutTemplate; onArchive: () => void; onEdit: () => void }) {
+function TemplateRow({ routine, busy, onArchive, onEdit }: { routine: RoutineView; busy: boolean; onArchive: () => void; onEdit: () => void }) {
   return (
     <div className="equipment-row" style={{ marginBottom: 8 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-        <div>
-          <p className="card-body" style={{ margin: 0, fontWeight: 600 }}>{template.name}</p>
-          <p className="meta" style={{ margin: 0 }}>
-            {template.exercises.length} {template.exercises.length === 1 ? "exercise" : "exercises"}:{" "}
-            {template.exercises.map((ex) => ex.name).join(", ")}
+        <div style={{ minWidth: 0 }}>
+          <p className="card-body" style={{ margin: 0, fontWeight: 600, overflowWrap: "anywhere" }}>{routine.label}{routine.edited && <span className="meta"> · edited</span>}</p>
+          <p className="meta" style={{ margin: 0, overflowWrap: "anywhere" }}>
+            {routine.exercises.length} {routine.exercises.length === 1 ? "exercise" : "exercises"}:{" "}
+            {routine.exercises.map((ex) => ex.name).join(", ")}
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-          <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", fontSize: 14, minHeight: 44 }} aria-label={`Edit ${template.name}`} onClick={onEdit}>EDIT</button>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ width: "auto", padding: "4px 10px", fontSize: 14, minHeight: 44 }}
-            onClick={onArchive}
-          >
-            ARCHIVE
-          </button>
+          <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", fontSize: 14, minHeight: 44 }} disabled={busy} aria-label={`Edit ${routine.label}`} onClick={onEdit}>EDIT</button>
+          <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", fontSize: 14, minHeight: 44 }} disabled={busy} onClick={onArchive}>ARCHIVE</button>
         </div>
       </div>
     </div>
@@ -57,102 +34,44 @@ function TemplateRow({ template, onArchive, onEdit }: { template: CustomWorkoutT
 }
 
 export function CustomTemplateScreen() {
-  const [templates, setTemplates] = useState<CustomWorkoutTemplate[]>([]);
-  const [savedExercises, setSavedExercises] = useState<CustomExercise[]>([]);
+  const [routines, setRoutines] = useState<RoutineView[]>([]);
+  const [editing, setEditing] = useState<RoutineView | "NEW" | null>(null);
+  const [workoutActive, setWorkoutActive] = useState(false);
+  const [saved, setSaved] = useState<RoutineSaved | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
 
-  const [name, setName] = useState("");
-  const [selectedSets, setSelectedSets] = useState<Record<string, number>>({});
-  const [supersets, setSupersets] = useState<Record<string, boolean>>({});
-  // TEMPLATE-EDIT-001: editing reuses the builder; the original template keeps exercises the library no longer lists.
-  const [editing, setEditing] = useState<CustomWorkoutTemplate | null>(null);
-
-  useEffect(() => {
-    void refresh();
-  }, []);
+  useEffect(() => { void refresh(); }, []);
 
   async function refresh() {
-    setTemplates(await getCustomTemplates());
-    setSavedExercises(await getCustomExercises());
+    setRoutines((await getRoutineViews()).filter((r) => !r.builtIn));
+    setWorkoutActive(Boolean(await getActiveWorkoutSession()));
   }
 
   async function withBusy(fn: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
     setError(null);
-    try {
-      await fn();
-    } catch (e) {
-      setError(describeError(e, "Something went wrong."));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function toggleExercise(exerciseId: string) {
-    setSelectedSets((prev) => {
-      const next = { ...prev };
-      if (exerciseId in next) delete next[exerciseId];
-      else next[exerciseId] = DEFAULT_SETS;
-      return next;
-    });
-  }
-
-  function adjustSets(exerciseId: string, delta: number) {
-    setSelectedSets((prev) => ({ ...prev, [exerciseId]: Math.max(1, (prev[exerciseId] ?? DEFAULT_SETS) + delta) }));
-  }
-
-  const selectedIds = Object.keys(selectedSets);
-
-  // Exercises in the template being edited that the library no longer lists (archived): shown so they can be removed.
-  const retired = editing ? editing.exercises.filter((ex) => ex.exerciseId in selectedSets && !savedExercises.some((saved) => saved.id === ex.exerciseId)) : [];
-
-  function startEdit(template: CustomWorkoutTemplate) {
-    setEditing(template); setName(template.name);
-    setSelectedSets(Object.fromEntries(template.exercises.map((ex) => [ex.exerciseId, ex.sets])));
-    setSupersets(Object.fromEntries(template.exercises.filter((ex) => ex.supersetWithNext).map((ex) => [ex.exerciseId, true])));
-    setCreateOpen(true);
-  }
-  function resetForm() { setEditing(null); setName(""); setSelectedSets({}); setSupersets({}); setCreateOpen(false); }
-
-  async function handleCreate() {
-    if (!name.trim() || selectedIds.length === 0) return;
-    await withBusy(async () => {
-    const acknowledge = captureCommitFeedback();
-      const exercises: ExercisePrescription[] = selectedIds.map((exerciseId, index) => {
-        const original = editing?.exercises.find((ex) => ex.exerciseId === exerciseId);
-        const source = savedExercises.find((ex) => ex.id === exerciseId);
-        // An edited exercise keeps its own rep range and increment; only sets and superset change here.
-        if (original || !source) {
-          const { supersetWithNext: _old, ...rest } = original!;
-          return { ...rest, sets: selectedSets[exerciseId]!, ...(supersets[exerciseId] && index < selectedIds.length - 1 ? { supersetWithNext: true } : {}) };
-        }
-        return {
-          exerciseId: source.id,
-          name: source.name,
-          sets: selectedSets[exerciseId]!,
-          repRangeLow: source.repRangeLow,
-          repRangeHigh: source.repRangeHigh,
-          incrementLbs: deriveIncrementLbs(source.equipment, source.muscleGroup),
-          ...(supersets[exerciseId] && index < selectedIds.length - 1 ? { supersetWithNext: true } : {}),
-        };
-      });
-      if (editing) await updateCustomTemplate(editing.id, { name: name.trim(), exercises });
-      else await createCustomTemplate({ name: name.trim(), exercises });
-      acknowledge("LIGHT");
-      resetForm();
-      await refresh();
-    });
+    try { await fn(); } catch (e) { setError(describeError(e, "Something went wrong.")); } finally { setBusy(false); }
   }
 
   async function handleArchive(id: string) {
     await withBusy(async () => {
-    const acknowledge = captureCommitFeedback();
+      const acknowledge = captureCommitFeedback();
       if (await archiveCustomTemplate(id)) acknowledge("HEAVY");
+      setSaved(null);
       await refresh();
     });
+  }
+
+  if (editing) {
+    return (
+      <div className="intent-field">
+        <RoutineEditor routine={editing === "NEW" ? null : editing} workoutActive={workoutActive}
+          onCancel={() => setEditing(null)}
+          onDone={async (text, result) => { setEditing(null); setSaved({ text, eventId: result?.eventId ?? null }); await refresh(); }} />
+      </div>
+    );
   }
 
   return (
@@ -160,107 +79,24 @@ export function CustomTemplateScreen() {
       <header className="intent-field__intro">
         <p className="tool-label">CUSTOM PROGRAMS</p>
         <p className="card-body">
-          Build your own workout template from your saved exercises. Selectable in TRAIN alongside A/B/C — always your own choice, never suggested automatically.
+          Build your own workout template from your exercises or the exercise library. Selectable in TRAIN alongside A/B/C — always your own choice, never suggested automatically. A, B and C are edited from TRAIN · ROUTINES.
         </p>
       </header>
 
       <section aria-labelledby="custom-template-heading">
         <h2 id="custom-template-heading" className="section-label">My templates</h2>
+        {saved && <p className="routine-saved" role="status">{saved.text}{" "}
+          {saved.eventId && <button type="button" className="btn-secondary routine-inline" disabled={busy}
+            onClick={() => void withBusy(async () => { await undoRoutineEdit(saved.eventId!); setSaved({ text: "Undone. The routine is back as it was.", eventId: null }); await refresh(); })}>UNDO</button>}</p>}
         <div role="group" aria-label="My templates">
-          {templates.length === 0 && <p className="empty-state">No custom templates yet.</p>}
-          {templates.map((t) => (
-            <TemplateRow key={t.id} template={t} onArchive={() => void handleArchive(t.id)} onEdit={() => startEdit(t)} />
+          {routines.length === 0 && <p className="empty-state">No custom templates yet.</p>}
+          {routines.map((r) => (
+            <TemplateRow key={r.templateId} routine={r} busy={busy} onArchive={() => void handleArchive(r.templateId)} onEdit={() => { setSaved(null); setEditing(r); }} />
           ))}
         </div>
-
-        <div className="intent-create">
-          <FieldDisclosure summary={editing ? `EDIT ${editing.name.toUpperCase()}` : "CREATE TEMPLATE"} open={createOpen} onToggle={(open) => { if (!open && editing) resetForm(); else setCreateOpen(open); }}>
-            {savedExercises.length === 0 && !editing ? (
-              <p className="card-body">
-                You don't have any saved exercises yet — add some in the Exercise Library first, then come back here to build a template from them.
-              </p>
-            ) : (
-              <>
-                <input
-                  type="text"
-                  className="input"
-                  style={{ marginBottom: 12 }}
-                  aria-label="Template name"
-                  placeholder="Template name"
-                  value={name}
-                  disabled={busy}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <p className="meta" style={{ marginBottom: 8 }}>SELECT EXERCISES</p>
-                {savedExercises.map((ex) => {
-                  const selected = ex.id in selectedSets;
-                  return (
-                    <div key={ex.id} className="equipment-row" style={{ marginBottom: 6 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                        <button
-                          type="button"
-                          className={`chip ${selected ? "chip--selected" : ""}`}
-                          style={{ flex: 1, textAlign: "left" }}
-                          aria-pressed={selected}
-                          disabled={busy}
-                          onClick={() => toggleExercise(ex.id)}
-                        >
-                          {ex.name} <span className="meta">({ex.muscleGroup})</span>
-                        </button>
-                        {selected && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                            <button
-                              type="button"
-                              className="btn-secondary"
-                              style={{ width: 32, minWidth: 32, padding: 0 }}
-                              aria-label={`Decrease sets for ${ex.name}`}
-                              onClick={() => adjustSets(ex.id, -1)}
-                            >
-                              -
-                            </button>
-                            <span className="meta" style={{ minWidth: 48, textAlign: "center" }}>
-                              {selectedSets[ex.id]} sets
-                            </span>
-                            <button
-                              type="button"
-                              className="btn-secondary"
-                              style={{ width: 32, minWidth: 32, padding: 0 }}
-                              aria-label={`Increase sets for ${ex.name}`}
-                              onClick={() => adjustSets(ex.id, 1)}
-                            >
-                              +
-                            </button>
-                            {selectedIds.indexOf(ex.id) < selectedIds.length - 1 && <label className="meta" style={{ display: "flex", alignItems: "center", gap: 4, minHeight: 44 }}>
-                              <input type="checkbox" checked={supersets[ex.id] === true} disabled={busy} onChange={(e) => setSupersets((all) => ({ ...all, [ex.id]: e.target.checked }))} /> Superset with next
-                            </label>}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                {retired.length > 0 && <div role="group" aria-label="No longer in your library" style={{ marginTop: 12 }}>
-                  <p className="meta" style={{ marginBottom: 8 }}>NO LONGER IN YOUR LIBRARY</p>
-                  {retired.map((ex) => <div key={ex.exerciseId} className="equipment-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <span className="card-body" style={{ margin: 0 }}>{ex.name} <span className="meta">· {selectedSets[ex.exerciseId]} sets</span></span>
-                    <button type="button" className="btn-secondary" style={{ width: "auto", padding: "4px 10px", minHeight: 44 }} disabled={busy} aria-label={`Remove ${ex.name}`} onClick={() => toggleExercise(ex.exerciseId)}>REMOVE</button>
-                  </div>)}
-                </div>}
-                <button
-                  className="btn-primary"
-                  style={{ marginTop: 12 }}
-                  disabled={busy || !name.trim() || selectedIds.length === 0}
-                  onClick={() => void handleCreate()}
-                >
-                  {editing ? "SAVE CHANGES" : "SAVE TEMPLATE"}
-                </button>
-                {editing && <button type="button" className="btn-secondary" style={{ marginTop: 8 }} disabled={busy} onClick={resetForm}>CANCEL EDIT</button>}
-              </>
-            )}
-          </FieldDisclosure>
-        </div>
+        <button type="button" className="btn-secondary" style={{ marginTop: 12 }} disabled={busy} onClick={() => { setSaved(null); setEditing("NEW"); }}>CREATE TEMPLATE</button>
       </section>
-      {error && <p className="meta meta--error">{error}</p>}
+      {error && <p className="meta meta--error" role="alert">{error}</p>}
     </div>
   );
 }

@@ -22,9 +22,20 @@ export function hasRememberedRest(exerciseId: string | null | undefined): boolea
   return Boolean(exerciseId) && readRestMemory()[exerciseId!] !== undefined;
 }
 
-export function rememberRestAdjustment(exerciseId: string | null | undefined, deltaSeconds: number): void {
+/**
+ * GRAYSON-ROUTINE-EDIT-001: where a set's rest starts. A routine's rest for the exercise is the start in each workout;
+ * once he moves that exercise's rest with ± in this workout, his remembered length takes over for the rest of it.
+ * With no routine rest, it's the remembered rest, as before.
+ */
+export function restStartSeconds(exerciseId: string | null | undefined, routineRestSeconds: number | undefined, adjustedThisWorkout: boolean): number {
+  if (routineRestSeconds !== undefined && !adjustedThisWorkout) return clamp(routineRestSeconds);
+  return restSecondsFor(exerciseId);
+}
+
+/** `fromSeconds` is the rest the ± moved (a routine's rest, when that was the start); default the remembered rest. */
+export function rememberRestAdjustment(exerciseId: string | null | undefined, deltaSeconds: number, fromSeconds?: number): void {
   if (!exerciseId || !Number.isFinite(deltaSeconds) || deltaSeconds === 0) return;
   const memory = readRestMemory();
-  memory[exerciseId] = clamp(restSecondsFor(exerciseId) + deltaSeconds);
+  memory[exerciseId] = clamp((fromSeconds ?? restSecondsFor(exerciseId)) + deltaSeconds);
   writeRestMemory(memory);
 }

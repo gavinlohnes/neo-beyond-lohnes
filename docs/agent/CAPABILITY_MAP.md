@@ -319,6 +319,10 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   `application/customTemplateQueries.ts`. They deliberately do not enter the Engine's locked
   built-in A → B → C suggestion. The remaining gap is guided, goal-aware composition and explicit
   plan approval—not a missing custom-template primitive.
+- **GRAYSON-ROUTINE-EDIT-001:** one routine editor for every routine, A, B and C included
+  (`ui/screens/train/RoutineEditor.tsx`, `application/routineEditCommands.ts`, `domain/workout/routineEdit.ts`).
+  A, B and C resolve through `ROUTINE_EDITED` overrides in `customTemplateQueries.resolveTemplateDefinition`; later
+  TRAIN work (WORKOUT-CHANGES, ONE-OFF, WEEK-PLAN, BLOCK-CYCLE) saves routine changes through `saveRoutineEdit`.
 - **Ruling on file**: schema addition — owner sign-off obtained 2026-09-12 (direct chat ruling,
   see `docs/UX_DECISIONS.md`'s WORKOUT LIBRARY entry).
 

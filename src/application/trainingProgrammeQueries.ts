@@ -124,6 +124,16 @@ async function getSequenceView(revision: ProgrammeRevision, history: ProgrammeRe
   return { ...state, previousProgramme };
 }
 
+/**
+ * GRAYSON-ROUTINE-EDIT-001: the member this sequence revision currently names next, or null when the evidence can't
+ * say. A routine edit writes a new revision starting there, so it never moves his place in the sequence.
+ */
+export async function getSequenceNextTemplateId(revision: ProgrammeRevision): Promise<string | null> {
+  if (revision.programme?.mode !== "SEQUENCE") return null;
+  const state = await deriveSequenceState(revision, await getCustomTemplates({ includeArchived: true }));
+  return state.status === "UNKNOWN" ? null : state.nextMember?.templateId ?? null;
+}
+
 export function buildSequenceProgramme(templateIds: [string, string, string], templates: readonly CustomWorkoutTemplate[], startTemplateId = templateIds[0]): SequenceTrainingProgramme {
   if (new Set(templateIds).size !== 3) throw new Error("Choose three different templates.");
   const keys = ["A", "B", "C"] as const;

@@ -1,7 +1,7 @@
 import { db } from "../persistence/db";
 import { parseCustomExercise } from "../persistence/exerciseValidation";
 import type { CustomExercise } from "../domain/workout/customExercise";
-import { WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { fixedExerciseNames } from "../domain/workout/routineEdit";
 
 /** Same shape as getSavedMeals (nutritionQueries.ts): excludes archived by default, newest first. */
 export async function getCustomExercises(options: { includeArchived?: boolean } = {}): Promise<CustomExercise[]> {
@@ -18,10 +18,8 @@ export async function getCustomExercises(options: { includeArchived?: boolean } 
  * caller falls back to the id.
  */
 export async function getExerciseNames(): Promise<Record<string, string>> {
-  const names: Record<string, string> = {};
-  for (const template of Object.values(WORKOUT_TEMPLATES)) {
-    for (const ex of template.exercises) names[ex.exerciseId] = ex.name;
-  }
+  // GRAYSON-ROUTINE-EDIT-001: A, B and C, then the bundled library (a routine can hold either).
+  const names: Record<string, string> = Object.fromEntries(fixedExerciseNames());
   for (const ex of await getCustomExercises({ includeArchived: true })) names[ex.id] = ex.name;
   return names;
 }

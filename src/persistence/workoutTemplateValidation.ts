@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
+import type { RoutineEditedPayload } from "../domain/workout/routineEdit";
 
 /**
  * TRAIN-CREATE-002 (Custom Workout Templates): same shared-schema pattern
@@ -20,9 +21,11 @@ const exerciseSlotFields = {
   incrementLbs: z.number().min(0),
   // SUPERSET-001: optional and additive; rows and backups without it read as before.
   supersetWithNext: z.boolean().optional(),
+  // GRAYSON-ROUTINE-EDIT-001: optional and additive (the rest memory's 15 s to 10 min); older rows read as before.
+  restSeconds: z.number().int().min(15).max(600).optional(),
 };
 
-const exerciseSlotSchema = z
+export const exerciseSlotSchema = z
   .object(exerciseSlotFields)
   .refine((v) => v.repRangeHigh >= v.repRangeLow, "Rep range high must be at or above rep range low");
 
@@ -56,4 +59,21 @@ export const customWorkoutTemplateSchema = z.object({
 export function parseCustomWorkoutTemplate(raw: unknown): CustomWorkoutTemplate | null {
   const result = customWorkoutTemplateSchema.safeParse(raw);
   return result.success ? (result.data as CustomWorkoutTemplate) : null;
+}
+
+/** GRAYSON-ROUTINE-EDIT-001: a ROUTINE_EDITED payload as stored. Never throws; a malformed edit is skipped on read. */
+const routineVersionSchema = z.object({ name: z.string().trim().min(1).optional(), exercises: z.array(exerciseSlotSchema).min(1) });
+export const routineEditedPayloadSchema = z.object({
+  commandId: z.string().min(1),
+  templateId: z.string().min(1),
+  exercises: z.array(exerciseSlotSchema).min(1),
+  name: z.string().trim().min(1).optional(),
+  previous: routineVersionSchema,
+  reason: z.enum(["EDIT", "RESET", "UNDO"]),
+  undoesEventId: z.string().min(1).optional(),
+});
+
+export function parseRoutineEditedPayload(raw: unknown): RoutineEditedPayload | null {
+  const result = routineEditedPayloadSchema.safeParse(raw);
+  return result.success ? (result.data as RoutineEditedPayload) : null;
 }

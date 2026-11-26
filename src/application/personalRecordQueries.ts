@@ -1,6 +1,7 @@
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
 import { WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { fixedExerciseNames } from "../domain/workout/routineEdit";
 import { getUndoneSetIds } from "./trainQueries";
 import { getCustomExercises } from "./exerciseLibraryQueries";
 
@@ -54,10 +55,8 @@ export async function getAllRecords(): Promise<RecordCard[]> {
     list.push(set);
     setsBySession.set(set.sessionId, list);
   }
-  const names = new Map<string, string>();
-  for (const template of Object.values(WORKOUT_TEMPLATES)) {
-    for (const ex of template.exercises) names.set(ex.exerciseId, ex.name);
-  }
+  // GRAYSON-ROUTINE-EDIT-001: A, B and C, then the bundled library (a routine can hold either).
+  const names = fixedExerciseNames();
   for (const ex of await getCustomExercises({ includeArchived: true })) names.set(ex.id, ex.name);
 
   const priorSets: PerformedSet[] = [];
