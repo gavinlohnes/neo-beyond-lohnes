@@ -1,7 +1,7 @@
 import type { SavedMeal } from "../domain/common/types";
 
 export interface MealPlanDayInput { date: string; work: boolean }
-export interface MealPlanTargets { calories?: number | undefined; proteinG?: number | undefined }
+export interface MealPlanTargets { calories?: number | undefined; proteinG?: number | undefined; byDay?: (number | undefined)[] | undefined }
 export interface MealPlanSlot { label: string; mealId: string | null; servings: number }
 export interface MealPlanDay { date: string; work: boolean; slots: MealPlanSlot[] }
 export interface MealPlan { days: MealPlanDay[]; message: string | null }
@@ -22,10 +22,11 @@ export function draftMealPlan(meals: readonly SavedMeal[], targets: MealPlanTarg
   const library = meals.filter((m) => !m.archivedAt).slice().sort((a, b) => b.proteinG - a.proteinG || a.id.localeCompare(b.id));
   if (library.length < 3) return { days: [], message: "Save at least 3 meals to draft a plan. Use SAVE AS MEAL or SEARCH ALL FOODS." };
   if (window.length < count) throw new Error("The schedule window is incomplete.");
-  const calories = targets.calories && targets.calories > 0 ? targets.calories : undefined;
   const protein = targets.proteinG && targets.proteinG > 0 ? targets.proteinG : undefined;
   const days: MealPlanDay[] = [];
-  for (const dayInput of window.slice(0, count)) {
+  for (const [dayIndex, dayInput] of window.slice(0, count).entries()) {
+    const rawCalories = targets.byDay?.[dayIndex] ?? targets.calories;
+    const calories = rawCalories && rawCalories > 0 ? rawCalories : undefined;
     const day: MealPlanDay = { ...dayInput, slots: [] };
     const recent = days.slice(-2).flatMap((d) => d.slots);
     for (const label of slotLabels(day.work)) {
@@ -52,7 +53,8 @@ export function draftMealPlan(meals: readonly SavedMeal[], targets: MealPlanTarg
     }
     days.push(day);
   }
-  return { days, message: !calories && !protein ? "No calorie or protein target is set. Meals rotate with higher-protein choices first." : !calories ? "No calorie target is set. Portions aim at your protein target." : !protein ? "No protein target is available. Portions aim at your calorie target." : null };
+  const hasCalories = Boolean(targets.calories || targets.byDay?.some((value) => value !== undefined));
+  return { days, message: !hasCalories && !protein ? "No calorie or protein target is set. Meals rotate with higher-protein choices first." : !hasCalories ? "No calorie target is set. Portions aim at your protein target." : !protein ? "No protein target is available. Portions aim at your calorie target." : null };
 }
 
 /** SavedMeal currently has no ingredients or notes field. Do not invent a shopping ingredient. */

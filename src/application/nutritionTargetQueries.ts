@@ -2,7 +2,14 @@ import { db } from "../persistence/db";
 import { parseNutritionTargets } from "../persistence/nutritionTargetValidation";
 import { deriveProteinTargetG, DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 import { getMostRecentBodyweight } from "./queries";
-import type { NutritionTargets } from "../domain/common/types";
+import type { EatingWindowDayKind, NutritionTargets } from "../domain/common/types";
+import { averageDayTargets, deriveDayCalorieTarget, type DayCalorieTarget } from "../engine/dayTarget";
+import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
+import { deriveLifeState, getRecordedDayBefore, lifeStateInput } from "./lifeState";
+import { dayKindFor } from "./eatingWindow";
+import { getSchedulePattern } from "./queries";
+import { getConfirmedExceptions } from "./scheduleExceptions";
+import { getProgrammeView } from "./trainingProgrammeQueries";
 
 /**
  * NUTRITION-003: the settings row's I/O boundary. Reads the single stored
@@ -31,4 +38,51 @@ export async function getEffectiveProteinTargetG(): Promise<number | undefined> 
   const bodyweightLbs = await getMostRecentBodyweight();
   if (bodyweightLbs === undefined) return undefined;
   return deriveProteinTargetG(targets.proteinMultiplierGPerLb, bodyweightLbs);
+}
+
+/** The canonical calorie target reader for a lived day. Unknown placement safely returns the plain target. */
+export async function getDayCalorieTarget(beyondDayId: string | null): Promise<DayCalorieTarget> {
+  if (!beyondDayId) return deriveDayCalorieTarget(await getNutritionTargets(), null, false);
+  const day = await db.beyondDays.get(beyondDayId);
+  if (!day) return deriveDayCalorieTarget(await getNutritionTargets(), null, false);
+  return getCalorieTargetForDate(new Date(day.startedAt), day);
+}
+
+export async function getPlannedDayCalorieTarget(at: Date): Promise<DayCalorieTarget> {
+  return getCalorieTargetForDate(at);
+}
+
+async function getCalorieTargetForDate(at: Date, day?: { id: string; workContext?: "WORK" | "OFF" | "UNKNOWN" }): Promise<DayCalorieTarget> {
+  const targets = await getNutritionTargets();
+  if (!targets.dayTargets?.on) return deriveDayCalorieTarget(targets, null, false);
+  const facts = await dayFactsFor(at, day);
+  return facts.kind ? deriveDayCalorieTarget(targets, facts.kind, facts.lift) : deriveDayCalorieTarget(targets, null, false);
+}
+
+/** The lived day's kind (named the way the eating window names it) and whether it's a lift day, whatever the setting. */
+async function dayFactsFor(at: Date, day?: { id: string; workContext?: "WORK" | "OFF" | "UNKNOWN" }): Promise<{ kind: EatingWindowDayKind | null; lift: boolean }> {
+  const [schedule, exceptions] = await Promise.all([getSchedulePattern(), getConfirmedExceptions()]);
+  const yesterday = await getRecordedDayBefore(at, 1);
+  const recorded = day?.workContext === "WORK" || day?.workContext === "OFF" ? day.workContext : null;
+  const state = deriveLifeState(lifeStateInput(at, schedule, recorded, yesterday, recorded ? "OPERATOR" : undefined,
+    new Map([...exceptions].map(([date, exception]) => [date, exception.kind]))));
+  const kind = dayKindFor(state?.state);
+  if (!kind) return { kind: null, lift: false };
+  const [programme, sessions] = await Promise.all([
+    getProgrammeView(at), day ? db.workoutSessions.where("beyondDayId").equals(day.id).toArray() : Promise.resolve([]),
+  ]);
+  // A lift day is a strength workout his programme assigns to that day, or one logged that day. A sequence (A → B → C)
+  // has no day of its own, so it marks no day; runs are their own record and never count (#736 takeover fix: the
+  // sequence check made every day a lift day when no sequence existed).
+  const plannedLift = programme.planned.templateId !== null;
+  const loggedLift = sessions.some((session) => ["COMPLETED", "PARTIAL", "ACTIVE"].includes(session.status) && session.sessionType !== "RECOVERY");
+  return { kind, lift: plannedLift || loggedLift };
+}
+
+export async function getTwoWeekDayTargetProjection(now = new Date()) {
+  const targets = await getNutritionTargets();
+  const start = mostRecentBoundaryAtOrBefore(now);
+  // The kinds and lifts are named whether or not the setting is on yet, so the settings line can show his unsaved steps.
+  const days = await Promise.all(Array.from({ length: 14 }, (_, i) => dayFactsFor(new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 16, 30))));
+  return { average: averageDayTargets(targets, days), days, target: targets.calorieTargetKcal };
 }
