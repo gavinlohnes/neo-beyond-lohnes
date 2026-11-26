@@ -5,6 +5,8 @@ import { archiveSavedMeal, createSavedMeal, logMeal, voidMealLog } from "../../s
 import { updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
 import { getPlannedDayCalorieTarget } from "../../src/application/nutritionTargetQueries";
 import { getFitsNow, writeFitsNowOn } from "../../src/application/fitsNowQueries";
+import { dayKindFor, markEatingWindow, saveEatingWindowSettings } from "../../src/application/eatingWindow";
+import { getTodayPicture } from "../../src/application/todayPicture";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 
 /** GRAYSON-FITS-NOW-001 through the application layer. Run under TZ=UTC and TZ=America/Chicago. */
@@ -101,4 +103,45 @@ describe("Fits now", () => {
     const off = await getFitsNow();
     expect(off?.kind === "LIST" && off.rows.map((r) => r.meal.id)).toEqual([a.id, b.id]);
   });
+
+  it("#737 review B1: the tie-break uses the eating window's kind for today (yesterday recorded WORK, today OFF → RECOVERY)", async () => {
+    const a = await createSavedMeal({ name: "Bowl A", calories: 400, proteinG: 30, carbsG: 40, fatG: 10 });
+    const b = await createSavedMeal({ name: "Bowl B", calories: 400, proteinG: 30, carbsG: 40, fatG: 10 });
+    // Recorded kinds win over the schedule: Nov 10 is a first day off (A), Nov 13 and 15 are plain days off (B twice).
+    const plan: [number, "WORK" | "OFF", string | null][] = [[9, "WORK", null], [10, "OFF", a.id], [12, "OFF", null], [13, "OFF", b.id], [14, "OFF", null], [15, "OFF", b.id], [17, "WORK", null]];
+    for (const [d, kind, meal] of plan) {
+      vi.setSystemTime(at(d, 17));
+      const earlier = await startDay(new Date(2026, 10, d, 16, 30).toISOString());
+      await setWorkContext(earlier.id, kind, "MANUAL");
+      if (meal) await logMeal(earlier.id, meal, 1);
+      vi.setSystemTime(at(d + 1, 16, ));
+      await endDay(earlier.id);
+    }
+    vi.setSystemTime(at(18, 17));
+    const day = await startDay(new Date(2026, 10, 18, 16, 30).toISOString());
+    await setWorkContext(day.id, "OFF", "MANUAL");
+    await updateNutritionTargets({ calorieTargetKcal: 2000 });
+    expect(dayKindFor((await getTodayPicture())?.now?.state)).toBe("RECOVERY");
+    const fits = await getFitsNow();
+    expect(fits?.kind === "LIST" && fits.rows.map((r) => r.meal.id)).toEqual([a.id, b.id]);
+  });
+
+  it("#737 review N1/N2: a closed eating window hides it: fasting, or a planned window past its planned close", async () => {
+    vi.setSystemTime(at(18, 17));
+    const day = await startDay(new Date(2026, 10, 18, 16, 30).toISOString());
+    await setWorkContext(day.id, "OFF", "MANUAL");
+    await updateNutritionTargets({ calorieTargetKcal: 2000 });
+    await createSavedMeal({ name: "Chicken bowl", calories: 520, proteinG: 45, carbsG: 50, fatG: 12 });
+    // Off days open at 17:00 for 6 hours: planned 17:00–23:00 on this lived day.
+    await saveEatingWindowSettings({ enabled: true, eatingHours: 6, opensAt: { WORK: "14:00", RECOVERY: "17:00", OFF: "17:00" }, safetyCheckedAt: new Date().toISOString() });
+    vi.setSystemTime(at(18, 20));
+    expect(await getFitsNow()).not.toBeNull();
+    vi.setSystemTime(new Date(2026, 10, 19, 1));
+    expect(await getFitsNow()).toBeNull(); // planned window closed at 23:00, no marks
+    vi.setSystemTime(at(18, 21));
+    expect(await getFitsNow()).not.toBeNull();
+    await markEatingWindow("CLOSED");
+    expect(await getFitsNow()).toBeNull(); // fasting
+  });
 });
+
