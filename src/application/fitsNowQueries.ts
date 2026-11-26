@@ -8,7 +8,8 @@ import { activeVoidedIds } from "../domain/logVoids";
 import { getDayCalorieTarget, getEffectiveProteinTargetG } from "./nutritionTargetQueries";
 import { getSavedMeals, getTotalMealCalories } from "./nutritionQueries";
 import { getActiveDay, getDayProteinTotalG, getSchedulePattern } from "./queries";
-import { dayKindFor, getEatingWindowView } from "./eatingWindow";
+import { dayKindFor, getEatingWindowView, plannedOpening } from "./eatingWindow";
+import { getTodayPicture } from "./todayPicture";
 import { deriveLifeState, lifeStateInput } from "./lifeState";
 import { getConfirmedKinds } from "./scheduleExceptions";
 
@@ -65,14 +66,16 @@ export async function getFitsNow(now: Date = new Date()): Promise<FitsNow | null
     getSavedMeals(), getEatingWindowView(now).catch(() => null),
   ]);
   if (target.kcal === undefined) return null;
-  // The day's kind the eating window uses, for the tie-break (named even when targets by kind of day are off).
-  const [pattern, confirmed] = await Promise.all([getSchedulePattern(), getConfirmedKinds().catch(() => new Map<string, "WORK" | "OFF">())]);
-  const start = mostRecentBoundaryAtOrBefore(new Date(day.startedAt));
-  const todayRecorded = day.workContext === "WORK" || day.workContext === "OFF" ? day.workContext : null;
-  const kind = dayKindFor(deriveLifeState(lifeStateInput(start, pattern, todayRecorded, null, undefined, confirmed))?.state);
+  // The day's kind exactly as the eating window reads it (#737 review B1): the same today-picture life state, with
+  // yesterday's recorded kind and the lived-day read time, so a first day off after a picked-up shift is RECOVERY here too.
+  const kind = dayKindFor((await getTodayPicture(now).catch(() => null))?.now?.state);
   const state = windowView?.state;
+  // Closed: fasting, an opened window past its close, or (#737 review N1) a planned window whose planned close has passed.
+  const plannedClosed = state?.kind === "PLANNED" && windowView && kind
+    ? now.getTime() >= plannedOpening(mostRecentBoundaryAtOrBefore(new Date(day.startedAt)), windowView.settings.opensAt[kind]).getTime() + windowView.settings.eatingHours * 3_600_000
+    : false;
   const window: FitsNowInput["window"] = !state ? null
-    : state.kind === "FASTING" || (state.kind === "OPEN" && state.leftMinutes <= 0) ? { state: "CLOSED" }
+    : state.kind === "FASTING" || (state.kind === "OPEN" && state.leftMinutes <= 0) || plannedClosed ? { state: "CLOSED" }
     : state.kind === "OPEN" ? { state: "OPEN", leftMinutes: state.leftMinutes } : null;
   return fitsNow({
     targetKcal: target.kcal, eatenKcal: eaten, proteinTargetG: proteinTarget, proteinG: protein,

@@ -120,7 +120,7 @@ describe("ROUTE: the flip card", () => {
     await expect.element(screen.getByText(/^Sleep soon after this shift and get up by 13:00\./).first()).toBeVisible();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/route-card-360.png`, element: document.getElementById("flip-plan-card") as HTMLElement });
     await screen.getByRole("button", { name: "Skip Flip back" }).click();
-    expect(screen.getByText("Flip back", { exact: true }).elements()).toHaveLength(0);
+    await expect.poll(() => screen.getByText("Flip back", { exact: true }).elements().length).toBe(0);
     expect(localStorage.getItem("beyond.shiftSleepPlan.skip.2026-11-19.FLIP_BACK")).toBe("1");
   });
   it("turned off, the card goes and its switch stays reachable to turn it back on", async () => {
@@ -131,7 +131,8 @@ describe("ROUTE: the flip card", () => {
     await screen.getByLabelText("Show flip plans").click();
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
     await expect.element(screen.getByText("Flip plans are off.")).toBeVisible();
-    expect(screen.getByText("Flip back", { exact: true }).elements()).toHaveLength(0);
+    // #737 CI: the "off" row can render before the card's own read drops it, so wait for the card to go.
+    await expect.poll(() => screen.getByText("Flip back", { exact: true }).elements().length).toBe(0);
     await screen.getByRole("button", { name: "Change the flip plan" }).click();
     await screen.getByLabelText("Show flip plans").click();
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
