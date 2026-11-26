@@ -242,12 +242,12 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByText("Need a starting point?", { exact: true }).click();
     await screen.getByRole("button", { name: "GUIDE A DECISION", exact: true }).click();
     const title = screen.getByRole("textbox", { name: "Decision title", exact: true });
-    expect(document.activeElement).toBe(title.element());
+    await expect.poll(() => document.activeElement).toBe(title.element());
     await title.fill("My unsaved choice");
     await screen.getByRole("textbox", { name: "Decision", exact: true }).fill("Try the smaller option");
     await screen.getByRole("button", { name: "WRITE WITHOUT GUIDANCE", exact: true }).click();
     await screen.getByRole("button", { name: "BACK TO MORE" }).click();
-    expect(document.activeElement).toBe(journal.element());
+    await expect.poll(() => document.activeElement).toBe(journal.element());
     await journal.click();
     await expect.element(title).toHaveValue("My unsaved choice");
     await expect.element(screen.getByRole("textbox", { name: "Decision", exact: true })).toHaveValue("Try the smaller option");
@@ -259,7 +259,7 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     await screen.getByRole("button", { name: "GUIDE A TASK", exact: true }).click();
     const task = screen.getByRole("textbox", { name: "New obligation title" });
-    expect(document.activeElement).toBe(task.element());
+    await expect.poll(() => document.activeElement).toBe(task.element());
     await task.fill("A concrete step");
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
     await screen.getByRole("button", { name: "BACK TO MORE" }).click();
@@ -315,16 +315,16 @@ describe("Guided MORE + Low-Energy TODAY", () => {
     await screen.getByRole("button", { name: "Put a thought down", exact: false }).click();
     const input = screen.getByRole("textbox", { name: "Capture a thought", exact: true });
     await expect.element(input).toBeVisible();
-    expect(document.activeElement).toBe(input.element());
+    await expect.poll(() => document.activeElement).toBe(input.element());
     await input.fill("An interrupted free thought");
     await screen.getByRole("button", { name: "BACK TO SMALL STEPS" }).click();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "USE FULL VIEW" }).element());
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "USE FULL VIEW" }).element());
     await screen.getByRole("button", { name: "Open Minimum Day", exact: false }).click();
     // TONIGHT-001: TODAY no longer lifts a RED day's Minimum Day offer; it's the same TOOLS row at every capacity.
     await expect.element(screen.getByRole("button", { name: "ENABLE MINIMUM DAY", exact: true })).toBeVisible();
     expect((await getMinimumDayStatus(day.id)).enabled).toBe(false);
     await screen.getByRole("button", { name: "USE FULL VIEW" }).click();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "USE SMALL STEPS", exact: true }).element());
+    await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "USE SMALL STEPS", exact: true }).element());
     await expect.element(input).toHaveValue("An interrupted free thought");
     expect(screen.container.querySelector("[data-system-status]")?.textContent).toBe(system);
     expect(screen.container.querySelector(".console-guidance")?.textContent).toBe(guidance);

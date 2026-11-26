@@ -65,7 +65,7 @@ describe("FieldDisclosure (real browser)", () => {
     const screen = await render(<Harness />);
     const toggle = screen.getByRole("button", { name: "SHOW THING" }).element() as HTMLElement;
     toggle.focus();
-    expect(document.activeElement).toBe(toggle);
+    await expect.poll(() => document.activeElement).toBe(toggle);
   });
 
   it("can be forced open externally via the open prop (e.g. a just-logged CORRECT action)", async () => {

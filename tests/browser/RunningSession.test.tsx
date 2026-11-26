@@ -6,6 +6,7 @@ import axe from "axe-core";
 import { startDay } from "../../src/application/commands";
 import { advanceRunningPlan, endRunningSession, setRunningCuePreference, setRunningPosition, startRunningSession } from "../../src/application/runningCommands";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
+import { focusAfterSettle } from "./helpers/focus";
 
 /**
  * GRAYSON-TRAIN-RUN-001: TRAIN's running card, the live run, the finish sheet, the plan editor and the correct-a-run
@@ -106,7 +107,7 @@ describe("GRAYSON-TRAIN-RUN-001 running on TRAIN", () => {
 
     advance(1710);
     await expect.element(screen.getByRole("heading", { name: "Week 1, run 1 done." })).toBeVisible();
-    expect(document.activeElement?.textContent).toBe("Week 1, run 1 done.");
+    await expect.poll(() => document.activeElement?.textContent).toBe("Week 1, run 1 done.");
     await axeClean("finish", "[data-running-finish]");
     await screen.getByRole("button", { name: "MOVE ON TO WEEK 1, RUN 2" }).click();
     await expect.element(screen.getByRole("heading", { name: "Next: Week 1, run 2." })).toBeVisible();
@@ -168,10 +169,10 @@ describe("GRAYSON-TRAIN-RUN-001 running on TRAIN", () => {
     await shot("360-cue-settings", "[data-running-cues]");
     await noOverflow("plan");
 
-    (screen.getByRole("button", { name: "Edit week 1, run 2" }).element() as HTMLElement).focus();
+    await focusAfterSettle(screen.getByRole("button", { name: "Edit week 1, run 2" }));
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: "Edit Week 1, run 2 · 28 min 30 s" })).toBeVisible();
-    (screen.getByRole("button", { name: "Interval 2: 1 minute longer" }).element() as HTMLElement).focus();
+    await focusAfterSettle(screen.getByRole("button", { name: "Interval 2: 1 minute longer" }));
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: "Edit Week 1, run 2 · 29 min 30 s" })).toBeVisible();
     await screen.getByRole("button", { name: "ADD AN INTERVAL" }).click();
@@ -225,7 +226,7 @@ describe("GRAYSON-TRAIN-RUN-001 running on TRAIN", () => {
     await screen.getByRole("button", { name: "HISTORY", exact: true }).click();
     const row = screen.getByRole("button", { name: /^Week 1, run 1, Mon, Nov 16\. Partial · 10 min\. Correct this run$/ });
     await expect.element(row).toBeVisible();
-    (row.element() as HTMLElement).focus();
+    await focusAfterSettle(row);
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByRole("heading", { name: "Correct Week 1, run 1" })).toBeVisible();
     await screen.getByRole("radio", { name: "Completed" }).click();
@@ -233,7 +234,7 @@ describe("GRAYSON-TRAIN-RUN-001 running on TRAIN", () => {
     await axeClean("correct sheet", ".running-correct");
     await screen.getByRole("button", { name: "SAVE" }).click();
     await expect.element(screen.getByRole("button", { name: /Completed · 28 min · corrected\. Correct this run$/ })).toBeVisible();
-    expect(document.activeElement?.id).toBe(`running-row-${s.id}`);
+    await expect.poll(() => document.activeElement?.id).toBe(`running-row-${s.id}`);
     await shot("360-history-corrected", ".running-history");
     await noOverflow("history");
 

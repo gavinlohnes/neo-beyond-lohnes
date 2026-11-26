@@ -7,6 +7,7 @@ import { startDay } from "../../src/application/commands";
 import { recordStandardTest } from "../../src/application/standardTestCommands";
 import { db } from "../../src/persistence/db";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
+import { focusAfterSettle } from "./helpers/focus";
 
 /**
  * GRAYSON-TRAIN-STANDARDS-001: TRAIN → PROGRESS → STANDARDS. Record each test by keyboard, the one-minute timer and
@@ -58,11 +59,11 @@ async function openProgress() {
 }
 /** Keyboard only: focus a control and press Enter. */
 async function press(locator: { element: () => Element }) {
-  (locator.element() as HTMLElement).focus();
+  await focusAfterSettle(locator);
   await userEvent.keyboard("{Enter}");
 }
 async function typeInto(locator: { element: () => Element }, text: string) {
-  (locator.element() as HTMLInputElement).focus();
+  await focusAfterSettle(locator);
   await userEvent.keyboard("{Control>}a{/Control}{Backspace}");
   await userEvent.keyboard(text);
 }
@@ -91,7 +92,7 @@ describe("GRAYSON-TRAIN-STANDARDS-001 standards tests", { timeout: 60_000 }, () 
 
     // Sit-and-reach: RECORD, inches, SAVE.
     await press(screen.getByRole("button", { name: "Record Sit-and-reach" }));
-    expect(document.activeElement?.textContent).toBe("Record sit-and-reach");
+    await expect.poll(() => document.activeElement?.textContent).toBe("Record sit-and-reach");
     await shot("360-sheet-sit-and-reach");
     await typeInto(screen.getByRole("spinbutton", { name: "Inches" }), "31");
     await press(screen.getByRole("button", { name: "SAVE" }));
@@ -99,7 +100,7 @@ describe("GRAYSON-TRAIN-STANDARDS-001 standards tests", { timeout: 60_000 }, () 
     await typeInto(screen.getByRole("spinbutton", { name: "Inches" }), "14.25");
     await press(screen.getByRole("button", { name: "SAVE" }));
     await expect.poll(() => rowText("SIT_AND_REACH")).toBe("Last: 14¼ in on Nov 24.");
-    expect(document.activeElement?.id).toBe("standard-record-SIT_AND_REACH");
+    await expect.poll(() => document.activeElement?.id).toBe("standard-record-SIT_AND_REACH");
 
     // Sit-ups with the timer: one buzz at zero, nothing written by the timer.
     await press(screen.getByRole("button", { name: "Record One-minute sit-ups" }));
@@ -181,7 +182,7 @@ describe("GRAYSON-TRAIN-STANDARDS-001 standards tests", { timeout: 60_000 }, () 
     await typeInto(screen.getByRole("spinbutton", { name: "Seconds" }), "30");
     await press(screen.getByRole("button", { name: "SAVE" }));
     await expect.poll(() => rowText("RUN_1_5_MILE")).toBe("Last: 13:52 on Nov 24. Target: 13:30, set by you. 22 seconds to go.");
-    expect(document.activeElement?.id).toBe("standard-target-RUN_1_5_MILE");
+    await expect.poll(() => document.activeElement?.id).toBe("standard-target-RUN_1_5_MILE");
 
     await cleanup();
     screen = await openProgress();

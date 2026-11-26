@@ -90,13 +90,13 @@ describe("GRAYSON-WEIGHT-TREND-001", () => {
     // Keyboard only: Tab to the toggle, the smoothing radios and the disclosure.
     const toggle = screen.getByRole("button", { name: "Show trend: On" });
     (toggle.element() as HTMLElement).focus();
-    expect(document.activeElement).toBe(toggle.element());
+    await expect.poll(() => document.activeElement).toBe(toggle.element());
     await userEvent.keyboard("{Tab}");
-    expect((document.activeElement as HTMLInputElement).value).toBe("STEADY");
+    await expect.poll(() => (document.activeElement as HTMLInputElement).value).toBe("STEADY");
     await userEvent.keyboard("{ArrowRight}");
     await expect.poll(() => (screen.getByRole("radio", { name: "Quicker" }).element() as HTMLInputElement).checked).toBe(true);
     await userEvent.keyboard("{Tab}");
-    expect((document.activeElement as HTMLElement).textContent).toBe("What's the trend?");
+    await expect.poll(() => (document.activeElement as HTMLElement).textContent).toBe("What's the trend?");
     await userEvent.keyboard("{Enter}");
     await expect.element(screen.getByText("Your weigh-ins averaged so one day's water or salt barely moves it. It only moves when your weight really does.")).toBeVisible();
     await shot("360-settings-and-disclosure-open");
