@@ -78,7 +78,7 @@ export function WeekPlan({ onChanged, onClose }: { onChanged: () => Promise<void
               disabled={busy || !view.plan || day.past}
               aria-label={`${day.weekday} ${shortDate(day.date)}${day.today ? ", today" : ""}${day.work === "WORK" ? ", work day" : ""}: ${day.name}${day.source === "OVERRIDE" ? ", just this day" : ""}${view.plan && !day.past ? ". Change" : ""}`}
               onClick={() => { returnFocus.current = dayId(day.date); setSaved(null); setEditing(day); }}>
-              <span className="week-plan__when">{day.weekday.slice(0, 3)} {shortDate(day.date)}{day.today && <b> · TODAY</b>}</span>
+              <span className="week-plan__when">{day.weekday.slice(0, 3)} {shortDate(day.date)}{day.today && <b>TODAY</b>}</span>
               <span className="week-plan__work">{day.work === "WORK" ? "WORK" : day.work === "OFF" ? "OFF" : ""}</span>
               <span className="week-plan__what">{day.name}{day.source === "OVERRIDE" && <span className="meta"> · this day</span>}</span>
             </button>
