@@ -9,6 +9,41 @@
   changes the order whenever he likes.
 - Master at the time of writing: `2d575d0b`. Codex is offline; its TRAIN rows are with Claude Code.
 
+## Launch 1.0 first (Gavin, 2026-11-26)
+
+Gavin, 05:39 CT: **"I like the idea of the smaller launch. I think we shift into that mode."** 05:51 CT, **"Yes"** to
+putting it at the top of this file. Launch 1.0 is FUEL and TRAIN finished, plus the lighter-night card: he can run a
+full 4-week block on GRAYSON alone, eating to the right target for each kind of day. The plan:
+[GRAYSON Launch 1.0](https://claude.ai/artifact/AQxmupxcn7MBbP4uSjqeJ7).
+
+**This section wins over everything below it.** Each session builds only its 1.0 rows, in order, until they're done.
+Every other row below waits until after 1.0, including the rest of the Delta-track queue (CARRY onward is built;
+BRISK onward waits). New ideas go on the "after 1.0" list, not into briefs. All the usual rules still hold: one TODAY
+PR open at a time across both sessions, a fresh-context reviewer on every PR, Gavin merges every PROTECTED row.
+
+| # | Piece | Brief | Builder | Waits on | Lane |
+|---|---|---|---|---|---|
+| X1 | Browser focus checks wait for focus | [GRAYSON-FLAKES-003](GRAYSON-FLAKES-003.md) | Delta-track | nothing: first | ROUTINE |
+| F1 | A calorie target for each kind of day | [GRAYSON-DAY-TARGETS-001](GRAYSON-DAY-TARGETS-001.md) | Delta-track | X1 | PROTECTED |
+| F2 | Your meals that fit what's left | [GRAYSON-FITS-NOW-001](GRAYSON-FITS-NOW-001.md) | Delta-track | F1 | FEATURE |
+| F3 | Protein heads-up | [GRAYSON-PROTEIN-HEADSUP-001](GRAYSON-PROTEIN-HEADSUP-001.md) | Delta-track | F1 | PROTECTED |
+| F4 | Honest burn estimate | [GRAYSON-MISSION-REVIEW-001](GRAYSON-MISSION-REVIEW-001.md), **slice A only** | Delta-track (moved from Claude Code row 14, so Claude Code stays on TRAIN) | F1 | PROTECTED |
+| X2 | Lighter last night, in one tap | [GRAYSON-LIGHTER-NIGHT-001](GRAYSON-LIGHTER-NIGHT-001.md) | Delta-track | F2; a TODAY change | PROTECTED |
+| T1 | One routine editor | [GRAYSON-ROUTINE-EDIT-001](GRAYSON-ROUTINE-EDIT-001.md) | Claude Code | open as #730 | PROTECTED |
+| T2 | Add and swap mid-workout | [GRAYSON-WORKOUT-CHANGES-001](GRAYSON-WORKOUT-CHANGES-001.md) | Claude Code | T1 | PROTECTED |
+| T3 | Empty workout, START on TODAY | [GRAYSON-ONE-OFF-001](GRAYSON-ONE-OFF-001.md) | Claude Code | T2; a TODAY change | PROTECTED |
+| T4 | The week on Week A and Week B | [GRAYSON-WEEK-PLAN-001](GRAYSON-WEEK-PLAN-001.md) | Claude Code | T3 | PROTECTED |
+| T5 | 4 to 6 week blocks and the block review | [GRAYSON-BLOCK-CYCLE-001](GRAYSON-BLOCK-CYCLE-001.md) | Claude Code | T4 | PROTECTED |
+| T6 | Drop, failure and timed sets | [GRAYSON-SET-TYPES-001](GRAYSON-SET-TYPES-001.md) | Claude Code | T5 | PROTECTED |
+| T7 | The open exercise library | [GRAYSON-OPEN-LIBRARY-001](GRAYSON-OPEN-LIBRARY-001.md) | Claude Code | T6 | PROTECTED |
+| X3 | TRAIN home check | no brief: Gavin's phone check of TRAIN's home screen once T5 merges | Gavin | T5 | — |
+
+F3 and F4 don't share files with F2, so either may go while F2 waits on review. MISSION-REVIEW-001 slice B stays with
+Claude Code after 1.0. PR #694 (ASKS-COUNT) stays out of 1.0.
+
+**Launch 1.1, right after:** sets per muscle, the stall with its reason, the muscle-keeper and the shift-shaped
+session. Not briefed yet.
+
 ## Delta-track Claude Code session `ccr-380c4225` (TODAY, sleep, home; Grok Bot's queue)
 
 Grok Bot ran out of usage on 2026-11-24 at about 8:35 PM CT. Gavin gave its unstarted briefs to the Delta-track session
@@ -77,7 +112,7 @@ After B1 to B5, ahead of the queue below. They share the set logging screen, so 
 | 11 | [GRAYSON-NOT-RIGHT-001](GRAYSON-NOT-RIGHT-001.md) | E8 | "That's not right" on every Why, saved into ONE-MEMORY's store. E10 reads these corrections. ONE-MEMORY merged (#704), so it can start. | PROTECTED |
 | 12 | [GRAYSON-DELTA-READS-001](GRAYSON-DELTA-READS-001.md) | C5.5 | What Delta may read, per kind of record, with today's behaviour as the default; then which private kinds stay out of the Drive backup. Two slices. Doesn't need ONE-MEMORY, so build it first if NOT-RIGHT is still waiting. | PROTECTED |
 | 13 | [GRAYSON-TEACH-DEFAULTS-001](GRAYSON-TEACH-DEFAULTS-001.md) | E10 | After the same fix three times, Delta offers to change the number behind it, on his tap. Needs YOUR-NUMBERS and NOT-RIGHT. | PROTECTED |
-| 14 | [GRAYSON-MISSION-REVIEW-001](GRAYSON-MISSION-REVIEW-001.md) | C4.5 | Two slices: "Not fully logged" days leave the burn estimate, then one monthly Mission panel with at most one change. Slice B after ASKS-COUNT (#694). | PROTECTED |
+| 14 | [GRAYSON-MISSION-REVIEW-001](GRAYSON-MISSION-REVIEW-001.md) | C4.5 | **Slice A moved to the Delta-track session for Launch 1.0 (F4); slice B stays here, after 1.0.** Two slices: "Not fully logged" days leave the burn estimate, then one monthly Mission panel with at most one change. Slice B after ASKS-COUNT (#694). | PROTECTED |
 | 15 | [GRAYSON-EXPORT-ALL-001](GRAYSON-EXPORT-ALL-001.md) | C8.3 | Read-only CSV areas for sleep, check-ins, journal, notes, home, people and work record. Shares no files with the rows above, so build it whenever the next one waits on a merge. | FEATURE |
 | 16 | [GRAYSON-WEEKLY-ACTION-001](GRAYSON-WEEKLY-ACTION-001.md) | NHS Weight Loss Plan | One suggested weekly focus tied to his targets, in the Mission review's order. After MISSION-REVIEW-001; changes REVIEW-001's "no recommendation" rule for the focus only. | PROTECTED |
 | 17 | [GRAYSON-STARTER-HABITS-001](GRAYSON-STARTER-HABITS-001.md) | NHS Drink Free Days | Quick: one-tap starters in Add a habit, including drink-free days. Shares no files with the rows above. | FEATURE |
@@ -104,7 +139,7 @@ Then E5 (HABIT-EDIT-001), E6 (HOME-PEOPLE-EDIT-001) and C5.4 (MONTH-PATTERNS-001
 Then C3.2 (COMING-UP-001), E11 (TELL-DELTA-FIX-001) and C8.2 (RESTORE-DRILL-001). Then C7.3 (ALERT-KINDS-001, without "plan to confirm", which has nothing to alert about yet) and E14
 (ALERT-QUIET-001). C7.2 was already built as PLAN-FRESH-001 (#698). Then C3.3 (DAY-OFF-SHAPE-001) and C5.1 with C5.2
 (CHECKIN-WORDS-001). Then DAY-TARGETS-001 (2026-11-25), and FITS-NOW-001, PROTEIN-HEADSUP-001, SET-TYPES-001 and
-OPEN-LIBRARY-001 (2026-11-26).
+OPEN-LIBRARY-001 (2026-11-26). Then, for Launch 1.0, FLAKES-003 and LIGHTER-NIGHT-001 (2026-11-26).
 
 **Reviewers (2026-11-25):** Grok Bot is out of usage and Codex is offline, so every PR from either Claude Code
 session gets a fresh-context reviewer, never the session that built it.
