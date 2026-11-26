@@ -183,6 +183,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.bridgePlan.sent.v1": "device state (what this phone handed Health Bridge)", "beyond.bridgePlan.lineDay.v1": "seen",
       "beyond.bridgePlan.outdated": "this visit only (session)", "beyond.dictation.privacySeen.v1": "seen",
       "beyond.daily-note.draft.": "draft", "beyond:gym-draft:": "draft", "beyond:decrypt:": "animation state",
+      // GRAYSON-WORKOUT-CHANGES-001: which exercises' rest he moved in the live workout; cleared when it ends.
+      "beyond:rest-adjusted:": "live workout state",
       // GRAYSON-TRAIN-BODYMAP-001: the map's equipment chips, a view setting on this phone (the brief: doesn't travel).
       "beyond.bodyMap.v1": "view setting",
       // GRAYSON-FLIP-PLAN-001: TODAY's flip line asks ROUTE to open at the card (this visit only).

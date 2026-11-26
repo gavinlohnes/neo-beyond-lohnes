@@ -161,8 +161,13 @@ export async function getProgressionSuggestion(
   sessionType: "STANDARD" | "REDUCED",
   exerciseId: string,
   now: Date = new Date(),
+  /**
+   * GRAYSON-WORKOUT-CHANGES-001: the live workout's own prescription for this exercise (an added or swapped-in one,
+   * or the routine as the workout started), instead of the routine as it is now.
+   */
+  livePrescription?: ExercisePrescription,
 ): Promise<ProgressionSuggestion> {
-  const prescription = await resolvePrescription(templateId, sessionType, exerciseId);
+  const prescription = livePrescription ?? await resolvePrescription(templateId, sessionType, exerciseId);
   if (!prescription) {
     return { recommendation: "NO_HISTORY", reason: "Unknown exercise for this template/variant." };
   }

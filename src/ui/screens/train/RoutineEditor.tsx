@@ -251,8 +251,10 @@ function Stepper({ label, value, name, disabled, unit, onLess, onMore }: {
 }
 
 /** ADD EXERCISE and SWAP: his own exercises first, then the bundled library. */
-function ExercisePicker({ title, taken, onPick, onCancel }: {
+export function ExercisePicker({ title, taken, onPick, onCancel, recent, busy = false }: {
   title: string; taken: ReadonlySet<string>; onPick: (choice: RoutineExerciseChoice) => void; onCancel: () => void;
+  /** GRAYSON-WORKOUT-CHANGES-001: the three he did most recently, above the search. */
+  recent?: readonly RoutineExerciseChoice[]; busy?: boolean;
 }) {
   const [choices, setChoices] = useState<RoutineExerciseChoice[] | null>(null);
   const [query, setQuery] = useState("");
@@ -264,13 +266,20 @@ function ExercisePicker({ title, taken, onPick, onCancel }: {
 
   return <section className="card routine-picker" aria-labelledby={`${id}-title`} data-routine-picker>
     <h3 id={`${id}-title`} className="card-title">{title}</h3>
+    {recent && recent.length > 0 && <div role="group" aria-label="Done recently">
+      <p className="section-label">Done recently</p>
+      <ul className="routine-picker__list">{recent.map((c) => <li key={c.exerciseId}>
+        <button type="button" className="routine-picker__choice" disabled={busy} onClick={() => onPick(c)}>
+          <span>{c.name}</span><span className="meta">{c.detail} · {c.repRangeLow}–{c.repRangeHigh}</span>
+        </button></li>)}</ul>
+    </div>}
     <label className="routine-field">Search
       <input ref={searchRef} type="search" className="input" value={query} placeholder="Name, muscle or equipment" onChange={(e) => setQuery(e.target.value)} /></label>
     {error && <p className="meta meta--error" role="alert">{error}</p>}
     {choices && shown.length === 0 && <p className="empty-state">Nothing matches “{query.trim()}”.</p>}
     <ul className="routine-picker__list">
       {shown.map((c) => <li key={c.exerciseId}>
-        <button type="button" className="routine-picker__choice" onClick={() => onPick(c)}>
+        <button type="button" className="routine-picker__choice" disabled={busy} onClick={() => onPick(c)}>
           <span>{c.name}</span><span className="meta">{c.detail} · {c.repRangeLow}–{c.repRangeHigh}</span>
         </button>
       </li>)}

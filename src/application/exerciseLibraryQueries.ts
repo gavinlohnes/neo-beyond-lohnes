@@ -25,12 +25,13 @@ export async function getExerciseNames(): Promise<Record<string, string>> {
   for (const ex of await getCustomExercises({ includeArchived: true })) names[ex.id] = ex.name;
   // GRAYSON-ROUTINE-EDIT-001: a bundled-library exercise can appear in history once a routine has held it (his own, or
   // an edit of A, B or C). Only those are named, so search still lists each lift once.
-  const [templates, edits] = await Promise.all([db.customWorkoutTemplates.toArray(), db.events.where("type").equals("ROUTINE_EDITED").toArray()]);
+  // GRAYSON-WORKOUT-CHANGES-001: or once added or swapped into a live workout.
+  const [templates, edits] = await Promise.all([db.customWorkoutTemplates.toArray(), db.events.where("type").anyOf(["ROUTINE_EDITED", "WORKOUT_PLAN_CHANGED"]).toArray()]);
   const used = [
     ...templates.flatMap((t) => (Array.isArray(t?.exercises) ? t.exercises : [])),
     ...edits.flatMap((e) => {
-      const p = e.payload as { exercises?: unknown; previous?: { exercises?: unknown } } | undefined;
-      return [p?.exercises, p?.previous?.exercises].flatMap((list) => (Array.isArray(list) ? list : []));
+      const p = e.payload as { exercises?: unknown; previous?: { exercises?: unknown }; change?: { exercise?: unknown } } | undefined;
+      return [p?.exercises, p?.previous?.exercises, p?.change?.exercise ? [p.change.exercise] : undefined].flatMap((list) => (Array.isArray(list) ? list : []));
     }),
   ];
   for (const ex of used) {

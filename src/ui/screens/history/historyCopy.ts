@@ -189,6 +189,13 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
       const which = typeof p.name === "string" ? p.name : `Workout ${String(p.templateId)}`;
       return p.reason === "RESET" ? `${which} reset.` : p.reason === "UNDO" ? `${which}: a change undone.` : `${which} edited.`;
     }
+    // GRAYSON-WORKOUT-CHANGES-001: today only; KEEP FOR NEXT TIME shows as a routine edit.
+    case "WORKOUT_PLAN_CHANGED": {
+      const c = (p.change ?? {}) as { kind?: string; exercise?: { name?: string }; exerciseId?: string; fromExerciseId?: string };
+      return c.kind === "ADD" ? `Added to the workout: ${c.exercise?.name ?? "an exercise"}.`
+        : c.kind === "SWAP" ? `Swapped ${exercise(String(c.fromExerciseId))} for ${c.exercise?.name ?? "another exercise"}.`
+          : `Removed from today's workout: ${exercise(String(c.exerciseId))}.`;
+    }
     case "TRAIN_PROGRAM_SET":
       return p.programme === null ? "Training programme cleared." : "Training programme saved.";
     case "EXERCISE_CUE_SET":

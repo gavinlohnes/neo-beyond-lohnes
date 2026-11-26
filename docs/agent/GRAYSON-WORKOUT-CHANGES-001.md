@@ -5,7 +5,7 @@
   and tweak or correct everything in this app."** Merging this brief approves the defaults below.
 - **Lane: PROTECTED** (what a live session prescribes and what's saved to a routine). No new table and no Dexie
   version. Independent exact-head review, green CI; Gavin merges.
-- **Starting commit:** `origin/master` with ROUTINE-EDIT-001 merged. Re-fetch before starting.
+- **Starting commit:** `origin/master` with ROUTINE-EDIT-001 merged. Re-fetch before starting. Built on ROUTINE-EDIT-001's branch (#730, head `5d215420`) while it waits for Gavin's merge; rebased once it merges.
 - **Builder:** Claude Code. Branch `claude/grayson-workout-changes-001`. **Reviewer:** a fresh-context reviewer.
 - **Order:** Claude Code, TRAIN basics **#2** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), after
   ROUTINE-EDIT-001, whose commands it saves through. **It replaces GRAYSON-TRAIN-ORDER-001** (not started): KEEP THIS
