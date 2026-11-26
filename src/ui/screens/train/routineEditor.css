@@ -40,3 +40,8 @@
 /* The EDIT and ROUTINES pair under the workout card's exercise list. */
 .train-routine-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .train-routine-acts > button { flex: 1 1 120px; min-height: 44px; margin: 0; }
+
+/* GRAYSON-WORKOUT-CHANGES-001: SWAP and ADD EXERCISE on the live workout, and the question at the end. */
+.train-change-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.train-change-acts > button { flex: 1 1 140px; min-height: 44px; margin: 0; }
+.train-keep-changes { margin: 12px 0; padding-top: 8px; border-top: 1px solid var(--p-line, #2a2a2a); display: grid; gap: 8px; }

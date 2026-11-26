@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
 import type { RoutineEditedPayload } from "../domain/workout/routineEdit";
+import type { WorkoutPlanChangedPayload } from "../domain/workout/workoutChanges";
 
 /**
  * TRAIN-CREATE-002 (Custom Workout Templates): same shared-schema pattern
@@ -76,4 +77,21 @@ export const routineEditedPayloadSchema = z.object({
 export function parseRoutineEditedPayload(raw: unknown): RoutineEditedPayload | null {
   const result = routineEditedPayloadSchema.safeParse(raw);
   return result.success ? (result.data as RoutineEditedPayload) : null;
+}
+
+/** GRAYSON-WORKOUT-CHANGES-001: a WORKOUT_PLAN_CHANGED payload as stored. Never throws; a malformed change is skipped. */
+const keptSets = z.number().int().min(0).max(50);
+export const workoutPlanChangedPayloadSchema = z.object({
+  commandId: z.string().min(1),
+  sessionId: z.string().min(1),
+  change: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("ADD"), exercise: exerciseSlotSchema }),
+    z.object({ kind: z.literal("SWAP"), fromExerciseId: z.string().min(1), exercise: exerciseSlotSchema, keptSets }),
+    z.object({ kind: z.literal("REMOVE"), exerciseId: z.string().min(1), keptSets }),
+  ]),
+});
+
+export function parseWorkoutPlanChangedPayload(raw: unknown): WorkoutPlanChangedPayload | null {
+  const result = workoutPlanChangedPayloadSchema.safeParse(raw);
+  return result.success ? (result.data as WorkoutPlanChangedPayload) : null;
 }
