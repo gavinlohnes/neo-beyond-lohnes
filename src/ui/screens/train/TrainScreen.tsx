@@ -66,6 +66,7 @@ import { suggestSessionVariant } from "../../../engine/trainSuggestion";
 import type { ProgressionSuggestion } from "../../../engine/progression";
 import { useRedCapacityOverrideGate } from "../../hooks/useRedCapacityOverrideGate";
 import { useDayRolloverRefresh } from "../../hooks/useDayRolloverRefresh";
+import { getLighterLift } from "../../../application/lighterNightQueries";
 import { getActiveDay, getLatestCheckIn, getLatestRecommendation, getPlannedWorkDeclaration } from "../../../application/queries";
 import { traceShortSleepStreak } from "../../../engine/evaluate";
 import { ensureActiveDay, performDueDayRollover, setPlannedWork, submitCheckIn } from "../../../application/commands";
@@ -520,9 +521,13 @@ export function TrainScreen({
     const active = (await getActiveWorkoutSession()) ?? null;
     setSession(active);
     if (!preserveChoice) variantChosenRef.current = false;
+    // GRAYSON-LIGHTER-NIGHT-001: on a lighter last night he took TRAIN's SHORT (REDUCED) form; a linked SHORT has its
+    // own START SHORT in MY PROGRAMME, so the plain choice stays.
+    const lighterShort = !active && activeDay ? getLighterLift(activeDay.id)?.form === "REDUCED" : false;
     if (!variantChosenRef.current) setChosenVariant(
       !active && destination === "RECOVERY"
         ? "RECOVERY"
+        : lighterShort ? "REDUCED"
         : suggestion.variant === "RESET"
           ? "STANDARD"
           : suggestion.variant,

@@ -89,6 +89,7 @@ import { useUndoOpen } from "../../hooks/useUndoWindow";
 import type { BodyFocus } from "../../shortcuts";
 import { ActiveWorkoutCard } from "./ActiveWorkoutCard";
 import { useWorkoutCallQuestion } from "./WorkoutCall";
+import { LighterNightCard } from "./LighterNightCard";
 import type { TrainDestination } from "../train/TrainScreen";
 import { getRecentSavedMeals } from "../../../application/nutritionQueries";
 import { ResetCard } from "./ResetCard";
@@ -570,6 +571,8 @@ export function TodayScreen({
   useEffect(() => { const bump = () => setHomeFirstTick((n) => n + 1); window.addEventListener(HOME_FIRST_EVENT, bump); return () => window.removeEventListener(HOME_FIRST_EVENT, bump); }, []);
   // GRAYSON-TODAY-CALM-001: what the self-loading quiet lines and the shift catch-up say they have to show, and a
   // tick for "N MORE" (its opened state is kept for the lived day in todayQuietStore).
+  // GRAYSON-LIGHTER-NIGHT-001: the card reads for itself and says whether it has something, for the attention budget.
+  const [lighterNightPresent, setLighterNightPresent] = useState(false);
   const [quietPresence, setQuietPresence] = useState<{ ROUTINE: boolean; EXPERIMENT: boolean; REVIEW: boolean; PHONE_ALERTS_BEHIND: boolean; WORK_DUE: boolean; HABIT_LADDER: boolean }>({ ROUTINE: false, EXPERIMENT: false, REVIEW: false, PHONE_ALERTS_BEHIND: false, WORK_DUE: false, HABIT_LADDER: false });
   const [catchUpPresence, setCatchUpPresence] = useState<CatchUpPresence>("LOADING");
   const [quietMoreTick, setQuietMoreTick] = useState(0);
@@ -784,6 +787,7 @@ export function TodayScreen({
     paceHistories,
     workContextOpen,
     workoutQuestion,
+    lighterNightPresent,
   }, now);
   const {
     capacityResult,
@@ -831,6 +835,7 @@ export function TodayScreen({
     workEndInAttention,
     checkInInAttention,
     minimumDayInAttention,
+    lighterNightInAttention,
     suggestedVariant,
     liftedShiftDown,
     liftedReset,
@@ -1393,6 +1398,8 @@ export function TodayScreen({
       <LifeStateBand reading={lifeReading} moment={lifeMoment} ahead={ahead} since={since} days={recordedNow?.week?.days} now={now}
         weekAhead={() => <WeekAheadView now={now} onScheduleChanged={() => void refresh()} />} /></div>}
     {nextSection}
+    {/* GRAYSON-LIGHTER-NIGHT-001: under the Engine's recommendation, never above it; it counts in the attention budget. */}
+    {day && <LighterNightCard now={now.getTime()} refreshKey={refreshVersion} busy={busy} tucked={!lighterNightInAttention} onPresence={setLighterNightPresent} onChanged={() => void refresh()} />}
     {/* GRAYSON LOG-CATCHUP-001: after SHIFT DOWN on a shift day, what didn't get logged at work, before the close. */}
     {day && catchUpDue && (
       <ShiftCatchUpCard dayId={day.id} busy={busy} onDone={() => { setCloseSeenTick((n) => n + 1); void refresh(); }} onPresence={setCatchUpPresence} />
@@ -1919,6 +1926,10 @@ export function TodayScreen({
                 </button>
               )}
             </SignalRow>
+          )}
+
+          {day && lighterNightInAttention && (
+            <LighterNightCard now={now.getTime()} refreshKey={refreshVersion} busy={busy} onPresence={setLighterNightPresent} onChanged={() => void refresh()} />
           )}
 
           {commitmentInAttention && (

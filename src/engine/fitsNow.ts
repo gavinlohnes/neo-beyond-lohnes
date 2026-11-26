@@ -16,6 +16,11 @@ export interface FitsNowInput {
   meals: readonly FitsMeal[];
   /** How often he logged each saved meal on this kind of day over the last 28 days. */
   usesOnThisKind: ReadonlyMap<string, number>;
+  /**
+   * GRAYSON-LIGHTER-NIGHT-001: on a lighter last night he took the food part, so his work-night usuals (logged at least
+   * once on a work night in the last 28 days) come first, most-logged first; the rest follow in the usual order.
+   */
+  usualsFirst?: ReadonlyMap<string, number> | undefined;
   /** The eating window, if he uses it: CLOSED hides Fits now; OPEN with minutes left under 60 says so. */
   window: { state: "OPEN"; leftMinutes: number } | { state: "CLOSED" } | null;
 }
@@ -46,7 +51,7 @@ export function fitsNow(input: FitsNowInput): FitsNow | null {
   const toward = (m: FitsMeal) => (proteinLeft === undefined ? m.proteinG : Math.min(m.proteinG, proteinLeft));
   const rows = input.meals
     .filter((m) => m.calories <= leftKcal + FITS_NOW.ABOUT_FITS_KCAL)
-    .sort((a, b) => toward(b) - toward(a) || (input.usesOnThisKind.get(b.id) ?? 0) - (input.usesOnThisKind.get(a.id) ?? 0) || a.name.localeCompare(b.name))
+    .sort((a, b) => (input.usualsFirst ? (input.usualsFirst.get(b.id) ?? 0) - (input.usualsFirst.get(a.id) ?? 0) : 0) || toward(b) - toward(a) || (input.usesOnThisKind.get(b.id) ?? 0) - (input.usesOnThisKind.get(a.id) ?? 0) || a.name.localeCompare(b.name))
     .slice(0, FITS_NOW.MAX_ROWS)
     .map((meal) => ({ meal, aboutFits: meal.calories > leftKcal, leaves: leavesLine(meal, leftKcal, proteinLeft) }));
   if (!rows.length) return { kind: "NONE", leftKcal, line: `None of your saved meals fit the ${round(leftKcal)} kcal left`, windowLine };

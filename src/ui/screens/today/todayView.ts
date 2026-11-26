@@ -4,6 +4,7 @@ import { markKey, type LookSnapshot } from "../../../application/sinceLastLook";
 import { sleepMinutes as externalSleepMinutes } from "../../../domain/health/measuredSeries";
 import { deriveLifeState, lifeStateInput } from "../../../application/lifeState";
 import { deriveLifeMoment, lifeMomentInput } from "../../../application/lifeTransition";
+import { getLighterLift } from "../../../application/lighterNightQueries";
 import { recordedBy } from "../../../application/workContextResolution";
 import { livedDayStartOf } from "../../../application/reflect";
 import { minuteOfDay, paceReading, type PaceHistories } from "../../../application/pace";
@@ -35,6 +36,8 @@ export interface TodayViewUi {
   paceHistories: PaceHistories | null;
   workContextOpen: boolean;
   workoutQuestion: { open: boolean };
+  /** GRAYSON-LIGHTER-NIGHT-001: the lighter-last-night card reported it has something to show. */
+  lighterNightPresent?: boolean;
 }
 
 /**
@@ -246,6 +249,7 @@ export function deriveTodayView(snapshot: TodaySnapshot, ui: TodayViewUi, now: D
       !workoutCallIsScheduledRow &&
       scheduledClock.phase !== "PRE_WORK" &&
       isWorkEndDue(scheduledClock.phase, shiftWindow, now),
+    hasLighterNight: day !== null && ui.lighterNightPresent === true,
     isCheckInMissing:
       day !== null &&
       checkIn === null &&
@@ -279,13 +283,17 @@ export function deriveTodayView(snapshot: TodaySnapshot, ui: TodayViewUi, now: D
   const workEndInAttention = isInAttention(attentionPlan, "WORK_END_AVAILABLE");
   const checkInInAttention = isInAttention(attentionPlan, "CHECK_IN_MISSING");
   const minimumDayInAttention = isInAttention(attentionPlan, "MINIMUM_DAY_PROMINENT");
+  const lighterNightInAttention = isInAttention(attentionPlan, "LIGHTER_NIGHT");
 
 
 
   // ---- SHIFT CLOCK rendering (Drop 2) ----
   const fuelLine = describeFuel(minimumDayProteinG, proteinTargetG, minimumDayHydrateOz);
   // SLEEP-ENGINE-001: the short-sleep fact comes from the issued recommendation's trace, so this row and its card agree.
-  const suggestedVariant = suggestSessionVariant(capacityResult ? capacityResult.capacity : null, traceShortSleepStreak(recommendation?.trace)).variant;
+  const capacityVariant = suggestSessionVariant(capacityResult ? capacityResult.capacity : null, traceShortSleepStreak(recommendation?.trace)).variant;
+  // GRAYSON-LIGHTER-NIGHT-001: on a lighter last night he took the SHORT form, so TODAY's workout rows say SHORT too
+  // (a RESET or RECOVERY suggestion still comes first).
+  const suggestedVariant = capacityVariant === "STANDARD" && day && getLighterLift(day.id)?.form === "REDUCED" ? "REDUCED" : capacityVariant;
   const workoutLine = nextWorkout
     ? suggestedVariant === "RESET"
       ? `${nextWorkout.label} · RESET suggested first`
@@ -361,6 +369,7 @@ export function deriveTodayView(snapshot: TodaySnapshot, ui: TodayViewUi, now: D
     workEndInAttention,
     checkInInAttention,
     minimumDayInAttention,
+    lighterNightInAttention,
     fuelLine,
     suggestedVariant,
     workoutLine,

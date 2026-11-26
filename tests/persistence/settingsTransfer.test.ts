@@ -191,6 +191,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.flipPlan.focus.v1": "this visit only (session)",
       // GRAYSON-SHIFTDOWN-TAPS-001: tonight's "first at home" pick, one lived day's state (the brief: doesn't travel).
       "beyond.shiftDownHomeFirst.v1": "one lived day's state",
+      // GRAYSON-LIGHTER-NIGHT-001: NOT TONIGHT and what each part's UNDO needs, one lived day's state (like LATER).
+      "beyond.lighterNight.day.": "one lived day's state",
     };
     const EVENTS = new Set(["beyond:ask-alfred", "beyond:do", "beyond:drive-home", "beyond:find-food", "beyond:hidden-features",
       "beyond:home-first-changed", "beyond:memory-changed", "beyond:open-record", "beyond:routines-changed", "beyond:snippets-changed", "beyond:weekly-review-saved"]);
