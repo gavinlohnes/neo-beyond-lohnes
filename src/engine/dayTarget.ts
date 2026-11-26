@@ -3,6 +3,8 @@ import type { EatingWindowDayKind, NutritionTargets } from "../domain/common/typ
 export type DayTargetPart = { label: "Work night" | "First day off" | "Day off" | "Lift day"; kcal: number };
 export interface DayCalorieTarget {
   kcal: number | undefined;
+  /** The plain (weekly) target the day starts from. */
+  base: number | undefined;
   kind: EatingWindowDayKind | null;
   lift: boolean;
   parts: DayTargetPart[];
@@ -16,12 +18,12 @@ const LABELS: Record<EatingWindowDayKind, DayTargetPart["label"]> = {
 /** Pure, deterministic target derivation. Disabled/unknown-kind days remain byte-for-byte plain-target behavior. */
 export function deriveDayCalorieTarget(targets: NutritionTargets, kind: EatingWindowDayKind | null, lift: boolean): DayCalorieTarget {
   const base = targets.calorieTargetKcal;
-  if (base === undefined || !targets.dayTargets?.on || !kind) return { kcal: base, kind, lift: false, parts: [], floorHeld: false };
+  if (base === undefined || !targets.dayTargets?.on || !kind) return { kcal: base, base, kind, lift: false, parts: [], floorHeld: false };
   const parts: DayTargetPart[] = [{ label: LABELS[kind], kcal: targets.dayTargets.adjustKcal[kind] }];
   if (lift) parts.push({ label: "Lift day", kcal: targets.dayTargets.adjustKcal.LIFT });
   const raw = base + parts.reduce((sum, part) => sum + part.kcal, 0);
   const floor = targets.calorieFloorKcal ?? 1500;
-  return { kcal: Math.max(raw, floor), kind, lift, parts, floorHeld: raw < floor };
+  return { kcal: Math.max(raw, floor), base, kind, lift, parts, floorHeld: raw < floor };
 }
 
 export function averageDayTargets(targets: NutritionTargets, days: readonly { kind: EatingWindowDayKind | null; lift: boolean }[]): number | undefined {

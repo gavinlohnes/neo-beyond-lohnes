@@ -4,6 +4,11 @@ import { endDay, startDay, updateSchedulePattern } from "../../src/application/c
 import { balanceNutritionDayTargets, updateNutritionTargets } from "../../src/application/nutritionTargetCommands";
 import { getDayCalorieTarget, getNutritionTargets, getPlannedDayCalorieTarget, getTwoWeekDayTargetProjection } from "../../src/application/nutritionTargetQueries";
 import { saveTrainingProgramme } from "../../src/application/trainingProgramme";
+import { buildSequenceProgramme } from "../../src/application/trainingProgrammeQueries";
+import { createCustomTemplate } from "../../src/application/customTemplateCommands";
+import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { deriveLifeState, lifeStateInput } from "../../src/application/lifeState";
 import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { describeCalorieProgress } from "../../src/ui/screens/body/nutritionCopy";
@@ -66,6 +71,14 @@ describe("targets by kind of day", () => {
     await endDay(day.id);
   });
 
+  it("#736 review N1: a sequence programme (A → B → C) marks no day as a lift day", async () => {
+    await updateNutritionTargets({ calorieTargetKcal: 2000, dayTargets: { on: true, adjustKcal: ADJUST } });
+    const templates = await Promise.all((["Foundation A", "Foundation B", "Foundation C"] as const).map((name, i) =>
+      createCustomTemplate({ name, exercises: WORKOUT_TEMPLATES[(["A", "B", "C"] as const)[i]!]!.exercises })));
+    await saveTrainingProgramme(buildSequenceProgramme([templates[0]!.id, templates[1]!.id, templates[2]!.id], templates), null);
+    for (const d of [16, 18, 20, 22]) expect((await getPlannedDayCalorieTarget(at(d))).lift).toBe(false);
+  });
+
   it("the floor holds and says so", async () => {
     await updateNutritionTargets({ calorieTargetKcal: 1600, calorieFloorKcal: 1500, dayTargets: { on: true, adjustKcal: { WORK: 0, RECOVERY: 0, OFF: -300, LIFT: 0 } } });
     const off = await getPlannedDayCalorieTarget(at(22));
@@ -94,5 +107,17 @@ describe("targets by kind of day", () => {
     expect(Math.abs((await getTwoWeekDayTargetProjection()).average! - 2000)).toBeLessThanOrEqual(25);
     expect(await undo()).toBe(true);
     expect((await getNutritionTargets()).dayTargets!.adjustKcal.OFF).toBe(0);
+  });
+});
+
+describe("#736 review N2: no display reads the plain target directly", () => {
+  it("under src/ui and the meal plan, only the settings form and the weekly proposal name calorieTargetKcal", () => {
+    const files = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? files(p) : [p]; });
+    // Settings and the proposal edit the plain target. Delta's TARGETS line (operatorContext.ts) and the weekly numbers
+    // (weeklyDebriefQueries.ts) keep its original words when targets by kind of day are off, and are tested for it.
+    const allowed = new Set(["src/ui/screens/more/NutritionTargetsSettings.tsx", "src/ui/screens/weekly/CalorieProposal.tsx"]);
+    const offenders = [...files("src/ui").filter((f) => /\.(ts|tsx)$/.test(f)), "src/application/mealPlanQueries.ts"]
+      .filter((f) => !allowed.has(f) && /\bcalorieTargetKcal\b/.test(readFileSync(f, "utf8")));
+    expect(offenders).toEqual([]);
   });
 });

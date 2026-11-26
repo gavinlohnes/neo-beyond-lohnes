@@ -2,7 +2,7 @@ import { db } from "../persistence/db";
 import { parseNutritionTargets } from "../persistence/nutritionTargetValidation";
 import { deriveProteinTargetG, DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 import { getMostRecentBodyweight } from "./queries";
-import type { NutritionTargets } from "../domain/common/types";
+import type { EatingWindowDayKind, NutritionTargets } from "../domain/common/types";
 import { averageDayTargets, deriveDayCalorieTarget, type DayCalorieTarget } from "../engine/dayTarget";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { deriveLifeState, getRecordedDayBefore, lifeStateInput } from "./lifeState";
@@ -53,14 +53,21 @@ export async function getPlannedDayCalorieTarget(at: Date): Promise<DayCalorieTa
 }
 
 async function getCalorieTargetForDate(at: Date, day?: { id: string; workContext?: "WORK" | "OFF" | "UNKNOWN" }): Promise<DayCalorieTarget> {
-  const [targets, schedule, exceptions] = await Promise.all([getNutritionTargets(), getSchedulePattern(), getConfirmedExceptions()]);
+  const targets = await getNutritionTargets();
   if (!targets.dayTargets?.on) return deriveDayCalorieTarget(targets, null, false);
+  const facts = await dayFactsFor(at, day);
+  return facts.kind ? deriveDayCalorieTarget(targets, facts.kind, facts.lift) : deriveDayCalorieTarget(targets, null, false);
+}
+
+/** The lived day's kind (named the way the eating window names it) and whether it's a lift day, whatever the setting. */
+async function dayFactsFor(at: Date, day?: { id: string; workContext?: "WORK" | "OFF" | "UNKNOWN" }): Promise<{ kind: EatingWindowDayKind | null; lift: boolean }> {
+  const [schedule, exceptions] = await Promise.all([getSchedulePattern(), getConfirmedExceptions()]);
   const yesterday = await getRecordedDayBefore(at, 1);
   const recorded = day?.workContext === "WORK" || day?.workContext === "OFF" ? day.workContext : null;
   const state = deriveLifeState(lifeStateInput(at, schedule, recorded, yesterday, recorded ? "OPERATOR" : undefined,
     new Map([...exceptions].map(([date, exception]) => [date, exception.kind]))));
   const kind = dayKindFor(state?.state);
-  if (!kind) return deriveDayCalorieTarget(targets, null, false);
+  if (!kind) return { kind: null, lift: false };
   const [programme, sessions] = await Promise.all([
     getProgrammeView(at), day ? db.workoutSessions.where("beyondDayId").equals(day.id).toArray() : Promise.resolve([]),
   ]);
@@ -69,13 +76,13 @@ async function getCalorieTargetForDate(at: Date, day?: { id: string; workContext
   // sequence check made every day a lift day when no sequence existed).
   const plannedLift = programme.planned.templateId !== null;
   const loggedLift = sessions.some((session) => ["COMPLETED", "PARTIAL", "ACTIVE"].includes(session.status) && session.sessionType !== "RECOVERY");
-  return deriveDayCalorieTarget(targets, kind, plannedLift || loggedLift);
+  return { kind, lift: plannedLift || loggedLift };
 }
 
 export async function getTwoWeekDayTargetProjection(now = new Date()) {
   const targets = await getNutritionTargets();
   const start = mostRecentBoundaryAtOrBefore(now);
-  const resolved = await Promise.all(Array.from({ length: 14 }, (_, i) => getPlannedDayCalorieTarget(new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 16, 30))));
-  const days = resolved.map((day) => ({ kind: day.kind, lift: day.lift }));
+  // The kinds and lifts are named whether or not the setting is on yet, so the settings line can show his unsaved steps.
+  const days = await Promise.all(Array.from({ length: 14 }, (_, i) => dayFactsFor(new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 16, 30))));
   return { average: averageDayTargets(targets, days), days, target: targets.calorieTargetKcal };
 }

@@ -2268,7 +2268,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
             : mealEntries.length === 0 ? "No meals logged yet" : `${totalMealCalories} kcal logged today`}</p>
           {dayCalorieTarget?.parts.length ? <>
             <button type="button" className="chip" aria-expanded={dayTargetWhyOpen} onClick={() => setDayTargetWhyOpen((open) => !open)}>WHY THIS TARGET</button>
-            {dayTargetWhyOpen && <p className="meta">Weekly target {nutritionTargets?.calorieTargetKcal} · {dayCalorieTarget.parts.map((part) => `${part.label} ${part.kcal >= 0 ? "+" : ""}${part.kcal}`).join(" · ")}{dayCalorieTarget.floorHeld ? " · held at your floor" : ""}</p>}
+            {dayTargetWhyOpen && <p className="meta">Weekly target {dayCalorieTarget.base} · {dayCalorieTarget.parts.map((part) => `${part.label} ${part.kcal >= 0 ? "+" : ""}${part.kcal}`).join(" · ")}{dayCalorieTarget.floorHeld ? " · held at your floor" : ""}</p>}
           </> : null}
           <p className="meta">{effectiveProteinTargetG !== undefined
             ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
@@ -2486,7 +2486,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
     <div hidden={progressOpen || pictureOpen}><BodyDashboard day={day} now={new Date()} busy={busy || foodSearchBusy} refreshKey={dataRevision}
       water={{ totalOz: total, entries }} sleep={lastMainSleep}
       weight={{ history: weightHistory, goalLbs: nutritionTargets?.goalWeightLbs }}
-      nutrition={{ calories: totalMealCalories, mealsLogged: mealEntries.length, proteinG: dayProteinG, proteinTargetG: effectiveProteinTargetG, calorieTargetKcal: dayCalorieTarget?.kcal }}
+      nutrition={{ calories: totalMealCalories, mealsLogged: mealEntries.length, proteinG: dayProteinG, proteinTargetG: effectiveProteinTargetG, dayCalorieTargetKcal: dayCalorieTarget?.kcal }}
       waterConfirmation={waterConfirmation?.message ?? null} onAddWater={(oz) => void handleLogWaterAmount(oz)} onUndoWater={() => void handleUndoLog("WATER")}
       onOpen={(metric) => metric === "sleep" ? setSleepMetricOpen(true) : showProgress(metric === "nutrition" ? "calories" : metric)}
       onLog={onOpenRecord ?? (onLogWeight ? (target) => { if (target === "weight") onLogWeight(); } : undefined)}

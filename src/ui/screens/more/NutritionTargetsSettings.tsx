@@ -7,7 +7,8 @@ import { useUndoWindow } from "../../hooks/useUndoWindow";
 import { LineIcon } from "../../icons/LineIcon";
 import type { NutritionTargets } from "../../../domain/common/types";
 import { getNutritionTargets, getTwoWeekDayTargetProjection } from "../../../application/nutritionTargetQueries";
-import { balanceNutritionDayTargets, saveNutritionTargets } from "../../../application/nutritionTargetCommands";
+import { saveNutritionTargets } from "../../../application/nutritionTargetCommands";
+import { averageDayTargets, balancedOffAdjustment } from "../../../engine/dayTarget";
 import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
 /**
@@ -63,7 +64,8 @@ export function NutritionTargetsSettings() {
   const [floorInput, setFloorInput] = useState("");
   const [waterInput, setWaterInput] = useState("");
   const [dayTargets, setDayTargets] = useState<NutritionTargets["dayTargets"]>({ ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
-  const [projection, setProjection] = useState<{ average: number | undefined; target: number | undefined } | null>(null);
+  // The two weeks' kinds and lifts; the line and BALANCE read the steppers' current values against them (#736 review B1).
+  const [projection, setProjection] = useState<Awaited<ReturnType<typeof getTwoWeekDayTargetProjection>> | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,14 +156,21 @@ export function NutritionTargetsSettings() {
     }
   }
 
+  // BALANCE: from the adjustments on screen (saved or not), set Day off so the two weeks average his target, save
+  // them in this one tap, and show UNDO here in the open form.
+  const working = targets && dayTargets ? { ...targets, dayTargets } : null;
+  const twoWeekAverage = working && projection ? averageDayTargets(working, projection.days) : undefined;
+  const balanceTo = working && projection ? balancedOffAdjustment(working, projection.days) : null;
   async function handleBalance() {
-    if (busy) return;
+    if (busy || !dayTargets || balanceTo === null) return;
     setBusy(true); setError(null);
     try {
-      const { saved, undo } = await balanceNutritionDayTargets();
-      setTargets(saved); setDayTargets(saved.dayTargets!); setProjection(await getTwoWeekDayTargetProjection());
-      setConfirmation({ message: "Day targets balanced over two weeks.", undo });
-    } catch (e) { setError(describeError(e, "Could not balance day targets.")); }
+      const next = { ...dayTargets, adjustKcal: { ...dayTargets.adjustKcal, OFF: Math.max(-1000, Math.min(1000, balanceTo)) } };
+      const { saved, undo } = await saveNutritionTargets({ dayTargets: next });
+      if (disposedRef.current) return;
+      setTargets(saved); setDayTargets(saved.dayTargets!);
+      setConfirmation({ message: `Day off set to ${next.adjustKcal.OFF >= 0 ? "+" : ""}${next.adjustKcal.OFF}, so two weeks average your target.`, undo });
+    } catch (e) { if (!disposedRef.current) setError(describeError(e, "Could not balance day targets.")); }
     finally { if (!disposedRef.current) setBusy(false); }
   }
 
@@ -174,6 +183,8 @@ export function NutritionTargetsSettings() {
       const restored = await getNutritionTargets();
       if (disposedRef.current) return;
       setTargets(restored);
+      // #736 review B1: the open form shows what UNDO put back.
+      setDayTargets(restored.dayTargets ?? { ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
       setConfirmation(null);
     } finally {
       if (!disposedRef.current) setBusy(false);
@@ -232,9 +243,11 @@ export function NutritionTargetsSettings() {
               <span>{label} {dayTargets.adjustKcal[key] >= 0 ? "+" : ""}{dayTargets.adjustKcal[key]}</span>
               <span style={{ display: "flex", gap: 8 }}><button type="button" className="chip" style={{ minWidth: 44, minHeight: 44 }} aria-label={`Decrease ${label} by 50 kcal`} disabled={dayTargets.adjustKcal[key] <= -1000} onClick={() => setDayTargets((old) => ({ ...old!, adjustKcal: { ...old!.adjustKcal, [key]: old!.adjustKcal[key] - 50 } }))}>−</button><button type="button" className="chip" style={{ minWidth: 44, minHeight: 44 }} aria-label={`Increase ${label} by 50 kcal`} disabled={dayTargets.adjustKcal[key] >= 1000} onClick={() => setDayTargets((old) => ({ ...old!, adjustKcal: { ...old!.adjustKcal, [key]: old!.adjustKcal[key] + 50 } }))}>+</button></span>
             </div>)}
-            <p className="meta">{projection?.average !== undefined && projection.target !== undefined ? `Over two weeks: ${Math.round(projection.average)} a day, ${Math.abs(projection.average - projection.target) < 25 ? "your target" : `${Math.abs(Math.round(projection.average - projection.target))} ${projection.average > projection.target ? "over" : "under"} your target`}` : "Save a schedule and calorie target to see the two-week average."}</p>
-            <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleBalance()}>BALANCE</button>
+            <p className="meta" role="status">{twoWeekAverage !== undefined && projection?.target !== undefined ? `Over two weeks: ${Math.round(twoWeekAverage)} a day, ${Math.abs(twoWeekAverage - projection.target) < 25 ? "your target" : `${Math.abs(Math.round(twoWeekAverage - projection.target))} ${twoWeekAverage > projection.target ? "over" : "under"} your target`}` : "Save a schedule and calorie target to see the two-week average."}</p>
+            <button type="button" className="btn-secondary" disabled={busy || balanceTo === null || balanceTo === dayTargets.adjustKcal.OFF} onClick={() => void handleBalance()}>BALANCE</button>
+            {balanceTo === null && projection && <p className="meta">Your two weeks have no day off to balance with.</p>}
           </div>}
+          {banner}
         </fieldset>
         <div>
           <label className="meta" htmlFor="calorie-floor-input" style={{ display: "block", marginBottom: 4 }}>

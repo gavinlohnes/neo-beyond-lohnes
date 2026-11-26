@@ -11,7 +11,8 @@ import { NutritionTargetsSettings } from "../../src/ui/screens/more/NutritionTar
 import { APP_RELEASE, BUILD_COMMIT, BUILD_TIME } from "../../src/app/buildInfo";
 import { ENGINE_VERSION } from "../../src/engine/evaluate";
 import { archiveMission, createMission, createObligation } from "../../src/application/intentCommands";
-import { captureItem, startDay } from "../../src/application/commands";
+import { captureItem, startDay, updateSchedulePattern } from "../../src/application/commands";
+import { DEFAULT_SCHEDULE_PATTERN } from "../../src/engine/scheduledContext";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
 const SHOTS = import.meta.env.VITE_WALKTHROUGH_SHOTS as string | undefined;
 
@@ -50,6 +51,36 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
   });
+  it("#736 review B1: the two-week line follows the steppers; BALANCE shows UNDO in the open form; UNDO restores the stepper and the line", async () => {
+    await page.viewport(360, 900);
+    const { id: _id, createdAt: _c, updatedAt: _u, ...schedule } = DEFAULT_SCHEDULE_PATTERN;
+    await updateSchedulePattern(schedule);
+    await updateNutritionTargets({ calorieTargetKcal: 2000, dayTargets: { on: true, adjustKcal: { WORK: 0, RECOVERY: 0, OFF: 0, LIFT: 0 } } });
+    const screen = await render(<NutritionTargetsSettings />);
+    const open = screen.getByRole("button", { name: "Open TARGETS", exact: true });
+    await expect.element(open).toBeEnabled();
+    await open.click();
+    await expect.element(screen.getByText(/^Over two weeks: 2000 a day, your target$/)).toBeVisible();
+    // Unsaved steps move the line at once.
+    await screen.getByRole("button", { name: "Increase Work night by 50 kcal" }).click();
+    await screen.getByRole("button", { name: "Increase Work night by 50 kcal" }).click();
+    await expect.element(screen.getByText(/ over your target$/)).toBeVisible();
+    // BALANCE uses the steps on screen, saves them in this tap, and shows UNDO here.
+    await screen.getByRole("button", { name: "BALANCE", exact: true }).click();
+    await expect.element(screen.getByText(/^Day off set to -\d+, so two weeks average your target\.$/)).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "UNDO" })).toBeVisible();
+    await expect.element(screen.getByText(/, your target$/)).toBeVisible();
+    const balanced = (await db.nutritionTargets.get("current"))!.dayTargets!;
+    expect(balanced.adjustKcal.WORK).toBe(100);
+    expect(balanced.adjustKcal.OFF).toBeLessThan(0);
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.poll(async () => (await db.nutritionTargets.get("current"))!.dayTargets!.adjustKcal).toEqual({ WORK: 0, RECOVERY: 0, OFF: 0, LIFT: 0 });
+    await expect.element(screen.getByText("Day off +0", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("Work night +0", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText(/^Over two weeks: 2000 a day, your target$/)).toBeVisible();
+    expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+  });
+
   it("REVIEW-001 C2: a pending initial read cannot turn untouched blanks into target clears", async () => {
     const saved = await updateNutritionTargets({
       weightChangeTargetPercentPerWeek: 0.75,
