@@ -92,6 +92,27 @@ describe("GRAYSON-ONE-OFF-001 TODAY's START", () => {
     await expect.element(screen.getByRole("button", { name: "PROCEED ANYWAY" })).toBeVisible();
     expect(await getActiveWorkoutSession()).toBeUndefined();
   });
+
+  it("review of #734: with TRAIN already open, a RED check-in on TODAY still makes START ask the override", async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+    await submitCheckIn(day.id, RED);
+    await screen.rerender(<TrainScreen destination="START_PLANNED" />);
+    await expect.element(screen.getByRole("button", { name: "PROCEED ANYWAY" })).toBeVisible();
+    expect(await getActiveWorkoutSession()).toBeUndefined();
+    await screen.rerender(<TrainScreen destination="START_EMPTY" />);
+    await settle(400);
+    expect(await getActiveWorkoutSession()).toBeUndefined();
+  });
+
+  it("review of #734: TODAY's calm planned row has no filled red button", async () => {
+    const day = await startDay();
+    await render(<Card day={day} tonight={tonight(true)} onOpenTrain={() => {}} />);
+    await expect.poll(() => document.querySelectorAll(".workout-call button").length).toBeGreaterThan(0);
+    expect(document.querySelectorAll(".workout-call .btn-primary")).toHaveLength(0);
+  });
 });
 
 describe("GRAYSON-ONE-OFF-001 an empty workout", () => {
