@@ -33,7 +33,7 @@ beforeEach(async () => {
   vi.spyOn(speechSynthesis, "cancel").mockImplementation(() => {});
   await page.viewport(360, 900);
 });
-afterEach(async () => { await cleanup(); vi.restoreAllMocks(); delete w.SpeechRecognition; w.webkitSpeechRecognition = webkit; });
+afterEach(async () => { await cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); delete w.SpeechRecognition; w.webkitSpeechRecognition = webkit; });
 
 const q = (sel: string) => document.querySelector(sel);
 function fits(root: Element, width: number) {
@@ -146,6 +146,10 @@ describe("quick capture", () => {
 const sheet = () => render(<RecordSheets target="meal" open={() => {}} close={() => {}} onSaved={() => {}} onBusy={() => {}} onHistory={() => {}} onWorkout={() => {}} onNotes={() => {}} />);
 describe("meal log", () => {
   it("a saved meal becomes a card with WHEN applied; an unknown food lands in the search box; the rest is shown", async () => {
+    // A fixed time inside the lived day: on the real clock between 16:30 and 17:30, "1 H AGO" falls before the day's
+    // 16:30 start and is rightly refused, which failed CI on #736 at 16:36 UTC.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 20, 12));
     await startDay();
     await createSavedMeal({ name: "Chicken bowl", calories: 650, proteinG: 45, carbsG: 60, fatG: 18 });
     script = ["chicken bowl and pepperoni pizza and blue sky"];
