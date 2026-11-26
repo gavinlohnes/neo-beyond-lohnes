@@ -9,6 +9,7 @@ import { Readout, ReadoutGrid } from "../../components/ReadoutGrid";
 import { describeFindings, describeWaitingFindings } from "../weekly/weeklyCopy";
 import { describeError } from "../../errorMessage";
 import { WeeklyReviewPanel } from "./WeeklyReviewPanel";
+import { ShortDaysRow } from "./ShortDaysRow";
 import { MonthlyBodyReview } from "./MonthlyBodyReview";
 import { getMonthlyReview, type MonthlyReview } from "../../../application/monthlyReviewQueries";
 import { formatDate } from "../../formatDate";
@@ -143,6 +144,8 @@ export function WeeklyDashboard({ active = true, onOpenHistory }: { active?: boo
         )}
       </div>
 
+      {/* GRAYSON-MISSION-REVIEW-001 slice A: days that look short, first in the monthly review; nothing marked by itself. */}
+      {monthlyReview?.body && monthlyReview.body.shortDays.length > 0 && <ShortDaysRow days={monthlyReview.body.shortDays} onChanged={() => {}} />}
       {monthlyReview?.body && <MonthlyBodyReview body={monthlyReview.body} />}
       {monthlyError && <p className="meta" role="status">Body composition for this month couldn’t be read. The weekly review below is unaffected.</p>}
 

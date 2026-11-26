@@ -87,3 +87,19 @@ export function photoComparisons<T extends DatedPhoto>(photos: readonly T[], fro
     return earlier && earlier.id !== later.id ? [{ pose, earlier, later }] : [];
   });
 }
+
+/**
+ * GRAYSON-MISSION-REVIEW-001 slice A (HONEST-BURN): finished days in the window whose logged calories are under half of
+ * his median logged day there, that he hasn't answered either way. Pure; each with its calories so he can see why. The
+ * share is fixed here (SHORT_DAY_SHARE) and can move to his numbers page later.
+ */
+export const SHORT_DAY_SHARE = 0.5;
+export interface ShortDay { beyondDayId: string; livedDayStart: string; kcal: number }
+export function shortFoodDays(days: readonly { beyondDayId: string; livedDayStart: string; kcal: number }[], answered: ReadonlySet<string>): ShortDay[] {
+  if (!days.length) return [];
+  const sorted = days.map((d) => d.kcal).sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  return days.filter((d) => d.kcal < median * SHORT_DAY_SHARE && !answered.has(d.beyondDayId))
+    .sort((a, b) => a.livedDayStart.localeCompare(b.livedDayStart));
+}

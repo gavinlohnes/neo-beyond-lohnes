@@ -1,5 +1,6 @@
 import { MealPlanPanel } from "./MealPlanPanel";
 import { EatingWindowSetup } from "./EatingWindowSetup";
+import { NotFullyLoggedRow } from "./NotFullyLoggedRow";
 import { captureCommitFeedback } from "../../feel/feedback";
 import { LogTimeEditor } from "../../components/LogTimeEditor";
 import { SleepMetricSheet } from "../today/SleepMetricSheet";
@@ -2527,6 +2528,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
       {/* GRAYSON C9.2: History wears the panel frame the dashboard uses; its contents are unchanged. */}
       <section aria-label="History" className="bf bf-panel bf-panel--wide data-history"><h2 className="bf-panel__label">HISTORY</h2>
         {!healthDay && readingsReady && day && <DailyHealthRecord water={entries} sleep={sleepEntries} weight={bodyweightEntries} protein={proteinEntries} meals={mealEntries} disabled={busy} onInspect={(record) => onEditRecord?.(record, day.id)} />}
+        {/* GRAYSON-MISSION-REVIEW-001 slice A: "Not fully logged" under the day's food. */}
+        {!healthDay && readingsReady && day && <NotFullyLoggedRow dayId={day.id} disabled={busy} />}
         <HealthHistory open={healthHistoryOpen} onOpenChange={setHealthHistoryOpen} active={visible && !progressOpen}
           days={{ selected: healthDay, disabled: busy, refreshKey: dataRevision, onHistory: onHealthHistory, onSelect: setHealthDay, onExplore: showProgress, onInspect: (selection) => openSources(selection, true) }} />
       </section>

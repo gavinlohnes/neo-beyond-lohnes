@@ -5,8 +5,9 @@ import { getProgressPhotos } from "./progressPhotoQueries";
 import { getWeeklyReviewRecords } from "./weeklyReviewQueries";
 import { projectReviewRows, type ReviewWeight } from "../engine/reviewOverview";
 import {
-  isMonthlyReviewWeek, measurementChanges, monthlyWindow, MONTHLY_WINDOW_DAYS, photoComparisons, weeksUntilMonthly, windowWeightChange,
+  isMonthlyReviewWeek, measurementChanges, monthlyWindow, MONTHLY_WINDOW_DAYS, photoComparisons, shortFoodDays, weeksUntilMonthly, windowWeightChange,
 } from "../engine/monthlyReview";
+import { getAnsweredDayIds } from "./foodDayMark";
 import { MEASUREMENT_SITES, PHOTO_POSES } from "../domain/body/types";
 import type { ReviewWeek, WeeklyReviewRecord } from "../domain/review/types";
 
@@ -45,7 +46,9 @@ export async function getMonthlyReview(week: ReviewWeek) {
     (await getBodyweightEntries(day.beyondDayId)).map((entry) => ({ dayId: day.beyondDayId, lbs: entry.effectiveWeightLbs, at: entry.recordedAt, rootId: entry.rootEventId })),
   ))).flat();
   const rows = projectReviewRows(summaries, weights, new Date(window.start), MONTHLY_WINDOW_DAYS);
-  const [measurements, photos] = await Promise.all([getMeasurements(), getProgressPhotos()]);
+  const [measurements, photos, answered] = await Promise.all([getMeasurements(), getProgressPhotos(), getAnsweredDayIds()]);
+  // GRAYSON-MISSION-REVIEW-001 slice A: days that look short, suggested for "Not fully logged" (never marked by itself).
+  const shortDays = shortFoodDays(inWindow.flatMap((d) => d.kcal !== undefined ? [{ beyondDayId: d.beyondDayId, livedDayStart: d.livedDayStart, kcal: d.kcal }] : []), answered);
 
   return {
     ...cadence,
@@ -54,6 +57,7 @@ export async function getMonthlyReview(week: ReviewWeek) {
       weight: windowWeightChange(rows, window),
       measurements: measurementChanges(measurements, fromDate, toDate, MEASUREMENT_SITES),
       photos: photoComparisons(photos, fromDate, toDate, PHOTO_POSES),
+      shortDays,
     },
   };
 }
