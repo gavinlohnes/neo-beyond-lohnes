@@ -13,6 +13,7 @@ import { ENGINE_VERSION } from "../../src/engine/evaluate";
 import { archiveMission, createMission, createObligation } from "../../src/application/intentCommands";
 import { captureItem, startDay } from "../../src/application/commands";
 import { completeWorkout, logSet, startWorkout } from "../../src/application/trainCommands";
+const SHOTS = import.meta.env.VITE_WALKTHROUGH_SHOTS as string | undefined;
 
 /**
  * BEYOND FIELD ALPHA Phase 4 — first real-browser acceptance layer for
@@ -31,6 +32,22 @@ afterEach(() => {
 });
 
 describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
+  it("GRAYSON-DAY-TARGETS-001: edits 50-kcal day adjustments at 320px without accessibility violations", async () => {
+    await page.viewport(320, 800);
+    await updateNutritionTargets({ calorieTargetKcal: 1950 });
+    const screen = await render(<NutritionTargetsSettings />);
+    const open = screen.getByRole("button", { name: "Open TARGETS", exact: true });
+    await expect.element(open).toBeEnabled();
+    await open.click();
+    await screen.getByRole("checkbox", { name: "Use a different calorie target for each kind of day" }).click();
+    await screen.getByRole("button", { name: "Increase Work night by 50 kcal" }).click();
+    await screen.getByRole("button", { name: "Increase Work night by 50 kcal" }).click();
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.poll(async () => (await db.nutritionTargets.get("current"))?.dayTargets?.adjustKcal.WORK).toBe(100);
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/day-targets-320.png`, element: screen.container });
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    expect((await axe.run(screen.container, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
+  });
   it("REVIEW-001 C2: a pending initial read cannot turn untouched blanks into target clears", async () => {
     const saved = await updateNutritionTargets({
       weightChangeTargetPercentPerWeek: 0.75,

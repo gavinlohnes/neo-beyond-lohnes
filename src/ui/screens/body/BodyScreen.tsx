@@ -624,6 +624,7 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   // Nutrition Targets (NUTRITION-003)
   const [nutritionTargets, setNutritionTargets] = useState<NutritionTargets | null>(null);
   const [dayCalorieTarget, setDayCalorieTarget] = useState<DayCalorieTarget | null>(null);
+  const [dayTargetWhyOpen, setDayTargetWhyOpen] = useState(false);
   const dayTargetLabel = dayCalorieTarget?.parts.map((part) => part.label).join(", ");
   const [effectiveProteinTargetG, setEffectiveProteinTargetG] = useState<number | undefined>(undefined);
   // Drop 5: every weigh-in across all days, for the trend, best-since, milestone and goal date.
@@ -2264,6 +2265,10 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
           <p className="card-title">{dayCalorieTarget?.kcal
             ? describeCalorieProgress(totalMealCalories, dayCalorieTarget.kcal, mealEntries.length > 0, dayTargetLabel)
             : mealEntries.length === 0 ? "No meals logged yet" : `${totalMealCalories} kcal logged today`}</p>
+          {dayCalorieTarget?.parts.length ? <>
+            <button type="button" className="chip" aria-expanded={dayTargetWhyOpen} onClick={() => setDayTargetWhyOpen((open) => !open)}>WHY THIS TARGET</button>
+            {dayTargetWhyOpen && <p className="meta">Weekly target {nutritionTargets?.calorieTargetKcal} · {dayCalorieTarget.parts.map((part) => `${part.label} ${part.kcal >= 0 ? "+" : ""}${part.kcal}`).join(" · ")}{dayCalorieTarget.floorHeld ? " · held at your floor" : ""}</p>}
+          </> : null}
           <p className="meta">{effectiveProteinTargetG !== undefined
             ? describeProteinProgress(dayProteinG, effectiveProteinTargetG)
             : dayProteinG === 0 ? "No protein logged yet" : `${dayProteinG} g protein today (meals + protein logs)`}</p>
