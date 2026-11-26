@@ -239,7 +239,7 @@ export function describeLastStrengthSession(summary: LastStrengthSessionSummary 
   const statusWord = summary.status === "COMPLETED" ? "Completed" : "Partial";
   const sets = `${summary.workingSetCount} working ${summary.workingSetCount === 1 ? "set" : "sets"}`;
   const duration = summary.durationMinutes !== null ? ` · ${summary.durationMinutes} min` : "";
-  return `Template ${summary.templateId}${variant} — ${statusWord} · ${sets}${duration}`;
+  return `${summary.templateId ? `Template ${summary.templateId}` : ONE_OFF_LABEL}${variant} — ${statusWord} · ${sets}${duration}`;
 }
 
 /**
@@ -269,7 +269,7 @@ export function describeSessionStatusLabel(status: "COMPLETED" | "PARTIAL" | "AB
 /** TRAIN-003: one compact line per getRecentStrengthSessions entry — template, variant (only when REDUCED), and real status. */
 export function describeRecentStrengthEntry(entry: RecentStrengthSessionEntry): string {
   const variant = entry.sessionType === "REDUCED" ? " REDUCED" : "";
-  return `Template ${entry.templateId}${variant} — ${describeSessionStatusLabel(entry.status)}`;
+  return `${entry.templateId ? `Template ${entry.templateId}` : ONE_OFF_LABEL}${variant} — ${describeSessionStatusLabel(entry.status)}`;
 }
 
 /** TRAIN-003: calm empty-history copy for RECENT, distinct from LAST's own empty copy so neither reads as an error. */
@@ -330,11 +330,15 @@ export function describeProgressionSummary(counts: ProgressionSummaryCounts): st
   return `${joinWithAnd(parts)}.`;
 }
 
+/** GRAYSON-ONE-OFF-001: an empty workout with no routine, wherever a session's template is named. */
+export const ONE_OFF_LABEL = "Workout (one-off)";
+
 /**
  * Bare id for a built-in template ("A"/"B"/"C"); the template's own name for
  * a custom one. Shared by TRAIN and TODAY's Shift Clock workout rows (Drop 2).
  */
 export function templateLabel(templateId: WorkoutTemplateId, customTemplates: readonly CustomWorkoutTemplate[]): string {
+  if (!templateId) return ONE_OFF_LABEL;
   if (WORKOUT_TEMPLATES[templateId]) return templateId;
   return customTemplates.find((t) => t.id === templateId)?.name ?? templateId;
 }

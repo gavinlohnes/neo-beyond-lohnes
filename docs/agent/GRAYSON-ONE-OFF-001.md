@@ -5,7 +5,7 @@
   and tweak or correct everything in this app."** Merging this brief approves the defaults below.
 - **Lane: PROTECTED** (a session with no routine, the A, B, C turn, and a TODAY change). No new table and no Dexie
   version. Independent exact-head review, green CI; Gavin merges.
-- **Starting commit:** `origin/master` with WORKOUT-CHANGES-001 merged. Re-fetch before starting.
+- **Starting commit:** `origin/master` with WORKOUT-CHANGES-001 merged. Re-fetch before starting. Built on WORKOUT-CHANGES-001's branch (#732, stacked on #730) while those wait for Gavin's merge; rebased once they merge.
 - **Builder:** Claude Code. Branch `claude/grayson-one-off-001`. **Reviewer:** a fresh-context reviewer.
 - **Order:** Claude Code, TRAIN basics **#3** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25). It uses
   WORKOUT-CHANGES-001's ADD EXERCISE. **This is a TODAY change:** only one TODAY PR open at a time across both

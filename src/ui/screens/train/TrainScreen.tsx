@@ -57,7 +57,7 @@ import type { CustomWorkoutTemplate } from "../../../domain/workout/customTempla
 import { getCustomTemplates, reducedExercises } from "../../../application/customTemplateQueries";
 import { getRoutineViews } from "../../../application/routineEditQueries";
 import { RoutinesPanel } from "./RoutineEditor";
-import { AddExerciseSheet, KeepChangesLine, SwapSheet } from "./WorkoutChanges";
+import { AddExerciseSheet, KeepChangesLine, SaveAsRoutineLine, SwapSheet } from "./WorkoutChanges";
 import { getLastNumbers, getWorkoutPlan } from "../../../application/workoutChanges";
 import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
@@ -197,6 +197,8 @@ interface CompletionSummary {
   volumeLbs: number;
   /** GRAYSON-WORKOUT-CHANGES-001: the routine's label for the end-of-workout question (strength workouts only). */
   routineLabel?: string;
+  /** GRAYSON-ONE-OFF-001: an empty workout with no routine (offers SAVE AS ROUTINE). */
+  oneOff?: boolean;
 }
 
 /**
@@ -204,7 +206,12 @@ interface CompletionSummary {
  * made: the full session (STANDARD) or the short one (REDUCED). TRAIN's own flow,
  * including the RED override, still governs the start.
  */
-export type TrainDestination = "HISTORY" | "RECORDS" | "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED";
+export type TrainDestination = "HISTORY" | "RECORDS" | "RECOVERY" | "WORKOUT" | "WORKOUT_STANDARD" | "WORKOUT_REDUCED"
+  /**
+   * GRAYSON-ONE-OFF-001: TODAY's START and START EMPTY. TRAIN starts the workout through its own START path (the RED
+   * override question, the in-flight guard, an open session resumed rather than doubled), then shows it live.
+   */
+  | "START_PLANNED" | "START_PLANNED_REDUCED" | "START_EMPTY";
 
 export function TrainScreen({
   active = true,
@@ -439,6 +446,8 @@ export function TrainScreen({
       variantChosenRef.current = true;
       setChosenVariant(destination === "WORKOUT_STANDARD" ? "STANDARD" : "REDUCED");
     }
+    // GRAYSON-ONE-OFF-001: START from TODAY, from a fresh read (review of #734).
+    if (destination === "START_PLANNED" || destination === "START_PLANNED_REDUCED" || destination === "START_EMPTY") void startFromToday(destination);
     requestAnimationFrame(() => {
       if (session && session.sessionType !== "RECOVERY" && destination === "WORKOUT" && exerciseHeadingRef.current) {
         exerciseHeadingRef.current.focus({ preventScroll: true });
@@ -658,6 +667,28 @@ export function TrainScreen({
     } else {
       await actuallyStart(template, variant, programmeContext);
     }
+  }
+
+  /**
+   * GRAYSON-ONE-OFF-001 (review of #734): TODAY's START. TRAIN may still hold an earlier read (it stays mounted), so
+   * this reads capacity, any open workout and the plan afresh, then starts through the same RED gate as TRAIN's own
+   * START. An open workout is resumed, never doubled; a sequence that needs review isn't started (TRAIN shows why).
+   */
+  async function startFromToday(kind: "START_PLANNED" | "START_PLANNED_REDUCED" | "START_EMPTY") {
+    if (!(await refresh(false))) return;
+    if (await getActiveWorkoutSession()) return;
+    const day = await getActiveDay();
+    const checkIn = day ? await getLatestCheckIn(day.id) : undefined;
+    const fresh = checkIn ? deriveCapacity(checkIn).capacity : null;
+    if (kind === "START_EMPTY") { guard(fresh, () => actuallyStart("", "STANDARD")); return; }
+    const view = await getProgrammeView();
+    if (view.sequence && view.sequence.status !== "READY") return;
+    const template = view.sequence?.nextMember ? view.sequence.nextMember.templateId : await suggestTemplateForNextWorkout();
+    const variant = kind === "START_PLANNED" ? "STANDARD" : "REDUCED";
+    templateChosenRef.current = true; variantChosenRef.current = true;
+    setChosenTemplate(template); setChosenVariant(variant);
+    if (variant === "STANDARD") guard(fresh, () => actuallyStart(template, variant));
+    else await actuallyStart(template, variant);
   }
 
   async function handleQuickCheckIn() {
@@ -1061,7 +1092,8 @@ export function TrainScreen({
         advisoryChanges,
         records,
         volumeLbs,
-        ...(sessionType === "STANDARD" || sessionType === "REDUCED" ? { routineLabel: templateLabel(templateId, customTemplates) } : {}),
+        ...((sessionType === "STANDARD" || sessionType === "REDUCED") && templateId ? { routineLabel: templateLabel(templateId, customTemplates) } : {}),
+        ...((sessionType === "STANDARD" || sessionType === "REDUCED") && !templateId ? { oneOff: true } : {}),
       });
 
       // DAY-ROLLOVER-001: "don't interrupt an in-progress workout, roll
@@ -1412,6 +1444,8 @@ export function TrainScreen({
           )}
           {/* GRAYSON-WORKOUT-CHANGES-001: one question, only when something changed. */}
           {completionSummary.routineLabel && <KeepChangesLine sessionId={completionSummary.sessionId} routineLabel={completionSummary.routineLabel} />}
+          {/* GRAYSON-ONE-OFF-001: a one-off can become a routine, only when he taps it. */}
+          {completionSummary.oneOff && <SaveAsRoutineLine sessionId={completionSummary.sessionId} />}
           {/* DELTA-NEXT 4: how the workout felt, as a tag on today's note. */}
           <QuickTags label="How did it feel" tags={["felt-strong", "felt-flat", "short-on-time", "sore"]} />
           {/* ALFRED-007: ask Alfred about the workout just finished. */}
@@ -1557,6 +1591,8 @@ export function TrainScreen({
                 <button type="button" className="btn-secondary" disabled={busy} aria-label={`Edit workout ${templateLabel(chosenTemplate, customTemplates)}`}
                   onClick={() => setRoutinesOpen({ templateId: chosenTemplate })}>EDIT</button>
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => setRoutinesOpen({ templateId: null })}>ROUTINES</button>
+                {/* GRAYSON-ONE-OFF-001: a blank workout; never moves the A, B, C turn. */}
+                <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleStart("", "STANDARD")}>EMPTY WORKOUT</button>
               </div>
               <button type="button" className="btn-secondary" style={{ marginTop: 12 }} onClick={() => void openCalibrationPreview()}>
                 PREVIEW CALIBRATION
