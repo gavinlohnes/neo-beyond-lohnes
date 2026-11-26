@@ -82,6 +82,16 @@ describe("GRAYSON-LIGHTER-NIGHT-001: TODAY", () => {
     const job = (await db.obligations.toArray()).find((o) => o.title === "Home: Filter change")!;
     expect(job.plannedAt).toBe("2026-11-16");
     const taken = () => document.querySelector<HTMLElement>("section.lighter-night--taken");
+    // Each part's words keep a readable width beside its UNDO, at every phone width; no overflow.
+    for (const w of [320, 360, 412]) {
+      await page.viewport(w, 740);
+      for (const row of taken()!.querySelectorAll<HTMLElement>(".lighter-night__part")) {
+        expect(row.querySelector<HTMLElement>(".meta")!.getBoundingClientRect().width).toBeGreaterThan(w / 3);
+        expect(Math.round(row.querySelector("button")!.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+      }
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(w);
+    }
+    await page.viewport(360, 740);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/taken-360.png`, element: taken()! });
     expect((await axe.run(taken()!, { rules: { "color-contrast": { enabled: false } } })).violations).toEqual([]);
     taken()!.querySelector<HTMLButtonElement>("button[aria-label='Undo home']")!.focus();
@@ -105,11 +115,12 @@ describe("GRAYSON-LIGHTER-NIGHT-001: TODAY", () => {
   it("switched off in MORE · TODAY, it's gone", async () => {
     const settings = await render(<TodayQuietSettings />);
     const box = settings.getByRole("button", { name: "Lighter last night card", exact: true });
+    await expect.element(settings.getByRole("button", { name: /^Home part/ })).toHaveAttribute("aria-pressed", "true");
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/settings-360.png`, element: document.querySelector("[aria-label='Lighter last night']") as HTMLElement });
     await expect.element(box).toHaveAttribute("aria-pressed", "true");
     await box.click();
     await expect.element(box).toHaveAttribute("aria-pressed", "false");
-    await expect.element(settings.getByRole("button", { name: /^Its lift part/ })).toBeDisabled();
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/settings-360.png`, element: document.querySelector("[aria-label='Lighter last night']") as HTMLElement });
+    await expect.element(settings.getByRole("button", { name: /^Lift part/ })).not.toBeInTheDocument();
     await cleanup();
     await render(<TodayScreen onOpenLife={() => {}} onOpenCave={() => {}} />);
     await todaySettled();

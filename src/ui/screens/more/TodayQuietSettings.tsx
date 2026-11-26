@@ -76,7 +76,7 @@ export function TodayQuietSettings() {
   </div>;
 }
 
-const LIGHTER_PARTS = [["on", "Lighter last night card"], ["lift", "Its lift part (SHORT form)"], ["food", "Its food part (your usuals first)"], ["home", "Its home part (jobs move to your first day off)"]] as const;
+const LIGHTER_PARTS = [["on", "Lighter last night card"], ["lift", "Lift part (SHORT form)"], ["food", "Food part (usuals first)"], ["home", "Home part (to first day off)"]] as const;
 
 /** GRAYSON-LIGHTER-NIGHT-001: the card on or off, and each of its three parts. Nothing changes until he taps TAKE IT. */
 function LighterNightSwitches() {
@@ -84,12 +84,11 @@ function LighterNightSwitches() {
   return <div role="group" aria-label="Lighter last night">
     <p className="tool-label">Lighter last night</p>
     <p className="meta">On the last night of a run, before the shift: one card to take the SHORT lift, your usuals and move tonight's home jobs. It changes nothing until you tap TAKE IT.</p>
-    {LIGHTER_PARTS.map(([key, label]) => {
+    {LIGHTER_PARTS.filter(([key]) => key === "on" || settings.on).map(([key, label]) => {
       const on = settings[key];
-      const off = key !== "on" && !settings.on;
       return <div key={key} className="today-quiet-settings__row">
         <span>{label}</span>
-        <button type="button" className={`chip${on ? " chip--selected" : ""}`} aria-pressed={on} aria-label={label} disabled={off}
+        <button type="button" className={`chip${on ? " chip--selected" : ""}`} aria-pressed={on} aria-label={label}
           onClick={() => { const next = { ...settings, [key]: !on }; writeLighterNightSettings(next); setSettings(next); }}>{on ? "ON" : "OFF"}</button>
       </div>;
     })}

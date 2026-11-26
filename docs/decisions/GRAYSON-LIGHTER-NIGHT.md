@@ -31,7 +31,7 @@ each one was built, and two points where the code's real shape decided the detai
   It never says he's tired.
 - **Stale plan:** TAKE IT re-reads first. If the lift, the food part or any home job changed (or the shift has started),
   it refuses with "Tonight's plan changed since this card showed. Nothing was changed. Look again."
-- **His switches:** MORE · TODAY has the card and each part, in `beyond.lighterNight.v1` (travels with backups). What he
+- **His switches:** MORE · TODAY has the card and each part (the part switches show while the card is on), in `beyond.lighterNight.v1` (travels with backups). What he
   took each night is in `beyond.lighterNight.day.<dayId>` and stays on the phone, like WorkoutCall's LATER.
 - **UNDO here vs the Nov 24 rule:** this is a fix of what TAKE IT just changed, so each part's UNDO stays on the folded
   card for the lived day, as the brief says.
