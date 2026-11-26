@@ -24,6 +24,8 @@ import type { NutritionTargets } from "../domain/common/types";
  * additive field — rows and backups without it stay valid, and older
  * readers simply drop it. Same partial-update convention as the others.
  */
+function adjust() { return z.number().int().min(-1000).max(1000).refine((n) => n % 50 === 0, "Adjustments go in steps of 50 kcal"); }
+
 const nutritionTargetFields = {
   calorieTargetKcal: z.number().positive().optional(),
   proteinMultiplierGPerLb: z.number().min(0.1).max(3),
@@ -37,6 +39,12 @@ const nutritionTargetFields = {
   // GRAYSON C4.6 (owner approval 2026-11-23): optional and additive, like calorieFloorKcal; rows and backups without it
   // stay valid and read as "no target".
   waterTargetOz: z.number().int().min(16).max(300).optional(),
+  // GRAYSON-DAY-TARGETS-001 (Gavin, 2026-11-25): optional and additive; a row without it reads as off. Each adjustment is
+  // a whole number of kcal in steps of 50 within ±1000.
+  dayTargets: z.object({
+    on: z.boolean(),
+    adjustKcal: z.object({ WORK: adjust(), RECOVERY: adjust(), OFF: adjust(), LIFT: adjust() }).strict(),
+  }).strict().optional(),
 };
 
 /** Input to updateNutritionTargets — id/createdAt/updatedAt are assigned by the command, not the caller. At least one field must be present. */
@@ -50,9 +58,10 @@ export const nutritionTargetsInputSchema = z
     strengthSessionsTargetPerWeek: nutritionTargetFields.strengthSessionsTargetPerWeek.nullable(),
     calorieFloorKcal: nutritionTargetFields.calorieFloorKcal.nullable(),
     waterTargetOz: nutritionTargetFields.waterTargetOz.nullable(),
+    dayTargets: nutritionTargetFields.dayTargets,
   })
   .refine(
-    (v) => v.calorieTargetKcal !== undefined || v.proteinMultiplierGPerLb !== undefined || v.goalWeightLbs !== undefined || v.weightChangeTargetPercentPerWeek !== undefined || v.muscleSetsTargetPerWeek !== undefined || v.strengthSessionsTargetPerWeek !== undefined || v.calorieFloorKcal !== undefined || v.waterTargetOz !== undefined,
+    (v) => v.calorieTargetKcal !== undefined || v.proteinMultiplierGPerLb !== undefined || v.goalWeightLbs !== undefined || v.weightChangeTargetPercentPerWeek !== undefined || v.muscleSetsTargetPerWeek !== undefined || v.strengthSessionsTargetPerWeek !== undefined || v.calorieFloorKcal !== undefined || v.waterTargetOz !== undefined || v.dayTargets !== undefined,
     "At least one field must change",
   );
 export type NutritionTargetsInput = z.infer<typeof nutritionTargetsInputSchema>;
@@ -67,6 +76,7 @@ export const nutritionTargetsSchema = z.object({
   strengthSessionsTargetPerWeek: nutritionTargetFields.strengthSessionsTargetPerWeek,
   calorieFloorKcal: nutritionTargetFields.calorieFloorKcal,
   waterTargetOz: nutritionTargetFields.waterTargetOz,
+  dayTargets: nutritionTargetFields.dayTargets,
   createdAt: z.string(),
   updatedAt: z.string(),
 });

@@ -607,6 +607,11 @@ export interface NutritionTargets {
   calorieFloorKcal?: number;
   /** GRAYSON C4.6 (Gavin, 2026-11-23): his own daily water target in oz; unset means no target and no nag. */
   waterTargetOz?: number;
+  /**
+   * GRAYSON-DAY-TARGETS-001 (Gavin, 2026-11-25): a calorie target for each kind of day, as his own signed adjustments on
+   * the plain target. Optional and additive: absent reads as off, so older rows and backups are unchanged.
+   */
+  dayTargets?: { on: boolean; adjustKcal: { WORK: number; RECOVERY: number; OFF: number; LIFT: number } };
   createdAt: string;
   updatedAt: string;
 }

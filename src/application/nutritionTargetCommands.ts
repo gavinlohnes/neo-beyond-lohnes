@@ -40,6 +40,9 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
     ...(strengthSessionsTargetPerWeek !== undefined ? { strengthSessionsTargetPerWeek } : {}),
     ...(calorieFloorKcal !== undefined ? { calorieFloorKcal } : {}),
     ...(waterTargetOz !== undefined ? { waterTargetOz } : {}),
+    // GRAYSON-DAY-TARGETS-001: carried through every other save (the weekly proposal moves the base; the adjustments
+    // ride on top), replaced only when this save names them.
+    ...(parsed.dayTargets ?? existing?.dayTargets ? { dayTargets: parsed.dayTargets ?? existing!.dayTargets! } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
