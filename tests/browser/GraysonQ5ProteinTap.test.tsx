@@ -83,7 +83,7 @@ describe("GRAYSON-Q5-PROTEIN-TAP-001", () => {
     // Real keyboard travel: from the card's "Log food" action, Tab lands on the Protein meter (Eaten is not a control).
     card()!.querySelector<HTMLButtonElement>('button[aria-label="Log food"]')!.focus();
     await userEvent.keyboard("{Tab}");
-    expect(document.activeElement).toBe(button);
+    await expect.poll(() => document.activeElement).toBe(button);
     expect(button.matches(":focus-visible")).toBe(true);
     expect(getComputedStyle(button).outlineStyle).not.toBe("none");
     await userEvent.keyboard("{Enter}");

@@ -75,7 +75,7 @@ describe("16:30 mode pin expiry", () => {
     await expect.poll(source).toMatch(/^(Per schedule|Shift (in|ends in) .+?) · /);
     await expect.poll(suit).toBe("EXPECTED_POST_WORK");
     await expect.element(capture).toHaveValue("Keep this thought through 16:30");
-    expect(document.activeElement).toBe(focused);
+    await expect.poll(() => document.activeElement).toBe(focused);
     expect(await records()).toEqual(before);
     expect((await getActiveDay())?.id).toBe(day.id);
     expect((await db.workoutSessions.get(workout.id))?.status).toBe("ACTIVE");

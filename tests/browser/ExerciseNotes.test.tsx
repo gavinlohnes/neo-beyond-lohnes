@@ -99,7 +99,7 @@ describe("GRAYSON-TRAIN-NOTES-001 exercise notes", { timeout: 60_000 }, () => {
     const before = document.querySelector(".train-live-rest")?.textContent;
     clock += 5000; vi.setSystemTime(clock);
     await expect.poll(() => document.querySelector(".train-live-rest")?.textContent, { timeout: 3000 }).not.toBe(before);
-    expect(document.activeElement).toBe(live.element());
+    await expect.poll(() => document.activeElement).toBe(live.element());
     await typeInto(live, "Seat 5 now");
     await shot("360-live-editor", liveSurface());
     await fits("live editor", liveSurface, "live-editor");
