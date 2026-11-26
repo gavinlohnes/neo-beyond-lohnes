@@ -6,8 +6,8 @@ import { ConfirmBanner } from "../../components/ConfirmBanner";
 import { useUndoWindow } from "../../hooks/useUndoWindow";
 import { LineIcon } from "../../icons/LineIcon";
 import type { NutritionTargets } from "../../../domain/common/types";
-import { getNutritionTargets } from "../../../application/nutritionTargetQueries";
-import { saveNutritionTargets } from "../../../application/nutritionTargetCommands";
+import { getNutritionTargets, getTwoWeekDayTargetProjection } from "../../../application/nutritionTargetQueries";
+import { balanceNutritionDayTargets, saveNutritionTargets } from "../../../application/nutritionTargetCommands";
 import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
 /**
@@ -28,6 +28,7 @@ interface TargetsSaveConfirmation {
   message: string;
   undo: () => Promise<boolean>;
 }
+const EMPTY_DAY_TARGETS = { on: false, adjustKcal: { WORK: 0, RECOVERY: 0, OFF: 0, LIFT: 0 } } as const;
 
 function formInputs(targets: NutritionTargets | null) {
   return {
@@ -61,6 +62,8 @@ export function NutritionTargetsSettings() {
   const [sessionsInput, setSessionsInput] = useState("");
   const [floorInput, setFloorInput] = useState("");
   const [waterInput, setWaterInput] = useState("");
+  const [dayTargets, setDayTargets] = useState<NutritionTargets["dayTargets"]>({ ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
+  const [projection, setProjection] = useState<{ average: number | undefined; target: number | undefined } | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +76,8 @@ export function NutritionTargetsSettings() {
       .then((next) => {
         if (disposedRef.current) return;
         setTargets(next);
+        setDayTargets(next.dayTargets ?? { ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
+        void getTwoWeekDayTargetProjection().then(setProjection);
         setLoadState("ready");
       })
       .catch(() => {
@@ -94,6 +99,7 @@ export function NutritionTargetsSettings() {
     setSessionsInput(filled.sessions);
     setFloorInput(filled.floor);
     setWaterInput(filled.water);
+    setDayTargets(targets?.dayTargets ?? { ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
     setError(null);
     setOpen(true);
   }
@@ -125,6 +131,7 @@ export function NutritionTargetsSettings() {
       ...(floorValue !== targets?.calorieFloorKcal ? { calorieFloorKcal: floorValue ?? null } : {}),
       // GRAYSON C4.6: optional; blank clears it (no target, nothing shown).
       ...(waterValue !== targets?.waterTargetOz ? { waterTargetOz: waterValue ?? null } : {}),
+      ...(JSON.stringify(dayTargets) !== JSON.stringify(targets?.dayTargets ?? EMPTY_DAY_TARGETS) ? { dayTargets } : {}),
     };
     if (Object.keys(changes).length === 0) {
       setError(NO_CHANGES_MESSAGE);
@@ -136,6 +143,8 @@ export function NutritionTargetsSettings() {
       acknowledge("LIGHT");
       if (disposedRef.current) return;
       setTargets(saved);
+      setDayTargets(saved.dayTargets ?? { ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
+      setProjection(await getTwoWeekDayTargetProjection());
       setOpen(false);
       setConfirmation({ message: `Targets saved · ${describeTargets(saved)}`, undo });
     } catch (e) {
@@ -143,6 +152,17 @@ export function NutritionTargetsSettings() {
     } finally {
       if (!disposedRef.current) setBusy(false);
     }
+  }
+
+  async function handleBalance() {
+    if (busy) return;
+    setBusy(true); setError(null);
+    try {
+      const { saved, undo } = await balanceNutritionDayTargets();
+      setTargets(saved); setDayTargets(saved.dayTargets!); setProjection(await getTwoWeekDayTargetProjection());
+      setConfirmation({ message: "Day targets balanced over two weeks.", undo });
+    } catch (e) { setError(describeError(e, "Could not balance day targets.")); }
+    finally { if (!disposedRef.current) setBusy(false); }
   }
 
   async function handleUndo() {
@@ -201,6 +221,21 @@ export function NutritionTargetsSettings() {
             className="input"
           />
         </div>
+        <fieldset style={{ border: "1px solid var(--border-subtle)", padding: 12 }}>
+          <legend className="tool-label">TARGETS BY KIND OF DAY</legend>
+          <label className="meta" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="checkbox" checked={dayTargets?.on ?? false} onChange={(e) => setDayTargets((old) => ({ ...(old ?? EMPTY_DAY_TARGETS), on: e.target.checked, adjustKcal: { ...(old?.adjustKcal ?? EMPTY_DAY_TARGETS.adjustKcal) } }))} />
+            Use a different calorie target for each kind of day
+          </label>
+          {dayTargets?.on && <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+            {([['WORK', 'Work night'], ['RECOVERY', 'First day off'], ['OFF', 'Day off'], ['LIFT', 'Lift day']] as const).map(([key, label]) => <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span>{label} {dayTargets.adjustKcal[key] >= 0 ? "+" : ""}{dayTargets.adjustKcal[key]}</span>
+              <span style={{ display: "flex", gap: 8 }}><button type="button" className="chip" style={{ minWidth: 44, minHeight: 44 }} aria-label={`Decrease ${label} by 50 kcal`} onClick={() => setDayTargets((old) => ({ ...old!, adjustKcal: { ...old!.adjustKcal, [key]: old!.adjustKcal[key] - 50 } }))}>−</button><button type="button" className="chip" style={{ minWidth: 44, minHeight: 44 }} aria-label={`Increase ${label} by 50 kcal`} onClick={() => setDayTargets((old) => ({ ...old!, adjustKcal: { ...old!.adjustKcal, [key]: old!.adjustKcal[key] + 50 } }))}>+</button></span>
+            </div>)}
+            <p className="meta">{projection?.average !== undefined && projection.target !== undefined ? `Over two weeks: ${Math.round(projection.average)} a day, ${Math.round(projection.average - projection.target) === 0 ? "your target" : `${Math.abs(Math.round(projection.average - projection.target))} ${projection.average > projection.target ? "over" : "under"} your target`}` : "Save a schedule and calorie target to see the two-week average."}</p>
+            <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleBalance()}>BALANCE</button>
+          </div>}
+        </fieldset>
         <div>
           <label className="meta" htmlFor="calorie-floor-input" style={{ display: "block", marginBottom: 4 }}>
             Lowest calorie target BEYOND may propose (kcal/day)

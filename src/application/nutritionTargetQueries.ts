@@ -3,7 +3,8 @@ import { parseNutritionTargets } from "../persistence/nutritionTargetValidation"
 import { deriveProteinTargetG, DEFAULT_NUTRITION_TARGETS } from "../engine/nutritionTargets";
 import { getMostRecentBodyweight } from "./queries";
 import type { NutritionTargets } from "../domain/common/types";
-import { deriveDayCalorieTarget, type DayCalorieTarget } from "../engine/dayTarget";
+import { averageDayTargets, deriveDayCalorieTarget, type DayCalorieTarget } from "../engine/dayTarget";
+import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
 import { deriveLifeState, getRecordedDayBefore, lifeStateInput } from "./lifeState";
 import { dayKindFor } from "./eatingWindow";
 import { getSchedulePattern } from "./queries";
@@ -65,4 +66,12 @@ async function getCalorieTargetForDate(at: Date, day?: { id: string; workContext
   const plannedLift = programme.planned.templateId !== null || programme.sequence?.nextMember !== null;
   const loggedLift = sessions.some((session) => session.status !== "ABANDONED");
   return deriveDayCalorieTarget(targets, kind, plannedLift || loggedLift);
+}
+
+export async function getTwoWeekDayTargetProjection(now = new Date()) {
+  const targets = await getNutritionTargets();
+  const start = mostRecentBoundaryAtOrBefore(now);
+  const resolved = await Promise.all(Array.from({ length: 14 }, (_, i) => getPlannedDayCalorieTarget(new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 16, 30))));
+  const days = resolved.map((day) => ({ kind: day.kind, lift: day.lift }));
+  return { average: averageDayTargets(targets, days), days, target: targets.calorieTargetKcal };
 }

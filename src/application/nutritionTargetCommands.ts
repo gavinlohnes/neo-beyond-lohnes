@@ -4,6 +4,8 @@ import {
   type NutritionTargetsInput,
 } from "../persistence/nutritionTargetValidation";
 import type { NutritionTargets } from "../domain/common/types";
+import { balancedOffAdjustment } from "../engine/dayTarget";
+import { getNutritionTargets, getTwoWeekDayTargetProjection } from "./nutritionTargetQueries";
 
 /**
  * NUTRITION-003 (Calorie + Protein Targets, High-Risk Drop, direct owner
@@ -77,4 +79,12 @@ export async function saveNutritionTargets(input: NutritionTargetsInput): Promis
       });
     },
   };
+}
+
+export async function balanceNutritionDayTargets(): Promise<NutritionTargetsSave> {
+  const [targets, projection] = await Promise.all([getNutritionTargets(), getTwoWeekDayTargetProjection()]);
+  if (!targets.dayTargets) throw new Error("Turn on targets by kind of day first.");
+  const off = balancedOffAdjustment(targets, projection.days);
+  if (off === null) throw new Error("A saved two-week schedule needs at least one day off to balance.");
+  return saveNutritionTargets({ dayTargets: { ...targets.dayTargets, adjustKcal: { ...targets.dayTargets.adjustKcal, OFF: off } } });
 }
