@@ -30,6 +30,7 @@ export function WeekInNumbers({ dashboard }: { dashboard: WeeklyDashboard }) {
     </ReadoutGrid>
     {data && data.muscles.length > 0 && <p className="meta weekly-muscles"><strong>Sets by muscle</strong>: {data.muscles.map(([group, count]) => `${group} ${count}`).join(" · ")}.</p>}
     {prior && <p className="meta weekly-compare"><strong>The week before</strong> ({dateLabel(prior.start)}): sleep {display(prior.sleep, "h")} · protein {display(prior.protein, "g", 0)} · {prior.sessions} {prior.sessions === 1 ? "session" : "sessions"} · water {display(prior.water, "oz")}. Side by side, not a grade.</p>}
+    {data?.proteinHeadsUp && <p className="meta weekly-protein-headsup">{data.proteinHeadsUp}</p>}
     <p className="meta">Averages cover logged days only. Food figures are logged amounts, not verified total intake.</p>
     {error ? <div><p role="alert">The remaining numbers couldn't be read. Your records have not changed.</p><button type="button" className="btn-secondary" onClick={() => setRetry((n) => n + 1)}>RETRY NUMBERS</button></div> : !data ? <p role="status">Reading recorded numbers…</p> : <p className="meta">{data.comparison}</p>}
   </section>;

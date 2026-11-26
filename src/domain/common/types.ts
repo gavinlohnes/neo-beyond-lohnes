@@ -622,6 +622,11 @@ export interface NutritionTargets {
     on: boolean;
     adjustKcal: Record<"WORK" | "RECOVERY" | "OFF" | "LIFT", number>;
   };
+  /**
+   * GRAYSON-PROTEIN-HEADSUP-001 (Gavin, 2026-11-26): the protein heads-up's switch and his numbers (under `underPercent`
+   * on `days` of the last `windowDays` logged days), and when he last tapped THAT'S FINE. Optional and additive.
+   */
+  proteinHeadsUp?: { on: boolean; underPercent: number; days: number; windowDays: number; dismissedAt?: string | undefined };
   createdAt: string;
   updatedAt: string;
 }

@@ -9,6 +9,8 @@ import type { NutritionTargets } from "../../../domain/common/types";
 import { getNutritionTargets, getTwoWeekDayTargetProjection } from "../../../application/nutritionTargetQueries";
 import { saveNutritionTargets } from "../../../application/nutritionTargetCommands";
 import { readFitsNowOn, writeFitsNowOn } from "../../../application/fitsNowQueries";
+import { saveProteinHeadsUpSettings } from "../../../application/proteinPatternQueries";
+import { DEFAULT_PROTEIN_HEADSUP } from "../../../engine/proteinPattern";
 import { averageDayTargets, balancedOffAdjustment } from "../../../engine/dayTarget";
 import { describeError, NO_CHANGES_MESSAGE } from "../../errorMessage";
 
@@ -67,6 +69,18 @@ export function NutritionTargetsSettings() {
   const [dayTargets, setDayTargets] = useState<NutritionTargets["dayTargets"]>({ ...EMPTY_DAY_TARGETS, adjustKcal: { ...EMPTY_DAY_TARGETS.adjustKcal } });
   // The two weeks' kinds and lifts; the line and BALANCE read the steppers' current values against them (#736 review B1).
   const [fitsNowOn, setFitsNowOn] = useState(readFitsNowOn);
+  const headsUp = { ...DEFAULT_PROTEIN_HEADSUP, ...(targets?.proteinHeadsUp ?? {}) };
+  async function saveHeadsUp(next: { on: boolean; underPercent: number; days: number; windowDays: number }) {
+    if (busy) return;
+    setBusy(true); setError(null);
+    try {
+      const { saved, undo } = await saveProteinHeadsUpSettings({ on: next.on, underPercent: next.underPercent, days: next.days, windowDays: next.windowDays });
+      if (disposedRef.current) return;
+      setTargets(saved);
+      setConfirmation({ message: next.on ? `Protein heads-up: under ${next.underPercent}% on ${next.days} of the last ${next.windowDays} logged days.` : "Protein heads-up is off.", undo });
+    } catch (e) { if (!disposedRef.current) setError(describeError(e, "Could not save the heads-up.")); }
+    finally { if (!disposedRef.current) setBusy(false); }
+  }
   const [projection, setProjection] = useState<Awaited<ReturnType<typeof getTwoWeekDayTargetProjection>> | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState(false);
@@ -234,6 +248,28 @@ export function NutritionTargetsSettings() {
             className="input"
           />
         </div>
+        {/* GRAYSON-PROTEIN-HEADSUP-001: on by default; his percent and days, saved as soon as they change, with UNDO. */}
+        <fieldset style={{ border: "1px solid var(--border-subtle)", padding: 12 }}>
+          <legend className="tool-label">PROTEIN HEADS-UP</legend>
+          <label className="meta" style={{ display: "flex", gap: 10, alignItems: "center", minHeight: 44 }}>
+            <input type="checkbox" checked={headsUp.on} disabled={busy} onChange={(e) => void saveHeadsUp({ ...headsUp, on: e.target.checked })} />
+            Tell me when protein runs well under target on several logged days
+          </label>
+          {headsUp.on && <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            <label className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, minHeight: 44 }}>Under
+              <select className="input" style={{ width: "auto" }} value={headsUp.underPercent} disabled={busy} onChange={(e) => void saveHeadsUp({ ...headsUp, underPercent: Number(e.target.value) })}>
+                {[50, 55, 60, 65, 70, 75, 80, 85, 90, 95].map((p) => <option key={p} value={p}>{p}% of target</option>)}
+              </select></label>
+            <label className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, minHeight: 44 }}>On
+              <select className="input" style={{ width: "auto" }} value={headsUp.days} disabled={busy} onChange={(e) => { const days = Number(e.target.value); void saveHeadsUp({ ...headsUp, days, windowDays: Math.max(days, headsUp.windowDays) }); }}>
+                {[2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n} days</option>)}
+              </select></label>
+            <label className="meta" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, minHeight: 44 }}>Of the last
+              <select className="input" style={{ width: "auto" }} value={headsUp.windowDays} disabled={busy} onChange={(e) => { const windowDays = Number(e.target.value); void saveHeadsUp({ ...headsUp, windowDays, days: Math.min(headsUp.days, windowDays) }); }}>
+                {[2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n} logged days</option>)}
+              </select></label>
+          </div>}
+        </fieldset>
         {/* GRAYSON-FITS-NOW-001: on by default; this phone's choice, saved as soon as it's ticked (travels with backups). */}
         <label className="meta" style={{ display: "flex", gap: 10, alignItems: "center", minHeight: 44 }}>
           <input type="checkbox" checked={fitsNowOn} onChange={(e) => { writeFitsNowOn(e.target.checked); setFitsNowOn(e.target.checked); }} />
