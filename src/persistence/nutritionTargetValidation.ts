@@ -24,6 +24,9 @@ import type { NutritionTargets } from "../domain/common/types";
  * additive field — rows and backups without it stay valid, and older
  * readers simply drop it. Same partial-update convention as the others.
  */
+// GRAYSON-DAY-TARGETS-001: each adjustment is whole kcal in steps of 50, within ±1000.
+const dayAdjust = z.number().int().multipleOf(50).min(-1000).max(1000);
+
 const nutritionTargetFields = {
   calorieTargetKcal: z.number().positive().optional(),
   proteinMultiplierGPerLb: z.number().min(0.1).max(3),
@@ -40,8 +43,7 @@ const nutritionTargetFields = {
   dayTargets: z.object({
     on: z.boolean(),
     adjustKcal: z.object({
-      WORK: z.number().int().multipleOf(50), RECOVERY: z.number().int().multipleOf(50),
-      OFF: z.number().int().multipleOf(50), LIFT: z.number().int().multipleOf(50),
+      WORK: dayAdjust, RECOVERY: dayAdjust, OFF: dayAdjust, LIFT: dayAdjust,
     }),
   }).optional(),
 };

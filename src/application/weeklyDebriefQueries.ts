@@ -48,7 +48,8 @@ export async function getWeekInNumbers(current: WeeklyDashboard) {
   // WEEK-COMPARE-001: the week before, from the read above, for a side-by-side line. Null when it has no records.
   const before = previous.headline.recordedDays > 0 ? { start: previous.week.start, sessions: previous.headline.sessions, ...deriveWeekInNumbers(previous.rows, []) } : null;
   return { ...deriveWeekInNumbers(current.rows, previous.rows), week: current.week, before, muscles,
-    targets: { calories: weekTargetAverage, proteinG },
+    // Off, the plain target as before; on, the average of this week's own day targets.
+    targets: { calories: targets.dayTargets?.on ? weekTargetAverage : targets.calorieTargetKcal, proteinG, byDay: !!targets.dayTargets?.on },
     training: { sessions: sessionIds.size, sets: sets.length, volume: workoutVolumeLbs(sets), records: current.records.length, days: new Set(days.filter((d) => d.workouts.some((s) => sessionIds.has(s.sessionId))).map((d) => d.livedDayStart)).size },
     commitments: { done: completedIds.size, days: completedDays, open: open.length },
     shifts: { worked, scheduled, recordedDays: current.rows.filter((r) => r.dayIds.length).length },

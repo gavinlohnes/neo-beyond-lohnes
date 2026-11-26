@@ -64,8 +64,11 @@ async function getCalorieTargetForDate(at: Date, day?: { id: string; workContext
   const [programme, sessions] = await Promise.all([
     getProgrammeView(at), day ? db.workoutSessions.where("beyondDayId").equals(day.id).toArray() : Promise.resolve([]),
   ]);
-  const plannedLift = programme.planned.templateId !== null || programme.sequence?.nextMember !== null;
-  const loggedLift = sessions.some((session) => session.status !== "ABANDONED");
+  // A lift day is a strength workout his programme assigns to that day, or one logged that day. A sequence (A → B → C)
+  // has no day of its own, so it marks no day; runs are their own record and never count (#736 takeover fix: the
+  // sequence check made every day a lift day when no sequence existed).
+  const plannedLift = programme.planned.templateId !== null;
+  const loggedLift = sessions.some((session) => ["COMPLETED", "PARTIAL", "ACTIVE"].includes(session.status) && session.sessionType !== "RECOVERY");
   return deriveDayCalorieTarget(targets, kind, plannedLift || loggedLift);
 }
 

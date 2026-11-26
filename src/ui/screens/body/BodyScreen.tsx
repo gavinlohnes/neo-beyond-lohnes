@@ -625,7 +625,8 @@ export function BodyScreen({ overviewOnly = false, foodLookupEnabled = true, onO
   const [nutritionTargets, setNutritionTargets] = useState<NutritionTargets | null>(null);
   const [dayCalorieTarget, setDayCalorieTarget] = useState<DayCalorieTarget | null>(null);
   const [dayTargetWhyOpen, setDayTargetWhyOpen] = useState(false);
-  const dayTargetLabel = dayCalorieTarget?.parts.map((part) => part.label).join(", ");
+  const dayTargetLabel = dayCalorieTarget?.parts.length
+    ? `${dayCalorieTarget.parts.map((part, i) => (i ? part.label.toLowerCase() : part.label)).join(", ")}${dayCalorieTarget.floorHeld ? " · held at your floor" : ""}` : undefined;
   const [effectiveProteinTargetG, setEffectiveProteinTargetG] = useState<number | undefined>(undefined);
   // Drop 5: every weigh-in across all days, for the trend, best-since, milestone and goal date.
   const [weightHistory, setWeightHistory] = useState<WeighIn[]>([]);
