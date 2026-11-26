@@ -30,6 +30,7 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   const strengthSessionsTargetPerWeek = reviewTarget("strengthSessionsTargetPerWeek");
   const calorieFloorKcal = reviewTarget("calorieFloorKcal");
   const waterTargetOz = reviewTarget("waterTargetOz");
+  const dayTargets = parsed.dayTargets ?? existing?.dayTargets;
   const record: NutritionTargets = {
     id: "current",
     ...(effectiveCalorieTarget !== undefined ? { calorieTargetKcal: effectiveCalorieTarget } : {}),
@@ -40,6 +41,7 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
     ...(strengthSessionsTargetPerWeek !== undefined ? { strengthSessionsTargetPerWeek } : {}),
     ...(calorieFloorKcal !== undefined ? { calorieFloorKcal } : {}),
     ...(waterTargetOz !== undefined ? { waterTargetOz } : {}),
+    ...(dayTargets !== undefined ? { dayTargets } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
