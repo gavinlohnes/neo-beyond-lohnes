@@ -190,7 +190,7 @@ async function currentPlan(): Promise<{ id: string | null; plan: WeekPlanTrainin
 }
 
 /** USE THIS WEEK: the plan he looked at (his current setup converted, or his own edit of it). */
-export function useWeekPlan(plan: WeekPlanTrainingProgramme, expectedPreviousId: string | null): Promise<WeekPlanChange> {
+export function startWeekPlan(plan: WeekPlanTrainingProgramme, expectedPreviousId: string | null): Promise<WeekPlanChange> {
   return save(plan, expectedPreviousId);
 }
 
@@ -230,4 +230,17 @@ export async function undoWeekPlanChange(change: WeekPlanChange): Promise<void> 
   if (current?.id !== change.revisionId) throw new Error("WEEK_PLAN_UNDO_STALE: Your week has changed since. Change the day directly instead.");
   const previous = change.previousId ? history.find((r) => r.id === change.previousId)?.programme ?? null : null;
   await saveTrainingProgramme(previous, change.revisionId);
+}
+
+/**
+ * What TRAIN's card and TODAY's workout line plan for today. With a week plan: its routine for today ("" for an empty
+ * workout); on a Rest day, the usual A → B → C turn is still offered. Without one: unchanged (the sequence's next
+ * member when it's ready, else the turn).
+ */
+export async function getTodayPlannedTemplate(now = new Date()): Promise<{ templateId: string; fromWeekPlan: boolean; restDay: boolean }> {
+  const view = await getProgrammeView(now);
+  if (view.revision.programme?.mode === "WEEK_PLAN" && view.planned.templateId !== null) return { templateId: view.planned.templateId, fromWeekPlan: true, restDay: false };
+  const restDay = view.revision.programme?.mode === "WEEK_PLAN";
+  const templateId = view.sequence?.status === "READY" && view.sequence.nextMember ? view.sequence.nextMember.templateId : await suggestTemplateForNextWorkout();
+  return { templateId, fromWeekPlan: false, restDay };
 }
