@@ -34,32 +34,37 @@ afterEach(() => {
 });
 
 describe("CustomTemplateScreen (real browser)", () => {
+  // GRAYSON-ROUTINE-EDIT-001: creating and editing now open TRAIN's one routine editor (tests/browser/RoutineEdit.test.tsx
+  // covers the editor itself). These keep this screen's own promises.
+  async function create(screen: Awaited<ReturnType<typeof render>>, name: string, picks: RegExp[]) {
+    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+    await screen.getByRole("textbox", { name: "Name" }).fill(name);
+    for (const pick of picks) {
+      await screen.getByRole("button", { name: "ADD EXERCISE" }).click();
+      await screen.getByRole("button", { name: pick }).click();
+    }
+  }
+
   it("renders with no templates and no console errors", async () => {
     const screen = await render(<CustomTemplateScreen />);
     await expect.element(screen.getByText("No custom templates yet.")).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
 
-  it("prompts to add exercises first when the library is empty", async () => {
+  it("with an empty personal library, the bundled library is still there to build from", async () => {
     const screen = await render(<CustomTemplateScreen />);
     await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
-    await expect
-      .element(screen.getByText("You don't have any saved exercises yet", { exact: false }))
-      .toBeVisible();
+    await screen.getByRole("button", { name: "ADD EXERCISE" }).click();
+    await expect.element(screen.getByRole("button", { name: /^Barbell Bench Press/ })).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
 
   it("can build a template from saved exercises and see it in the list", async () => {
     await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
     const screen = await render(<CustomTemplateScreen />);
-    const myTemplates = screen.getByRole("group", { name: "My templates" });
-
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
-    await screen.getByPlaceholder("Template name").fill("Pull Day");
-    await screen.getByRole("button", { name: "Barbell Row (Back)" }).click();
-    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
-
-    await expect.element(myTemplates.getByText("Pull Day", { exact: true })).toBeVisible();
+    await create(screen, "Pull Day", [/^Barbell Row.*yours/]);
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.element(screen.getByRole("group", { name: "My templates" }).getByText("Pull Day", { exact: true })).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
 
@@ -67,75 +72,58 @@ describe("CustomTemplateScreen (real browser)", () => {
     await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
     await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
     const screen = await render(<CustomTemplateScreen />);
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
-    await screen.getByPlaceholder("Template name").fill("Pull pair");
-    await screen.getByRole("button", { name: "Barbell Row (Back)" }).click();
-    await screen.getByRole("button", { name: "Face Pull (Shoulders)" }).click();
+    await create(screen, "Pull pair", [/^Barbell Row.*yours/, /^Face Pull.*yours/]);
     const boxes = screen.getByRole("checkbox", { name: "Superset with next" });
     expect(boxes.elements()).toHaveLength(1);
     await boxes.click();
-    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
-    const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
     await expect.poll(async () => (await getCustomTemplates())[0]?.exercises.map((e) => e.supersetWithNext ?? false)).toEqual([true, false]);
   });
 
   it("TEMPLATE-EDIT-001: edits a saved template in place: name, sets and superset, keeping its rep ranges", async () => {
-    await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
-    await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
+    const row = await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
+    const pull = await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
+    const before = await createCustomTemplate({ name: "Pull pair", exercises: [row, pull].map((e) => ({ exerciseId: e.id, name: e.name, sets: 3, repRangeLow: e.repRangeLow, repRangeHigh: e.repRangeHigh, incrementLbs: 5 })) });
     const screen = await render(<CustomTemplateScreen />);
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
-    await screen.getByPlaceholder("Template name").fill("Pull pair");
-    await screen.getByRole("button", { name: "Barbell Row (Back)" }).click();
-    await screen.getByRole("button", { name: "Face Pull (Shoulders)" }).click();
-    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
-    const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
-    await expect.poll(async () => (await getCustomTemplates()).length).toBe(1);
-    const [before] = await getCustomTemplates();
 
     await screen.getByRole("button", { name: "Edit Pull pair" }).click();
-    await expect.element(screen.getByPlaceholder("Template name")).toHaveValue("Pull pair");
-    await screen.getByPlaceholder("Template name").fill("Pull superset");
-    await screen.getByRole("button", { name: "Increase sets for Barbell Row" }).click();
+    await expect.element(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Pull pair");
+    await screen.getByRole("textbox", { name: "Name" }).fill("Pull superset");
+    await screen.getByRole("button", { name: "Barbell Row: sets up" }).click();
     await screen.getByRole("checkbox", { name: "Superset with next" }).click();
-    await screen.getByRole("button", { name: "SAVE CHANGES" }).click();
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
 
     await expect.poll(async () => (await getCustomTemplates())[0]?.name).toBe("Pull superset");
     const [after] = await getCustomTemplates();
-    expect(after!.id).toBe(before!.id);
-    expect(after!.exercises.map((e) => [e.exerciseId, e.sets, e.supersetWithNext ?? false])).toEqual([[before!.exercises[0]!.exerciseId, 4, true], [before!.exercises[1]!.exerciseId, 3, false]]);
-    expect(after!.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs])).toEqual(before!.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs]));
+    expect(after!.id).toBe(before.id);
+    expect(after!.exercises.map((e) => [e.exerciseId, e.sets, e.supersetWithNext ?? false])).toEqual([[row.id, 4, true], [pull.id, 3, false]]);
+    expect(after!.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs])).toEqual(before.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs]));
     await expect.element(screen.getByRole("button", { name: "CREATE TEMPLATE" })).toBeVisible();
   });
 
-  it("TEMPLATE-EDIT-001: shows exercises no longer in the library while editing, and can remove them", async () => {
+  it("TEMPLATE-EDIT-001: keeps exercises no longer in the library while editing, and can remove them", async () => {
     const { archiveCustomExercise } = await import("../../src/application/exerciseLibraryCommands");
     const row = await createCustomExercise({ name: "Barbell Row", muscleGroup: "Back", equipment: "Barbell", repRangeLow: 6, repRangeHigh: 10 });
     const pull = await createCustomExercise({ name: "Face Pull", muscleGroup: "Shoulders", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 });
-    const { createCustomTemplate } = await import("../../src/application/customTemplateCommands");
     await createCustomTemplate({ name: "Pull pair", exercises: [row, pull].map((e) => ({ exerciseId: e.id, name: e.name, sets: 3, repRangeLow: e.repRangeLow, repRangeHigh: e.repRangeHigh, incrementLbs: 5 })) });
     await archiveCustomExercise(pull.id);
     const screen = await render(<CustomTemplateScreen />);
     await screen.getByRole("button", { name: "Edit Pull pair" }).click();
-    await expect.element(screen.getByRole("group", { name: "No longer in your library" })).toHaveTextContent("Face Pull · 3 sets");
-    await screen.getByRole("button", { name: "Remove Face Pull" }).click();
-    await screen.getByRole("button", { name: "SAVE CHANGES" }).click();
-    const { getCustomTemplates } = await import("../../src/application/customTemplateQueries");
+    await screen.getByRole("button", { name: "More for Face Pull" }).click();
+    await screen.getByRole("button", { name: "REMOVE" }).click();
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
     await expect.poll(async () => (await getCustomTemplates())[0]?.exercises.map((e) => e.name)).toEqual(["Barbell Row"]);
   });
 
   it("TRAIN-PROGRESSION-001: derives a real equipment-based increment through the actual screen, not the old flat placeholder", async () => {
     await createCustomExercise({ name: "Leg Press Machine", muscleGroup: "Legs", equipment: "Machine", repRangeLow: 8, repRangeHigh: 12 });
     const screen = await render(<CustomTemplateScreen />);
-
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
-    await screen.getByPlaceholder("Template name").fill("Leg Day");
-    await screen.getByRole("button", { name: "Leg Press Machine (Legs)" }).click();
-    await screen.getByRole("button", { name: "SAVE TEMPLATE" }).click();
-
+    await create(screen, "Leg Day", [/^Leg Press Machine/]);
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.poll(async () => (await getCustomTemplates()).length).toBe(1);
     const [template] = await getCustomTemplates();
     expect(template!.exercises).toHaveLength(1);
-    // Machine equipment -> 10lb (deriveIncrementLbs), not the old flat 5lb
-    // placeholder every equipment type used to get regardless of what it was.
+    // Machine equipment -> 10lb (deriveIncrementLbs), not the old flat 5lb placeholder.
     expect(template!.exercises[0]!.incrementLbs).toBe(10);
     expect(consoleErrors).toEqual([]);
   });

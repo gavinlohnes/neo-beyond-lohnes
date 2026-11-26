@@ -1,6 +1,7 @@
 import { db } from "../persistence/db";
 import { parseCustomExercise } from "../persistence/exerciseValidation";
 import type { CustomExercise } from "../domain/workout/customExercise";
+import { fixedExerciseNames } from "../domain/workout/routineEdit";
 import { WORKOUT_TEMPLATES } from "../domain/workout/types";
 
 /** Same shape as getSavedMeals (nutritionQueries.ts): excludes archived by default, newest first. */
@@ -18,10 +19,23 @@ export async function getCustomExercises(options: { includeArchived?: boolean } 
  * caller falls back to the id.
  */
 export async function getExerciseNames(): Promise<Record<string, string>> {
+  const fixed = fixedExerciseNames();
   const names: Record<string, string> = {};
-  for (const template of Object.values(WORKOUT_TEMPLATES)) {
-    for (const ex of template.exercises) names[ex.exerciseId] = ex.name;
-  }
+  for (const template of Object.values(WORKOUT_TEMPLATES)) for (const ex of template.exercises) names[ex.exerciseId] = ex.name;
   for (const ex of await getCustomExercises({ includeArchived: true })) names[ex.id] = ex.name;
+  // GRAYSON-ROUTINE-EDIT-001: a bundled-library exercise can appear in history once a routine has held it (his own, or
+  // an edit of A, B or C). Only those are named, so search still lists each lift once.
+  const [templates, edits] = await Promise.all([db.customWorkoutTemplates.toArray(), db.events.where("type").equals("ROUTINE_EDITED").toArray()]);
+  const used = [
+    ...templates.flatMap((t) => (Array.isArray(t?.exercises) ? t.exercises : [])),
+    ...edits.flatMap((e) => {
+      const p = e.payload as { exercises?: unknown; previous?: { exercises?: unknown } } | undefined;
+      return [p?.exercises, p?.previous?.exercises].flatMap((list) => (Array.isArray(list) ? list : []));
+    }),
+  ];
+  for (const ex of used) {
+    const id = (ex as { exerciseId?: unknown } | null)?.exerciseId;
+    if (typeof id === "string" && !(id in names) && fixed.has(id)) names[id] = fixed.get(id)!;
+  }
   return names;
 }

@@ -1,0 +1,42 @@
+/* GRAYSON-ROUTINE-EDIT-001: the routine list, editor and exercise picker. TRAIN's look (running.css): neutral ink,
+   1px lines, square corners, 44 px controls, 16 px text, nothing red but SAVE. Reduced motion: nothing animates. */
+.routine-list, .routine-editor, .routine-picker { margin: 12px 0; }
+.routine-list__rows, .routine-rows, .routine-picker__list { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 10px; }
+.routine-list__row { border-top: 1px solid var(--p-line, #2a2a2a); padding-top: 8px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; }
+.routine-list__row .meta { margin: 0; overflow-wrap: anywhere; }
+.routine-list__name { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-1); overflow-wrap: anywhere; }
+.routine-list__acts, .routine-editor__acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.routine-list__acts > button, .routine-editor__acts > button { flex: 1 1 140px; min-height: 44px; font-size: 16px; }
+.routine-inline { width: auto; min-height: 44px; padding: 6px 12px; font-size: 14px; }
+.routine-saved { margin: 8px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.routine-row { border-top: 1px solid var(--p-line, #2a2a2a); padding-top: 8px; display: grid; gap: 8px; }
+.routine-row__head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.routine-row__index { font-family: var(--font-mono, monospace); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.routine-row__name { margin: 0; font-size: 16px; color: var(--text-1); overflow-wrap: anywhere; }
+.routine-row__move { display: flex; gap: 4px; }
+.routine-row__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.routine-row__fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.routine-row__extras { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.routine-step { width: 44px; min-width: 44px; min-height: 44px; padding: 0; font-size: 18px; }
+
+/* One line each: label, −, value, +. */
+.routine-stepper { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(56px, auto) 44px; align-items: center; gap: 4px; }
+.routine-stepper__label { font-size: 16px; color: var(--text-2); }
+.routine-stepper__value { text-align: center; font-family: var(--font-mono, monospace); font-size: 18px; font-variant-numeric: tabular-nums; color: var(--text-1); }
+
+.routine-field { display: grid; gap: 4px; font-size: 16px; margin: 8px 0; }
+.routine-field input { min-height: 44px; font-size: 16px; }
+.routine-option { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
+.routine-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--text-1); }
+
+.routine-picker__choice {
+  width: 100%; min-height: 44px; display: grid; gap: 2px; text-align: left; padding: 8px 10px; font: inherit; font-size: 16px;
+  color: var(--text-1); background: transparent; border: 1px solid var(--p-line-2, #3a3a3a); border-radius: 0; cursor: pointer;
+}
+.routine-picker__choice .meta { overflow-wrap: anywhere; }
+.routine-picker__choice:focus-visible { outline: 2px solid var(--focus, var(--text-1)); outline-offset: 2px; }
+
+/* The EDIT and ROUTINES pair under the workout card's exercise list. */
+.train-routine-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.train-routine-acts > button { flex: 1 1 120px; min-height: 44px; margin: 0; }

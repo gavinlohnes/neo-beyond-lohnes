@@ -1962,6 +1962,9 @@ Direct owner ruling, 2026-09-12 (in chat): general authorization to build toward
   shape of open, permissively-licensed datasets (free-exercise-db, Unlicense; wger, exercise data
   CC-licensed separately from its AGPL code) but every entry is a hand-authored generic exercise
   fact — never a verbatim copy of a specific dataset's file or content.
+- **Amended (GRAYSON-ROUTINE-EDIT-001, Gavin, 2026-11-25):** A, B and C are now editable with a one-tap reset to
+  the code's version, through an override event; see [GRAYSON-ROUTINE-EDIT](decisions/GRAYSON-ROUTINE-EDIT.md).
+  `WORKOUT_TEMPLATES` itself still never changes, and its exercise ids stay a closed set.
 - **Does not touch the fixed A/B/C `WORKOUT_TEMPLATES` system or Engine progression.** The
   domain-layer comment "No broad exercise database" on `WorkoutTemplateId`
   (`src/domain/workout/types.ts`) constrains *that* fixed template system specifically — why its

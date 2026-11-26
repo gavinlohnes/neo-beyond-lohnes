@@ -45,7 +45,7 @@ export interface LockScreenPlan {
 }
 
 /** One planned set, as the LOG button would save it now. */
-export interface PlannedSet { exerciseId: string; name: string; substitutedName?: string; setNumber: number; total: number; weight: number; reps: number }
+export interface PlannedSet { exerciseId: string; name: string; substitutedName?: string; setNumber: number; total: number; weight: number; reps: number; /** GRAYSON-ROUTINE-EDIT-001: the routine's rest for this exercise, when set. */ restSeconds?: number }
 
 /** Pure apart from the rest lookup: the snapshot for the worker, leaving out sets already recorded (logged or skipped). */
 export function buildLockScreenPlan(input: {
@@ -62,7 +62,7 @@ export function buildLockScreenPlan(input: {
   const sets = input.planned.filter((p) => !done.has(`${p.exerciseId}#${p.setNumber}`));
   const restFor = input.restFor ?? restSecondsFor;
   const restSeconds: Record<string, number> = {};
-  for (const s of sets) restSeconds[s.exerciseId] ??= restFor(s.exerciseId);
+  for (const s of sets) restSeconds[s.exerciseId] ??= s.restSeconds ?? restFor(s.exerciseId);
   const now = input.now ?? Date.now();
   const rest = input.session.activeRestEndsAt;
   return {

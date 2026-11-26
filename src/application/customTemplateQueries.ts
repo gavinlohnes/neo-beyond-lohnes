@@ -1,8 +1,8 @@
 import { db } from "../persistence/db";
-import { parseCustomWorkoutTemplate } from "../persistence/workoutTemplateValidation";
+import { parseCustomWorkoutTemplate, parseRoutineEditedPayload } from "../persistence/workoutTemplateValidation";
+import { builtInRoutineAt, customRoutineAt, isBuiltInRoutine, routineEditEntries, type RoutineEditEntry } from "../domain/workout/routineEdit";
 import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
 import {
-  WORKOUT_TEMPLATES,
   type ExercisePrescription,
   type WorkoutTemplateDefinition,
   type WorkoutTemplateId,
@@ -16,25 +16,39 @@ export async function getCustomTemplates(options: { includeArchived?: boolean } 
   return filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** GRAYSON-ROUTINE-EDIT-001: every usable ROUTINE_EDITED, in causal order. */
+export async function getRoutineEditEntries(): Promise<RoutineEditEntry[]> {
+  return routineEditEntries(await db.events.where("type").equals("ROUTINE_EDITED").toArray(), parseRoutineEditedPayload);
+}
+
+/** A point in the event log: a workout's start (its WORKOUT_STARTED seq, else its start time). */
+export interface RoutinePoint { seq?: number | undefined; at: string }
+
+/** Where a workout started, so its routine is read as it was then: an edit saved mid-workout applies from the next. */
+export async function getSessionRoutinePoint(session: { id: string; startedAt: string }): Promise<RoutinePoint> {
+  const started = (await db.events.where("type").equals("WORKOUT_STARTED").toArray())
+    .find((event) => (event.payload as { sessionId?: unknown } | undefined)?.sessionId === session.id);
+  return { seq: started?.seq, at: started?.recordedAt ?? session.startedAt };
+}
+
 /**
- * TRAIN-CREATE-002: the one seam that lets the rest of the app treat a
- * custom template's id like a built-in one, without ever touching
- * WORKOUT_TEMPLATES' own fixed dictionary (domain/workout/types.ts's
- * getPrescription/getReducedExercises remain scoped to the built-in
- * three, unchanged). Checks the locked built-in dictionary first — same
- * three templates, same content — and only falls back to the operator's
- * own custom templates for anything else. Returns undefined for an
- * unknown or archived id; callers already treat "no exercises" as valid
- * (RECOVERY's own [] case).
+ * TRAIN-CREATE-002: the one seam that lets the rest of the app treat a custom template's id like a built-in one.
+ * GRAYSON-ROUTINE-EDIT-001: A, B and C resolve to his latest edit (ROUTINE_EDITED), else the code's version; with
+ * `asOf`, to the routine as it was at that point (a workout's start). Returns undefined for an unknown or archived id;
+ * callers already treat "no exercises" as valid (RECOVERY's own [] case).
  */
-export async function resolveTemplateDefinition(templateId: WorkoutTemplateId): Promise<WorkoutTemplateDefinition | undefined> {
-  const builtIn = WORKOUT_TEMPLATES[templateId];
-  if (builtIn) return builtIn;
+export async function resolveTemplateDefinition(templateId: WorkoutTemplateId, asOf?: RoutinePoint): Promise<WorkoutTemplateDefinition | undefined> {
+  if (isBuiltInRoutine(templateId)) {
+    return { id: templateId, exercises: builtInRoutineAt(templateId, await getRoutineEditEntries(), asOf).exercises };
+  }
   const raw = await db.customWorkoutTemplates.get(templateId);
   if (!raw) return undefined;
   const parsed = parseCustomWorkoutTemplate(raw);
   if (!parsed || parsed.archivedAt) return undefined;
-  return { id: parsed.id, exercises: parsed.exercises };
+  const exercises = asOf
+    ? customRoutineAt(templateId, { name: parsed.name, exercises: parsed.exercises }, await getRoutineEditEntries(), asOf).exercises
+    : parsed.exercises;
+  return { id: parsed.id, exercises };
 }
 
 /**
@@ -46,11 +60,16 @@ export async function resolveTemplateDefinition(templateId: WorkoutTemplateId): 
 export async function resolveTemplateExercises(
   templateId: WorkoutTemplateId,
   sessionType: "STANDARD" | "REDUCED",
+  asOf?: RoutinePoint,
 ): Promise<ExercisePrescription[]> {
-  const definition = await resolveTemplateDefinition(templateId);
+  const definition = await resolveTemplateDefinition(templateId, asOf);
   if (!definition) return [];
-  return sessionType === "REDUCED" ? definition.exercises.slice(0, 2).map((ex) => ({ ...ex, sets: 2 })) : definition.exercises;
+  return sessionType === "REDUCED" ? reducedExercises(definition.exercises) : definition.exercises;
 }
+
+/** REDUCED = the first two exercises, two working sets each (Decision Register), for any routine. */
+export const reducedExercises = (exercises: readonly ExercisePrescription[]): ExercisePrescription[] =>
+  exercises.slice(0, 2).map((ex) => ({ ...ex, sets: 2 }));
 
 export async function resolvePrescription(
   templateId: WorkoutTemplateId,

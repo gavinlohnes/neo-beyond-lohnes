@@ -38,7 +38,7 @@ import { RecordsList } from "./RecordsList";
 import { TrainingHistory } from "./TrainingHistory";
 import { LiftHistoryControl } from "./LiftHistory";
 import { workoutVolumeLbs } from "../../../application/trainHistoryQueries";
-import { rememberRestAdjustment, restSecondsFor } from "../../../application/restMemory";
+import { rememberRestAdjustment, restStartSeconds } from "../../../application/restMemory";
 import { SetFixSheet, useSetFixUndo } from "./SetFixSheet";
 import { restEndBuzz, shouldBuzzRestEnd } from "../../feel/restEndBuzz";
 import { getRestBuzzPreference, setRestBuzzPreference, type RestBuzzPreference } from "../../../application/restBuzzQueries";
@@ -52,9 +52,11 @@ import { WhyDisclosure } from "../../components/WhyDisclosure";
 import { HoldButton } from "../../components/HoldButton";
 import type { Capacity, WorkoutSession } from "../../../domain/common/types";
 import type { ExercisePrescription, PerformedSet, SessionType, WorkoutTemplateId } from "../../../domain/workout/types";
-import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER, getReducedExercises } from "../../../domain/workout/types";
+import { WORKOUT_TEMPLATES, WORKOUT_TEMPLATE_ORDER } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
-import { getCustomTemplates } from "../../../application/customTemplateQueries";
+import { getCustomTemplates, getSessionRoutinePoint, reducedExercises, resolveTemplateExercises } from "../../../application/customTemplateQueries";
+import { getRoutineViews } from "../../../application/routineEditQueries";
+import { RoutinesPanel } from "./RoutineEditor";
 import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
 import { deriveCapacity } from "../../../engine/capacity";
@@ -152,13 +154,14 @@ function exercisesFor(
   templateId: WorkoutTemplateId,
   sessionType: SessionType,
   customTemplates: CustomWorkoutTemplate[],
+  builtInRoutines: Readonly<Record<string, ExercisePrescription[]>> = {},
 ): ExercisePrescription[] {
   if (sessionType === "RECOVERY") return [];
-  if (WORKOUT_TEMPLATES[templateId]) {
-    return sessionType === "REDUCED" ? getReducedExercises(templateId) : WORKOUT_TEMPLATES[templateId]!.exercises;
-  }
-  const exercises = customTemplates.find((t) => t.id === templateId)?.exercises ?? [];
-  return sessionType === "REDUCED" ? exercises.slice(0, 2).map((ex) => ({ ...ex, sets: 2 })) : exercises;
+  // GRAYSON-ROUTINE-EDIT-001: A, B and C as he last edited them (the code's version until then).
+  const exercises = WORKOUT_TEMPLATES[templateId]
+    ? builtInRoutines[templateId] ?? WORKOUT_TEMPLATES[templateId]!.exercises
+    : customTemplates.find((t) => t.id === templateId)?.exercises ?? [];
+  return sessionType === "REDUCED" ? reducedExercises(exercises) : exercises;
 }
 
 interface SetInputState {
@@ -300,6 +303,11 @@ export function TrainScreen({
   const [focusedExerciseId, setFocusedExerciseId] = useState<string | null>(null);
   /** REST-MEMORY-001: which exercise the running rest follows, so ± taps teach that exercise. */
   const restExerciseRef = useRef<string | null>(null);
+  // GRAYSON-ROUTINE-EDIT-001: the length the current rest started at, and the exercises whose rest he moved this workout.
+  const restStartRef = useRef<number | null>(null);
+  const restAdjustedRef = useRef<Set<string>>(new Set());
+  const restAdjustedSessionRef = useRef<string | null>(null);
+  if (restAdjustedSessionRef.current !== (session?.id ?? null)) { restAdjustedSessionRef.current = session?.id ?? null; restAdjustedRef.current = new Set(); }
   const [completionSummary, setCompletionSummary] = useState<CompletionSummary | null>(null);
   // GRAYSON-TRAIN-GUIDED-001: Delta's one proposal (if any), the pain stop, and what it noticed this workout (memory only).
   const [proposal, setProposal] = useState<(SetProposal & { exerciseId: string; exerciseName: string }) | null>(null);
@@ -339,6 +347,11 @@ export function TrainScreen({
   // exercisesFor/templateLabel take this as an explicit argument rather
   // than reading component state themselves, so they stay pure functions.
   const [customTemplates, setCustomTemplates] = useState<CustomWorkoutTemplate[]>([]);
+  // GRAYSON-ROUTINE-EDIT-001: A, B and C in force, the live workout's exercises as they were when it started, and the
+  // routine editor (null closed; a template id opens straight into that routine).
+  const [builtInRoutines, setBuiltInRoutines] = useState<Record<string, ExercisePrescription[]>>({});
+  const [sessionExercises, setSessionExercises] = useState<ExercisePrescription[] | null>(null);
+  const [routinesOpen, setRoutinesOpen] = useState<{ templateId: string | null } | null>(null);
   const [sequenceProgramme, setSequenceProgramme] = useState<SequenceProgrammeView | null>(null);
   const [programmeRefreshKey, setProgrammeRefreshKey] = useState(0);
   // TRAIN-CREATE-003: names only, offered as substitution quick-picks
@@ -465,6 +478,7 @@ export function TrainScreen({
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
+    setBuiltInRoutines(Object.fromEntries((await getRoutineViews()).filter((r) => r.builtIn).map((r) => [r.templateId, r.exercises])));
     const customs = await getCustomExercises();
     setCustomExerciseNames(customs.map((e) => e.name));
     setCustomExercisesForMap(customs);
@@ -519,8 +533,9 @@ export function TrainScreen({
         } catch { setInputs({}); }
       }
       setSets(await getPerformedSets(active.id));
-      await loadExerciseAdvisory(active, loadedCustomTemplates);
+      await loadExerciseAdvisory(active);
     } else {
+      setSessionExercises(null);
       setSets([]);
       setProgressionSuggestions({});
       setLastPerformedSets({});
@@ -549,8 +564,9 @@ export function TrainScreen({
    * below) is a separate, explicit, always-editable display default, not
    * a submission.
    */
-  async function loadExerciseAdvisory(activeSession: WorkoutSession, customTemplatesForResolution: CustomWorkoutTemplate[] = customTemplates) {
+  async function loadExerciseAdvisory(activeSession: WorkoutSession) {
     if (activeSession.sessionType === "RECOVERY") {
+      setSessionExercises([]);
       setProgressionSuggestions({});
       setLastPerformedSets({});
       setRecentSubstitutions({});
@@ -558,7 +574,9 @@ export function TrainScreen({
     }
     const templateId = activeSession.templateId as WorkoutTemplateId;
     const sessionType = activeSession.sessionType as "STANDARD" | "REDUCED";
-    const exercises = exercisesFor(templateId, activeSession.sessionType as SessionType, customTemplatesForResolution);
+    // GRAYSON-ROUTINE-EDIT-001: the routine as it was when this workout started; an edit saved since applies next time.
+    const exercises = await resolveTemplateExercises(templateId, sessionType, await getSessionRoutinePoint(activeSession));
+    setSessionExercises(exercises);
     const progressionEntries = await Promise.all(
       exercises.map(async (ex) => [ex.exerciseId, await getProgressionSuggestion(templateId, sessionType, ex.exerciseId)] as const),
     );
@@ -724,8 +742,11 @@ export function TrainScreen({
   async function startRestAfterCommit(exerciseId: string) {
     if (!session) return;
     // REST-MEMORY-001: the rest you settled on for this exercise last time, else the default.
+    // GRAYSON-ROUTINE-EDIT-001: the routine's rest is where it starts, until a ± in this workout moves it.
+    const start = restStartSeconds(exerciseId, activeExercises.find((ex) => ex.exerciseId === exerciseId)?.restSeconds, restAdjustedRef.current.has(exerciseId));
     restExerciseRef.current = exerciseId;
-    await startRest(session.id, restSecondsFor(exerciseId));
+    restStartRef.current = start;
+    await startRest(session.id, start);
     const now = Date.now();
     setRestTouchedAt(now);
     // The ticking effect below only advances `nowTick` once its 1s
@@ -849,7 +870,10 @@ export function TrainScreen({
     setRestTouchedAt(Date.now());
     try {
       await adjustRest(session.id, deltaSeconds);
-      rememberRestAdjustment(restExerciseRef.current, deltaSeconds);
+      rememberRestAdjustment(restExerciseRef.current, deltaSeconds, restStartRef.current ?? undefined);
+      // The next ± builds on this one; later sets of this exercise start from the remembered length.
+      if (restStartRef.current !== null) restStartRef.current += deltaSeconds;
+      if (restExerciseRef.current) restAdjustedRef.current.add(restExerciseRef.current);
       await refreshSession();
     } catch (error) {
       reportOperationFailure(error);
@@ -1070,13 +1094,14 @@ export function TrainScreen({
   const templateOptions: WorkoutTemplateId[] = [...WORKOUT_TEMPLATE_ORDER, ...customTemplates.map((t) => t.id)];
   const sequenceNeedsReview = sequenceProgramme !== null && sequenceProgramme.status !== "READY" && !templateChosenRef.current;
   const activeExercises = session
-    ? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates)
+    ? sessionExercises ?? exercisesFor(session.templateId as WorkoutTemplateId, session.sessionType as SessionType, customTemplates, builtInRoutines)
     : [];
   // GRAYSON-TRAIN-LOCKSCREEN-001: what the LOG button would save for each working set, for the lock screen.
   const lockScreenPlanned: PlannedSet[] = activeExercises.flatMap((ex) => Array.from({ length: ex.sets }, (_, i) => {
     const display = getInputDisplay(ex.exerciseId, i + 1);
     return { exerciseId: ex.exerciseId, name: subs[ex.exerciseId] || ex.name, ...(subs[ex.exerciseId] ? { substitutedName: subs[ex.exerciseId] } : {}),
-      setNumber: i + 1, total: ex.sets, weight: Number(display.weight) || 0, reps: Number(display.reps) || 0, kind: display.setKind };
+      setNumber: i + 1, total: ex.sets, weight: Number(display.weight) || 0, reps: Number(display.reps) || 0, kind: display.setKind,
+      ...(ex.restSeconds !== undefined && !restAdjustedRef.current.has(ex.exerciseId) ? { restSeconds: ex.restSeconds } : {}) };
   }).filter((p) => p.kind !== "WARMUP").map(({ kind: _kind, ...p }) => p));
   const lockScreen = useLockScreenSets({ session, sets, planned: lockScreenPlanned, onApplied: async () => { await refresh(true); } });
   const variantSuggestion = suggestSessionVariant(capacity, shortSleep);
@@ -1084,6 +1109,7 @@ export function TrainScreen({
     chosenTemplate,
     chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant,
     customTemplates,
+    builtInRoutines,
   );
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
 
@@ -1381,7 +1407,13 @@ export function TrainScreen({
           being visible. The current choice is always shown in the summary
           line and override stays one tap away, so START WORKOUT lands on
           the first phone screen. */}
-      {!session && !completionSummary && (
+      {/* GRAYSON-ROUTINE-EDIT-001: the routine list and editor open in the workout card's place, before START. */}
+      {!session && !completionSummary && routinesOpen && (
+        <RoutinesPanel initialTemplateId={routinesOpen.templateId} workoutActive={false}
+          onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(true); }}
+          onClose={() => setRoutinesOpen(null)} />
+      )}
+      {!session && !completionSummary && !routinesOpen && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
             {sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
@@ -1478,6 +1510,11 @@ export function TrainScreen({
                   </li>
                 ))}
               </ol>
+              <div className="train-routine-acts">
+                <button type="button" className="btn-secondary" disabled={busy} aria-label={`Edit workout ${templateLabel(chosenTemplate, customTemplates)}`}
+                  onClick={() => setRoutinesOpen({ templateId: chosenTemplate })}>EDIT</button>
+                <button type="button" className="btn-secondary" disabled={busy} onClick={() => setRoutinesOpen({ templateId: null })}>ROUTINES</button>
+              </div>
               <button type="button" className="btn-secondary" style={{ marginTop: 12 }} onClick={() => void openCalibrationPreview()}>
                 PREVIEW CALIBRATION
               </button>

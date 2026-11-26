@@ -3,11 +3,14 @@
 /**
  * TRAIN-CREATE-002: widened from the original fixed `"A" | "B" | "C"`
  * union to a plain string so it can also address a user-created custom
- * template (`CustomWorkoutTemplate`, customTemplate.ts). This does NOT
- * touch WORKOUT_TEMPLATES's exercise composition itself, which remains
- * exactly the locked, fixed machine-oriented set below (Decision
- * Register, TRAIN — exercise names/sets/rep ranges locked word for word,
- * unchanged). No broad exercise database for the built-in three;
+ * template (`CustomWorkoutTemplate`, customTemplate.ts). The code's
+ * WORKOUT_TEMPLATES below stay the fixed machine-oriented originals.
+ * GRAYSON-ROUTINE-EDIT-001 (Gavin, 2026-11-25) lifted the "locked word
+ * for word" rule: he can edit A, B and C through a ROUTINE_EDITED
+ * override event (domain/workout/routineEdit.ts), and RESET TO ORIGINAL
+ * brings back the version below. Read the routine in force through
+ * application/customTemplateQueries.ts, never this dictionary directly
+ * for what to train. No broad exercise database for the built-in three;
  * exercise IDs are shared across templates where the same movement
  * recurs (Preacher Curl in B/C, Triceps Pressdown in A/C) so future
  * per-exercise progression history is continuous regardless of which day
@@ -52,6 +55,8 @@ export interface ExercisePrescription {
   incrementLbs: number;
   /** SUPERSET-001 (APPS-PICKS-003 pick 18, after Hevy): do this and the next exercise back to back. Optional; absent = on its own. */
   supersetWithNext?: boolean | undefined;
+  /** GRAYSON-ROUTINE-EDIT-001: where this exercise's rest starts, 15–600 s. Optional; absent = his remembered rest. */
+  restSeconds?: number | undefined;
 }
 
 export interface WorkoutTemplateDefinition {

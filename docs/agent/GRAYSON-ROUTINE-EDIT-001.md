@@ -7,7 +7,7 @@
   word for word" rule for the built-in A, B and C.
 - **Lane: PROTECTED** (prescriptions, the programme snapshot and a Decision Register change). No new table and no Dexie
   version. Independent exact-head review, green CI; Gavin merges.
-- **Starting commit:** `origin/master` `a2c33c53` or later. Re-fetch before starting.
+- **Starting commit:** `origin/master` `a2c33c53` or later. Re-fetch before starting. Built from `8258dbed`.
 - **Builder:** Claude Code. Branch `claude/grayson-routine-edit-001`. **Reviewer:** a fresh-context reviewer.
 - **Order:** Claude Code, TRAIN basics **#1** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25).
   WORKOUT-CHANGES-001, ONE-OFF-001, WEEK-PLAN-001 and BLOCK-CYCLE-001 build on its editor and commands.
