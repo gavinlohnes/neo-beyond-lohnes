@@ -1,6 +1,6 @@
 import { db } from "../persistence/db";
 import type { DomainEvent } from "../domain/common/types";
-import type { ProgrammeRevision, TrainingProgramme } from "../domain/workout/trainingProgramme";
+import { WEEK_PLAN_EMPTY, WEEK_PLAN_REST, type ProgrammeRevision, type TrainingProgramme } from "../domain/workout/trainingProgramme";
 import { trainingProgrammeEventSchema, trainingProgrammeSchema } from "../persistence/trainingProgrammeValidation";
 import { logIntentEvent } from "./intentCommands";
 import { newId } from "./commands";
@@ -89,6 +89,10 @@ export async function saveTrainingProgramme(programme: TrainingProgramme | null,
           if (!snapshotMatches(short, member.short.snapshot)) throw new Error("A linked SHORT template changed. Reopen and review it before saving.");
         }
       }
+    } else if (parsed?.mode === "WEEK_PLAN") {
+      // GRAYSON-WEEK-PLAN-001: every day is Rest, an empty workout, A, B, C, or one of his routines.
+      const values = [...parsed.weeks.flatMap((week) => Object.values(week)), ...Object.values(parsed.overrides ?? {})];
+      for (const id of values) if (id !== WEEK_PLAN_REST && id !== WEEK_PLAN_EMPTY && !Object.hasOwn(WORKOUT_TEMPLATES, id) && !custom.some((t) => t.id === id)) throw new Error("A routine in your week is no longer available. Choose another for that day.");
     } else {
       for (const id of Object.values(parsed?.slots ?? {})) if (!Object.hasOwn(WORKOUT_TEMPLATES, id) && !custom.some((t) => t.id === id)) throw new Error("A selected template is no longer available. Choose another or clear that slot.");
     }

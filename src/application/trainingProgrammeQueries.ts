@@ -4,7 +4,7 @@ import { getCustomTemplates } from "./customTemplateQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getSchedulePattern } from "./queries";
 import { mostRecentBoundaryAtOrBefore } from "../engine/dayRollover";
-import { formatLocalDate, isOperatorSavedSchedule, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
+import { formatLocalDate, isOperatorSavedSchedule, scheduleWeekIndex, scheduledWorkContextForLivedDay } from "../engine/scheduledContext";
 import { resolveProgrammeSlot } from "../engine/trainingProgrammeResolution";
 import { WORKOUT_TEMPLATE_ORDER } from "../domain/workout/types";
 import { recordedBy, resolveWorkContext } from "./workContextResolution";
@@ -196,7 +196,7 @@ export async function getProgrammeView(now = new Date()) {
     ? { key: null, templateId: null }
     : revision.programme?.mode === "ROTATION" && !rotationAvailable
       ? { key: null, templateId: null }
-      : resolveProgrammeSlot(revision.programme, date, context);
+      : resolveProgrammeSlot(revision.programme, date, context, (day) => (rotationAvailable ? scheduleWeekIndex(day, schedule) : 0));
   const templates = [...WORKOUT_TEMPLATE_ORDER.map((id) => ({ id, name: `Workout ${id}`, custom: false as const })), ...custom.map((t) => ({ id: t.id, name: t.name, custom: true as const }))];
   const sequence = revision.programme?.mode === "SEQUENCE" ? await getSequenceView(revision, history, allCustom) : null;
   return { revision, templates, customTemplates: custom, planned, sequence, forecast, rotationAvailable, date: formatLocalDate(date) };

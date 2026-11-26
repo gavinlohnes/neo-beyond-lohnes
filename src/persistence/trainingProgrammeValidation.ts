@@ -36,7 +36,17 @@ const sequenceProgrammeSchema = z.object({
   if (new Set(formIds).size !== formIds.length) ctx.addIssue({ code: "custom", path: ["members"], message: "Each linked form must use its own template." });
 });
 
-export const trainingProgrammeSchema = z.union([assignedProgrammeSchema, sequenceProgrammeSchema]);
+// GRAYSON-WEEK-PLAN-001: optional new shape inside the same revision event; older revisions and backups read as before.
+const weekPlanDaySchema = z.string().trim().min(1).max(100);
+const weekPlanProgrammeSchema = z.object({
+  mode: z.literal("WEEK_PLAN"),
+  weeks: z.array(z.record(z.string(), weekPlanDaySchema)).min(1).max(8),
+  overrides: z.record(z.string().regex(/^\d{4}-\d{2}-\d{2}$/), weekPlanDaySchema).optional(),
+}).strict().superRefine((value, ctx) => {
+  for (const [i, week] of value.weeks.entries()) for (const key of Object.keys(week)) if (!WEEKDAY_SLOTS.includes(key as never)) ctx.addIssue({ code: "custom", path: ["weeks", i, key], message: "Unknown weekday." });
+});
+
+export const trainingProgrammeSchema = z.union([assignedProgrammeSchema, sequenceProgrammeSchema, weekPlanProgrammeSchema]);
 export const trainingProgrammeEventSchema = z.object({
   commandId: z.string().min(1), previousId: z.string().min(1).nullable(), programme: trainingProgrammeSchema.nullable(),
 }).strict();

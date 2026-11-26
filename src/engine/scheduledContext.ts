@@ -105,6 +105,11 @@ function parseAnchorMonday(anchorMonday: string): Date {
   return new Date(y, m - 1, d);
 }
 
+/** GRAYSON-WEEK-PLAN-001: which week of his saved cycle a date falls in (0 = Week A), from the same anchor. */
+export function scheduleWeekIndex(date: Date, pattern: SchedulePattern): number {
+  return weekIndexOf(date, pattern);
+}
+
 function weekIndexOf(date: Date, pattern: SchedulePattern): number {
   const cycleLength = pattern.weeks.length;
   const anchor = midnightOf(parseAnchorMonday(pattern.anchorMonday));
