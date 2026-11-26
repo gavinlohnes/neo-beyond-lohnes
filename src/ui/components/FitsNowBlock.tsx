@@ -23,7 +23,7 @@ export function FitsNowBlock({ busy, refreshKey = 0, onLog, compact = false }: {
   if (compact) {
     const top = fits.kind === "LIST" ? fits.rows[0]! : null;
     return <p className="meta fits-now__line" data-fits-now-line>
-      {top ? `Fits now: ${top.meal.name} · ${Math.round(top.meal.calories)} kcal · ${Math.round(top.meal.proteinG)} g protein` : fits.kind === "NONE" ? fits.line : ""}
+      {top ? `${top.aboutFits ? "About fits" : "Fits now"}: ${top.meal.name} · ${Math.round(top.meal.calories)} kcal · ${Math.round(top.meal.proteinG)} g protein` : fits.kind === "NONE" ? fits.line : ""}
     </p>;
   }
   return (
