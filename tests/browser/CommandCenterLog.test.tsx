@@ -100,7 +100,7 @@ describe("TODAY logging", () => {
     const buttons = [...sheet.element().querySelectorAll<HTMLButtonElement>("button")].filter(button => button.checkVisibility() && !button.disabled);
     (buttons[buttons.length - 1] as HTMLElement).focus();
     await userEvent.keyboard("{Tab}");
-    expect(sheet.element().contains(document.activeElement)).toBe(true);
+    await expect.poll(() => sheet.element().contains(document.activeElement)).toBe(true);
     await userEvent.keyboard("{Escape}");
     await expect.poll(() => screen.getByRole("dialog", { name: "LOG" }).elements().length).toBe(0);
     await expect.poll(() => document.activeElement?.getAttribute("aria-label")).toBe("Open LOG");

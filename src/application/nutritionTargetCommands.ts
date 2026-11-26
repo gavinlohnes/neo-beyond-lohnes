@@ -4,6 +4,8 @@ import {
   type NutritionTargetsInput,
 } from "../persistence/nutritionTargetValidation";
 import type { NutritionTargets } from "../domain/common/types";
+import { balancedOffAdjustment } from "../engine/dayTarget";
+import { getNutritionTargets, getTwoWeekDayTargetProjection } from "./nutritionTargetQueries";
 
 /**
  * NUTRITION-003 (Calorie + Protein Targets, High-Risk Drop, direct owner
@@ -30,6 +32,9 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
   const strengthSessionsTargetPerWeek = reviewTarget("strengthSessionsTargetPerWeek");
   const calorieFloorKcal = reviewTarget("calorieFloorKcal");
   const waterTargetOz = reviewTarget("waterTargetOz");
+  const dayTargets = parsed.dayTargets ?? existing?.dayTargets;
+  // GRAYSON-PROTEIN-HEADSUP-001: carried through every other save, like dayTargets.
+  const proteinHeadsUp = parsed.proteinHeadsUp ?? existing?.proteinHeadsUp;
   const record: NutritionTargets = {
     id: "current",
     ...(effectiveCalorieTarget !== undefined ? { calorieTargetKcal: effectiveCalorieTarget } : {}),
@@ -40,6 +45,8 @@ export async function updateNutritionTargets(input: NutritionTargetsInput): Prom
     ...(strengthSessionsTargetPerWeek !== undefined ? { strengthSessionsTargetPerWeek } : {}),
     ...(calorieFloorKcal !== undefined ? { calorieFloorKcal } : {}),
     ...(waterTargetOz !== undefined ? { waterTargetOz } : {}),
+    ...(dayTargets !== undefined ? { dayTargets } : {}),
+    ...(proteinHeadsUp !== undefined ? { proteinHeadsUp } : {}),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -75,4 +82,12 @@ export async function saveNutritionTargets(input: NutritionTargetsInput): Promis
       });
     },
   };
+}
+
+export async function balanceNutritionDayTargets(): Promise<NutritionTargetsSave> {
+  const [targets, projection] = await Promise.all([getNutritionTargets(), getTwoWeekDayTargetProjection()]);
+  if (!targets.dayTargets) throw new Error("Turn on targets by kind of day first.");
+  const off = balancedOffAdjustment(targets, projection.days);
+  if (off === null) throw new Error("A saved two-week schedule needs at least one day off to balance.");
+  return saveNutritionTargets({ dayTargets: { ...targets.dayTargets, adjustKcal: { ...targets.dayTargets.adjustKcal, OFF: off } } });
 }

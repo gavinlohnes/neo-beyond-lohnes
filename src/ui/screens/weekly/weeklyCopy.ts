@@ -191,6 +191,8 @@ function kcal(n: number): string {
 
 /** The headline and the quiet line under it: a range, what it came from, and what it assumes. */
 export function describeExpenditure(readout: ExpenditureReadout): { headline?: string; detail: string } {
+  // GRAYSON-MISSION-REVIEW-001 slice A: say how many marked days were left out; with none, the words are unchanged.
+  const left = readout.leftOut ? ` ${plural(readout.leftOut, "day", "days")} left out: not fully logged.` : "";
   if (readout.kind === "ESTIMATE") {
     const change =
       Math.abs(readout.weeklyChangeLbs) < 0.05
@@ -200,11 +202,11 @@ export function describeExpenditure(readout: ExpenditureReadout): { headline?: s
       headline: `About ${kcal(readout.lowKcal)}–${kcal(readout.highKcal)} kcal a day`,
       detail: `Estimated from the last ${readout.windowDays} days: ${readout.intakeDays} days with meals logged (avg ${kcal(
         readout.avgIntakeKcal,
-      )} kcal) and ${change}. Assumes those days' meals were all logged.`,
+      )} kcal) and ${change}. Assumes those days' meals were all logged.${left}`,
     };
   }
   if (readout.tooNoisy) {
-    return { detail: "Not enough data yet — weight is moving around too much for a useful range." };
+    return { detail: `Not enough data yet — weight is moving around too much for a useful range.${left}` };
   }
   // DELTA-004: the same floor, said as what to log. Weigh-ins already counted but bunched together need spreading.
   const weighIns = readout.weighIns.need - readout.weighIns.have;
@@ -214,7 +216,7 @@ export function describeExpenditure(readout: ExpenditureReadout): { headline?: s
   ], "your daily burn estimate");
   const count = (c: { have: number; need: number }, what: string) => `${c.have}${c.have < c.need ? ` of ${c.need}` : ""} ${what}`;
   const progress = `${count(readout.intakeDays, "meal days")}, ${count(readout.weighIns, "weigh-ins")} in the last ${readout.windowDays} days`;
-  return { detail: goal ? `${goal.slice(0, -1)} (${progress}).` : `Not enough data yet (${progress}).` };
+  return { detail: `${goal ? `${goal.slice(0, -1)} (${progress}).` : `Not enough data yet (${progress}).`}${left}` };
 }
 
 // ---- YOUR USUAL (FOUNDATION-A-F1) ----

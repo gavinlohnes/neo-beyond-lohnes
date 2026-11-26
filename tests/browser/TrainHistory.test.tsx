@@ -208,7 +208,7 @@ describe("lift history during a workout", () => {
     chip.click();
     await expect.element(screen.getByRole("button", { name: "Machine Chest Press history" })).toBeVisible();
     expect(document.querySelector(".train-lift-history")).toBeNull();
-    expect(document.activeElement).toBe(chip);
+    await expect.poll(() => document.activeElement).toBe(chip);
     expect(getLiftRecentSessions).toHaveBeenCalledTimes(1);
   });
 });

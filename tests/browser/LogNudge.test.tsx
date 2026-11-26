@@ -112,7 +112,7 @@ describe("GRAYSON-LOG-NUDGE-001 on TODAY", () => {
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/after-glance-nudge-since-360.png`, element: document.querySelector(".today-numbers") as HTMLElement });
     (nudge().getByRole("button", { name: "TELL DELTA" }).element() as HTMLElement).focus();
     await userEvent.keyboard("{Tab}");
-    expect(document.activeElement?.textContent).toBe("NOT NOW");
+    await expect.poll(() => document.activeElement?.textContent).toBe("NOT NOW");
     await userEvent.keyboard("{Enter}");
     await expect.poll(() => document.querySelector('[aria-label="Logging nudge"]')).toBeNull();
     await cleanup();

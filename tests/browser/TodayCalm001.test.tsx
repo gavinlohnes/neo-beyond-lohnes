@@ -161,7 +161,7 @@ describe("GRAYSON-TODAY-CALM-001 on TODAY", () => {
     const more = q(".today-quiet-more") as HTMLButtonElement;
     (q('[aria-label="Logging nudge"][role="group"] button:last-of-type') as HTMLElement).focus();
     await userEvent.tab();
-    expect(document.activeElement).toBe(more);
+    await expect.poll(() => document.activeElement).toBe(more);
     await userEvent.keyboard("{Enter}");
     await expect.poll(() => q('[aria-label="After shift routine"]')).not.toBeNull();
     await expect.poll(() => document.activeElement === q(".today-quiet-lines")).toBe(true);

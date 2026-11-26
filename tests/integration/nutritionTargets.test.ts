@@ -84,6 +84,14 @@ describe("getNutritionTargets / updateNutritionTargets — single mutable settin
     await expect(updateNutritionTargets({ muscleSetsTargetPerWeek: 60 })).rejects.toThrow();
     await expect(updateNutritionTargets({ strengthSessionsTargetPerWeek: 2.5 })).rejects.toThrow();
   });
+
+  it("stores day-kind adjustments while old rows remain valid", async () => {
+    const old = await updateNutritionTargets({ calorieTargetKcal: 1950 });
+    expect(old.dayTargets).toBeUndefined();
+    await updateNutritionTargets({ dayTargets: { on: true, adjustKcal: { WORK: 100, RECOVERY: 0, OFF: -100, LIFT: 150 } } });
+    expect(await getNutritionTargets()).toMatchObject({ dayTargets: { on: true, adjustKcal: { WORK: 100, RECOVERY: 0, OFF: -100, LIFT: 150 } } });
+    await expect(updateNutritionTargets({ dayTargets: { on: true, adjustKcal: { WORK: 25, RECOVERY: 0, OFF: 0, LIFT: 0 } } })).rejects.toThrow();
+  });
 });
 
 describe("getEffectiveProteinTargetG — derived from bodyweight, never guessed", () => {
@@ -173,7 +181,8 @@ describe("getTotalMealCalories", () => {
  */
 describe("Backup/restore round-trip — NutritionTargets survives", () => {
   it("a saved target row survives a real export -> clear -> import cycle", async () => {
-    await updateNutritionTargets({ calorieTargetKcal: 2100, proteinMultiplierGPerLb: 0.9, weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
+    await updateNutritionTargets({ calorieTargetKcal: 2100, proteinMultiplierGPerLb: 0.9, weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3,
+      dayTargets: { on: true, adjustKcal: { WORK: 100, RECOVERY: 0, OFF: -100, LIFT: 150 } } });
 
     const blob = await db.export({ prettyJson: true });
     const file = new File([blob], "native-backup.json", { type: "application/json" });
@@ -188,5 +197,6 @@ describe("Backup/restore round-trip — NutritionTargets survives", () => {
     expect(restored.calorieTargetKcal).toBe(2100);
     expect(restored.proteinMultiplierGPerLb).toBe(0.9);
     expect(restored).toMatchObject({ weightChangeTargetPercentPerWeek: 0.75, muscleSetsTargetPerWeek: 12, strengthSessionsTargetPerWeek: 3 });
+    expect(restored.dayTargets).toEqual({ on: true, adjustKcal: { WORK: 100, RECOVERY: 0, OFF: -100, LIFT: 150 } });
   });
 });

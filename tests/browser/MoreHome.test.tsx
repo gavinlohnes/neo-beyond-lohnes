@@ -31,7 +31,7 @@ describe("MORE-HOME-001", () => {
     expect(plan.open).toBe(false);
     await screen.getByRole("button", { name: "Plan", exact: true }).click();
     expect(plan.open).toBe(true);
-    expect(document.activeElement).toBe(plan.querySelector("summary"));
+    await expect.poll(() => document.activeElement).toBe(plan.querySelector("summary"));
 
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(360);
     const home = document.querySelector(".sys-home")!;

@@ -60,3 +60,8 @@
 .framing-guide__status { position: absolute; inset: auto 12px 12px; margin: 0; padding: 8px 10px; background: rgba(0, 0, 0, .75); color: var(--text-1); }
 .framing-guide__note { margin: 10px 14px 0; }
 .framing-guide__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; padding: 12px 14px 0; }
+/* GRAYSON-MISSION-REVIEW-001 slice A: the days that look short, at the top of the monthly review. */
+.short-days__list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
+.short-days__row { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 16px; }
+.short-days__row input { width: 24px; height: 24px; flex: none; }
+.short-days button { width: auto; min-height: 44px; padding-inline: 16px; }

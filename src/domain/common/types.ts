@@ -276,6 +276,12 @@ export type DomainEventType =
   | "LEARNING_RESPONDED"
   /** GRAYSON-CHALLENGE-LADDER-001 (C6.6): his answer to a habit ladder line. Global; payload in application/habitLadder.ts. */
   | "HABIT_LADDER_ANSWERED"
+  /**
+   * GRAYSON-MISSION-REVIEW-001 slice A (HONEST-BURN, Gavin 2026-11-24): his mark that a lived day's food was not fully
+   * logged, under that day's beyondDayId. The newest for a day wins; unmarking is the same event with partial false.
+   * Payload in application/foodDayMark.ts.
+   */
+  | "FOOD_DAY_PARTIAL_SET"
   // GRAYSON C4.8a (Gavin, 2026-11-20 design #601; build approved 2026-11-23): Eating Window boundaries he marks, a
   // one-day skip, and undo of either. Day-scoped to the active lived day when tapped. Payloads below.
   | "EATING_WINDOW_MARKED"
@@ -611,6 +617,16 @@ export interface NutritionTargets {
   calorieFloorKcal?: number;
   /** GRAYSON C4.6 (Gavin, 2026-11-23): his own daily water target in oz; unset means no target and no nag. */
   waterTargetOz?: number;
+  /** GRAYSON-DAY-TARGETS-001: operator-owned adjustments layered over the plain daily target. */
+  dayTargets?: {
+    on: boolean;
+    adjustKcal: Record<"WORK" | "RECOVERY" | "OFF" | "LIFT", number>;
+  };
+  /**
+   * GRAYSON-PROTEIN-HEADSUP-001 (Gavin, 2026-11-26): the protein heads-up's switch and his numbers (under `underPercent`
+   * on `days` of the last `windowDays` logged days), and when he last tapped THAT'S FINE. Optional and additive.
+   */
+  proteinHeadsUp?: { on: boolean; underPercent: number; days: number; windowDays: number; dismissedAt?: string | undefined };
   createdAt: string;
   updatedAt: string;
 }

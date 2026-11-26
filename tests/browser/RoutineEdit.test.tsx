@@ -11,6 +11,7 @@ import { getCustomTemplates } from "../../src/application/customTemplateQueries"
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { CustomTemplateScreen } from "../../src/ui/screens/more/CustomTemplateScreen";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
+import { focusAfterSettle } from "./helpers/focus";
 
 /**
  * GRAYSON-ROUTINE-EDIT-001: the brief's phone check in a real browser. TRAIN → EDIT on A, move the second exercise to
@@ -164,7 +165,7 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await screen.getByRole("button", { name: "Edit Pull Day" }).click();
     await screen.getByRole("textbox", { name: "Name" }).fill("Pull");
     // Keyboard: focus ↓ on the first row and press Enter.
-    (document.querySelector('[aria-label="Move Lat Pulldown down"]') as HTMLButtonElement).focus();
+    await focusAfterSettle(document.querySelector('[aria-label="Move Lat Pulldown down"]')!);
     await userEvent.keyboard("{Enter}");
     expect(rows()).toEqual(["lib-face-pull", "lat-pulldown"]);
     await axeClean("more editor", editor());

@@ -19,7 +19,8 @@ import { describeSleepTargets } from "./sleepDebt";
 import { getWeekAhead } from "./weekAheadQueries";
 import { describeTodayPicture, getTodayPicture } from "./todayPicture";
 import { getMeasuredSnapshot } from "./measuredQueries";
-import { getNutritionTargets } from "./nutritionTargetQueries";
+import { getDayCalorieTarget, getNutritionTargets } from "./nutritionTargetQueries";
+import { getProteinHeadsUp } from "./proteinPatternQueries";
 import { getQuitSummary } from "./quitQueries";
 import { isOperatorSavedSchedule, livedDayShiftWindow } from "../engine/scheduledContext";
 import { sleepMinutes } from "../domain/health/measuredSeries";
@@ -111,8 +112,8 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
           `BEYOND CURRENT RECOMMENDATION: ${r.kind} — ${r.title}. Rationale: ${r.rationale} Decision: ${decision ?? "not recorded"}. Issued ${date(r.issuedAt)}. Canonical Engine output; Alfred may explain it but must not create or rank a replacement.`, "Recorded event", { at: r.issuedAt })]
         : [s("RECOMMENDATION", `none:${active.id}`, JSON.stringify([active.id, "none"]), "No current BEYOND recommendation",
           "BEYOND CURRENT RECOMMENDATION: none recorded for this lived day. Alfred must say it is unavailable and must not infer or create one.")]);
-      await read("Food today", () => getFoodDiary(active.id), (d) => [s("FOOD", active.id, JSON.stringify(d), "Food today",
-        `FOOD TODAY: ${Math.round(d.proteinG)} g protein${d.proteinTargetG ? ` of ${Math.round(d.proteinTargetG)} g target` : ""}, ${Math.round(d.calories)} kcal.${d.entries.length ? " " + d.entries.map((e) => `${hhmm(new Date(e.at))} ${e.name} (${Math.round(e.proteinG)} g${e.calories !== null ? `, ${Math.round(e.calories)} kcal` : ""})`).join("; ") : " Nothing logged yet."}`)]);
+      await read("Food today", async () => ({ ...(await getFoodDiary(active.id)), headsUp: (await getProteinHeadsUp(now).catch(() => null))?.line ?? null }), (d) => [s("FOOD", active.id, JSON.stringify(d), "Food today",
+        `FOOD TODAY: ${Math.round(d.proteinG)} g protein${d.proteinTargetG ? ` of ${Math.round(d.proteinTargetG)} g target` : ""}, ${Math.round(d.calories)} kcal.${d.entries.length ? " " + d.entries.map((e) => `${hhmm(new Date(e.at))} ${e.name} (${Math.round(e.proteinG)} g${e.calories !== null ? `, ${Math.round(e.calories)} kcal` : ""})`).join("; ") : " Nothing logged yet."}${d.headsUp ? ` ${d.headsUp} (GRAYSON-PROTEIN-HEADSUP-001: say it once if asked about food; facts only, no advice.)` : ""}`)]);
       await read("Quit records", () => getQuitSummary(active.id, now), (q) => q ? [s("QUIT", q.habit.id, JSON.stringify(q), "Quit records",
         `QUIT TRACKER (${q.habit.name}): clean today ${q.cleanToday ? "yes" : "not logged"}; ${q.cleanThisMonth} clean days this month, ${q.cleanTotal} total; ${q.urgesToday.length} urges logged today.`)] : []);
     }
@@ -137,8 +138,8 @@ export function readOperatorContext(options: Options, now = new Date()): Promise
       `ROUTINES: [${r.id}] ${ROUTINE_MOMENT_LABELS[r.moment]}: ${r.title} — ${r.steps.map((st) => st.text).join(", ")}.`, "Operator statement", { at: r.updatedAt })));
     await read("Projects", getProjectViews, (v) => v.filter(({ project: p }) => p.status === "ACTIVE" || p.status === "PAUSED").map((v) => s("PROJECT", v.project.id, JSON.stringify(v), v.project.title,
       `OPEN PROJECTS: [${v.project.id}] "${v.project.title}" — ${v.project.status.toLowerCase()}; ${v.progress.done} of ${v.progress.total - v.progress.released} done${v.progress.next ? `; his chosen next step: "${v.progress.next.title}"` : ""}${v.project.finish ? `; finished when: ${v.project.finish}` : ""}.`, "Derived from records", { at: v.project.updatedAt })));
-    await read("Targets and weight", async () => ({ targets: await getNutritionTargets(), weight: await getMostRecentBodyweight() }), ({ targets: t, weight: w }) => [s("TARGETS", "nutrition", JSON.stringify([t, w]), "Nutrition targets and latest weight",
-      `TARGETS: calories ${t.calorieTargetKcal ?? "not set"} kcal; protein ${t.proteinMultiplierGPerLb} g per lb${t.goalWeightLbs ? `; goal weight ${t.goalWeightLbs} lb` : ""}. Latest weight: ${w ?? "none logged"} lb.`)]);
+    await read("Targets and weight", async () => ({ targets: await getNutritionTargets(), dayTarget: active ? await getDayCalorieTarget(active.id) : null, weight: await getMostRecentBodyweight() }), ({ targets: t, dayTarget, weight: w }) => [s("TARGETS", "nutrition", JSON.stringify([t, dayTarget, w]), "Nutrition targets and latest weight",
+      `TARGETS: ${dayTarget?.parts.length ? `today's target ${dayTarget.kcal} kcal (${dayTarget.parts.map((part) => part.label.toLowerCase()).join(", ")})` : `calories ${t.calorieTargetKcal ?? "not set"} kcal`}; protein ${t.proteinMultiplierGPerLb} g per lb${t.goalWeightLbs ? `; goal weight ${t.goalWeightLbs} lb` : ""}. Latest weight: ${w ?? "none logged"} lb.`)]);
     await read("Next seven days", () => getWeekAhead(now), (v) => [s("FORECAST", "week", JSON.stringify(v), "Next seven scheduled days",
       `SCHEDULE NEXT 7 DAYS: ${v.days.map((d) => d.basis === "UNKNOWN" ? `${d.date} unknown` : `${d.date} ${d.work}${d.shiftStartHour !== null ? ` ${d.shiftStartHour}:00` : ""} (${d.basis === "RECORDED" ? "recorded" : d.basis === "CONFIRMED" ? "confirmed change" : "forecast"})`).join(" · ")}. Forecast days are predictions, not availability; confirmed changes are plans the operator confirmed, not work done; recorded days are what was set for that lived day. Alfred cannot change the schedule himself; he may only propose a change (schedule_change, schedule_swap, set_work_context) as a card the operator confirms.`, "Configured forecast")]);
     await read("Garmin measurements", () => getMeasuredSnapshot(now.getTime()), (v) => [s("MEASURED", "garmin", JSON.stringify([v.lastNight, v.stepsToday.length > 1 ? v.stepsToday.at(-1)?.total : null, v.resting.at(-1), v.resting.at(-2), v.garminAsOf]), "Applicable Garmin measurements",

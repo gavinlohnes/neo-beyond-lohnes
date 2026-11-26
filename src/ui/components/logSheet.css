@@ -76,3 +76,13 @@
 /* GRAYSON-DICTATE-001: TALK sits under the meal search; the search row is unchanged where TALK doesn't show. */
 .record-meal-search { display: grid; gap: 8px; min-width: 0; }
 .record-meal-search .talk { justify-self: start; }
+/* GRAYSON-FITS-NOW-001: Fits now, above LIKELY NOW. Plain rows; no colour. */
+.fits-now { margin-bottom: 12px; }
+.fits-now h3 { margin-top: 0; }
+.fits-now__text { min-width: 0; }
+.fits-now__row button { min-height: 44px; }
+/* GRAYSON-PROTEIN-HEADSUP-001: one quiet line on BODY's food card. No colour. */
+.protein-headsup { margin-top: 6px; display: grid; gap: 6px; }
+.protein-headsup summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 16px; }
+.protein-headsup__acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.protein-headsup button { width: auto; min-height: 44px; padding-inline: 14px; }

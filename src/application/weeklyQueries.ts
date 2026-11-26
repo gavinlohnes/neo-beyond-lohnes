@@ -13,6 +13,7 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
 import { projectFindings, type FindingsResult } from "../engine/findings";
+import { getPartialDayIds } from "./foodDayMark";
 import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
 import { proposeCalorieTarget, WEIGHT_MAX_AGE_DAYS, type CalorieProposal, type CurrentWeight } from "./targetProposal";
 import { projectPersonalBaselines, type PersonalBaseline } from "../engine/personalBaselines";
@@ -194,7 +195,8 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
     if (f.kind === "STALL" || f.kind === "EXERCISE_STORY") exerciseNames[f.exerciseId] = names.get(f.exerciseId) ?? f.exerciseId;
   }
 
-  const expenditure = projectExpenditure(daySummaries, history, now);
+  // GRAYSON-MISSION-REVIEW-001 slice A: days he marked not fully logged leave the burn estimate's intake.
+  const expenditure = projectExpenditure(daySummaries, history, now, await getPartialDayIds());
   return {
     weight: {
       ...(avgLbs !== undefined ? { avgLbs } : {}),

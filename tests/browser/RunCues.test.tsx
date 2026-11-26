@@ -200,7 +200,7 @@ describe("GRAYSON-TRAIN-RUN-CUES-001 voice cues with the phone locked", () => {
     await screen.getByRole("button", { name: "CUE WORDS" }).click();
     const sheet = page.getByRole("dialog", { name: "Cue words" });
     await expect.element(sheet).toBeVisible();
-    expect(document.activeElement?.textContent).toBe("Cue words");
+    await expect.poll(() => document.activeElement?.textContent).toBe("Cue words");
     const runRow = () => document.querySelector('[data-run-words] [data-cue="RUN"] [data-hear]')?.textContent;
     expect(runRow()).toBe("Run for 1 minute");
     await expect.element(sheet.getByText("Voice and speed follow your phone's text-to-speech settings.")).toBeVisible();
@@ -225,7 +225,7 @@ describe("GRAYSON-TRAIN-RUN-CUES-001 voice cues with the phone locked", () => {
     const sent = payloadOf(links(open)[1]!);
     expect(sent.cues.find((c) => c.kind === "WALK")!.text).toBe("Ease off, 1 min 30");
     expect(sent.cues.find((c) => c.kind === "HALFWAY")!.speak).toBe(false);
-    expect(document.activeElement?.textContent).toBe("CUE WORDS");
+    await expect.poll(() => document.activeElement?.textContent).toBe("CUE WORDS");
 
     await screen.getByRole("button", { name: "CUE WORDS" }).click();
     await page.getByRole("dialog", { name: "Cue words" }).getByRole("button", { name: "RESET" }).click();

@@ -230,7 +230,7 @@ describe("TRAIN-OPERATOR-001", () => {
     await expect.poll(() => vi.mocked(getRecentSubstitutions).mock.calls.length).toBeGreaterThan(advisoryReads);
     await Promise.all(vi.mocked(getRecentSubstitutions).mock.results.slice(advisoryReads).map((result) => result.value));
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    expect(document.activeElement).toBe(weight.element());
+    await expect.poll(() => document.activeElement).toBe(weight.element());
     await weight.fill("105");
     await screen.getByRole("spinbutton", { name: "Set 1 repetitions" }).fill("8");
     await screen.getByRole("button", { name: "LOG", exact: true }).click();

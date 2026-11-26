@@ -83,7 +83,7 @@ it("opens from COMMAND by keyboard, traps focus, exits on Escape and persists ac
   expect(document.querySelector("main")!.closest("[inert]")).not.toBeNull();
   for (let i = 0; i < 12; i++) {
     await userEvent.keyboard("{Tab}");
-    expect(overlay()!.contains(document.activeElement)).toBe(true);
+    await expect.poll(() => overlay()!.contains(document.activeElement)).toBe(true);
   }
   await cleanup();
   await render(<App />);

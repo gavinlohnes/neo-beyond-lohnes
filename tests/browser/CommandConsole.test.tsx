@@ -262,7 +262,7 @@ describe("Production Command Console", () => {
       await expect.element(screen.getByRole("button", { name: "MORE", exact: true })).toHaveAttribute("aria-current", "page");
       await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO MORE", exact: true }).element());
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      expect(document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO MORE", exact: true }).element());
+      await expect.poll(() => document.activeElement).toBe(screen.getByRole("button", { name: "BACK TO MORE", exact: true }).element());
       await expect.element(screen.getByRole("button", { name: "Close TOOLS" })).toBeVisible();
       // The query is still there on return to COMMAND.
       await screen.getByRole("button", { name: "MORE", exact: true }).click();

@@ -6,7 +6,8 @@ import { db } from "../persistence/db";
 import { getWeeklyDashboard, type WeeklyDashboard } from "./weeklyDashboardQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getCurrentlyEligibleUnresolvedObligations } from "./intentQueries";
-import { getNutritionTargets, getEffectiveProteinTargetG } from "./nutritionTargetQueries";
+import { getProteinHeadsUp } from "./proteinPatternQueries";
+import { getDayCalorieTarget, getNutritionTargets, getEffectiveProteinTargetG } from "./nutritionTargetQueries";
 import { getUndoneSetIds } from "./trainQueries";
 import { getSchedulePattern } from "./queries";
 import { deriveWeekInNumbers } from "./weeklyDebrief";
@@ -37,6 +38,8 @@ export async function getWeekInNumbers(current: WeeklyDashboard) {
   const completedDays = new Set(completions.map((e) => mostRecentBoundaryAtOrBefore(new Date(e.occurredAt)).toISOString())).size;
   const worked = new Set(days.filter((d) => d.work.workEndedAt).map((d) => d.livedDayStart)).size;
   const saved = isOperatorSavedSchedule(schedule);
+  const weekDayTargets = await Promise.all(current.rows.flatMap((row) => row.dayIds).map((id) => getDayCalorieTarget(id)));
+  const weekTargetAverage = weekDayTargets.length ? weekDayTargets.reduce((sum, target) => sum + (target.kcal ?? 0), 0) / weekDayTargets.length : targets.calorieTargetKcal;
   const scheduled = saved ? current.rows.filter((r) => scheduledWorkContextForLivedDay(new Date(r.start), schedule) === "WORK").length : null;
   // MUSCLE-MAP-001 (APPS-PICKS-003 pick 20, after Hevy): performed sets per muscle group, from the exercise's
   // library or custom muscle group. Exercises without a known group are counted as "Other", never guessed.
@@ -45,8 +48,11 @@ export async function getWeekInNumbers(current: WeeklyDashboard) {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   // WEEK-COMPARE-001: the week before, from the read above, for a side-by-side line. Null when it has no records.
   const before = previous.headline.recordedDays > 0 ? { start: previous.week.start, sessions: previous.headline.sessions, ...deriveWeekInNumbers(previous.rows, []) } : null;
-  return { ...deriveWeekInNumbers(current.rows, previous.rows), week: current.week, before, muscles,
-    targets: { calories: targets.calorieTargetKcal, proteinG },
+  // GRAYSON-PROTEIN-HEADSUP-001: one sentence when the pattern stood at the week's end (facts only).
+  const proteinHeadsUp = (await getProteinHeadsUp(new Date(current.week.end), new Set(), { ignoreQuiet: true }).catch(() => null))?.line ?? null;
+  return { ...deriveWeekInNumbers(current.rows, previous.rows), week: current.week, before, muscles, proteinHeadsUp,
+    // Off, the plain target as before; on, the average of this week's own day targets.
+    targets: { calories: targets.dayTargets?.on ? weekTargetAverage : targets.calorieTargetKcal, proteinG, byDay: !!targets.dayTargets?.on },
     training: { sessions: sessionIds.size, sets: sets.length, volume: workoutVolumeLbs(sets), records: current.records.length, days: new Set(days.filter((d) => d.workouts.some((s) => sessionIds.has(s.sessionId))).map((d) => d.livedDayStart)).size },
     commitments: { done: completedIds.size, days: completedDays, open: open.length },
     shifts: { worked, scheduled, recordedDays: current.rows.filter((r) => r.dayIds.length).length },
