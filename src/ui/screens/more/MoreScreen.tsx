@@ -37,6 +37,7 @@ import { AutoBackupSettings } from "./AutoBackupSettings";
 import { DriveRestorePicker } from "./DriveRestorePicker";
 import { VoiceSettings } from "./VoiceSettings";
 import { TodayQuietSettings } from "./TodayQuietSettings";
+import { StretchSuggestSettings } from "./StretchSuggestSettings";
 import { TimeCapsuleSettings } from "./TimeCapsuleSettings";
 import { WeeklyCheckInScreen } from "../weekly/WeeklyCheckInScreen";
 import { LineIcon } from "../../icons/LineIcon";
@@ -994,6 +995,8 @@ export function MoreScreen({
       {/* GRAYSON-TODAY-CALM-001: TODAY's quiet lines (how many, order, which) and the after-shift rule. */}
       <details id="command-today-lines" className="more-inspection"><summary>TODAY</summary><TodayQuietSettings /></details>
       <details id="command-voice" className="more-inspection"><summary>Voice</summary><VoiceSettings /></details>
+      {/* GRAYSON-HOME-STRETCH-001 slice B: TRAIN's stretch suggestion and its windows. */}
+      <details id="command-train-settings" className="more-inspection"><summary>Train</summary><StretchSuggestSettings /></details>
       <details id="command-hidden-features" className="more-inspection"><summary>Hidden features</summary>
         <p className="meta">These optional tools start hidden. Showing or hiding them never changes records or Engine guidance. This preference stays on this browser.</p>
         {([ ["minimumDay", "Minimum Day"], ["smallSteps", "Small Steps"], ["foodLookup", "Online food lookup"] ] as [HiddenFeature, string][]).map(([feature, label]) => <label key={feature} className="hidden-feature-choice">

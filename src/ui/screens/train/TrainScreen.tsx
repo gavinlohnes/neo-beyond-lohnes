@@ -10,6 +10,9 @@ import { isWorkingSet, compareSetOrder, formatHold, isTimed, targetSecOf } from 
 import { TimedSet } from "./TimedSet";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { HomeStartChoice } from "./HomeStartChoice";
+import { StretchRoutinesPanel } from "./StretchRoutinesPanel";
+import { StretchPlayer } from "./StretchPlayer";
+import { readStretchPlay } from "../../../application/stretchSession";
 import { TrainProgress } from "./TrainProgress";
 import { TrainWindowLine } from "./TrainWindowLine";
 import { DeltaPain, DeltaProposal } from "./DeltaPanels";
@@ -1680,6 +1683,8 @@ export function TrainScreen({
           {/* GRAYSON-HOME-STRETCH-001 slice A: HOME beside the gym start (its own file; started through handleStart). */}
           <HomeStartChoice busy={busy} startDisabled={!!session} refreshKey={programmeRefreshKey} onChanged={() => { setProgrammeRefreshKey((value) => value + 1); void refresh(true); }}
             onStart={(templateId, programmeContext) => { templateChosenRef.current = true; variantChosenRef.current = true; setChosenTemplate(templateId); setChosenVariant("STANDARD"); void handleStart(templateId, "STANDARD", programmeContext); }} />
+          {/* GRAYSON-HOME-STRETCH-001 slice B: a stretch routine that fits the hour, and every routine a tap deeper (own file). */}
+          <StretchRoutinesPanel busy={busy} startDisabled={!!session} refreshKey={programmeRefreshKey} onStarted={async () => { await refresh(); }} />
 
           {/* REAL-DATA-001: see the workout before starting it. The owner's real backup had 10 of 12
               workouts abandoned within seconds; looking should never cost an abandoned session. */}
@@ -1849,7 +1854,13 @@ export function TrainScreen({
         /></details>
       )}
 
-      {session && session.sessionType === "RECOVERY" && !completionSummary && (
+      {/* GRAYSON-HOME-STRETCH-001 slice B: a stretch routine plays in its own player and saves itself. */}
+      {session && session.sessionType === "RECOVERY" && !completionSummary && readStretchPlay(session.id) && (
+        <CommandSurface>
+          <StretchPlayer session={session} onFinished={async () => { await performDueDayRollover().catch(() => {}); await refresh(); }} />
+        </CommandSurface>
+      )}
+      {session && session.sessionType === "RECOVERY" && !completionSummary && !readStretchPlay(session.id) && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
           <h2 className="command-title" style={{ fontSize: 24, marginBottom: 8 }}>Light movement</h2>

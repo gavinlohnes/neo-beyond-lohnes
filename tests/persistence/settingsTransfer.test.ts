@@ -191,6 +191,8 @@ describe("C8.1 settings travel with the backup", () => {
       "beyond.flipPlan.focus.v1": "this visit only (session)",
       // GRAYSON-SHIFTDOWN-TAPS-001: tonight's "first at home" pick, one lived day's state (the brief: doesn't travel).
       "beyond.shiftDownHomeFirst.v1": "one lived day's state",
+      // GRAYSON-HOME-STRETCH-001: the stretch routine playing in the open recovery session, cleared when it's saved.
+      "beyond.stretchPlay.v1": "live workout state",
       // GRAYSON-LIGHTER-NIGHT-001: NOT TONIGHT and what each part's UNDO needs, one lived day's state (like LATER).
       "beyond.lighterNight.day.": "one lived day's state",
     };

@@ -55,10 +55,19 @@ export function suggestNextTemplate(lastAdvancingTemplateId: WorkoutTemplateId |
  * RECOVERY completion tiers, duration only (Canonical Spec TRAIN):
  * >=10 min COMPLETED, 1-9 min PARTIAL, explicit zero-movement end
  * ABANDONED.
+ *
+ * GRAYSON-HOME-STRETCH-001 slice B (Gavin, 2026-11-26): a stretch routine
+ * played to the end counts as COMPLETED whatever its length, so an 8-minute
+ * wind-down isn't called partial. Stopped early, the minutes rule above still
+ * applies. The flag is optional and only set by the stretch player, so every
+ * other recovery session (and every one already logged) reads exactly as
+ * before; nothing re-derives a stored status.
  */
 export function deriveRecoverySessionStatus(
   durationMinutes: number,
+  routineCompleted = false,
 ): "COMPLETED" | "PARTIAL" | "ABANDONED" {
+  if (routineCompleted) return "COMPLETED";
   if (durationMinutes >= 10) return "COMPLETED";
   if (durationMinutes >= 1) return "PARTIAL";
   return "ABANDONED";
