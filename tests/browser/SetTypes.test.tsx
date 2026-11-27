@@ -68,8 +68,36 @@ describe("GRAYSON-SET-TYPES-001 set kinds on TRAIN", () => {
     expect(sets.find((s) => s.setKind === "DROP")).toMatchObject({ setNumber: 1, weight: 80, reps: 8, dropOf: sets.find((s) => s.setKind === "FAILURE")!.id });
     // Set 2 is still the next one to log.
     await expect.element(screen.getByRole("spinbutton", { name: "Set 2 weight in pounds" })).toBeVisible();
+    // Review of #748: fixing the set above keeps its drop on screen (the fix is a new row with a new id).
+    await screen.getByRole("button", { name: "Fix set 1" }).click();
+    await userEvent.fill(screen.getByRole("spinbutton", { name: "Weight (lb)" }), "105");
+    await screen.getByRole("button", { name: "SAVE" }).click();
+    await expect.element(screen.getByText("#1 — 105 lb x 8", { exact: false })).toBeVisible();
+    await expect.element(screen.getByText("drop — 80 lb x 8")).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Fix the drop set after set 1" })).toBeVisible();
+    // And removing it keeps the drop too, still fixable.
+    await screen.getByRole("button", { name: "Fix set 1" }).click();
+    await screen.getByRole("button", { name: "REMOVE SET" }).click();
+    await expect.element(screen.getByText("drop — 80 lb x 8")).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "Fix the drop set after set 1" })).toBeVisible();
     await axeClean("logged with drop", document.querySelector(".train-drop-row")!.parentElement!);
     await fits("set kinds", "kinds");
+  });
+
+  it("Drop picked on the set: no rest before or after it, and the picker goes back to Working", { timeout: 30_000 }, async () => {
+    const screen = await startA();
+    await userEvent.fill(screen.getByRole("spinbutton", { name: "Set 1 weight in pounds" }), "100");
+    await userEvent.fill(screen.getByRole("spinbutton", { name: "Set 1 repetitions" }), "8");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.poll(async () => (await getActiveWorkoutSession())!.activeRestEndsAt ?? null).not.toBeNull();
+    await screen.getByRole("radio", { name: "Drop" }).first().click();
+    await userEvent.fill(screen.getByRole("spinbutton", { name: "Set 2 weight in pounds" }), "70");
+    await screen.getByRole("button", { name: "LOG" }).first().click();
+    await expect.element(screen.getByText("drop — 70 lb x 8")).toBeVisible();
+    expect((await getActiveWorkoutSession())!.activeRestEndsAt ?? null).toBeNull();
+    await expect.element(screen.getByRole("radio", { name: "Working" }).first()).toBeChecked();
+    const session = (await getActiveWorkoutSession())!;
+    expect((await getPerformedSets(session.id)).find((s) => s.setKind === "DROP")).toMatchObject({ setNumber: 1, weight: 70 });
   });
 
   it("a timed exercise: START counts up, buzzes once at the target, DONE logs the time held", { timeout: 30_000 }, async () => {

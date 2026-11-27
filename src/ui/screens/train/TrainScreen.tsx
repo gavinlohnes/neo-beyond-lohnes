@@ -883,7 +883,8 @@ export function TrainScreen({
       const parent = display.setKind === "DROP" ? dropParentFor(exerciseId) : undefined;
       const dropOf = parent?.id;
       if (display.setKind === "DROP" && !dropOf) throw new Error("SET_DROP_INVALID: A drop set follows a logged set of this exercise. Log that first.");
-      // A drop shares its parent's number, so this slot stays open for the next working set.
+      // A drop shares its parent's number, so this slot stays open for the next working set. No rest before it.
+      if (parent && session.activeRestEndsAt) await skipRest(session.id);
       await logSet(session.beyondDayId, session.id, exerciseId, parent?.setNumber ?? setNumber, weight, reps, subs[exerciseId] || undefined, { setKind: display.setKind ?? "WORKING", ...(dropOf ? { dropOf } : {}), ...(durationSec !== undefined ? { durationSec } : {}), ...(display.setKind !== "WARMUP" && display.setKind !== "FAILURE" && display.repsInReserve ? { repsInReserve: Number(display.repsInReserve) } : {}) });
       committed = true;
       haptic("SET_LOGGED");
@@ -891,7 +892,11 @@ export function TrainScreen({
       setSets(fresh);
       setJustLoggedKey(inputKey(exerciseId, setNumber));
       if (timed) setProposal(null); else offerProposal(exerciseId, weight, reps, display, fresh);
-      if (display.setKind !== "WARMUP") await startRestAfterCommit(exerciseId);
+      if (parent) {
+        // The slot stays open for the next working set, so its picker goes back to Working.
+        patchInput(exerciseId, setNumber, { setKind: "WORKING" });
+        await refreshSession();
+      } else if (display.setKind !== "WARMUP") await startRestAfterCommit(exerciseId);
     } catch (error) {
       if (committed) setReadError(`Your set was recorded. Refresh the workout before continuing. ${describeError(error, "Updated workout information is unavailable.")}`);
       else setReadError(`Could not confirm set recording. Read the saved workout before trying again. ${describeError(error, "Workout information is temporarily unavailable.")}`);
@@ -970,6 +975,23 @@ export function TrainScreen({
       setWriteRef.current = false;
       setBusy(false);
     }
+  }
+
+  /**
+   * GRAYSON-SET-TYPES-001: the live drop sets under a set number. Drops share their set's number, so they stay put
+   * when that set is fixed (a new row, a new id) or removed (review of #748).
+   */
+  function dropsAt(exerciseId: string, setNumber: number) {
+    return sets.filter((d) => d.setKind === "DROP" && d.exerciseId === exerciseId && d.setNumber === setNumber).sort(compareSetOrder);
+  }
+  function dropRows(ex: ExercisePrescription, setNumber: number) {
+    return dropsAt(ex.exerciseId, setNumber).map((d) => <div key={d.id} className="train-drop-row" data-drop-row>
+      <p className="meta" style={{ margin: 0 }} data-set-kind="DROP">drop — {d.durationSec !== undefined ? `held ${formatHold(d.durationSec)}` : `${d.weight} lb x ${d.reps}`}</p>
+      <button type="button" className="btn-secondary train-set-fix" aria-label={`Fix the drop set after set ${setNumber}`} disabled={busy}
+        onClick={() => setFixingSetId(d.id)}>FIX</button>
+      {fixingSetId === d.id && <SetFixSheet target={{ set: d }} exerciseName={ex.name}
+        onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />}
+    </div>);
   }
 
   /** GRAYSON-SET-TYPES-001: the newest logged working or failure set of an exercise (a drop's parent). */
@@ -1243,7 +1265,7 @@ export function TrainScreen({
       // GRAYSON-SET-TYPES-001: a timed set has no reps to repeat, so the lock screen sends him to BEYOND for it.
       reps: isTimed(ex) ? 0 : Number(display.reps) || 0, kind: display.setKind,
       ...(ex.restSeconds !== undefined && !restAdjustedRef.current.has(ex.exerciseId) ? { restSeconds: ex.restSeconds } : {}) };
-  }).filter((p) => p.kind !== "WARMUP").map(({ kind: _kind, ...p }) => p));
+  }).filter((p) => p.kind !== "WARMUP" && p.kind !== "DROP").map(({ kind: _kind, ...p }) => p));
   const lockScreen = useLockScreenSets({ session, sets, planned: lockScreenPlanned, onApplied: async () => { await refresh(true); } });
   const variantSuggestion = suggestSessionVariant(capacity, shortSleep);
   const plannedExercises = exercisesFor(
@@ -2076,13 +2098,7 @@ export function TrainScreen({
                         {!loggedSet.skipped && loggedSet.durationSec === undefined && <button type="button" className="btn-secondary train-set-fix" aria-label={`Add a drop set after set ${setNumber}`} disabled={busy}
                           onClick={() => void handleAddDrop(loggedSet, ex.incrementLbs)}>ADD DROP</button>}
                       </div>
-                      {sets.filter((d) => d.dropOf === loggedSet.id).sort(compareSetOrder).map((d) => <div key={d.id} className="train-drop-row">
-                        <p className="meta" style={{ margin: 0 }} data-set-kind="DROP">drop — {d.weight} lb x {d.reps}</p>
-                        <button type="button" className="btn-secondary train-set-fix" aria-label={`Fix the drop set after set ${setNumber}`} disabled={busy}
-                          onClick={() => setFixingSetId(d.id)}>FIX</button>
-                        {fixingSetId === d.id && <SetFixSheet target={{ set: d }} exerciseName={ex.name}
-                          onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />}
-                      </div>)}
+                      {dropRows(ex, setNumber)}
                       {fixingSetId === loggedSet.id && <SetFixSheet target={{ set: loggedSet }} exerciseName={ex.name}
                         onDone={(done) => { setFixingSetId(null); liveFixUndo.show(done); void refresh(true); }} onCancel={() => setFixingSetId(null)} />}
                       {sessionRecords.has(loggedSet.id) && (
@@ -2095,7 +2111,8 @@ export function TrainScreen({
                     </div>
                   );
                 }
-                if (setNumber !== currentSetNumber) return null;
+                // A drop whose set was removed still shows (and can be fixed) under its number.
+                if (setNumber !== currentSetNumber) return dropsAt(ex.exerciseId, setNumber).length ? <div key={setNumber}>{dropRows(ex, setNumber)}</div> : null;
                 // Overdrive Phase 18 (REAL-DEVICE ACCEPTANCE CORRECTION,
                 // TRAIN EXECUTION UX + PHONE WIDTH): the old single-row
                 // "# − [lb] + lb x − [reps] + " adjuster packed ~7 fixed-
@@ -2112,6 +2129,7 @@ export function TrainScreen({
                 // most important control on the whole screen.
                 return (
                   <div key={setNumber} style={{ marginBottom: 14 }}>
+                    {dropRows(ex, setNumber)}
                     {/* Exact repeat stays one tap; LOG is the primary action for the displayed inputs. */}
                     {suggestion && display.setKind !== "WARMUP" && !isTimed(ex) && (
                       <button
@@ -2236,7 +2254,7 @@ export function TrainScreen({
                     {logSetNotice?.key === inputKey(ex.exerciseId, setNumber) && (
                       <p className="meta" role="status" style={{ margin: "8px 0 0" }}>{logSetNotice.message}</p>
                     )}
-                    <SetDetails value={display} disabled={busy} onChange={(patch) => patchInput(ex.exerciseId, setNumber, patch)} />
+                    <SetDetails value={display} disabled={busy} allowDrop={!isTimed(ex)} onChange={(patch) => patchInput(ex.exerciseId, setNumber, patch)} />
                   </div>
                 );
               })}

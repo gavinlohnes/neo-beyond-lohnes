@@ -97,6 +97,11 @@ export async function correctSet(performedSetId: string, input: SetFixInput): Pr
     };
     if (after.durationSec === undefined && after.reps < 1) throw new Error("SET_REPS_REQUIRED: Enter at least 1 rep, or remove the set.");
     if (sameValues(before, after)) throw new Error("SET_NO_OP: Nothing changed.");
+    // A drop shares its set's number, so it can't become a working set in that same slot (review of #748).
+    if (set.setKind === "DROP" && after.setKind !== "DROP" && after.setKind !== "WARMUP" &&
+        effective.some((s) => s.id !== set.id && s.exerciseId === set.exerciseId && s.setNumber === set.setNumber && s.setKind !== "WARMUP" && s.setKind !== "DROP")) {
+      throw new Error("SET_DROP_SLOT: A drop shares its set's number. To count it as a working set, remove it and log it as the next set.");
+    }
     assertUniqueWorking(effective, set.exerciseId, set.setNumber, after.setKind, set.id);
     // GRAYSON-SET-TYPES-001: a failure set has nothing left; a drop set follows the set above it.
     if (after.setKind === "FAILURE") after.repsInReserve = 0;

@@ -192,9 +192,9 @@ function SessionRecordView({
                         ? <SetFixSheet target={{ set }} exerciseName={exercise.name}
                             onDone={(done) => { setFixing(null); undo.show(done); refreshRecord(); }} onCancel={() => setFixing(null)} />
                         : <button type="button" className="set-fix-row" id={`set-row-${set.id}`}
-                            aria-label={`${({ WARMUP: "Warm-up · ", DROP: "Drop · ", FAILURE: "To failure · " } as Record<string, string>)[set.setKind ?? ""] ?? ""}${describeRecordedSet(set)}${set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}. Fix this set`}
+                            aria-label={`${({ WARMUP: "Warm-up · ", DROP: "Drop · ", FAILURE: "To failure · " } as Record<string, string>)[set.setKind ?? ""] ?? ""}${describeRecordedSet(set)}${set.repsInReserve !== undefined && set.setKind !== "FAILURE" ? ` · ${set.repsInReserve} reps left` : ""}. Fix this set`}
                             onClick={() => setFixing({ setId: set.id })}>
-                            {({ WARMUP: "Warm-up · ", DROP: "Drop · ", FAILURE: "To failure · " } as Record<string, string>)[set.setKind ?? ""] ?? ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}
+                            {({ WARMUP: "Warm-up · ", DROP: "Drop · ", FAILURE: "To failure · " } as Record<string, string>)[set.setKind ?? ""] ?? ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined && set.setKind !== "FAILURE" ? ` · ${set.repsInReserve} reps left` : ""}
                           </button>}
                       {set.fixes && <SetFixHistory fixes={set.fixes} newestFixEventId={set.newestFixEventId} onPutBack={(id) => void putBack(id)} />}
                       {set.record && (

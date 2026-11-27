@@ -185,6 +185,14 @@ describe("GRAYSON-SET-TYPES-001 logging and fixing kinds", () => {
     expect(event.payload).toMatchObject({ setKind: "DROP", dropOf: fail!.id });
   });
 
+  it("a drop that shares its set's number can't become a working set in that slot; the message says what to do", async () => {
+    const { session } = await workout(2, [[100, 8], [80, 8, { drop: true }]]);
+    const drop = (await chestSets(session.id)).find((s) => s.setKind === "DROP")!;
+    await expect(correctSet(drop.id, { weight: 80, reps: 8, setKind: "WORKING" })).rejects.toThrow(/SET_DROP_SLOT: A drop shares its set's number/);
+    // As a warm-up it may (warm-ups don't take a slot).
+    await correctSet(drop.id, { weight: 80, reps: 8, setKind: "WARMUP" });
+  });
+
   it("ADD DROP's weight: 20% lighter by default, rounded down to his plate step; the step is his (5–50%)", () => {
     expect(getDropStepPercent()).toBe(20);
     expect(dropWeight(100, 5)).toBe(80);
