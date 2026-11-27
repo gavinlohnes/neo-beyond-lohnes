@@ -18,8 +18,30 @@ export async function getBlockState(): Promise<BlockState> {
   return { block: latest?.payload.block ?? null, settings: latest?.payload.settings ?? DEFAULT_BLOCK_SETTINGS, latestEventId: latest?.eventId ?? null, history };
 }
 
+/**
+ * The blocks actually in force, in order (review of #746): replay the history. NEXT finishes the current block and
+ * starts the next; any other change replaces the current block (light week off, ended early, nothing at all); UNDO puts
+ * back the state from before the change it undoes. Superseded versions never count.
+ */
+export function effectiveBlocks(history: BlockState["history"]): TrainingBlock[] {
+  const states: { current: TrainingBlock | null; finished: TrainingBlock[] }[] = [];
+  let state: { current: TrainingBlock | null; finished: TrainingBlock[] } = { current: null, finished: [] };
+  for (const { eventId, payload } of history) {
+    if (payload.reason === "UNDO" && payload.undoesEventId) {
+      const index = history.findIndex((h) => h.eventId === payload.undoesEventId);
+      state = index > 0 ? states[index - 1]! : { current: null, finished: [] };
+    } else if (payload.reason === "NEXT") {
+      state = { current: payload.block, finished: state.current ? [...state.finished, state.current] : state.finished };
+    } else {
+      state = { current: payload.block, finished: state.finished };
+    }
+    states.push(state);
+    void eventId;
+  }
+  return [...state.finished, ...(state.current ? [state.current] : [])];
+}
 
-/** The light week a session started in, if any: judged by the newest block covering its date. */
+/** The light week a session started in, if any: judged by the block in force covering its date. */
 export function lightBlockFor(blocks: readonly TrainingBlock[], startedAt: string): TrainingBlock | null {
   const day = mostRecentBoundaryAtOrBefore(new Date(startedAt));
   const block = [...blocks].reverse().find((b) => blockWeekOf(b, day) !== null);
@@ -28,14 +50,13 @@ export function lightBlockFor(blocks: readonly TrainingBlock[], startedAt: strin
 
 export async function isLightSession(session: { startedAt: string }): Promise<BlockSettings | null> {
   const { history, settings } = await getBlockState();
-  const blocks = history.map((h) => h.payload.block).filter((b): b is TrainingBlock => !!b && b.lightLastWeek);
-  return lightBlockFor(blocks, session.startedAt) ? settings : null;
+  return lightBlockFor(effectiveBlocks(history), session.startedAt) ? settings : null;
 }
 
 /** Is a session inside a light week (so progression and stalls leave it out)? */
 export async function lightWeekSessionIds(): Promise<Set<string>> {
   const { history } = await getBlockState();
-  const blocks = history.map((h) => h.payload.block).filter((b): b is TrainingBlock => !!b && b.lightLastWeek);
+  const blocks = effectiveBlocks(history).filter((b) => b.lightLastWeek);
   if (!blocks.length) return new Set();
   const sessions = await db.workoutSessions.toArray();
   return new Set(sessions.filter((s) => lightBlockFor(blocks, s.startedAt)).map((s) => s.id));

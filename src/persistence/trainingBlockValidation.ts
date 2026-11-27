@@ -10,6 +10,7 @@ const blockSchema = z.object({
   normalWeeks: z.array(z.number().int().min(1).max(6)).optional(),
   endedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   weightDrops: z.record(z.string().min(1), z.number().min(1).max(50)).optional(),
+  pendingDrops: z.record(z.string().min(1), z.number().min(1).max(50)).optional(),
 });
 const settingsSchema = z.object({
   sessionsShare: z.number().gt(0).max(1),

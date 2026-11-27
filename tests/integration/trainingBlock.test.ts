@@ -11,6 +11,7 @@ import {
   nextBlock, resetBlockSettings, saveBlockSettings, setNormalThisWeek, startBlock, undoBlockChange, undoBlockSuggestion,
 } from "../../src/application/trainingBlock";
 import { applyAnyRestore, previewAnyRestore } from "../../src/persistence/restore";
+import { blockStartWeight } from "../../src/application/trainingBlock";
 import { blockWeekOf, DEFAULT_BLOCK_SETTINGS, isLightWeek, lightSets, validateBlock } from "../../src/domain/workout/trainingBlock";
 import { buildBlockReview, type BlockReviewInput } from "../../src/engine/blockReview";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
@@ -41,7 +42,7 @@ describe("the block (domain)", () => {
 
 describe("the review rules (engine)", () => {
   const base: BlockReviewInput = {
-    settings: DEFAULT_BLOCK_SETTINGS, focus: [], sessions: { done: 12, planned: 15, skippedByWeekday: { "4": 2, "6": 1 } },
+    settings: DEFAULT_BLOCK_SETTINGS, focus: [], sessions: { done: 12, planned: 15, skippedByWeekday: { "4": 2, "6": 1 }, weeksRun: 5 },
     mainLifts: [{ routineName: "Workout A", name: "Machine Chest Press", start: 150, end: 160 }], stalls: [], weight: null, focusSets: [],
   };
   it("gives the lines from fixed data, weight only with both weeks", () => {
@@ -52,7 +53,7 @@ describe("the review rules (engine)", () => {
   it("each rule fires, ranked stalls, sessions, keep, focus; at most three", () => {
     const stall = { routineId: "A", routineName: "Workout A", exerciseId: "pec-deck", name: "Pec Deck", swapTo: { exerciseId: "lib-cable-crossover", name: "Cable Crossover" } };
     const dropStall = { ...stall, exerciseId: "leg-press", name: "Leg Press", swapTo: null };
-    const r = buildBlockReview({ ...base, sessions: { done: 9, planned: 15, skippedByWeekday: { "4": 4, "6": 2 } }, stalls: [stall, dropStall], focus: ["Chest"],
+    const r = buildBlockReview({ ...base, sessions: { done: 9, planned: 15, skippedByWeekday: { "4": 4, "6": 2 }, weeksRun: 5 }, stalls: [stall, dropStall], focus: ["Chest"],
       focusSets: [{ area: "Chest", setsPerWeek: 6, firstExercise: { routineId: "A", exerciseId: "machine-chest-press", name: "Machine Chest Press" } }] });
     expect(r.suggestions.map((s) => s.kind)).toEqual(["SWAP", "DROP", "FEWER_DAYS"]);
     expect(r.suggestions[2]!.text).toBe("One fewer planned day a week: make Thursday a rest day.");
@@ -154,5 +155,76 @@ describe("the review and ACCEPT", () => {
     expect((await getBlockState()).block).toBeNull();
     await previewAnyRestore(backup); await applyAnyRestore(backup);
     expect((await getBlockState()).block).toMatchObject({ weeks: 6, focus: ["Chest", "Triceps"], lightLastWeek: false });
+  });
+});
+
+describe("review of #746", () => {
+  async function lightWorkout() {
+    vi.setSystemTime(at(2026, 11, 29));
+    const day = await startDay();
+    const s = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
+    return { day, s, sets: (await getWorkoutPlan(s)).today.map((e) => e.sets) };
+  }
+  const full = WORKOUT_TEMPLATES.A!.exercises.map((e) => e.sets);
+
+  it("light week off, the block ended early, or START undone: full sets, and the session counts", async () => {
+    await startBlock({ weeks: 4 });
+    await changeBlock({ lightLastWeek: false });
+    let w = await lightWorkout();
+    expect(w.sets).toEqual(full);
+    expect((await lightWeekSessionIds()).has(w.s.id)).toBe(false);
+    await completeWorkout(w.day.id, w.s.id, "STANDARD", "PARTIAL");
+    await db.events.clear(); await db.workoutSessions.clear(); vi.setSystemTime(at(2026, 11, 2));
+
+    await startBlock({ weeks: 4 });
+    vi.setSystemTime(at(2026, 11, 16));
+    await endBlock();
+    w = await lightWorkout();
+    expect(w.sets).toEqual(full);
+    await completeWorkout(w.day.id, w.s.id, "STANDARD", "PARTIAL");
+    await db.events.clear(); await db.workoutSessions.clear(); vi.setSystemTime(at(2026, 11, 2));
+
+    const started = await startBlock({ weeks: 4 });
+    await undoBlockChange(started);
+    w = await lightWorkout();
+    expect(w.sets).toEqual(full);
+    expect((await lightWeekSessionIds()).size).toBe(0);
+  });
+
+  it("a finished block's light week still counts as light after NEXT BLOCK; UNDO of NEXT keeps it", async () => {
+    await startBlock({ weeks: 4 });
+    const w = await lightWorkout();
+    await completeWorkout(w.day.id, w.s.id, "STANDARD", "PARTIAL");
+    vi.setSystemTime(at(2027, 0, 3));
+    const next = await nextBlock();
+    expect((await lightWeekSessionIds()).has(w.s.id)).toBe(true);
+    await undoBlockChange(next);
+    expect((await lightWeekSessionIds()).has(w.s.id)).toBe(true);
+  });
+
+  it("an accepted lighter start applies to the next block only, once", async () => {
+    await startBlock({ weeks: 4 });
+    vi.setSystemTime(at(2027, 0, 3));
+    await acceptBlockSuggestion({ id: "DROP:leg-press", kind: "DROP", exerciseId: "leg-press", percent: 10, text: "", why: "" });
+    expect(await blockStartWeight("leg-press", 100, 10)).toBeNull();
+    await nextBlock();
+    vi.setSystemTime(at(2027, 0, 5));
+    expect(await blockStartWeight("leg-press", 100, 10)).toBe(90);
+    const day = await startDay();
+    const s = await startWorkout(day.id, "A", "STANDARD", { overrideConfirmed: true });
+    await logSet(day.id, s.id, "leg-press", 1, 90, 10);
+    expect(await blockStartWeight("leg-press", 100, 10)).toBeNull();
+    await completeWorkout(day.id, s.id, "STANDARD", "PARTIAL");
+    vi.setSystemTime(at(2027, 1, 1));
+    await nextBlock();
+    vi.setSystemTime(at(2027, 1, 3));
+    expect(await blockStartWeight("leg-press", 100, 10)).toBeNull();
+  });
+
+  it("fewer days needs two weeks run and the same day skipped twice", () => {
+    const base: BlockReviewInput = { settings: DEFAULT_BLOCK_SETTINGS, focus: [], mainLifts: [], stalls: [], weight: null, focusSets: [],
+      sessions: { done: 0, planned: 2, skippedByWeekday: { "4": 1, "6": 1 }, weeksRun: 1 } };
+    expect(buildBlockReview(base).suggestions).toEqual([]);
+    expect(buildBlockReview({ ...base, sessions: { done: 1, planned: 6, skippedByWeekday: { "4": 2 }, weeksRun: 2 } }).suggestions.map((x) => x.kind)).toEqual(["FEWER_DAYS"]);
   });
 });

@@ -103,7 +103,8 @@ export async function nextBlock(now = new Date()): Promise<string> {
   if (!block) throw fail("BLOCK_NONE", "There's no block to follow.");
   const start = block.endedOn ? comingMonday(addDays(parseDate(block.endedOn), 1)) : formatLocalDate(addDays(blockLastDay(block), 1));
   const startDate = start < comingMonday(now) ? comingMonday(now) : start;
-  return write({ startDate, weeks: block.weeks, focus: block.focus, lightLastWeek: block.lightLastWeek, ...(block.weightDrops ? { weightDrops: block.weightDrops } : {}) }, settings, "NEXT");
+  // Drops accepted in this block's review start the next block lighter, once (review of #746: never carried further).
+  return write({ startDate, weeks: block.weeks, focus: block.focus, lightLastWeek: block.lightLastWeek, ...(block.pendingDrops ? { weightDrops: block.pendingDrops } : {}) }, settings, "NEXT");
 }
 
 /** UNDO the newest block change: back to what was there before it. */
@@ -198,21 +199,21 @@ export async function getBlockReview(now = new Date()): Promise<BlockReviewView 
   const routineIds = [...new Set(done.map((s) => s.templateId).filter((id): id is string => !!id))];
   const routineName = (id: string) => (Object.hasOwn(WORKOUT_TEMPLATES, id) ? `Workout ${id}` : custom.find((t) => t.id === id)?.name ?? "A routine");
   const routines = await Promise.all(routineIds.map(async (id) => ({ id, name: routineName(id), exercises: await resolveTemplateExercises(id, "STANDARD") })));
-  const firstWeekEnd = addDays(start, 7);
   const lastWeekStart = addDays(end, -6);
+  // Windows by lived date (review of #746): the block's first seven days, and its last seven up to today.
+  const inWindow = (iso: string, from: Date, to: Date) => { const d = livedDate(iso); return d >= formatLocalDate(from) && d <= formatLocalDate(to); };
+  const firstWeekLast = addDays(start, 6);
   const best = (exerciseId: string, from: Date, to: Date) => {
     let top: number | null = null;
     for (const s of sets) {
-      if (s.exerciseId !== exerciseId) continue;
-      const t = new Date(s.recordedAt).getTime();
-      if (t < from.getTime() - DAY_MS || t > to.getTime() + DAY_MS) continue;
+      if (s.exerciseId !== exerciseId || !inWindow(s.recordedAt, from, to)) continue;
       const e = estimatedOneRepMax(s.weight, s.reps);
       if (e !== null && (top === null || e > top)) top = e;
     }
     return top;
   };
   const mainLifts = routines.flatMap((r) => r.exercises[0] ? [{ routineName: r.name, name: r.exercises[0].name,
-    start: best(r.exercises[0].exerciseId, start, firstWeekEnd), end: best(r.exercises[0].exerciseId, lastWeekStart, end) }] : []);
+    start: best(r.exercises[0].exerciseId, start, firstWeekLast), end: best(r.exercises[0].exerciseId, lastWeekStart, end) }] : []);
 
   // Stalls: deloadStall on every exercise of those routines (light-week sessions left out).
   const histories = buildExerciseHistories(finished.filter((s) => !light.has(s.id)).map((s) => ({ sessionId: s.id, startedAt: s.startedAt })), sets);
@@ -225,14 +226,17 @@ export async function getBlockReview(now = new Date()): Promise<BlockReviewView 
   }
 
   // Trend weight: the average of each week's weigh-ins (as weeklyQueries does), only with both weeks logged.
-  const avg = (from: Date, to: Date) => { const w = weights.filter((x) => { const t = new Date(x.recordedAt).getTime(); return t >= from.getTime() - DAY_MS && t <= to.getTime() + DAY_MS; }).map((x) => x.weightLbs); return w.length ? w.reduce((a, b) => a + b, 0) / w.length : null; };
-  const wStart = avg(start, firstWeekEnd);
+  const avg = (from: Date, to: Date) => { const w = weights.filter((x) => inWindow(x.recordedAt, from, to)).map((x) => x.weightLbs); return w.length ? w.reduce((a, b) => a + b, 0) / w.length : null; };
+  const wStart = avg(start, firstWeekLast);
   const wEnd = avg(lastWeekStart, end);
   const weight = wStart !== null && wEnd !== null ? { start: wStart, end: wEnd } : null;
 
   // Focus: direct working sets a week for each area, and the first exercise that counts for it.
   const weeksElapsed = Math.max(1, Math.ceil((end.getTime() - start.getTime() + DAY_MS) / (7 * DAY_MS)));
-  const doneIds = new Set(done.map((s) => s.id));
+  // The planned light week (fewer sets by design) is left out of the focus average (review of #746).
+  const lightRan = block.lightLastWeek && weeksElapsed >= block.weeks && !(block.normalWeeks ?? []).includes(block.weeks);
+  const focusWeeks = Math.max(1, weeksElapsed - (lightRan ? 1 : 0));
+  const doneIds = new Set(done.filter((s) => !light.has(s.id)).map((s) => s.id));
   const groupCache = new Map<string, string | null>();
   const group = async (id: string) => { if (!groupCache.has(id)) groupCache.set(id, await muscleGroupOf(id)); return groupCache.get(id)!; };
   const names = new Map(routines.flatMap((r) => r.exercises.map((e) => [e.exerciseId, e.name] as const)));
@@ -241,10 +245,10 @@ export async function getBlockReview(now = new Date()): Promise<BlockReviewView 
     for (const s of sets) if (doneIds.has(s.sessionId) && countsFor(area, names.get(s.exerciseId) ?? "", await group(s.exerciseId))) count++;
     let first: { routineId: string; exerciseId: string; name: string } | null = null;
     for (const r of routines) for (const ex of r.exercises) if (!first && countsFor(area, ex.name, await group(ex.exerciseId))) first = { routineId: r.id, exerciseId: ex.exerciseId, name: ex.name };
-    return { area, setsPerWeek: count / weeksElapsed, firstExercise: first };
+    return { area, setsPerWeek: count / focusWeeks, firstExercise: first };
   }));
 
-  const review = buildBlockReview({ settings, focus: block.focus, sessions: { done: done.length, planned, skippedByWeekday }, mainLifts, stalls, weight, focusSets });
+  const review = buildBlockReview({ settings, focus: block.focus, sessions: { done: done.length, planned, skippedByWeekday, weeksRun: weeksElapsed }, mainLifts, stalls, weight, focusSets });
   return { ...review, block, through: formatLocalDate(end) };
 }
 
@@ -282,7 +286,7 @@ export async function acceptBlockSuggestion(s: BlockSuggestion, now = new Date()
   // DROP: start that lift lighter in this block until he logs it.
   const { block, settings } = await getBlockState();
   if (!block) throw fail("BLOCK_NONE", "There's no block.");
-  return { kind: "BLOCK", eventId: await write({ ...block, weightDrops: { ...(block.weightDrops ?? {}), [s.exerciseId]: s.percent } }, settings, "CHANGE") };
+  return { kind: "BLOCK", eventId: await write({ ...block, pendingDrops: { ...(block.pendingDrops ?? {}), [s.exerciseId]: s.percent } }, settings, "CHANGE") };
 }
 
 export async function undoBlockSuggestion(undo: AcceptUndo): Promise<void> {

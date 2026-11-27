@@ -11,7 +11,7 @@ export interface BlockReviewInput {
   settings: BlockSettings;
   focus: readonly string[];
   /** Planned is null without a week plan (the sessions rule then doesn't apply). */
-  sessions: { done: number; planned: number | null; skippedByWeekday: Readonly<Record<string, number>> };
+  sessions: { done: number; planned: number | null; skippedByWeekday: Readonly<Record<string, number>>; weeksRun: number };
   mainLifts: readonly { routineName: string; name: string; start: number | null; end: number | null }[];
   stalls: readonly { routineId: string; routineName: string; exerciseId: string; name: string; swapTo: { exerciseId: string; name: string } | null }[];
   weight: { start: number; end: number } | null;
@@ -51,7 +51,8 @@ export function buildBlockReview(input: BlockReviewInput): BlockReview {
   }
   if (planned !== null && planned > 0 && done / planned < input.settings.sessionsShare) {
     const most = Object.entries(input.sessions.skippedByWeekday).sort((a, b) => b[1] - a[1] || Number(a[0]) - Number(b[0]))[0];
-    if (most && most[1] > 0) suggestions.push({ id: `FEWER:${most[0]}`, kind: "FEWER_DAYS", weekday: most[0],
+    // Evidence floor (§7; review of #746): at least two weeks run, and the same day skipped at least twice.
+    if (most && most[1] >= 2 && input.sessions.weeksRun >= 2) suggestions.push({ id: `FEWER:${most[0]}`, kind: "FEWER_DAYS", weekday: most[0],
       text: `One fewer planned day a week: make ${WEEKDAYS[Number(most[0])]} a rest day.`, why: `${done} of ${planned} planned sessions (${pct(done / planned)}, under ${pct(input.settings.sessionsShare)}); ${WEEKDAYS[Number(most[0])]} was skipped most (${most[1]}).` });
   }
   const focusAdds: BlockSuggestion[] = [];

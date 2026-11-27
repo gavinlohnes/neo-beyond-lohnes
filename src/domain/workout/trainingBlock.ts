@@ -20,8 +20,10 @@ export interface TrainingBlock {
   normalWeeks?: number[];
   /** Set when he ended the block early: the local date it ended. */
   endedOn?: string;
-  /** Accepted in a block review: start these lifts lighter (percent) in this block, until he logs them. */
+  /** Lifts that start lighter (percent) in this block, until he logs them: handed over once by NEXT BLOCK. */
   weightDrops?: Record<string, number>;
+  /** Accepted in this block's review: handed to the next block by NEXT BLOCK, once (never carried further). */
+  pendingDrops?: Record<string, number>;
 }
 
 export interface BlockSettings {
