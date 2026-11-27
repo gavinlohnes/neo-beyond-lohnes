@@ -81,7 +81,8 @@ it("UNLINKED-001: suggests plain-word mentions and links one only on LINK", asyn
   await screen.getByRole("button", { name: /^Link garage in the note from / }).click();
   await expect.poll(async () => (await db.dailyNotes.get(day.id))?.text).toBe("Spent the evening on the [[garage]] shelves.");
   await expect.element(screen.getByRole("button", { name: /^Open daily note: / })).toBeVisible();
-  expect(screen.getByText(/^Mentioned without a link/).elements()).toHaveLength(0);
+  // The backlink and the unlinked list are two separate reads; wait for the list's own refresh (FLAKES-003 pattern).
+  await expect.poll(() => screen.getByText(/^Mentioned without a link/).elements()).toHaveLength(0);
 });
 
 it("UNLINKED-001: a name inside someone else's [[link]] is not suggested", async () => {
