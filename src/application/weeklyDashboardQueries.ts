@@ -8,6 +8,7 @@ import { findWeekReview, getWeeklyReviewRecords } from "./weeklyReviewQueries";
 import { projectReviewRows, type ReviewRow, type ReviewWeight } from "../engine/reviewOverview";
 import { reviewWeekBack, weekHeadline, type WeekHeadline } from "../engine/weeklyDashboard";
 import { projectFindings, type FindingsResult } from "../engine/findings";
+import { lightWeekSessionIds } from "./trainingBlockState";
 import type { PerformedSet } from "../domain/workout/types";
 import type { ReviewWeek, WeeklyReviewRecord } from "../domain/review/types";
 
@@ -67,7 +68,9 @@ export async function getWeeklyDashboard(weeksBack: number, now: Date = new Date
   ]);
   const records = allRecords.filter((record) => inWeek(record.recordedAt)).reverse();
   const sets = (setRows as unknown as PerformedSet[]).filter((set) => !undone.has(set.id));
-  const findings = projectFindings({ summaries, sets, schedule, now: new Date(week.end) });
+  // GRAYSON-BLOCK-CYCLE-001: a light week's sets (fewer by plan) aren't evidence of a stall.
+  const lightIds = await lightWeekSessionIds();
+  const findings = projectFindings({ summaries, sets: sets.filter((s) => !lightIds.has(s.sessionId)), schedule, now: new Date(week.end) });
   const exerciseNames: Record<string, string> = {};
   for (const finding of findings.findings) {
     if (finding.kind === "STALL" || finding.kind === "EXERCISE_STORY") exerciseNames[finding.exerciseId] = names[finding.exerciseId] ?? finding.exerciseId;

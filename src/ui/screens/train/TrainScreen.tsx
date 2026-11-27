@@ -58,6 +58,7 @@ import { getCustomTemplates, reducedExercises } from "../../../application/custo
 import { getRoutineViews } from "../../../application/routineEditQueries";
 import { RoutinesPanel } from "./RoutineEditor";
 import { WeekPlan } from "./WeekPlan";
+import { applyLightWeek, blockStartWeight, getBlockView, setNormalThisWeek, type BlockView } from "../../../application/trainingBlock";
 import { AddExerciseSheet, KeepChangesLine, SaveAsRoutineLine, SwapSheet } from "./WorkoutChanges";
 import { getLastNumbers, getWorkoutPlan } from "../../../application/workoutChanges";
 import { getProgrammeView, type SequenceProgrammeView } from "../../../application/trainingProgrammeQueries";
@@ -375,6 +376,8 @@ export function TrainScreen({
   // GRAYSON-WEEK-PLAN-001: null without a week plan; else whether today is planned or Rest. And the week view.
   const [weekPlanToday, setWeekPlanToday] = useState<"PLANNED" | "REST" | null>(null);
   const [weekOpen, setWeekOpen] = useState(false);
+  // GRAYSON-BLOCK-CYCLE-001: the block in force (its line, and whether today is a light week).
+  const [blockView, setBlockView] = useState<BlockView | null>(null);
   const [changeSheet, setChangeSheet] = useState<{ kind: "SWAP"; exerciseId: string } | { kind: "ADD" } | null>(null);
   const [sequenceProgramme, setSequenceProgramme] = useState<SequenceProgrammeView | null>(null);
   const [programmeRefreshKey, setProgrammeRefreshKey] = useState(0);
@@ -504,6 +507,7 @@ export function TrainScreen({
 
     const loadedCustomTemplates = await getCustomTemplates();
     setCustomTemplates(loadedCustomTemplates);
+    setBlockView(await getBlockView().catch(() => null));
     setBuiltInRoutines(Object.fromEntries((await getRoutineViews()).filter((r) => r.builtIn).map((r) => [r.templateId, r.exercises])));
     const customs = await getCustomExercises();
     setCustomExerciseNames(customs.map((e) => e.name));
@@ -625,6 +629,13 @@ export function TrainScreen({
     );
     // GRAYSON-WORKOUT-CHANGES-001: an added or swapped-in exercise with no history in this routine starts from its last
     // numbers anywhere (an editable display default, as before).
+    // GRAYSON-BLOCK-CYCLE-001: a lift he accepted to start lighter this block pre-fills lighter until he logs it.
+    for (const entry of lastSetEntries) {
+      const ex = exercises.find((e) => e.exerciseId === entry[0]);
+      if (!entry[1] || !ex) continue;
+      const lighter = await blockStartWeight(ex.exerciseId, entry[1].weight, ex.incrementLbs);
+      if (lighter !== null) (entry as [string, LastSetInfo | undefined])[1] = { ...entry[1], weight: lighter };
+    }
     if (lastSetEntries.some(([, last]) => last === undefined)) {
       const anywhere = await getLastNumbers();
       for (const entry of lastSetEntries) {
@@ -1194,12 +1205,14 @@ export function TrainScreen({
   }).filter((p) => p.kind !== "WARMUP").map(({ kind: _kind, ...p }) => p));
   const lockScreen = useLockScreenSets({ session, sets, planned: lockScreenPlanned, onApplied: async () => { await refresh(true); } });
   const variantSuggestion = suggestSessionVariant(capacity, shortSleep);
-  const suggestedExercises = exercisesFor(
+  const plannedExercises = exercisesFor(
     chosenTemplate,
     chosenVariant === "RECOVERY" ? "STANDARD" : chosenVariant,
     customTemplates,
     builtInRoutines,
   );
+  // GRAYSON-BLOCK-CYCLE-001: a light week shows (and starts) fewer sets of the same exercises.
+  const suggestedExercises = blockView?.lightToday ? applyLightWeek(plannedExercises, blockView.settings) : plannedExercises;
   const suggestedSummary = describeTemplateSummary(suggestedExercises);
 
   async function openCalibrationPreview() {
@@ -1516,6 +1529,12 @@ export function TrainScreen({
             {weekPlanToday ? "YOUR WEEK" : sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
           </p>
           {weekPlanToday === "REST" && <p className="meta" style={{ marginBottom: 8 }}>Your week says Rest today. START still works if you want to train.</p>}
+          {blockView?.line && blockView.week !== null && <p className="meta" style={{ marginBottom: 4 }}>{blockView.line}</p>}
+          {blockView?.lightToday && chosenVariant !== "RECOVERY" && <p className="train-light-week" style={{ marginBottom: 8 }}>
+            <span>Light week: same weights, fewer sets.</span>{" "}
+            <button type="button" className="btn-secondary routine-inline" disabled={busy}
+              onClick={() => void setNormalThisWeek().then(() => refresh(true)).catch((e) => setReadError(describeError(e, "That didn't save.")))}>NORMAL THIS WEEK</button>
+          </p>}
           <h2 className="command-title">
             {chosenVariant === "RECOVERY" ? "Recovery session" : sentenceCase(suggestedSummary.bodyAreas) || "Workout"}
           </h2>

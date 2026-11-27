@@ -45,3 +45,16 @@
 .train-change-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .train-change-acts > button { flex: 1 1 140px; min-height: 44px; margin: 0; }
 .train-keep-changes { margin: 12px 0; padding-top: 8px; border-top: 1px solid var(--p-line, #2a2a2a); display: grid; gap: 8px; }
+
+/* GRAYSON-BLOCK-CYCLE-001: the block card, setup, settings and review. */
+.block-cycle { margin: 8px 0; }
+.block-cycle__set { border: 0; margin: 10px 0; padding: 0; }
+.block-cycle__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.block-cycle__chips .chip { flex: none; min-height: 44px; padding: 8px 12px; }
+.block-cycle__num { display: flex; align-items: center; gap: 8px; }
+.block-cycle__num .input { width: 6em; min-height: 44px; }
+.block-cycle__range { display: grid; grid-template-columns: minmax(0, 1fr) 5em 5em; align-items: center; gap: 6px; margin: 4px 0; }
+.block-cycle__range .input { min-height: 44px; }
+.block-review__lines { margin: 8px 0; padding-left: 18px; display: grid; gap: 4px; font-size: 16px; }
+.block-review__suggestions { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 10px; }
+.block-review__suggestion { border-top: 1px solid var(--p-line, #2a2a2a); padding-top: 8px; display: grid; gap: 4px; }

@@ -200,7 +200,8 @@ change the load.
   with acceptable technique/effort evidence.
 - **Reduce today:** preserve primary movements while removing later accessory burden.
 - **Recovery:** light movement or rest when the current evidence and explicit condition justify it;
-  no automatic calendar deload.
+  no automatic calendar deload. **Amended (Gavin, 2026-11-25, GRAYSON-BLOCK-CYCLE-001):** a lighter last week is
+  planned only inside a block Gavin starts, shown before it begins and turned off in one tap.
 - **Substitute:** pain/safety, repeated equipment absence, strong owner preference, persistent
   technique barrier or movement-specific failure; preserve programme role and keep histories honest.
 - **Review programme:** only after repeated evidence shows a broader mismatch.
@@ -221,6 +222,10 @@ scientific truths.
 
 At block end, continue, change focus or return to balanced development. Lack of progress triggers
 investigation, not automatic volume escalation.
+
+**Built (GRAYSON-BLOCK-CYCLE-001):** TRAIN · PROGRESS · THIS BLOCK starts a 4 to 6 week block with 0 to 3 focus areas
+and an optional lighter last week; the block review offers at most three changes from fixed rules, each with its
+number, that Gavin accepts or skips by tap. See [GRAYSON-BLOCK-CYCLE](decisions/GRAYSON-BLOCK-CYCLE.md).
 
 ## 8. TRAIN Progress and Direction
 

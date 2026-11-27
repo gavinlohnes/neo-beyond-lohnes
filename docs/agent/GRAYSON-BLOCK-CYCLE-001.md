@@ -6,7 +6,7 @@
   defaults below, including the amendment to TRAIN Intelligence §7 named under Scope.
 - **Lane: PROTECTED** (programme dosage and a doctrine amendment). No new table and no Dexie version. Independent
   exact-head review, green CI; Gavin merges.
-- **Starting commit:** `origin/master` with WEEK-PLAN-001 merged. Re-fetch before starting.
+- **Starting commit:** `origin/master` with WEEK-PLAN-001 merged. Re-fetch before starting. Built from `3f07787a` (WEEK-PLAN-001 merged as #742).
 - **Builder:** Claude Code. Branch `claude/grayson-block-cycle-001`. **Reviewer:** a fresh-context reviewer.
 - **Order:** Claude Code, TRAIN basics **#5** in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md) (2026-11-25), last,
   because it reads the week plan and saves its changes through ROUTINE-EDIT-001.

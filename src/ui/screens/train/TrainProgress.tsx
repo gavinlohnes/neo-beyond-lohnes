@@ -4,6 +4,7 @@ import { undoStandardFix, undoStandardRemove } from "../../../application/standa
 import { FIX_UNDO_MS, useUndoWindow } from "../../hooks/useUndoWindow";
 import { describeError } from "../../errorMessage";
 import { StandardTestSheet, type StandardChange, type StandardSheetMode } from "./StandardTestSheet";
+import { BlockCycle } from "./BlockCycle";
 import { getTrainProgress } from "../../../application/trainProgressQueries";
 import type { TrainProgress as Progress, EvidenceClass } from "../../../application/trainProgress";
 import { Activity, Compass, Dumbbell, Target } from "lucide-react";
@@ -66,8 +67,10 @@ export function TrainProgress({ active }: { active: boolean }) {
       <div className="train-progress__rows">
         <p className="train-progress__row" data-next={where.next.kind}>{next} {where.sessions28} finished {where.sessions28 === 1 ? "session" : "sessions"} in the last 4 weeks{forms ? ` (${forms})` : ""}.</p>
         <p className="train-progress__row" data-per-week><span className="train-progress__key">BY WEEK</span> oldest first: {where.perWeek.join(" · ")}</p>
-        <p className="train-progress__row"><span className="train-progress__key">THIS BLOCK</span> No emphasis block set. Emphasis blocks come later, with your confirmation.</p>
       </div>
+      {/* GRAYSON-BLOCK-CYCLE-001: THIS BLOCK is now his block: start one, its week, and its review. */}
+      <p className="train-progress__key" style={{ marginTop: 8 }}>THIS BLOCK</p>
+      <BlockCycle onChanged={() => void load()} />
     </Panel>
     <Panel headingId="train-progress-standards" icon={<Target size={18} />} label="STANDARDS" wide>
       {undo && <p className="standard-undo" role="status">{undo.label}{" "}
