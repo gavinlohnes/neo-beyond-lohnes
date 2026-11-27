@@ -49,7 +49,7 @@ it("TODAY resume lands on the next working set with defaults/rest intact and no 
   expect((await db.workoutSessions.get(session.id))?.activeRestEndsAt).toBe(before?.activeRestEndsAt);
   const log = screen.getByRole("button", { name: "LOG", exact: true }).element();
   await expect.poll(() => log.getBoundingClientRect().bottom).toBeLessThanOrEqual(document.querySelector(".shell-nav")!.getBoundingClientRect().top);
-  const optional = screen.getByRole("combobox", { name: "Set type", exact: true }).element();
+  const optional = screen.getByRole("group", { name: "Set type", exact: true }).element();
   expect(log.getBoundingClientRect().top).toBeLessThan(optional.getBoundingClientRect().top);
   expect(log.closest(".command-surface")?.querySelectorAll(".btn-primary")).toHaveLength(1);
   const repeat = screen.getByRole("button", { name: "SET 2: SAME AS LAST TIME — 100 lb x 8", exact: true });
@@ -62,12 +62,13 @@ it("Gym's explicit LOG precedes optional set controls, while warm-up and effort 
   await screen.getByRole("button", { name: "GYM MODE", exact: true }).click();
   const gym = screen.getByRole("dialog", { name: "Gym mode", exact: true });
   const log = gym.getByRole("button", { name: "LOG SET 2", exact: true }).element();
-  const options = gym.getByRole("combobox", { name: "Set type", exact: true });
+  // GRAYSON-SET-TYPES-001: the set type is four one-tap chips now (was a select).
+  const options = gym.getByRole("group", { name: "Set type", exact: true });
   expect(log.getBoundingClientRect().top).toBeLessThan(options.element().getBoundingClientRect().top);
-  await options.selectOptions("WARMUP");
+  await gym.getByRole("radio", { name: "Warm-up", exact: true }).click();
   await expect.element(gym.getByRole("button", { name: "LOG WARM-UP", exact: true })).toBeVisible();
   expect(await getPerformedSets(session.id)).toHaveLength(1);
-  await options.selectOptions("WORKING");
+  await gym.getByRole("radio", { name: "Working", exact: true }).click();
   await gym.getByRole("combobox", { name: "How many reps left? (optional)", exact: true }).selectOptions("0");
   await gym.getByRole("button", { name: "LOG SET 2", exact: true }).click();
   await expect.poll(async () => (await getPerformedSets(session.id)).find((s) => s.setNumber === 2)?.repsInReserve).toBe(0);

@@ -19,18 +19,18 @@ async function start() {
 
 it("normal and Gym share warm-up/effort drafts, survive remount, undo and finish honestly", async () => {
   const { session, screen } = await start();
-  await screen.getByRole("combobox", { name: "Set type", exact: true }).selectOptions("WARMUP");
+  await screen.getByRole("radio", { name: "Warm-up", exact: true }).click();
   await screen.getByLabelText("Set 1 weight in pounds").fill("45");
   await screen.getByLabelText("Set 1 repetitions").fill("10");
   await screen.getByRole("button", { name: "GYM MODE", exact: true }).click();
   const gym = screen.getByRole("dialog", { name: "Gym mode" });
-  await expect.element(gym.getByRole("combobox", { name: "Set type", exact: true })).toHaveValue("WARMUP");
+  await expect.element(gym.getByRole("radio", { name: "Warm-up", exact: true })).toBeChecked();
   await gym.getByRole("button", { name: "LOG WARM-UP", exact: true }).click();
   await expect.poll(async () => (await getPerformedSets(session.id)).length).toBe(1);
   await expect.element(gym.getByText("Set 1 of 3 · 8-12 reps", { exact: true })).toBeVisible();
   await gym.getByRole("button", { name: "UNDO", exact: true }).click();
   await expect.poll(async () => (await getPerformedSets(session.id)).length).toBe(0);
-  await gym.getByRole("combobox", { name: "Set type", exact: true }).selectOptions("WORKING");
+  await gym.getByRole("radio", { name: "Working", exact: true }).click();
   await gym.getByRole("combobox", { name: "How many reps left? (optional)", exact: true }).selectOptions("0");
   await gym.getByLabelText("Weight", { exact: true }).fill("95");
   await gym.getByRole("button", { name: "EXIT", exact: true }).click();
@@ -50,9 +50,10 @@ it("normal and Gym share warm-up/effort drafts, survive remount, undo and finish
 it.each([320, 375, 768, 1024])("optional controls fit %spx and keep accessible labels", async (width) => {
   await page.viewport(width, 850);
   const { screen } = await start();
-  await expect.element(screen.getByRole("combobox", { name: "Set type", exact: true })).toBeVisible();
+  await expect.element(screen.getByRole("group", { name: "Set type", exact: true })).toBeVisible();
   expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(width);
-  expect(getComputedStyle(screen.getByRole("combobox", { name: "Set type", exact: true }).element()).fontSize).toBe("16px");
+  // GRAYSON-SET-TYPES-001: the set type is four one-tap chips now (was a select).
+  expect(getComputedStyle(screen.getByRole("radio", { name: "Warm-up", exact: true }).element().closest("label")!).fontSize).toBe("16px");
   for (const animation of document.getAnimations()) animation.finish();
   const results = await axe.run(document.body, { rules: { region: { enabled: false } } });
   expect(results.violations).toEqual([]);
