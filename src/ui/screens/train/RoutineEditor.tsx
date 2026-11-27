@@ -24,6 +24,7 @@ import { restSecondsFor } from "../../../application/restMemory";
 import { feedback } from "../../feel/feedback";
 import { describeError } from "../../errorMessage";
 import "./routineEditor.css";
+import { HomeTwin, HomeTwinNudge } from "./HomeTwin";
 
 /**
  * GRAYSON-ROUTINE-EDIT-001 (Gavin, 2026-11-25). One editor for every routine, A, B and C included, opened from TRAIN's
@@ -38,7 +39,7 @@ export const formatRest = (seconds: number) => `${Math.floor(seconds / 60)}:${St
 const describeRoutine = (exercises: readonly ExercisePrescription[]) =>
   `${exercises.length} ${exercises.length === 1 ? "exercise" : "exercises"} · ${exercises.reduce((t, ex) => t + ex.sets, 0)} sets`;
 
-export interface RoutineSaved { text: string; eventId: string | null }
+export interface RoutineSaved { text: string; eventId: string | null; templateId?: string | null }
 
 /** The ROUTINES list, with the editor one tap from each row. */
 export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onClose }: {
@@ -64,9 +65,9 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
     returnFocus.current = null;
   }, [editing]);
 
-  const afterChange = async (text: string, result: RoutineEditResult | null) => {
+  const afterChange = async (text: string, result: RoutineEditResult | null, templateId: string | null = null) => {
     feedback("MEDIUM");
-    setSaved({ text, eventId: result?.eventId ?? null });
+    setSaved({ text, eventId: result?.eventId ?? null, templateId: result ? templateId : null });
     await reload();
     await onChanged();
   };
@@ -81,7 +82,7 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
   if (routines && editing && (editing === "NEW" || open)) {
     return <RoutineEditor routine={open} workoutActive={workoutActive}
       onCancel={() => setEditing(null)}
-      onDone={async (text, result) => { setEditing(null); await afterChange(text, result); }} />;
+      onDone={async (text, result) => { const savedId = open?.templateId ?? null; setEditing(null); await afterChange(text, result, savedId); }} />;
   }
 
   return <section className="card routine-list" aria-labelledby={`${id}-title`} data-routine-list>
@@ -89,6 +90,8 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
     <p className="meta">Edit any routine, A, B and C included. A workout you've started keeps its exercises; a change applies from the next one.</p>
     {saved && <p className="routine-saved" role="status">{saved.text}{" "}
       {saved.eventId && <button type="button" className="btn-secondary routine-inline" disabled={busy} onClick={() => void undo(saved.eventId!)}>UNDO</button>}</p>}
+    {/* GRAYSON-HOME-STRETCH-001 slice C: a routine with a home twin offers UPDATE TWIN after a change. */}
+    {saved?.templateId && <HomeTwinNudge templateId={saved.templateId} busy={busy} />}
     {error && <p className="meta meta--error" role="alert">{error}</p>}
     {!routines ? <p className="meta">Reading routines…</p> : <ul className="routine-list__rows">
       {routines.map((r) => {
@@ -235,6 +238,8 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
         {builtIn ? "RESET TO ORIGINAL" : "RESET TO AS FIRST SAVED"}</button>}
       <button type="button" className="btn-secondary" disabled={busy} onClick={onCancel}>CANCEL</button>
     </div>
+    {/* GRAYSON-HOME-STRETCH-001 slice C: the routine's home twin (its own file). */}
+    {routine && <HomeTwin templateId={routine.templateId} busy={busy} />}
   </section>;
 }
 
