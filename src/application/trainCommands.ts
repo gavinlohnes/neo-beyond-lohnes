@@ -326,6 +326,8 @@ export async function completeWorkout(
   sessionType: SessionType,
   status: "COMPLETED" | "PARTIAL",
   durationMinutes?: number,
+  /** GRAYSON-HOME-STRETCH-001: the stretch routine a recovery session played; kept on the row and the event. */
+  routine?: { id: string; name: string; completed: boolean },
 ): Promise<void> {
   await writeWorkoutAtomically(async () => {
     const existing = await db.workoutSessions.get(sessionId);
@@ -336,6 +338,7 @@ export async function completeWorkout(
         session.status = status;
         session.endedAt = new Date().toISOString();
         delete session.activeRestEndsAt;
+        if (routine) session.stretchRoutine = { id: routine.id, name: routine.name, completed: routine.completed };
       });
     const correlationId = newId();
     await logEvent(
@@ -348,6 +351,7 @@ export async function completeWorkout(
         sessionType,
         ...(existing?.programmeContext ? { programmeContext: existing.programmeContext } : {}),
         ...(durationMinutes !== undefined ? { durationMinutes } : {}),
+        ...(routine ? { stretchRoutine: { id: routine.id, name: routine.name, completed: routine.completed } } : {}),
       },
       "USER",
       correlationId,
@@ -403,13 +407,15 @@ export async function completeRecoverySession(
   beyondDayId: string,
   sessionId: string,
   durationMinutes: number,
+  /** GRAYSON-HOME-STRETCH-001: a stretch routine, and whether it was played to the end. Absent for every other recovery session. */
+  routine?: { id: string; name: string; completed: boolean },
 ): Promise<void> {
-  const status = deriveRecoverySessionStatus(durationMinutes);
+  const status = deriveRecoverySessionStatus(durationMinutes, routine?.completed === true);
   if (status === "ABANDONED") {
     await abandonWorkout(beyondDayId, sessionId, "RECOVERY", durationMinutes);
     return;
   }
-  await completeWorkout(beyondDayId, sessionId, "RECOVERY", status, durationMinutes);
+  await completeWorkout(beyondDayId, sessionId, "RECOVERY", status, durationMinutes, routine);
 }
 
 /**

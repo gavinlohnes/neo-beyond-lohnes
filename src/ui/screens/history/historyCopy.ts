@@ -201,6 +201,9 @@ export function describeEvent(event: DomainEvent, exerciseNames: Record<string, 
     // GRAYSON-BLOCK-CYCLE-001: plain words for his block's changes.
     case "TRAINING_BLOCK_SET":
       return ({ START: "Block started.", NEXT: "Next block started.", CHANGE: "Block changed.", END: "Block ended early.", NORMAL_WEEK: "Full sets this light week.", SETTINGS: "Block settings saved.", UNDO: "Block change undone." } as Record<string, string>)[String(p.reason)] ?? "Block changed.";
+    // GRAYSON-HOME-STRETCH-001: the routines themselves are in TRAIN · STRETCH.
+    case "STRETCH_ROUTINES_SET":
+      return "Stretch routines saved.";
     case "TRAIN_PROGRAM_SET":
       return p.programme === null ? "Training programme cleared." : "Training programme saved.";
     case "EXERCISE_CUE_SET":
