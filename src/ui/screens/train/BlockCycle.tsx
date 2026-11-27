@@ -136,7 +136,10 @@ export function BlockReviewScreen({ onClose, onNext, busy: outerBusy }: { onClos
   const [error, setError] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const id = useId();
-  useEffect(() => { void getBlockReview().then((r) => { setReview(r); requestAnimationFrame(() => headingRef.current?.focus()); }).catch((e) => setError(describeError(e, "The review is unavailable."))); }, []);
+  useEffect(() => { void getBlockReview().then(setReview).catch((e) => setError(describeError(e, "The review is unavailable."))); }, []);
+  // Focus the heading once it has rendered (review of #746 CI: a frame queued before the render could miss it).
+  const hasReview = review !== null;
+  useEffect(() => { if (hasReview) headingRef.current?.focus(); }, [hasReview]);
   const run = async (fn: () => Promise<void>) => {
     setBusy(true); setError(null);
     try { await fn(); feedback("MEDIUM"); } catch (e) { setError(describeError(e, "That didn't save. Nothing changed.")); } finally { setBusy(false); }
