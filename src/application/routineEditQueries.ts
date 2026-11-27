@@ -56,7 +56,13 @@ export interface RoutineExerciseChoice {
   repRangeHigh: number;
   incrementLbs: number;
   mine: boolean;
+  /** GRAYSON-SET-TYPES-001: a timed exercise brings its target with it. */
+  measure?: "TIME";
+  targetSec?: number;
 }
+
+const timedOf = (ex: { measure?: string | undefined; targetSec?: number | undefined }): { measure?: "TIME"; targetSec?: number } =>
+  ex.measure === "TIME" ? { measure: "TIME", targetSec: ex.targetSec ?? 30 } : {};
 
 /**
  * His own exercises first, then A, B and C's own movements (their ids, so a lift swapped out and back keeps its
@@ -67,21 +73,21 @@ export async function getRoutineExerciseChoices(): Promise<RoutineExerciseChoice
   const mine = await getCustomExercises();
   const seeded = new Set(mine.flatMap((ex) => (ex.libraryExerciseId ? [ex.libraryExerciseId] : [])));
   const choices: RoutineExerciseChoice[] = mine.map((ex) => ({ exerciseId: ex.id, name: ex.name, detail: `${ex.muscleGroup} · ${ex.equipment} · yours`,
-    repRangeLow: ex.repRangeLow, repRangeHigh: ex.repRangeHigh, incrementLbs: deriveIncrementLbs(ex.equipment, ex.muscleGroup), mine: true }));
+    repRangeLow: ex.repRangeLow, repRangeHigh: ex.repRangeHigh, incrementLbs: deriveIncrementLbs(ex.equipment, ex.muscleGroup), mine: true, ...timedOf(ex) }));
   const named = new Set(choices.map((c) => c.name.trim().toLowerCase()));
   const seen = new Set<string>();
   for (const id of WORKOUT_TEMPLATE_ORDER) {
     for (const ex of originalBuiltInExercises(id) ?? []) {
       if (seen.has(ex.exerciseId) || named.has(ex.name.toLowerCase())) continue;
       seen.add(ex.exerciseId);
-      choices.push({ exerciseId: ex.exerciseId, name: ex.name, detail: `In Workout ${id}`, repRangeLow: ex.repRangeLow, repRangeHigh: ex.repRangeHigh, incrementLbs: ex.incrementLbs, mine: false });
+      choices.push({ exerciseId: ex.exerciseId, name: ex.name, detail: `In Workout ${id}`, repRangeLow: ex.repRangeLow, repRangeHigh: ex.repRangeHigh, incrementLbs: ex.incrementLbs, mine: false, ...timedOf(ex) });
     }
   }
   for (const c of choices) named.add(c.name.trim().toLowerCase());
   for (const ex of EXERCISE_LIBRARY) {
     if (seeded.has(ex.id) || named.has(ex.name.toLowerCase())) continue;
     choices.push({ exerciseId: ex.id, name: ex.name, detail: `${ex.muscleGroup} · ${ex.equipment}`, repRangeLow: ex.repRangeLow,
-      repRangeHigh: ex.repRangeHigh, incrementLbs: deriveIncrementLbs(ex.equipment, ex.muscleGroup), mine: false });
+      repRangeHigh: ex.repRangeHigh, incrementLbs: deriveIncrementLbs(ex.equipment, ex.muscleGroup), mine: false, ...timedOf(ex) });
   }
   return choices;
 }

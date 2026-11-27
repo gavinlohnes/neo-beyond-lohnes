@@ -32,6 +32,7 @@ export async function createCustomExercise(input: CustomExerciseInput): Promise<
     repRangeHigh: parsed.repRangeHigh,
     ...(parsed.notes ? { notes: parsed.notes } : {}),
     ...(parsed.libraryExerciseId ? { libraryExerciseId: parsed.libraryExerciseId } : {}),
+    ...(parsed.measure === "TIME" ? { measure: "TIME" as const, targetSec: parsed.targetSec ?? 30 } : {}),
     createdAt: new Date().toISOString(),
   };
   await db.customExercises.add(exercise);
@@ -50,7 +51,11 @@ export async function updateCustomExercise(id: string, changes: CustomExerciseMo
     ...(parsed.repRangeLow !== undefined ? { repRangeLow: parsed.repRangeLow } : {}),
     ...(parsed.repRangeHigh !== undefined ? { repRangeHigh: parsed.repRangeHigh } : {}),
     ...(parsed.notes !== undefined ? { notes: parsed.notes } : {}),
+    ...(parsed.targetSec !== undefined ? { targetSec: parsed.targetSec } : {}),
   };
+  // GRAYSON-SET-TYPES-001: switching Timed off drops the field, so the row reads exactly as before.
+  if (parsed.measure === "REPS") { delete updated.measure; delete updated.targetSec; }
+  if (parsed.measure === "TIME") { updated.measure = "TIME"; updated.targetSec ??= 30; }
   await db.customExercises.put(updated);
   return updated;
 }

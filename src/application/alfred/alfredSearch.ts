@@ -2,6 +2,7 @@ import { contextSource, readOperatorContext } from "../operatorContext";
 import { getMemories } from "./alfredMemory";
 import { db } from "../../persistence/db";
 import { projectSetFixes } from "../../domain/workout/setFixes";
+import { formatHold } from "../../domain/workout/types";
 import { parseProject } from "../../persistence/intentValidation";
 import { getDaySummaries } from "../dayLedgerQueries";
 import { dayLine } from "./alfredContext";
@@ -47,7 +48,13 @@ export async function searchRecords(query: string, limit = 30, includePersonal =
   // GRAYSON-TRAIN-EDIT-001: search reads the sets as they stand (undone, replaced and removed sets left out);
   // the history of a fix stays findable through its events above.
   const retracted = projectSetFixes(events).retractedSetIds;
-  for (const s of sets) if (!retracted.has(String(s.id))) consider(typeof s.recordedAt === "string" ? s.recordedAt : undefined, "SET", s);
+  // GRAYSON-SET-TYPES-001: the kind and any hold in words, so Delta says "drop", "to failure", "held 0:45".
+  const kindWords: Record<string, string> = { WARMUP: "warm-up", DROP: "drop", FAILURE: "to failure" };
+  for (const s of sets) {
+    if (retracted.has(String(s.id))) continue;
+    const words = { kind: kindWords[String(s.setKind ?? "")] ?? "working", ...(typeof s.durationSec === "number" ? { held: formatHold(s.durationSec) } : {}) };
+    consider(typeof s.recordedAt === "string" ? s.recordedAt : undefined, "SET", { ...words, ...s });
+  }
   for (const m of memories) consider(m.savedAt, `MEMORY ${m.topic}`, m.text);
   for (const p of projects.map(parseProject).filter((x): x is NonNullable<typeof x> => x !== null)) consider(p.updatedAt, `PROJECT ${p.status}`, { id: p.id, title: p.title, finish: p.finish });
   hits.sort((a, b) => b.at.localeCompare(a.at));

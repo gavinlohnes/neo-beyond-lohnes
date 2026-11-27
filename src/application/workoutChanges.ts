@@ -10,7 +10,7 @@ import { lightSets } from "../domain/workout/trainingBlock";
 import { parseWorkoutPlanChangedPayload } from "../persistence/workoutTemplateValidation";
 import { EXERCISE_LIBRARY } from "../domain/workout/exerciseLibrary";
 import { TEMPLATE_TO_LIBRARY_ID } from "../domain/workout/exerciseHowTo";
-import { isWorkingSet, type ExercisePrescription, type PerformedSet, type WorkoutTemplateId } from "../domain/workout/types";
+import { countsTowardBest, isWorkingSet, type ExercisePrescription, type PerformedSet, type WorkoutTemplateId } from "../domain/workout/types";
 import type { WorkoutSession } from "../domain/common/types";
 import { saveRoutineEdit, type RoutineEditResult } from "./routineEditCommands";
 import { createCustomTemplate } from "./customTemplateCommands";
@@ -77,11 +77,14 @@ async function change(sessionId: string, build: (plan: WorkoutPlanState, sets: P
   });
 }
 
-const doneSets = (sets: readonly PerformedSet[], exerciseId: string) => sets.filter((s) => s.exerciseId === exerciseId && isWorkingSet(s)).length;
+// GRAYSON-SET-TYPES-001: a drop set shares its parent's slot, so it never counts as a set done.
+const doneSets = (sets: readonly PerformedSet[], exerciseId: string) => sets.filter((s) => s.exerciseId === exerciseId && isWorkingSet(s) && s.setKind !== "DROP").length;
 
 /** A pick from ADD EXERCISE or SWAP, as a prescription: its own rep range and weight step, three sets. */
-export function prescriptionFor(choice: Pick<RoutineExerciseChoice, "exerciseId" | "name" | "repRangeLow" | "repRangeHigh" | "incrementLbs">, sets = ADDED_SETS): ExercisePrescription {
-  return { exerciseId: choice.exerciseId, name: choice.name, sets, repRangeLow: choice.repRangeLow, repRangeHigh: choice.repRangeHigh, incrementLbs: choice.incrementLbs };
+export function prescriptionFor(choice: Pick<RoutineExerciseChoice, "exerciseId" | "name" | "repRangeLow" | "repRangeHigh" | "incrementLbs"> & { measure?: string | undefined; targetSec?: number | undefined }, sets = ADDED_SETS): ExercisePrescription {
+  return { exerciseId: choice.exerciseId, name: choice.name, sets, repRangeLow: choice.repRangeLow, repRangeHigh: choice.repRangeHigh, incrementLbs: choice.incrementLbs,
+    // GRAYSON-SET-TYPES-001: a timed exercise stays timed.
+    ...(choice.measure === "TIME" ? { measure: "TIME" as const, targetSec: choice.targetSec ?? 30 } : {}) };
 }
 
 export function addExerciseToSession(sessionId: string, choice: Parameters<typeof prescriptionFor>[0]): Promise<string> {
@@ -125,7 +128,7 @@ async function swapCandidates(): Promise<SwapCandidate[]> {
     const library = libraryFor(c.exerciseId);
     const muscleGroup = custom?.muscleGroup ?? library?.muscleGroup;
     const equipment = custom?.equipment ?? library?.equipment;
-    return muscleGroup && equipment ? [{ exerciseId: c.exerciseId, name: c.name, muscleGroup, equipment, repRangeLow: c.repRangeLow, repRangeHigh: c.repRangeHigh, incrementLbs: c.incrementLbs, mine: c.mine }] : [];
+    return muscleGroup && equipment ? [{ exerciseId: c.exerciseId, name: c.name, muscleGroup, equipment, repRangeLow: c.repRangeLow, repRangeHigh: c.repRangeHigh, incrementLbs: c.incrementLbs, mine: c.mine, ...(c.measure ? { measure: c.measure, targetSec: c.targetSec } : {}) }] : [];
   });
 }
 
@@ -134,7 +137,7 @@ async function lastByExercise(): Promise<Map<string, { weight: number; reps: num
   const [sets, undone] = await Promise.all([db.performedSets.toArray() as unknown as Promise<PerformedSet[]>, getUndoneSetIds()]);
   const last = new Map<string, { weight: number; reps: number; at: string }>();
   for (const s of sets) {
-    if (undone.has(s.id) || !isWorkingSet(s) || s.substitutedName) continue;
+    if (undone.has(s.id) || !countsTowardBest(s) || s.substitutedName) continue;
     const seen = last.get(s.exerciseId);
     if (!seen || s.recordedAt > seen.at) last.set(s.exerciseId, { weight: s.weight, reps: s.reps, at: s.recordedAt });
   }
@@ -213,7 +216,7 @@ export async function getOneOffRoutineDraft(sessionId: string): Promise<OneOffRo
   const session = await db.workoutSessions.get(sessionId);
   if (!session || session.templateId || session.sessionType === "RECOVERY") return null;
   const [plan, sets, candidates] = await Promise.all([getWorkoutPlan(session), liveSets(sessionId), swapCandidates()]);
-  const working = sets.filter((s) => isWorkingSet(s) && !s.substitutedName)
+  const working = sets.filter((s) => isWorkingSet(s) && s.setKind !== "DROP" && !s.substitutedName)
     .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt) || (a.seq ?? 0) - (b.seq ?? 0));
   const order: string[] = [];
   const count = new Map<string, number>();

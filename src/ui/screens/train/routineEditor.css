@@ -58,3 +58,18 @@
 .block-review__lines { margin: 8px 0; padding-left: 18px; display: grid; gap: 4px; font-size: 16px; }
 .block-review__suggestions { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 10px; }
 .block-review__suggestion { border-top: 1px solid var(--p-line, #2a2a2a); padding-top: 8px; display: grid; gap: 4px; }
+
+/* GRAYSON-SET-TYPES-001: the set kind picker and drop rows. */
+.set-kind { border: 0; margin: 6px 0; padding: 0; }
+.set-kind__choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.set-kind__choice { flex: none; min-height: 44px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; }
+.set-kind__choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--text-1); }
+.train-drop-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0 4px 28px; }
+
+/* GRAYSON-SET-TYPES-001: the timed set. A big clock, START and DONE as the primary action, typed seconds below. */
+.timed-set { display: grid; gap: 8px; margin-bottom: 8px; }
+.timed-set__running { display: grid; gap: 8px; }
+.timed-set__clock { margin: 0; text-align: center; font-family: var(--font-mono, monospace); font-size: 40px; font-variant-numeric: tabular-nums; color: var(--text-1); }
+.timed-set__go { min-height: 56px; font-size: 18px; }
+.timed-set__typed { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
+.timed-set__typed .input { min-height: 44px; text-align: center; }

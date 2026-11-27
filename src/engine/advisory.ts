@@ -97,6 +97,8 @@ export function composeAdvisoryNoteFromProgression(
       ...(suggestion.suggestedNextWeight !== undefined
         ? [{ key: "suggestedNextWeight", value: suggestion.suggestedNextWeight }]
         : []),
+      // GRAYSON-SET-TYPES-001: a timed exercise's target instead of a weight.
+      ...(suggestion.suggestedTargetSec !== undefined ? [{ key: "suggestedTargetSec", value: suggestion.suggestedTargetSec }] : []),
     ],
     attentionLevel: "QUIET",
   };

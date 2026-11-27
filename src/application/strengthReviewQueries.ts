@@ -30,6 +30,7 @@ export async function getStrengthReview(now = new Date()) {
     const muscle = (exerciseId: string): MuscleGroup | undefined => customMuscles.get(exerciseId) ?? libraryMuscles.get(exerciseId);
     const observations = (rawSets as unknown as PerformedSet[]).flatMap((set) => {
       const session = finished.get(set.sessionId);
+      // GRAYSON-SET-TYPES-001: drop sets count here (volume and sets per muscle); a drop is always lighter than its set, so it is never the best.
       if (!session || undone.has(set.id) || !isWorkingSet(set) || set.substitutedName || set.reps <= 0 || set.weight <= 0) return [];
       const muscleGroup = muscle(set.exerciseId);
       const at = session.endedAt ?? session.startedAt;

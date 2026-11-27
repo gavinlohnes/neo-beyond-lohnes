@@ -1,5 +1,5 @@
 import { projectSetFixes, SET_RETRACTION_TYPES } from "../domain/workout/setFixes";
-import { isWorkingSet } from "../domain/workout/types";
+import { countsTowardBest, isWorkingSet } from "../domain/workout/types";
 /**
  * Leverage Implementation 001 (deterministic ordering hardening,
  * 2026-08-22): every timestamp sort in this file was audited against
@@ -191,7 +191,8 @@ export async function getProgressionSuggestion(
     getUndoneSetIds(),
   ]);
   const bySession = new Map<string, PerformedSet[]>();
-  for (const set of exerciseSets) if (!undoneIds.has(set.id) && set.setKind !== "WARMUP") bySession.set(set.sessionId, [...(bySession.get(set.sessionId) ?? []), set]);
+  // GRAYSON-SET-TYPES-001: drop sets aren't progression evidence.
+  for (const set of exerciseSets) if (!undoneIds.has(set.id) && set.setKind !== "WARMUP" && set.setKind !== "DROP") bySession.set(set.sessionId, [...(bySession.get(set.sessionId) ?? []), set]);
 
   for (let i = sessions.length - 1; i >= 0; i--) {
     const sets = bySession.get(sessions[i]!.id) ?? [];
@@ -411,7 +412,7 @@ export async function getLastPerformedSetForExercise(
 
   for (let i = sessions.length - 1; i >= 0; i--) {
     const sets = (await getPerformedSets(sessions[i]!.id))
-      .filter((s) => s.exerciseId === exerciseId && isWorkingSet(s))
+      .filter((s) => s.exerciseId === exerciseId && countsTowardBest(s))
       .sort((a, b) => a.setNumber - b.setNumber);
     if (sets.length > 0) {
       const first = sets[0]!;

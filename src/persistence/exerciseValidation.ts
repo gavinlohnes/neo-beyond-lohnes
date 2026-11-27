@@ -21,6 +21,9 @@ const customExerciseInputFields = {
   repRangeHigh: z.number().int().min(1, "Rep range high must be at least 1"),
   notes: z.string().trim().optional(),
   libraryExerciseId: z.string().optional(),
+  // GRAYSON-SET-TYPES-001: optional and additive; older rows read as reps.
+  measure: z.enum(["REPS", "TIME"]).optional(),
+  targetSec: z.number().int().min(5).max(600).optional(),
 };
 
 /** Input to createCustomExercise. id/createdAt/archivedAt are assigned by the command, not the caller. */
@@ -38,6 +41,8 @@ export const customExerciseModifyInputSchema = z
     repRangeLow: customExerciseInputFields.repRangeLow.optional(),
     repRangeHigh: customExerciseInputFields.repRangeHigh.optional(),
     notes: customExerciseInputFields.notes,
+    measure: customExerciseInputFields.measure,
+    targetSec: customExerciseInputFields.targetSec,
   })
   .refine((v) => Object.values(v).some((value) => value !== undefined), "At least one field must change");
 export type CustomExerciseModifyInput = z.infer<typeof customExerciseModifyInputSchema>;
@@ -52,6 +57,8 @@ export const customExerciseSchema = z
     repRangeHigh: customExerciseInputFields.repRangeHigh,
     notes: z.string().optional(),
     libraryExerciseId: z.string().optional(),
+    measure: customExerciseInputFields.measure,
+    targetSec: customExerciseInputFields.targetSec,
     createdAt: z.string(),
     archivedAt: z.string().optional(),
   })

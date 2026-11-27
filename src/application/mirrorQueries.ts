@@ -1,4 +1,4 @@
-import { isWorkingSet } from "../domain/workout/types";
+import { countsTowardBest } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
 import { getBodyweightHistory } from "./bodyTrendQueries";
@@ -63,7 +63,7 @@ export async function getMirror(now: Date = new Date()): Promise<Mirror> {
   );
   const sets = ((await db.performedSets.toArray()) as unknown as PerformedSet[]).filter(
     // weight > 0: a bodyweight lift logged at 0 lb has no heaviest set to compare (MIRROR-001 review note).
-    (s) => finished.has(s.sessionId) && !undone.has(s.id) && isWorkingSet(s) && s.reps > 0 && s.weight > 0 && !s.substitutedName,
+    (s) => finished.has(s.sessionId) && !undone.has(s.id) && countsTowardBest(s) && s.reps > 0 && s.weight > 0 && !s.substitutedName,
   );
   const sessionsPerLift = new Map<string, Set<string>>();
   for (const s of sets) sessionsPerLift.set(s.exerciseId, (sessionsPerLift.get(s.exerciseId) ?? new Set()).add(s.sessionId));

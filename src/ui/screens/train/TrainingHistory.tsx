@@ -192,9 +192,9 @@ function SessionRecordView({
                         ? <SetFixSheet target={{ set }} exerciseName={exercise.name}
                             onDone={(done) => { setFixing(null); undo.show(done); refreshRecord(); }} onCancel={() => setFixing(null)} />
                         : <button type="button" className="set-fix-row" id={`set-row-${set.id}`}
-                            aria-label={`${set.setKind === "WARMUP" ? "Warm-up · " : ""}${describeRecordedSet(set)}${set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}. Fix this set`}
+                            aria-label={`${({ WARMUP: "Warm-up · ", DROP: "Drop · ", FAILURE: "To failure · " } as Record<string, string>)[set.setKind ?? ""] ?? ""}${describeRecordedSet(set)}${set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}. Fix this set`}
                             onClick={() => setFixing({ setId: set.id })}>
-                            {set.setKind === "WARMUP" ? "Warm-up · " : ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}
+                            {({ WARMUP: "Warm-up · ", DROP: "Drop · ", FAILURE: "To failure · " } as Record<string, string>)[set.setKind ?? ""] ?? ""}{describeRecordedSet(set)}{set.repsInReserve !== undefined ? ` · ${set.repsInReserve} reps left` : ""}
                           </button>}
                       {set.fixes && <SetFixHistory fixes={set.fixes} newestFixEventId={set.newestFixEventId} onPutBack={(id) => void putBack(id)} />}
                       {set.record && (
@@ -214,7 +214,7 @@ function SessionRecordView({
                   ))}
                 </ul>
                 {fixing && "addTo" in fixing && fixing.addTo === exercise.exerciseId
-                  ? <SetFixSheet target={{ add: { sessionId, exerciseId: exercise.exerciseId, weight: exercise.sets.at(-1)?.weight ?? 0, reps: exercise.sets.at(-1)?.reps ?? 0 } }}
+                  ? <SetFixSheet target={{ add: { sessionId, exerciseId: exercise.exerciseId, weight: exercise.sets.at(-1)?.weight ?? 0, reps: exercise.sets.at(-1)?.reps ?? 0, timed: exercise.sets.some((x) => x.durationSec !== undefined) } }}
                       exerciseName={exercise.name} onDone={(done) => { setFixing(null); undo.show(done); refreshRecord(); }} onCancel={() => setFixing(null)} />
                   : (record.entry.status === "COMPLETED" || record.entry.status === "PARTIAL") && <button type="button" className="set-fix-add" onClick={() => setFixing({ addTo: exercise.exerciseId })}>Add a set</button>}
               </div>

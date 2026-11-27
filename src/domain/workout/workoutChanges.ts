@@ -115,6 +115,8 @@ export interface SwapCandidate {
   repRangeHigh: number;
   incrementLbs: number;
   mine: boolean;
+  measure?: "TIME" | undefined;
+  targetSec?: number | undefined;
 }
 export interface SwapSuggestion extends SwapCandidate {
   last: { weight: number; reps: number; at: string } | null;

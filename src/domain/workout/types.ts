@@ -57,6 +57,25 @@ export interface ExercisePrescription {
   supersetWithNext?: boolean | undefined;
   /** GRAYSON-ROUTINE-EDIT-001: where this exercise's rest starts, 15–600 s. Optional; absent = his remembered rest. */
   restSeconds?: number | undefined;
+  /** GRAYSON-SET-TYPES-001: "TIME" logs how long each set was held instead of reps. Absent = reps. */
+  measure?: ExerciseMeasure | undefined;
+  /** GRAYSON-SET-TYPES-001: a timed exercise's target hold, 5–600 s. Absent = TIMED_TARGET_DEFAULT_SEC. */
+  targetSec?: number | undefined;
+}
+
+/** GRAYSON-SET-TYPES-001: how an exercise is counted. */
+export type ExerciseMeasure = "REPS" | "TIME";
+export const TIMED_TARGET_DEFAULT_SEC = 30;
+export const TIMED_TARGET_MIN_SEC = 5;
+export const TIMED_TARGET_MAX_SEC = 600;
+/** Timed progression: once every working set reaches the target, the next target is this much longer. */
+export const TIMED_STEP_SEC = 5;
+export const isTimed = (ex: { measure?: ExerciseMeasure | undefined }): boolean => ex.measure === "TIME";
+export const targetSecOf = (ex: { targetSec?: number | undefined }): number => ex.targetSec ?? TIMED_TARGET_DEFAULT_SEC;
+/** "0:45", "1:30". */
+export function formatHold(sec: number): string {
+  const s = Math.max(0, Math.round(sec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
 export interface WorkoutTemplateDefinition {
@@ -212,8 +231,12 @@ export interface PerformedSet {
   reps: number;
   skipped: boolean;
   recordedAt: string;
-  /** Missing on legacy rows means a working set. */
-  setKind?: "WORKING" | "WARMUP";
+  /** Missing on legacy rows means a working set. GRAYSON-SET-TYPES-001 adds DROP and FAILURE. */
+  setKind?: SetKind;
+  /** GRAYSON-SET-TYPES-001: a drop set's parent (the set straight above it). */
+  dropOf?: string;
+  /** GRAYSON-SET-TYPES-001: a timed set's time held, in seconds (reps may be 0). */
+  durationSec?: number;
   /** Operator estimate, integer 0–10; absent means not recorded. Never recommendation input. */
   repsInReserve?: number;
   /** The canonical SET_LOGGED/SET_SKIPPED event sequence, for same-time undo order. */
@@ -224,9 +247,25 @@ export interface PerformedSet {
   from?: "LOCK_SCREEN";
 }
 
-/** Shared statistics boundary; skipped sets and preparation are not working performance. */
+/**
+ * GRAYSON-SET-TYPES-001 (Gavin, 2026-11-26): every set is one of four kinds. Missing means WORKING, so every older set
+ * keeps its meaning. FAILURE is a working set taken to failure. DROP is a lighter set straight after the one above it.
+ */
+export type SetKind = "WORKING" | "WARMUP" | "DROP" | "FAILURE";
+export const SET_KINDS: readonly SetKind[] = ["WORKING", "WARMUP", "DROP", "FAILURE"];
+
+/** Shared statistics boundary; skipped sets and preparation are not working performance. Drop sets count as work (volume, sets). */
 export function isWorkingSet(set: { skipped?: boolean; setKind?: string }): boolean {
   return !set.skipped && set.setKind !== "WARMUP";
+}
+
+/**
+ * GRAYSON-SET-TYPES-001: sets that can set a best, an estimated max, a progression step or a stall: WORKING and FAILURE.
+ * A drop set (lighter, straight after a heavier one) isn't a fair test. For every set logged before set kinds existed
+ * (WORKING or WARMUP) this is exactly isWorkingSet, so no past best or suggestion changes.
+ */
+export function countsTowardBest(set: { skipped?: boolean; setKind?: string }): boolean {
+  return isWorkingSet(set) && set.setKind !== "DROP";
 }
 
 /** Preserve legacy time/ordinal ordering, using canonical event sequence for same-time new rows. */

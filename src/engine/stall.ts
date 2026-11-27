@@ -1,3 +1,4 @@
+import { countsTowardBest } from "../domain/workout/types";
 import { isWorkingSet } from "../domain/workout/types";
 import type { PerformedSet } from "../domain/workout/types";
 import { findSessionRecords } from "./personalRecords";
@@ -44,7 +45,8 @@ export function buildExerciseHistories(
   for (const session of ordered) {
     const sessionSets = setsBySession.get(session.sessionId) ?? [];
     const records = findSessionRecords(prior, sessionSets);
-    const counted = sessionSets.filter((s) => isWorkingSet(s) && !s.substitutedName && s.reps > 0);
+    // GRAYSON-SET-TYPES-001: a drop set is never a stall's evidence.
+    const counted = sessionSets.filter((s) => countsTowardBest(s) && !s.substitutedName && s.reps > 0);
     const byExercise = new Map<string, PerformedSet[]>();
     for (const set of counted) {
       const list = byExercise.get(set.exerciseId) ?? [];

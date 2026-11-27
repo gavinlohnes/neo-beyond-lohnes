@@ -19,7 +19,7 @@ import { resolveWeekPlanDay } from "../engine/trainingProgrammeResolution";
 import { buildExerciseHistories, deloadStall } from "../engine/stall";
 import { buildBlockReview, estimatedOneRepMax, type BlockReview, type BlockSuggestion } from "../engine/blockReview";
 import { applyRoutineEdit } from "../domain/workout/routineEdit";
-import { WORKOUT_TEMPLATES, isWorkingSet, type ExercisePrescription, type PerformedSet } from "../domain/workout/types";
+import { WORKOUT_TEMPLATES, countsTowardBest, isWorkingSet, type ExercisePrescription, type PerformedSet } from "../domain/workout/types";
 import { WEEK_PLAN_REST } from "../domain/workout/trainingProgramme";
 import {
   blockLastDay,
@@ -209,6 +209,7 @@ export async function getBlockReview(now = new Date()): Promise<BlockReviewView 
     let top: number | null = null;
     for (const s of sets) {
       if (s.exerciseId !== exerciseId || !inWindow(s.recordedAt, from, to)) continue;
+      if (!countsTowardBest(s)) continue;
       const e = estimatedOneRepMax(s.weight, s.reps);
       if (e !== null && (top === null || e > top)) top = e;
     }

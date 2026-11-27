@@ -27,6 +27,9 @@ export interface LibraryExercise {
   equipment: string;
   repRangeLow: number;
   repRangeHigh: number;
+  /** GRAYSON-SET-TYPES-001: held for time, not counted. Absent = reps. */
+  measure?: "REPS" | "TIME";
+  targetSec?: number;
 }
 
 export const EXERCISE_LIBRARY: LibraryExercise[] = [
@@ -88,7 +91,7 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { id: "lib-dip-triceps", name: "Triceps Dip", muscleGroup: "Arms", equipment: "Bodyweight", repRangeLow: 8, repRangeHigh: 15 },
 
   // Core
-  { id: "lib-plank", name: "Plank", muscleGroup: "Core", equipment: "Bodyweight", repRangeLow: 1, repRangeHigh: 3 },
+  { id: "lib-plank", name: "Plank", muscleGroup: "Core", equipment: "Bodyweight", repRangeLow: 1, repRangeHigh: 3, measure: "TIME", targetSec: 30 },
   { id: "lib-hanging-leg-raise", name: "Hanging Leg Raise", muscleGroup: "Core", equipment: "Bodyweight", repRangeLow: 8, repRangeHigh: 15 },
   { id: "lib-cable-crunch", name: "Cable Crunch", muscleGroup: "Core", equipment: "Cable", repRangeLow: 12, repRangeHigh: 15 },
   { id: "lib-russian-twist", name: "Russian Twist", muscleGroup: "Core", equipment: "Bodyweight", repRangeLow: 15, repRangeHigh: 20 },
@@ -98,7 +101,7 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { id: "lib-kettlebell-swing", name: "Kettlebell Swing", muscleGroup: "Full Body", equipment: "Kettlebell", repRangeLow: 12, repRangeHigh: 20 },
   { id: "lib-clean-and-press", name: "Clean and Press", muscleGroup: "Full Body", equipment: "Barbell", repRangeLow: 5, repRangeHigh: 8 },
   { id: "lib-burpee", name: "Burpee", muscleGroup: "Full Body", equipment: "Bodyweight", repRangeLow: 10, repRangeHigh: 20 },
-  { id: "lib-farmers-carry", name: "Farmer's Carry", muscleGroup: "Full Body", equipment: "Dumbbell", repRangeLow: 1, repRangeHigh: 3 },
+  { id: "lib-farmers-carry", name: "Farmer's Carry", muscleGroup: "Full Body", equipment: "Dumbbell", repRangeLow: 1, repRangeHigh: 3, measure: "TIME", targetSec: 40 },
 ];
 
 /** Case-insensitive match against name, muscle group, or equipment. Empty/whitespace query returns the full list. */

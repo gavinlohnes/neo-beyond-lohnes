@@ -20,6 +20,7 @@ import {
   type RoutineEditOp,
 } from "../../../domain/workout/routineEdit";
 import type { ExercisePrescription } from "../../../domain/workout/types";
+import { formatHold, isTimed, targetSecOf, TIMED_STEP_SEC, TIMED_TARGET_MAX_SEC, TIMED_TARGET_MIN_SEC } from "../../../domain/workout/types";
 import { restSecondsFor } from "../../../application/restMemory";
 import { feedback } from "../../feel/feedback";
 import { describeError } from "../../errorMessage";
@@ -160,7 +161,8 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
     return <ExercisePicker title={swapping ? `Swap ${swapping.name} for…` : "Add an exercise"} taken={new Set(exercises.flatMap((ex) => [ex.exerciseId, `name:${ex.name.trim().toLowerCase()}`]))}
       onCancel={() => { pendingFocus.current = picker.swapIndex !== null ? `${rowKey(exercises[picker.swapIndex]!)}-menu` : `${id}-add`; setPicker(null); }}
       onPick={(choice) => {
-        const pick = { exerciseId: choice.exerciseId, name: choice.name, repRangeLow: choice.repRangeLow, repRangeHigh: choice.repRangeHigh, incrementLbs: choice.incrementLbs };
+        const pick = { exerciseId: choice.exerciseId, name: choice.name, repRangeLow: choice.repRangeLow, repRangeHigh: choice.repRangeHigh, incrementLbs: choice.incrementLbs,
+          ...(choice.measure === "TIME" ? { measure: choice.measure, targetSec: choice.targetSec } : {}) };
         setPicker(null);
         // Focus returns to the exercise just placed (review of #730), not the page.
         const placed = `${rowKey({ ...pick, sets: 0 })}-menu`;
@@ -207,12 +209,18 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
             <Stepper label="Sets" value={String(ex.sets)} name={ex.name} disabled={busy}
               onLess={ex.sets > ROUTINE_SETS_MIN ? () => step({ sets: ex.sets - 1 }) : undefined}
               onMore={ex.sets < ROUTINE_SETS_MAX ? () => step({ sets: ex.sets + 1 }) : undefined} />
+            {/* GRAYSON-SET-TYPES-001: a timed exercise has a target hold, 5 s steps, instead of a rep range. */}
+            {isTimed(ex) ? <Stepper label="Target time" value={formatHold(targetSecOf(ex))} name={ex.name} disabled={busy} unit="5 seconds"
+              onLess={targetSecOf(ex) > TIMED_TARGET_MIN_SEC ? () => step({ targetSec: targetSecOf(ex) - TIMED_STEP_SEC }) : undefined}
+              onMore={targetSecOf(ex) < TIMED_TARGET_MAX_SEC ? () => step({ targetSec: targetSecOf(ex) + TIMED_STEP_SEC }) : undefined} />
+            : <>
             <Stepper label="Reps from" value={String(ex.repRangeLow)} name={ex.name} disabled={busy}
               onLess={ex.repRangeLow > ROUTINE_REPS_MIN ? () => step({ repRangeLow: ex.repRangeLow - 1 }) : undefined}
               onMore={ex.repRangeLow < ex.repRangeHigh ? () => step({ repRangeLow: ex.repRangeLow + 1 }) : undefined} />
             <Stepper label="Reps to" value={String(ex.repRangeHigh)} name={ex.name} disabled={busy}
               onLess={ex.repRangeHigh > ex.repRangeLow ? () => step({ repRangeHigh: ex.repRangeHigh - 1 }) : undefined}
               onMore={ex.repRangeHigh < ROUTINE_REPS_MAX ? () => step({ repRangeHigh: ex.repRangeHigh + 1 }) : undefined} />
+            </>}
             <Stepper label="Rest" value={rest === undefined ? "Usual" : formatRest(rest)} name={ex.name} disabled={busy} unit="15 seconds"
               onLess={base > ROUTINE_REST_MIN_SECONDS ? () => step({ restSeconds: clamp(base - REST_STEP, ROUTINE_REST_MIN_SECONDS, ROUTINE_REST_MAX_SECONDS) }) : undefined}
               onMore={base < ROUTINE_REST_MAX_SECONDS ? () => step({ restSeconds: clamp(base + REST_STEP, ROUTINE_REST_MIN_SECONDS, ROUTINE_REST_MAX_SECONDS) }) : undefined} />
@@ -220,6 +228,8 @@ export function RoutineEditor({ routine, workoutActive, onCancel, onDone }: {
           <div className="routine-row__extras">
             {rest !== undefined && <button type="button" className="btn-secondary routine-inline" disabled={busy} onClick={() => step({ restSeconds: undefined })}
               aria-label={`${ex.name}: use my usual rest`}>USE MY USUAL REST</button>}
+            <label className="routine-option"><input type="checkbox" checked={isTimed(ex)} disabled={busy}
+              onChange={(e) => step({ measure: e.target.checked ? "TIME" : "REPS" })} /> Timed (hold for time)</label>
             {i < exercises.length - 1 && <label className="routine-option"><input type="checkbox" checked={ex.supersetWithNext === true} disabled={busy}
               onChange={(e) => step({ supersetWithNext: e.target.checked })} /> Superset with next</label>}
           </div>

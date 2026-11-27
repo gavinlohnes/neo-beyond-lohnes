@@ -10,7 +10,7 @@ import { getWeeklySummary } from "./weeklyQueries";
 import { getReasoningKnowledge } from "./learningQueries";
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
-import { isWorkingSet } from "../domain/workout/types";
+import { countsTowardBest } from "../domain/workout/types";
 import type { WhyTrace } from "../domain/intelligence/types";
 import { DELOAD_FRACTION, RE_ENTRY_DAYS, RE_ENTRY_FRACTION } from "../engine/progression";
 import { STALL_SESSIONS } from "../engine/stall";
@@ -41,7 +41,7 @@ export async function getCoachCards(now = new Date(), suggestedVariant: "STANDAR
       const advice = await getProgressionSuggestion(template, variant, ex.exerciseId, now);
       if (!["DELOAD", "RE_ENTRY", "REDUCE"].includes(advice.recommendation)) continue;
       const sets = (await db.performedSets.where("exerciseId").equals(ex.exerciseId).toArray() as unknown as PerformedSet[])
-        .filter((s) => finished.has(s.sessionId) && !undone.has(s.id) && isWorkingSet(s) && !s.substitutedName && s.reps > 0)
+        .filter((s) => finished.has(s.sessionId) && !undone.has(s.id) && countsTowardBest(s) && !s.substitutedName && s.reps > 0)
         .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt) || a.id.localeCompare(b.id));
       const last = sets.slice(-3).reverse();
       cards.push({ id: `TRAIN:${template}:${variant}:${ex.exerciseId}`, key: key("TRAIN", [template, variant, ex.exerciseId, advice, sets.slice(-16).map((s) => [s.id, s.weight, s.reps])]), title: ex.name, evidence: advice.reason, destination: "TRAIN",

@@ -9,7 +9,7 @@
   it). No new table or Dexie version; optional fields only, so every older event and backup reads unchanged.
   Independent exact-head review, green CI; Gavin merges.
 - **Starting commit:** `origin/master` with the five TRAIN basics (GRAYSON-TRAIN-BASICS B1–B5) merged. Re-fetch before
-  starting.
+  starting. Built from `234c1202` (BLOCK-CYCLE-001 merged as #746).
 - **Builder:** Claude Code, TRAIN lane. Branch `claude/grayson-set-types-001`. **Reviewer:** a fresh-context reviewer.
 - **Order:** Claude Code, after the TRAIN basics, in [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md).
 
