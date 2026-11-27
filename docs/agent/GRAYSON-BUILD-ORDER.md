@@ -37,9 +37,9 @@ PR open at a time across both sessions, a fresh-context reviewer on every PR, Ga
 | T5 | 4 to 6 week blocks and the block review | [GRAYSON-BLOCK-CYCLE-001](GRAYSON-BLOCK-CYCLE-001.md) | Claude Code | T4 | PROTECTED |
 | T6 | Drop, failure and timed sets | [GRAYSON-SET-TYPES-001](GRAYSON-SET-TYPES-001.md) | Claude Code | T5 | PROTECTED |
 | T7 | The open exercise library | [GRAYSON-OPEN-LIBRARY-001](GRAYSON-OPEN-LIBRARY-001.md) | Claude Code | T6 | PROTECTED |
-| X3 | TRAIN home check | no brief: Gavin's phone check of TRAIN's home screen once T5 merges | Gavin | T5 | — |
+| X3 | TRAIN as the one home for training | [GRAYSON-TRAIN-HOME-001](GRAYSON-TRAIN-HOME-001.md) | Claude Code | T7 | FEATURE (Gavin merges in 1.0) |
 
-**Merged so far (2026-11-26):** X1 #733, F1 #736, F2 #737 and #739, F3 #740, F4 #738, T1 #730, T2 #735. T3 is open as #734.
+**Merged so far (2026-11-27):** X1 #733 and #744, F1 #736, F2 #737 and #739, F3 #740, F4 #738, X2 #743, T1 #730, T2 #735, T3 #734, T4 #742, T5 #746. X4 slice A is open as #745.
 
 **Checkpoint:** 1.0 merged and phone-checked by Fri Dec 4, so the first 4-week block on GRAYSON alone (no Hevy, MuscleWiki or Couch to 5K) starts Mon Dec 7. X4 joined 1.0 on Gavin's **"Yes"**, 14:48 CT.
 
