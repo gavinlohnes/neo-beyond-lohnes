@@ -1,0 +1,9 @@
+/* GRAYSON-HOME-STRETCH-001 slice A: HOME beside the gym start. Calm, no colour of its own. */
+.home-start { margin-top: 12px; }
+.home-start .meta { margin: 0 0 8px; }
+.home-start__go { width: 100%; min-height: 44px; }
+.home-start__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.home-start__actions button { flex: 1 1 96px; min-height: 44px; }
+.home-start__pick { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.home-start__pick select { min-height: 44px; font-size: 16px; width: 100%; }
+.home-start--review h3 { margin: 0 0 8px; overflow-wrap: break-word; }

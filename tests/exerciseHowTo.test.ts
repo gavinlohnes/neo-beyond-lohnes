@@ -22,8 +22,8 @@ const ORIGINAL_TEN: Record<string, { role: string; setup: string; cues: string[]
 afterEach(() => localStorage.clear());
 
 describe("GRAYSON-TRAIN-HOWTO-001 guides", () => {
-  it("covers all 54 library exercises with a role, setup, exactly three cues and one or two mistakes", () => {
-    expect(EXERCISE_LIBRARY).toHaveLength(54);
+  it("covers all 64 library exercises (54, plus GRAYSON-HOME-STRETCH-001's ten home moves) with a role, setup, exactly three cues and one or two mistakes", () => {
+    expect(EXERCISE_LIBRARY).toHaveLength(64);
     expect(Object.keys(EXERCISE_HOW_TO).sort()).toEqual(EXERCISE_LIBRARY.map((e) => e.id).sort());
     for (const lib of EXERCISE_LIBRARY) {
       const g = EXERCISE_HOW_TO[lib.id]!;
@@ -37,7 +37,8 @@ describe("GRAYSON-TRAIN-HOWTO-001 guides", () => {
   });
 
   it("maps the ten built-ins to library ids with their text unchanged", () => {
-    expect(Object.keys(TEMPLATE_TO_LIBRARY_ID).sort()).toEqual(Object.keys(ORIGINAL_TEN).sort());
+    // GRAYSON-HOME-STRETCH-001 adds the two HOME moves that are library moves already.
+    expect(Object.keys(TEMPLATE_TO_LIBRARY_ID).sort()).toEqual([...Object.keys(ORIGINAL_TEN), "home-glute-bridge", "home-plank"].sort());
     for (const [templateId, original] of Object.entries(ORIGINAL_TEN)) {
       const libId = TEMPLATE_TO_LIBRARY_ID[templateId]!;
       expect(EXERCISE_LIBRARY.some((e) => e.id === libId), libId).toBe(true);
