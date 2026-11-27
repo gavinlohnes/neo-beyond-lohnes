@@ -27,6 +27,8 @@ export function HomeStartChoice({ busy, startDisabled, refreshKey, onStart, onCh
   const [working, setWorking] = useState(false);
   const writing = useRef(false);
   const reviewRef = useRef<HTMLHeadingElement>(null);
+  const goRef = useRef<HTMLButtonElement>(null);
+  const focusGo = useRef(false);
 
   useEffect(() => {
     let live = true;
@@ -34,6 +36,8 @@ export function HomeStartChoice({ busy, startDisabled, refreshKey, onStart, onCh
     return () => { live = false; };
   }, [refreshKey, tick]);
   useEffect(() => { if (review && !review.changing) reviewRef.current?.focus(); }, [review?.ids.join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  // After USE THESE, focus lands on START AT HOME instead of falling back to the page.
+  useEffect(() => { if (focusGo.current && home?.kind === "LINKED") { focusGo.current = false; goRef.current?.focus(); } }, [home]);
 
   async function run(action: () => Promise<void>, failure: string) {
     if (writing.current || busy) return;
@@ -49,7 +53,11 @@ export function HomeStartChoice({ busy, startDisabled, refreshKey, onStart, onCh
     await run(async () => {
       const made = await prepareHomeTemplates();
       if (home?.kind === "SETUP_SEQUENCE") {
-        setReview({ ids: made.map((t) => t.id) as [string, string, string], names: made.map((t) => t.name) as [string, string, string], changing: false, choices: [] });
+        // His working links stay; HOME A, B or C fills only a missing or broken one.
+        const choices = await getHomeTemplateChoices();
+        const ids = home.members.map((m, i) => m.homeId ?? made[i]!.id) as [string, string, string];
+        const names = ids.map((id) => choices.find((c) => c.id === id)?.name ?? made.find((t) => t.id === id)?.name ?? "") as [string, string, string];
+        setReview({ ids, names, changing: false, choices: [] });
       } else {
         setTick((n) => n + 1);
         onChanged?.();
@@ -68,6 +76,7 @@ export function HomeStartChoice({ busy, startDisabled, refreshKey, onStart, onCh
     if (!review) return;
     await run(async () => {
       await linkHomeForms(review.ids);
+      focusGo.current = true;
       setReview(null);
       setTick((n) => n + 1);
       onChanged?.();
@@ -117,7 +126,7 @@ export function HomeStartChoice({ busy, startDisabled, refreshKey, onStart, onCh
     return (
       <section className="home-start" aria-label="Train at home">
         <p className="meta">Gym closed or short on time? Do {home.key} at home.</p>
-        <button type="button" className="btn-secondary home-start__go" disabled={disabled}
+        <button ref={goRef} type="button" className="btn-secondary home-start__go" disabled={disabled}
           onClick={() => onStart(home.templateId, { programmeRevisionId: home.revisionId, memberKey: home.key, parentTemplateId: home.parentTemplateId, form: "HOME" })}>
           START AT HOME · {home.key}
         </button>

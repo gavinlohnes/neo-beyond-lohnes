@@ -73,6 +73,20 @@ describe("TRAIN's HOME choice", () => {
     expect((await getProgrammeView()).sequence?.nextMember?.templateId).toBe(gym[1]!.id);
   });
 
+  it("#745 review: SET UP HOME keeps his working links; a HOME routine he edited to hold a gym move is named on refusal", async () => {
+    const gym = await createCustomTemplateSet((["Gym A", "Gym B", "Gym C"] as const).map((name, i) => ({ name, exercises: WORKOUT_TEMPLATES[(["A", "B", "C"] as const)[i]!]!.exercises })));
+    await saveTrainingProgramme(buildSequenceProgramme(gym.map((t) => t.id) as [string, string, string], gym), null);
+    const homes = await prepareHomeTemplates();
+    // He links C → HOME A, B → HOME B, A → HOME C; then HOME C (A's link) changes, so A's link breaks.
+    await linkHomeForms([homes[2]!.id, homes[1]!.id, homes[0]!.id]);
+    await updateCustomTemplate(homes[2]!.id, { exercises: homes[2]!.exercises.slice(0, 2) });
+    const start = await getHomeStart();
+    expect(start).toMatchObject({ kind: "SETUP_SEQUENCE", members: [{ key: "A", homeId: null }, { key: "B", homeId: homes[1]!.id }, { key: "C", homeId: homes[0]!.id }] });
+    // A routine with a gym move in it is refused by name.
+    await updateCustomTemplate(homes[1]!.id, { exercises: [...homes[1]!.exercises, WORKOUT_TEMPLATES.A!.exercises[0]!] });
+    await expect(linkHomeForms([homes[2]!.id, homes[1]!.id, homes[0]!.id])).rejects.toThrow("HOME B has a gym move in it");
+  });
+
   it("a stale programme refuses the link and saves nothing", async () => {
     const gym = await createCustomTemplateSet((["Gym A", "Gym B", "Gym C"] as const).map((name, i) => ({ name, exercises: WORKOUT_TEMPLATES[(["A", "B", "C"] as const)[i]!]!.exercises })));
     const homes = await prepareHomeTemplates();

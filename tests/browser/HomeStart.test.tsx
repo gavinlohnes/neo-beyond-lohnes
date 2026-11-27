@@ -51,6 +51,8 @@ describe("HOME on TRAIN", () => {
     await screen.getByRole("button", { name: "USE THESE", exact: true }).click();
     const go = screen.getByRole("button", { name: "START AT HOME · B", exact: true });
     await expect.element(go).toBeVisible();
+    // #745 review: focus lands on START AT HOME, not the page.
+    await expect.poll(() => document.activeElement === go.element()).toBe(true);
     await expect.element(screen.getByText("Gym closed or short on time? Do B at home.")).toBeVisible();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/start-at-home-360.png`, element: region()! });
     await go.click();

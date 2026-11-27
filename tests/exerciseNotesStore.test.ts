@@ -53,4 +53,13 @@ describe("GRAYSON-TRAIN-NOTES-001 exercise notes", () => {
     applySettingsBlock(block);
     expect(readExerciseNote("lib-lat-pulldown")).toBe("Thigh pad snug");
   });
+  it("GRAYSON-HOME-STRETCH-001: a note saved under home-plank before it mapped to Plank still shows; saving moves it to the shared key", () => {
+    localStorage.setItem(EXERCISE_NOTES_KEY, JSON.stringify({ "home-plank": { text: "Elbows on the mat", updatedAt: "2026-11-01T00:00:00.000Z" } }));
+    expect(readExerciseNote("home-plank")).toBe("Elbows on the mat");
+    writeExerciseNote("home-plank", "Squeeze glutes");
+    expect(readExerciseNote("lib-plank")).toBe("Squeeze glutes");
+    expect(Object.keys(JSON.parse(localStorage.getItem(EXERCISE_NOTES_KEY)!))).toEqual(["lib-plank"]);
+    writeExerciseNote("home-plank", "");
+    expect(readExerciseNote("home-plank")).toBeNull(); // cleared, and the old one doesn't come back
+  });
 });

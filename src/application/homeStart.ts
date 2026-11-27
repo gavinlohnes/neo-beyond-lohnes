@@ -15,7 +15,7 @@ import type { CustomWorkoutTemplate } from "../domain/workout/customTemplate";
  */
 export type HomeStart =
   | { kind: "LINKED"; key: "A" | "B" | "C"; templateId: string; name: string; revisionId: string; parentTemplateId: string }
-  | { kind: "SETUP_SEQUENCE"; members: { key: "A" | "B" | "C"; name: string }[] }
+  | { kind: "SETUP_SEQUENCE"; members: { key: "A" | "B" | "C"; name: string; homeId: string | null }[] }
   | { kind: "DIRECT"; homes: { id: string; name: string }[] }
   | { kind: "SETUP_DIRECT" };
 
@@ -32,7 +32,8 @@ export async function getHomeStart(now: Date = new Date()): Promise<HomeStart | 
     if (next.home && !next.home.issue) {
       return { kind: "LINKED", key: next.key, templateId: next.home.templateId, name: next.home.name, revisionId: view.revision.id, parentTemplateId: next.templateId };
     }
-    return { kind: "SETUP_SEQUENCE", members: sequence.members.map((m) => ({ key: m.key, name: m.name })) };
+    // His existing links stay the proposal where they still work; only the missing or broken ones get a default.
+    return { kind: "SETUP_SEQUENCE", members: sequence.members.map((m) => ({ key: m.key, name: m.name, homeId: m.home && !m.home.issue ? m.home.templateId : null })) };
   }
   const homes = templates.filter(isHome).sort((a, b) => a.name.localeCompare(b.name)).map((t) => ({ id: t.id, name: t.name }));
   return homes.length ? { kind: "DIRECT", homes } : { kind: "SETUP_DIRECT" };
@@ -73,6 +74,9 @@ export async function linkHomeForms(ids: [string, string, string], now: Date = n
   if (view.revision.programme?.mode !== "SEQUENCE" || !view.sequence?.nextMember || !view.revision.id) {
     throw new Error("Your programme changed. Look again before linking.");
   }
+  // Name a routine that isn't bodyweight-only (he may have edited one), rather than a general refusal.
+  const loaded = ids.map((id) => templates.find((t) => t.id === id)).find((t) => t && !isHome(t));
+  if (loaded) throw new Error(`${loaded.name.replace(/^Grayson /, "")} has a gym move in it, so it can't be a HOME form. Choose another, or edit it in ROUTINES.`);
   const linked = linkSequenceHomeForms(view.revision.programme, ids, templates, view.sequence.nextMember.templateId);
   await saveTrainingProgramme(linked, view.revision.id);
 }
