@@ -30,7 +30,8 @@ export function effectiveBlocks(history: BlockState["history"]): TrainingBlock[]
     if (payload.reason === "UNDO" && payload.undoesEventId) {
       const index = history.findIndex((h) => h.eventId === payload.undoesEventId);
       state = index > 0 ? states[index - 1]! : { current: null, finished: [] };
-    } else if (payload.reason === "NEXT") {
+    } else if (payload.reason === "NEXT" || (payload.reason === "START" && state.current && payload.block && state.current.startDate < payload.block.startDate)) {
+      // NEXT, or START after an earlier block (review of #746): the earlier block is finished and still counts.
       state = { current: payload.block, finished: state.current ? [...state.finished, state.current] : state.finished };
     } else {
       state = { current: payload.block, finished: state.finished };

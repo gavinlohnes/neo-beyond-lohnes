@@ -65,8 +65,10 @@ export function comingMonday(now: Date): string {
 
 /** START A BLOCK: 5 weeks, no focus, lighter last week, by default. */
 export async function startBlock(input: { weeks?: number; focus?: string[]; lightLastWeek?: boolean } = {}, now = new Date()): Promise<string> {
-  const { settings } = await getBlockState();
-  return write({ startDate: comingMonday(now), weeks: input.weeks ?? 5, focus: input.focus ?? [], lightLastWeek: input.lightLastWeek ?? true }, settings, "START");
+  const { block, settings } = await getBlockState();
+  // A lighter start he accepted in the last block's review carries into a block started this way too (review of #746).
+  const drops = block?.pendingDrops;
+  return write({ startDate: comingMonday(now), weeks: input.weeks ?? 5, focus: input.focus ?? [], lightLastWeek: input.lightLastWeek ?? true, ...(drops ? { weightDrops: drops } : {}) }, settings, "START");
 }
 
 /** Change the running block's length, focus or light week. */

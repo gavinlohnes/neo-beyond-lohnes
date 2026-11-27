@@ -202,6 +202,19 @@ describe("review of #746", () => {
     expect((await lightWeekSessionIds()).has(w.s.id)).toBe(true);
   });
 
+  it("START A BLOCK after a finished block keeps that block's light week out of progression, and carries its lighter starts", async () => {
+    await startBlock({ weeks: 4 });
+    const w = await lightWorkout();
+    await completeWorkout(w.day.id, w.s.id, "STANDARD", "PARTIAL");
+    vi.setSystemTime(at(2027, 0, 3));
+    await acceptBlockSuggestion({ id: "DROP:leg-press", kind: "DROP", exerciseId: "leg-press", percent: 10, text: "", why: "" });
+    expect((await lightWeekSessionIds()).has(w.s.id)).toBe(true);
+    await startBlock({ weeks: 5 });
+    expect((await lightWeekSessionIds()).has(w.s.id)).toBe(true);
+    vi.setSystemTime(at(2027, 0, 5));
+    expect(await blockStartWeight("leg-press", 100, 10)).toBe(90);
+  });
+
   it("an accepted lighter start applies to the next block only, once", async () => {
     await startBlock({ weeks: 4 });
     vi.setSystemTime(at(2027, 0, 3));
