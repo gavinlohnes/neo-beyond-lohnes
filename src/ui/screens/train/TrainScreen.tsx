@@ -8,6 +8,7 @@ import { WorkoutRecap } from "./WorkoutRecap";
 import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder } from "../../../domain/workout/types";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
+import { HomeStartChoice } from "./HomeStartChoice";
 import { TrainProgress } from "./TrainProgress";
 import { TrainWindowLine } from "./TrainWindowLine";
 import { DeltaPain, DeltaProposal } from "./DeltaPanels";
@@ -1594,6 +1595,9 @@ export function TrainScreen({
                 : "START WORKOUT"}
           </button>
           {sequenceNeedsReview && <p className="meta">The active sequence cannot name a safe next member from current evidence. Review it below, or use CHANGE to make a direct choice.</p>}
+          {/* GRAYSON-HOME-STRETCH-001 slice A: HOME beside the gym start (its own file; started through handleStart). */}
+          <HomeStartChoice busy={busy} startDisabled={!!session} refreshKey={programmeRefreshKey} onChanged={() => { setProgrammeRefreshKey((value) => value + 1); void refresh(true); }}
+            onStart={(templateId, programmeContext) => { templateChosenRef.current = true; variantChosenRef.current = true; setChosenTemplate(templateId); setChosenVariant("STANDARD"); void handleStart(templateId, "STANDARD", programmeContext); }} />
 
           {/* REAL-DATA-001: see the workout before starting it. The owner's real backup had 10 of 12
               workouts abandoned within seconds; looking should never cost an abandoned session. */}

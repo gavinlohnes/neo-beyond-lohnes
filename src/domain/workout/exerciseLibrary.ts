@@ -99,6 +99,19 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { id: "lib-clean-and-press", name: "Clean and Press", muscleGroup: "Full Body", equipment: "Barbell", repRangeLow: 5, repRangeHigh: 8 },
   { id: "lib-burpee", name: "Burpee", muscleGroup: "Full Body", equipment: "Bodyweight", repRangeLow: 10, repRangeHigh: 20 },
   { id: "lib-farmers-carry", name: "Farmer's Carry", muscleGroup: "Full Body", equipment: "Dumbbell", repRangeLow: 1, repRangeHigh: 3 },
+  // GRAYSON-HOME-STRETCH-001 slice A: the bodyweight HOME A, B and C moves (homeTemplates.ts), under their own home-*
+  // ids so every logged home set keeps its history. Glute Bridge and Plank already exist above, so those two home ids
+  // map to the library entries in TEMPLATE_TO_LIBRARY_ID instead (exerciseHowTo.ts).
+  { id: "home-incline-push-up", name: "Incline Push-Up", muscleGroup: "Chest", equipment: "Bodyweight", repRangeLow: 6, repRangeHigh: 15 },
+  { id: "home-close-grip-push-up", name: "Close-Grip Push-Up", muscleGroup: "Arms", equipment: "Bodyweight", repRangeLow: 5, repRangeHigh: 12 },
+  { id: "home-diamond-push-up", name: "Diamond Push-Up", muscleGroup: "Arms", equipment: "Bodyweight", repRangeLow: 5, repRangeHigh: 12 },
+  { id: "home-pike-push-up", name: "Pike Push-Up", muscleGroup: "Shoulders", equipment: "Bodyweight", repRangeLow: 5, repRangeHigh: 12 },
+  { id: "home-prone-pull-down", name: "Prone Pull-Down", muscleGroup: "Back", equipment: "Bodyweight", repRangeLow: 8, repRangeHigh: 15 },
+  { id: "home-reverse-snow-angel", name: "Reverse Snow Angel", muscleGroup: "Back", equipment: "Bodyweight", repRangeLow: 8, repRangeHigh: 15 },
+  { id: "home-bodyweight-squat", name: "Bodyweight Squat", muscleGroup: "Legs", equipment: "Bodyweight", repRangeLow: 8, repRangeHigh: 20 },
+  { id: "home-split-squat", name: "Split Squat", muscleGroup: "Legs", equipment: "Bodyweight", repRangeLow: 6, repRangeHigh: 15 },
+  { id: "home-dead-bug", name: "Dead Bug", muscleGroup: "Core", equipment: "Bodyweight", repRangeLow: 6, repRangeHigh: 12 },
+  { id: "home-side-plank", name: "Side Plank", muscleGroup: "Core", equipment: "Bodyweight", repRangeLow: 1, repRangeHigh: 3 },
 ];
 
 /** Case-insensitive match against name, muscle group, or equipment. Empty/whitespace query returns the full list. */
