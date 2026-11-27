@@ -5,6 +5,8 @@ import { getSessionRoutinePoint, resolveTemplateExercises } from "./customTempla
 import { getCustomExercises } from "./exerciseLibraryQueries";
 import { getRoutineExerciseChoices, type RoutineExerciseChoice } from "./routineEditQueries";
 import { getUndoneSetIds } from "./trainQueries";
+import { isLightSession } from "./trainingBlockState";
+import { lightSets } from "../domain/workout/trainingBlock";
 import { parseWorkoutPlanChangedPayload } from "../persistence/workoutTemplateValidation";
 import { EXERCISE_LIBRARY } from "../domain/workout/exerciseLibrary";
 import { TEMPLATE_TO_LIBRARY_ID } from "../domain/workout/exerciseHowTo";
@@ -49,7 +51,10 @@ export async function getWorkoutPlan(session: Pick<WorkoutSession, "id" | "start
     resolveTemplateExercises(templateId, session.sessionType === "REDUCED" ? "REDUCED" : "STANDARD", point),
     planEvents(),
   ]);
-  return { ...projectWorkoutPlan(todayBase, routineBase, sessionPlanChanges(events, session.id, parseWorkoutPlanChangedPayload)), routineBase };
+  // GRAYSON-BLOCK-CYCLE-001: a light week's workout has fewer sets of the same exercises; the routine doesn't change.
+  const light = await isLightSession(session);
+  const today = light ? todayBase.map((ex) => ({ ...ex, sets: lightSets(ex.sets, light.lightFraction) })) : todayBase;
+  return { ...projectWorkoutPlan(today, routineBase, sessionPlanChanges(events, session.id, parseWorkoutPlanChangedPayload)), routineBase };
 }
 
 async function liveSets(sessionId: string): Promise<PerformedSet[]> {
@@ -239,4 +244,24 @@ export async function saveSessionAsRoutine(sessionId: string, name: string): Pro
   if (!draft) throw fail("ONE_OFF_EMPTY", "Nothing was logged, so there's nothing to save.");
   const template = await createCustomTemplate({ name: name.trim() || draft.name, exercises: draft.exercises });
   return { templateId: template.id };
+}
+
+/**
+ * GRAYSON-BLOCK-CYCLE-001: the best same-muscle move for an exercise outside a workout (the block review's swap), by
+ * the same ranker as SWAP. Null when the exercise has no muscle group on file or nothing else fits.
+ */
+export async function getSameMuscleMove(exerciseId: string, exclude: ReadonlySet<string>, now = new Date()): Promise<SwapSuggestion | null> {
+  const [candidates, last] = await Promise.all([swapCandidates(), lastByExercise()]);
+  const muscleGroup = candidates.find((c) => c.exerciseId === exerciseId)?.muscleGroup ?? libraryFor(exerciseId)?.muscleGroup ?? null;
+  if (!muscleGroup) return null;
+  const since = new Date(now.getTime() - RECENT_EQUIPMENT_DAYS * 86_400_000).toISOString();
+  const equipmentOf = new Map(candidates.map((c) => [c.exerciseId, c.equipment]));
+  const recentEquipment = new Set([...last].filter(([, l]) => l.at >= since).flatMap(([id]) => (equipmentOf.has(id) ? [equipmentOf.get(id)!] : [])));
+  return rankSwapSuggestions({ muscleGroup, candidates, exclude: new Set([...exclude, exerciseId]), recentEquipment, lastByExercise: last, limit: 1 })[0] ?? null;
+}
+
+/** The muscle group on file for an exercise (his own, A/B/C's via the library, or the library's). */
+export async function muscleGroupOf(exerciseId: string): Promise<string | null> {
+  const candidates = await swapCandidates();
+  return candidates.find((c) => c.exerciseId === exerciseId)?.muscleGroup ?? libraryFor(exerciseId)?.muscleGroup ?? null;
 }

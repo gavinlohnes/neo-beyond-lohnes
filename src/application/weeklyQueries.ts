@@ -13,6 +13,7 @@ import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
 import { projectFindings, type FindingsResult } from "../engine/findings";
+import { lightWeekSessionIds } from "./trainingBlockState";
 import { getPartialDayIds } from "./foodDayMark";
 import { projectExpenditure, type ExpenditureReadout } from "../engine/expenditure";
 import { proposeCalorieTarget, WEIGHT_MAX_AGE_DAYS, type CalorieProposal, type CurrentWeight } from "./targetProposal";
@@ -189,7 +190,9 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
   for (const t of await getCustomTemplates({ includeArchived: true })) templateLabels[t.id] = t.name;
 
   // Read-only findings: the same ledger, plus every logged set (undone ones removed).
-  const findings = projectFindings({ summaries: daySummaries, sets: allSets, schedule: await getSchedulePattern(), now });
+  // GRAYSON-BLOCK-CYCLE-001: a light week's sets (fewer by plan) aren't evidence of a stall.
+  const lightIds = await lightWeekSessionIds();
+  const findings = projectFindings({ summaries: daySummaries, sets: allSets.filter((s) => !lightIds.has(s.sessionId)), schedule: await getSchedulePattern(), now });
   const exerciseNames: Record<string, string> = {};
   for (const f of findings.findings) {
     if (f.kind === "STALL" || f.kind === "EXERCISE_STORY") exerciseNames[f.exerciseId] = names.get(f.exerciseId) ?? f.exerciseId;

@@ -31,6 +31,7 @@ import type {
 } from "../domain/workout/types";
 import type { DomainEvent, ExerciseCueSetPayload, SetUndonePayload, WorkoutSession } from "../domain/common/types";
 import { getCustomTemplates, resolvePrescription, resolveTemplateExercises } from "./customTemplateQueries";
+import { lightWeekSessionIds } from "./trainingBlockState";
 import { byTimeThenSeq } from "./queries";
 
 /**
@@ -178,8 +179,10 @@ export async function getProgressionSuggestion(
   if (allSessions.some((session) => session.templateId === templateId && session.programmeContext?.form === "HOME")) {
     return { recommendation: "NO_HISTORY", reason: "HOME uses bodyweight work; loaded progression, re-entry and deload do not apply." };
   }
+  // GRAYSON-BLOCK-CYCLE-001: a light week's sessions (fewer sets by plan) never count as a miss or a stall.
+  const light = await lightWeekSessionIds();
   const sessions = allSessions
-    .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE")
+    .filter((s) => s.templateId === templateId && s.sessionType === sessionType && s.status !== "ACTIVE" && !light.has(s.id))
     .sort((a, b) => (a.endedAt ?? a.startedAt).localeCompare(b.endedAt ?? b.startedAt));
   // PERF-001: this exercise's live sets, read once and grouped by session, instead of two reads per past session.
   // The newest session that has any still wins, with its sets in the same index order getPerformedSets returns.
@@ -196,7 +199,7 @@ export async function getProgressionSuggestion(
       // DELOAD (4.0-b slice 1): the lift's stall across every finished session, any template or variant, judged
       // for records with the stall finding's own rule (engine/stall.ts).
       const finished = allSessions
-        .filter((s) => s.status === "COMPLETED" || s.status === "PARTIAL")
+        .filter((s) => (s.status === "COMPLETED" || s.status === "PARTIAL") && !light.has(s.id))
         .map((s) => ({ sessionId: s.id, startedAt: s.startedAt }));
       const history = buildExerciseHistories(finished, [...bySession.values()].flat()).get(exerciseId) ?? [];
       return evaluateProgression(prescription, sets, {

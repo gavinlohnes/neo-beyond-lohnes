@@ -1,6 +1,7 @@
 import { getActiveDay, hasActivePlannedWork } from "./queries";
 import { getActiveWorkoutSession, getLastAdvancingTemplate, getProgressionSuggestion, getUndoneSetIds } from "./trainQueries";
 import { getProgrammeView } from "./trainingProgrammeQueries";
+import { getBlockView } from "./trainingBlock";
 import { resolveTemplateExercises } from "./customTemplateQueries";
 import { getWorkoutPlan } from "./workoutChanges";
 import { suggestNextTemplate } from "../engine/trainSuggestion";
@@ -68,6 +69,13 @@ export async function getCoachCards(now = new Date(), suggestedVariant: "STANDAR
     const s = delta.suggestion;
     cards.push({ id: `DELTA:${s.tag}`, key: key("DELTA", s), title: s.what, evidence: `After ${s.withDays} noted days with #${s.tag}, next-day sleep was ${s.minutesLess} minutes shorter than after ${s.withoutDays} other noted days. A pattern, not proof of a cause. Review the ${s.days}-day test before starting.`, destination: "DELTA",
       why: { rule: "A tag pattern in your notes and next-day sleep. A pattern, not proof of a cause.", facts: [{ label: "Tag", value: `#${s.tag}` }, { label: "Days with it", value: `${s.withDays} noted days` }, { label: "Other days", value: `${s.withoutDays} noted days` }, { label: "Next-day sleep", value: `${s.minutesLess} minutes shorter with it` }] } });
+  }
+  // GRAYSON-BLOCK-CYCLE-001: on the block's last day, one card offers its review. It opens TRAIN; nothing is applied.
+  const block = await getBlockView(now).catch(() => null);
+  if (block?.block && block.reviewReady && block.week !== null) {
+    cards.push({ id: `BLOCK:${block.block.startDate}`, key: key("BLOCK", [block.block.startDate, block.block.weeks]), title: "Your block ends today. Review it?",
+      evidence: `${block.block.weeks} weeks from ${shortDate(`${block.block.startDate}T12:00:00`)}. The review shows sessions, main lifts, stalls and weight, with up to three changes you accept or skip.`, destination: "TRAIN",
+      why: { rule: "Block review (GRAYSON-BLOCK-CYCLE-001): offered on a block's last day; nothing changes unless you accept.", facts: [{ label: "Block", value: block.line ?? "" }] } });
   }
   return cards;
 }

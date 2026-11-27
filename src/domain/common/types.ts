@@ -320,6 +320,9 @@ export type DomainEventType =
   // under the session's own beyondDayId. Today only; the routine changes only on KEEP FOR NEXT TIME (ROUTINE_EDITED).
   // Payload in domain/workout/workoutChanges.ts.
   | "WORKOUT_PLAN_CHANGED"
+  // GRAYSON-BLOCK-CYCLE-001 (Gavin, 2026-11-25): a training block he started, changed, ended or undid, and his block
+  // settings. Global (no beyondDayId), USER; latest wins. Payload in domain/workout/trainingBlock.ts.
+  | "TRAINING_BLOCK_SET"
   // GRAYSON-TRAIN-STANDARDS-001 (Gavin, 2026-11-24): a sit-and-reach, one-minute sit-up or 1.5-mile run test result,
   // day-scoped to the lived day it was recorded in. Removed through the shared void family (STANDARD_TEST_VOIDED,
   // domain/logVoids.ts) and put back with LOG_VOID_UNDONE; a fix voids the old result and records a new one.
