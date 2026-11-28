@@ -41,6 +41,8 @@ export interface FoodSearchResult {
 }
 
 const FDC_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search";
+/** Values from USDA FoodData Central's /foods/search OpenAPI contract. */
+export const USDA_SEARCH_DATA_TYPES = ["Foundation", "SR Legacy", "Survey (FNDDS)", "Branded"] as const;
 
 // USDA's own stable nutrient ids (https://fdc.nal.usda.gov/) — matched by
 // id, not name, since branded-food nutrient names vary slightly (e.g.
@@ -58,6 +60,7 @@ interface RawFood {
   fdcId?: number;
   description?: string;
   brandOwner?: string;
+  dataType?: string;
   servingSize?: number;
   servingSizeUnit?: string;
   foodNutrients?: RawFoodNutrient[];
@@ -77,6 +80,22 @@ function macroValue(nutrients: RawFoodNutrient[], nutrientId: number, expectedUn
   return match.value;
 }
 
+const GRAM_UNITS = new Set(["G", "GRM", "GRAM", "GRAMS"]);
+const MILLILITER_UNITS = new Set(["ML", "MLT", "MILLILITER", "MILLILITERS"]);
+
+/**
+ * USDA standardizes Branded search nutrients to 100 g or 100 ml even though the row also carries the label's serving
+ * size. Convert back to that serving only when its unit identifies the 100-unit basis. Otherwise keep the nutrients
+ * on their returned basis and say "100 g" rather than presenting a false per-serving claim.
+ */
+function brandedServing(raw: RawFood): { factor: number; description: string } | null {
+  if (raw.dataType !== "Branded" || typeof raw.servingSize !== "number" || !Number.isFinite(raw.servingSize) || raw.servingSize <= 0 || !raw.servingSizeUnit) return null;
+  const unit = raw.servingSizeUnit.trim().toUpperCase();
+  if (GRAM_UNITS.has(unit)) return { factor: raw.servingSize / 100, description: `${raw.servingSize} g` };
+  if (MILLILITER_UNITS.has(unit)) return { factor: raw.servingSize / 100, description: `${raw.servingSize} ml` };
+  return null;
+}
+
 // Excludes rather than defaults-to-zero any food missing one of the four
 // required macros in the expected unit — inventing a 0 would be silent
 // wrong data, which the Trust Contract forbids ("must never pretend to
@@ -94,19 +113,22 @@ function toSearchResult(raw: RawFood): FoodSearchResult | null {
   const fiberG = macroValue(nutrients, NUTRIENT_ID.FIBER, "G");
   const sodiumMg = macroValue(nutrients, NUTRIENT_ID.SODIUM, "MG");
 
-  const servingDescription =
-    typeof raw.servingSize === "number" && raw.servingSizeUnit ? `${raw.servingSize} ${raw.servingSizeUnit}` : "100 g";
+  const serving = brandedServing(raw);
+  const factor = serving?.factor ?? 1;
+  const scaled = (value: number) => value * factor;
+  const servingDescription = serving?.description ?? (raw.dataType === "Branded" ? "100 g"
+    : typeof raw.servingSize === "number" && raw.servingSizeUnit ? `${raw.servingSize} ${raw.servingSizeUnit}` : "100 g");
 
   return {
     fdcId: raw.fdcId,
     description: raw.description,
     ...(raw.brandOwner ? { brandOwner: raw.brandOwner } : {}),
-    calories,
-    proteinG,
-    carbsG,
-    fatG,
-    ...(fiberG !== null ? { fiberG } : {}),
-    ...(sodiumMg !== null ? { sodiumMg } : {}),
+    calories: scaled(calories),
+    proteinG: scaled(proteinG),
+    carbsG: scaled(carbsG),
+    fatG: scaled(fatG),
+    ...(fiberG !== null ? { fiberG: scaled(fiberG) } : {}),
+    ...(sodiumMg !== null ? { sodiumMg: scaled(sodiumMg) } : {}),
     servingDescription,
   };
 }
@@ -123,12 +145,16 @@ export async function searchFoods(query: string, options?: { fetchImpl?: typeof 
   if (!trimmed) return [];
   const doFetch = options?.fetchImpl ?? fetch;
   const url = new URL(FDC_SEARCH_URL);
-  url.searchParams.set("query", trimmed);
-  url.searchParams.set("pageSize", "10");
   url.searchParams.set("api_key", resolveApiKey());
 
   try {
-    const response = await doFetch(url.toString());
+    // USDA's documented GET array filter currently rejects Survey (FNDDS), while the documented POST search accepts
+    // the complete array. Keep the key in the URL and the non-secret criteria in the JSON body.
+    const response = await doFetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: trimmed, pageSize: 10, dataType: USDA_SEARCH_DATA_TYPES }),
+    });
     if (!response.ok) return [];
     const data = (await response.json()) as RawSearchResponse;
     const foods = data.foods ?? [];

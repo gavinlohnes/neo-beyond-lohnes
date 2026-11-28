@@ -11,6 +11,10 @@ import { db } from "../../src/persistence/db";
 /** FOOD-001: MEAL works like MyFitnessPal — protein left on top, search all foods, any amount, barcode. */
 const USDA = { foods: [{ fdcId: 171477, description: "Chicken breast, roasted", servingSize: undefined, foodNutrients: [
   { nutrientId: 1008, unitName: "KCAL", value: 165 }, { nutrientId: 1003, unitName: "G", value: 31 }, { nutrientId: 1005, unitName: "G", value: 0 }, { nutrientId: 1004, unitName: "G", value: 3.6 }] }] };
+const USDA_BRANDED = { foods: [{ fdcId: 2517161, description: "CHEERIOS", dataType: "Branded", brandOwner: "General Mills",
+  servingSize: 20, servingSizeUnit: "GRM", foodNutrients: [
+    { nutrientId: 1008, unitName: "KCAL", value: 359 }, { nutrientId: 1003, unitName: "G", value: 12.8 },
+    { nutrientId: 1005, unitName: "G", value: 74.4 }, { nutrientId: 1004, unitName: "G", value: 6.41 }] }] };
 const OFF = { status: 1, product: { product_name: "Greek Yogurt", brands: "Fage", serving_size: "170 g",
   nutriments: { "energy-kcal_serving": 150, proteins_serving: 17, carbohydrates_serving: 6, fat_serving: 6.5 } } };
 
@@ -63,6 +67,24 @@ describe("FOOD-001", () => {
     await expect.poll(async () => (await db.events.where("beyondDayId").equals(day.id).toArray()).find((e) => e.type === "MEAL_LOGGED")?.payload)
       .toMatchObject({ servings: 1.5, calories: 247.5, proteinG: 46.5 });
     expect((await db.savedMeals.toArray()).map((m) => m.name)).toEqual(["Chicken breast, roasted · 100 g"]);
+  });
+
+  it("shows and logs USDA branded nutrients per the stated serving", async () => {
+    fetchSpy.mockImplementation(async (input: Parameters<typeof window.fetch>[0]) => {
+      const url = String(input);
+      if (url.startsWith("https://api.nal.usda.gov/")) return new Response(JSON.stringify(USDA_BRANDED));
+      throw new Error(`unexpected fetch ${url}`);
+    });
+    const day = await startDay();
+    const screen = await openMeal();
+    await screen.getByRole("searchbox", { name: "Search your meals and foods" }).fill("cheerios");
+    await screen.getByRole("button", { name: "SEARCH ALL FOODS FOR ‘cheerios’" }).click();
+    await expect.element(screen.getByText("General Mills · 72 kcal · 2.6 g protein per 20 g", { exact: true })).toBeVisible();
+    await screen.getByRole("button", { name: "Amount for CHEERIOS" }).click();
+    await expect.element(screen.getByRole("spinbutton", { name: "Amount in grams" })).toHaveValue(20);
+    await screen.getByRole("button", { name: "LOG", exact: true }).click();
+    await expect.poll(async () => (await db.events.where("beyondDayId").equals(day.id).toArray()).find((e) => e.type === "MEAL_LOGGED")?.payload)
+      .toMatchObject({ calories: 71.8, proteinG: 2.6, carbsG: 14.9, fatG: 1.3 });
   });
 
   it("SCAN BARCODE: a typed barcode looks up Open Food Facts, credited, and logs by grams", async () => {
