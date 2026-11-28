@@ -70,7 +70,7 @@ describe("FOOD-001", () => {
   });
 
   it("shows and logs USDA branded nutrients per the stated serving", async () => {
-    fetchSpy.mockImplementation(async (input) => {
+    fetchSpy.mockImplementation(async (input: Parameters<typeof window.fetch>[0]) => {
       const url = String(input);
       if (url.startsWith("https://api.nal.usda.gov/")) return new Response(JSON.stringify(USDA_BRANDED));
       throw new Error(`unexpected fetch ${url}`);
