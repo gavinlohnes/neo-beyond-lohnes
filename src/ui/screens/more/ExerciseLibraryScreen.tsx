@@ -10,6 +10,7 @@ import { getCustomExercises } from "../../../application/exerciseLibraryQueries"
 import { archiveCustomExercise, createCustomExercise, updateCustomExercise } from "../../../application/exerciseLibraryCommands";
 import { formatHold } from "../../../domain/workout/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import "./openLibrary.css";
 import {
   copyOpenExerciseToMine, getOpenLibraryPrefs, getOpenLibrarySource, getVisibleOpenExercises, hideOpenExercise, setShowStretches,
   showHiddenOpenExercises, type OpenLibraryPrefs,
@@ -92,17 +93,13 @@ function LibraryRow({ lib, children }: { lib: LibraryExercise; children: React.R
 /** GRAYSON-OPEN-LIBRARY-001: one open exercise: its muscles and equipment, HOW TO (its steps), EDIT (copy to mine), HIDE. */
 function OpenRow({ ex, busy, onHowTo, onEdit, onHide }: { ex: OpenExercise; busy: boolean; onHowTo: () => void; onEdit: () => void; onHide: () => void }) {
   return (
-    <div className="equipment-row" style={{ marginBottom: 4 }} data-open-exercise={ex.id}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <p className="card-body" style={{ margin: 0 }}>{ex.name}</p>
-          <p className="meta" style={{ margin: 0 }}>{describeOpenExercise(ex)} · open set</p>
-        </div>
-        <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <button type="button" className="btn-secondary howto-open" aria-label={`How to do ${ex.name}`} onClick={onHowTo}>HOW TO</button>
-          <button type="button" className="btn-secondary open-row__act" aria-label={`Copy ${ex.name} into my exercises to edit it`} disabled={busy} onClick={onEdit}>EDIT</button>
-          <button type="button" className="btn-secondary open-row__act" aria-label={`Hide ${ex.name} from search`} disabled={busy} onClick={onHide}>HIDE</button>
-        </div>
+    <div className="equipment-row open-row" data-open-exercise={ex.id}>
+      <p className="card-body" style={{ margin: 0 }}>{ex.name}</p>
+      <p className="meta" style={{ margin: 0 }}>{describeOpenExercise(ex)} · open set</p>
+      <div className="open-row__acts">
+        <button type="button" className="btn-secondary open-row__act" aria-label={`How to do ${ex.name}`} onClick={onHowTo}>HOW TO</button>
+        <button type="button" className="btn-secondary open-row__act" aria-label={`Copy ${ex.name} into my exercises to edit it`} disabled={busy} onClick={onEdit}>EDIT</button>
+        <button type="button" className="btn-secondary open-row__act" aria-label={`Hide ${ex.name} from search`} disabled={busy} onClick={onHide}>HIDE</button>
       </div>
     </div>
   );
