@@ -9,7 +9,7 @@ import { resolveTemplateExercises } from "../../src/application/customTemplateQu
 import { createCustomExercise } from "../../src/application/exerciseLibraryCommands";
 import { getCustomTemplates } from "../../src/application/customTemplateQueries";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
-import { CustomTemplateScreen } from "../../src/ui/screens/more/CustomTemplateScreen";
+import { RoutinesPanel } from "../../src/ui/screens/train/RoutineEditor";
 import { WORKOUT_TEMPLATES } from "../../src/domain/workout/types";
 import { focusAfterSettle } from "./helpers/focus";
 
@@ -150,10 +150,11 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await expect.element(screen.getByRole("button", { name: "Leg Press: reps to down" })).toBeDisabled();
   });
 
-  it("MORE · Custom programs opens the same editor: create from A/B/C movements and the library, rename with UNDO, keyboard move", async () => {
-    const screen = await render(<CustomTemplateScreen />);
-    await expect.element(screen.getByText("No custom templates yet.")).toBeVisible();
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+  // GRAYSON-TRAIN-HOME-001: MORE's ROUTINES · WORKOUTS (was CUSTOM PROGRAMS) opens this same list in TRAIN.
+  it("the routines list: create from A/B/C movements and the library, rename with UNDO, keyboard move, archive", async () => {
+    const screen = await render(<RoutinesPanel workoutActive={false} onChanged={() => {}} onClose={() => {}} />);
+    await expect.element(screen.getByRole("heading", { name: "Routines" })).toBeVisible();
+    await screen.getByRole("button", { name: "NEW ROUTINE" }).click();
     await screen.getByRole("textbox", { name: "Name" }).fill("Pull Day");
     await screen.getByRole("button", { name: "ADD EXERCISE" }).click();
     await screen.getByRole("button", { name: /^Lat Pulldown/ }).click();
@@ -161,7 +162,7 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await screen.getByRole("button", { name: /^Face Pull/ }).click();
     await screen.getByRole("checkbox", { name: "Superset with next" }).click();
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
-    await expect.element(screen.getByRole("group", { name: "My templates" }).getByText("Pull Day", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("list", { name: "Your routines" }).getByText("Pull Day", { exact: true })).toBeVisible();
     const [created] = await getCustomTemplates();
     expect(created!.exercises.map((e) => [e.exerciseId, e.supersetWithNext ?? false, e.incrementLbs])).toEqual([["lat-pulldown", true, 5], ["lib-face-pull", false, 5]]);
 
@@ -177,7 +178,7 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await screen.getByRole("button", { name: "UNDO" }).click();
     await expect.poll(async () => (await getCustomTemplates())[0]!.name).toBe("Pull Day");
     expect((await getCustomTemplates())[0]!.exercises.map((e) => e.exerciseId)).toEqual(["lat-pulldown", "lib-face-pull"]);
-    await screen.getByRole("button", { name: "ARCHIVE" }).click();
-    await expect.element(screen.getByText("No custom templates yet.")).toBeVisible();
+    await screen.getByRole("button", { name: "Archive Pull Day" }).click();
+    await expect.poll(async () => (await getCustomTemplates()).length).toBe(0);
   });
 });

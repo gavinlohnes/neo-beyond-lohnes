@@ -73,3 +73,9 @@
 .timed-set__go { min-height: 56px; font-size: 18px; }
 .timed-set__typed { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; }
 .timed-set__typed .input { min-height: 44px; text-align: center; }
+
+/* GRAYSON-TRAIN-HOME-001: EDIT and ARCHIVE side by side on a routine row; the Archived list below. */
+.routine-list__row-acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.routine-archived { margin-top: 12px; }
+.train-library { margin: 12px 0; }
+.train-library__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }

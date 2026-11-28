@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { resetRoutine, saveRoutineEdit, undoRoutineEdit, type RoutineEditResult } from "../../../application/routineEditCommands";
-import { createCustomTemplate } from "../../../application/customTemplateCommands";
+import { archiveCustomTemplate, createCustomTemplate, unarchiveCustomTemplate } from "../../../application/customTemplateCommands";
 import {
   countOpenMatches,
   filterRoutineExerciseChoices,
   OPEN_CHOICES_SHOWN,
+  getArchivedRoutines,
   getRoutineExerciseChoices,
   getRoutineViews,
   type RoutineExerciseChoice,
@@ -42,7 +43,14 @@ export const formatRest = (seconds: number) => `${Math.floor(seconds / 60)}:${St
 const describeRoutine = (exercises: readonly ExercisePrescription[]) =>
   `${exercises.length} ${exercises.length === 1 ? "exercise" : "exercises"} · ${exercises.reduce((t, ex) => t + ex.sets, 0)} sets`;
 
-export interface RoutineSaved { text: string; eventId: string | null; templateId?: string | null }
+export interface RoutineSaved {
+  text: string;
+  eventId: string | null;
+  /** GRAYSON-HOME-STRETCH-001: the saved gym routine whose existing twin can now be updated. */
+  templateId?: string | null;
+  /** GRAYSON-TRAIN-HOME-001: UNDO of an ARCHIVE. */
+  unarchiveId?: string;
+}
 
 /** The ROUTINES list, with the editor one tap from each row. */
 export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onClose }: {
@@ -52,6 +60,7 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
   onClose: () => void;
 }) {
   const [routines, setRoutines] = useState<RoutineView[] | null>(null);
+  const [archived, setArchived] = useState<{ templateId: string; name: string }[]>([]);
   const [editing, setEditing] = useState<string | "NEW" | null>(initialTemplateId ?? null);
   const [saved, setSaved] = useState<RoutineSaved | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +69,7 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
   const returnFocus = useRef<string | null>(null);
   const id = useId();
 
-  const reload = async () => { setRoutines(await getRoutineViews()); };
+  const reload = async () => { const [views, gone] = await Promise.all([getRoutineViews(), getArchivedRoutines()]); setRoutines(views); setArchived(gone); };
   useEffect(() => { void reload().catch((e) => setError(describeError(e, "Routines are unavailable. Please retry."))); }, []);
   useEffect(() => {
     if (editing) return;
@@ -81,6 +90,27 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
     finally { setBusy(false); }
   };
 
+  // GRAYSON-TRAIN-HOME-001: ARCHIVE moved here from MORE's CUSTOM PROGRAMS: one tap, with UNDO; BRING BACK from Archived.
+  const archive = async (r: RoutineView) => {
+    setBusy(true); setError(null);
+    try {
+      if (await archiveCustomTemplate(r.templateId)) feedback("HEAVY");
+      setSaved({ text: `${r.label} archived.`, eventId: null, unarchiveId: r.templateId });
+      await reload(); await onChanged();
+      requestAnimationFrame(() => headingRef.current?.focus());
+    } catch (e) { setError(describeError(e, "That didn't archive. Nothing changed.")); }
+    finally { setBusy(false); }
+  };
+  const bringBack = async (templateId: string, name: string, undone: boolean) => {
+    setBusy(true); setError(null);
+    try {
+      if (await unarchiveCustomTemplate(templateId)) feedback("MEDIUM");
+      setSaved({ text: undone ? `Undone. ${name} is back.` : `${name} is back in your routines.`, eventId: null });
+      await reload(); await onChanged();
+    } catch (e) { setError(describeError(e, "That didn't come back. Nothing changed.")); }
+    finally { setBusy(false); }
+  };
+
   const open = routines && editing ? (editing === "NEW" ? null : routines.find((r) => r.templateId === editing) ?? null) : null;
   if (routines && editing && (editing === "NEW" || open)) {
     return <RoutineEditor routine={open} workoutActive={workoutActive}
@@ -92,11 +122,13 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
     <h3 id={`${id}-title`} ref={headingRef} tabIndex={-1} className="card-title">Routines</h3>
     <p className="meta">Edit any routine, A, B and C included. A workout you've started keeps its exercises; a change applies from the next one.</p>
     {saved && <p className="routine-saved" role="status">{saved.text}{" "}
-      {saved.eventId && <button type="button" className="btn-secondary routine-inline" disabled={busy} onClick={() => void undo(saved.eventId!)}>UNDO</button>}</p>}
+      {saved.eventId && <button type="button" className="btn-secondary routine-inline" disabled={busy} onClick={() => void undo(saved.eventId!)}>UNDO</button>}
+      {saved.unarchiveId && <button type="button" className="btn-secondary routine-inline" disabled={busy}
+        onClick={() => void bringBack(saved.unarchiveId!, saved.text.replace(/ archived\.$/, ""), true)}>UNDO</button>}</p>}
     {/* GRAYSON-HOME-STRETCH-001 slice C: a routine with a home twin offers UPDATE TWIN after a change. */}
     {saved?.templateId && <HomeTwinNudge templateId={saved.templateId} busy={busy} />}
     {error && <p className="meta meta--error" role="alert">{error}</p>}
-    {!routines ? <p className="meta">Reading routines…</p> : <ul className="routine-list__rows">
+    {!routines ? <p className="meta">Reading routines…</p> : <ul className="routine-list__rows" aria-label="Your routines">
       {routines.map((r) => {
         const rowId = `routine-row-${r.templateId}`;
         return <li key={r.templateId} className="routine-list__row">
@@ -104,11 +136,23 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
             <p className="routine-list__name">{r.label}{r.edited && <span className="meta"> · edited</span>}{r.inProgramme && <span className="meta"> · in your programme</span>}</p>
             <p className="meta">{describeRoutine(r.exercises)}: {r.exercises.map((ex) => ex.name).join(", ")}</p>
           </div>
-          <button id={rowId} type="button" className="btn-secondary routine-inline" disabled={busy} aria-label={`Edit ${r.label}`}
-            onClick={() => { returnFocus.current = rowId; setSaved(null); setEditing(r.templateId); }}>EDIT</button>
+          <div className="routine-list__row-acts">
+            <button id={rowId} type="button" className="btn-secondary routine-inline" disabled={busy} aria-label={`Edit ${r.label}`}
+              onClick={() => { returnFocus.current = rowId; setSaved(null); setEditing(r.templateId); }}>EDIT</button>
+            {!r.builtIn && <button type="button" className="btn-secondary routine-inline" disabled={busy} aria-label={`Archive ${r.label}`}
+              onClick={() => void archive(r)}>ARCHIVE</button>}
+          </div>
         </li>;
       })}
     </ul>}
+    {archived.length > 0 && <section className="routine-archived" aria-labelledby={`${id}-archived`}>
+      <h4 id={`${id}-archived`} className="section-label">Archived</h4>
+      <ul className="routine-list__rows">{archived.map((a) => <li key={a.templateId} className="routine-list__row">
+        <p className="routine-list__name">{a.name}</p>
+        <button type="button" className="btn-secondary routine-inline" disabled={busy} aria-label={`Bring back ${a.name}`}
+          onClick={() => void bringBack(a.templateId, a.name, false)}>BRING BACK</button>
+      </li>)}</ul>
+    </section>}
     <div className="routine-list__acts">
       <button type="button" className="btn-secondary" disabled={busy || !routines} onClick={() => { setSaved(null); setEditing("NEW"); }}>NEW ROUTINE</button>
       <button type="button" className="btn-secondary" onClick={onClose}>BACK</button>

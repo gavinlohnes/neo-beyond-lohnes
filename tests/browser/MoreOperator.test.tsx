@@ -66,7 +66,9 @@ const destinations = [
   ["MISSIONS & OBLIGATIONS", "MORE // MISSIONS & OBLIGATIONS"],
   ["WORK SCHEDULE", "MORE // WORK SCHEDULE"],
   ["EXERCISE LIBRARY", "MORE // EXERCISE LIBRARY"],
-  ["CUSTOM PROGRAMS", "MORE // CUSTOM PROGRAMS"],
+  // GRAYSON-TRAIN-HOME-001: CUSTOM PROGRAMS became ROUTINES · WORKOUTS, which opens TRAIN (its own test below);
+  // the shift checklists are SHIFT ROUTINES.
+  ["SHIFT ROUTINES", "MORE // SHIFT ROUTINES"],
 ] as const;
 
 describe("MORE-OPERATOR-001", () => {
@@ -167,6 +169,16 @@ describe("MORE-OPERATOR-001", () => {
     expect(await db.events.toArray()).toEqual(before);
     expect((await db.workoutSessions.get(session.id))?.status).toBe("ACTIVE");
     expect(await db.performedSets.where("sessionId").equals(session.id).count()).toBe(1);
+  });
+
+  it("GRAYSON-TRAIN-HOME-001: ROUTINES · WORKOUTS asks the shell for TRAIN's routines list, with no domain writes", async () => {
+    const before = await db.events.toArray();
+    const opened: unknown[] = [];
+    const screen = await render(<MoreScreen onOpenDestination={(destination) => { opened.push(destination); return true; }} />);
+    const trigger = await commandResult(screen, "ROUTINES · WORKOUTS");
+    await trigger.click();
+    expect(opened).toEqual([{ kind: "routines" }]);
+    expect(await db.events.toArray()).toEqual(before);
   });
 
   it("retains unsaved settings/capsule text, disclosure and scroll on inspection/return", async () => {

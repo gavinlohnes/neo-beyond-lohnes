@@ -8,6 +8,7 @@ import { WorkoutRecap } from "./WorkoutRecap";
 import { SetDetails } from "./SetDetails";
 import { isWorkingSet, compareSetOrder, formatHold, isTimed, targetSecOf } from "../../../domain/workout/types";
 import { TimedSet } from "./TimedSet";
+import { TrainLibrary } from "./TrainLibrary";
 import { TrainingProgrammePanel } from "./TrainingProgrammePanel";
 import { HomeStartChoice } from "./HomeStartChoice";
 import { StretchRoutinesPanel } from "./StretchRoutinesPanel";
@@ -222,7 +223,9 @@ export type TrainDestination = "HISTORY" | "RECORDS" | "RECOVERY" | "WORKOUT" | 
    * GRAYSON-ONE-OFF-001: TODAY's START and START EMPTY. TRAIN starts the workout through its own START path (the RED
    * override question, the in-flight guard, an open session resumed rather than doubled), then shows it live.
    */
-  | "START_PLANNED" | "START_PLANNED_REDUCED" | "START_EMPTY";
+  | "START_PLANNED" | "START_PLANNED_REDUCED" | "START_EMPTY"
+  /** GRAYSON-TRAIN-HOME-001: MORE's ROUTINES · WORKOUTS opens TRAIN's one routines list. */
+  | "ROUTINES";
 
 export function TrainScreen({
   active = true,
@@ -384,6 +387,8 @@ export function TrainScreen({
   // GRAYSON-WEEK-PLAN-001: null without a week plan; else whether today is planned or Rest. And the week view.
   const [weekPlanToday, setWeekPlanToday] = useState<"PLANNED" | "REST" | null>(null);
   const [weekOpen, setWeekOpen] = useState(false);
+  // GRAYSON-TRAIN-HOME-001: the exercise library, in the workout card's place.
+  const [libraryOpen, setLibraryOpen] = useState(false);
   // GRAYSON-BLOCK-CYCLE-001: the block in force (its line, and whether today is a light week).
   const [blockView, setBlockView] = useState<BlockView | null>(null);
   const [changeSheet, setChangeSheet] = useState<{ kind: "SWAP"; exerciseId: string } | { kind: "ADD" } | null>(null);
@@ -464,11 +469,13 @@ export function TrainScreen({
     }
     // GRAYSON-ONE-OFF-001: START from TODAY, from a fresh read (review of #734).
     if (destination === "START_PLANNED" || destination === "START_PLANNED_REDUCED" || destination === "START_EMPTY") void startFromToday(destination);
+    if (destination === "ROUTINES") { setWeekOpen(false); setLibraryOpen(false); setRoutinesOpen({ templateId: null }); }
     requestAnimationFrame(() => {
       if (session && session.sessionType !== "RECOVERY" && destination === "WORKOUT" && exerciseHeadingRef.current) {
         exerciseHeadingRef.current.focus({ preventScroll: true });
         exerciseHeadingRef.current.scrollIntoView({ block: "start", behavior: "instant" });
-      } else if (session || destination !== "RECOVERY") headingRef.current?.focus();
+      } else if (destination === "ROUTINES") return; // the routines list focuses its own heading
+      else if (session || destination !== "RECOVERY") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
   }, [active, reading, readError, destination, destinationReady, session, onDestinationConsumed]);
@@ -1581,16 +1588,17 @@ export function TrainScreen({
           line and override stays one tap away, so START WORKOUT lands on
           the first phone screen. */}
       {/* GRAYSON-ROUTINE-EDIT-001: the routine list and editor open in the workout card's place, before START. */}
-      {!session && !completionSummary && routinesOpen && (
-        <RoutinesPanel initialTemplateId={routinesOpen.templateId} workoutActive={false}
+      {!completionSummary && routinesOpen && (
+        <RoutinesPanel initialTemplateId={routinesOpen.templateId} workoutActive={Boolean(session)}
           onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(true); }}
           onClose={() => setRoutinesOpen(null)} />
       )}
       {/* GRAYSON-WEEK-PLAN-001: the week opens in the workout card's place. */}
-      {!session && !completionSummary && !routinesOpen && weekOpen && (
+      {!session && !completionSummary && !routinesOpen && libraryOpen && <TrainLibrary onClose={() => setLibraryOpen(false)} />}
+      {!session && !completionSummary && !routinesOpen && !libraryOpen && weekOpen && (
         <WeekPlan onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(false); }} onClose={() => setWeekOpen(false)} />
       )}
-      {!session && !completionSummary && !routinesOpen && !weekOpen && (
+      {!session && !completionSummary && !routinesOpen && !libraryOpen && !weekOpen && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>
             {weekPlanToday ? "YOUR WEEK" : sequenceProgramme?.status === "READY" ? "YOUR PROGRAMME" : noCheckIn ? "DEFAULT WORKOUT" : "SUGGESTED WORKOUT"}
@@ -1704,6 +1712,8 @@ export function TrainScreen({
                   onClick={() => setRoutinesOpen({ templateId: chosenTemplate })}>EDIT</button>
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => setRoutinesOpen({ templateId: null })}>ROUTINES</button>
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => setWeekOpen(true)}>THIS WEEK</button>
+                {/* GRAYSON-TRAIN-HOME-001: the exercise library, one tap from TRAIN. */}
+                <button type="button" className="btn-secondary" disabled={busy} onClick={() => setLibraryOpen(true)}>LIBRARY</button>
                 {/* GRAYSON-ONE-OFF-001: a blank workout; never moves the A, B, C turn. */}
                 <button type="button" className="btn-secondary" disabled={busy} onClick={() => void handleStart("", "STANDARD")}>EMPTY WORKOUT</button>
               </div>
@@ -1855,12 +1865,12 @@ export function TrainScreen({
       )}
 
       {/* GRAYSON-HOME-STRETCH-001 slice B: a stretch routine plays in its own player and saves itself. */}
-      {session && session.sessionType === "RECOVERY" && !completionSummary && readStretchPlay(session.id) && (
+      {session && !routinesOpen && session.sessionType === "RECOVERY" && !completionSummary && readStretchPlay(session.id) && (
         <CommandSurface>
           <StretchPlayer session={session} onFinished={async () => { await performDueDayRollover().catch(() => {}); await refresh(); }} />
         </CommandSurface>
       )}
-      {session && session.sessionType === "RECOVERY" && !completionSummary && !readStretchPlay(session.id) && (
+      {session && !routinesOpen && session.sessionType === "RECOVERY" && !completionSummary && !readStretchPlay(session.id) && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
           <h2 className="command-title" style={{ fontSize: 24, marginBottom: 8 }}>Light movement</h2>
@@ -1904,7 +1914,7 @@ export function TrainScreen({
       <div hidden={Boolean(completionSummary) || (session ? session.sessionType !== "RECOVERY" : chosenVariant !== "RECOVERY")}>
         <MemoryPanel scope="RECOVERY" contextual active={active && !completionSummary && (session ? session.sessionType === "RECOVERY" : chosenVariant === "RECOVERY")} blocked={busy} />
       </div>
-      {session && session.sessionType !== "RECOVERY" && !completionSummary && (
+      {session && !routinesOpen && session.sessionType !== "RECOVERY" && !completionSummary && (
         <>
           {/* Canonical session orientation stays compact so recording leads.
               Gym Mode is the same optional full-screen operating shortcut. */}
@@ -2550,7 +2560,7 @@ export function TrainScreen({
           content above it is hidden then. */}
       {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
       {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
-      {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
+      {session && !routinesOpen && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>
   );
 }

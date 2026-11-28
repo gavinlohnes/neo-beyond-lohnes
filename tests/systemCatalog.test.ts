@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES } from "../src/ui/systemCatalog";
+import { CAPABILITY_GROUPS, findCapabilities, RENAMED_CAPABILITY_LABELS, SYSTEM_CAPABILITIES } from "../src/ui/systemCatalog";
 
 describe("capability discovery (COMMAND search)", () => {
   it("offers unique entries in known groups and browses without a query", () => {
@@ -16,9 +16,24 @@ describe("capability discovery (COMMAND search)", () => {
   });
   it("keeps every destination the SYSTEM dialog reached", () => {
     const labels = SYSTEM_CAPABILITIES.map((entry) => entry.label as string);
-    for (const label of ["PLAN TODAY", "TODAY TOOLS", "TRAIN", "DATA", "WATER", "MEAL", "SLEEP", "BODYWEIGHT", "WORKOUT", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "HISTORY", "WEEKLY CHECK-IN", "REVIEW", "DECISION JOURNAL", "SEARCH RECORDS"]) {
+    for (const label of ["PLAN TODAY", "TODAY TOOLS", "TRAIN", "DATA", "WATER", "MEAL", "SLEEP", "BODYWEIGHT", "WORKOUT", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "EXERCISE LIBRARY", "ROUTINES · WORKOUTS", "SHIFT ROUTINES", "HISTORY", "WEEKLY CHECK-IN", "REVIEW", "DECISION JOURNAL", "SEARCH RECORDS"]) {
       expect(labels).toContain(label);
     }
+  });
+  // GRAYSON-TRAIN-HOME-001: CUSTOM PROGRAMS is ROUTINES · WORKOUTS (TRAIN's list); the shift checklists are SHIFT ROUTINES.
+  it("search finds both kinds of routine, the workout routines by their old words, and the library", () => {
+    const names = (query: string) => findCapabilities(query).map((entry) => entry.label as string);
+    expect(names("routine")).toEqual(expect.arrayContaining(["ROUTINES · WORKOUTS", "SHIFT ROUTINES"]));
+    for (const query of ["program", "template", "workout"]) expect(names(query), query).toContain("ROUTINES · WORKOUTS");
+    for (const query of ["library", "exercise", "lift"]) expect(names(query), query).toContain("EXERCISE LIBRARY");
+    expect(names("shift")).toContain("SHIFT ROUTINES");
+    const workouts = SYSTEM_CAPABILITIES.find((entry) => entry.label === "ROUTINES · WORKOUTS")!;
+    expect(workouts.destination).toEqual({ kind: "routines" });
+    expect(SYSTEM_CAPABILITIES.find((entry) => entry.label === "SHIFT ROUTINES")!.destination).toEqual({ kind: "more", view: "ROUTINES" });
+    // A pin saved under an old label still finds its entry.
+    expect(RENAMED_CAPABILITY_LABELS["CUSTOM PROGRAMS"]).toBe("ROUTINES · WORKOUTS");
+    expect(RENAMED_CAPABILITY_LABELS.ROUTINES).toBe("SHIFT ROUTINES");
+    expect(SYSTEM_CAPABILITIES.some((entry) => (entry.label as string) === "CUSTOM PROGRAMS" || (entry.label as string) === "ROUTINES")).toBe(false);
   });
   it.each([
     ["  HYDRATION ", ["WATER"]],
