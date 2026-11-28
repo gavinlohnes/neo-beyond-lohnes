@@ -18,7 +18,7 @@ A fresh-context reviewer on every PR; Gavin merges every PROTECTED row.
 
 | # | Piece | Brief | Builder | Waits on | Lane |
 |---|---|---|---|---|---|
-| L1 | Delta logs meals from real numbers (and branded search numbers fixed) | [GRAYSON-MEAL-LOOKUP-001](GRAYSON-MEAL-LOOKUP-001.md) | Delta-track ("Project Grayson codex notes") | X5 merged | PROTECTED |
+| L1 | Delta logs meals from real numbers | [GRAYSON-MEAL-LOOKUP-001](GRAYSON-MEAL-LOOKUP-001.md), slices B and C (slice A is A1 in 1.0) | Delta-track ("Project Grayson codex notes") | X5 merged | PROTECTED |
 | L2 | Rest alert with the phone locked | [GRAYSON-REST-ALERT-001](GRAYSON-REST-ALERT-001.md) | TRAIN builder ("Project GRAYSON TRAIN builder") | L1 merged; the only Health Bridge change open | PROTECTED |
 | L3 | Photo of a nutrition label fills a food | [GRAYSON-LABEL-SCAN-001](GRAYSON-LABEL-SCAN-001.md) | Delta-track ("Project Grayson codex notes") | L2 merged; uses L1's source field; Dexie v30 | PROTECTED |
 
@@ -54,11 +54,12 @@ PR open at a time across both sessions, a fresh-context reviewer on every PR, Ga
 | T6 | Drop, failure and timed sets | [GRAYSON-SET-TYPES-001](GRAYSON-SET-TYPES-001.md) | Claude Code | T5 | PROTECTED |
 | T7 | The open exercise library | [GRAYSON-OPEN-LIBRARY-001](GRAYSON-OPEN-LIBRARY-001.md) | Claude Code | T6 | PROTECTED |
 | X3 | TRAIN as the one home for training | [GRAYSON-TRAIN-HOME-001](GRAYSON-TRAIN-HOME-001.md) | Claude Code | T7 | FEATURE (Gavin merges in 1.0) |
-| X5 | Garmin runs and workouts come into TRAIN | [GRAYSON-GARMIN-WORKOUTS-001](GRAYSON-GARMIN-WORKOUTS-001.md) | Claude Code | X3 follow-up #753; the only Health Bridge change open | PROTECTED |
+| A1 | Branded food search logs per-serving numbers | [GRAYSON-MEAL-LOOKUP-001](GRAYSON-MEAL-LOOKUP-001.md), **slice A only** | Codex ("GRAYSON home lane" chat) | nothing: next, while Claude Code is out | FEATURE (Gavin merges in 1.0) |
+| X5 | Garmin runs and workouts come into TRAIN | [GRAYSON-GARMIN-WORKOUTS-001](GRAYSON-GARMIN-WORKOUTS-001.md) | Claude Code | A1 merged (builders take turns); the only Health Bridge change open | PROTECTED |
 
 **Merged so far (2026-11-28):** X1 #733 and #744, F1 #736, F2 #737 and #739, F3 #740, F4 #738, X2 #743, X4 slice A #745 and slice B #749, T1 #730, T2 #735, T3 #734, T4 #742, T5 #746, T6 #748, T7 #750, X3 #751. Open: X4 slice C #752, X3 follow-up #753 (its review found routines unreachable mid-workout).
 
-**Checkpoint:** 1.0 merged and phone-checked by Fri Dec 4, so the first 4-week block on GRAYSON alone (no Hevy, MuscleWiki or Couch to 5K) starts Mon Dec 7. X4 joined 1.0 on Gavin's **"Yes"**, 14:48 CT. X5 joined 1.0 on Gavin's "I think we do 1 for now", 2026-11-27 21:26 CT; the rest alert and a label photo scan go to 1.1.
+**Checkpoint:** 1.0 merged and phone-checked by Fri Dec 4, so the first 4-week block on GRAYSON alone (no Hevy, MuscleWiki or Couch to 5K) starts Mon Dec 7. X4 joined 1.0 on Gavin's **"Yes"**, 14:48 CT. X5 joined 1.0 on Gavin's "I think we do 1 for now", 2026-11-27 21:26 CT; the rest alert and a label photo scan go to 1.1. A1 joined 1.0 on Gavin's **"Yes, add it to 1.0"**, 2026-11-27 22:38 CT: today's USDA search appears to show and log branded foods' per-100 g numbers as one serving.
 
 X4 and the TRAIN builder's T3 to T7 both touch TRAIN screens: X4 keeps its UI in new files and rebases before each PR opens.
 
