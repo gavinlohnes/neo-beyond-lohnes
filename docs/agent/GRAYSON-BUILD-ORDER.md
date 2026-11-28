@@ -9,6 +9,22 @@
   changes the order whenever he likes.
 - Master at the time of writing: `2d575d0b`. Codex is offline; its TRAIN rows are with Claude Code.
 
+## Launch 1.1, after 1.0 (Gavin, 2026-11-27)
+
+Gavin, 22:17 CT: **"We will just focus on getting to 1.1"**; 22:28 CT, on these briefs: **"You start here and get
+ready for a builder to start."** **No 1.1 row starts until 1.0's last row, X5, merges.** Until then the Launch 1.0
+section below wins. Builders take turns (Gavin, 18:52 CT: "one at a time"): one row is built at a time, in this order.
+A fresh-context reviewer on every PR; Gavin merges every PROTECTED row.
+
+| # | Piece | Brief | Builder | Waits on | Lane |
+|---|---|---|---|---|---|
+| L1 | Delta logs meals from real numbers (and branded search numbers fixed) | [GRAYSON-MEAL-LOOKUP-001](GRAYSON-MEAL-LOOKUP-001.md) | Delta-track ("Project Grayson codex notes") | X5 merged | PROTECTED |
+| L2 | Rest alert with the phone locked | [GRAYSON-REST-ALERT-001](GRAYSON-REST-ALERT-001.md) | TRAIN builder ("Project GRAYSON TRAIN builder") | L1 merged; the only Health Bridge change open | PROTECTED |
+| L3 | Photo of a nutrition label fills a food | [GRAYSON-LABEL-SCAN-001](GRAYSON-LABEL-SCAN-001.md) | Delta-track ("Project Grayson codex notes") | L2 merged; uses L1's source field; Dexie v30 | PROTECTED |
+
+Also on the 1.1 list, not briefed yet: sets per muscle, the stall with its reason, the muscle-keeper and the
+shift-shaped session. Recipes and micronutrients come later, not in 1.1. Design 1 waits until after 1.1.
+
 ## Launch 1.0 first (Gavin, 2026-11-26)
 
 Gavin, 05:39 CT: **"I like the idea of the smaller launch. I think we shift into that mode."** 05:51 CT, **"Yes"** to
@@ -49,15 +65,7 @@ X4 and the TRAIN builder's T3 to T7 both touch TRAIN screens: X4 keeps its UI in
 F3 and F4 don't share files with F2, so either may go while F2 waits on review. MISSION-REVIEW-001 slice B stays with
 Claude Code after 1.0. PR #694 (ASKS-COUNT) stays out of 1.0.
 
-**Launch 1.1, right after:** sets per muscle, the stall with its reason, the muscle-keeper and the shift-shaped
-session. Added 2026-11-27 (Gavin, 21:23 CT: "2 and 6 we can wait until 1.1"; 21:28 CT: "Add to 1.1"):
-- **Delta logs meals from real numbers:** Delta looks a food up by name in USDA's branded foods and Open Food Facts
-  before it estimates, marks each entry "from the label" or "estimated", and learns his usuals ("my usual
-  breakfast"). This replaces a separate food-search screen.
-- **Rest alert with the phone locked.**
-- **Photo scan of a nutrition label with no barcode.**
-
-Not briefed yet. Recipes and micronutrients come later, not in 1.1.
+**Launch 1.1:** see the Launch 1.1 section at the top of this file.
 
 **Design 1, after 1.0 (Gavin, 2026-11-27 21:40 CT: "I don't think it necessarily needs to be done for the 1.0
 launch... It dosent feel like a professionally designed and tested app // life os."):**
