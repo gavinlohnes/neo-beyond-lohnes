@@ -6,6 +6,7 @@ import axe from "axe-core";
 import { startDay, submitCheckIn } from "../../src/application/commands";
 import { createCustomTemplate } from "../../src/application/customTemplateCommands";
 import { getCustomTemplates } from "../../src/application/customTemplateQueries";
+import { getActiveWorkoutSession } from "../../src/application/trainQueries";
 import { createRoutine } from "../../src/application/routineCommands";
 import { App } from "../../src/app/App";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
@@ -81,6 +82,34 @@ describe("GRAYSON-TRAIN-HOME-001 TRAIN as the one home for training", () => {
     await fits("routines", document.querySelector("[data-routine-list]")!, "routines-archived");
     await screen.getByRole("button", { name: "UNDO" }).click();
     await expect.poll(async () => (await getCustomTemplates()).map((t) => t.name)).toEqual(["Leg Day"]);
+  });
+
+  it("keeps routine edit and archive available during a workout without changing the live session", { timeout: 30_000 }, async () => {
+    const legDay = await createCustomTemplate({ name: "Leg Day", exercises: [{ exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: 10 }] });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
+    await screen.getByRole("button", { name: "START WORKOUT", exact: true }).click();
+    await expect.poll(async () => await getActiveWorkoutSession()).toBeTruthy();
+    const activeId = (await getActiveWorkoutSession())!.id;
+
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("program");
+    await screen.getByRole("button", { name: /^ROUTINES · WORKOUTS/ }).click();
+    await expect.element(screen.getByRole("heading", { name: "Routines" })).toHaveFocus();
+    await expect.element(screen.getByRole("button", { name: "Archive Leg Day" })).toBeVisible();
+
+    await screen.getByRole("button", { name: "Edit Leg Day" }).click();
+    await expect.element(screen.getByText("Your workout in progress keeps its exercises. This applies from the next one.")).toBeVisible();
+    await screen.getByRole("textbox", { name: "Name" }).fill("Leg Day Later");
+    await screen.getByRole("button", { name: "SAVE", exact: true }).click();
+    await expect.poll(async () => (await getCustomTemplates()).find((r) => r.id === legDay.id)?.name).toBe("Leg Day Later");
+    expect((await getActiveWorkoutSession())?.id).toBe(activeId);
+
+    await screen.getByRole("button", { name: "Archive Leg Day Later" }).click();
+    await expect.poll(async () => (await getCustomTemplates()).some((r) => r.id === legDay.id)).toBe(false);
+    expect((await getActiveWorkoutSession())?.id).toBe(activeId);
   });
 
   it("MORE says SHIFT ROUTINES, and his checklists are all there under their old key", { timeout: 30_000 }, async () => {
