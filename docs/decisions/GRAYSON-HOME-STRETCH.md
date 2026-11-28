@@ -75,3 +75,18 @@ how it was built. Slices B and C add their sections here.
   - The suggestion is on screen only; nothing starts by itself or is sent to his phone. The windows and an off switch
     are in MORE · Train (`beyond.stretchSuggest.v1`, travels with backups).
 - **Taps:** the suggested routine starts in 1 tap; any other in 2 (STRETCH ROUTINES, then START).
+
+## Slice C: the home twin
+- **Build:** every non-HOME routine's editor has a HOME TWIN line. BUILD TWIN reads the routine lift by lift and uses
+  T2's swap ranker over the existing `home-*` bodyweight moves, restricted to the same muscle group. Sets carry over;
+  the home move supplies its rep range. A group with no home move stays an explicit gap rather than receiving a guess.
+- **Review:** the proposal names every mapping, and each choice can be changed or dropped. Nothing writes until SAVE
+  TWIN; a proposal with no kept moves cannot be saved.
+- **Save:** a sequence member's twin becomes that member's linked HOME form through the existing programme revision
+  guard. A routine outside the sequence gets an editable `<routine> · HOME` custom routine, available through TRAIN's
+  existing direct HOME choice. Updating a linked twin uses the routine editor's existing atomic restamp, so the
+  programme snapshot stays valid and the current sequence position is preserved.
+- **Keep in step:** after an edited gym routine is saved, an existing twin gets the optional "Your home twin still has
+  the old lifts. UPDATE TWIN?" line. UPDATE TWIN opens the same review; ignoring it changes nothing.
+- **Taps:** BUILD TWIN then SAVE TWIN is two taps when the proposal needs no changes; updating after an edit is UPDATE
+  TWIN then SAVE TWIN.
