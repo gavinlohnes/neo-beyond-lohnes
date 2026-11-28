@@ -51,7 +51,7 @@ export function RoutinesPanel({ active }: { active: boolean }) {
 
   const shown = (routines ?? []).filter((r) => showArchived || r.status === "ACTIVE");
   return <section aria-labelledby={`${uid}-routines`} className="intent-field">
-    <h2 id={`${uid}-routines`} className="tool-label">YOUR ROUTINES</h2>
+    <h2 id={`${uid}-routines`} className="tool-label">YOUR SHIFT ROUTINES</h2>
     <p className="card-body">Write them in your own words. TODAY shows the ones for the moment you're in: before shift, on shift, after shift, or a day off. Tick steps if it helps; nothing counts what you skip.</p>
     <button type="button" className="btn-secondary" onClick={() => askAlfred("Help me write a routine for one part of my rotation (before shift, on shift, after shift or a day off). Ask what I already do, then offer it as a card I can save.")}>WRITE ONE WITH ALFRED</button>
     {readError && <div><p role="alert">{readError} Routines are unavailable, not empty.</p><button type="button" className="btn-secondary" onClick={() => void load()}>RETRY ROUTINES</button></div>}

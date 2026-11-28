@@ -20,6 +20,8 @@ export type SystemDestination =
   | { kind: "workspace"; tab: "TRAIN" | "BODY" }
   | { kind: "body"; focus: BodyFocus }
   | { kind: "workout" }
+  /** GRAYSON-TRAIN-HOME-001: TRAIN's one routines list (A, B, C and his own). */
+  | { kind: "routines" }
   | { kind: "capture" }
   | { kind: "stealth" }
   | { kind: "drive" }
@@ -62,11 +64,13 @@ export const SYSTEM_CAPABILITIES = [
   { label: "PLAN TODAY", description: "Your chosen tasks and recorded deadlines", aliases: ["plan", "tasks", "today plan", "next 7", "next7", "no date", "undated", "smart lists"], group: "Plan", destination: { kind: "more", view: "PLAN" } },
   { label: "TRAIN", description: "Workouts, your programme, recovery and records", aliases: ["training", "fitness", "recovery", "programme", "training programme", "my programme", "training program"], group: "Plan", destination: { kind: "workspace", tab: "TRAIN" }, browse: false },
   { label: "WORKOUT", description: "TRAIN · Start or resume a workout", aliases: ["exercise", "resume", "gym", "set", "lift"], group: "Plan", destination: { kind: "workout" } },
-  { label: "EXERCISE LIBRARY", description: "Browse and manage exercises", aliases: ["lift", "exercise"], group: "Plan", destination: { kind: "more", view: "EXERCISE_LIBRARY" } },
-  { label: "CUSTOM PROGRAMS", description: "Your workout templates", aliases: ["program", "template"], group: "Plan", destination: { kind: "more", view: "CUSTOM_TEMPLATES" } },
+  { label: "EXERCISE LIBRARY", description: "Browse and manage exercises (also LIBRARY on TRAIN)", aliases: ["library", "lift", "exercise"], group: "Plan", destination: { kind: "more", view: "EXERCISE_LIBRARY" } },
+  // GRAYSON-TRAIN-HOME-001: was CUSTOM PROGRAMS; one name for workouts, and it opens TRAIN's routines list.
+  { label: "ROUTINES · WORKOUTS", description: "Your workout routines: A, B, C and your own, in TRAIN", aliases: ["routine", "workout", "program", "template", "custom programs"], group: "Plan", destination: { kind: "routines" } },
   { label: "MISSIONS & OBLIGATIONS", description: "Commitments, projects and intent", aliases: ["mission", "obligation", "commitment", "goal"], group: "Plan", destination: { kind: "more", view: "INTENT" } },
   { label: "LIFE", description: "Direction, plans, routines, people, home and memory in one place", aliases: ["life", "personal", "me", "organise", "organize"], group: "Plan", destination: { kind: "more", view: "LIFE" } },
-  { label: "ROUTINES", description: "Your before, during and after shift routines", aliases: ["routine", "checklist", "habit", "rhythm"], group: "Plan", destination: { kind: "more", view: "ROUTINES" } },
+  // GRAYSON-TRAIN-HOME-001: was ROUTINES; the view key stays "ROUTINES".
+  { label: "SHIFT ROUTINES", description: "Your before, during and after shift routines", aliases: ["routine", "shift", "checklist", "habit", "rhythm"], group: "Plan", destination: { kind: "more", view: "ROUTINES" } },
   { label: "HABITS", description: "LIFE · Mark small repeat actions done for this lived day", aliases: ["habit", "daily habit", "work day habit"], group: "Plan", destination: { kind: "more", view: "LIFE" } },
   // UX-POLISH-001: the personal-OS areas are found by name in search (search-only: MORE-TRIM-001 keeps
   // the browsed list at 25 or fewer). People and Home also stay in Personal Understanding.
@@ -133,3 +137,8 @@ export function findCapabilities(query: string) {
   });
 }
 
+/** GRAYSON-TRAIN-HOME-001: labels renamed after he may have pinned them; a saved pin still finds its entry. */
+export const RENAMED_CAPABILITY_LABELS: Readonly<Record<string, string>> = {
+  "CUSTOM PROGRAMS": "ROUTINES · WORKOUTS",
+  ROUTINES: "SHIFT ROUTINES",
+};

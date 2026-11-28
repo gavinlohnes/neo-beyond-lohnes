@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { render, cleanup } from "vitest-browser-react";
-import { CustomTemplateScreen } from "../../src/ui/screens/more/CustomTemplateScreen";
+import { RoutinesPanel } from "../../src/ui/screens/train/RoutineEditor";
 import { createCustomExercise } from "../../src/application/exerciseLibraryCommands";
 import { createCustomTemplate } from "../../src/application/customTemplateCommands";
 import { getCustomTemplates } from "../../src/application/customTemplateQueries";
 
 /**
+ * GRAYSON-TRAIN-HOME-001: MORE's CUSTOM PROGRAMS is now ROUTINES · WORKOUTS, which opens TRAIN's one routines list;
+ * these tests keep its promises there (build, superset, edit in place, increments, ARCHIVE), none dropped.
+ *
  * TRAIN-CREATE-002 (Custom Workout Templates). Real-browser smoke
  * coverage for the one dedicated management surface, same treatment as
  * ExerciseLibraryScreen.test.tsx — proves it actually mounts and drives
@@ -33,11 +36,15 @@ afterEach(() => {
   restoreConsoleError();
 });
 
-describe("CustomTemplateScreen (real browser)", () => {
+// The one routines list, as TRAIN and MORE's ROUTINES · WORKOUTS open it.
+const CustomTemplateScreen = () => <RoutinesPanel workoutActive={false} onChanged={() => {}} onClose={() => {}} />;
+const mine = (screen: Awaited<ReturnType<typeof render>>) => screen.getByRole("list", { name: "Your routines" });
+
+describe("Workout routines in TRAIN, formerly CUSTOM PROGRAMS (real browser)", () => {
   // GRAYSON-ROUTINE-EDIT-001: creating and editing now open TRAIN's one routine editor (tests/browser/RoutineEdit.test.tsx
   // covers the editor itself). These keep this screen's own promises.
   async function create(screen: Awaited<ReturnType<typeof render>>, name: string, picks: RegExp[]) {
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+    await screen.getByRole("button", { name: "NEW ROUTINE" }).click();
     await screen.getByRole("textbox", { name: "Name" }).fill(name);
     for (const pick of picks) {
       await screen.getByRole("button", { name: "ADD EXERCISE" }).click();
@@ -45,15 +52,17 @@ describe("CustomTemplateScreen (real browser)", () => {
     }
   }
 
-  it("renders with no templates and no console errors", async () => {
+  it("renders A, B and C with no routines of his own, nothing archived, and no console errors", async () => {
     const screen = await render(<CustomTemplateScreen />);
-    await expect.element(screen.getByText("No custom templates yet.")).toBeVisible();
+    await expect.element(mine(screen).getByText("Workout A", { exact: false }).first()).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Archive / }).elements()).toHaveLength(0);
+    expect(screen.getByRole("heading", { name: "Archived" }).elements()).toHaveLength(0);
     expect(consoleErrors).toEqual([]);
   });
 
   it("with an empty personal library, the bundled library is still there to build from", async () => {
     const screen = await render(<CustomTemplateScreen />);
-    await screen.getByRole("button", { name: "CREATE TEMPLATE" }).click();
+    await screen.getByRole("button", { name: "NEW ROUTINE" }).click();
     await screen.getByRole("button", { name: "ADD EXERCISE" }).click();
     await expect.element(screen.getByRole("button", { name: /^Barbell Bench Press/ })).toBeVisible();
     expect(consoleErrors).toEqual([]);
@@ -64,7 +73,7 @@ describe("CustomTemplateScreen (real browser)", () => {
     const screen = await render(<CustomTemplateScreen />);
     await create(screen, "Pull Day", [/^Barbell Row.*yours/]);
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();
-    await expect.element(screen.getByRole("group", { name: "My templates" }).getByText("Pull Day", { exact: true })).toBeVisible();
+    await expect.element(mine(screen).getByText("Pull Day", { exact: true })).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
 
@@ -98,7 +107,7 @@ describe("CustomTemplateScreen (real browser)", () => {
     expect(after!.id).toBe(before.id);
     expect(after!.exercises.map((e) => [e.exerciseId, e.sets, e.supersetWithNext ?? false])).toEqual([[row.id, 4, true], [pull.id, 3, false]]);
     expect(after!.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs])).toEqual(before.exercises.map((e) => [e.repRangeLow, e.repRangeHigh, e.incrementLbs]));
-    await expect.element(screen.getByRole("button", { name: "CREATE TEMPLATE" })).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: "NEW ROUTINE" })).toBeVisible();
   });
 
   it("TEMPLATE-EDIT-001: keeps exercises no longer in the library while editing, and can remove them", async () => {
@@ -128,17 +137,28 @@ describe("CustomTemplateScreen (real browser)", () => {
     expect(consoleErrors).toEqual([]);
   });
 
-  it("archiving a template removes it from the visible list", async () => {
+  it("archiving a routine removes it from the list in one tap, with UNDO, and BRING BACK from Archived", async () => {
     await createCustomTemplate({
       name: "Leg Day",
       exercises: [{ exerciseId: "x", name: "X", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: 5 }],
     });
     const screen = await render(<CustomTemplateScreen />);
-    const myTemplates = screen.getByRole("group", { name: "My templates" });
-    await expect.element(myTemplates.getByText("Leg Day", { exact: true })).toBeVisible();
+    await expect.element(mine(screen).getByText("Leg Day", { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "ARCHIVE" }).click();
-    await expect.element(myTemplates.getByText("No custom templates yet.")).toBeVisible();
+    await screen.getByRole("button", { name: "Archive Leg Day" }).click();
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Leg Day archived.");
+    expect(mine(screen).getByText("Leg Day", { exact: true }).elements()).toHaveLength(0);
+    await expect.element(screen.getByRole("heading", { name: "Archived" })).toBeVisible();
+    expect((await getCustomTemplates()).length).toBe(0);
+
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Undone. Leg Day is back.");
+    await expect.element(mine(screen).getByText("Leg Day", { exact: true })).toBeVisible();
+    expect((await getCustomTemplates()).map((t) => t.name)).toEqual(["Leg Day"]);
+
+    await screen.getByRole("button", { name: "Archive Leg Day" }).click();
+    await screen.getByRole("button", { name: "Bring back Leg Day" }).click();
+    await expect.element(mine(screen).getByText("Leg Day", { exact: true })).toBeVisible();
     expect(consoleErrors).toEqual([]);
   });
 });

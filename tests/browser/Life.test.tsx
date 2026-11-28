@@ -16,7 +16,8 @@ it("shows each area as a tab over its existing screen, at phone width", async ()
   await addPersonDate({ person: "Sam", occasion: "Birthday", month: 3, day: 14 });
   const screen = await render(<LifeScreen active />);
   await expect.element(screen.getByRole("tab", { name: "Direction" })).toHaveAttribute("aria-selected", "true");
-  await screen.getByRole("tab", { name: "Routines" }).click();
+  // GRAYSON-TRAIN-HOME-001: the tab reads "Shift routines".
+  await screen.getByRole("tab", { name: "Shift routines" }).click();
   await expect.element(screen.getByRole("heading", { name: "Pre-shift" })).toBeVisible();
   await screen.getByRole("tab", { name: "People" }).click();
   await expect.element(screen.getByText("Sam's birthday", { exact: true })).toBeVisible();

@@ -51,8 +51,8 @@ const commandHeadings = {
   PLAN: "MORE // PLAN TODAY", SYSTEMS: "MORE // SYSTEMS",
   HISTORY: "MORE // HISTORY", WEEKLY: "MORE // WEEKLY CHECK-IN", REVIEW: "MORE // REVIEW",
   SEARCH: "MORE // SEARCH", JOURNAL: "MORE // DECISION JOURNAL", INTENT: "MORE // MISSIONS & OBLIGATIONS",
-  WORK_SCHEDULE: "MORE // WORK SCHEDULE", WORK_RECORD: "MORE // WORK RECORD", EXERCISE_LIBRARY: "MORE // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "MORE // CUSTOM PROGRAMS",
-  MEMORY: "MORE // MEMORY", ROUTINES: "MORE // ROUTINES", PEOPLE: "MORE // PEOPLE", HOME: "MORE // HOME", LIFE: "MORE // LIFE", SNIPPETS: "SNIPPETS",
+  WORK_SCHEDULE: "MORE // WORK SCHEDULE", WORK_RECORD: "MORE // WORK RECORD", EXERCISE_LIBRARY: "MORE // EXERCISE LIBRARY", CUSTOM_TEMPLATES: "MORE // ROUTINES · WORKOUTS",
+  MEMORY: "MORE // MEMORY", ROUTINES: "MORE // SHIFT ROUTINES", PEOPLE: "MORE // PEOPLE", HOME: "MORE // HOME", LIFE: "MORE // LIFE", SNIPPETS: "SNIPPETS",
   DAILY_NOTE: "MORE // DAILY NOTE",
   COLLECTIONS: "MORE // COLLECTIONS",
   HIGHLIGHTS: "MORE // HIGHLIGHTS",
@@ -102,6 +102,10 @@ describe("COMMAND catalog", () => {
         await expect.element(screen.getByRole("dialog", { name: "Stealth" })).toBeVisible();
         await userEvent.keyboard("{Escape}");
         await expect.poll(() => document.querySelector(".stealth")).toBeNull();
+      } else if (destination.kind === "routines") {
+        // GRAYSON-TRAIN-HOME-001: ROUTINES · WORKOUTS opens TRAIN's one routines list, focused on its heading.
+        await expect.element(screen.getByRole("button", { name: "TRAIN", exact: true })).toHaveAttribute("aria-current", "page");
+        await expect.element(screen.getByRole("heading", { name: "Routines", exact: true })).toHaveFocus();
       } else {
         const tab = destination.kind === "workspace" ? destination.tab === "BODY" ? "DATA" : destination.tab : "TRAIN";
         await expect.element(screen.getByRole("button", { name: tab, exact: true })).toHaveAttribute("aria-current", "page");
@@ -118,7 +122,7 @@ describe("COMMAND catalog", () => {
     const screen = await render(<App />);
     await openCommand(screen);
     // The pre-redesign destination inventory is deliberately independent of the current catalog.
-    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
+    const before = ["WATER", "MEAL", "FOOD LOOKUP", "SLEEP", "BODYWEIGHT", "NOTE", "URGE", "SYSTEMS", "STEALTH", "TODAY TOOLS", "PLAN TODAY", "TRAIN", "WORKOUT", "EXERCISE LIBRARY", "ROUTINES · WORKOUTS", "MISSIONS & OBLIGATIONS", "WORK SCHEDULE", "IMPORT HEALTH DATA", "DATA", "WEEKLY CHECK-IN", "REVIEW", "HISTORY", "DECISION JOURNAL", "SEARCH RECORDS", "BACKUP & RECOVERY", "TARGETS", "QUIT TRACKER SETTINGS", "TIME CAPSULE", "CHECK-IN REMINDER", "DIAGNOSTICS", "A PLACE TO START"];
     for (const name of before) expect(SYSTEM_CAPABILITIES.some((entry) => entry.label === name)).toBe(true);
     for (const summary of document.querySelectorAll<HTMLDetailsElement>(".command-group")) summary.open = true;
     // MORE-LIBRARY-001 deliberately makes the newly added outside-app jobs browsable. Keep the
