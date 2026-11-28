@@ -1,4 +1,4 @@
-import { compareSetOrder, isWorkingSet } from "../domain/workout/types";
+import { compareSetOrder, countsTowardBest } from "../domain/workout/types";
 /**
  * Moved here unchanged from application/personalRecordQueries.ts (Drop 1,
  * Day Ledger, 2026-10-03) so the pure Day Ledger can count each session's
@@ -15,15 +15,19 @@ import { compareSetOrder, isWorkingSet } from "../domain/workout/types";
  * - REPS: no earlier set at the same or a heavier weight had as many reps.
  * The first session with an exercise never shows a record, not even for a
  * heavier later set (nothing to beat yet, and ramping up isn't a PR).
+ * GRAYSON-SET-TYPES-001: a timed set (durationSec) is a record when no earlier timed set at the same or a heavier
+ * weight was held as long (TIME). Drop and warm-up sets are never records.
  * Skipped sets, zero-rep sets, and substituted movements are ignored on both
  * sides, since a substitute is a different lift under the same slot.
  */
-export type PersonalRecordKind = "HEAVIEST" | "REPS";
+export type PersonalRecordKind = "HEAVIEST" | "REPS" | "TIME";
 
 export interface PersonalRecord {
   kind: PersonalRecordKind;
   weight: number;
   reps: number;
+  /** TIME only (GRAYSON-SET-TYPES-001): the hold, in seconds. */
+  durationSec?: number;
 }
 
 export interface RecordCandidateSet {
@@ -36,8 +40,10 @@ export interface RecordCandidateSet {
   recordedAt: string;
   /** Tie-break for sets logged in the same millisecond. */
   setNumber?: number;
-  setKind?: "WORKING" | "WARMUP";
+  setKind?: string;
   seq?: number;
+  /** GRAYSON-SET-TYPES-001: a timed set's hold. */
+  durationSec?: number;
 }
 
 /** Logged order: time, then set number when two sets share a timestamp. */
@@ -46,7 +52,13 @@ export function byLoggedOrder(a: RecordCandidateSet, b: RecordCandidateSet): num
 }
 
 function counts(set: RecordCandidateSet): boolean {
-  return isWorkingSet(set) && !set.substitutedName && set.reps > 0;
+  // GRAYSON-SET-TYPES-001: drop sets never set a best.
+  return countsTowardBest(set) && !set.substitutedName && set.reps > 0 && set.durationSec === undefined;
+}
+
+/** GRAYSON-SET-TYPES-001: a timed set is judged by how long it was held, per weight. Drop sets still never count. */
+function countsTimed(set: RecordCandidateSet): boolean {
+  return countsTowardBest(set) && !set.substitutedName && set.durationSec !== undefined && set.durationSec > 0;
 }
 
 /**
@@ -66,10 +78,27 @@ export function findSessionRecords(
     seen.set(set.exerciseId, list);
   }
 
+  const held = new Map<string, { weight: number; durationSec: number }[]>();
+  for (const set of history) {
+    if (!countsTimed(set)) continue;
+    held.set(set.exerciseId, [...(held.get(set.exerciseId) ?? []), { weight: set.weight, durationSec: set.durationSec! }]);
+  }
+
   const hasEarlierSession = new Set(seen.keys());
+  const hasEarlierHold = new Set(held.keys());
   const records = new Map<string, PersonalRecord>();
   const ordered = [...sessionSets].sort(byLoggedOrder);
   for (const set of ordered) {
+    if (countsTimed(set)) {
+      // Longest hold at this weight or heavier; the first session with the exercise sets nothing, like reps.
+      const prior = held.get(set.exerciseId) ?? [];
+      if (hasEarlierHold.has(set.exerciseId) && prior.filter((p) => p.weight >= set.weight).every((p) => p.durationSec < set.durationSec!)) {
+        records.set(set.id, { kind: "TIME", weight: set.weight, reps: set.reps, durationSec: set.durationSec! });
+      }
+      prior.push({ weight: set.weight, durationSec: set.durationSec! });
+      held.set(set.exerciseId, prior);
+      continue;
+    }
     if (!counts(set)) continue;
     const prior = seen.get(set.exerciseId) ?? [];
     if (hasEarlierSession.has(set.exerciseId)) {

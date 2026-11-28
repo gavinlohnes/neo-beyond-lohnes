@@ -7,7 +7,7 @@ import { deriveRecoverySessionStatus } from "../engine/trainSuggestion";
 import { logEvent } from "./commands";
 import { WORKOUT_WRITE_TABLES, writeAtomically } from "./atomicWrite";
 import { getLatestCheckIn } from "./queries";
-import { compareSetOrder } from "../domain/workout/types";
+import { compareSetOrder, SET_KINDS, type SetKind } from "../domain/workout/types";
 import { getPerformedSets } from "./trainQueries";
 import type { Capacity, ExerciseCueSetPayload, PerformedSetRaw } from "../domain/common/types";
 import { EXERCISE_CUE_MAX_LENGTH } from "../domain/common/types";
@@ -162,15 +162,21 @@ export async function logSet(
   weight: number,
   reps: number,
   substitutedName?: string,
-  options: { setKind?: "WORKING" | "WARMUP"; repsInReserve?: number } & SetSourceOptions = {},
+  options: { setKind?: SetKind; repsInReserve?: number; dropOf?: string; durationSec?: number } & SetSourceOptions = {},
 ): Promise<void> {
   const { at, from, ...metadata } = options;
   // Drop 1.6a (field soak): an empty LOG tap used to save "0 lb x 0". A logged set has at least one rep
   // (a set not done is SKIP); weight may be 0 for bodyweight work.
-  if (!Number.isInteger(reps) || reps < 1) throw new Error("SET_REPS_REQUIRED: enter at least 1 rep, or SKIP the set.");
+  // GRAYSON-SET-TYPES-001: a timed set logs the time held; its reps may be 0.
+  const timed = options.durationSec !== undefined;
+  if (timed && (!Number.isInteger(options.durationSec) || options.durationSec! < 1 || options.durationSec! > 3600)) throw new Error("SET_TIME_INVALID: enter the time held, 1 second to 60 minutes.");
+  if (!Number.isInteger(reps) || reps < (timed ? 0 : 1)) throw new Error("SET_REPS_REQUIRED: enter at least 1 rep, or SKIP the set.");
   if (!Number.isFinite(weight) || weight < 0) throw new Error("SET_WEIGHT_INVALID: weight must be 0 or more.");
   if (!Number.isInteger(setNumber) || setNumber < 1) throw new Error("SET_NUMBER_INVALID");
-  if (metadata.setKind !== undefined && metadata.setKind !== "WORKING" && metadata.setKind !== "WARMUP") throw new Error("SET_KIND_INVALID");
+  if (metadata.setKind !== undefined && !SET_KINDS.includes(metadata.setKind)) throw new Error("SET_KIND_INVALID");
+  if ((metadata.setKind === "DROP") !== (metadata.dropOf !== undefined)) throw new Error("SET_DROP_INVALID: a drop set follows the set above it.");
+  // A failure set is a working set with nothing left: reps in reserve 0.
+  if (metadata.setKind === "FAILURE") metadata.repsInReserve = 0;
   if (metadata.repsInReserve !== undefined && (!Number.isInteger(metadata.repsInReserve) || metadata.repsInReserve < 0 || metadata.repsInReserve > 10)) throw new Error("SET_EFFORT_INVALID: enter whole reps left from 0 to 10, or leave blank.");
   const set: PerformedSet = {
     id: newId(),
@@ -190,9 +196,13 @@ export async function logSet(
     const session = await db.workoutSessions.get(sessionId);
     if (!session || session.status !== "ACTIVE" || session.beyondDayId !== beyondDayId) throw new Error("WORKOUT_NOT_ACTIVE");
     if (at !== undefined) set.recordedAt = checkSetTime(at, session.startedAt);
-    if (metadata.setKind !== "WARMUP") {
+    if (metadata.setKind === "DROP") {
       const live = await getPerformedSets(sessionId);
-      if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) throw new Error("SET_ALREADY_RECORDED");
+      const parent = live.find((s) => s.id === metadata.dropOf);
+      if (!parent || parent.exerciseId !== exerciseId || parent.skipped || parent.setKind === "WARMUP") throw new Error("SET_DROP_INVALID: a drop set follows a logged set of the same exercise.");
+    } else if (metadata.setKind !== "WARMUP") {
+      const live = await getPerformedSets(sessionId);
+      if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP" && s.setKind !== "DROP")) throw new Error("SET_ALREADY_RECORDED");
     }
     const correlationId = newId();
     const eventId = await logEvent(beyondDayId, "SET_LOGGED", {
@@ -234,7 +244,7 @@ export async function skipSet(
     if (!session || session.status !== "ACTIVE" || session.beyondDayId !== beyondDayId) throw new Error("WORKOUT_NOT_ACTIVE");
     if (at !== undefined) set.recordedAt = checkSetTime(at, session.startedAt);
     const live = await getPerformedSets(sessionId);
-    if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) throw new Error("SET_ALREADY_RECORDED");
+    if (live.some((s) => s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP" && s.setKind !== "DROP")) throw new Error("SET_ALREADY_RECORDED");
     const correlationId = newId();
     const eventId = await logEvent(beyondDayId, "SET_SKIPPED", { commandId: correlationId, performedSetId: set.id, sessionId, exerciseId, setNumber, ...(from ? { from } : {}) },
       "USER", correlationId, undefined, at !== undefined ? set.recordedAt : undefined);

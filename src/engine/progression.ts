@@ -1,4 +1,4 @@
-import { isWorkingSet } from "../domain/workout/types";
+import { countsTowardBest, isTimed, targetSecOf, TIMED_STEP_SEC } from "../domain/workout/types";
 import type { ExercisePrescription, PerformedSet } from "../domain/workout/types";
 import type { DeloadStall } from "./stall";
 
@@ -29,6 +29,9 @@ export interface ProgressionSuggestion {
   daysSinceLastPerformed?: number;
   /** DELOAD only: the stalled run's top-set weights, oldest first. */
   stallTopWeights?: number[];
+  /** GRAYSON-SET-TYPES-001, timed exercises only: the target held last time and the one suggested next. */
+  lastTargetSec?: number;
+  suggestedTargetSec?: number;
 }
 
 /**
@@ -66,11 +69,13 @@ export function evaluateProgression(
   lastSessionSets: PerformedSet[],
   context: ProgressionContext = {},
 ): ProgressionSuggestion {
-  const base = evaluateLastSession(prescription, lastSessionSets.filter((s) => s.setKind !== "WARMUP"));
+  if (isTimed(prescription)) return evaluateTimed(prescription, lastSessionSets);
+  // GRAYSON-SET-TYPES-001: drop sets aren't a fair test of the prescription (warm-ups never were).
+  const base = evaluateLastSession(prescription, lastSessionSets.filter((s) => s.setKind !== "WARMUP" && s.setKind !== "DROP"));
   const days = context.daysSinceLastPerformed;
   // The load to ease back from: the clean last weight when there is one,
   // otherwise (mixed/incomplete evidence) the heaviest set actually done.
-  const performedWeights = lastSessionSets.filter((s) => isWorkingSet(s)).map((s) => s.weight);
+  const performedWeights = lastSessionSets.filter((s) => countsTowardBest(s)).map((s) => s.weight);
   const fromWeight = base.lastWeight ?? (performedWeights.length > 0 ? Math.max(...performedWeights) : undefined);
   const step = prescription.incrementLbs > 0 ? prescription.incrementLbs : 1;
   const lighter = (fraction: number) => (fromWeight === undefined || fromWeight <= 0 ? undefined : Math.floor((fromWeight * fraction) / step) * step);
@@ -133,7 +138,7 @@ function evaluateLastSession(prescription: ExercisePrescription, lastSessionSets
   // with any skip is automatically "incomplete evidence" for INCREASE/
   // REDUCE purposes, since fewer than the prescribed count were actually
   // performed.
-  const performed = lastSessionSets.filter((s) => isWorkingSet(s));
+  const performed = lastSessionSets.filter((s) => countsTowardBest(s));
   if (performed.length < prescription.sets) {
     return {
       recommendation: "HOLD",
@@ -174,4 +179,29 @@ function evaluateLastSession(prescription: ExercisePrescription, lastSessionSets
     reason: `${lastWeight}lb was within range without qualifying for a change last time.`,
     lastWeight,
   };
+}
+
+/**
+ * GRAYSON-SET-TYPES-001 (Gavin's brief, approved on merge): a timed exercise's progression, the same shape as the
+ * rep rule. Every prescribed working set held for the target → suggest TIMED_STEP_SEC longer; fewer sets, a skip, or
+ * any set short of the target → hold the target. Warm-up and drop sets never count. No re-entry or deload for holds:
+ * there is no load to ease off. Advisory only, like everything here.
+ */
+function evaluateTimed(prescription: ExercisePrescription, lastSessionSets: PerformedSet[]): ProgressionSuggestion {
+  const target = targetSecOf(prescription);
+  const sets = lastSessionSets.filter((s) => s.setKind !== "WARMUP" && s.setKind !== "DROP");
+  if (sets.length === 0) return { recommendation: "NO_HISTORY", reason: "No prior performance recorded for this exercise in this context yet." };
+  const performed = sets.filter((s) => countsTowardBest(s) && s.durationSec !== undefined);
+  if (performed.length < prescription.sets) {
+    return { recommendation: "HOLD", reason: "Incomplete evidence last time (fewer sets performed than prescribed, or one was skipped).", lastTargetSec: target };
+  }
+  if (performed.every((s) => s.durationSec! >= target)) {
+    return {
+      recommendation: "INCREASE",
+      reason: `All ${prescription.sets} sets held the ${target}s target.`,
+      lastTargetSec: target,
+      suggestedTargetSec: target + TIMED_STEP_SEC,
+    };
+  }
+  return { recommendation: "HOLD", reason: `Not every set held the ${target}s target last time.`, lastTargetSec: target };
 }

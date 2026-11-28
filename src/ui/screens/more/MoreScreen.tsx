@@ -1,3 +1,4 @@
+import { getDropStepPercent, setDropStepPercent } from "../../../application/dropStep";
 import type { CaveVitalId } from "../../../application/caveVitals";
 import { useHiddenFeatures, setHiddenFeature, type HiddenFeature } from "../../hiddenFeatures";
 import { MemoryPanel } from "../../components/MemoryPanel";
@@ -396,6 +397,7 @@ export function MoreScreen({
   // immediate-action controls rather than a separate SAVE step.
   // GRAYSON-TRAIN-REST-001: the rest-end buzz, beside the check-in reminder.
   const [restBuzz, setRestBuzzState] = useState<RestBuzzPreference>(getRestBuzzPreference);
+  const [dropStep, setDropStep] = useState(getDropStepPercent);
   const updateRestBuzz = (next: RestBuzzPreference) => { setRestBuzzPreference(next); setRestBuzzState(next); };
   const [reminderPreference, setReminderPreference] = useState<CheckInReminderPreference>(() =>
     getCheckInReminderPreference(),
@@ -1066,6 +1068,13 @@ export function MoreScreen({
               </select>
             )}
           </div>
+          {/* GRAYSON-SET-TYPES-001: ADD DROP's step, 5 to 50%. */}
+          <label className="meta" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 12 }}>Drop set: lighter by
+            <select aria-label="Drop set step" value={dropStep} style={{ fontSize: 16, minHeight: 44 }}
+              onChange={(e) => { const n = Number(e.target.value); setDropStepPercent(n); setDropStep(n); }}>
+              {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map((n) => <option key={n} value={n}>{n}%</option>)}
+            </select>
+          </label>
         </div>
       </section>
 

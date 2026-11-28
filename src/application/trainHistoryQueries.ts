@@ -105,6 +105,8 @@ export interface SessionRecordSet {
   record?: PersonalRecord;
   setKind?: PerformedSet["setKind"];
   repsInReserve?: number;
+  /** GRAYSON-SET-TYPES-001: a timed set's hold. */
+  durationSec?: number;
   /** GRAYSON-TRAIN-EDIT-001: this set's fixes, oldest first (corrections, an add, a removal put back). */
   fixes?: SetFixEntry[];
   /** GRAYSON-TRAIN-EDIT-001: the newest standing fix, which Undo / Put it back cancels. */
@@ -166,6 +168,7 @@ export async function getWorkoutSessionRecord(sessionId: string): Promise<Workou
       reps: set.reps,
       skipped: set.skipped,
       ...(set.setKind ? { setKind: set.setKind } : {}),
+      ...(set.durationSec !== undefined ? { durationSec: set.durationSec } : {}),
       ...(set.repsInReserve !== undefined ? { repsInReserve: set.repsInReserve } : {}),
       ...(set.substitutedName ? { substitutedName: set.substitutedName } : {}),
       ...(record ? { record } : {}),

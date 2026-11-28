@@ -1,7 +1,7 @@
 // Domain layer must not import React, Dexie, or UI code.
 import type { DomainEvent } from "../common/types";
 import { EXERCISE_LIBRARY } from "./exerciseLibrary";
-import { WORKOUT_TEMPLATES, type ExercisePrescription } from "./types";
+import { TIMED_TARGET_DEFAULT_SEC, TIMED_TARGET_MAX_SEC, TIMED_TARGET_MIN_SEC, WORKOUT_TEMPLATES, type ExercisePrescription } from "./types";
 
 /**
  * GRAYSON-ROUTINE-EDIT-001 (Gavin, 2026-11-25: "I should be able to edit and tweak or correct everything in this
@@ -67,6 +67,10 @@ export function validateRoutineExercises(exercises: readonly ExercisePrescriptio
       return `${ex.name}: rest goes from 0:15 to 10:00.`;
     }
     if (!Number.isFinite(ex.incrementLbs) || ex.incrementLbs < 0) return `${ex.name}: the weight step is missing.`;
+    if (ex.measure !== undefined && ex.measure !== "REPS" && ex.measure !== "TIME") return `${ex.name}: count it by reps or by time.`;
+    if (ex.targetSec !== undefined && (!Number.isInteger(ex.targetSec) || ex.targetSec < TIMED_TARGET_MIN_SEC || ex.targetSec > TIMED_TARGET_MAX_SEC)) {
+      return `${ex.name}: the target time goes from 0:05 to 10:00.`;
+    }
   }
   return null;
 }
@@ -74,9 +78,13 @@ export function validateRoutineExercises(exercises: readonly ExercisePrescriptio
 export type RoutineEditOp =
   | { kind: "MOVE"; index: number; by: -1 | 1 }
   | { kind: "REMOVE"; index: number }
-  | { kind: "SWAP"; index: number; with: Pick<ExercisePrescription, "exerciseId" | "name" | "repRangeLow" | "repRangeHigh" | "incrementLbs"> }
-  | { kind: "ADD"; exercise: Pick<ExercisePrescription, "exerciseId" | "name" | "repRangeLow" | "repRangeHigh" | "incrementLbs">; sets?: number }
-  | { kind: "SET"; index: number; change: Partial<Pick<ExercisePrescription, "sets" | "repRangeLow" | "repRangeHigh" | "restSeconds" | "supersetWithNext">> };
+  | { kind: "SWAP"; index: number; with: Pick<ExercisePrescription, "exerciseId" | "name" | "repRangeLow" | "repRangeHigh" | "incrementLbs" | "measure" | "targetSec"> }
+  | { kind: "ADD"; exercise: Pick<ExercisePrescription, "exerciseId" | "name" | "repRangeLow" | "repRangeHigh" | "incrementLbs" | "measure" | "targetSec">; sets?: number }
+  | { kind: "SET"; index: number; change: Partial<Pick<ExercisePrescription, "sets" | "repRangeLow" | "repRangeHigh" | "restSeconds" | "supersetWithNext" | "measure" | "targetSec">> };
+
+/** GRAYSON-SET-TYPES-001: only a timed exercise carries measure and target; a reps one stays exactly as before. */
+const timedFields = (ex: { measure?: string | undefined; targetSec?: number | undefined }) =>
+  ex.measure === "TIME" ? { measure: "TIME" as const, targetSec: ex.targetSec ?? TIMED_TARGET_DEFAULT_SEC } : {};
 
 const DEFAULT_ADDED_SETS = 3;
 
@@ -109,6 +117,7 @@ export function applyRoutineEdit(exercises: readonly ExercisePrescription[], op:
       next[op.index] = {
         exerciseId: op.with.exerciseId, name: op.with.name, sets: slot.sets,
         repRangeLow: op.with.repRangeLow, repRangeHigh: op.with.repRangeHigh, incrementLbs: op.with.incrementLbs,
+        ...timedFields(op.with),
         ...(slot.restSeconds !== undefined ? { restSeconds: slot.restSeconds } : {}),
         ...(slot.supersetWithNext ? { supersetWithNext: true } : {}),
       };
@@ -117,12 +126,16 @@ export function applyRoutineEdit(exercises: readonly ExercisePrescription[], op:
     case "ADD":
       if (next.some((ex) => ex.exerciseId === op.exercise.exerciseId)) throw new Error(`ROUTINE_EDIT_DUPLICATE: ${op.exercise.name} is already in this routine.`);
       next.push({ exerciseId: op.exercise.exerciseId, name: op.exercise.name, sets: op.sets ?? DEFAULT_ADDED_SETS,
-        repRangeLow: op.exercise.repRangeLow, repRangeHigh: op.exercise.repRangeHigh, incrementLbs: op.exercise.incrementLbs });
+        repRangeLow: op.exercise.repRangeLow, repRangeHigh: op.exercise.repRangeHigh, incrementLbs: op.exercise.incrementLbs, ...timedFields(op.exercise) });
       break;
     case "SET": {
       const slot = at(op.index);
-      const { restSeconds, supersetWithNext, ...numbers } = op.change;
+      const { restSeconds, supersetWithNext, measure, targetSec, ...numbers } = op.change;
       Object.assign(slot, numbers);
+      if ("measure" in op.change) {
+        if (measure === "TIME") { slot.measure = "TIME"; slot.targetSec ??= TIMED_TARGET_DEFAULT_SEC; } else { delete slot.measure; delete slot.targetSec; }
+      }
+      if ("targetSec" in op.change && slot.measure === "TIME" && targetSec !== undefined) slot.targetSec = targetSec;
       if ("restSeconds" in op.change) {
         if (restSeconds === undefined) delete slot.restSeconds; else slot.restSeconds = restSeconds;
       }

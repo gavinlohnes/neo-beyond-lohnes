@@ -1,4 +1,4 @@
-import { isWorkingSet } from "../domain/workout/types";
+import { countsTowardBest } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
 import { formatLocalDate } from "../engine/scheduledContext";
@@ -33,7 +33,7 @@ export async function getStrengthCurve(exerciseId: string): Promise<StrengthPoin
   const prSessions = new Set(records.filter((r) => r.exerciseId === exerciseId).map((r) => r.sessionId));
   const sets = ((await db.performedSets.where("exerciseId").equals(exerciseId).toArray()) as unknown as PerformedSet[]).filter(
     // Counted sets only, as RECORDS counts them: a substitute is a different lift in the same slot.
-    (s) => !undone.has(s.id) && isWorkingSet(s) && s.reps > 0 && !s.substitutedName,
+    (s) => !undone.has(s.id) && countsTowardBest(s) && s.reps > 0 && !s.substitutedName,
   );
   const points: StrengthPoint[] = [];
   for (const session of sessions) {

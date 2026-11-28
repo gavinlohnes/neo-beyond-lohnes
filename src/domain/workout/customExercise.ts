@@ -23,6 +23,10 @@ export interface CustomExercise {
   repRangeLow: number;
   repRangeHigh: number;
   notes?: string;
+  /** GRAYSON-SET-TYPES-001: "TIME" = held for time. Absent = reps. */
+  measure?: "REPS" | "TIME";
+  /** Target hold for a timed exercise, 5–600 s. */
+  targetSec?: number;
   /** Present when this entry was seeded from EXERCISE_LIBRARY; absent for a fully hand-typed entry. Provenance only — editing afterward never re-reads the library entry. */
   libraryExerciseId?: string;
   createdAt: string;

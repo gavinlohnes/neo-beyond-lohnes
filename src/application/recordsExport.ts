@@ -1,3 +1,4 @@
+import { formatHold } from "../domain/workout/types";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { getBodyweightHistoryWithSources } from "./bodyTrendQueries";
 import { getMealEntries } from "./nutritionQueries";
@@ -61,7 +62,7 @@ export async function getRecordsExport(area: ExportArea, now = Date.now()): Prom
       }
     }
   } else if (area === "workouts") {
-    header = ["lived_day", "time", "session", "status", "exercise", "substituted_as", "set", "set_kind", "weight_lb", "reps", "skipped"];
+    header = ["lived_day", "time", "session", "status", "exercise", "substituted_as", "set", "set_kind", "weight_lb", "reps", "skipped", "held"];
     rows = [];
     const sessions = [...(await getTrainingHistory())].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
     for (const s of sessions) {
@@ -70,7 +71,7 @@ export async function getRecordsExport(area: ExportArea, now = Date.now()): Prom
       const lived = livedOf.get(s.beyondDayId) ?? ymd(s.startedAt);
       const session = `${s.templateId}${s.sessionType === "STANDARD" ? "" : ` ${s.sessionType}`}`;
       for (const ex of record.exercises) for (const set of ex.sets) {
-        rows.push([lived, clock(s.startedAt), session, s.status, ex.name, set.substitutedName, set.setNumber, set.setKind === "WARMUP" ? "warm-up" : "working", set.skipped ? null : set.weight, set.skipped ? null : set.reps, set.skipped ? "yes" : "no"]);
+        rows.push([lived, clock(s.startedAt), session, s.status, ex.name, set.substitutedName, set.setNumber, ({ WARMUP: "warm-up", DROP: "drop", FAILURE: "to failure" } as Record<string, string>)[set.setKind ?? ""] ?? "working", set.skipped ? null : set.weight, set.skipped ? null : set.reps, set.skipped ? "yes" : "no", set.skipped || set.durationSec === undefined ? null : formatHold(set.durationSec)]);
       }
     }
   } else if (area === "measurements") {

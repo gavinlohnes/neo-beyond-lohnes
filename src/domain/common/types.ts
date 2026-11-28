@@ -1233,8 +1233,10 @@ export interface SetFixValues {
   weight: number;
   reps: number;
   skipped: boolean;
-  setKind?: "WORKING" | "WARMUP";
+  setKind?: import("../workout/types").SetKind;
   repsInReserve?: number;
+  /** GRAYSON-SET-TYPES-001: a timed set's hold. */
+  durationSec?: number;
 }
 
 /**
@@ -1270,8 +1272,9 @@ export interface SetAddedPayload {
   performedSetId: string;
   weight: number;
   reps: number;
-  setKind?: "WORKING" | "WARMUP";
+  setKind?: import("../workout/types").SetKind;
   repsInReserve?: number;
+  durationSec?: number;
 }
 
 /** Cancels one fix (the newest on its set): its retraction is lifted, and a row it created is retracted. */

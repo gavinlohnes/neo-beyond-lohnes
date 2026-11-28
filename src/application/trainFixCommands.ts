@@ -1,3 +1,4 @@
+import { compareSetOrder, SET_KINDS, type SetKind } from "../domain/workout/types";
 import { db } from "../persistence/db";
 import { writeAtomically, WORKOUT_WRITE_TABLES } from "./atomicWrite";
 import { logEvent } from "./commands";
@@ -27,16 +28,20 @@ const HISTORY_STATUSES = new Set(["COMPLETED", "PARTIAL"]);
 export interface SetFixInput {
   weight: number;
   reps: number;
-  setKind?: "WORKING" | "WARMUP";
+  setKind?: SetKind;
   /** Blank (undefined) clears it. */
   repsInReserve?: number;
+  /** GRAYSON-SET-TYPES-001: a timed set's hold; its reps may then be 0. */
+  durationSec?: number;
 }
 
 /** logSet's value rules (trainCommands.ts), with plain messages. */
 function validate(input: SetFixInput): void {
   if (!Number.isFinite(input.weight) || input.weight < 0) throw new Error("SET_WEIGHT_INVALID: Weight must be 0 or more.");
-  if (!Number.isInteger(input.reps) || input.reps < 1) throw new Error("SET_REPS_REQUIRED: Enter at least 1 rep, or remove the set.");
-  if (input.setKind !== undefined && input.setKind !== "WORKING" && input.setKind !== "WARMUP") throw new Error("SET_KIND_INVALID: Choose warm-up or working.");
+  const timed = input.durationSec !== undefined;
+  if (timed && (!Number.isInteger(input.durationSec) || input.durationSec! < 1 || input.durationSec! > 3600)) throw new Error("SET_TIME_INVALID: Enter the time held, 1 second to 60 minutes.");
+  if (!Number.isInteger(input.reps) || input.reps < (timed ? 0 : 1)) throw new Error("SET_REPS_REQUIRED: Enter at least 1 rep, or remove the set.");
+  if (input.setKind !== undefined && !SET_KINDS.includes(input.setKind)) throw new Error("SET_KIND_INVALID: Choose working, warm-up, drop or to failure.");
   if (input.repsInReserve !== undefined && (!Number.isInteger(input.repsInReserve) || input.repsInReserve < 0 || input.repsInReserve > 10)) {
     throw new Error("SET_EFFORT_INVALID: Enter whole reps left from 0 to 10, or leave it blank.");
   }
@@ -46,9 +51,10 @@ const valuesOf = (set: PerformedSet): SetFixValues => ({
   weight: set.weight, reps: set.reps, skipped: set.skipped,
   ...(set.setKind ? { setKind: set.setKind } : {}),
   ...(set.repsInReserve !== undefined ? { repsInReserve: set.repsInReserve } : {}),
+  ...(set.durationSec !== undefined ? { durationSec: set.durationSec } : {}),
 });
 const sameValues = (a: SetFixValues, b: SetFixValues) =>
-  a.weight === b.weight && a.reps === b.reps && a.skipped === b.skipped && (a.setKind ?? "WORKING") === (b.setKind ?? "WORKING") && a.repsInReserve === b.repsInReserve;
+  a.weight === b.weight && a.reps === b.reps && a.skipped === b.skipped && (a.setKind ?? "WORKING") === (b.setKind ?? "WORKING") && a.repsInReserve === b.repsInReserve && a.durationSec === b.durationSec;
 
 interface Context { session: WorkoutSession; set: PerformedSet; effective: PerformedSet[] }
 
@@ -67,9 +73,10 @@ async function load(performedSetId: string): Promise<Context> {
   return { session, set, effective: rows.filter((r) => !projection.retractedSetIds.has(r.id)) };
 }
 
-function assertUniqueWorking(effective: readonly PerformedSet[], exerciseId: string, setNumber: number, setKind: "WORKING" | "WARMUP" | undefined, exceptId?: string) {
-  if (setKind === "WARMUP") return;
-  if (effective.some((s) => s.id !== exceptId && s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP")) {
+function assertUniqueWorking(effective: readonly PerformedSet[], exerciseId: string, setNumber: number, setKind: SetKind | "WORKING" | "WARMUP" | undefined, exceptId?: string) {
+  // GRAYSON-SET-TYPES-001: a drop set shares its parent's number, like a warm-up it doesn't take the working slot.
+  if (setKind === "WARMUP" || setKind === "DROP") return;
+  if (effective.some((s) => s.id !== exceptId && s.exerciseId === exerciseId && s.setNumber === setNumber && s.setKind !== "WARMUP" && s.setKind !== "DROP")) {
     throw new Error("SET_ALREADY_RECORDED: There's already a working set with that number. Mark this one as a warm-up, or remove the other.");
   }
 }
@@ -86,15 +93,33 @@ export async function correctSet(performedSetId: string, input: SetFixInput): Pr
       weight: input.weight, reps: input.reps, skipped: false,
       ...(input.setKind ? { setKind: input.setKind } : set.setKind ? { setKind: set.setKind } : {}),
       ...(input.repsInReserve !== undefined ? { repsInReserve: input.repsInReserve } : {}),
+      ...(input.durationSec !== undefined ? { durationSec: input.durationSec } : set.durationSec !== undefined ? { durationSec: set.durationSec } : {}),
     };
+    if (after.durationSec === undefined && after.reps < 1) throw new Error("SET_REPS_REQUIRED: Enter at least 1 rep, or remove the set.");
     if (sameValues(before, after)) throw new Error("SET_NO_OP: Nothing changed.");
+    // A drop shares its set's number, so it can't become a working set in that same slot (review of #748).
+    if (set.setKind === "DROP" && after.setKind !== "DROP" && after.setKind !== "WARMUP" &&
+        effective.some((s) => s.id !== set.id && s.exerciseId === set.exerciseId && s.setNumber === set.setNumber && s.setKind !== "WARMUP" && s.setKind !== "DROP")) {
+      throw new Error("SET_DROP_SLOT: A drop shares its set's number. To count it as a working set, remove it and log it as the next set.");
+    }
     assertUniqueWorking(effective, set.exerciseId, set.setNumber, after.setKind, set.id);
+    // GRAYSON-SET-TYPES-001: a failure set has nothing left; a drop set follows the set above it.
+    if (after.setKind === "FAILURE") after.repsInReserve = 0;
+    let dropOf: string | undefined;
+    if (after.setKind === "DROP") {
+      dropOf = set.dropOf ?? [...effective]
+        .filter((s) => s.id !== set.id && s.exerciseId === set.exerciseId && !s.skipped && s.setKind !== "WARMUP" && s.setKind !== "DROP" && compareSetOrder(s, set) <= 0)
+        .sort(compareSetOrder).at(-1)?.id;
+      if (!dropOf) throw new Error("SET_DROP_INVALID: A drop set follows a set of the same exercise above it.");
+    }
     const newRow: PerformedSet = {
       id: newId(), beyondDayId: session.beyondDayId, sessionId: set.sessionId, exerciseId: set.exerciseId, setNumber: set.setNumber,
       weight: after.weight, reps: after.reps, skipped: false, recordedAt: set.recordedAt,
       ...(set.substitutedName ? { substitutedName: set.substitutedName } : {}),
       ...(after.setKind ? { setKind: after.setKind } : {}),
       ...(after.repsInReserve !== undefined ? { repsInReserve: after.repsInReserve } : {}),
+      ...(dropOf ? { dropOf } : {}),
+      ...(after.durationSec !== undefined ? { durationSec: after.durationSec } : {}),
       ...(set.seq !== undefined ? { seq: set.seq } : {}),
       // GRAYSON-TRAIN-LOCKSCREEN-001: a set from the lock screen keeps saying so after a fix.
       ...(set.from ? { from: set.from } : {}),
@@ -145,11 +170,13 @@ export async function addSetToSession(sessionId: string, exerciseId: string, inp
       ...(substitutedName ? { substitutedName } : {}),
       ...(input.setKind ? { setKind: input.setKind } : {}),
       ...(input.repsInReserve !== undefined ? { repsInReserve: input.repsInReserve } : {}),
+      ...(input.durationSec !== undefined ? { durationSec: input.durationSec } : {}),
     };
     const commandId = newId();
     const payload: SetAddedPayload = {
       commandId, sessionId, exerciseId, setNumber, performedSetId: row.id, weight: row.weight, reps: row.reps,
       ...(row.setKind ? { setKind: row.setKind } : {}), ...(row.repsInReserve !== undefined ? { repsInReserve: row.repsInReserve } : {}),
+      ...(row.durationSec !== undefined ? { durationSec: row.durationSec } : {}),
     };
     const fixEventId = await logEvent(session.beyondDayId, "SET_ADDED", payload, "USER", commandId);
     const event = await db.events.get(fixEventId);

@@ -1,5 +1,5 @@
 import type { ExercisePrescription, SessionType, WorkoutSessionStatus, WorkoutTemplateId } from "../../../domain/workout/types";
-import { WORKOUT_TEMPLATE_ORDER, WORKOUT_TEMPLATES } from "../../../domain/workout/types";
+import { formatHold, WORKOUT_TEMPLATE_ORDER, WORKOUT_TEMPLATES } from "../../../domain/workout/types";
 import type { CustomWorkoutTemplate } from "../../../domain/workout/customTemplate";
 import type { SessionVariantSuggestion } from "../../../engine/trainSuggestion";
 import { doesSessionAdvanceRotation, deriveRecoverySessionStatus } from "../../../engine/trainSuggestion";
@@ -200,6 +200,12 @@ export function describeRecoveryPreview(durationMinutes: number): string {
  */
 export function describeProgressionAdvisory(suggestion: ProgressionSuggestion): string | null {
   if (suggestion.recommendation === "NO_HISTORY") return null;
+  // GRAYSON-SET-TYPES-001: a timed exercise's suggestion is a time, not a weight.
+  if (suggestion.lastTargetSec !== undefined) {
+    return suggestion.suggestedTargetSec !== undefined
+      ? `Last time every set held ${formatHold(suggestion.lastTargetSec)} — suggests ${formatHold(suggestion.suggestedTargetSec)} next.`
+      : `Suggests holding ${formatHold(suggestion.lastTargetSec)} again.`;
+  }
   if (
     suggestion.recommendation === "RE_ENTRY" &&
     suggestion.suggestedNextWeight !== undefined &&
@@ -363,7 +369,10 @@ export function describeHistoryFacts(entry: TrainingHistoryEntry): string {
 /** ULTIMATE-FOUNDATION-002: a session-record set line. */
 export function describeRecordedSet(set: SessionRecordSet): string {
   if (set.skipped) return `Set ${set.setNumber} · skipped`;
-  const done = `Set ${set.setNumber} · ${set.weight} lb × ${set.reps}`;
+  // GRAYSON-SET-TYPES-001: a timed set reads as its hold ("0:45", with any added weight).
+  const done = set.durationSec !== undefined
+    ? `Set ${set.setNumber} · ${set.weight > 0 ? `${set.weight} lb · ` : ""}held ${formatHold(set.durationSec)}`
+    : `Set ${set.setNumber} · ${set.weight} lb × ${set.reps}`;
   return set.substitutedName ? `${done} · as ${set.substitutedName}` : done;
 }
 
@@ -371,9 +380,12 @@ export const TRAINING_HISTORY_EMPTY = "Finished and stopped strength sessions wi
 
 // GRAYSON-TRAIN-EDIT-001 (Gavin, 2026-11-24): set fix copy.
 /** "145 lb × 12", "warm-up 95 lb × 10", "skipped", plus reps left when recorded. */
-export function describeSetValues(v: { weight: number; reps: number; skipped: boolean; setKind?: string | undefined; repsInReserve?: number | undefined }): string {
+export function describeSetValues(v: { weight: number; reps: number; skipped: boolean; setKind?: string | undefined; repsInReserve?: number | undefined; durationSec?: number | undefined }): string {
   if (v.skipped) return "skipped";
-  const base = `${v.setKind === "WARMUP" ? "warm-up " : ""}${v.weight} lb × ${v.reps}`;
+  // GRAYSON-SET-TYPES-001: the kind in words, and a timed set as its hold.
+  const kind = ({ WARMUP: "warm-up ", DROP: "drop ", FAILURE: "to failure: " } as Record<string, string>)[v.setKind ?? ""] ?? "";
+  const base = `${kind}${v.durationSec !== undefined ? `${v.weight > 0 ? `${v.weight} lb, ` : ""}held ${formatHold(v.durationSec)}` : `${v.weight} lb × ${v.reps}`}`;
+  if (v.setKind === "FAILURE") return base;
   return v.repsInReserve !== undefined ? `${base}, ${v.repsInReserve} reps left` : base;
 }
 
@@ -435,3 +447,18 @@ export const RUNNING_LIFT_ACTIVE = "Finish or stop your workout before starting 
 export const RUNNING_HISTORY_EMPTY = "Runs you start will appear here.";
 
 export const RUNNING_STATUS_LABEL = { ACTIVE: "In progress", COMPLETED: "Completed", PARTIAL: "Partial", ABANDONED: "Stopped" } as const;
+
+/** GRAYSON-SET-TYPES-001: each set kind in words, and what it does to his numbers (said where he picks it). */
+export const SET_KIND_LABEL: Record<import("../../../domain/workout/types").SetKind, string> = {
+  WORKING: "Working", WARMUP: "Warm-up", DROP: "Drop", FAILURE: "Failure",
+};
+export const SET_KIND_EFFECT: Record<import("../../../domain/workout/types").SetKind, string> = {
+  WORKING: "Counts toward your best and your next weight.",
+  WARMUP: "Preparation only. Your next working set stays open.",
+  DROP: "Drop sets count in volume, not toward your best or your next weight.",
+  FAILURE: "A working set to failure: 0 reps left. Counts like any working set.",
+};
+/** How a logged set's kind reads in history, export and Delta: "drop", "to failure", "warm-up"; nothing for working. */
+export function describeSetKind(kind: string | undefined): string {
+  return kind === "DROP" ? "drop" : kind === "FAILURE" ? "to failure" : kind === "WARMUP" ? "warm-up" : "";
+}

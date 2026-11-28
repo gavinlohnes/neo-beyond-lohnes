@@ -57,7 +57,7 @@ export function buildLockScreenPlan(input: {
   now?: number;
   restFor?: (exerciseId: string) => number;
 }): LockScreenPlan {
-  const done = new Set(input.recorded.filter((s) => s.setKind !== "WARMUP").map((s) => `${s.exerciseId}#${s.setNumber}`));
+  const done = new Set(input.recorded.filter((s) => s.setKind !== "WARMUP" && s.setKind !== "DROP").map((s) => `${s.exerciseId}#${s.setNumber}`));
   // A set with no reps yet (nothing to repeat) stays in the plan; the notification asks for it in BEYOND, no DONE.
   const sets = input.planned.filter((p) => !done.has(`${p.exerciseId}#${p.setNumber}`));
   const restFor = input.restFor ?? restSecondsFor;

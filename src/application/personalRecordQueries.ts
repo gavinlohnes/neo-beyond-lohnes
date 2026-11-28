@@ -1,6 +1,6 @@
 import { db } from "../persistence/db";
 import type { PerformedSet } from "../domain/workout/types";
-import { WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { formatHold, WORKOUT_TEMPLATES } from "../domain/workout/types";
 import { fixedExerciseNames } from "../domain/workout/routineEdit";
 import { getUndoneSetIds } from "./trainQueries";
 import { getCustomExercises } from "./exerciseLibraryQueries";
@@ -21,6 +21,7 @@ export async function getRecordHistory(sessionId: string): Promise<PerformedSet[
 }
 
 export function describePersonalRecord(record: PersonalRecord): string {
+  if (record.kind === "TIME") return `NEW PR — longest hold${record.weight > 0 ? ` at ${record.weight} lb` : ""} (${formatHold(record.durationSec ?? 0)})`;
   return record.kind === "HEAVIEST"
     ? `NEW PR — heaviest yet (${record.weight} lb)`
     : `NEW PR — most reps at ${record.weight} lb (${record.reps})`;
@@ -84,6 +85,7 @@ export async function getAllRecords(): Promise<RecordCard[]> {
 
 /** A record card's line: "Heaviest: 145 lb × 8" or "Most reps at 135 lb: 12". */
 export function describeRecordCard(record: PersonalRecord): string {
+  if (record.kind === "TIME") return `Longest hold${record.weight > 0 ? ` at ${record.weight} lb` : ""}: ${formatHold(record.durationSec ?? 0)}`;
   return record.kind === "HEAVIEST"
     ? `Heaviest: ${record.weight} lb × ${record.reps}`
     : `Most reps at ${record.weight} lb: ${record.reps}`;
@@ -96,7 +98,8 @@ export async function getBestRecords(records?: readonly RecordCard[]): Promise<R
   for (const card of records ?? await getAllRecords()) {
     const prior = best.get(card.exerciseId);
     if (!prior || card.record.weight > prior.record.weight ||
-        (card.record.weight === prior.record.weight && card.record.reps > prior.record.reps)) best.set(card.exerciseId, card);
+        (card.record.weight === prior.record.weight && card.record.reps > prior.record.reps) ||
+        (card.record.weight === prior.record.weight && (card.record.durationSec ?? 0) > (prior.record.durationSec ?? 0))) best.set(card.exerciseId, card);
   }
   return [...best.values()].sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
 }

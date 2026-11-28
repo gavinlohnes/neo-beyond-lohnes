@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import type { CustomExercise } from "../../../domain/workout/customExercise";
 import { EXERCISE_LIBRARY, searchLibraryExercises, type LibraryExercise, type MuscleGroup } from "../../../domain/workout/exerciseLibrary";
 import { getCustomExercises } from "../../../application/exerciseLibraryQueries";
-import { archiveCustomExercise, createCustomExercise } from "../../../application/exerciseLibraryCommands";
+import { archiveCustomExercise, createCustomExercise, updateCustomExercise } from "../../../application/exerciseLibraryCommands";
+import { formatHold } from "../../../domain/workout/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
 import { describeError } from "../../errorMessage";
 
@@ -29,7 +30,7 @@ import { describeError } from "../../errorMessage";
 
 const MUSCLE_GROUPS: MuscleGroup[] = ["Chest", "Back", "Shoulders", "Legs", "Glutes", "Arms", "Core", "Full Body"];
 
-function ExerciseRow({ exercise, onArchive, customs }: { exercise: CustomExercise; onArchive: () => void; customs: readonly CustomExercise[] }) {
+function ExerciseRow({ exercise, onArchive, onTimed, customs }: { exercise: CustomExercise; onArchive: () => void; onTimed: (timed: boolean) => void; customs: readonly CustomExercise[] }) {
   const note = useExerciseNote(exercise.id, customs);
   return (
     <div className="equipment-row" style={{ marginBottom: 8 }}>
@@ -37,13 +38,16 @@ function ExerciseRow({ exercise, onArchive, customs }: { exercise: CustomExercis
         <div>
           <p className="card-body" style={{ margin: 0, fontWeight: 600 }}>{exercise.name}</p>
           <p className="meta" style={{ margin: 0 }}>
-            {exercise.muscleGroup} · {exercise.equipment} · {exercise.repRangeLow}-{exercise.repRangeHigh} reps
+            {exercise.muscleGroup} · {exercise.equipment} · {exercise.measure === "TIME" ? `timed, target ${formatHold(exercise.targetSec ?? 30)}` : `${exercise.repRangeLow}-${exercise.repRangeHigh} reps`}
           </p>
           {/* GRAYSON-TRAIN-NOTES-001: his note, shown and edited the same way as on library rows. */}
           <ExerciseNoteLine name={exercise.name} state={note} returnFocusTo={`note-${exercise.id}`} />
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
         <ExerciseNoteButton id={`note-${exercise.id}`} name={exercise.name} state={note} />
+        {/* GRAYSON-SET-TYPES-001: his own exercise can be held for time. New routine picks carry it. */}
+        <label className="routine-option" style={{ fontSize: 14 }}><input type="checkbox" checked={exercise.measure === "TIME"}
+          aria-label={`${exercise.name}: timed`} onChange={(e) => onTimed(e.target.checked)} /> Timed</label>
         <button
           type="button"
           className="btn-secondary"
@@ -67,7 +71,7 @@ function LibraryRow({ lib, children }: { lib: LibraryExercise; children: React.R
         <div style={{ minWidth: 0 }}>
           <p className="card-body" style={{ margin: 0 }}>{lib.name}</p>
           <p className="meta" style={{ margin: 0 }}>
-            {lib.muscleGroup} · {lib.equipment} · {lib.repRangeLow}-{lib.repRangeHigh} reps
+            {lib.muscleGroup} · {lib.equipment} · {lib.measure === "TIME" ? `timed, ${formatHold(lib.targetSec ?? 30)}` : `${lib.repRangeLow}-${lib.repRangeHigh} reps`}
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -133,6 +137,7 @@ export function ExerciseLibraryScreen() {
         repRangeLow: lib.repRangeLow,
         repRangeHigh: lib.repRangeHigh,
         libraryExerciseId: lib.id,
+        ...(lib.measure === "TIME" ? { measure: "TIME" as const, targetSec: lib.targetSec ?? 30 } : {}),
       });
       acknowledge("LIGHT");
       await refresh();
@@ -200,7 +205,8 @@ export function ExerciseLibraryScreen() {
         <div role="group" aria-label="My exercises">
           {exercises.length === 0 && <p className="empty-state">No exercises saved yet.</p>}
           {exercises.map((ex) => (
-            <ExerciseRow key={ex.id} exercise={ex} customs={exercises} onArchive={() => void handleArchive(ex.id)} />
+            <ExerciseRow key={ex.id} exercise={ex} customs={exercises} onArchive={() => void handleArchive(ex.id)}
+              onTimed={(timed) => void withBusy(async () => { await updateCustomExercise(ex.id, { measure: timed ? "TIME" : "REPS" }); await refresh(); })} />
           ))}
         </div>
 

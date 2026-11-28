@@ -45,6 +45,8 @@ export interface GymModeProps {
   onUndoLastSet: () => void;
   /** GRAYSON-TRAIN-FINISH-3: Delta's proposal and pain stop, rendered by TRAIN (same panels as the workout view). */
   delta?: React.ReactNode;
+  /** GRAYSON-SET-TYPES-001: a timed exercise's START / DONE control, in place of reps. */
+  timedSet?: React.ReactNode;
 }
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
@@ -109,9 +111,9 @@ export function GymMode(props: GymModeProps) {
       <h2 className="gym-mode__name">{exercise.name}</h2>
       <CueLine key={exercise.exerciseId} exerciseId={exercise.exerciseId} exerciseName={exercise.name} onSave={props.onSaveCue} />
       <p className="gym-mode__set">
-        {setNumber !== null ? `Set ${setNumber} of ${exercise.sets}` : "All sets logged"} · {exercise.repRangeLow}-{exercise.repRangeHigh} reps
+        {setNumber !== null ? `Set ${setNumber} of ${exercise.sets}` : "All sets logged"}{props.timedSet ? "" : ` · ${exercise.repRangeLow}-${exercise.repRangeHigh} reps`}
       </p>
-      {props.ghost && (
+      {props.ghost && !props.timedSet && (
         <p className="gym-mode__ghost">
           Last time {props.ghost.weight} × {props.ghost.reps}
         </p>
@@ -141,14 +143,14 @@ export function GymMode(props: GymModeProps) {
             onPlus={() => props.onAdjustWeight(exercise.incrementLbs)}
           />
           {isBarbell && weightLbs > 0 && <p className="gym-mode__hint">{describePlates(weightLbs)}</p>}
-          <Stepper
+          {props.timedSet ?? <Stepper
             label="Reps"
             unit="reps"
             value={props.reps}
             onChange={props.onSetReps}
             onMinus={() => props.onAdjustReps(-1)}
             onPlus={() => props.onAdjustReps(1)}
-          />
+          />}
           {props.notice && (
             <p className="meta meta--error" role="alert" style={{ marginTop: 8 }}>
               {props.notice}

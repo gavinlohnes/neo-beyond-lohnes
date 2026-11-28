@@ -1,3 +1,5 @@
+import { formatHold, type SetKind } from "../../../domain/workout/types";
+import { SetKindPicker } from "./SetDetails";
 import { useEffect, useId, useRef, useState } from "react";
 import { addSetToSession, correctSet, removeSet, undoSetFix, type SetFixResult } from "../../../application/trainFixCommands";
 import type { SetFixEntry } from "../../../domain/workout/setFixes";
@@ -18,15 +20,16 @@ export interface FixableSet {
   weight: number;
   reps: number;
   skipped: boolean;
-  setKind?: "WORKING" | "WARMUP" | undefined;
+  setKind?: SetKind | undefined;
   repsInReserve?: number | undefined;
+  durationSec?: number | undefined;
 }
 
 export type SetFixDone = { result: SetFixResult; text: string };
 
 export function SetFixSheet({ target, exerciseName, onDone, onCancel }: {
   /** A set to fix, or `{ add: … }` to add one to a finished session. */
-  target: { set: FixableSet } | { add: { sessionId: string; exerciseId: string; weight: number; reps: number } };
+  target: { set: FixableSet } | { add: { sessionId: string; exerciseId: string; weight: number; reps: number; timed?: boolean } };
   exerciseName: string;
   onDone: (done: SetFixDone) => void;
   onCancel: () => void;
@@ -34,7 +37,10 @@ export function SetFixSheet({ target, exerciseName, onDone, onCancel }: {
   const set = "set" in target ? target.set : null;
   const [weight, setWeight] = useState(String(set ? (set.skipped ? "" : set.weight) : "add" in target ? target.add.weight : ""));
   const [reps, setReps] = useState(String(set ? (set.skipped ? "" : set.reps) : "add" in target ? target.add.reps : ""));
-  const [warmUp, setWarmUp] = useState(set?.setKind === "WARMUP");
+  const [kind, setKind] = useState<SetKind>(set?.setKind ?? "WORKING");
+  // GRAYSON-SET-TYPES-001: a timed set is fixed by its seconds held, not reps.
+  const timed = set ? set.durationSec !== undefined : "add" in target && target.add.timed === true;
+  const [held, setHeld] = useState(set?.durationSec !== undefined ? String(set.durationSec) : "");
   const [rir, setRir] = useState(set?.repsInReserve !== undefined ? String(set.repsInReserve) : "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -50,14 +56,18 @@ export function SetFixSheet({ target, exerciseName, onDone, onCancel }: {
     const w = Number(weight);
     const r = Number(reps);
     if (weight.trim() === "" || !Number.isFinite(w) || w < 0) { setError("Weight must be 0 or more."); return; }
-    if (reps.trim() === "" || !Number.isInteger(r) || r < 1) { setError(set ? "Enter at least 1 rep, or remove the set." : "Enter at least 1 rep."); return; }
+    const h = Number(held);
+    if (timed && (!Number.isInteger(h) || h < 1 || h > 3600)) { setError("Enter the seconds held, 1 to 3600."); return; }
+    if (!timed && (reps.trim() === "" || !Number.isInteger(r) || r < 1)) { setError(set ? "Enter at least 1 rep, or remove the set." : "Enter at least 1 rep."); return; }
     const effort = rir.trim() === "" ? undefined : Number(rir);
     setBusy(true); setError(null);
     try {
-      const input = { weight: w, reps: r, setKind: warmUp ? "WARMUP" as const : "WORKING" as const, ...(effort !== undefined ? { repsInReserve: effort } : {}) };
+      const input = { weight: w, reps: timed ? (set?.reps ?? 0) : r, setKind: kind, ...(timed ? { durationSec: h } : {}),
+        ...(effort !== undefined && kind !== "FAILURE" ? { repsInReserve: effort } : {}) };
       const result = set ? await correctSet(set.id, input) : await addSetToSession((target as { add: { sessionId: string } }).add.sessionId, (target as { add: { exerciseId: string } }).add.exerciseId, input);
       feedback("MEDIUM");
-      onDone({ result, text: set ? `${set.skipped ? "Filled in" : "Fixed"}: set ${set.setNumber}, ${w} lb × ${r}.` : `Added: ${w} lb × ${r}.` });
+      const what = timed ? `${w > 0 ? `${w} lb, ` : ""}held ${formatHold(h)}` : `${w} lb × ${r}`;
+      onDone({ result, text: set ? `${set.skipped ? "Filled in" : "Fixed"}: set ${set.setNumber}, ${what}.` : `Added: ${what}.` });
     } catch (e) { setError(describeError(e, "That didn't save. Nothing changed.")); }
     finally { setBusy(false); }
   };
@@ -75,10 +85,13 @@ export function SetFixSheet({ target, exerciseName, onDone, onCancel }: {
     {set && !set.skipped && <p className="meta">Now: {describeSetValues(set)}</p>}
     <div className="set-fix__fields">
       <label className="set-fix__field">Weight (lb)<input type="number" inputMode="decimal" min={0} step="any" value={weight} onChange={(e) => setWeight(e.target.value)} /></label>
-      <label className="set-fix__field">Reps<input type="number" inputMode="numeric" min={1} step={1} value={reps} onChange={(e) => setReps(e.target.value)} /></label>
-      <label className="set-fix__field">Reps left (optional)<input type="number" inputMode="numeric" min={0} max={10} step={1} value={rir} onChange={(e) => setRir(e.target.value)} /></label>
-      <label className="set-fix__check"><input type="checkbox" checked={warmUp} onChange={(e) => setWarmUp(e.target.checked)} />Warm-up</label>
+      {timed
+        ? <label className="set-fix__field">Seconds held<input type="number" inputMode="numeric" min={1} max={3600} step={1} value={held} onChange={(e) => setHeld(e.target.value)} /></label>
+        : <label className="set-fix__field">Reps<input type="number" inputMode="numeric" min={1} step={1} value={reps} onChange={(e) => setReps(e.target.value)} /></label>}
+      {kind !== "FAILURE" && <label className="set-fix__field">Reps left (optional)<input type="number" inputMode="numeric" min={0} max={10} step={1} value={rir} onChange={(e) => setRir(e.target.value)} /></label>}
     </div>
+    {/* GRAYSON-SET-TYPES-001: change a set's kind after logging, with UNDO (a fix). Adding a set offers no Drop. */}
+    <SetKindPicker value={kind} allowDrop={!!set} disabled={busy} onChange={setKind} />
     {error && <p className="meta" role="alert">{error}</p>}
     <div className="set-fix__acts">
       <button type="button" className="btn-primary" disabled={busy} onClick={() => void save()}>SAVE</button>

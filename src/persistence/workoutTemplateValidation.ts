@@ -24,6 +24,9 @@ const exerciseSlotFields = {
   supersetWithNext: z.boolean().optional(),
   // GRAYSON-ROUTINE-EDIT-001: optional and additive (the rest memory's 15 s to 10 min); older rows read as before.
   restSeconds: z.number().int().min(15).max(600).optional(),
+  // GRAYSON-SET-TYPES-001: optional and additive; older rows read as reps.
+  measure: z.enum(["REPS", "TIME"]).optional(),
+  targetSec: z.number().int().min(5).max(600).optional(),
 };
 
 export const exerciseSlotSchema = z

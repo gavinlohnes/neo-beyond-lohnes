@@ -605,10 +605,10 @@ export const REGISTRY: Registry = {
       const session = await getActiveWorkoutSession();
       if (!session || session.id !== p.session_id) throw new Error("WORKOUT_NOT_ACTIVE: that workout is no longer in progress.");
       // The next number after any logged or skipped set of this exercise, as TRAIN numbers them (review of #386).
-      const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((st) => st.exerciseId === p.exercise_id && st.setKind !== "WARMUP").map((st) => st.setNumber));
+      const last = Math.max(0, ...(await getPerformedSets(session.id)).filter((st) => st.exerciseId === p.exercise_id && st.setKind !== "WARMUP" && st.setKind !== "DROP").map((st) => st.setNumber));
       await logSet(session.beyondDayId, session.id, p.exercise_id, last + 1, p.weight, p.reps);
       // ALFRED-ACT-001: the set just written, so UNDO takes back exactly this one (TRAIN's own SET_UNDONE).
-      const performed = (await getPerformedSets(session.id)).find((st) => st.exerciseId === p.exercise_id && st.setNumber === last + 1 && st.setKind !== "WARMUP");
+      const performed = (await getPerformedSets(session.id)).find((st) => st.exerciseId === p.exercise_id && st.setNumber === last + 1 && st.setKind !== "WARMUP" && st.setKind !== "DROP");
       return performed ? { undo: { kind: "set", dayId: session.beyondDayId, sessionId: session.id, performedSetId: performed.id } } : {};
     },
   },
