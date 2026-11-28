@@ -1962,6 +1962,7 @@ Direct owner ruling, 2026-09-12 (in chat): general authorization to build toward
   shape of open, permissively-licensed datasets (free-exercise-db, Unlicense; wger, exercise data
   CC-licensed separately from its AGPL code) but every entry is a hand-authored generic exercise
   fact — never a verbatim copy of a specific dataset's file or content.
+- **Amended (GRAYSON-OPEN-LIBRARY-001, Gavin's merge of its brief, 2026-11-28):** for free-exercise-db only, a pinned, generated copy of its data (no pictures) is bundled as the open exercise library; see [GRAYSON-OPEN-LIBRARY](decisions/GRAYSON-OPEN-LIBRARY.md). wger's code stays rejected.
 - **Amended (GRAYSON-ROUTINE-EDIT-001, Gavin, 2026-11-25):** A, B and C are now editable with a one-tap reset to
   the code's version, through an override event; see [GRAYSON-ROUTINE-EDIT](decisions/GRAYSON-ROUTINE-EDIT.md).
   `WORKOUT_TEMPLATES` itself still never changes, and its exercise ids stay a closed set.

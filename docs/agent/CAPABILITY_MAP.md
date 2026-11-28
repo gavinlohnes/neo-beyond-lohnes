@@ -304,7 +304,13 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
 - **Rejected**: importing wger's application code (AGPL is a real license concern for anything
   bundled into this repo); a bulk verbatim import of free-exercise-db's or any other dataset's
   file (kept the same "own the UX, don't build/import a proprietary database" line NUTRITION
-  already drew, applied to a second domain).
+  already drew, applied to a second domain). **Amended (GRAYSON-OPEN-LIBRARY-001, Gavin's merge of
+  its brief, 2026-11-28):** for free-exercise-db only, a pinned, generated copy of its data (no
+  pictures) is bundled; see [GRAYSON-OPEN-LIBRARY](../decisions/GRAYSON-OPEN-LIBRARY.md). wger stays rejected.
+- **Built — GRAYSON-OPEN-LIBRARY-001:** `scripts/build-open-exercises.mjs` writes
+  `src/data/openExercises.json` from one pinned free-exercise-db commit; `domain/workout/openLibrary.ts` holds the
+  one muscle table, the duplicate rule and search; `application/openLibrary.ts` loads it lazily (its own chunk) with
+  his hide list and stretches switch. The library screen and the routine picker search it after his own.
 - **Built (2026-09-12)**: `src/domain/workout/exerciseLibrary.ts`'s `EXERCISE_LIBRARY` — a small
   (~60 entry), hand-authored reference list (generic exercise facts: name/muscle group/equipment/
   rep range), and `src/domain/workout/customExercise.ts`'s `CustomExercise` — a directly-mutable
@@ -339,7 +345,8 @@ No mandatory Drop harvest, fresh Drive search or parallel research process is re
   built from those primitives; it does not authorize writes, Engine changes or Mission semantics.
 - Donor ruling: adapt equipment/feedback patterns from Fitbod and observed muscle distribution from
   Hevy; ideas only from MIT GainPath/Workout Planner; no wger AGPL code; free-exercise-db bulk reuse
-  stays deferred under the existing owner ruling.
+  stays deferred under the existing owner ruling (since amended for free-exercise-db's data only,
+  GRAYSON-OPEN-LIBRARY-001, 2026-11-28).
 
 - **Built — GYM-UPGRADE-001:** the existing TRAIN/Gym command path includes optional warm-up kind
   and reps-in-reserve; absent legacy kind remains working. Shared `isWorkingSet` bounds statistics;

@@ -2,7 +2,9 @@ import { useEffect, useId, useRef, useState } from "react";
 import { resetRoutine, saveRoutineEdit, undoRoutineEdit, type RoutineEditResult } from "../../../application/routineEditCommands";
 import { createCustomTemplate } from "../../../application/customTemplateCommands";
 import {
+  countOpenMatches,
   filterRoutineExerciseChoices,
+  OPEN_CHOICES_SHOWN,
   getRoutineExerciseChoices,
   getRoutineViews,
   type RoutineExerciseChoice,
@@ -271,8 +273,10 @@ export function ExercisePicker({ title, taken, onPick, onCancel, recent, busy = 
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const id = useId();
-  useEffect(() => { searchRef.current?.focus(); void getRoutineExerciseChoices().then(setChoices).catch((e) => setError(describeError(e, "The exercise list is unavailable."))); }, []);
+  useEffect(() => { searchRef.current?.focus(); void getRoutineExerciseChoices({ open: true }).then(setChoices).catch((e) => setError(describeError(e, "The exercise list is unavailable."))); }, []);
   const shown = choices ? filterRoutineExerciseChoices(choices, query).filter((c) => !taken.has(c.exerciseId) && !taken.has(`name:${c.name.trim().toLowerCase()}`)) : [];
+  // GRAYSON-OPEN-LIBRARY-001: open matches show once he searches, at most OPEN_CHOICES_SHOWN at a time.
+  const openTotal = choices ? countOpenMatches(choices, query) : 0;
 
   return <section className="card routine-picker" aria-labelledby={`${id}-title`} data-routine-picker>
     <h3 id={`${id}-title`} className="card-title">{title}</h3>
@@ -287,6 +291,8 @@ export function ExercisePicker({ title, taken, onPick, onCancel, recent, busy = 
       <input ref={searchRef} type="search" className="input" value={query} placeholder="Name, muscle or equipment" onChange={(e) => setQuery(e.target.value)} /></label>
     {error && <p className="meta meta--error" role="alert">{error}</p>}
     {choices && shown.length === 0 && <p className="empty-state">Nothing matches “{query.trim()}”.</p>}
+    {!query.trim() && <p className="meta">Search to find more in the open exercise set.</p>}
+    {openTotal > OPEN_CHOICES_SHOWN && <p className="meta" role="status">Showing {OPEN_CHOICES_SHOWN} of {openTotal} from the open set. Type more to narrow it.</p>}
     <ul className="routine-picker__list">
       {shown.map((c) => <li key={c.exerciseId}>
         <button type="button" className="routine-picker__choice" disabled={busy} onClick={() => onPick(c)}>

@@ -543,7 +543,7 @@ change it.
 | **Workout Planner** (MIT) | Direct/secondary muscle accounting, plan preview, offline/mobile cycle calibration | **COPY IDEAS ONLY.** Its volume tiers are not imported as scientific truth. |
 | **NHS Couch to 5K** | Time-based run/walk progression, recovery between sessions and repeatable weeks | **ADAPT AS FOUNDATION.** Make it shift-aware, initially compatible with three strength sessions, then hand off to 1.5-mile-specific work. |
 | **wger** | Connected routines/exercises/nutrition/weight and flexible progression | **REJECT CODE INTEGRATION.** AGPL application code; separately licensed content requires item-level diligence. |
-| **free-exercise-db** | Public-domain exercise schema with muscles/equipment/instructions | **DEFER BULK REUSE.** Existing owner ruling prohibits bulk import; hand-authored library remains until separately amended. |
+| **free-exercise-db** | Public-domain exercise schema with muscles/equipment/instructions | **DEFER BULK REUSE.** Existing owner ruling prohibits bulk import; hand-authored library remains until separately amended. **Amended 2026-11-28 (GRAYSON-OPEN-LIBRARY-001):** its data, pinned and without pictures, is bundled as the open exercise library. |
 
 - **REUSE:** existing BEYOND TRAIN execution/progression/programme/custom-template/history, Body,
   nutrition targets, Food Week, Eating Window, sleep/capacity, Missions, Week Planner and Review.
@@ -689,8 +689,8 @@ Primary and first-party sources inspected 2026-11-20:
   <https://github.com/Aebisc/Workout-Planner>
 - wger: AGPL-3.0 application; exercise/ingredient content separately Creative Commons per item.
   <https://github.com/wger-project/wger>
-- free-exercise-db: Unlicense/public-domain-style dataset; reuse remains deferred by the existing
-  owner ruling. <https://github.com/yuhonas/free-exercise-db>
+- free-exercise-db: Unlicense/public-domain-style dataset; its data is bundled, pinned and without
+  pictures, since GRAYSON-OPEN-LIBRARY-001 (2026-11-28). <https://github.com/yuhonas/free-exercise-db>
 
 Owner-supplied external evidence inspected but not committed: “Appendix A - Physical Fitness
 Standards,” dated row 12-15-22, containing the four male/female age-category tables summarized above.

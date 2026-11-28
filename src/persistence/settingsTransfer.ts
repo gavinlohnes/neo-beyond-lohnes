@@ -28,6 +28,7 @@ export const TRAVELLING_SETTINGS: Readonly<Record<string, string>> = {
   "beyond.exerciseHowTo.v1": "Exercise how-to edits",
   "beyond:restBuzzPreference": "Rest timer buzz",
   "beyond.dropStep.v1": "Drop set step",
+  "beyond.openLibrary.v1": "Open exercise library (hidden exercises, stretches)",
   "beyond:runningBuzz": "Running buzz",
   "beyond:runningHalfwayCue": "Running halfway cue",
   "beyond:runningKeepAwake": "Running keeps the screen on",
