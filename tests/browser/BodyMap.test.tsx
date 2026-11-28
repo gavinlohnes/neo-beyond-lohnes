@@ -50,7 +50,9 @@ describe("GRAYSON-TRAIN-BODYMAP-001 body map", { timeout: 60_000 }, () => {
     for (const region of ["Chest", "Back", "Shoulders", "Arms", "Core", "Legs", "Glutes"]) {
       (document.querySelector(`[data-region="${region}"]`) as SVGGElement).dispatchEvent(new MouseEvent("click", { bubbles: true }));
       const expected = EXERCISE_LIBRARY.filter((e) => e.muscleGroup === region).map((e) => e.id);
-      await expect.poll(() => listed().filter((id) => id!.startsWith("lib-"))).toEqual(expected);
+      // Library entries, by membership: GRAYSON-HOME-STRETCH-001's home moves are library entries under home-* ids.
+      const libraryIds = new Set(EXERCISE_LIBRARY.map((e) => e.id));
+      await expect.poll(() => listed().filter((id) => libraryIds.has(id!))).toEqual(expected);
       expect(document.querySelector(`[data-region="${region}"]`)!.classList.contains("body-map__region--selected")).toBe(true);
     }
 

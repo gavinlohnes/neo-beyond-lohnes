@@ -1,5 +1,6 @@
 import { isWorkingSet } from "../domain/workout/types";
 import { EXERCISE_LIBRARY, type MuscleGroup } from "../domain/workout/exerciseLibrary";
+import { TEMPLATE_TO_LIBRARY_ID } from "../domain/workout/exerciseHowTo";
 import type { PerformedSet } from "../domain/workout/types";
 import { workoutVolumeLbs } from "./trainHistoryQueries";
 import { db } from "../persistence/db";
@@ -44,7 +45,7 @@ export async function getWeekInNumbers(current: WeeklyDashboard) {
   // MUSCLE-MAP-001 (APPS-PICKS-003 pick 20, after Hevy): performed sets per muscle group, from the exercise's
   // library or custom muscle group. Exercises without a known group are counted as "Other", never guessed.
   const groupOf = new Map<string, string>([...Object.entries(BUILT_IN_MUSCLES), ...EXERCISE_LIBRARY.map((e) => [e.id, e.muscleGroup] as const), ...custom.map((e) => [e.id, e.muscleGroup] as const)]);
-  const muscles = Object.entries(sets.reduce<Record<string, number>>((acc, set) => { const g = groupOf.get(set.exerciseId) ?? "Other"; acc[g] = (acc[g] ?? 0) + 1; return acc; }, {}))
+  const muscles = Object.entries(sets.reduce<Record<string, number>>((acc, set) => { const g = groupOf.get(set.exerciseId) ?? groupOf.get(TEMPLATE_TO_LIBRARY_ID[set.exerciseId] ?? "") ?? "Other"; acc[g] = (acc[g] ?? 0) + 1; return acc; }, {}))
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   // WEEK-COMPARE-001: the week before, from the read above, for a side-by-side line. Null when it has no records.
   const before = previous.headline.recordedDays > 0 ? { start: previous.week.start, sessions: previous.headline.sessions, ...deriveWeekInNumbers(previous.rows, []) } : null;

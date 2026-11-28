@@ -34,7 +34,10 @@ function readAll(): Record<string, StoredNote> {
 
 /** The note for a library or built-in exercise, or null. Anything bad in storage reads as no note. */
 export function readExerciseNote(exerciseId: string): string | null {
-  return readAll()[noteKeyFor(exerciseId)]?.text ?? null;
+  const all = readAll();
+  // GRAYSON-HOME-STRETCH-001: Glute Bridge and Plank's home ids now share their library entry's note; one saved under
+  // the home id before that still shows.
+  return all[noteKeyFor(exerciseId)]?.text ?? all[exerciseId]?.text ?? null;
 }
 
 export function checkExerciseNote(text: string): string {
@@ -49,6 +52,8 @@ export function writeExerciseNote(exerciseId: string, text: string, now: Date = 
   const notes = readAll();
   if (trimmed) notes[noteKeyFor(exerciseId)] = { text: trimmed, updatedAt: now.toISOString() };
   else delete notes[noteKeyFor(exerciseId)];
+  // An older note kept under the raw id gives way to the shared one, so a cleared note doesn't come back.
+  if (noteKeyFor(exerciseId) !== exerciseId) delete notes[exerciseId];
   try { localStorage.setItem(EXERCISE_NOTES_KEY, JSON.stringify(notes)); } catch { /* storage blocked: unchanged */ }
 }
 
