@@ -2,6 +2,7 @@ import { getCustomExercises } from "./exerciseLibraryQueries";
 import { getCustomTemplates, getRoutineEditEntries } from "./customTemplateQueries";
 import { getTrainingProgramme } from "./trainingProgramme";
 import { EXERCISE_LIBRARY } from "../domain/workout/exerciseLibrary";
+import { describeOpenExercise, OPEN_REP_HIGH, OPEN_REP_LOW } from "../domain/workout/openLibrary";
 import { deriveIncrementLbs, WORKOUT_TEMPLATE_ORDER, type ExercisePrescription } from "../domain/workout/types";
 import { builtInRoutineAt, originalBuiltInExercises, routineEditState, sameRoutine, type RoutineEditEntry } from "../domain/workout/routineEdit";
 
@@ -56,6 +57,8 @@ export interface RoutineExerciseChoice {
   repRangeHigh: number;
   incrementLbs: number;
   mine: boolean;
+  /** GRAYSON-OPEN-LIBRARY-001: from the open exercise set; listed only when he searches. */
+  open?: boolean;
   /** GRAYSON-SET-TYPES-001: a timed exercise brings its target with it. */
   measure?: "TIME";
   targetSec?: number;
@@ -69,7 +72,7 @@ const timedOf = (ex: { measure?: string | undefined; targetSec?: number | undefi
  * history), then the bundled library. A library entry he already saved, or one with the same name as an entry above,
  * isn't listed twice.
  */
-export async function getRoutineExerciseChoices(): Promise<RoutineExerciseChoice[]> {
+export async function getRoutineExerciseChoices(options: { open?: boolean } = {}): Promise<RoutineExerciseChoice[]> {
   const mine = await getCustomExercises();
   const seeded = new Set(mine.flatMap((ex) => (ex.libraryExerciseId ? [ex.libraryExerciseId] : [])));
   const choices: RoutineExerciseChoice[] = mine.map((ex) => ({ exerciseId: ex.id, name: ex.name, detail: `${ex.muscleGroup} · ${ex.equipment} · yours`,
@@ -89,11 +92,37 @@ export async function getRoutineExerciseChoices(): Promise<RoutineExerciseChoice
     choices.push({ exerciseId: ex.id, name: ex.name, detail: `${ex.muscleGroup} · ${ex.equipment}`, repRangeLow: ex.repRangeLow,
       repRangeHigh: ex.repRangeHigh, incrementLbs: deriveIncrementLbs(ex.equipment, ex.muscleGroup), mine: false, ...timedOf(ex) });
   }
+  // GRAYSON-OPEN-LIBRARY-001: the open set last, when the picker asks (it loads the bundled file). His names win.
+  if (options.open) {
+    try {
+      for (const c of choices) named.add(c.name.trim().toLowerCase());
+      const { getVisibleOpenExercises } = await import("./openLibrary");
+      const open = (await getVisibleOpenExercises()).filter((ex) => !named.has(ex.name.trim().toLowerCase()));
+      for (const ex of open) {
+        choices.push({ exerciseId: ex.id, name: ex.name, detail: `${describeOpenExercise(ex)} · open set`, repRangeLow: OPEN_REP_LOW, repRangeHigh: OPEN_REP_HIGH,
+          incrementLbs: deriveIncrementLbs(ex.equipment, ex.muscleGroup), mine: false, open: true });
+      }
+    } catch { /* The open set couldn't load (offline before its first load): his own and the library still list. */ }
+  }
   return choices;
 }
 
-/** Case-insensitive on name and detail; an empty query lists everything. */
+/** GRAYSON-OPEN-LIBRARY-001: at most this many open matches at once; typing more narrows them. */
+export const OPEN_CHOICES_SHOWN = 40;
+
+/**
+ * Case-insensitive on name and detail; an empty query lists everything but the open set, which only shows when he
+ * searches (his own first, then at most OPEN_CHOICES_SHOWN open matches).
+ */
 export function filterRoutineExerciseChoices(choices: readonly RoutineExerciseChoice[], query: string): RoutineExerciseChoice[] {
   const q = query.trim().toLowerCase();
-  return q ? choices.filter((c) => c.name.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q)) : [...choices];
+  if (!q) return choices.filter((c) => !c.open);
+  const found = choices.filter((c) => c.name.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q));
+  return [...found.filter((c) => !c.open), ...found.filter((c) => c.open).slice(0, OPEN_CHOICES_SHOWN)];
+}
+
+/** How many open matches a search has in all (to say "showing 40 of 120"). */
+export function countOpenMatches(choices: readonly RoutineExerciseChoice[], query: string): number {
+  const q = query.trim().toLowerCase();
+  return q ? choices.filter((c) => c.open && (c.name.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q))).length : 0;
 }

@@ -10,6 +10,12 @@ import { getCustomExercises } from "../../../application/exerciseLibraryQueries"
 import { archiveCustomExercise, createCustomExercise, updateCustomExercise } from "../../../application/exerciseLibraryCommands";
 import { formatHold } from "../../../domain/workout/types";
 import { FieldDisclosure } from "../../components/FieldDisclosure";
+import "./openLibrary.css";
+import {
+  copyOpenExerciseToMine, getOpenLibraryPrefs, getOpenLibrarySource, getVisibleOpenExercises, hideOpenExercise, setShowStretches,
+  showHiddenOpenExercises, type OpenLibraryPrefs,
+} from "../../../application/openLibrary";
+import { describeOpenExercise, searchOpenExercises, type OpenExercise } from "../../../domain/workout/openLibrary";
 import { describeError } from "../../errorMessage";
 
 /**
@@ -84,6 +90,21 @@ function LibraryRow({ lib, children }: { lib: LibraryExercise; children: React.R
   );
 }
 
+/** GRAYSON-OPEN-LIBRARY-001: one open exercise: its muscles and equipment, HOW TO (its steps), EDIT (copy to mine), HIDE. */
+function OpenRow({ ex, busy, onHowTo, onEdit, onHide }: { ex: OpenExercise; busy: boolean; onHowTo: () => void; onEdit: () => void; onHide: () => void }) {
+  return (
+    <div className="equipment-row open-row" data-open-exercise={ex.id}>
+      <p className="card-body" style={{ margin: 0 }}>{ex.name}</p>
+      <p className="meta" style={{ margin: 0 }}>{describeOpenExercise(ex)} · open set</p>
+      <div className="open-row__acts">
+        <button type="button" className="btn-secondary open-row__act" aria-label={`How to do ${ex.name}`} onClick={onHowTo}>HOW TO</button>
+        <button type="button" className="btn-secondary open-row__act" aria-label={`Copy ${ex.name} into my exercises to edit it`} disabled={busy} onClick={onEdit}>EDIT</button>
+        <button type="button" className="btn-secondary open-row__act" aria-label={`Hide ${ex.name} from search`} disabled={busy} onClick={onHide}>HIDE</button>
+      </div>
+    </div>
+  );
+}
+
 export function ExerciseLibraryScreen() {
   const [howTo, setHowTo] = useState<{ id: string; name: string } | null>(null);
   const [byMuscle, setByMuscle] = useState(false);
@@ -109,6 +130,30 @@ export function ExerciseLibraryScreen() {
   useEffect(() => {
     setLibraryResults(searchLibraryExercises(query));
   }, [query]);
+
+  // GRAYSON-OPEN-LIBRARY-001: the open set loads the first time he searches, and shows after his own matches.
+  const [openVisible, setOpenVisible] = useState<OpenExercise[] | null>(null);
+  const [openPrefs, setOpenPrefs] = useState<OpenLibraryPrefs>(() => getOpenLibraryPrefs());
+  const [openNotice, setOpenNotice] = useState<string | null>(null);
+  const [openSource, setOpenSource] = useState<{ commit: string; licence: string } | null>(null);
+  const searching = query.trim().length > 0;
+  useEffect(() => {
+    if (!searching) return;
+    let live = true;
+    void getVisibleOpenExercises().then((list) => { if (live) setOpenVisible(list); }).catch(() => { if (live) setOpenVisible([]); });
+    if (!openSource) void getOpenLibrarySource().then((src) => { if (live) setOpenSource(src); }).catch(() => {});
+    return () => { live = false; };
+    // Reload when his choices or his own exercises change.
+  }, [searching, openPrefs, exercises]); // eslint-disable-line react-hooks/exhaustive-deps
+  // His hide list applies at once, before the reload finishes.
+  const openMatches = searching && openVisible ? searchOpenExercises(openVisible, query).filter((ex) => !openPrefs.hidden.includes(ex.id)) : [];
+  const OPEN_SHOWN = 40;
+
+  function updateOpenPrefs(change: () => void, notice: string) {
+    change();
+    setOpenPrefs(getOpenLibraryPrefs());
+    setOpenNotice(notice);
+  }
 
   async function refresh() {
     setExercises(await getCustomExercises());
@@ -241,6 +286,42 @@ export function ExerciseLibraryScreen() {
                 </LibraryRow>
               ))}
             </div>
+
+            {/* GRAYSON-OPEN-LIBRARY-001: the open set, by search, after his own and the library's matches. */}
+            <section aria-labelledby="open-library-heading" className="open-library" data-open-library>
+              <h3 id="open-library-heading" className="meta" style={{ margin: "0 0 4px" }}>OPEN EXERCISE SET</h3>
+              {!searching && <p className="meta">Search to find about 800 more from the open exercise set.</p>}
+              {searching && openVisible === null && <p className="meta" role="status">Loading the open exercise set…</p>}
+              {searching && openVisible !== null && openMatches.length === 0 && <p className="meta">No open matches.</p>}
+              {openMatches.length > OPEN_SHOWN && <p className="meta" role="status">Showing {OPEN_SHOWN} of {openMatches.length}. Type more to narrow it.</p>}
+              {openNotice && <p className="meta" role="status">{openNotice}</p>}
+              <div role="group" aria-label="Open exercise set matches">
+                {openMatches.slice(0, OPEN_SHOWN).map((ex) => (
+                  <OpenRow key={ex.id} ex={ex} busy={busy} onHowTo={() => setHowTo({ id: ex.id, name: ex.name })}
+                    onEdit={() => void withBusy(async () => {
+                      const acknowledge = captureCommitFeedback();
+                      await copyOpenExerciseToMine(ex.id);
+                      acknowledge("LIGHT");
+                      setOpenPrefs(getOpenLibraryPrefs());
+                      setOpenNotice(`${ex.name} is in your exercises now. Change it there.`);
+                      await refresh();
+                    })}
+                    onHide={() => updateOpenPrefs(() => hideOpenExercise(ex.id), `${ex.name} is hidden from search.`)} />
+                ))}
+              </div>
+              <label className="routine-option">
+                <input type="checkbox" checked={openPrefs.showStretches}
+                  onChange={(e) => { const show = e.target.checked; updateOpenPrefs(() => setShowStretches(show), show ? "Stretches show in search." : "Stretches are hidden."); }} />
+                Show stretches
+              </label>
+              {openPrefs.hidden.length > 0 && (
+                <p className="meta" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                  {openPrefs.hidden.length} hidden
+                  <button type="button" className="btn-secondary open-row__act" onClick={() => updateOpenPrefs(() => showHiddenOpenExercises(), "Hidden open exercises show again.")}>SHOW THEM AGAIN</button>
+                </p>
+              )}
+              {openSource && <p className="meta">From free-exercise-db ({openSource.licence}), pinned at {openSource.commit.slice(0, 8)}.</p>}
+            </section>
 
             <p className="meta" style={{ marginBottom: 8, borderTop: "1px solid var(--border-subtle)", paddingTop: 12 }}>
               OR CREATE A FULLY CUSTOM EXERCISE

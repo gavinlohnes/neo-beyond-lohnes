@@ -6,7 +6,7 @@
   below **and amends his earlier no-bulk-import ruling for this one dataset** (see "This amends a ruling").
 - **Lane: PROTECTED** (new bundled third-party data and an amended owner ruling). No new table or Dexie version.
   Independent exact-head review, green CI; Gavin merges.
-- **Starting commit:** `origin/master` with the five TRAIN basics (B1–B5) merged. Re-fetch before starting.
+- **Starting commit:** `origin/master` with the five TRAIN basics (B1–B5) merged. Re-fetch before starting. Built from `4eee98bb` (SET-TYPES-001 merged as #748).
 - **Builder:** Claude Code, TRAIN lane. Branch `claude/grayson-open-library-001`. **Reviewer:** a fresh-context
   reviewer.
 - **Order:** Claude Code, after the TRAIN basics and alongside or after SET-TYPES-001, in

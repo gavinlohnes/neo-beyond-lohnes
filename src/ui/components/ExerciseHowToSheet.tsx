@@ -2,6 +2,21 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { effectiveHowTo, isHttpsUrl, resetHowTo, writeHowToEdit } from "../screens/train/exerciseHowToStore";
 import "./exerciseHowTo.css";
+import { describeOpenExercise, isOpenExerciseId, OPEN_STEPS_LABEL, type OpenExercise } from "../../domain/workout/openLibrary";
+
+/** GRAYSON-OPEN-LIBRARY-001: an open exercise's own steps, said where they come from. His how-to wins where one exists. */
+function OpenSteps({ exerciseId }: { exerciseId: string }) {
+  const [ex, setEx] = useState<OpenExercise | null | undefined>(undefined);
+  useEffect(() => { let live = true; void import("../../application/openLibrary").then(({ getOpenExercise }) => getOpenExercise(exerciseId)).then((found) => { if (live) setEx(found ?? null); }).catch(() => { if (live) setEx(null); }); return () => { live = false; }; }, [exerciseId]);
+  if (ex === undefined) return <section className="howto-sheet__body"><p className="meta" role="status">Loading…</p></section>;
+  if (ex === null || ex.steps.length === 0) return <section className="howto-sheet__body"><p>No steps for this one in the open exercise set.</p></section>;
+  return <section className="howto-sheet__body" data-open-steps>
+    <p className="meta-strong">{OPEN_STEPS_LABEL}</p>
+    <p className="meta">{describeOpenExercise(ex)} · {ex.level}</p>
+    <h3>Steps</h3>
+    <ol className="howto-sheet__list">{ex.steps.map((step, i) => <li key={i}>{step}</li>)}</ol>
+  </section>;
+}
 
 /**
  * GRAYSON-TRAIN-HOWTO-001 (Gavin, 2026-11-24): "how do I do this?" for any library exercise, offline, with one tap
@@ -45,7 +60,8 @@ export function ExerciseHowToSheet({ exerciseId, name, onClose }: { exerciseId: 
       <div><p className="tool-label">HOW TO</p><h2 id={titleId}>{name}</h2></div>
       <button type="button" className="btn-secondary howto-sheet__close" onClick={onClose}>CLOSE</button>
     </header>
-    {!guide ? <section className="howto-sheet__body"><p>Your own exercise: its note is the guide. Library exercises have a full how-to.</p></section>
+    {!guide ? (isOpenExerciseId(exerciseId) ? <OpenSteps exerciseId={exerciseId} />
+        : <section className="howto-sheet__body"><p>Your own exercise: its note is the guide. Library exercises have a full how-to.</p></section>)
       : editing ? <HowToEditor exerciseId={exerciseId} guide={guide}
           onDone={(text) => { setEditing(false); setNotice(text); setVersion((n) => n + 1); }} onCancel={() => setEditing(false)} />
       : <section className="howto-sheet__body">

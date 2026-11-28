@@ -127,8 +127,11 @@ describe("GRAYSON-ROUTINE-EDIT-001 one routine editor", () => {
     await expect.element(screen.getByRole("button", { name: "More for Cable Fly" })).toHaveFocus();
     await screen.getByRole("button", { name: "More for Leg Press" }).click();
     await screen.getByRole("button", { name: "SWAP" }).click();
+    await screen.getByRole("searchbox", { name: "Search" }).fill("zzqx");
+    await expect.element(screen.getByText("Nothing matches “zzqx”.")).toBeVisible();
+    // GRAYSON-OPEN-LIBRARY-001: "hack" used to match nothing; the open exercise set has a Hack Squat.
     await screen.getByRole("searchbox", { name: "Search" }).fill("hack");
-    await expect.element(screen.getByText("Nothing matches “hack”.")).toBeVisible();
+    await expect.element(screen.getByRole("button", { name: /^Hack Squat.*open set/ })).toBeVisible();
     await screen.getByRole("searchbox", { name: "Search" }).fill("back squat");
     await screen.getByRole("button", { name: /^Back Squat/ }).click();
     await screen.getByRole("button", { name: "SAVE", exact: true }).click();

@@ -3,7 +3,7 @@ import type { PerformedSet } from "../domain/workout/types";
 import { formatHold, WORKOUT_TEMPLATES } from "../domain/workout/types";
 import { fixedExerciseNames } from "../domain/workout/routineEdit";
 import { getUndoneSetIds } from "./trainQueries";
-import { getCustomExercises } from "./exerciseLibraryQueries";
+import { getCustomExercises, getExerciseNames } from "./exerciseLibraryQueries";
 
 export {
   byLoggedOrder,
@@ -59,6 +59,8 @@ export async function getAllRecords(): Promise<RecordCard[]> {
   // GRAYSON-ROUTINE-EDIT-001: A, B and C, then the bundled library (a routine can hold either).
   const names = fixedExerciseNames();
   for (const ex of await getCustomExercises({ includeArchived: true })) names.set(ex.id, ex.name);
+  // GRAYSON-OPEN-LIBRARY-001: an open exercise is named by the routine or workout that held it, never by the bundled file.
+  for (const [id, name] of Object.entries(await getExerciseNames())) if (!names.has(id)) names.set(id, name);
 
   const priorSets: PerformedSet[] = [];
   const cards: RecordCard[] = [];

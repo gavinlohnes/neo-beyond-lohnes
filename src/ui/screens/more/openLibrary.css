@@ -1,0 +1,6 @@
+/* GRAYSON-OPEN-LIBRARY-001: one open exercise: name, muscles, then HOW TO, EDIT and HIDE on one line (they wrap at
+   320 px only if they must). 44 px targets, 14 px labels like the library's ADD. */
+.open-row { margin-bottom: 6px; display: grid; gap: 4px; }
+.open-row .card-body, .open-row .meta { overflow-wrap: anywhere; }
+.open-row__acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.open-row__act { width: auto; min-height: 44px; padding: 4px 12px; font-size: 14px; flex: none; }

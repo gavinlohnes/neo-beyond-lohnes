@@ -3,6 +3,7 @@ import { parseCustomExercise } from "../persistence/exerciseValidation";
 import type { CustomExercise } from "../domain/workout/customExercise";
 import { fixedExerciseNames } from "../domain/workout/routineEdit";
 import { WORKOUT_TEMPLATES } from "../domain/workout/types";
+import { isOpenExerciseId } from "../domain/workout/openLibrary";
 
 /** Same shape as getSavedMeals (nutritionQueries.ts): excludes archived by default, newest first. */
 export async function getCustomExercises(options: { includeArchived?: boolean } = {}): Promise<CustomExercise[]> {
@@ -37,6 +38,9 @@ export async function getExerciseNames(): Promise<Record<string, string>> {
   for (const ex of used) {
     const id = (ex as { exerciseId?: unknown } | null)?.exerciseId;
     if (typeof id === "string" && !(id in names) && fixed.has(id)) names[id] = fixed.get(id)!;
+    // GRAYSON-OPEN-LIBRARY-001: an open exercise keeps the name its routine saved, whatever the bundled file says later.
+    const name = (ex as { name?: unknown } | null)?.name;
+    if (typeof id === "string" && !(id in names) && isOpenExerciseId(id) && typeof name === "string" && name.trim()) names[id] = name.trim();
   }
   return names;
 }
