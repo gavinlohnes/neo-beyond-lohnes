@@ -59,6 +59,13 @@ session. Added 2026-11-27 (Gavin, 21:23 CT: "2 and 6 we can wait until 1.1"; 21:
 
 Not briefed yet. Recipes and micronutrients come later, not in 1.1.
 
+**Design 1, after 1.0 (Gavin, 2026-11-27 21:40 CT: "I don't think it necessarily needs to be done for the 1.0
+launch... It dosent feel like a professionally designed and tested app // life os."):**
+[GRAYSON-DESIGN-001](GRAYSON-DESIGN-001.md). An audit and baseline, one design system (tokens and shared
+components), every screen onto it, the five tabs TODAY · FUEL · LOG · TRAIN · YOU, Delta as the one name, a night
+mode, then an after pass against before-and-after targets. Not in 1.0 and no builder slot yet: Gavin picks the builder
+and the start, one PR open at a time.
+
 ## Delta-track Claude Code session `ccr-380c4225` (TODAY, sleep, home; Grok Bot's queue)
 
 Grok Bot ran out of usage on 2026-11-24 at about 8:35 PM CT. Gavin gave its unstarted briefs to the Delta-track session
