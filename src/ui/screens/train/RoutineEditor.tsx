@@ -42,7 +42,7 @@ export const formatRest = (seconds: number) => `${Math.floor(seconds / 60)}:${St
 const describeRoutine = (exercises: readonly ExercisePrescription[]) =>
   `${exercises.length} ${exercises.length === 1 ? "exercise" : "exercises"} · ${exercises.reduce((t, ex) => t + ex.sets, 0)} sets`;
 
-export interface RoutineSaved { text: string; eventId: string | null; /** GRAYSON-TRAIN-HOME-001: UNDO of an ARCHIVE. */ unarchiveId?: string }
+export interface RoutineSaved { text: string; eventId: string | null; /** GRAYSON-TRAIN-HOME-001: UNDO of an ARCHIVE. */ unarchive?: { id: string; name: string } }
 
 /** The ROUTINES list, with the editor one tap from each row. */
 export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onClose }: {
@@ -87,7 +87,7 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
     setBusy(true); setError(null);
     try {
       if (await archiveCustomTemplate(r.templateId)) feedback("HEAVY");
-      setSaved({ text: `${r.label} archived.`, eventId: null, unarchiveId: r.templateId });
+      setSaved({ text: `${r.label} archived.`, eventId: null, unarchive: { id: r.templateId, name: r.label } });
       await reload(); await onChanged();
       requestAnimationFrame(() => headingRef.current?.focus());
     } catch (e) { setError(describeError(e, "That didn't archive. Nothing changed.")); }
@@ -115,8 +115,8 @@ export function RoutinesPanel({ initialTemplateId, workoutActive, onChanged, onC
     <p className="meta">Edit any routine, A, B and C included. A workout you've started keeps its exercises; a change applies from the next one.</p>
     {saved && <p className="routine-saved" role="status">{saved.text}{" "}
       {saved.eventId && <button type="button" className="btn-secondary routine-inline" disabled={busy} onClick={() => void undo(saved.eventId!)}>UNDO</button>}
-      {saved.unarchiveId && <button type="button" className="btn-secondary routine-inline" disabled={busy}
-        onClick={() => void bringBack(saved.unarchiveId!, saved.text.replace(/ archived\.$/, ""), true)}>UNDO</button>}</p>}
+      {saved.unarchive && <button type="button" className="btn-secondary routine-inline" disabled={busy}
+        onClick={() => void bringBack(saved.unarchive!.id, saved.unarchive!.name, true)}>UNDO</button>}</p>}
     {error && <p className="meta meta--error" role="alert">{error}</p>}
     {!routines ? <p className="meta">Reading routines…</p> : <ul className="routine-list__rows" aria-label="Your routines">
       {routines.map((r) => {

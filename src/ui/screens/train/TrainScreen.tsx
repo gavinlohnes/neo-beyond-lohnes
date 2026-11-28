@@ -469,12 +469,13 @@ export function TrainScreen({
     }
     // GRAYSON-ONE-OFF-001: START from TODAY, from a fresh read (review of #734).
     if (destination === "START_PLANNED" || destination === "START_PLANNED_REDUCED" || destination === "START_EMPTY") void startFromToday(destination);
-    if (destination === "ROUTINES" && !session) { setWeekOpen(false); setLibraryOpen(false); setRoutinesOpen({ templateId: null }); }
+    // Review of #751: mid-workout too, as MORE's CUSTOM PROGRAMS allowed (the live workout keeps its exercises).
+    if (destination === "ROUTINES") { setWeekOpen(false); setLibraryOpen(false); setRoutinesOpen({ templateId: null }); }
     requestAnimationFrame(() => {
       if (session && session.sessionType !== "RECOVERY" && destination === "WORKOUT" && exerciseHeadingRef.current) {
         exerciseHeadingRef.current.focus({ preventScroll: true });
         exerciseHeadingRef.current.scrollIntoView({ block: "start", behavior: "instant" });
-      } else if (destination === "ROUTINES" && !session) return; // the routines list focuses its own heading
+      } else if (destination === "ROUTINES") return; // the routines list focuses its own heading
       else if (session || destination !== "RECOVERY") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
@@ -1865,6 +1866,13 @@ export function TrainScreen({
       )}
 
       {/* GRAYSON-HOME-STRETCH-001 slice B: a stretch routine plays in its own player and saves itself. */}
+      {/* GRAYSON-TRAIN-HOME-001 (review of #751): MORE's ROUTINES · WORKOUTS during a workout opens the routines list
+          above it; the workout stays as it is, and a change applies from the next one. */}
+      {session && !completionSummary && routinesOpen && (
+        <RoutinesPanel initialTemplateId={routinesOpen.templateId} workoutActive
+          onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(true); }}
+          onClose={() => setRoutinesOpen(null)} />
+      )}
       {session && session.sessionType === "RECOVERY" && !completionSummary && readStretchPlay(session.id) && (
         <CommandSurface>
           <StretchPlayer session={session} onFinished={async () => { await performDueDayRollover().catch(() => {}); await refresh(); }} />

@@ -44,7 +44,7 @@ export async function getRoutineViews(): Promise<RoutineView[]> {
   ];
 }
 
-/** GRAYSON-TRAIN-HOME-001: his archived routines, newest first, for "Archived" in TRAIN's routines list. */
+/** GRAYSON-TRAIN-HOME-001: his archived routines (newest created first), for "Archived" in TRAIN's routines list. */
 export async function getArchivedRoutines(): Promise<{ templateId: string; name: string }[]> {
   return (await getCustomTemplates({ includeArchived: true })).filter((t) => t.archivedAt).map((t) => ({ templateId: t.id, name: t.name }));
 }
