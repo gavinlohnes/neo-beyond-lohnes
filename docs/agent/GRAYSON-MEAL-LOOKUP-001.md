@@ -8,12 +8,15 @@
 - **Lane: PROTECTED.** It adds a field to `MEAL_LOGGED` events and saved meals (event semantics, backup and CSV), changes
   what Alfred may propose and how its numbers are filled (AI authority), and calls a new Open Food Facts endpoint. Gavin
   merges after green CI and a fresh-context reviewer's exact-head PASS posted on the PR.
-- **Starting commit:** latest `origin/master` after X5 (GRAYSON-GARMIN-WORKOUTS-001) merges. Re-fetch before starting.
+- **Starting commit:** slice A, latest `origin/master` now; slices B and C, latest `origin/master` after X5
+  (GRAYSON-GARMIN-WORKOUTS-001) merges. Re-fetch before starting.
   Written against `9d83d915` (#755 merged).
 - **Builder:** Claude Code, Delta-track session (the "Project Grayson codex notes" chat), which built FUEL rows F1 to F4.
   Branch `claude/grayson-meal-lookup-001`. **Reviewer:** a fresh-context reviewer.
-- **Order:** row L1 in the Launch 1.1 table of [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md), first after X5. Builders
-  take turns: nothing else is being built while this is.
+- **Order:** slice A is row A1 in the Launch 1.0 table of [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md), built now
+  by Codex (the "GRAYSON home lane" chat), branch `codex/grayson-meal-lookup-001-slice-a`, lane FEATURE, Gavin merges
+  (Gavin, 2026-11-27 22:38 CT: **"Yes, add it to 1.0"**). Slices B and C are row L1 in the Launch 1.1 table, first
+  after X5, with the Builder above. Builders take turns: nothing else is being built while either is.
 - **Dexie:** no new version. `source` is a non-indexed field, so no index changes. Old records without it read as
   "not recorded".
 
@@ -74,10 +77,13 @@ whether branded foods are searched, log looked-up foods at once (off), "the usua
 whether the free helper looks foods up inline. Each entry's amount, numbers and source are editable, with UNDO.
 
 ## Slices
-- **A. Search numbers are right.** Confirm with a live USDA response whether branded search results are per 100 g. If
+- **A. Search numbers are right (in 1.0, row A1, its own PR).** Confirm with a live USDA response whether branded search results are per 100 g. If
   they are, scale branded values to the stated serving when its unit is g or ml, otherwise label them "per 100 g".
-  Send `dataType` explicitly. Tests on recorded responses for each data type. This slice fixes today's meal-sheet
-  search as well, so it may ship on its own first if Gavin asks.
+  Send `dataType` explicitly. Tests on recorded responses for each data type. The fix is in `searchFoods`, so it covers
+  both callers (`RecordSheets.tsx` and `BodyScreen.tsx`). No new field, no Dexie change, no Alfred change. Already
+  logged meals and saved meals keep their numbers; the PR says so in one line, and he fixes any through the existing
+  saved-meal editor and correction path. If a live response shows branded values are already per serving, stop and
+  report: the slice then only adds `dataType` and tests.
 - **B. Delta looks it up.** A `food_lookup` read tool (query and optional amount) returning up to three matches with
   per-serving numbers, serving text, source and id. `log_meal` gains `source` and `source_id`, and BEYOND refills the
   numbers from the record (default 2). The source line, OTHER MATCHES and amount edit on the card. The free helper's
@@ -85,7 +91,7 @@ whether the free helper looks foods up inline. Each entry's amount, numbers and 
 - **C. Source on every entry.** The `source` field on events and saved meals, FUEL and HISTORY lines, CSV, backup, old
   backups load. "The usual" matching. The settings card.
 
-One PR for all three unless slice A ships first on his word.
+Slice A ships first, on its own PR in 1.0. Slices B and C are one PR in 1.1.
 
 ## Design and locks
 - FIELD-AUTHORITY-001: LOG stays the card's one red action; OTHER MATCHES, EDIT and the source line are not red.
