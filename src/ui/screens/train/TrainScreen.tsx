@@ -469,12 +469,12 @@ export function TrainScreen({
     }
     // GRAYSON-ONE-OFF-001: START from TODAY, from a fresh read (review of #734).
     if (destination === "START_PLANNED" || destination === "START_PLANNED_REDUCED" || destination === "START_EMPTY") void startFromToday(destination);
-    if (destination === "ROUTINES" && !session) { setWeekOpen(false); setLibraryOpen(false); setRoutinesOpen({ templateId: null }); }
+    if (destination === "ROUTINES") { setWeekOpen(false); setLibraryOpen(false); setRoutinesOpen({ templateId: null }); }
     requestAnimationFrame(() => {
       if (session && session.sessionType !== "RECOVERY" && destination === "WORKOUT" && exerciseHeadingRef.current) {
         exerciseHeadingRef.current.focus({ preventScroll: true });
         exerciseHeadingRef.current.scrollIntoView({ block: "start", behavior: "instant" });
-      } else if (destination === "ROUTINES" && !session) return; // the routines list focuses its own heading
+      } else if (destination === "ROUTINES") return; // the routines list focuses its own heading
       else if (session || destination !== "RECOVERY") headingRef.current?.focus();
       else recoveryChoiceRef.current?.focus();
     });
@@ -1588,8 +1588,8 @@ export function TrainScreen({
           line and override stays one tap away, so START WORKOUT lands on
           the first phone screen. */}
       {/* GRAYSON-ROUTINE-EDIT-001: the routine list and editor open in the workout card's place, before START. */}
-      {!session && !completionSummary && routinesOpen && (
-        <RoutinesPanel initialTemplateId={routinesOpen.templateId} workoutActive={false}
+      {!completionSummary && routinesOpen && (
+        <RoutinesPanel initialTemplateId={routinesOpen.templateId} workoutActive={Boolean(session)}
           onChanged={async () => { setProgrammeRefreshKey((value) => value + 1); await refresh(true); }}
           onClose={() => setRoutinesOpen(null)} />
       )}
@@ -1865,12 +1865,12 @@ export function TrainScreen({
       )}
 
       {/* GRAYSON-HOME-STRETCH-001 slice B: a stretch routine plays in its own player and saves itself. */}
-      {session && session.sessionType === "RECOVERY" && !completionSummary && readStretchPlay(session.id) && (
+      {session && !routinesOpen && session.sessionType === "RECOVERY" && !completionSummary && readStretchPlay(session.id) && (
         <CommandSurface>
           <StretchPlayer session={session} onFinished={async () => { await performDueDayRollover().catch(() => {}); await refresh(); }} />
         </CommandSurface>
       )}
-      {session && session.sessionType === "RECOVERY" && !completionSummary && !readStretchPlay(session.id) && (
+      {session && !routinesOpen && session.sessionType === "RECOVERY" && !completionSummary && !readStretchPlay(session.id) && (
         <CommandSurface>
           <p className="tool-label" style={{ marginBottom: 4 }}>RECOVERY — IN PROGRESS</p>
           <h2 className="command-title" style={{ fontSize: 24, marginBottom: 8 }}>Light movement</h2>
@@ -1914,7 +1914,7 @@ export function TrainScreen({
       <div hidden={Boolean(completionSummary) || (session ? session.sessionType !== "RECOVERY" : chosenVariant !== "RECOVERY")}>
         <MemoryPanel scope="RECOVERY" contextual active={active && !completionSummary && (session ? session.sessionType === "RECOVERY" : chosenVariant === "RECOVERY")} blocked={busy} />
       </div>
-      {session && session.sessionType !== "RECOVERY" && !completionSummary && (
+      {session && !routinesOpen && session.sessionType !== "RECOVERY" && !completionSummary && (
         <>
           {/* Canonical session orientation stays compact so recording leads.
               Gym Mode is the same optional full-screen operating shortcut. */}
@@ -2560,7 +2560,7 @@ export function TrainScreen({
           content above it is hidden then. */}
       {trainView === "WORKOUT" && !completionSummary && !session && <RunningPanel active={active} liftActive={!!session} onRunningChange={setRunningActive} />}
       {/* #630 review: kept mounted across views (hidden), as before, so an open edit survives HISTORY and back. */}
-      {session && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
+      {session && !routinesOpen && <div className="train-programme-after" hidden={trainView !== "WORKOUT"}>{programmePanel}</div>}
     </div>
   );
 }
