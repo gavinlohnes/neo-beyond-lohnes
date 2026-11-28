@@ -38,10 +38,11 @@ PR open at a time across both sessions, a fresh-context reviewer on every PR, Ga
 | T6 | Drop, failure and timed sets | [GRAYSON-SET-TYPES-001](GRAYSON-SET-TYPES-001.md) | Claude Code | T5 | PROTECTED |
 | T7 | The open exercise library | [GRAYSON-OPEN-LIBRARY-001](GRAYSON-OPEN-LIBRARY-001.md) | Claude Code | T6 | PROTECTED |
 | X3 | TRAIN as the one home for training | [GRAYSON-TRAIN-HOME-001](GRAYSON-TRAIN-HOME-001.md) | Claude Code | T7 | FEATURE (Gavin merges in 1.0) |
+| X5 | Garmin runs and workouts come into TRAIN | [GRAYSON-GARMIN-WORKOUTS-001](GRAYSON-GARMIN-WORKOUTS-001.md) | Claude Code | X3 follow-up #753; the only Health Bridge change open | PROTECTED |
 
-**Merged so far (2026-11-27):** X1 #733 and #744, F1 #736, F2 #737 and #739, F3 #740, F4 #738, X2 #743, T1 #730, T2 #735, T3 #734, T4 #742, T5 #746. X4 slice A is open as #745.
+**Merged so far (2026-11-28):** X1 #733 and #744, F1 #736, F2 #737 and #739, F3 #740, F4 #738, X2 #743, X4 slice A #745 and slice B #749, T1 #730, T2 #735, T3 #734, T4 #742, T5 #746, T6 #748, T7 #750, X3 #751. Open: X4 slice C #752, X3 follow-up #753 (its review found routines unreachable mid-workout).
 
-**Checkpoint:** 1.0 merged and phone-checked by Fri Dec 4, so the first 4-week block on GRAYSON alone (no Hevy, MuscleWiki or Couch to 5K) starts Mon Dec 7. X4 joined 1.0 on Gavin's **"Yes"**, 14:48 CT.
+**Checkpoint:** 1.0 merged and phone-checked by Fri Dec 4, so the first 4-week block on GRAYSON alone (no Hevy, MuscleWiki or Couch to 5K) starts Mon Dec 7. X4 joined 1.0 on Gavin's **"Yes"**, 14:48 CT. X5 joined 1.0 on Gavin's "I think we do 1 for now", 2026-11-27 21:26 CT; the rest alert and a label photo scan go to 1.1.
 
 X4 and the TRAIN builder's T3 to T7 both touch TRAIN screens: X4 keeps its UI in new files and rebases before each PR opens.
 
@@ -49,7 +50,14 @@ F3 and F4 don't share files with F2, so either may go while F2 waits on review. 
 Claude Code after 1.0. PR #694 (ASKS-COUNT) stays out of 1.0.
 
 **Launch 1.1, right after:** sets per muscle, the stall with its reason, the muscle-keeper and the shift-shaped
-session. Not briefed yet.
+session. Added 2026-11-27 (Gavin, 21:23 CT: "2 and 6 we can wait until 1.1"; 21:28 CT: "Add to 1.1"):
+- **Delta logs meals from real numbers:** Delta looks a food up by name in USDA's branded foods and Open Food Facts
+  before it estimates, marks each entry "from the label" or "estimated", and learns his usuals ("my usual
+  breakfast"). This replaces a separate food-search screen.
+- **Rest alert with the phone locked.**
+- **Photo scan of a nutrition label with no barcode.**
+
+Not briefed yet. Recipes and micronutrients come later, not in 1.1.
 
 ## Delta-track Claude Code session `ccr-380c4225` (TODAY, sleep, home; Grok Bot's queue)
 
