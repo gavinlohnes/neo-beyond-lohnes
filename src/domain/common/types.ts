@@ -158,6 +158,11 @@ export interface WorkoutSession {
    * version bump — see db.ts, unchanged at v8.
    */
   activeRestEndsAt?: string;
+  /**
+   * GRAYSON-HOME-STRETCH-001 slice B: the stretch routine a RECOVERY session played, and whether it was played to the
+   * end. Non-indexed and optional (no Dexie version); absent on every other session.
+   */
+  stretchRoutine?: { id: string; name: string; completed: boolean };
 }
 
 /**
@@ -316,6 +321,9 @@ export type DomainEventType =
   // Global (no beyondDayId), USER. For A, B and C the latest wins over the code's version; for his own routines it
   // keeps the version it replaced. Payload in domain/workout/routineEdit.ts.
   | "ROUTINE_EDITED"
+  // GRAYSON-HOME-STRETCH-001 slice B (Gavin, 2026-11-26): his whole list of stretch routines, edited, reset or deleted.
+  // Global (no beyondDayId), USER, like TRAIN_PROGRAM_SET; the newest wins. Payload in application/stretchRoutines.ts.
+  | "STRETCH_ROUTINES_SET"
   // GRAYSON-WORKOUT-CHANGES-001 (Gavin, 2026-11-25): an exercise added, swapped or removed in a live workout. USER,
   // under the session's own beyondDayId. Today only; the routine changes only on KEEP FOR NEXT TIME (ROUTINE_EDITED).
   // Payload in domain/workout/workoutChanges.ts.

@@ -1,0 +1,23 @@
+/* GRAYSON-HOME-STRETCH-001 slice B: the stretch player and routines. Calm, no colour of its own. */
+.stretch-player { padding: var(--space-4, 16px) 0; }
+.stretch-player__name { font-size: 26px; margin: 4px 0 0; overflow-wrap: break-word; }
+.stretch-player__side { margin: 2px 0 0; font-weight: 600; }
+.stretch-player__count { font-size: 56px; line-height: 1.1; margin: 8px 0; font-variant-numeric: tabular-nums; }
+.stretch-player__cues { margin: 0 0 8px; padding-left: 1.2em; }
+.stretch-player__cue { min-height: 1.4em; }
+.stretch-player__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 8px; }
+.stretch-player__actions button { min-height: 44px; }
+.stretch-routines { margin-top: 16px; }
+.stretch-routines__suggest { margin: 0 0 8px; }
+.stretch-routines__suggest button, .stretch-routine__start { width: 100%; min-height: 44px; }
+.stretch-routine { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border-subtle, #333); }
+.stretch-routine__name { flex: 1 1 140px; min-width: 0; overflow-wrap: break-word; }
+.stretch-routine button { min-height: 44px; }
+.stretch-edit label { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.stretch-edit input, .stretch-edit select { font-size: 16px; min-height: 44px; width: 100%; }
+.stretch-edit__step { border-top: 1px solid var(--border-subtle, #333); padding: 8px 0; }
+.stretch-edit__row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.stretch-edit__row > * { flex: 1 1 90px; }
+.stretch-edit__row button { min-height: 44px; flex: 0 1 auto; }
+.stretch-edit__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.stretch-edit__actions button { flex: 1 1 100px; min-height: 44px; }
