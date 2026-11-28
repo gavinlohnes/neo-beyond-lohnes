@@ -151,11 +151,11 @@ describe("MoreScreen (real browser) — MENU / SYSTEM surface", () => {
     await expect.element(screen.getByRole("button", { name: "EXPORT BACKUP" })).toBeVisible();
   });
 
-  it("REDESIGN-001: journal, exercises, custom programs and review remain distinct destinations", async () => {
+  it("REDESIGN-001: journal, exercises, workout routines and review remain distinct destinations", async () => {
     const screen = await render(<MoreScreen />);
     const before = await db.events.toArray();
     const rows = [];
-    for (const label of ["DECISION JOURNAL", "EXERCISE LIBRARY", "CUSTOM PROGRAMS", "REVIEW"]) {
+    for (const label of ["DECISION JOURNAL", "EXERCISE LIBRARY", "ROUTINES · WORKOUTS", "REVIEW"]) {
       rows.push((await commandResult(screen, label)).element());
     }
     expect(new Set(rows).size).toBe(4);

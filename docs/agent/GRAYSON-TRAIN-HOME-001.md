@@ -9,7 +9,7 @@
 - **Lane: FEATURE** (navigation and labels only: no stored data, event, table or Dexie version changes). For Launch
   1.0, Gavin still merges, after green CI and a fresh-context reviewer's exact-head PASS posted on the PR.
 - **Starting commit:** latest `origin/master` with T7 (GRAYSON-OPEN-LIBRARY-001) merged, because T7 changes the
-  library screen this brief links to. Re-fetch before starting.
+  library screen this brief links to. Re-fetch before starting. Built from `25726f33` (OPEN-LIBRARY-001 merged as #750).
 - **Builder:** Claude Code, TRAIN lane (the "Project GRAYSON TRAIN builder" chat). Branch
   `claude/grayson-train-home-001`. **Reviewer:** a fresh-context reviewer.
 - **Order:** row X3 in the Launch 1.0 table of [GRAYSON-BUILD-ORDER](GRAYSON-BUILD-ORDER.md), after T7.

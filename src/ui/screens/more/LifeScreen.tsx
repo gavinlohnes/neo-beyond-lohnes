@@ -7,6 +7,7 @@ import { HomePanel } from "../../components/HomePanel";
 import { HabitsPanel } from "../../components/HabitsPanel";
 import { askAlfred } from "../../components/AlfredSheet";
 import { IntentScreen } from "./IntentScreen";
+import { LIFE_TAB_LABEL } from "./lifeTabLabels";
 import "../../components/alfred.css";
 import { WholeLifeHome, type WholeLifeActions } from "./WholeLifeHome";
 
@@ -17,6 +18,7 @@ import { WholeLifeHome, type WholeLifeActions } from "./WholeLifeHome";
  */
 export const LIFE_TABS = ["Direction", "Plans", "Routines", "Habits", "People", "Home", "Memory"] as const;
 export type LifeTab = (typeof LIFE_TABS)[number];
+
 const BLURB: Record<LifeTab, string> = {
   Direction: "What matters to you and what you're working around, in your own words.",
   Plans: "Missions, projects and the commitments under them.",
@@ -55,7 +57,7 @@ export function LifeScreen({ active, initialTab = "Direction", startAtOverview =
     <div className="life-tabs" role="tablist" aria-label="Life areas">
       {LIFE_TABS.map((t) => <button key={t} type="button" role="tab" id={`${uid}-tab-${t}`} aria-selected={tab === t} aria-controls={`${uid}-panel-${t}`}
         tabIndex={tab === t ? 0 : -1} onKeyDown={onKey}
-        className={`chip ${tab === t ? "chip--selected" : ""}`} onClick={() => open(t)}>{t}</button>)}
+        className={`chip ${tab === t ? "chip--selected" : ""}`} onClick={() => open(t)}>{LIFE_TAB_LABEL[t]}</button>)}
     </div>
     <p className="meta">{BLURB[tab]}</p>
     {LIFE_TABS.map((t) => <div key={t} role="tabpanel" id={`${uid}-panel-${t}`} aria-labelledby={`${uid}-tab-${t}`} hidden={tab !== t}>

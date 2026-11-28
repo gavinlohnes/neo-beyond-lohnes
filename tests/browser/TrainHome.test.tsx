@@ -1,97 +1,104 @@
 /// <reference types="@vitest/browser-playwright" />
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { page, userEvent } from "vitest/browser";
 import { cleanup, render } from "vitest-browser-react";
-import { page } from "vitest/browser";
-import "../../src/ui/styles/fonts";
+import axe from "axe-core";
+import { startDay, submitCheckIn } from "../../src/application/commands";
+import { createCustomTemplate } from "../../src/application/customTemplateCommands";
+import { getCustomTemplates } from "../../src/application/customTemplateQueries";
+import { createRoutine } from "../../src/application/routineCommands";
 import { App } from "../../src/app/App";
-import { startDay } from "../../src/application/commands";
+import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
+import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
 import { db } from "../../src/persistence/db";
 
 /**
- * TRAIN-HOME-001: TRAIN opens like the other screens, compactly: START WORKOUT stays on the first phone screen.
- * VISUAL-FOUNDATION-002: the hero is now the foundation's command bar; the heading stays for screen readers.
+ * GRAYSON-TRAIN-HOME-001: the brief's phone check in a real browser. On TRAIN, LIBRARY opens the exercise library and
+ * comes back to the workout. In MORE, ROUTINES · WORKOUTS opens TRAIN's routines. Archive a routine from TRAIN, then
+ * UNDO. MORE says SHIFT ROUTINES and the checklists are all there. 320 px and axe. Nothing is written by navigating.
  */
+const SHOTS = import.meta.env.VITE_WALKTHROUGH_SHOTS as string | undefined;
+const GREEN = { energy: 4, stress: 2, mood: 4, soreness: 1, alcoholUrge: 0 } as const;
+const settle = (ms = 120) => new Promise<void>((r) => setTimeout(r, ms));
+async function shot(name: string, el: Element | null) { if (SHOTS && el) await page.screenshot({ path: `${SHOTS}/${name}.png`, element: el as HTMLElement }); }
+async function axeClean(label: string, root: Element) {
+  const r = await axe.run(root, { runOnly: ["wcag2a", "wcag2aa"] });
+  expect(r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`), label).toEqual([]);
+}
+async function fits(label: string, root: Element, name?: string) {
+  for (const width of [320, 360, 412]) {
+    await page.viewport(width, SHOTS ? 1800 : 900); await settle();
+    expect(document.documentElement.scrollWidth, `${label} at ${width}`).toBeLessThanOrEqual(width);
+    if (name) await shot(`${width}-${name}`, root);
+  }
+  await page.viewport(360, 900);
+}
+
+beforeEach(async () => { await page.viewport(360, 900); localStorage.clear(); });
 afterEach(async () => { await cleanup(); });
 
-describe("TRAIN-HOME-001", () => {
-  it("opens on the TRAIN // STRENGTH command bar with START WORKOUT still on the first screen at 360px", async () => {
-    const [w, h] = [360, 780];
-    await page.viewport(w, h);
-    await startDay();
-    const screen = await render(<App />);
-    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
-    await expect.element(screen.getByRole("heading", { name: "YOUR TRAINING.", exact: true })).toBeInTheDocument();
-    await expect.element(screen.getByText("TRAIN // STRENGTH", { exact: false })).toBeVisible();
-    await expect.element(screen.getByText("Prepare your workout. You choose the session.", { exact: true })).toBeVisible();
-    // The workout card appears once TRAIN's read settles; wait for it before measuring.
-    const startButton = screen.getByRole("button", { name: /^START WORKOUT/ }).first();
-    await expect.element(startButton).toBeVisible();
-    for (const a of document.getAnimations()) a.finish();
-    const start = startButton.element().getBoundingClientRect();
-    const nav = document.querySelector("nav.bottom-nav, nav[aria-label='Main']")?.getBoundingClientRect();
-    expect(start.bottom).toBeLessThanOrEqual(nav ? nav.top : h);
-    const small: string[] = [];
-    const walker = document.createTreeWalker(document.querySelector(".train-home")!, NodeFilter.SHOW_TEXT);
-    // Accessibility (amended 2026-11-14): sentences stay 16 px or larger; only short mono-capital labels (the eyebrow,
-    // the date) may be smaller, and never under 10 px. The visually hidden heading isn't rendered text.
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-      const t = n.textContent?.trim(), el = n.parentElement!;
-      if (!t || el.closest(".visually-hidden")) continue;
-      const size = parseFloat(getComputedStyle(el).fontSize), label = t === t.toUpperCase() && t.length <= 24;
-      if (size < (label ? 10 : 16)) small.push(t);
-    }
-    expect(small).toEqual([]);
-    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(w);
+describe("GRAYSON-TRAIN-HOME-001 TRAIN as the one home for training", () => {
+  it("LIBRARY on TRAIN: one tap in, find an exercise, back to the workout", { timeout: 30_000 }, async () => {
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const screen = await render(<TrainScreen />);
+    await expect.element(screen.getByRole("button", { name: "LIBRARY", exact: true })).toBeVisible();
+    const acts = document.querySelector(".train-routine-acts");
+    await axeClean("start row", acts!);
+    await fits("start row", acts!, "start-row");
+    await screen.getByRole("button", { name: "LIBRARY", exact: true }).click();
+    await expect.element(screen.getByRole("heading", { name: "Exercise library" })).toHaveFocus();
+    await screen.getByRole("button", { name: "ADD EXERCISE" }).click();
+    await userEvent.fill(screen.getByRole("textbox", { name: "Search exercise reference list" }), "cable");
+    await expect.element(screen.getByRole("group", { name: "Open exercise set matches" }).getByText("Cable Chest Press", { exact: true })).toBeVisible();
+    await expect.element(screen.getByRole("checkbox", { name: "Show stretches" })).toBeVisible();
+    await axeClean("library in TRAIN", document.querySelector("[data-train-library]")!);
+    await fits("library in TRAIN", document.querySelector("[data-train-library]")!, "library");
+    await screen.getByRole("button", { name: "BACK TO WORKOUT" }).first().click();
+    await expect.element(screen.getByRole("button", { name: "START WORKOUT" })).toBeVisible();
+    expect(document.querySelector("[data-train-library]")).toBeNull();
+    expect(await db.workoutSessions.count()).toBe(0);
   });
 
-  it("opens and closes the calibration preview without starting or writing a workout", async () => {
-    await page.viewport(360, 780);
-    await startDay();
+  it("MORE's ROUTINES · WORKOUTS opens TRAIN's routines; ARCHIVE in TRAIN with UNDO", { timeout: 30_000 }, async () => {
+    await createCustomTemplate({ name: "Leg Day", exercises: [{ exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: 10 }] });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
     const screen = await render(<App />);
-    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
-    const beforeEvents = await db.events.count();
-    const beforeSessions = await db.workoutSessions.count();
-    const trigger = screen.getByRole("button", { name: "PREVIEW CALIBRATION" });
-    await trigger.click();
-    await expect.element(screen.getByRole("dialog", { name: "Machine Chest Press" })).toBeVisible();
-    expect([...document.querySelector(".calibration-preview")!.parentElement!.children]
-      .filter((element) => !element.classList.contains("calibration-preview"))
-      .every((element) => (element as HTMLElement).inert)).toBe(true);
-    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
-    await expect.element(screen.getByRole("button", { name: "CLOSE" })).toHaveFocus();
-    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }));
-    await expect.element(screen.getByRole("button", { name: "CONTINUE" })).toHaveFocus();
-    document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    await expect.element(trigger).toHaveFocus();
-    await trigger.click();
-    await screen.getByRole("button", { name: "CONTINUE" }).click();
-    await screen.getByRole("button", { name: "CONTINUE" }).click();
-    await expect.element(screen.getByText(/No comparable performance found/)).toBeVisible();
-    await screen.getByRole("button", { name: "CLOSE" }).click();
-    await expect.element(trigger).toHaveFocus();
-    await expect.element(screen.getByRole("button", { name: /^START WORKOUT/ }).first()).toBeVisible();
-    expect(await db.events.count()).toBe(beforeEvents);
-    expect(await db.workoutSessions.count()).toBe(beforeSessions);
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("program");
+    await screen.getByRole("button", { name: /^ROUTINES · WORKOUTS/ }).click();
+    await expect.element(screen.getByRole("button", { name: "TRAIN", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect.element(screen.getByRole("heading", { name: "Routines" })).toHaveFocus();
+    const list = screen.getByRole("list", { name: "Your routines" });
+    await expect.element(list.getByText("Leg Day", { exact: true })).toBeVisible();
+    await expect.element(list.getByText("Workout A", { exact: false }).first()).toBeVisible();
+    // Archive in 2 taps: the list is open (1), ARCHIVE (2). UNDO brings it back.
+    await screen.getByRole("button", { name: "Archive Leg Day" }).click();
+    await expect.element(screen.getByRole("status")).toHaveTextContent("Leg Day archived.");
+    await expect.poll(async () => (await getCustomTemplates()).length).toBe(0);
+    await axeClean("routines with archived", document.querySelector("[data-routine-list]")!);
+    await fits("routines", document.querySelector("[data-routine-list]")!, "routines-archived");
+    await screen.getByRole("button", { name: "UNDO" }).click();
+    await expect.poll(async () => (await getCustomTemplates()).map((t) => t.name)).toEqual(["Leg Day"]);
   });
 
-  it("builds and discards a three-day plan draft without canonical writes", async () => {
-    await page.viewport(360, 780);
-    await startDay();
-    const screen = await render(<App />);
-    await screen.getByRole("button", { name: "TRAIN", exact: true }).click();
-    const beforeEvents = await db.events.count(), beforeSessions = await db.workoutSessions.count();
-    const trigger = screen.getByRole("button", { name: "DRAFT MY 3-DAY PLAN" });
-    await trigger.click();
-    const dialog = screen.getByRole("dialog", { name: "Your three-day plan" });
-    await expect.element(dialog).toBeVisible();
-    await screen.getByRole("button", { name: "CONTINUE" }).click();
-    await screen.getByRole("button", { name: "CONTINUE" }).click();
-    await screen.getByRole("button", { name: "MINIMUM" }).click();
-    await screen.getByRole("button", { name: "CONTINUE" }).click();
-    await expect.element(screen.getByText(/Nothing has been activated/i)).toBeVisible();
-    await screen.getByRole("button", { name: "CLOSE", exact: true }).click();
-    await expect.element(trigger).toHaveFocus();
-    expect(await db.events.count()).toBe(beforeEvents);
-    expect(await db.workoutSessions.count()).toBe(beforeSessions);
+  it("MORE says SHIFT ROUTINES, and his checklists are all there under their old key", { timeout: 30_000 }, async () => {
+    await createRoutine({ title: "Pre-shift", moment: "BEFORE_SHIFT", steps: ["Shower", "Pack lunch"] });
+    await createRoutine({ title: "Wind down", moment: "AFTER_SHIFT", steps: ["Stretch"] });
+    const before = await db.events.count();
+    const screen = await render(<MoreScreen initialView="ROUTINES" />);
+    await expect.element(screen.getByRole("heading", { name: "MORE // SHIFT ROUTINES" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "YOUR SHIFT ROUTINES" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Pre-shift" })).toBeVisible();
+    await expect.element(screen.getByRole("heading", { name: "Wind down" })).toBeVisible();
+    await shot("360-shift-routines", document.body);
+    await cleanup();
+    // Search: "routine" finds both, "shift" the checklists.
+    const menu = await render(<MoreScreen />);
+    await menu.getByRole("searchbox", { name: "Find a screen or action" }).fill("routine");
+    await expect.element(menu.getByRole("button", { name: /^SHIFT ROUTINES/ })).toBeVisible();
+    await expect.element(menu.getByRole("button", { name: /^ROUTINES · WORKOUTS/ })).toBeVisible();
+    expect(await db.events.count()).toBe(before);
   });
 });

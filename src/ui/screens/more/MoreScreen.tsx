@@ -62,7 +62,7 @@ import { RoutinesPanel } from "../../components/RoutinesPanel";
 import { LifeScreen, type LifeTab } from "./LifeScreen";
 import { PeoplePanel } from "../../components/PeoplePanel";
 import { HomePanel } from "../../components/HomePanel";
-import { CAPABILITY_GROUPS, findCapabilities, SYSTEM_CAPABILITIES, type CommandSection, type ReflectFocus, type SystemCapability, type SystemDestination } from "../../systemCatalog";
+import { CAPABILITY_GROUPS, findCapabilities, RENAMED_CAPABILITY_LABELS, SYSTEM_CAPABILITIES, type CommandSection, type ReflectFocus, type SystemCapability, type SystemDestination } from "../../systemCatalog";
 import { PlanTodayScreen } from "./PlanTodayScreen";
 import { SystemsReadout } from "../systems/SystemsReadout";
 import type { InsightMetric } from "../../../application/bodyInsightsQueries";
@@ -90,7 +90,6 @@ const COMMAND_GROUP_SUMMARY: Record<(typeof CAPABILITY_GROUPS)[number], { eyebro
  */
 const JournalScreen = lazy(() => import("./JournalScreen").then((m) => ({ default: m.JournalScreen })));
 const ExerciseLibraryScreen = lazy(() => import("./ExerciseLibraryScreen").then((m) => ({ default: m.ExerciseLibraryScreen })));
-const CustomTemplateScreen = lazy(() => import("./CustomTemplateScreen").then((m) => ({ default: m.CustomTemplateScreen })));
 const HistoryScreen = lazy(() => import("../history/HistoryScreen").then((m) => ({ default: m.HistoryScreen })));
 const Opening = ({ children }: { children: ReactNode }) => <Suspense fallback={<p role="status" className="meta">Opening…</p>}>{children}</Suspense>;
 
@@ -102,7 +101,9 @@ const MAX_RECENTS = 5;
 function readMoreLabels(key: string, limit = Number.POSITIVE_INFINITY): string[] {
   try {
     const value = JSON.parse(localStorage.getItem(key) ?? "[]");
-    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, limit) : [];
+    // GRAYSON-TRAIN-HOME-001: a pin or recent saved under a renamed label reads as its new label.
+    const labels = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").map((label) => RENAMED_CAPABILITY_LABELS[label] ?? label) : [];
+    return [...new Set(labels)].slice(0, limit);
   } catch { return []; }
 }
 
@@ -133,13 +134,23 @@ function capabilityIcon(entry: SystemCapability): IconName {
   if (entry.label === "HISTORY") return "history";
   if (entry.label === "SEARCH RECORDS") return "search";
   if (entry.label === "EXERCISE LIBRARY") return "exerciseLibrary";
-  if (entry.label === "CUSTOM PROGRAMS") return "customPrograms";
+  if (entry.label === "ROUTINES · WORKOUTS") return "customPrograms";
   if (entry.label === "DECISION JOURNAL") return "decisionJournal";
   if (entry.label === "WORK SCHEDULE" || entry.label.includes("CALENDAR")) return "schedule";
   if (entry.label.includes("BACKUP")) return "backup";
   if (entry.label === "WORKOUT" || entry.label === "TRAIN") return "train";
   if (["DATA", "SLEEP", "MEAL", "WATER", "BODYWEIGHT", "IMPORT HEALTH DATA"].includes(entry.label)) return "body";
   return GROUP_ICONS[entry.group];
+}
+
+/** GRAYSON-TRAIN-HOME-001: opens TRAIN's routines list at once; the button stays if TRAIN can't be opened just now. */
+function RoutinesRedirect({ onOpen }: { onOpen: () => boolean }) {
+  const opened = useRef(false);
+  useEffect(() => { if (!opened.current) opened.current = onOpen(); }, [onOpen]);
+  return <section className="intent-field">
+    <p className="card-body">Your workout routines (A, B, C and your own) live in TRAIN · ROUTINES, with edit and archive.</p>
+    <button type="button" className="btn-secondary" onClick={() => { opened.current = onOpen(); }}>OPEN ROUTINES IN TRAIN</button>
+  </section>;
 }
 
 function resolveMoreLabels(labels: string[]): SystemCapability[] {
@@ -706,7 +717,7 @@ export function MoreScreen({
           }} /></>}</div>
           <div hidden={view !== "PEOPLE"}>{visited.has("PEOPLE") && <><OperatorHeader destination="command">MORE // PEOPLE</OperatorHeader><PeoplePanel active={active && view === "PEOPLE"} focusPerson={personFocus} /></>}</div>
           <div hidden={view !== "HOME"}>{visited.has("HOME") && <><OperatorHeader destination="command">MORE // HOME</OperatorHeader><HomePanel active={active && view === "HOME"} /></>}</div>
-          <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
+          <div hidden={view !== "ROUTINES"}>{visited.has("ROUTINES") && <><OperatorHeader destination="command">MORE // SHIFT ROUTINES</OperatorHeader><RoutinesPanel active={active && view === "ROUTINES"} /></>}</div>
           <div hidden={view !== "SAVED"}>{visited.has("SAVED") && <><OperatorHeader destination="command">MORE // SAVED</OperatorHeader><SavedInboxScreen active={active && view === "SAVED"} /></>}</div>
           <div hidden={view !== "DAILY_NOTE"}>{visited.has("DAILY_NOTE") && <><OperatorHeader destination="command">MORE // DAILY NOTE</OperatorHeader><DailyNoteScreen active={active && view === "DAILY_NOTE"} dayId={dailyNoteDayId} onOpenWeeklyInterview={() => openReflect("INTERVIEW")} onOpenPatterns={() => openReflect("PATTERNS")} onOpenDelta={() => openReflect("DELTA")} /></>}</div>
           <div hidden={view !== "COLLECTIONS"}>{visited.has("COLLECTIONS") && <><OperatorHeader destination="command">MORE // COLLECTIONS</OperatorHeader><CollectionsScreen active={active && view === "COLLECTIONS"} /></>}</div>
@@ -718,7 +729,9 @@ export function MoreScreen({
           <div hidden={view !== "JOURNAL"}>{visited.has("JOURNAL") && <><OperatorHeader destination="command">MORE // DECISION JOURNAL</OperatorHeader><Opening><JournalScreen navigationEntryId={journalFocus} active={active && view === "JOURNAL"} {...(onOpenCapture ? { onOpenCapture: openGuidedCapture } : {})} /></Opening></>}</div>
           {view === "EXERCISE_LIBRARY" && <><OperatorHeader destination="command">MORE // EXERCISE LIBRARY</OperatorHeader><Opening><ExerciseLibraryScreen /></Opening></>}
           <div hidden={view !== "HEALTH_IMPORT"}>{visited.has("HEALTH_IMPORT") && <HealthImportScreen active={active && view === "HEALTH_IMPORT"} />}</div>
-          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">MORE // CUSTOM PROGRAMS</OperatorHeader><Opening><CustomTemplateScreen /></Opening></>}
+          {/* GRAYSON-TRAIN-HOME-001: one list for workouts. The old CUSTOM PROGRAMS view sends him to TRAIN's routines. */}
+          {view === "CUSTOM_TEMPLATES" && <><OperatorHeader destination="command">MORE // ROUTINES · WORKOUTS</OperatorHeader>
+            <RoutinesRedirect onOpen={() => onOpenDestination?.({ kind: "routines" }) ?? false} /></>}
         </div>
       {/* Keep local settings/disclosures/drafts mounted while inspecting a destination. */}
       <div ref={menuRef} hidden={view !== "MENU"} className="more-control-center">

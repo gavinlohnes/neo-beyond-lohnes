@@ -102,6 +102,9 @@ describe("GRAYSON-OPEN-LIBRARY-001 the open exercise library", () => {
     // Log a set on it like any other exercise.
     const train = await render(<TrainScreen />);
     await train.getByRole("button", { name: "START WORKOUT" }).click();
+    // Review of #750: wait for the started workout before reading it (the session row lands after the tap).
+    await expect.element(train.getByRole("button", { name: "LOG" }).first()).toBeVisible();
+    await expect.poll(async () => (await getActiveWorkoutSession())?.id ?? null).not.toBeNull();
     const session = (await getActiveWorkoutSession())!;
     const { logSet } = await import("../../src/application/trainCommands");
     await logSet(session.beyondDayId, session.id, "fedb-Cable_Chest_Press", 1, 50, 10);

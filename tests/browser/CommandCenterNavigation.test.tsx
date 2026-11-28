@@ -97,8 +97,10 @@ describe("re-tap, back and retention", () => {
   });
 
   it("keeps all favorites and recent places through a real remount", async () => {
-    const favorites = ["PLAN TODAY", "ROUTINES", "HABITS", "DAILY NOTE", "COLLECTIONS", "HIGHLIGHTS"];
-    localStorage.setItem("beyond.more.favorites.v1", JSON.stringify(favorites));
+    // GRAYSON-TRAIN-HOME-001: "ROUTINES" was pinned under its old name; it shows as SHIFT ROUTINES.
+    const stored = ["PLAN TODAY", "ROUTINES", "HABITS", "DAILY NOTE", "COLLECTIONS", "HIGHLIGHTS"];
+    const favorites = ["PLAN TODAY", "SHIFT ROUTINES", "HABITS", "DAILY NOTE", "COLLECTIONS", "HIGHLIGHTS"];
+    localStorage.setItem("beyond.more.favorites.v1", JSON.stringify(stored));
     localStorage.setItem("beyond.more.recents.v1", JSON.stringify(["HISTORY"]));
     const first = await render(<App />);
     await first.getByRole("button", { name: "MORE", exact: true }).click();

@@ -5,6 +5,7 @@ import { routineEstimate } from "../../../application/routinePlayer";
 import type { Routine } from "../../../domain/routines";
 import type { SystemDestination } from "../../systemCatalog";
 import type { LifeTab } from "./LifeScreen";
+import { LIFE_TAB_LABEL } from "./lifeTabLabels";
 import { RoutinePlayer } from "../../components/RoutinePlayer";
 import { stepKey } from "../../../application/routineCommands";
 import { SectionUnavailable as Unavailable } from "../../components/Section";
@@ -72,7 +73,7 @@ export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: 
         <Dumbbell size={24} /><span><small>RECORDED WORKOUT IN PROGRESS</small><strong>Return to your workout</strong></span><ArrowUpRight size={20} />
       </button>}
     </section>
-    <nav className="wl-area-nav" aria-label="Life shortcuts">{(["Plans", "Routines", "Habits", "People", "Home", "Memory"] as const).map((area) => <button type="button" key={area} onClick={() => onArea(area)}>{area}<ArrowUpRight size={16} /></button>)}</nav>
+    <nav className="wl-area-nav" aria-label="Life shortcuts">{(["Plans", "Routines", "Habits", "People", "Home", "Memory"] as const).map((area) => <button type="button" key={area} onClick={() => onArea(area)}>{LIFE_TAB_LABEL[area]}<ArrowUpRight size={16} /></button>)}</nav>
     {!data ? <p role="status">Bringing your records together…</p> : <div className="wl-layout">
       <div className="wl-main">
         <section className="wl-section" aria-labelledby={`${idPrefix}-plan-title`}>
@@ -90,7 +91,7 @@ export function WholeLifeHome({ active, onArea, onNavigate, onTask, idPrefix }: 
         <section className="wl-section" aria-labelledby={`${idPrefix}-project-title`}><header className="wl-section-head"><div><p className="wl-eyebrow">YOUR PROJECTS</p><h3 id={`${idPrefix}-project-title`}>Your projects</h3></div><button type="button" onClick={() => onArea("Plans")}>Projects <ArrowUpRight size={18} /></button></header>
           {!projects ? <Unavailable /> : projects.length ? <div className="wl-projects">{projects.map(({ project, progress }) => <article key={project.id} className="wl-project"><p className="wl-eyebrow">{project.status === "PAUSED" ? "Paused by you" : "Active project"}</p><h4>{project.title}</h4>{project.finish && <p>{project.finish}</p>}<p className="wl-project-count">{progress.done}<span> / {progress.total} steps recorded done</span></p><button type="button" disabled={progress.next ? !onTask : false} onClick={() => progress.next ? onTask?.(progress.next.id) : onArea("Plans")}><span>{progress.next ? `Chosen next: ${progress.next.title}` : "Choose a next step when you're ready"}</span><ArrowUpRight size={18} /></button></article>)}</div> : <div className="wl-breathing-room"><p>No active projects.</p><span>A project is anything finite you want to finish, with its steps.</span><button type="button" onClick={() => onArea("Plans")}>Start with your plans <ArrowUpRight size={18} /></button></div>}
         </section>
-        <section className="wl-section" aria-labelledby={`${idPrefix}-routine-title`}><header className="wl-section-head"><div><p className="wl-eyebrow">YOUR ROUTINES</p><h3 id={`${idPrefix}-routine-title`}>Your routines</h3></div><button type="button" onClick={() => onArea("Routines")}>Routines <ArrowUpRight size={18} /></button></header>
+        <section className="wl-section" aria-labelledby={`${idPrefix}-routine-title`}><header className="wl-section-head"><div><p className="wl-eyebrow">YOUR SHIFT ROUTINES</p><h3 id={`${idPrefix}-routine-title`}>Your shift routines</h3></div><button type="button" onClick={() => onArea("Routines")}>Shift routines <ArrowUpRight size={18} /></button></header>
           {!routines ? <Unavailable /> : routines.length ? <ul className="wl-routines">{routines.map((routine) => <li key={routine.id}><button type="button" onClick={() => setPlaying(routine)}><CirclePlay size={28} /><span><strong>{routine.title}</strong><small>{routine.steps.length} steps{routineEstimate(routine.steps) ? ` · ${routineEstimate(routine.steps)}` : " · Your pace"}</small>{progress?.startedAt && <small>{routine.steps.filter((step) => progress.ticks.has(stepKey(routine.id, step.id))).length} / {routine.steps.length} steps recorded</small>}</span><span>Play</span></button>{progress?.startedAt && routine.steps.length > 0 && <progress className="wl-routine-progress" aria-label={`Recorded steps in ${routine.title}`} aria-valuetext={`${routine.steps.filter((step) => progress.ticks.has(stepKey(routine.id, step.id))).length} of ${routine.steps.length} steps recorded`} max={routine.steps.length} value={routine.steps.filter((step) => progress.ticks.has(stepKey(routine.id, step.id))).length} />}</li>)}</ul> : <p className="wl-caption">No saved routines yet. Build a repeatable sequence for the moments you choose.</p>}{progress?.startedAt && <p className="wl-caption">Progress for the day started {new Date(progress.startedAt).toLocaleDateString()}.</p>}{data.routineProgress.state === "unavailable" && <Unavailable>Routine progress could not be read.</Unavailable>}
         </section>
       </div>

@@ -123,3 +123,16 @@ export async function archiveCustomTemplate(id: string): Promise<boolean> {
   await db.customWorkoutTemplates.update(id, { archivedAt: new Date().toISOString() });
   return true;
 }
+
+/**
+ * GRAYSON-TRAIN-HOME-001: UNDO of ARCHIVE (and BRING BACK from "Archived"), in TRAIN's routines list. Clears the flag;
+ * the routine, its history and its edits are exactly as they were. Idempotent.
+ */
+export async function unarchiveCustomTemplate(id: string): Promise<boolean> {
+  const existing = await db.customWorkoutTemplates.get(id);
+  if (!existing) throw notFound(id);
+  if (!existing.archivedAt) return false;
+  const { archivedAt: _archivedAt, ...rest } = existing;
+  await db.customWorkoutTemplates.put(rest);
+  return true;
+}

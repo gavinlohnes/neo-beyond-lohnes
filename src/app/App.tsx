@@ -605,6 +605,8 @@ function AppWorkspaces() {
 
   function openMore(view: MoreView, focus: IntentFocus | null = null, focusHeading = true) {
     if (!canNavigate()) return false;
+    // GRAYSON-TRAIN-HOME-001: the old CUSTOM PROGRAMS key (a link, a shortcut) still lands on TRAIN's routines.
+    if (view === "CUSTOM_TEMPLATES") return openTrain("ROUTINES");
     setCommandTodayOrigin(tab === "TODAY" && view !== "MENU");
     setHealthHistoryOrigin(false); setHealthHistory(null);
     setIntentFocus(focus); setMemoryFocusId(null); setDailyNoteDayId(null); setPersonFocus(null); setWorkRecordFocus(null);
@@ -716,6 +718,8 @@ function AppWorkspaces() {
     if (destination.kind === "exercise") { if (!openTrain("RECORDS")) return false; setTrainRecordsFocus(destination.exerciseId); return true; }
     if (destination.kind === "body") return openBody(destination.focus);
     if (destination.kind === "workout") return openTrain("WORKOUT");
+    // GRAYSON-TRAIN-HOME-001: MORE's ROUTINES · WORKOUTS is TRAIN's one routines list.
+    if (destination.kind === "routines") return openTrain("ROUTINES");
     if (destination.kind === "workspace") return openPrimaryTab(destination.tab);
     if (destination.kind === "capture") { openCapture(); return true; }
     if (destination.kind === "stealth") { changeStealth(true); return true; }
