@@ -7,6 +7,7 @@ import { startDay, submitCheckIn } from "../../src/application/commands";
 import { createCustomTemplate } from "../../src/application/customTemplateCommands";
 import { getCustomTemplates } from "../../src/application/customTemplateQueries";
 import { createRoutine } from "../../src/application/routineCommands";
+import { logSet, startWorkout } from "../../src/application/trainCommands";
 import { App } from "../../src/app/App";
 import { TrainScreen } from "../../src/ui/screens/train/TrainScreen";
 import { MoreScreen } from "../../src/ui/screens/more/MoreScreen";
@@ -81,6 +82,33 @@ describe("GRAYSON-TRAIN-HOME-001 TRAIN as the one home for training", () => {
     await fits("routines", document.querySelector("[data-routine-list]")!, "routines-archived");
     await screen.getByRole("button", { name: "UNDO" }).click();
     await expect.poll(async () => (await getCustomTemplates()).map((t) => t.name)).toEqual(["Leg Day"]);
+  });
+
+  it("during a workout, ROUTINES · WORKOUTS still opens the routines list: ARCHIVE with UNDO; the workout is untouched (review of #751)", { timeout: 30_000 }, async () => {
+    await createCustomTemplate({ name: "Leg Day", exercises: [{ exerciseId: "leg-press", name: "Leg Press", sets: 3, repRangeLow: 8, repRangeHigh: 12, incrementLbs: 10 }] });
+    const day = await startDay();
+    await submitCheckIn(day.id, GREEN);
+    const session = await startWorkout(day.id, "A", "STANDARD");
+    await logSet(day.id, session.id, "machine-chest-press", 1, 100, 8);
+    const screen = await render(<App />);
+    await screen.getByRole("button", { name: "MORE", exact: true }).click();
+    await screen.getByRole("searchbox", { name: "Find a screen or action" }).fill("program");
+    await screen.getByRole("button", { name: /^ROUTINES · WORKOUTS/ }).click();
+    await expect.element(screen.getByRole("button", { name: "TRAIN", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect.element(screen.getByRole("heading", { name: "Routines" })).toHaveFocus();
+    await screen.getByRole("button", { name: "Archive Leg Day" }).click();
+    await expect.element(screen.getByRole("status").filter({ hasText: "Leg Day archived." })).toBeVisible();
+    await expect.poll(async () => (await getCustomTemplates()).length).toBe(0);
+    await screen.getByRole("button", { name: "UNDO" }).first().click();
+    await expect.poll(async () => (await getCustomTemplates()).map((t) => t.name)).toEqual(["Leg Day"]);
+    // The editor says a change applies from the next workout; the live one keeps its set.
+    await screen.getByRole("button", { name: "Edit Leg Day" }).click();
+    await expect.element(screen.getByText(/applies from the next one/)).toBeVisible();
+    await screen.getByRole("button", { name: "CANCEL" }).click();
+    await screen.getByRole("button", { name: "BACK" }).click();
+    expect(document.querySelector("[data-routine-list]")).toBeNull();
+    expect((await db.workoutSessions.get(session.id))?.status).toBe("ACTIVE");
+    expect(await db.performedSets.where("sessionId").equals(session.id).count()).toBe(1);
   });
 
   it("MORE says SHIFT ROUTINES, and his checklists are all there under their old key", { timeout: 30_000 }, async () => {
