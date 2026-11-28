@@ -8,7 +8,7 @@ import { getBodyweightHistory, projectGoalDate, type GoalProjection } from "./bo
 import { getEffectiveProteinTargetG, getNutritionTargets } from "./nutritionTargetQueries";
 import { getQuitHabit } from "./quitQueries";
 import { getDayProteinTotalG, getSchedulePattern } from "./queries";
-import { getCustomExercises } from "./exerciseLibraryQueries";
+import { getCustomExercises, getExerciseNames } from "./exerciseLibraryQueries";
 import { getDaySummaries } from "./dayLedgerQueries";
 import { summarizeBurden, type BurdenSummary } from "../engine/dayLedger";
 import { projectRibbon, type RibbonDay } from "../engine/ribbon";
@@ -132,6 +132,8 @@ export async function getWeeklySummary(now: Date = new Date()): Promise<WeeklySu
   // GRAYSON-ROUTINE-EDIT-001: A, B and C, then the bundled library (a routine can hold either).
   const names = fixedExerciseNames();
   for (const ex of await getCustomExercises({ includeArchived: true })) names.set(ex.id, ex.name);
+  // GRAYSON-OPEN-LIBRARY-001 (review of #750): an open exercise is named by the routine or workout that held it.
+  for (const [id, name] of Object.entries(await getExerciseNames())) if (!names.has(id)) names.set(id, name);
   const priorSets: PerformedSet[] = [];
   let workouts = 0;
   const records: WeeklySummary["training"]["records"] = [];

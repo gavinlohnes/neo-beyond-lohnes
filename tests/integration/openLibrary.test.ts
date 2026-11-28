@@ -9,6 +9,7 @@ import { getWorkoutSessionRecord } from "../../src/application/trainHistoryQueri
 import { getAllRecords } from "../../src/application/personalRecordQueries";
 import { getRecordsExport } from "../../src/application/recordsExport";
 import { getExerciseNames } from "../../src/application/exerciseLibraryQueries";
+import { getWeeklySummary } from "../../src/application/weeklyQueries";
 import { createCustomExercise } from "../../src/application/exerciseLibraryCommands";
 import { getCustomExercises } from "../../src/application/exerciseLibraryQueries";
 import { saveRoutineEdit } from "../../src/application/routineEditCommands";
@@ -181,6 +182,8 @@ describe("GRAYSON-OPEN-LIBRARY-001 in the app", () => {
     expect(await getProgressionSuggestion("A", "STANDARD", ID, at(10, 12))).toMatchObject({ recommendation: "INCREASE", lastWeight: 55, suggestedNextWeight: 60 });
     expect((await getAllRecords()).find((r) => r.exerciseId === ID)).toMatchObject({ exerciseName: "Cable Chest Press", record: { kind: "HEAVIEST", weight: 55 } });
     expect((await getExerciseNames())[ID]).toBe("Cable Chest Press");
+    // Review of #750: the weekly summary's PR line names it too.
+    expect((await getWeeklySummary(at(10, 12))).training.records.map((r) => r.exerciseName)).toContain("Cable Chest Press");
     const csv = await getRecordsExport("workouts");
     expect(csv.rows.filter((r) => r[4] === "Cable Chest Press")).toHaveLength(6);
   });
